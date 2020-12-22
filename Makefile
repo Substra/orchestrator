@@ -11,3 +11,7 @@ $(assets)/node/node.pb.go: $(protos)/node.proto
 
 $(assets)/objective/objective.pb.go: $(protos)/objective.proto
 	protoc --proto_path=lib/protos --go-grpc_out=lib/assets/objective --go_out=lib/assets/objective lib/protos/objective.proto
+
+.PHONY: clean
+clean:
+	rm orchestrator
