@@ -14,6 +14,10 @@ type Server struct {
 	dbFactory persistence.Factory
 }
 
+func NewServer(dbFactory persistence.Factory) *Server {
+	return &Server{dbFactory: dbFactory}
+}
+
 // RegisterNode is exported
 func (s *Server) RegisterNode(ctx context.Context, n *Node) (*Node, error) {
 	db, err := s.dbFactory(ctx)

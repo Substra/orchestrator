@@ -15,6 +15,10 @@ type Server struct {
 	dbFactory persistence.Factory
 }
 
+func NewServer(dbFactory persistence.Factory) *Server {
+	return &Server{dbFactory: dbFactory}
+}
+
 // RegisterObjective is exported
 func (s *Server) RegisterObjective(ctx context.Context, o *Objective) (*Objective, error) {
 	db, err := s.dbFactory(ctx)
