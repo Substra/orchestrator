@@ -1,16 +1,18 @@
 package main
 
 import (
-	"context"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
 
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
-	"github.com/substrafoundation/substra-orchestrator/lib/node"
+	"github.com/substrafoundation/substra-orchestrator/database"
+	"github.com/substrafoundation/substra-orchestrator/lib/assets/node"
+	"github.com/substrafoundation/substra-orchestrator/lib/assets/objective"
+	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
 	"google.golang.org/grpc"
 )
 
@@ -66,15 +68,15 @@ func RunServerWithChainCode() {
 }
 
 // RunServerWithoutChaincode is exported
-func RunServerWithoutChaincode() {
+func RunServerWithoutChainCode() {
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-	factory := func(_ context.Context) *database.RedisDB {
-		return &database.RedisDB{rdb}
+	factory := func(_ interface{}) (persistence.Database, error) {
+		return database.NewRedisDB(rdb), nil
 	}
 
 	listen, err := net.Listen("tcp", ":9000")
@@ -83,8 +85,8 @@ func RunServerWithoutChaincode() {
 	}
 
 	server := grpc.NewServer()
-	node.RegisterNodeServiceServer(server, &node.Server{dbFactory: factory})
-	objective.RegisterObjectiveServiceServer(server, &objective.Server{dbFactory: factory})
+	node.RegisterNodeServiceServer(server, node.NewServer(factory))
+	objective.RegisterObjectiveServiceServer(server, objective.NewServer(factory))
 
 	if err := server.Serve(listen); err != nil {
 		log.Fatalf("failed to server grpc server on port 9000: %v", err)

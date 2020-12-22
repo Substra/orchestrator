@@ -6,7 +6,6 @@ require (
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.4.4
 	github.com/golang/protobuf v1.4.3
-	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/hyperledger/fabric-sdk-go v1.0.0-rc1
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924

@@ -1,16 +1,27 @@
 // Package database provides implementations of persistence layer for different databases
 package database
 
-import "github.com/go-redis/redis/v8"
+import (
+	"context"
+
+	"github.com/go-redis/redis/v8"
+)
 
 type RedisDB struct {
-	redis.Client
+	rdb *redis.Client
+}
+
+func NewRedisDB(rdb *redis.Client) *RedisDB {
+	return &RedisDB{
+		rdb: rdb,
+	}
 }
 
 func (r *RedisDB) PutState(key string, data []byte) error {
-	return r.Set(ctx, key, data, 0).Err()
+	return r.rdb.Set(context.Background(), key, data, 0).Err()
 }
 
 func (r *RedisDB) GetState(key string) ([]byte, error) {
-	return r.Get(ctx, key).Result()
+	s, err := r.rdb.Get(context.Background(), key).Result()
+	return []byte(s), err
 }
