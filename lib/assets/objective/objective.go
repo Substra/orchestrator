@@ -12,6 +12,7 @@ var objs []Objective
 
 // Server is exported
 type Server struct {
+	UnimplementedObjectiveServiceServer
 	dbFactory persistence.Factory
 }
 

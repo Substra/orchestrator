@@ -11,6 +11,7 @@ import (
 
 // Server is exported
 type Server struct {
+	UnimplementedNodeServiceServer
 	dbFactory persistence.Factory
 }
 
