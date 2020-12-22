@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package objective;
+
+option go_package = ".;objective";
+
+message Objective {
+    string key = 1;
+	string name = 2;
+	string test_dataset = 3;
+    repeated string permissions = 4;
+    map<string, string> metadata = 5;
+}
+
+service ObjectiveService{
+    rpc RegisterObjective(Objective) returns (Objective) {}
+    rpc QueryObjective(Objective) returns (Objective) {}
+}
