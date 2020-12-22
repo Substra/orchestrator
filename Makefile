@@ -15,3 +15,7 @@ $(assets)/objective/objective.pb.go: $(protos)/objective.proto
 .PHONY: clean
 clean:
 	rm orchestrator
+
+.PHONY: test
+test:
+	go test -cover ./...
