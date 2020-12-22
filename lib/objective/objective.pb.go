@@ -108,6 +108,53 @@ func (x *Objective) GetMetadata() map[string]string {
 	return nil
 }
 
+type ObjectiveQuery struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+}
+
+func (x *ObjectiveQuery) Reset() {
+	*x = ObjectiveQuery{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_protos_objective_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ObjectiveQuery) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ObjectiveQuery) ProtoMessage() {}
+
+func (x *ObjectiveQuery) ProtoReflect() protoreflect.Message {
+	mi := &file_protos_objective_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ObjectiveQuery.ProtoReflect.Descriptor instead.
+func (*ObjectiveQuery) Descriptor() ([]byte, []int) {
+	return file_protos_objective_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ObjectiveQuery) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
 var File_protos_objective_proto protoreflect.FileDescriptor
 
 var file_protos_objective_proto_rawDesc = []byte{
@@ -128,18 +175,21 @@ var file_protos_objective_proto_rawDesc = []byte{
 	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a,
 	0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12,
 	0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x32, 0x95, 0x01, 0x0a, 0x10, 0x4f, 0x62,
-	0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x41,
-	0x0a, 0x11, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74,
-	0x69, 0x76, 0x65, 0x12, 0x14, 0x2e, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x2e,
-	0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x1a, 0x14, 0x2e, 0x6f, 0x62, 0x6a, 0x65,
-	0x63, 0x74, 0x69, 0x76, 0x65, 0x2e, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x22,
-	0x00, 0x12, 0x3e, 0x0a, 0x0e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74,
-	0x69, 0x76, 0x65, 0x12, 0x14, 0x2e, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x2e,
-	0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x1a, 0x14, 0x2e, 0x6f, 0x62, 0x6a, 0x65,
-	0x63, 0x74, 0x69, 0x76, 0x65, 0x2e, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x22,
-	0x00, 0x42, 0x0d, 0x5a, 0x0b, 0x2e, 0x3b, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x22, 0x0a, 0x0e, 0x4f, 0x62, 0x6a,
+	0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b,
+	0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x32, 0x9a, 0x01,
+	0x0a, 0x10, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69,
+	0x63, 0x65, 0x12, 0x41, 0x0a, 0x11, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x4f, 0x62,
+	0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x12, 0x14, 0x2e, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74,
+	0x69, 0x76, 0x65, 0x2e, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x1a, 0x14, 0x2e,
+	0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x2e, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74,
+	0x69, 0x76, 0x65, 0x22, 0x00, 0x12, 0x43, 0x0a, 0x0e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x62,
+	0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x12, 0x19, 0x2e, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74,
+	0x69, 0x76, 0x65, 0x2e, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x1a, 0x14, 0x2e, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x2e, 0x4f,
+	0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x22, 0x00, 0x42, 0x0d, 0x5a, 0x0b, 0x2e, 0x3b,
+	0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x69, 0x76, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -154,15 +204,16 @@ func file_protos_objective_proto_rawDescGZIP() []byte {
 	return file_protos_objective_proto_rawDescData
 }
 
-var file_protos_objective_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_protos_objective_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_protos_objective_proto_goTypes = []interface{}{
-	(*Objective)(nil), // 0: objective.Objective
-	nil,               // 1: objective.Objective.MetadataEntry
+	(*Objective)(nil),      // 0: objective.Objective
+	(*ObjectiveQuery)(nil), // 1: objective.ObjectiveQuery
+	nil,                    // 2: objective.Objective.MetadataEntry
 }
 var file_protos_objective_proto_depIdxs = []int32{
-	1, // 0: objective.Objective.metadata:type_name -> objective.Objective.MetadataEntry
+	2, // 0: objective.Objective.metadata:type_name -> objective.Objective.MetadataEntry
 	0, // 1: objective.ObjectiveService.RegisterObjective:input_type -> objective.Objective
-	0, // 2: objective.ObjectiveService.QueryObjective:input_type -> objective.Objective
+	1, // 2: objective.ObjectiveService.QueryObjective:input_type -> objective.ObjectiveQuery
 	0, // 3: objective.ObjectiveService.RegisterObjective:output_type -> objective.Objective
 	0, // 4: objective.ObjectiveService.QueryObjective:output_type -> objective.Objective
 	3, // [3:5] is the sub-list for method output_type
@@ -190,6 +241,18 @@ func file_protos_objective_proto_init() {
 				return nil
 			}
 		}
+		file_protos_objective_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ObjectiveQuery); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -197,7 +260,7 @@ func file_protos_objective_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_protos_objective_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -224,7 +287,7 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ObjectiveServiceClient interface {
 	RegisterObjective(ctx context.Context, in *Objective, opts ...grpc.CallOption) (*Objective, error)
-	QueryObjective(ctx context.Context, in *Objective, opts ...grpc.CallOption) (*Objective, error)
+	QueryObjective(ctx context.Context, in *ObjectiveQuery, opts ...grpc.CallOption) (*Objective, error)
 }
 
 type objectiveServiceClient struct {
@@ -244,7 +307,7 @@ func (c *objectiveServiceClient) RegisterObjective(ctx context.Context, in *Obje
 	return out, nil
 }
 
-func (c *objectiveServiceClient) QueryObjective(ctx context.Context, in *Objective, opts ...grpc.CallOption) (*Objective, error) {
+func (c *objectiveServiceClient) QueryObjective(ctx context.Context, in *ObjectiveQuery, opts ...grpc.CallOption) (*Objective, error) {
 	out := new(Objective)
 	err := c.cc.Invoke(ctx, "/objective.ObjectiveService/QueryObjective", in, out, opts...)
 	if err != nil {
@@ -256,7 +319,7 @@ func (c *objectiveServiceClient) QueryObjective(ctx context.Context, in *Objecti
 // ObjectiveServiceServer is the server API for ObjectiveService service.
 type ObjectiveServiceServer interface {
 	RegisterObjective(context.Context, *Objective) (*Objective, error)
-	QueryObjective(context.Context, *Objective) (*Objective, error)
+	QueryObjective(context.Context, *ObjectiveQuery) (*Objective, error)
 }
 
 // UnimplementedObjectiveServiceServer can be embedded to have forward compatible implementations.
@@ -266,7 +329,7 @@ type UnimplementedObjectiveServiceServer struct {
 func (*UnimplementedObjectiveServiceServer) RegisterObjective(context.Context, *Objective) (*Objective, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterObjective not implemented")
 }
-func (*UnimplementedObjectiveServiceServer) QueryObjective(context.Context, *Objective) (*Objective, error) {
+func (*UnimplementedObjectiveServiceServer) QueryObjective(context.Context, *ObjectiveQuery) (*Objective, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryObjective not implemented")
 }
 
@@ -293,7 +356,7 @@ func _ObjectiveService_RegisterObjective_Handler(srv interface{}, ctx context.Co
 }
 
 func _ObjectiveService_QueryObjective_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Objective)
+	in := new(ObjectiveQuery)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -305,7 +368,7 @@ func _ObjectiveService_QueryObjective_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/objective.ObjectiveService/QueryObjective",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ObjectiveServiceServer).QueryObjective(ctx, req.(*Objective))
+		return srv.(ObjectiveServiceServer).QueryObjective(ctx, req.(*ObjectiveQuery))
 	}
 	return interceptor(ctx, in, info, handler)
 }

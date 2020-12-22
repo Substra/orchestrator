@@ -12,7 +12,11 @@ message Objective {
     map<string, string> metadata = 5;
 }
 
+message ObjectiveQuery {
+    string key = 1;
+}
+
 service ObjectiveService{
     rpc RegisterObjective(Objective) returns (Objective) {}
-    rpc QueryObjective(Objective) returns (Objective) {}
+    rpc QueryObjective(ObjectiveQuery) returns (Objective) {}
 }

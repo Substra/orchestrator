@@ -5,6 +5,8 @@ go 1.15
 require (
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.4 // indirect
+	github.com/hyperledger/fabric-sdk-go v1.0.0-rc1
+	github.com/stretchr/testify v1.5.1
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
 	golang.org/x/sys v0.0.0-20201221093633-bc327ba9c2f0 // indirect
 	golang.org/x/text v0.3.4 // indirect
