@@ -1,29 +1,26 @@
 package node
 
 import (
-	"context"
-
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	nodeService "github.com/substrafoundation/substra-orchestrator/lib/assets/node"
+	"github.com/substrafoundation/substra-orchestrator/chaincode/ledger"
+	nodeAsset "github.com/substrafoundation/substra-orchestrator/lib/assets/node"
 )
 
 // SmartContract manages nodes
 type SmartContract struct {
 	contractapi.Contract
-	server *nodeService.Server
-}
-
-func NewNodeContract(server *nodeService.Server) *SmartContract {
-	return &SmartContract{
-		server: server,
-	}
 }
 
 // RegisterNode creates a new node in world state
 func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface, id string) error {
-	node := nodeService.Node{Id: id}
+	db, err := ledger.GetLedgerFromContext(ctx)
+	if err != nil {
+		return err
+	}
 
-	_, err := s.server.RegisterNode(context.Background(), &node)
+	service := nodeAsset.NewService(db)
+	node := nodeAsset.Node{Id: id}
 
+	err = service.RegisterNode(&node)
 	return err
 }

@@ -12,7 +12,6 @@ import (
 	"github.com/substrafoundation/substra-orchestrator/database"
 	"github.com/substrafoundation/substra-orchestrator/lib/assets/node"
 	"github.com/substrafoundation/substra-orchestrator/lib/assets/objective"
-	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
 	"google.golang.org/grpc"
 )
 
@@ -75,9 +74,7 @@ func RunServerWithoutChainCode() {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-	factory := func(_ interface{}) (persistence.Database, error) {
-		return database.NewRedisDB(rdb), nil
-	}
+	db := database.NewRedisDB(rdb)
 
 	listen, err := net.Listen("tcp", ":9000")
 	if err != nil {
@@ -85,8 +82,8 @@ func RunServerWithoutChainCode() {
 	}
 
 	server := grpc.NewServer()
-	node.RegisterNodeServiceServer(server, node.NewServer(factory))
-	objective.RegisterObjectiveServiceServer(server, objective.NewServer(factory))
+	node.RegisterNodeServiceServer(server, node.NewServer(node.NewService(db)))
+	objective.RegisterObjectiveServiceServer(server, objective.NewServer(objective.NewService(db)))
 
 	if err := server.Serve(listen); err != nil {
 		log.Fatalf("failed to server grpc server on port 9000: %v", err)
