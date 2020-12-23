@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	testHelper "github.com/substrafoundation/substra-orchestrator/chaincode/testing"
 	"github.com/substrafoundation/substra-orchestrator/lib/assets/objective"
@@ -54,4 +55,16 @@ func TestGetObjective(t *testing.T) {
 
 	ctx := new(testHelper.MockedContext)
 	contract.QueryObjective(ctx, "uuid")
+}
+
+func TestResponseFromAsset(t *testing.T) {
+	objective := objective.Objective{}
+
+	r := responseFromAsset(&objective)
+
+	assert.Equal(t, objective.Key, r.Key, "Key should be equal")
+	assert.Equal(t, objective.Name, r.Name, "Name should be equal")
+	assert.Equal(t, objective.TestDataset, r.TestDataset, "TestDataset should be equal")
+	assert.Equal(t, objective.Permissions, r.Permissions, "Permissions should be equal")
+	assert.Equal(t, objective.Metadata, r.Metadata, "Metadata should be equal")
 }

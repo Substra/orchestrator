@@ -22,10 +22,15 @@ func main() {
 	logger.SetOutput(os.Stdout)
 	logger.SetLevel(logrus.DebugLevel)
 
-	chaincode, err := contractapi.NewChaincode(node.NewSmartContract(), objective.NewSmartContract())
+	nodeContract := node.NewSmartContract()
+	nodeContract.Name = "org.substra.node"
+	objectiveContract := objective.NewSmartContract()
+	objectiveContract.Name = "org.substra.objective"
+
+	chaincode, err := contractapi.NewChaincode(nodeContract, objectiveContract)
 
 	if err != nil {
-		log.Fatal("Error create substra chaincode", err.Error())
+		log.Fatal("Error creating substra chaincode", err.Error())
 	}
 
 	if err := chaincode.Start(); err != nil {
