@@ -122,7 +122,7 @@ Type this in another terminal to invoke chaincode:
 export PATH=$CLONE_DIR/build/bin:\$PATH
 export FABRIC_CFG_PATH=$CLONE_DIR/sampleconfig
 
-CORE_PEER_ADDRESS=127.0.0.1:7051 peer chaincode invoke -o 127.0.0.1:7050 -C ch1 -n mycc -c '{"Args":["QueryNodes"]}'
+CORE_PEER_ADDRESS=127.0.0.1:7051 peer chaincode invoke -o 127.0.0.1:7050 -C ch1 -n mycc -c '{"Args":["org.substra.node:RegisterNode", "uuid"]}'
 EOF
         read input
     done
