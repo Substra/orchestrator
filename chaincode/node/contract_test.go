@@ -33,8 +33,8 @@ func (m *MockedService) RegisterNode(n *node.Node) error {
 	return args.Error(0)
 }
 
-func mockFactory(mock node.Manager) func(c contractapi.TransactionContextInterface) (node.Manager, error) {
-	return func(_ contractapi.TransactionContextInterface) (node.Manager, error) {
+func mockFactory(mock node.API) func(c contractapi.TransactionContextInterface) (node.API, error) {
+	return func(_ contractapi.TransactionContextInterface) (node.API, error) {
 		return mock, nil
 	}
 }

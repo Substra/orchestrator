@@ -6,13 +6,13 @@ import (
 	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
 )
 
-// Manager defines the methods to act on Nodes
-type Manager interface {
+// API defines the methods to act on Nodes
+type API interface {
 	RegisterNode(*Node) error
 }
 
 // Service is the node manipulation entry point
-// it implements the Manager interface
+// it implements the API
 type Service struct {
 	db persistence.Database
 }

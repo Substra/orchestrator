@@ -6,7 +6,7 @@ import (
 	nodeAsset "github.com/substrafoundation/substra-orchestrator/lib/assets/node"
 )
 
-func getServiceFromContext(ctx contractapi.TransactionContextInterface) (nodeAsset.Manager, error) {
+func getServiceFromContext(ctx contractapi.TransactionContextInterface) (nodeAsset.API, error) {
 	db, err := ledger.GetLedgerFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func getServiceFromContext(ctx contractapi.TransactionContextInterface) (nodeAss
 // SmartContract manages nodes
 type SmartContract struct {
 	contractapi.Contract
-	serviceFactory func(contractapi.TransactionContextInterface) (nodeAsset.Manager, error)
+	serviceFactory func(contractapi.TransactionContextInterface) (nodeAsset.API, error)
 }
 
 func NewSmartContract() *SmartContract {
