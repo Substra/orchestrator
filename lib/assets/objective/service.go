@@ -6,7 +6,14 @@ import (
 	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
 )
 
+// Manager defines the methods to act on Objectives
+type Manager interface {
+	RegisterObjective(*Objective) error
+	GetObjective(string) (*Objective, error)
+}
+
 // Service is the objective manipulation entry point
+// it implements the Manager interface
 type Service struct {
 	db persistence.Database
 }

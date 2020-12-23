@@ -6,14 +6,14 @@ import (
 	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
 )
 
-// GetLedgerFromContext implements database.Factory and will return the ledger DB from invocation context
-func GetLedgerFromContext(ctx interface{}) (persistence.Database, error) {
-	stub := ctx.(contractapi.TransactionContextInterface).GetStub()
+// GetLedgerFromContext will return the ledger DB from invocation context
+func GetLedgerFromContext(ctx contractapi.TransactionContextInterface) (persistence.Database, error) {
+	stub := ctx.GetStub()
 
 	return &DB{ccStub: stub}, nil
 }
 
-// DB is the distributed ledger persistence layer
+// DB is the distributed ledger persistence layer implementing persistence.Database
 type DB struct {
 	ccStub shim.ChaincodeStubInterface
 }

@@ -21,7 +21,7 @@ func main() {
 	logger.SetOutput(os.Stdout)
 	logger.SetLevel(logrus.DebugLevel)
 
-	chaincode, err := contractapi.NewChaincode(&node.SmartContract{})
+	chaincode, err := contractapi.NewChaincode(node.NewSmartContract())
 
 	if err != nil {
 		log.Fatal("Error create substra chaincode", err.Error())
