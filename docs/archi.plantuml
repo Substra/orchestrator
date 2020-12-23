@@ -1,0 +1,15 @@
+@startuml
+object "orchestrator (standalone)" as os
+object chaincode
+
+object "gRPC server" as grpc
+object "smartContract" as sc
+object "AssetService (business logic)" as services
+object "Persistence layer" as db
+
+os --> grpc
+grpc --> services
+chaincode --> sc
+sc --> services
+services --> db
+@enduml
