@@ -1,8 +1,15 @@
 assets = ./lib/assets
 protos = ./lib/protos
+CHAINCODE_BIN = chaincode.bin
+ORCHESTRATOR_BIN = orchestrator
+
+all: orchestrator chaincode
 
 orchestrator: protos
-	go build -o orchestrator .
+	go build -o $(ORCHESTRATOR_BIN) .
+
+chaincode: protos
+	go build -o $(CHAINCODE_BIN) ./chaincode
 
 protos: $(assets)/node/node.pb.go $(assets)/objective/objective.pb.go
 
@@ -14,7 +21,8 @@ $(assets)/objective/objective.pb.go: $(protos)/objective.proto
 
 .PHONY: clean
 clean:
-	rm orchestrator
+	rm $(ORCHESTRATOR_BIN)
+	rm $(CHAINCODE_BIN)
 
 .PHONY: test
 test:
