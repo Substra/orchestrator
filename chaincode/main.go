@@ -7,6 +7,7 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/sirupsen/logrus"
 	"github.com/substrafoundation/substra-orchestrator/chaincode/node"
+	"github.com/substrafoundation/substra-orchestrator/chaincode/objective"
 )
 
 var logger = logrus.New()
@@ -21,7 +22,7 @@ func main() {
 	logger.SetOutput(os.Stdout)
 	logger.SetLevel(logrus.DebugLevel)
 
-	chaincode, err := contractapi.NewChaincode(node.NewSmartContract())
+	chaincode, err := contractapi.NewChaincode(node.NewSmartContract(), objective.NewSmartContract())
 
 	if err != nil {
 		log.Fatal("Error create substra chaincode", err.Error())

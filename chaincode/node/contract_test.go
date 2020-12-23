@@ -3,26 +3,11 @@ package node
 import (
 	"testing"
 
-	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
-	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/stretchr/testify/mock"
+	testHelper "github.com/substrafoundation/substra-orchestrator/chaincode/testing"
 	"github.com/substrafoundation/substra-orchestrator/lib/assets/node"
 )
-
-type MockedContext struct {
-	mock.Mock
-}
-
-func (m *MockedContext) GetStub() shim.ChaincodeStubInterface {
-	args := m.Called()
-	return args.Get(0).(shim.ChaincodeStubInterface)
-}
-
-func (m *MockedContext) GetClientIdentity() cid.ClientIdentity {
-	args := m.Called()
-	return args.Get(0).(cid.ClientIdentity)
-}
 
 type MockedService struct {
 	mock.Mock
@@ -48,6 +33,6 @@ func TestRegistration(t *testing.T) {
 	o := &node.Node{Id: "uuid1"}
 	mockService.On("RegisterNode", o).Return(nil).Once()
 
-	ctx := new(MockedContext)
+	ctx := new(testHelper.MockedContext)
 	contract.RegisterNode(ctx, "uuid1")
 }
