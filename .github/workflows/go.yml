@@ -1,0 +1,43 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+    - "master"
+  pull_request:
+    branches:
+    - "master"
+env:
+    GO111MODULE: on
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v2
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15.x
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: build-${{ hashFiles('**/go.sum') }}
+      - name: Lint
+        uses: Jerome1337/golint-action@v1.0.2
+        with:
+          golint-path: ./...
+      - name: Install protobuf codegen tool
+        run: |
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip
+          unzip protoc-3.14.0-linux-x86_64.zip -d $HOME/.local
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          go install google.golang.org/protobuf/cmd/protoc-gen-go
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+      - name: Build
+        run: make
+      - name: Test
+        run: make test
