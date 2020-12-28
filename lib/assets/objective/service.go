@@ -25,6 +25,7 @@ func NewService(db persistence.Database) *Service {
 	return &Service{db: db}
 }
 
+// RegisterObjective persist an objective
 func (s *Service) RegisterObjective(o *Objective) error {
 	b, err := json.Marshal(o)
 	if err != nil {
@@ -35,6 +36,7 @@ func (s *Service) RegisterObjective(o *Objective) error {
 	return nil
 }
 
+// GetObjective retrieves an objective by its ID
 func (s *Service) GetObjective(id string) (*Objective, error) {
 	o := Objective{}
 

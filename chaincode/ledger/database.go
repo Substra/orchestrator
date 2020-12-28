@@ -43,6 +43,7 @@ func (l *DB) PutState(resource string, key string, data []byte) error {
 	return l.ccStub.PutState(k, b)
 }
 
+// GetState retrieves data for a given resource
 func (l *DB) GetState(resource string, key string) ([]byte, error) {
 	k := getFullKey(resource, key)
 	b, err := l.ccStub.GetState(k)
@@ -59,6 +60,7 @@ func (l *DB) GetState(resource string, key string) ([]byte, error) {
 	return buf, nil
 }
 
+// GetAll fetch all data for a given resource kind
 func (l *DB) GetAll(resource string) ([][]byte, error) {
 	queryString := fmt.Sprintf(`{"selector":{"docType":"%s"}}`, resource)
 

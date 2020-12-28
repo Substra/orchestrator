@@ -66,7 +66,7 @@ func RunServerWithChainCode() {
 	log.Println(result)
 }
 
-// RunServerWithoutChaincode will expose the chaincode logic through gRPC.
+// RunServerWithoutChainCode will expose the chaincode logic through gRPC.
 // State will be stored in a redis database.
 func RunServerWithoutChainCode() {
 	rdb := redis.NewClient(&redis.Options{

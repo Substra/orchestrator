@@ -21,6 +21,7 @@ type SmartContract struct {
 	serviceFactory func(contractapi.TransactionContextInterface) (objectiveAsset.API, error)
 }
 
+// NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
 	return &SmartContract{
 		serviceFactory: getServiceFromContext,
@@ -40,7 +41,8 @@ func (s *SmartContract) RegisterObjective(ctx contractapi.TransactionContextInte
 	return err
 }
 
-type ObjectiveResponse struct {
+// AssetResponse represents an objective
+type AssetResponse struct {
 	Key         string            `json:"key"`
 	Name        string            `json:"name"`
 	TestDataset string            `json:"testDataset"`
@@ -48,8 +50,8 @@ type ObjectiveResponse struct {
 	Metadata    map[string]string `json:"metadata"`
 }
 
-func responseFromAsset(o *objectiveAsset.Objective) *ObjectiveResponse {
-	return &ObjectiveResponse{
+func responseFromAsset(o *objectiveAsset.Objective) *AssetResponse {
+	return &AssetResponse{
 		Key:         o.Key,
 		Name:        o.Name,
 		TestDataset: o.TestDataset,
@@ -58,7 +60,8 @@ func responseFromAsset(o *objectiveAsset.Objective) *ObjectiveResponse {
 	}
 }
 
-func (s *SmartContract) QueryObjective(ctx contractapi.TransactionContextInterface, key string) (*ObjectiveResponse, error) {
+// QueryObjective will return the objective identified by the given key
+func (s *SmartContract) QueryObjective(ctx contractapi.TransactionContextInterface, key string) (*AssetResponse, error) {
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
 		return nil, err

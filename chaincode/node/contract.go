@@ -21,21 +21,22 @@ type SmartContract struct {
 	serviceFactory func(contractapi.TransactionContextInterface) (nodeAsset.API, error)
 }
 
+// NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
 	return &SmartContract{
 		serviceFactory: getServiceFromContext,
 	}
 }
 
-// NodeResponse represents a Node
-type NodeResponse struct {
-	Id string `json:"id"`
+// AssetResponse represents a Node
+type AssetResponse struct {
+	ID string `json:"id"`
 }
 
 // responseFromAsset will convert a node into a NodeResponse
-func responseFromAsset(n *nodeAsset.Node) *NodeResponse {
-	return &NodeResponse{
-		Id: n.Id,
+func responseFromAsset(n *nodeAsset.Node) *AssetResponse {
+	return &AssetResponse{
+		ID: n.Id,
 	}
 }
 
@@ -52,13 +53,14 @@ func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface
 	return err
 }
 
-func (s *SmartContract) QueryNodes(ctx contractapi.TransactionContextInterface) ([]*NodeResponse, error) {
+// QueryNodes retrieves all known nodes
+func (s *SmartContract) QueryNodes(ctx contractapi.TransactionContextInterface) ([]*AssetResponse, error) {
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var r []*NodeResponse
+	var r []*AssetResponse
 
 	nodes, err := service.GetNodes()
 

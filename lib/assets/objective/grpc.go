@@ -12,6 +12,7 @@ type Server struct {
 	objectiveService *Service
 }
 
+// NewServer creates a grpc server
 func NewServer(service *Service) *Server {
 	return &Server{objectiveService: service}
 }

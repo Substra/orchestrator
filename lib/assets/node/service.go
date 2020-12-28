@@ -25,6 +25,7 @@ func NewService(db persistence.Database) *Service {
 	return &Service{db: db}
 }
 
+// RegisterNode persist a node
 func (s *Service) RegisterNode(n *Node) error {
 	nodeBytes, err := json.Marshal(n)
 	if err != nil {
@@ -36,6 +37,7 @@ func (s *Service) RegisterNode(n *Node) error {
 	return nil
 }
 
+// GetNodes list all known nodes
 func (s *Service) GetNodes() ([]*Node, error) {
 	b, err := s.db.GetAll(resource)
 	if err != nil {
