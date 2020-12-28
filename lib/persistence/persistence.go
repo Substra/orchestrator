@@ -10,10 +10,11 @@ type Database interface {
 
 // DBWriter handles persisting and updating data
 type DBWriter interface {
-	PutState(key string, data []byte) error
+	PutState(resource string, key string, data []byte) error
 }
 
 // DBReader handles data retrieval
 type DBReader interface {
-	GetState(key string) ([]byte, error)
+	GetState(resource string, key string) ([]byte, error)
+	GetAll(resource string) ([][]byte, error)
 }

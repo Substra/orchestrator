@@ -1,8 +1,6 @@
 package node
 
 import (
-	"log"
-
 	"golang.org/x/net/context"
 )
 
@@ -19,9 +17,15 @@ func NewServer(service *Service) *Server {
 
 // RegisterNode will add a new node to the network
 func (s *Server) RegisterNode(ctx context.Context, n *Node) (*Node, error) {
-	log.Println(n)
-	log.Printf("node: %s, %s, %s", n.GetId(), n.GetModelKey(), n.GetFoo())
-
 	err := s.nodeService.RegisterNode(n)
 	return n, err
+}
+
+// QueryNodes will return all known nodes
+func (s *Server) QueryNodes(ctx context.Context, in *NodeQueryParam) (*NodeQueryResponse, error) {
+	nodes, err := s.nodeService.GetNodes()
+
+	return &NodeQueryResponse{
+		Nodes: nodes,
+	}, err
 }

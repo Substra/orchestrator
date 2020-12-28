@@ -10,12 +10,10 @@ import (
 func TestRegistration(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
 	node := Node{
-		Id:       "uuid1",
-		ModelKey: "test",
-		Foo:      "bar",
+		Id: "uuid1",
 	}
 
-	mockDB.On("PutState", "uuid1", mock.Anything).Return(nil).Once()
+	mockDB.On("PutState", resource, "uuid1", mock.Anything).Return(nil).Once()
 
 	service := NewService(mockDB)
 

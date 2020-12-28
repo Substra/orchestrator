@@ -6,10 +6,15 @@ option go_package = ".;node";
 
 message Node {
     string id = 1;
-    string model_key=2;
-    string foo=3;
 }
 
-service NodeService{
+message NodeQueryResponse {
+    repeated Node nodes = 1;
+}
+
+message NodeQueryParam {}
+
+service NodeService {
     rpc RegisterNode(Node) returns (Node) {}
+    rpc QueryNodes(NodeQueryParam) returns (NodeQueryResponse) {}
 }

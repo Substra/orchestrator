@@ -1,6 +1,8 @@
 package ledger
 
 import (
+	"errors"
+
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
@@ -19,9 +21,12 @@ type DB struct {
 }
 
 // PutState stores data in the ledger
-func (l *DB) PutState(key string, data []byte) error {
+func (l *DB) PutState(resource string, key string, data []byte) error {
 	return l.ccStub.PutState(key, data)
 }
-func (l *DB) GetState(key string) ([]byte, error) {
+func (l *DB) GetState(resource string, key string) ([]byte, error) {
 	return l.ccStub.GetState(key)
+}
+func (l *DB) GetAll(resource string) ([][]byte, error) {
+	return [][]byte{}, errors.New("unimplemented")
 }

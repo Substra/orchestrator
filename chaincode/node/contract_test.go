@@ -18,6 +18,11 @@ func (m *MockedService) RegisterNode(n *node.Node) error {
 	return args.Error(0)
 }
 
+func (m *MockedService) GetNodes() ([]*node.Node, error) {
+	args := m.Called()
+	return args.Get(0).([]*node.Node), args.Error(1)
+}
+
 func mockFactory(mock node.API) func(c contractapi.TransactionContextInterface) (node.API, error) {
 	return func(_ contractapi.TransactionContextInterface) (node.API, error) {
 		return mock, nil

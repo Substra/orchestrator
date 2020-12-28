@@ -18,7 +18,7 @@ func TestRegistration(t *testing.T) {
 		Key: "objKey",
 	}
 
-	mockDB.On("PutState", "objKey", mock.Anything).Return(nil).Once()
+	mockDB.On("PutState", resource, "objKey", mock.Anything).Return(nil).Once()
 
 	service.RegisterObjective(&objective)
 }
@@ -35,7 +35,7 @@ func TestQuery(t *testing.T) {
 	objBytes, err := json.Marshal(&objective)
 	require.Nil(t, err)
 
-	mockDB.On("GetState", "objKey").Return(objBytes, nil).Once()
+	mockDB.On("GetState", resource, "objKey").Return(objBytes, nil).Once()
 
 	o, err := service.GetObjective("objKey")
 	require.Nil(t, err)

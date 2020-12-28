@@ -18,6 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NodeServiceClient interface {
 	RegisterNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	QueryNodes(ctx context.Context, in *NodeQueryParam, opts ...grpc.CallOption) (*NodeQueryResponse, error)
 }
 
 type nodeServiceClient struct {
@@ -37,11 +38,21 @@ func (c *nodeServiceClient) RegisterNode(ctx context.Context, in *Node, opts ...
 	return out, nil
 }
 
+func (c *nodeServiceClient) QueryNodes(ctx context.Context, in *NodeQueryParam, opts ...grpc.CallOption) (*NodeQueryResponse, error) {
+	out := new(NodeQueryResponse)
+	err := c.cc.Invoke(ctx, "/node.NodeService/QueryNodes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NodeServiceServer is the server API for NodeService service.
 // All implementations must embed UnimplementedNodeServiceServer
 // for forward compatibility
 type NodeServiceServer interface {
 	RegisterNode(context.Context, *Node) (*Node, error)
+	QueryNodes(context.Context, *NodeQueryParam) (*NodeQueryResponse, error)
 	mustEmbedUnimplementedNodeServiceServer()
 }
 
@@ -51,6 +62,9 @@ type UnimplementedNodeServiceServer struct {
 
 func (UnimplementedNodeServiceServer) RegisterNode(context.Context, *Node) (*Node, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterNode not implemented")
+}
+func (UnimplementedNodeServiceServer) QueryNodes(context.Context, *NodeQueryParam) (*NodeQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryNodes not implemented")
 }
 func (UnimplementedNodeServiceServer) mustEmbedUnimplementedNodeServiceServer() {}
 
@@ -83,6 +97,24 @@ func _NodeService_RegisterNode_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NodeService_QueryNodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NodeQueryParam)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeServiceServer).QueryNodes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/node.NodeService/QueryNodes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeServiceServer).QueryNodes(ctx, req.(*NodeQueryParam))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _NodeService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "node.NodeService",
 	HandlerType: (*NodeServiceServer)(nil),
@@ -90,6 +122,10 @@ var _NodeService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterNode",
 			Handler:    _NodeService_RegisterNode_Handler,
+		},
+		{
+			MethodName: "QueryNodes",
+			Handler:    _NodeService_QueryNodes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

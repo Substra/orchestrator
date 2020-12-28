@@ -17,11 +17,19 @@ func NewRedisDB(rdb *redis.Client) *RedisDB {
 	}
 }
 
-func (r *RedisDB) PutState(key string, data []byte) error {
-	return r.rdb.Set(context.Background(), key, data, 0).Err()
+func (r *RedisDB) PutState(resource string, key string, data []byte) error {
+	return r.rdb.HSet(context.Background(), resource, key, data).Err()
 }
 
-func (r *RedisDB) GetState(key string) ([]byte, error) {
-	s, err := r.rdb.Get(context.Background(), key).Result()
+func (r *RedisDB) GetState(resource string, key string) ([]byte, error) {
+	s, err := r.rdb.HGet(context.Background(), resource, key).Result()
 	return []byte(s), err
+}
+
+func (r *RedisDB) GetAll(resource string) (result [][]byte, err error) {
+	s, err := r.rdb.HGetAll(context.Background(), resource).Result()
+	for _, v := range s {
+		result = append(result, []byte(v))
+	}
+	return
 }

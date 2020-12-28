@@ -6,6 +6,8 @@ import (
 	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
 )
 
+const resource = "objectives"
+
 // API defines the methods to act on Objectives
 type API interface {
 	RegisterObjective(*Objective) error
@@ -29,14 +31,14 @@ func (s *Service) RegisterObjective(o *Objective) error {
 		return err
 	}
 
-	s.db.PutState(o.GetKey(), b)
+	s.db.PutState(resource, o.GetKey(), b)
 	return nil
 }
 
 func (s *Service) GetObjective(id string) (*Objective, error) {
 	o := Objective{}
 
-	b, err := s.db.GetState(id)
+	b, err := s.db.GetState(resource, id)
 	if err != nil {
 		return &o, err
 	}
