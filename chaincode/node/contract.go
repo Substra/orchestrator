@@ -27,6 +27,17 @@ func NewSmartContract() *SmartContract {
 	}
 }
 
+// NodeResponse represents a Node
+type NodeResponse struct {
+	Id string `json:"id"`
+}
+
+func responseFromAsset(n *nodeAsset.Node) *NodeResponse {
+	return &NodeResponse{
+		Id: n.Id,
+	}
+}
+
 // RegisterNode creates a new node in world state
 func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface, id string) error {
 	service, err := s.serviceFactory(ctx)
@@ -38,4 +49,21 @@ func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface
 
 	err = service.RegisterNode(&node)
 	return err
+}
+
+func (s *SmartContract) QueryNodes(ctx contractapi.TransactionContextInterface) ([]*NodeResponse, error) {
+	service, err := s.serviceFactory(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var r []*NodeResponse
+
+	nodes, err := service.GetNodes()
+
+	for _, n := range nodes {
+		r = append(r, responseFromAsset(n))
+	}
+
+	return r, err
 }
