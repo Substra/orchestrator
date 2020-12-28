@@ -15,9 +15,11 @@
 package main
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 
+	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/sirupsen/logrus"
 	"github.com/substrafoundation/substra-orchestrator/chaincode/node"
@@ -44,10 +46,39 @@ func main() {
 	chaincode, err := contractapi.NewChaincode(nodeContract, objectiveContract)
 
 	if err != nil {
-		log.Fatal("Error creating substra chaincode", err.Error())
+		log.Fatal("error creating substra chaincode", err.Error())
 	}
 
-	if err := chaincode.Start(); err != nil {
-		panic(err.Error())
+	key, err := ioutil.ReadFile(os.Getenv("TLS_KEY_FILE"))
+	if err != nil {
+		logger.Errorf("unable to read key file with path=%s, error: %s", os.Getenv("TLS_KEY_FILE"), err)
+	}
+
+	cert, err := ioutil.ReadFile(os.Getenv("TLS_CERT_FILE"))
+	if err != nil {
+		logger.Errorf("unable to read cert file with path %s, error: %s", os.Getenv("TLS_CERT_FILE"), err)
+	}
+
+	ca, err := ioutil.ReadFile(os.Getenv("TLS_ROOTCERT_FILE"))
+	if err != nil {
+		logger.Errorf("unable to read ca cert file with path: %s, error: %s", os.Getenv("TLS_CERT_FILE"), err)
+	}
+
+	server := &shim.ChaincodeServer{
+		CCID:    os.Getenv("CHAINCODE_CCID"),
+		Address: os.Getenv("CHAINCODE_ADDRESS"),
+		CC:      chaincode,
+		TLSProps: shim.TLSProperties{
+			Disabled:      false,
+			Key:           key,
+			Cert:          cert,
+			ClientCACerts: ca,
+		},
+	}
+
+	// Start the chaincode external server
+	logger.Infof("starting substra chaincode server")
+	if err = server.Start(); err != nil {
+		logger.Errorf("error happened while starting chaincode %s, version: %s : %s", chaincode.Info.Title, chaincode.Info.Version, err)
 	}
 }
