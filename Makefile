@@ -1,23 +1,20 @@
 assets = ./lib/assets
-protos = ./lib/protos
 CHAINCODE_BIN = chaincode.bin
 ORCHESTRATOR_BIN = orchestrator
 
+protobufs = $(wildcard $(assets)/*/*.proto)
+pbgo = $(protobufs:.proto=.pb.go)
+
 all: orchestrator chaincode
 
-orchestrator: protos
+orchestrator: $(pbgo)
 	go build -o $(ORCHESTRATOR_BIN) .
 
-chaincode: protos
+chaincode: $(pbgo)
 	go build -o $(CHAINCODE_BIN) ./chaincode
 
-protos: $(assets)/node/node.pb.go $(assets)/objective/objective.pb.go
-
-$(assets)/node/node.pb.go: $(protos)/node.proto
-	protoc --proto_path=lib/protos --go-grpc_out=lib/assets/node --go_out=lib/assets/node lib/protos/node.proto
-
-$(assets)/objective/objective.pb.go: $(protos)/objective.proto
-	protoc --proto_path=lib/protos --go-grpc_out=lib/assets/objective --go_out=lib/assets/objective lib/protos/objective.proto
+$(pbgo): %.pb.go: %.proto
+	protoc --proto_path=$(dir $<) --go-grpc_out=$(dir $@) --go_out=$(dir $@) $<
 
 .PHONY: clean
 clean:
