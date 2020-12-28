@@ -32,6 +32,7 @@ type NodeResponse struct {
 	Id string `json:"id"`
 }
 
+// responseFromAsset will convert a node into a NodeResponse
 func responseFromAsset(n *nodeAsset.Node) *NodeResponse {
 	return &NodeResponse{
 		Id: n.Id,
