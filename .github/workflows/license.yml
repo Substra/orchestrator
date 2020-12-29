@@ -1,0 +1,25 @@
+name: License header
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  check:
+    name: Check license header
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Golang
+        uses: actions/setup-go@v2
+      - name: Install addlicense
+        run: |
+            echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+            go install github.com/google/addlicense
+      - name: Check license
+        run: |
+            addlicense -check -l apache -c "Owkin Inc." $(find $PWD -type f -name '*.go') $(find $PWD -type f -name '*.proto')
