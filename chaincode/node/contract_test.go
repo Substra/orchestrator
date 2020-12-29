@@ -3,8 +3,11 @@ package node
 import (
 	"testing"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/hyperledger/fabric-protos-go/msp"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	testHelper "github.com/substrafoundation/substra-orchestrator/chaincode/testing"
 	"github.com/substrafoundation/substra-orchestrator/lib/assets/node"
 )
@@ -35,9 +38,22 @@ func TestRegistration(t *testing.T) {
 		serviceFactory: mockFactory(mockService),
 	}
 
-	o := &node.Node{Id: "uuid1"}
+	org := "TestOrg"
+
+	o := &node.Node{Id: org}
 	mockService.On("RegisterNode", o).Return(nil).Once()
 
+	sID := msp.SerializedIdentity{
+		Mspid: org,
+	}
+	b, err := proto.Marshal(&sID)
+	require.Nil(t, err, "SID marshal should not fail")
+
+	stub := new(testHelper.MockedStub)
+	stub.On("GetCreator").Return(b, nil).Once()
+
 	ctx := new(testHelper.MockedContext)
-	contract.RegisterNode(ctx, "uuid1")
+	ctx.On("GetStub").Return(stub).Once()
+
+	contract.RegisterNode(ctx)
 }

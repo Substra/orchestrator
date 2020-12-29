@@ -41,13 +41,15 @@ func responseFromAsset(n *nodeAsset.Node) *AssetResponse {
 }
 
 // RegisterNode creates a new node in world state
-func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface, id string) error {
+func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface) error {
+	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
+
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
 		return err
 	}
 
-	node := nodeAsset.Node{Id: id}
+	node := nodeAsset.Node{Id: txCreator}
 
 	err = service.RegisterNode(&node)
 	return err
