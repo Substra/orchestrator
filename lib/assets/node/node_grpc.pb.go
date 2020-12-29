@@ -76,7 +76,7 @@ type UnsafeNodeServiceServer interface {
 }
 
 func RegisterNodeServiceServer(s grpc.ServiceRegistrar, srv NodeServiceServer) {
-	s.RegisterService(&_NodeService_serviceDesc, srv)
+	s.RegisterService(&NodeService_ServiceDesc, srv)
 }
 
 func _NodeService_RegisterNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -115,7 +115,10 @@ func _NodeService_QueryNodes_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-var _NodeService_serviceDesc = grpc.ServiceDesc{
+// NodeService_ServiceDesc is the grpc.ServiceDesc for NodeService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var NodeService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "node.NodeService",
 	HandlerType: (*NodeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
@@ -129,5 +132,5 @@ var _NodeService_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "node.proto",
+	Metadata: "lib/assets/node/node.proto",
 }

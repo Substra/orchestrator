@@ -56,8 +56,10 @@ func TestRegistration(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 	ctx.On("GetStub").Return(stub).Once()
 
-	err = contract.RegisterNode(ctx)
+	node, err := contract.RegisterNode(ctx)
 	assert.Nil(t, err, "node registration should not fail")
+
+	assert.Equal(t, node, o)
 }
 
 func TestQueryNodes(t *testing.T) {

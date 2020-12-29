@@ -19,3 +19,5 @@ require (
 	google.golang.org/grpc v1.34.0
 	google.golang.org/protobuf v1.25.0
 )
+
+replace github.com/hyperledger/fabric-contract-api-go => github.com/mblottiere/fabric-contract-api-go v1.1.2-0.20201229163308-647252c97ff1

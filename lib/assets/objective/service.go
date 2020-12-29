@@ -12,6 +12,7 @@ const resource = "objectives"
 type API interface {
 	RegisterObjective(*Objective) error
 	GetObjective(string) (*Objective, error)
+	GetObjectives() ([]*Objective, error)
 }
 
 // Service is the objective manipulation entry point
@@ -47,4 +48,25 @@ func (s *Service) GetObjective(id string) (*Objective, error) {
 
 	err = json.Unmarshal(b, &o)
 	return &o, err
+}
+
+// GetObjectives returns all stored objectives
+func (s *Service) GetObjectives() ([]*Objective, error) {
+	b, err := s.db.GetAll(resource)
+	if err != nil {
+		return nil, err
+	}
+
+	var objectives []*Objective
+
+	for _, nodeBytes := range b {
+		o := Objective{}
+		err = json.Unmarshal(nodeBytes, &o)
+		if err != nil {
+			return nil, err
+		}
+		objectives = append(objectives, &o)
+	}
+
+	return objectives, nil
 }

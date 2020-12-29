@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package assets;
+
+option go_package = "github.com/substrafoundation/substra-orchestrator/lib/assets";
+
+enum SortOrder {
+    ASCENDING = 0;
+    DESCENDING = 1;
+}

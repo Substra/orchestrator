@@ -27,6 +27,6 @@ func (s *Server) RegisterObjective(ctx context.Context, o *Objective) (*Objectiv
 }
 
 // QueryObjective fetches an objective by its key
-func (s *Server) QueryObjective(ctx context.Context, q *ObjectiveQuery) (*Objective, error) {
-	return s.objectiveService.GetObjective(q.GetKey())
+func (s *Server) QueryObjective(ctx context.Context, key string) (*Objective, error) {
+	return s.objectiveService.GetObjective(key)
 }

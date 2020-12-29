@@ -18,7 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ObjectiveServiceClient interface {
 	RegisterObjective(ctx context.Context, in *Objective, opts ...grpc.CallOption) (*Objective, error)
-	QueryObjective(ctx context.Context, in *ObjectiveQuery, opts ...grpc.CallOption) (*Objective, error)
+	QueryObjectives(ctx context.Context, in *ObjectiveQueryParam, opts ...grpc.CallOption) (*ObjectiveQueryResponse, error)
+	GetLeaderboard(ctx context.Context, in *LeaderboardQueryParam, opts ...grpc.CallOption) (*Leaderboard, error)
 }
 
 type objectiveServiceClient struct {
@@ -38,9 +39,18 @@ func (c *objectiveServiceClient) RegisterObjective(ctx context.Context, in *Obje
 	return out, nil
 }
 
-func (c *objectiveServiceClient) QueryObjective(ctx context.Context, in *ObjectiveQuery, opts ...grpc.CallOption) (*Objective, error) {
-	out := new(Objective)
-	err := c.cc.Invoke(ctx, "/objective.ObjectiveService/QueryObjective", in, out, opts...)
+func (c *objectiveServiceClient) QueryObjectives(ctx context.Context, in *ObjectiveQueryParam, opts ...grpc.CallOption) (*ObjectiveQueryResponse, error) {
+	out := new(ObjectiveQueryResponse)
+	err := c.cc.Invoke(ctx, "/objective.ObjectiveService/QueryObjectives", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *objectiveServiceClient) GetLeaderboard(ctx context.Context, in *LeaderboardQueryParam, opts ...grpc.CallOption) (*Leaderboard, error) {
+	out := new(Leaderboard)
+	err := c.cc.Invoke(ctx, "/objective.ObjectiveService/GetLeaderboard", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +62,8 @@ func (c *objectiveServiceClient) QueryObjective(ctx context.Context, in *Objecti
 // for forward compatibility
 type ObjectiveServiceServer interface {
 	RegisterObjective(context.Context, *Objective) (*Objective, error)
-	QueryObjective(context.Context, *ObjectiveQuery) (*Objective, error)
+	QueryObjectives(context.Context, *ObjectiveQueryParam) (*ObjectiveQueryResponse, error)
+	GetLeaderboard(context.Context, *LeaderboardQueryParam) (*Leaderboard, error)
 	mustEmbedUnimplementedObjectiveServiceServer()
 }
 
@@ -63,8 +74,11 @@ type UnimplementedObjectiveServiceServer struct {
 func (UnimplementedObjectiveServiceServer) RegisterObjective(context.Context, *Objective) (*Objective, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterObjective not implemented")
 }
-func (UnimplementedObjectiveServiceServer) QueryObjective(context.Context, *ObjectiveQuery) (*Objective, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryObjective not implemented")
+func (UnimplementedObjectiveServiceServer) QueryObjectives(context.Context, *ObjectiveQueryParam) (*ObjectiveQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryObjectives not implemented")
+}
+func (UnimplementedObjectiveServiceServer) GetLeaderboard(context.Context, *LeaderboardQueryParam) (*Leaderboard, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLeaderboard not implemented")
 }
 func (UnimplementedObjectiveServiceServer) mustEmbedUnimplementedObjectiveServiceServer() {}
 
@@ -76,7 +90,7 @@ type UnsafeObjectiveServiceServer interface {
 }
 
 func RegisterObjectiveServiceServer(s grpc.ServiceRegistrar, srv ObjectiveServiceServer) {
-	s.RegisterService(&_ObjectiveService_serviceDesc, srv)
+	s.RegisterService(&ObjectiveService_ServiceDesc, srv)
 }
 
 func _ObjectiveService_RegisterObjective_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -97,25 +111,46 @@ func _ObjectiveService_RegisterObjective_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ObjectiveService_QueryObjective_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ObjectiveQuery)
+func _ObjectiveService_QueryObjectives_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ObjectiveQueryParam)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ObjectiveServiceServer).QueryObjective(ctx, in)
+		return srv.(ObjectiveServiceServer).QueryObjectives(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/objective.ObjectiveService/QueryObjective",
+		FullMethod: "/objective.ObjectiveService/QueryObjectives",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ObjectiveServiceServer).QueryObjective(ctx, req.(*ObjectiveQuery))
+		return srv.(ObjectiveServiceServer).QueryObjectives(ctx, req.(*ObjectiveQueryParam))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _ObjectiveService_serviceDesc = grpc.ServiceDesc{
+func _ObjectiveService_GetLeaderboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LeaderboardQueryParam)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjectiveServiceServer).GetLeaderboard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/objective.ObjectiveService/GetLeaderboard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjectiveServiceServer).GetLeaderboard(ctx, req.(*LeaderboardQueryParam))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ObjectiveService_ServiceDesc is the grpc.ServiceDesc for ObjectiveService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ObjectiveService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "objective.ObjectiveService",
 	HandlerType: (*ObjectiveServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
@@ -124,10 +159,14 @@ var _ObjectiveService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ObjectiveService_RegisterObjective_Handler,
 		},
 		{
-			MethodName: "QueryObjective",
-			Handler:    _ObjectiveService_QueryObjective_Handler,
+			MethodName: "QueryObjectives",
+			Handler:    _ObjectiveService_QueryObjectives_Handler,
+		},
+		{
+			MethodName: "GetLeaderboard",
+			Handler:    _ObjectiveService_GetLeaderboard_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "objective.proto",
+	Metadata: "lib/assets/objective/objective.proto",
 }

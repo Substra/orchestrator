@@ -1,8 +1,11 @@
 package objective
 
 import (
+	"errors"
+
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/substrafoundation/substra-orchestrator/chaincode/ledger"
+	"github.com/substrafoundation/substra-orchestrator/lib/assets"
 	objectiveAsset "github.com/substrafoundation/substra-orchestrator/lib/assets/objective"
 )
 
@@ -29,6 +32,7 @@ func NewSmartContract() *SmartContract {
 }
 
 // RegisterObjective creates a new objective in world state
+// If the key exists, it will override the existing value with the new one
 func (s *SmartContract) RegisterObjective(ctx contractapi.TransactionContextInterface, id string) error {
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
@@ -41,37 +45,22 @@ func (s *SmartContract) RegisterObjective(ctx contractapi.TransactionContextInte
 	return err
 }
 
-// AssetResponse represents an objective
-type AssetResponse struct {
-	Key         string            `json:"key"`
-	Name        string            `json:"name"`
-	TestDataset string            `json:"testDataset"`
-	Permissions []string          `json:"permissions"`
-	Metadata    map[string]string `json:"metadata"`
-}
-
-func responseFromAsset(o *objectiveAsset.Objective) *AssetResponse {
-	return &AssetResponse{
-		Key:         o.Key,
-		Name:        o.Name,
-		TestDataset: o.TestDataset,
-		Permissions: o.Permissions,
-		Metadata:    o.Metadata,
-	}
-}
-
-// QueryObjective will return the objective identified by the given key
-func (s *SmartContract) QueryObjective(ctx contractapi.TransactionContextInterface, key string) (*AssetResponse, error) {
+// QueryObjectives returns the objectives
+func (s *SmartContract) QueryObjectives(ctx contractapi.TransactionContextInterface) ([]*objectiveAsset.Objective, error) {
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	o, err := service.GetObjective(key)
-	return responseFromAsset(o), err
+	return service.GetObjectives()
+}
+
+// QueryLeaderboard returns for an objective all its certified testtuples with a done status
+func (s *SmartContract) QueryLeaderboard(ctx contractapi.TransactionContextInterface, key string, sortOrder assets.SortOrder) (*objectiveAsset.Leaderboard, error) {
+	return nil, errors.New("unimplemented")
 }
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryObjective"}
+	return []string{"QueryObjectives", "QueryLeaderboard"}
 }

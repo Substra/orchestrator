@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package node;
 
-option go_package = ".;node";
+option go_package = "github.com/substrafoundation/substra-orchestrator/lib/assets/node";
 
 message Node {
     string id = 1;

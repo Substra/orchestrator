@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.25.0
 // 	protoc        v3.14.0
-// source: node.proto
+// source: lib/assets/node/node.proto
 
 package node
 
@@ -36,7 +36,7 @@ type Node struct {
 func (x *Node) Reset() {
 	*x = Node{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[0]
+		mi := &file_lib_assets_node_node_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -49,7 +49,7 @@ func (x *Node) String() string {
 func (*Node) ProtoMessage() {}
 
 func (x *Node) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[0]
+	mi := &file_lib_assets_node_node_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -62,7 +62,7 @@ func (x *Node) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Node.ProtoReflect.Descriptor instead.
 func (*Node) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{0}
+	return file_lib_assets_node_node_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Node) GetId() string {
@@ -83,7 +83,7 @@ type NodeQueryResponse struct {
 func (x *NodeQueryResponse) Reset() {
 	*x = NodeQueryResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[1]
+		mi := &file_lib_assets_node_node_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -96,7 +96,7 @@ func (x *NodeQueryResponse) String() string {
 func (*NodeQueryResponse) ProtoMessage() {}
 
 func (x *NodeQueryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[1]
+	mi := &file_lib_assets_node_node_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -109,7 +109,7 @@ func (x *NodeQueryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NodeQueryResponse.ProtoReflect.Descriptor instead.
 func (*NodeQueryResponse) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{1}
+	return file_lib_assets_node_node_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *NodeQueryResponse) GetNodes() []*Node {
@@ -128,7 +128,7 @@ type NodeQueryParam struct {
 func (x *NodeQueryParam) Reset() {
 	*x = NodeQueryParam{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_node_proto_msgTypes[2]
+		mi := &file_lib_assets_node_node_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -141,7 +141,7 @@ func (x *NodeQueryParam) String() string {
 func (*NodeQueryParam) ProtoMessage() {}
 
 func (x *NodeQueryParam) ProtoReflect() protoreflect.Message {
-	mi := &file_node_proto_msgTypes[2]
+	mi := &file_lib_assets_node_node_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -154,13 +154,14 @@ func (x *NodeQueryParam) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NodeQueryParam.ProtoReflect.Descriptor instead.
 func (*NodeQueryParam) Descriptor() ([]byte, []int) {
-	return file_node_proto_rawDescGZIP(), []int{2}
+	return file_lib_assets_node_node_proto_rawDescGZIP(), []int{2}
 }
 
-var File_node_proto protoreflect.FileDescriptor
+var File_lib_assets_node_node_proto protoreflect.FileDescriptor
 
-var file_node_proto_rawDesc = []byte{
-	0x0a, 0x0a, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x04, 0x6e, 0x6f,
+var file_lib_assets_node_node_proto_rawDesc = []byte{
+	0x0a, 0x1a, 0x6c, 0x69, 0x62, 0x2f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x2f, 0x6e, 0x6f, 0x64,
+	0x65, 0x2f, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x04, 0x6e, 0x6f,
 	0x64, 0x65, 0x22, 0x16, 0x0a, 0x04, 0x4e, 0x6f, 0x64, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0x35, 0x0a, 0x11, 0x4e, 0x6f,
 	0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
@@ -174,29 +175,33 @@ var file_node_proto_rawDesc = []byte{
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x12, 0x14, 0x2e, 0x6e, 0x6f, 0x64,
 	0x65, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d,
 	0x1a, 0x17, 0x2e, 0x6e, 0x6f, 0x64, 0x65, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x08, 0x5a, 0x06, 0x2e,
-	0x3b, 0x6e, 0x6f, 0x64, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x43, 0x5a, 0x41, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x73, 0x75, 0x62, 0x73, 0x74, 0x72,
+	0x61, 0x66, 0x6f, 0x75, 0x6e, 0x64, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x73, 0x75, 0x62, 0x73,
+	0x74, 0x72, 0x61, 0x2d, 0x6f, 0x72, 0x63, 0x68, 0x65, 0x73, 0x74, 0x72, 0x61, 0x74, 0x6f, 0x72,
+	0x2f, 0x6c, 0x69, 0x62, 0x2f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x2f, 0x6e, 0x6f, 0x64, 0x65,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_node_proto_rawDescOnce sync.Once
-	file_node_proto_rawDescData = file_node_proto_rawDesc
+	file_lib_assets_node_node_proto_rawDescOnce sync.Once
+	file_lib_assets_node_node_proto_rawDescData = file_lib_assets_node_node_proto_rawDesc
 )
 
-func file_node_proto_rawDescGZIP() []byte {
-	file_node_proto_rawDescOnce.Do(func() {
-		file_node_proto_rawDescData = protoimpl.X.CompressGZIP(file_node_proto_rawDescData)
+func file_lib_assets_node_node_proto_rawDescGZIP() []byte {
+	file_lib_assets_node_node_proto_rawDescOnce.Do(func() {
+		file_lib_assets_node_node_proto_rawDescData = protoimpl.X.CompressGZIP(file_lib_assets_node_node_proto_rawDescData)
 	})
-	return file_node_proto_rawDescData
+	return file_lib_assets_node_node_proto_rawDescData
 }
 
-var file_node_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_node_proto_goTypes = []interface{}{
+var file_lib_assets_node_node_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_lib_assets_node_node_proto_goTypes = []interface{}{
 	(*Node)(nil),              // 0: node.Node
 	(*NodeQueryResponse)(nil), // 1: node.NodeQueryResponse
 	(*NodeQueryParam)(nil),    // 2: node.NodeQueryParam
 }
-var file_node_proto_depIdxs = []int32{
+var file_lib_assets_node_node_proto_depIdxs = []int32{
 	0, // 0: node.NodeQueryResponse.nodes:type_name -> node.Node
 	0, // 1: node.NodeService.RegisterNode:input_type -> node.Node
 	2, // 2: node.NodeService.QueryNodes:input_type -> node.NodeQueryParam
@@ -209,13 +214,13 @@ var file_node_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_node_proto_init() }
-func file_node_proto_init() {
-	if File_node_proto != nil {
+func init() { file_lib_assets_node_node_proto_init() }
+func file_lib_assets_node_node_proto_init() {
+	if File_lib_assets_node_node_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_node_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_lib_assets_node_node_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Node); i {
 			case 0:
 				return &v.state
@@ -227,7 +232,7 @@ func file_node_proto_init() {
 				return nil
 			}
 		}
-		file_node_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_lib_assets_node_node_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*NodeQueryResponse); i {
 			case 0:
 				return &v.state
@@ -239,7 +244,7 @@ func file_node_proto_init() {
 				return nil
 			}
 		}
-		file_node_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_lib_assets_node_node_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*NodeQueryParam); i {
 			case 0:
 				return &v.state
@@ -256,18 +261,18 @@ func file_node_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_node_proto_rawDesc,
+			RawDescriptor: file_lib_assets_node_node_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_node_proto_goTypes,
-		DependencyIndexes: file_node_proto_depIdxs,
-		MessageInfos:      file_node_proto_msgTypes,
+		GoTypes:           file_lib_assets_node_node_proto_goTypes,
+		DependencyIndexes: file_lib_assets_node_node_proto_depIdxs,
+		MessageInfos:      file_lib_assets_node_node_proto_msgTypes,
 	}.Build()
-	File_node_proto = out.File
-	file_node_proto_rawDesc = nil
-	file_node_proto_goTypes = nil
-	file_node_proto_depIdxs = nil
+	File_lib_assets_node_node_proto = out.File
+	file_lib_assets_node_node_proto_rawDesc = nil
+	file_lib_assets_node_node_proto_goTypes = nil
+	file_lib_assets_node_node_proto_depIdxs = nil
 }

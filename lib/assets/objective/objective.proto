@@ -2,21 +2,46 @@ syntax = "proto3";
 
 package objective;
 
-option go_package = ".;objective";
+import "lib/assets/common.proto";
+
+option go_package = "github.com/substrafoundation/substra-orchestrator/lib/assets/objective";
 
 message Objective {
     string key = 1;
-	string name = 2;
-	string test_dataset = 3;
+    string name = 2;
+    string test_dataset = 3;
     repeated string permissions = 4;
     map<string, string> metadata = 5;
 }
 
-message ObjectiveQuery {
-    string key = 1;
+message ObjectiveQueryParam {}
+
+message ObjectiveQueryResponse {
+    repeated Objective objectives = 1;
 }
 
-service ObjectiveService{
+message LeaderboardQueryParam {
+    string objective_key = 1;
+    assets.SortOrder sort_order = 2;
+}
+
+// This will probably live somewhere else once we implement test tuple assets
+message BoardTuple {
+    string algo = 1;
+    string creator = 2;
+    string key = 3;
+    string traintuple_key = 4;
+    float perf = 5;
+    string tag = 6;
+}
+
+message Leaderboard {
+    Objective objective = 1;
+    repeated BoardTuple test_tuples = 2;
+}
+
+service ObjectiveService {
     rpc RegisterObjective(Objective) returns (Objective) {}
-    rpc QueryObjective(ObjectiveQuery) returns (Objective) {}
+    rpc QueryObjectives(ObjectiveQueryParam) returns (ObjectiveQueryResponse) {}
+    rpc GetLeaderboard(LeaderboardQueryParam) returns (Leaderboard) {}
 }

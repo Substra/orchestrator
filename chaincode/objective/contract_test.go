@@ -24,6 +24,11 @@ func (m *MockedService) GetObjective(key string) (*objective.Objective, error) {
 	return args.Get(0).(*objective.Objective), args.Error(1)
 }
 
+func (m *MockedService) GetObjectives() ([]*objective.Objective, error) {
+	args := m.Called()
+	return args.Get(0).([]*objective.Objective), args.Error(1)
+}
+
 func mockFactory(mock objective.API) func(c contractapi.TransactionContextInterface) (objective.API, error) {
 	return func(_ contractapi.TransactionContextInterface) (objective.API, error) {
 		return mock, nil
@@ -43,28 +48,21 @@ func TestRegistration(t *testing.T) {
 	contract.RegisterObjective(ctx, "uuid1")
 }
 
-func TestGetObjective(t *testing.T) {
+func TestQueryObjectives(t *testing.T) {
 	mockService := new(MockedService)
 	contract := &SmartContract{
 		serviceFactory: mockFactory(mockService),
 	}
 
-	o := &objective.Objective{Key: "uuid"}
+	objectives := []*objective.Objective{
+		{Name: "test"},
+		{Name: "test2"},
+	}
 
-	mockService.On("GetObjective", "uuid").Return(o, nil).Once()
+	mockService.On("GetObjectives").Return(objectives, nil).Once()
 
 	ctx := new(testHelper.MockedContext)
-	contract.QueryObjective(ctx, "uuid")
-}
-
-func TestResponseFromAsset(t *testing.T) {
-	objective := objective.Objective{}
-
-	r := responseFromAsset(&objective)
-
-	assert.Equal(t, objective.Key, r.Key, "Key should be equal")
-	assert.Equal(t, objective.Name, r.Name, "Name should be equal")
-	assert.Equal(t, objective.TestDataset, r.TestDataset, "TestDataset should be equal")
-	assert.Equal(t, objective.Permissions, r.Permissions, "Permissions should be equal")
-	assert.Equal(t, objective.Metadata, r.Metadata, "Metadata should be equal")
+	r, err := contract.QueryObjectives(ctx)
+	assert.Nil(t, err, "query should not fail")
+	assert.Len(t, r, len(objectives), "query should return all objectives")
 }
