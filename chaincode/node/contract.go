@@ -28,6 +28,11 @@ func NewSmartContract() *SmartContract {
 	}
 }
 
+// GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
+func (s *SmartContract) GetEvaluateTransactions() []string {
+	return []string{"QueryNodes"}
+}
+
 // AssetResponse represents a Node
 type AssetResponse struct {
 	ID string `json:"id"`
