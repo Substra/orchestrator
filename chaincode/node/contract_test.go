@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric-protos-go/msp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	testHelper "github.com/substrafoundation/substra-orchestrator/chaincode/testing"
@@ -55,5 +56,25 @@ func TestRegistration(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 	ctx.On("GetStub").Return(stub).Once()
 
-	contract.RegisterNode(ctx)
+	err = contract.RegisterNode(ctx)
+	assert.Nil(t, err, "node registration should not fail")
+}
+
+func TestQueryNodes(t *testing.T) {
+	mockService := new(MockedService)
+	contract := &SmartContract{
+		serviceFactory: mockFactory(mockService),
+	}
+
+	nodes := []*node.Node{
+		{Id: "org1"},
+		{Id: "org2"},
+	}
+
+	mockService.On("GetNodes").Return(nodes, nil).Once()
+
+	ctx := new(testHelper.MockedContext)
+	resp, err := contract.QueryNodes(ctx)
+	assert.Nil(t, err, "querying nodes should not fail")
+	assert.Len(t, resp, len(nodes), "query should return all nodes")
 }
