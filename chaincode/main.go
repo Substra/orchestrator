@@ -16,34 +16,26 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 
+	"github.com/go-playground/log/v7"
+	"github.com/go-playground/log/v7/handlers/console"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/sirupsen/logrus"
 	"github.com/substrafoundation/substra-orchestrator/chaincode/node"
 	"github.com/substrafoundation/substra-orchestrator/chaincode/objective"
 )
 
-var logger = logrus.New()
-
 func main() {
-
-	logger.SetFormatter(&logrus.TextFormatter{
-		ForceColors:   true,
-		FullTimestamp: true,
-	})
-
-	logger.SetOutput(os.Stdout)
-	logger.SetLevel(logrus.DebugLevel)
+	cLog := console.New(true)
+	log.AddHandler(cLog, log.AllLevels...)
 
 	nodeContract := node.NewSmartContract()
 	nodeContract.Name = "org.substra.node"
 	objectiveContract := objective.NewSmartContract()
 	objectiveContract.Name = "org.substra.objective"
 
-	chaincode, err := contractapi.NewChaincode(nodeContract, objectiveContract)
+	cc, err := contractapi.NewChaincode(nodeContract, objectiveContract)
 
 	if err != nil {
 		log.Fatal("error creating substra chaincode", err.Error())
@@ -51,23 +43,23 @@ func main() {
 
 	key, err := ioutil.ReadFile(os.Getenv("TLS_KEY_FILE"))
 	if err != nil {
-		logger.Errorf("unable to read key file with path=%s, error: %s", os.Getenv("TLS_KEY_FILE"), err)
+		log.Errorf("unable to read key file with path=%s, error: %s", os.Getenv("TLS_KEY_FILE"), err)
 	}
 
 	cert, err := ioutil.ReadFile(os.Getenv("TLS_CERT_FILE"))
 	if err != nil {
-		logger.Errorf("unable to read cert file with path %s, error: %s", os.Getenv("TLS_CERT_FILE"), err)
+		log.Errorf("unable to read cert file with path %s, error: %s", os.Getenv("TLS_CERT_FILE"), err)
 	}
 
 	ca, err := ioutil.ReadFile(os.Getenv("TLS_ROOTCERT_FILE"))
 	if err != nil {
-		logger.Errorf("unable to read ca cert file with path: %s, error: %s", os.Getenv("TLS_CERT_FILE"), err)
+		log.Errorf("unable to read ca cert file with path: %s, error: %s", os.Getenv("TLS_CERT_FILE"), err)
 	}
 
 	server := &shim.ChaincodeServer{
 		CCID:    os.Getenv("CHAINCODE_CCID"),
 		Address: os.Getenv("CHAINCODE_ADDRESS"),
-		CC:      chaincode,
+		CC:      cc,
 		TLSProps: shim.TLSProperties{
 			Disabled:      false,
 			Key:           key,
@@ -77,8 +69,8 @@ func main() {
 	}
 
 	// Start the chaincode external server
-	logger.Infof("starting substra chaincode server")
+	log.Infof("starting substra chaincode server")
 	if err = server.Start(); err != nil {
-		logger.Errorf("error happened while starting chaincode %s, version: %s : %s", chaincode.Info.Title, chaincode.Info.Version, err)
+		log.Errorf("error happened while starting chaincode %s, version: %s : %s", cc.Info.Title, cc.Info.Version, err)
 	}
 }

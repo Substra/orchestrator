@@ -18,10 +18,19 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
 )
+
+var logger log.Entry
+
+func init() {
+	logger = log.WithFields(
+		log.F("db_backend", "ledger"),
+	)
+}
 
 // GetLedgerFromContext will return the ledger DB from invocation context
 func GetLedgerFromContext(ctx contractapi.TransactionContextInterface) (persistence.Database, error) {
@@ -37,22 +46,32 @@ type DB struct {
 
 // storedAsset wraps an asset to add docType metadata
 type storedAsset struct {
-	docType         string
-	serializedAsset []byte
+	DocType         string `json:"doc_type"`
+	SerializedAsset []byte `json:"serialized_asset"`
 }
 
 // PutState stores data in the ledger
 func (l *DB) PutState(resource string, key string, data []byte) error {
 	k := getFullKey(resource, key)
+	logger := logger.WithFields(
+		log.F("resource", resource),
+		log.F("key", key),
+		log.F("fullkey", k),
+		log.F("data", data),
+	)
+	logger.Debug("put state")
+
 	storedAsset := &storedAsset{
-		docType:         resource,
-		serializedAsset: data,
+		DocType:         resource,
+		SerializedAsset: data,
 	}
 
 	b, err := json.Marshal(storedAsset)
 	if err != nil {
+		logger.WithError(err).Error("Failed to marshal stored asset")
 		return err
 	}
+	logger.WithField("serialized stored asset", b).Debug("Marshalling successful")
 
 	return l.ccStub.PutState(k, b)
 }
@@ -60,6 +79,13 @@ func (l *DB) PutState(resource string, key string, data []byte) error {
 // GetState retrieves data for a given resource
 func (l *DB) GetState(resource string, key string) ([]byte, error) {
 	k := getFullKey(resource, key)
+	logger := logger.WithFields(
+		log.F("resource", resource),
+		log.F("key", key),
+		log.F("fullkey", k),
+	)
+	logger.Debug("get state")
+
 	b, err := l.ccStub.GetState(k)
 	if err != nil {
 		return nil, err
@@ -68,6 +94,7 @@ func (l *DB) GetState(resource string, key string) ([]byte, error) {
 	var buf []byte
 	err = json.Unmarshal(b, &buf)
 	if err != nil {
+		logger.WithError(err).Error("Failed to unmarshal stored asset")
 		return nil, err
 	}
 
@@ -76,7 +103,12 @@ func (l *DB) GetState(resource string, key string) ([]byte, error) {
 
 // GetAll fetch all data for a given resource kind
 func (l *DB) GetAll(resource string) ([][]byte, error) {
-	queryString := fmt.Sprintf(`{"selector":{"docType":"%s"}}`, resource)
+	logger := logger.WithFields(
+		log.F("resource", resource),
+	)
+	logger.Debug("get all")
+
+	queryString := fmt.Sprintf(`{"selector":{"doc_type":"%s"}}`, resource)
 
 	return l.getQueryResultForQueryString(queryString)
 }
@@ -107,7 +139,7 @@ func constructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorI
 		if err != nil {
 			return nil, err
 		}
-		assets = append(assets, storedAsset.serializedAsset)
+		assets = append(assets, storedAsset.SerializedAsset)
 	}
 
 	return assets, nil
