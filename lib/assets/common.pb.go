@@ -85,18 +85,254 @@ func (SortOrder) EnumDescriptor() ([]byte, []int) {
 	return file_lib_assets_common_proto_rawDescGZIP(), []int{0}
 }
 
+// Addressable references an asset on the network.
+// It contains both its address (backend URL) and checksum.
+type Addressable struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Checksum       string `protobuf:"bytes,1,opt,name=checksum,proto3" json:"checksum,omitempty"`
+	StorageAddress string `protobuf:"bytes,2,opt,name=storage_address,json=storageAddress,proto3" json:"storage_address,omitempty"`
+}
+
+func (x *Addressable) Reset() {
+	*x = Addressable{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_lib_assets_common_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Addressable) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Addressable) ProtoMessage() {}
+
+func (x *Addressable) ProtoReflect() protoreflect.Message {
+	mi := &file_lib_assets_common_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Addressable.ProtoReflect.Descriptor instead.
+func (*Addressable) Descriptor() ([]byte, []int) {
+	return file_lib_assets_common_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Addressable) GetChecksum() string {
+	if x != nil {
+		return x.Checksum
+	}
+	return ""
+}
+
+func (x *Addressable) GetStorageAddress() string {
+	if x != nil {
+		return x.StorageAddress
+	}
+	return ""
+}
+
+// TODO
+type Dataset struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	DataManagerKey string   `protobuf:"bytes,1,opt,name=data_manager_key,json=dataManagerKey,proto3" json:"data_manager_key,omitempty"`
+	DataSampleKeys []string `protobuf:"bytes,2,rep,name=data_sample_keys,json=dataSampleKeys,proto3" json:"data_sample_keys,omitempty"`
+}
+
+func (x *Dataset) Reset() {
+	*x = Dataset{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_lib_assets_common_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Dataset) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Dataset) ProtoMessage() {}
+
+func (x *Dataset) ProtoReflect() protoreflect.Message {
+	mi := &file_lib_assets_common_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Dataset.ProtoReflect.Descriptor instead.
+func (*Dataset) Descriptor() ([]byte, []int) {
+	return file_lib_assets_common_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Dataset) GetDataManagerKey() string {
+	if x != nil {
+		return x.DataManagerKey
+	}
+	return ""
+}
+
+func (x *Dataset) GetDataSampleKeys() []string {
+	if x != nil {
+		return x.DataSampleKeys
+	}
+	return nil
+}
+
+// Permissions for an asset, each key is an action
+type Permissions struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Process *Permission `protobuf:"bytes,1,opt,name=process,proto3" json:"process,omitempty"`
+}
+
+func (x *Permissions) Reset() {
+	*x = Permissions{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_lib_assets_common_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Permissions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Permissions) ProtoMessage() {}
+
+func (x *Permissions) ProtoReflect() protoreflect.Message {
+	mi := &file_lib_assets_common_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Permissions.ProtoReflect.Descriptor instead.
+func (*Permissions) Descriptor() ([]byte, []int) {
+	return file_lib_assets_common_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Permissions) GetProcess() *Permission {
+	if x != nil {
+		return x.Process
+	}
+	return nil
+}
+
+// Permission represents the permission for a single action
+type Permission struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Public        bool     `protobuf:"varint,1,opt,name=public,proto3" json:"public,omitempty"`
+	AuthorizedIds []string `protobuf:"bytes,2,rep,name=authorized_ids,json=authorizedIds,proto3" json:"authorized_ids,omitempty"`
+}
+
+func (x *Permission) Reset() {
+	*x = Permission{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_lib_assets_common_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Permission) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Permission) ProtoMessage() {}
+
+func (x *Permission) ProtoReflect() protoreflect.Message {
+	mi := &file_lib_assets_common_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Permission.ProtoReflect.Descriptor instead.
+func (*Permission) Descriptor() ([]byte, []int) {
+	return file_lib_assets_common_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Permission) GetPublic() bool {
+	if x != nil {
+		return x.Public
+	}
+	return false
+}
+
+func (x *Permission) GetAuthorizedIds() []string {
+	if x != nil {
+		return x.AuthorizedIds
+	}
+	return nil
+}
+
 var File_lib_assets_common_proto protoreflect.FileDescriptor
 
 var file_lib_assets_common_proto_rawDesc = []byte{
 	0x0a, 0x17, 0x6c, 0x69, 0x62, 0x2f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x2f, 0x63, 0x6f, 0x6d,
 	0x6d, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74,
-	0x73, 0x2a, 0x2a, 0x0a, 0x09, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x0d,
-	0x0a, 0x09, 0x41, 0x53, 0x43, 0x45, 0x4e, 0x44, 0x49, 0x4e, 0x47, 0x10, 0x00, 0x12, 0x0e, 0x0a,
-	0x0a, 0x44, 0x45, 0x53, 0x43, 0x45, 0x4e, 0x44, 0x49, 0x4e, 0x47, 0x10, 0x01, 0x42, 0x32, 0x5a,
-	0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6f, 0x77, 0x6b, 0x69,
-	0x6e, 0x2f, 0x73, 0x75, 0x62, 0x73, 0x74, 0x72, 0x61, 0x2d, 0x6f, 0x72, 0x63, 0x68, 0x65, 0x73,
-	0x74, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x2f, 0x6c, 0x69, 0x62, 0x2f, 0x61, 0x73, 0x73, 0x65, 0x74,
-	0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x22, 0x52, 0x0a, 0x0b, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x61, 0x62, 0x6c, 0x65,
+	0x12, 0x1a, 0x0a, 0x08, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x73, 0x75, 0x6d, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x08, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x73, 0x75, 0x6d, 0x12, 0x27, 0x0a, 0x0f,
+	0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x5d, 0x0a, 0x07, 0x44, 0x61, 0x74, 0x61, 0x73, 0x65, 0x74,
+	0x12, 0x28, 0x0a, 0x10, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72,
+	0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x64, 0x61, 0x74, 0x61,
+	0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x4b, 0x65, 0x79, 0x12, 0x28, 0x0a, 0x10, 0x64, 0x61,
+	0x74, 0x61, 0x5f, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x5f, 0x6b, 0x65, 0x79, 0x73, 0x18, 0x02,
+	0x20, 0x03, 0x28, 0x09, 0x52, 0x0e, 0x64, 0x61, 0x74, 0x61, 0x53, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x4b, 0x65, 0x79, 0x73, 0x22, 0x3b, 0x0a, 0x0b, 0x50, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73, 0x69,
+	0x6f, 0x6e, 0x73, 0x12, 0x2c, 0x0a, 0x07, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x2e, 0x50, 0x65,
+	0x72, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x07, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73,
+	0x73, 0x22, 0x4b, 0x0a, 0x0a, 0x50, 0x65, 0x72, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x12,
+	0x16, 0x0a, 0x06, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52,
+	0x06, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x12, 0x25, 0x0a, 0x0e, 0x61, 0x75, 0x74, 0x68, 0x6f,
+	0x72, 0x69, 0x7a, 0x65, 0x64, 0x5f, 0x69, 0x64, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52,
+	0x0d, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x7a, 0x65, 0x64, 0x49, 0x64, 0x73, 0x2a, 0x2a,
+	0x0a, 0x09, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x0d, 0x0a, 0x09, 0x41,
+	0x53, 0x43, 0x45, 0x4e, 0x44, 0x49, 0x4e, 0x47, 0x10, 0x00, 0x12, 0x0e, 0x0a, 0x0a, 0x44, 0x45,
+	0x53, 0x43, 0x45, 0x4e, 0x44, 0x49, 0x4e, 0x47, 0x10, 0x01, 0x42, 0x2a, 0x5a, 0x28, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6f, 0x77, 0x6b, 0x69, 0x6e, 0x2f, 0x6f,
+	0x72, 0x63, 0x68, 0x65, 0x73, 0x74, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x2f, 0x6c, 0x69, 0x62, 0x2f,
+	0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -112,15 +348,21 @@ func file_lib_assets_common_proto_rawDescGZIP() []byte {
 }
 
 var file_lib_assets_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_lib_assets_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_lib_assets_common_proto_goTypes = []interface{}{
-	(SortOrder)(0), // 0: assets.SortOrder
+	(SortOrder)(0),      // 0: assets.SortOrder
+	(*Addressable)(nil), // 1: assets.Addressable
+	(*Dataset)(nil),     // 2: assets.Dataset
+	(*Permissions)(nil), // 3: assets.Permissions
+	(*Permission)(nil),  // 4: assets.Permission
 }
 var file_lib_assets_common_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: assets.Permissions.process:type_name -> assets.Permission
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_lib_assets_common_proto_init() }
@@ -128,19 +370,70 @@ func file_lib_assets_common_proto_init() {
 	if File_lib_assets_common_proto != nil {
 		return
 	}
+	if !protoimpl.UnsafeEnabled {
+		file_lib_assets_common_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Addressable); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_lib_assets_common_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Dataset); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_lib_assets_common_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Permissions); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_lib_assets_common_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Permission); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_lib_assets_common_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   0,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_lib_assets_common_proto_goTypes,
 		DependencyIndexes: file_lib_assets_common_proto_depIdxs,
 		EnumInfos:         file_lib_assets_common_proto_enumTypes,
+		MessageInfos:      file_lib_assets_common_proto_msgTypes,
 	}.Build()
 	File_lib_assets_common_proto = out.File
 	file_lib_assets_common_proto_rawDesc = nil

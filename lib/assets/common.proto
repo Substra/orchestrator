@@ -22,3 +22,27 @@ enum SortOrder {
     ASCENDING = 0;
     DESCENDING = 1;
 }
+
+// Addressable references an asset on the network.
+// It contains both its address (backend URL) and checksum.
+message Addressable {
+  string checksum = 1;
+  string storage_address = 2;
+}
+
+// TODO
+message Dataset {
+  string data_manager_key = 1;
+  repeated string data_sample_keys = 2;
+}
+
+// Permissions for an asset, each key is an action
+message Permissions {
+  Permission process = 1;
+}
+
+// Permission represents the permission for a single action
+message Permission {
+  bool public = 1;
+  repeated string authorized_ids = 2;
+}
