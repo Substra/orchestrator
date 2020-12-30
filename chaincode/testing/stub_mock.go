@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package testing provides helpers to ease testing chaincode related code
 package testing
 
 import (

@@ -20,6 +20,7 @@ import "lib/assets/common.proto";
 
 option go_package = "github.com/substrafoundation/substra-orchestrator/lib/assets/objective";
 
+// Objective represents the hypothesis against which a model is trained and evaluated.
 message Objective {
     string key = 1;
     string name = 2;

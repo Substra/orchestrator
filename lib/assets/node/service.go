@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package node defines the Node asset and its business logic.
+// A Node is an actor of the network.
 package node
 
 import (

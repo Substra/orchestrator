@@ -12,24 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
-
-package node;
-
-option go_package = "github.com/substrafoundation/substra-orchestrator/lib/assets/node";
-
-// Node is a member of the network
-message Node {
-    string id = 1;
-}
-
-message NodeQueryResponse {
-    repeated Node nodes = 1;
-}
-
-message NodeQueryParam {}
-
-service NodeService {
-    rpc RegisterNode(Node) returns (Node) {}
-    rpc QueryNodes(NodeQueryParam) returns (NodeQueryResponse) {}
-}
+// Package lib defines structures and business logic related to substra orchestration platform.
+// This package does not rely on a concrete storage backend, but rather defines a persistence interface.
+// Business logic should be agnostic of the backend as well, as it may be called from either a gRPC server
+// or a smart contract.
+package lib

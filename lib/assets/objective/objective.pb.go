@@ -40,6 +40,7 @@ const (
 // of the legacy proto package is being used.
 const _ = proto.ProtoPackageIsVersion4
 
+// Objective represents the hypothesis against which a model is trained and evaluated.
 type Objective struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

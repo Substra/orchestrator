@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package objective defines the Objective asset.
+// An Objective is the hypothesis against which a model is trained/evaluated.
 package objective
 
 import (
