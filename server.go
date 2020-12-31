@@ -16,10 +16,11 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 	"net"
 	"os"
 
+	"github.com/go-playground/log/v7"
+	"github.com/go-playground/log/v7/handlers/console"
 	"github.com/go-redis/redis/v8"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
@@ -77,7 +78,7 @@ func RunServerWithChainCode() {
 		log.Fatal("failed guess where")
 	}
 
-	log.Println(result)
+	log.Debug(result)
 }
 
 // RunServerWithoutChainCode will expose the chaincode logic through gRPC.
@@ -99,11 +100,15 @@ func RunServerWithoutChainCode() {
 	node.RegisterNodeServiceServer(server, node.NewServer(node.NewService(db)))
 	objective.RegisterObjectiveServiceServer(server, objective.NewServer(objective.NewService(db)))
 
+	log.WithField("address", listen.Addr().String()).Info("Server listening")
 	if err := server.Serve(listen); err != nil {
 		log.Fatalf("failed to server grpc server on port 9000: %v", err)
 	}
 }
 
 func main() {
+	cLog := console.New(true)
+	log.AddHandler(cLog, log.AllLevels...)
+
 	RunServerWithoutChainCode()
 }
