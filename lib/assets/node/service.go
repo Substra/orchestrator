@@ -48,9 +48,7 @@ func (s *Service) RegisterNode(n *Node) error {
 		return err
 	}
 
-	s.db.PutState(resource, n.GetId(), nodeBytes)
-
-	return nil
+	return s.db.PutState(resource, n.GetId(), nodeBytes)
 }
 
 // GetNodes list all known nodes
