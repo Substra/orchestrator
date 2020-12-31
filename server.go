@@ -89,6 +89,8 @@ func RunServerWithoutChainCode() {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
+	defer rdb.Close()
+
 	db := database.NewRedisDB(rdb)
 
 	listen, err := net.Listen("tcp", ":9000")
