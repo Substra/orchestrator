@@ -9,7 +9,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/hyperledger/fabric-chaincode-go v0.0.0-20200728190242-9b3ae92d8664
-	github.com/hyperledger/fabric-contract-api-go v1.1.1
+	github.com/hyperledger/fabric-contract-api-go v1.1.2-0.20210104111150-d852efd3f6af
 	github.com/hyperledger/fabric-protos-go v0.0.0-20200917184523-71c4060efc42
 	github.com/hyperledger/fabric-sdk-go v1.0.0-rc1
 	github.com/onsi/ginkgo v1.14.2 // indirect
@@ -22,5 +22,3 @@ require (
 	google.golang.org/grpc v1.34.0
 	google.golang.org/protobuf v1.25.0
 )
-
-replace github.com/hyperledger/fabric-contract-api-go => github.com/mblottiere/fabric-contract-api-go v1.1.2-0.20201229163308-647252c97ff1

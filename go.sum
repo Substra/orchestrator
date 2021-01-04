@@ -142,6 +142,9 @@ github.com/hyperledger/fabric-chaincode-go v0.0.0-20200728190242-9b3ae92d8664 h1
 github.com/hyperledger/fabric-chaincode-go v0.0.0-20200728190242-9b3ae92d8664/go.mod h1:N7H3sA7Tx4k/YzFq7U0EPdqJtqvM4Kild0JoCc7C0Dc=
 github.com/hyperledger/fabric-config v0.0.5 h1:khRkm8U9Ghdg8VmZfptgzCFlCzrka8bPfUkM+/j6Zlg=
 github.com/hyperledger/fabric-config v0.0.5/go.mod h1:YpITBI/+ZayA3XWY5lF302K7PAsFYjEEPM/zr3hegA8=
+github.com/hyperledger/fabric-contract-api-go v1.1.1/go.mod h1:+39cWxbh5py3NtXpRA63rAH7NzXyED+QJx1EZr0tJPo=
+github.com/hyperledger/fabric-contract-api-go v1.1.2-0.20210104111150-d852efd3f6af h1:1w3F6Fh/CNOPnxa0BCm+ucSFbcpsBBeqr0Edbn7Fwbw=
+github.com/hyperledger/fabric-contract-api-go v1.1.2-0.20210104111150-d852efd3f6af/go.mod h1:+39cWxbh5py3NtXpRA63rAH7NzXyED+QJx1EZr0tJPo=
 github.com/hyperledger/fabric-lib-go v1.0.0 h1:UL1w7c9LvHZUSkIvHTDGklxFv2kTeva1QI2emOVc324=
 github.com/hyperledger/fabric-lib-go v1.0.0/go.mod h1:H362nMlunurmHwkYqR5uHL2UDWbQdbfz74n8kbCFsqc=
 github.com/hyperledger/fabric-protos-go v0.0.0-20190919234611-2a87503ac7c9/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
