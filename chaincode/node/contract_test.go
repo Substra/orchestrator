@@ -23,8 +23,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	testHelper "github.com/substrafoundation/substra-orchestrator/chaincode/testing"
-	"github.com/substrafoundation/substra-orchestrator/lib/assets/node"
+	testHelper "github.com/owkin/orchestrator/chaincode/testing"
+	"github.com/owkin/orchestrator/lib/assets/node"
 )
 
 type MockedService struct {

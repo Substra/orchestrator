@@ -21,7 +21,7 @@ import (
 	"github.com/hyperledger/fabric-protos-go/msp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	testHelper "github.com/substrafoundation/substra-orchestrator/chaincode/testing"
+	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 )
 
 func TestGetTxCreator(t *testing.T) {

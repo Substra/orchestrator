@@ -21,7 +21,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
+	"github.com/owkin/orchestrator/lib/persistence"
 )
 
 var logger log.Entry

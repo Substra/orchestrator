@@ -20,8 +20,8 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	testHelper "github.com/substrafoundation/substra-orchestrator/chaincode/testing"
-	"github.com/substrafoundation/substra-orchestrator/lib/assets/objective"
+	testHelper "github.com/owkin/orchestrator/chaincode/testing"
+	"github.com/owkin/orchestrator/lib/assets/objective"
 )
 
 type MockedService struct {

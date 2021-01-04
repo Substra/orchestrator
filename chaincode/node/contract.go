@@ -16,8 +16,8 @@ package node
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/substrafoundation/substra-orchestrator/chaincode/ledger"
-	nodeAsset "github.com/substrafoundation/substra-orchestrator/lib/assets/node"
+	"github.com/owkin/orchestrator/chaincode/ledger"
+	nodeAsset "github.com/owkin/orchestrator/lib/assets/node"
 )
 
 func getServiceFromContext(ctx contractapi.TransactionContextInterface) (nodeAsset.API, error) {

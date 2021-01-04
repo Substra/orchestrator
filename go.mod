@@ -1,4 +1,4 @@
-module github.com/substrafoundation/substra-orchestrator
+module github.com/owkin/orchestrator
 
 go 1.15
 

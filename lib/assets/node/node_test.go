@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/mock"
-	persistenceHelper "github.com/substrafoundation/substra-orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 )
 
 func TestRegistration(t *testing.T) {

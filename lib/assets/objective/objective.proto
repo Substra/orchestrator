@@ -18,7 +18,7 @@ package objective;
 
 import "lib/assets/common.proto";
 
-option go_package = "github.com/substrafoundation/substra-orchestrator/lib/assets/objective";
+option go_package = "github.com/owkin/orchestrator/lib/assets/objective";
 
 // Objective represents the hypothesis against which a model is trained and evaluated.
 message Objective {

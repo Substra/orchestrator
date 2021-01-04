@@ -19,7 +19,7 @@ package node
 import (
 	"encoding/json"
 
-	"github.com/substrafoundation/substra-orchestrator/lib/persistence"
+	"github.com/owkin/orchestrator/lib/persistence"
 )
 
 const resource = "nodes"

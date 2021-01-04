@@ -18,9 +18,9 @@ import (
 	"errors"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/substrafoundation/substra-orchestrator/chaincode/ledger"
-	"github.com/substrafoundation/substra-orchestrator/lib/assets"
-	objectiveAsset "github.com/substrafoundation/substra-orchestrator/lib/assets/objective"
+	"github.com/owkin/orchestrator/chaincode/ledger"
+	"github.com/owkin/orchestrator/lib/assets"
+	objectiveAsset "github.com/owkin/orchestrator/lib/assets/objective"
 )
 
 func getServiceFromContext(ctx contractapi.TransactionContextInterface) (objectiveAsset.API, error) {

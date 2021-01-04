@@ -24,9 +24,9 @@ import (
 	"github.com/go-playground/log/v7/handlers/console"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
-	"github.com/substrafoundation/substra-orchestrator/database/couchdb"
-	"github.com/substrafoundation/substra-orchestrator/lib/assets/node"
-	"github.com/substrafoundation/substra-orchestrator/lib/assets/objective"
+	"github.com/owkin/orchestrator/database/couchdb"
+	"github.com/owkin/orchestrator/lib/assets/node"
+	"github.com/owkin/orchestrator/lib/assets/objective"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )

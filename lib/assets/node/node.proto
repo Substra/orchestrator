@@ -16,7 +16,7 @@ syntax = "proto3";
 
 package node;
 
-option go_package = "github.com/substrafoundation/substra-orchestrator/lib/assets/node";
+option go_package = "github.com/owkin/orchestrator/lib/assets/node";
 
 // Node is a member of the network
 message Node {

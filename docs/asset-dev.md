@@ -47,7 +47,7 @@ An `asset.Service` structure is then defined, holding a reference to the storage
 This is where the asset logic is defined.
 The service must implement the API.
 
-There are helpers defined in `github.com/substrafoundation/substra-orchestrator/lib/persistence/testing`
+There are helpers defined in `github.com/owkin/orchestrator/lib/persistence/testing`
 to mock the persistence layer.
 Example usage:
 
@@ -55,7 +55,7 @@ Example usage:
 import (
     "testing"
 
-    persistenceHelper "github.com/substrafoundation/substra-orchestrator/lib/persistence/testing"
+    persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 )
 
 func TestSomeMethod(t *testing.T) {

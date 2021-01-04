@@ -24,7 +24,7 @@ import (
 	_ "github.com/go-kivik/couchdb/v3" // CouchDB driver
 	"github.com/go-kivik/kivik/v3"
 	"github.com/go-playground/log/v7"
-	"github.com/substrafoundation/substra-orchestrator/utils"
+	"github.com/owkin/orchestrator/utils"
 )
 
 // Persistence implements persistence.Database.

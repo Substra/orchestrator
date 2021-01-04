@@ -22,8 +22,8 @@ import (
 	"github.com/go-playground/log/v7/handlers/console"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/substrafoundation/substra-orchestrator/chaincode/node"
-	"github.com/substrafoundation/substra-orchestrator/chaincode/objective"
+	"github.com/owkin/orchestrator/chaincode/node"
+	"github.com/owkin/orchestrator/chaincode/objective"
 )
 
 func main() {
