@@ -30,12 +30,6 @@ message Addressable {
   string storage_address = 2;
 }
 
-// TODO
-message Dataset {
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
-}
-
 // Permissions for an asset, each key is an action
 message Permissions {
   Permission process = 1;

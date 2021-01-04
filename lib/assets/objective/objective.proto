@@ -17,6 +17,7 @@ syntax = "proto3";
 package objective;
 
 import "lib/assets/common.proto";
+import "lib/assets/dataset/dataset.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/assets/objective";
 
@@ -24,7 +25,7 @@ option go_package = "github.com/owkin/orchestrator/lib/assets/objective";
 message Objective {
     string key = 1;
     string name = 2;
-    assets.Dataset test_dataset = 3;
+    dataset.Dataset test_dataset = 3;
     assets.Addressable description = 4;
     string metrics_name = 5;
     assets.Addressable metrics = 6;

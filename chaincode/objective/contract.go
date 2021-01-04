@@ -20,6 +20,7 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/assets/dataset"
 	objectiveAsset "github.com/owkin/orchestrator/lib/assets/objective"
 )
 
@@ -54,7 +55,7 @@ func (s *SmartContract) RegisterObjective(
 	description *assets.Addressable,
 	metricsName string,
 	metrics *assets.Addressable,
-	testDataset *assets.Dataset,
+	testDataset *dataset.Dataset,
 	metadata map[string]string,
 	permissions *assets.Permissions,
 ) error {
