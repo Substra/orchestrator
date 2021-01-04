@@ -46,8 +46,8 @@ type DB struct {
 
 // storedAsset wraps an asset to add docType metadata
 type storedAsset struct {
-	DocType         string `json:"doc_type"`
-	SerializedAsset []byte `json:"serialized_asset"`
+	DocType string          `json:"doc_type"`
+	Asset   json.RawMessage `json:"asset"`
 }
 
 // PutState stores data in the ledger
@@ -62,8 +62,8 @@ func (l *DB) PutState(resource string, key string, data []byte) error {
 	logger.Debug("put state")
 
 	storedAsset := &storedAsset{
-		DocType:         resource,
-		SerializedAsset: data,
+		DocType: resource,
+		Asset:   data,
 	}
 
 	b, err := json.Marshal(storedAsset)
@@ -102,7 +102,7 @@ func (l *DB) GetState(resource string, key string) ([]byte, error) {
 }
 
 // GetAll fetch all data for a given resource kind
-func (l *DB) GetAll(resource string) ([][]byte, error) {
+func (l *DB) GetAll(resource string) (result [][]byte, err error) {
 	logger := logger.WithFields(
 		log.F("resource", resource),
 	)
@@ -110,25 +110,12 @@ func (l *DB) GetAll(resource string) ([][]byte, error) {
 
 	queryString := fmt.Sprintf(`{"selector":{"doc_type":"%s"}}`, resource)
 
-	return l.getQueryResultForQueryString(queryString)
-}
-
-func getFullKey(resource string, key string) string {
-	return resource + ":" + key
-}
-
-func (l *DB) getQueryResultForQueryString(queryString string) ([][]byte, error) {
 	resultsIterator, err := l.ccStub.GetQueryResult(queryString)
 	if err != nil {
 		return nil, err
 	}
 	defer resultsIterator.Close()
 
-	return constructQueryResponseFromIterator(resultsIterator)
-}
-
-func constructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorInterface) ([][]byte, error) {
-	var assets [][]byte
 	for resultsIterator.HasNext() {
 		queryResult, err := resultsIterator.Next()
 		if err != nil {
@@ -139,8 +126,12 @@ func constructQueryResponseFromIterator(resultsIterator shim.StateQueryIteratorI
 		if err != nil {
 			return nil, err
 		}
-		assets = append(assets, storedAsset.SerializedAsset)
+		result = append(result, storedAsset.Asset)
 	}
 
-	return assets, nil
+	return result, nil
+}
+
+func getFullKey(resource string, key string) string {
+	return resource + ":" + key
 }

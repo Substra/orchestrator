@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  couchdb:
+    image: couchdb:3.1
+    ports:
+      - "5984:5984"
+    volumes:
+      - couchdata:/opt/couchdb/data
+    environment:
+      COUCHDB_USER: dev
+      COUCHDB_PASSWORD: dev
+
+volumes:
+  couchdata: {}

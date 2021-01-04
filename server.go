@@ -15,19 +15,20 @@
 package main
 
 import (
+	"context"
 	"io/ioutil"
 	"net"
 	"os"
 
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/console"
-	"github.com/go-redis/redis/v8"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
-	"github.com/substrafoundation/substra-orchestrator/database"
+	"github.com/substrafoundation/substra-orchestrator/database/couchdb"
 	"github.com/substrafoundation/substra-orchestrator/lib/assets/node"
 	"github.com/substrafoundation/substra-orchestrator/lib/assets/objective"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // RunServerWithChainCode is exported
@@ -84,14 +85,13 @@ func RunServerWithChainCode() {
 // RunServerWithoutChainCode will expose the chaincode logic through gRPC.
 // State will be stored in a redis database.
 func RunServerWithoutChainCode() {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-	defer rdb.Close()
+	dsn := "http://dev:dev@localhost:5984"
 
-	db := database.NewRedisDB(rdb)
+	couchPersistence, err := couchdb.NewPersistence(context.TODO(), dsn, "substra_orchestrator")
+	defer couchPersistence.Close(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	listen, err := net.Listen("tcp", ":9000")
 	if err != nil {
@@ -99,8 +99,10 @@ func RunServerWithoutChainCode() {
 	}
 
 	server := grpc.NewServer()
-	node.RegisterNodeServiceServer(server, node.NewServer(node.NewService(db)))
-	objective.RegisterObjectiveServiceServer(server, objective.NewServer(objective.NewService(db)))
+	node.RegisterNodeServiceServer(server, node.NewServer(node.NewService(couchPersistence)))
+	objective.RegisterObjectiveServiceServer(server, objective.NewServer(objective.NewService(couchPersistence)))
+
+	reflection.Register(server)
 
 	log.WithField("address", listen.Addr().String()).Info("Server listening")
 	if err := server.Serve(listen); err != nil {

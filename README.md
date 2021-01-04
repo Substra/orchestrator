@@ -23,6 +23,19 @@ You can run the described chaincode in devmode with a single command:
 
 This does not require any configuration and will build the chaincode if needed.
 
+### Standalone orchestrator
+
+When running in standalone mode, the orchestrator needs a [couchdb](https://couchdb.apache.org/)
+database to persist its data.
+
+During development process, you can spawn a couchdb server with docker-compose:
+```
+docker-compose start
+```
+
+Fauxton (the couchdb frontend) is accesible on http://localhost:5984/_utils
+Development credentials are `dev`/`dev`
+
 #### Dev tools versions
 
 - [go](https://golang.org/): v1.15.5
