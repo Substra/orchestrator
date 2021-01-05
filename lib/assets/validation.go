@@ -26,3 +26,10 @@ func (a *Addressable) Validate() error {
 		validation.Field(&a.StorageAddress, validation.Required, is.URL),
 	)
 }
+
+// Validate makes sure the Permissions object is valid
+func (p *Permissions) Validate() error {
+	return validation.ValidateStruct(p,
+		validation.Field(&p.Process, validation.Required),
+	)
+}

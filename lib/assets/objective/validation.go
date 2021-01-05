@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 package objective
 
 import (
-	"github.com/go-ozzo/ozzo-validation/v4"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 // Validate returns an error if the objective is not valid:
@@ -25,9 +25,10 @@ func (o *Objective) Validate() error {
 		validation.Field(&o.Key, validation.Required, validation.Length(36, 36)),
 		validation.Field(&o.Name, validation.Required, validation.Length(1, 100)),
 		validation.Field(&o.MetricsName, validation.Required, validation.Length(1, 100)),
-		// validate structure against their own rules
-		validation.Field(&o.Description),
-		validation.Field(&o.Permissions),
-		validation.Field(&o.Metrics),
+		validation.Field(&o.Metadata, validation.Each(validation.Length(0, 100))),
+		validation.Field(&o.Description, validation.Required),
+		validation.Field(&o.Permissions, validation.Required),
+		validation.Field(&o.Metrics, validation.Required),
+		validation.Field(&o.TestDataset),
 	)
 }

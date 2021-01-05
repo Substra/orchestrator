@@ -40,3 +40,11 @@ func TestAddressableValidation(t *testing.T) {
 	assert.Error(t, invalidStorage.Validate(), "storage address should be valid")
 	assert.NoError(t, validAddressable.Validate(), "validation should pass")
 }
+
+func TestPermissionsValidation(t *testing.T) {
+	emptyPermissions := &Permissions{}
+	complete := &Permissions{Process: &Permission{Public: true, AuthorizedIds: []string{}}}
+
+	assert.Error(t, emptyPermissions.Validate(), "empty object is invalid")
+	assert.NoError(t, complete.Validate())
+}
