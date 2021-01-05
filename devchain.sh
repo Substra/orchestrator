@@ -100,7 +100,7 @@ function  run() {
     echo "Building chaincode"
     cd $CHAINCODE_DIR; make chaincode; cd -
     echo "Running chaincode"
-    CORE_CHAINCODE_LOGLEVEL=debug CORE_PEER_TLS_ENABLED=false CORE_CHAINCODE_ID_NAME=mycc:1.0 $CHAINCODE_DIR/chaincode.bin -peer.address 127.0.0.1:7052 &
+    CORE_CHAINCODE_LOGLEVEL=debug CORE_PEER_TLS_ENABLED=false CORE_CHAINCODE_ID_NAME=mycc:1.0 $CHAINCODE_DIR/bin/chaincode -peer.address 127.0.0.1:7052 &
     CHAINCODE_PID=$!
 
     sleep 3

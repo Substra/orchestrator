@@ -1,6 +1,7 @@
 assets = ./lib/assets
-CHAINCODE_BIN = chaincode.bin
-ORCHESTRATOR_BIN = orchestrator
+OUTPUT_DIR = ./bin
+CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
+ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
 PROJECT_ROOT = .
 go_src = $(shell find . -type f -name '*.go')
 
@@ -9,11 +10,14 @@ pbgo = $(protobufs:.proto=.pb.go)
 
 all: $(ORCHESTRATOR_BIN) $(CHAINCODE_BIN)
 
-$(ORCHESTRATOR_BIN): $(pbgo) $(go_src)
+$(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR)
 	go build -o $(ORCHESTRATOR_BIN) .
 
-$(CHAINCODE_BIN): $(pbgo) $(go_src)
+$(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR)
 	go build -o $(CHAINCODE_BIN) ./chaincode
+
+$(OUTPUT_DIR):
+	mkdir $(OUTPUT_DIR)
 
 $(pbgo): %.pb.go: %.proto
 	protoc --proto_path=$(PROJECT_ROOT) --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative --go-grpc_out=$(PROJECT_ROOT) --go_out=$(PROJECT_ROOT) $<
@@ -23,8 +27,7 @@ proto-codegen: $(pbgo)
 
 .PHONY: clean
 clean:
-	rm $(ORCHESTRATOR_BIN)
-	rm $(CHAINCODE_BIN)
+	rm -rf $(OUTPUT_DIR)
 
 .PHONY: test
 test:
