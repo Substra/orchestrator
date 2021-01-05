@@ -15,9 +15,11 @@
 package couchdb
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
+	"github.com/go-kivik/kivikmock/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -73,4 +75,25 @@ func TestGetFullKey(t *testing.T) {
 	k := getFullKey("resource", "id")
 
 	assert.Equal(t, "resource:id", k, "key should be prefixed with resource type")
+}
+
+func TestEnsureDBWithExistingDB(t *testing.T) {
+	client, mock, err := kivikmock.New()
+	require.NoError(t, err)
+
+	mock.ExpectAllDBs().WillReturn([]string{"test"})
+
+	err = ensureDB(context.TODO(), client, "test")
+	assert.NoError(t, err)
+}
+
+func TestEnsureDBCreatesDB(t *testing.T) {
+	client, mock, err := kivikmock.New()
+	require.NoError(t, err)
+
+	mock.ExpectAllDBs().WillReturn([]string{})
+	mock.ExpectCreateDB().WillReturnError(nil)
+
+	err = ensureDB(context.TODO(), client, "test")
+	assert.NoError(t, err)
 }
