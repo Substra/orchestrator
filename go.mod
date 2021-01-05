@@ -6,6 +6,7 @@ require (
 	github.com/go-kivik/couchdb/v3 v3.2.5
 	github.com/go-kivik/kivik/v3 v3.2.3
 	github.com/go-kivik/kivikmock/v3 v3.2.0
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/go-playground/log/v7 v7.0.2
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-cmp v0.5.4 // indirect

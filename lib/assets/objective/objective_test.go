@@ -18,10 +18,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 )
 
 func TestRegistration(t *testing.T) {
@@ -29,12 +29,17 @@ func TestRegistration(t *testing.T) {
 	service := NewService(mockDB)
 
 	objective := Objective{
-		Key: "objKey",
+		Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Name:        "Test objective",
+		MetricsName: "test perf",
 	}
 
-	mockDB.On("PutState", resource, "objKey", mock.Anything).Return(nil).Once()
+	mockDB.On("PutState", resource, "08680966-97ae-4573-8b2d-6c4db2b3c532", mock.Anything).Return(nil).Once()
 
-	service.RegisterObjective(&objective)
+	err := service.RegisterObjective(&objective)
+	assert.NoError(t, err, "Registration of valid objective should not fail")
+
+	mockDB.AssertExpectations(t)
 }
 
 func TestQuery(t *testing.T) {
