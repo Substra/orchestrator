@@ -64,8 +64,6 @@ func (s *SmartContract) RegisterObjective(
 		return err
 	}
 
-	// TODO: validation (description/metrics/etc)
-
 	o := objectiveAsset.Objective{
 		Key:         key,
 		Name:        name,
@@ -74,9 +72,8 @@ func (s *SmartContract) RegisterObjective(
 		Metrics:     metrics,
 		Metadata:    metadata,
 		Permissions: permissions,
+		TestDataset: testDataset,
 	}
-
-	// TODO: add Dataset ???
 
 	err = service.RegisterObjective(&o)
 	return err

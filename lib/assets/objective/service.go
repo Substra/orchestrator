@@ -49,6 +49,9 @@ func (s *Service) RegisterObjective(o *Objective) error {
 		return err
 	}
 
+	// TODO: validate objective
+	// TODO: register associated dataset
+
 	s.db.PutState(resource, o.GetKey(), b)
 	return nil
 }

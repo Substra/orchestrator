@@ -18,10 +18,12 @@ import (
 	"testing"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	testHelper "github.com/owkin/orchestrator/chaincode/testing"
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/assets/dataset"
+	"github.com/owkin/orchestrator/lib/assets/objective"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/assets/objective"
 )
 
 type MockedService struct {
@@ -55,11 +57,36 @@ func TestRegistration(t *testing.T) {
 		serviceFactory: mockFactory(mockService),
 	}
 
-	o := &objective.Objective{Key: "uuid1"}
+	description := &assets.Addressable{}
+	metrics := &assets.Addressable{}
+	testDataset := &dataset.Dataset{}
+	permissions := &assets.Permissions{}
+	metadata := map[string]string{"test": "true"}
+
+	o := &objective.Objective{
+		Key:         "uuid1",
+		Name:        "Objective name",
+		Description: description,
+		MetricsName: "metrics name",
+		Metrics:     metrics,
+		TestDataset: testDataset,
+		Metadata:    metadata,
+		Permissions: permissions,
+	}
 	mockService.On("RegisterObjective", o).Return(nil).Once()
 
 	ctx := new(testHelper.MockedContext)
-	contract.RegisterObjective(ctx, "uuid1")
+	contract.RegisterObjective(
+		ctx,
+		"uuid1",
+		"Objective name",
+		description,
+		"metrics name",
+		metrics,
+		testDataset,
+		metadata,
+		permissions,
+	)
 }
 
 func TestQueryObjectives(t *testing.T) {
@@ -79,4 +106,25 @@ func TestQueryObjectives(t *testing.T) {
 	r, err := contract.QueryObjectives(ctx)
 	assert.Nil(t, err, "query should not fail")
 	assert.Len(t, r, len(objectives), "query should return all objectives")
+}
+
+func TestEvaluateTransactions(t *testing.T) {
+	contract := NewSmartContract()
+
+	queries := []string{
+		"QueryObjectives",
+		"QueryLeaderboard",
+	}
+
+	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
+}
+
+func TestGetServiceFromContext(t *testing.T) {
+	context := testHelper.MockedContext{}
+	context.On("GetStub").Return(&testHelper.MockedStub{}).Once()
+
+	service, err := getServiceFromContext(&context)
+
+	assert.Nil(t, err, "Creating service should not fail")
+	assert.Implements(t, (*objective.API)(nil), service, "service should implements objective API")
 }
