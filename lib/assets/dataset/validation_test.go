@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+package dataset
 
-package dataset;
+import (
+	"testing"
 
-option go_package = "github.com/owkin/orchestrator/lib/assets/dataset";
+	"github.com/stretchr/testify/assert"
+)
 
-// Dataset references several related samples
-message Dataset {
-  string key = 1;
-  repeated string sample_keys = 2;
+func TestDatasetValidation(t *testing.T) {
+	empty := &Dataset{}
+
+	assert.Error(t, empty.Validate(), "empty object is invalid")
 }
