@@ -53,7 +53,7 @@ func NewPersistence(ctx context.Context, dsn string, db string) (*Persistence, e
 
 // ensureDB makes sure the database exists
 func ensureDB(ctx context.Context, client *kivik.Client, name string) error {
-	exist, err := client.DBExists(context.TODO(), name)
+	exist, err := client.DBExists(ctx, name)
 	if err != nil {
 		return err
 	}
