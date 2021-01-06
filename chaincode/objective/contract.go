@@ -64,6 +64,11 @@ func (s *SmartContract) RegisterObjective(
 		return err
 	}
 
+	owner, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		return err
+	}
+
 	o := objectiveAsset.Objective{
 		Key:         key,
 		Name:        name,
@@ -73,6 +78,7 @@ func (s *SmartContract) RegisterObjective(
 		Metadata:    metadata,
 		Permissions: permissions,
 		TestDataset: testDataset,
+		Owner:       owner,
 	}
 
 	err = service.RegisterObjective(&o)

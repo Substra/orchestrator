@@ -54,7 +54,16 @@ func (s *Service) RegisterObjective(o *Objective) error {
 		return err
 	}
 
-	// TODO: register associated dataset
+	testDataset := o.TestDataset
+	if testDataset != nil {
+		// err = datasetService.RegisterDataset(testDataset)
+		// if err != nil {
+		//	return err
+		// }
+	}
+
+	// This will use known nodes and tx creator
+	// o.Permissions := NewPermissions()
 
 	s.db.PutState(resource, o.GetKey(), b)
 	return nil

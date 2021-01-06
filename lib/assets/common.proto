@@ -33,6 +33,7 @@ message Addressable {
 // Permissions for an asset, each key is an action
 message Permissions {
   Permission process = 1;
+  Permission download = 2;
 }
 
 // Permission represents the permission for a single action

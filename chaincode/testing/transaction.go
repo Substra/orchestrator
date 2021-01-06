@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ledger
+package testing
 
 import (
 	"testing"
 
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/stretchr/testify/assert"
+	"github.com/golang/protobuf/proto"
+	"github.com/hyperledger/fabric-protos-go/msp"
+	"github.com/stretchr/testify/require"
 )
 
-func TestGetTxCreator(t *testing.T) {
-	org := "SampleOrg"
+func FakeTxCreator(t *testing.T, mspid string) []byte {
+	sID := msp.SerializedIdentity{
+		Mspid: mspid,
+	}
+	b, err := proto.Marshal(&sID)
+	require.Nil(t, err, "SID marshal should not fail")
 
-	stub := new(testHelper.MockedStub)
-	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, org), nil).Once()
-
-	creator, err := GetTxCreator(stub)
-	assert.Nil(t, err, "GetTxCreator should not fail")
-	assert.Equal(t, org, creator, "Creator should be the MSP ID")
+	return b
 }

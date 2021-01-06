@@ -63,6 +63,8 @@ func TestRegistration(t *testing.T) {
 	permissions := &assets.Permissions{}
 	metadata := map[string]string{"test": "true"}
 
+	mspid := "org"
+
 	o := &objective.Objective{
 		Key:         "uuid1",
 		Name:        "Objective name",
@@ -72,10 +74,16 @@ func TestRegistration(t *testing.T) {
 		TestDataset: testDataset,
 		Metadata:    metadata,
 		Permissions: permissions,
+		Owner:       mspid,
 	}
 	mockService.On("RegisterObjective", o).Return(nil).Once()
 
 	ctx := new(testHelper.MockedContext)
+	stub := new(testHelper.MockedStub)
+	ctx.On("GetStub").Return(stub).Once()
+
+	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
+
 	contract.RegisterObjective(
 		ctx,
 		"uuid1",
