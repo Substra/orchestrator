@@ -24,7 +24,6 @@ import (
 	_ "github.com/go-kivik/couchdb/v3" // CouchDB driver
 	"github.com/go-kivik/kivik/v3"
 	"github.com/go-playground/log/v7"
-	"github.com/owkin/orchestrator/utils"
 )
 
 // Persistence implements persistence.Database.
@@ -54,13 +53,12 @@ func NewPersistence(ctx context.Context, dsn string, db string) (*Persistence, e
 
 // ensureDB makes sure the database exists
 func ensureDB(ctx context.Context, client *kivik.Client, name string) error {
-	all, err := client.AllDBs(ctx)
+	exist, err := client.DBExists(context.TODO(), name)
 	if err != nil {
 		return err
 	}
 
-	if utils.StringInSlice(all, name) {
-		// Database already exists
+	if exist {
 		return nil
 	}
 

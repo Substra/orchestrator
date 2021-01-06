@@ -81,7 +81,7 @@ func TestEnsureDBWithExistingDB(t *testing.T) {
 	client, mock, err := kivikmock.New()
 	require.NoError(t, err)
 
-	mock.ExpectAllDBs().WillReturn([]string{"test"})
+	mock.ExpectDBExists().WithName("test").WillReturn(true)
 
 	err = ensureDB(context.TODO(), client, "test")
 	assert.NoError(t, err)
@@ -91,7 +91,7 @@ func TestEnsureDBCreatesDB(t *testing.T) {
 	client, mock, err := kivikmock.New()
 	require.NoError(t, err)
 
-	mock.ExpectAllDBs().WillReturn([]string{})
+	mock.ExpectDBExists().WithName("test").WillReturn(false)
 	mock.ExpectCreateDB().WillReturnError(nil)
 
 	err = ensureDB(context.TODO(), client, "test")
