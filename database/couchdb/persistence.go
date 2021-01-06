@@ -38,9 +38,12 @@ func NewPersistence(ctx context.Context, dsn string, db string) (*Persistence, e
 	if err != nil {
 		return nil, err
 	}
+	return newPersistence(ctx, client, db)
+}
 
+func newPersistence(ctx context.Context, client *kivik.Client, db string) (*Persistence, error) {
 	pong, err := client.Ping(ctx)
-	if !pong {
+	if !pong || err != nil {
 		return nil, err
 	}
 
@@ -111,10 +114,10 @@ func (p *Persistence) PutState(resource string, key string, data []byte) error {
 // GetState fetches identified data
 func (p *Persistence) GetState(resource string, key string) ([]byte, error) {
 	r := p.db.Get(context.TODO(), getFullKey(resource, key))
-	var buf []byte
+	var s storedAsset
 
-	err := r.ScanDoc(buf)
-	return buf, err
+	err := r.ScanDoc(&s)
+	return s.Asset, err
 }
 
 // GetAll retrieves all data for a resource kind
