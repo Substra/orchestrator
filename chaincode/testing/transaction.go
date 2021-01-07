@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// FakeTxCreator handles the dirty details of generating a transaction creator
 func FakeTxCreator(t *testing.T, mspid string) []byte {
 	sID := msp.SerializedIdentity{
 		Mspid: mspid,

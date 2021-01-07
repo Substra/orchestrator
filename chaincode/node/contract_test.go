@@ -17,15 +17,12 @@ package node
 import (
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/hyperledger/fabric-protos-go/msp"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 type MockedService struct {
@@ -59,11 +56,7 @@ func TestRegistration(t *testing.T) {
 	o := &assets.Node{Id: org}
 	mockService.On("RegisterNode", o).Return(nil).Once()
 
-	sID := msp.SerializedIdentity{
-		Mspid: org,
-	}
-	b, err := proto.Marshal(&sID)
-	require.Nil(t, err, "SID marshal should not fail")
+	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
