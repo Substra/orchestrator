@@ -17,22 +17,23 @@ package node
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/ledger"
-	nodeAsset "github.com/owkin/orchestrator/lib/assets/node"
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/orchestration"
 )
 
-func getServiceFromContext(ctx contractapi.TransactionContextInterface) (nodeAsset.API, error) {
+func getServiceFromContext(ctx contractapi.TransactionContextInterface) (orchestration.NodeAPI, error) {
 	db, err := ledger.GetLedgerFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return nodeAsset.NewService(db), nil
+	return orchestration.NewNodeService(db), nil
 }
 
 // SmartContract manages nodes
 type SmartContract struct {
 	contractapi.Contract
-	serviceFactory func(contractapi.TransactionContextInterface) (nodeAsset.API, error)
+	serviceFactory func(contractapi.TransactionContextInterface) (orchestration.NodeAPI, error)
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -48,7 +49,7 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 }
 
 // RegisterNode creates a new node in world state
-func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface) (*nodeAsset.Node, error) {
+func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface) (*assets.Node, error) {
 	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
 
 	service, err := s.serviceFactory(ctx)
@@ -56,14 +57,14 @@ func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface
 		return nil, err
 	}
 
-	node := nodeAsset.Node{Id: txCreator}
+	node := assets.Node{Id: txCreator}
 
 	err = service.RegisterNode(&node)
 	return &node, err
 }
 
 // QueryNodes retrieves all known nodes
-func (s *SmartContract) QueryNodes(ctx contractapi.TransactionContextInterface) ([]*nodeAsset.Node, error) {
+func (s *SmartContract) QueryNodes(ctx contractapi.TransactionContextInterface) ([]*assets.Node, error) {
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
 		return nil, err

@@ -20,8 +20,7 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/assets/dataset"
-	"github.com/owkin/orchestrator/lib/assets/objective"
+	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -30,23 +29,23 @@ type MockedService struct {
 	mock.Mock
 }
 
-func (m *MockedService) RegisterObjective(o *objective.Objective) error {
+func (m *MockedService) RegisterObjective(o *assets.Objective) error {
 	args := m.Called(o)
 	return args.Error(0)
 }
 
-func (m *MockedService) GetObjective(key string) (*objective.Objective, error) {
+func (m *MockedService) GetObjective(key string) (*assets.Objective, error) {
 	args := m.Called(key)
-	return args.Get(0).(*objective.Objective), args.Error(1)
+	return args.Get(0).(*assets.Objective), args.Error(1)
 }
 
-func (m *MockedService) GetObjectives() ([]*objective.Objective, error) {
+func (m *MockedService) GetObjectives() ([]*assets.Objective, error) {
 	args := m.Called()
-	return args.Get(0).([]*objective.Objective), args.Error(1)
+	return args.Get(0).([]*assets.Objective), args.Error(1)
 }
 
-func mockFactory(mock objective.API) func(c contractapi.TransactionContextInterface) (objective.API, error) {
-	return func(_ contractapi.TransactionContextInterface) (objective.API, error) {
+func mockFactory(mock orchestration.ObjectiveAPI) func(c contractapi.TransactionContextInterface) (orchestration.ObjectiveAPI, error) {
+	return func(_ contractapi.TransactionContextInterface) (orchestration.ObjectiveAPI, error) {
 		return mock, nil
 	}
 }
@@ -59,13 +58,13 @@ func TestRegistration(t *testing.T) {
 
 	description := &assets.Addressable{}
 	metrics := &assets.Addressable{}
-	testDataset := &dataset.Dataset{}
+	testDataset := &assets.Dataset{}
 	permissions := &assets.Permissions{}
 	metadata := map[string]string{"test": "true"}
 
 	mspid := "org"
 
-	o := &objective.Objective{
+	o := &assets.Objective{
 		Key:         "uuid1",
 		Name:        "Objective name",
 		Description: description,
@@ -103,7 +102,7 @@ func TestQueryObjectives(t *testing.T) {
 		serviceFactory: mockFactory(mockService),
 	}
 
-	objectives := []*objective.Objective{
+	objectives := []*assets.Objective{
 		{Name: "test"},
 		{Name: "test2"},
 	}
@@ -134,5 +133,5 @@ func TestGetServiceFromContext(t *testing.T) {
 	service, err := getServiceFromContext(&context)
 
 	assert.Nil(t, err, "Creating service should not fail")
-	assert.Implements(t, (*objective.API)(nil), service, "service should implements objective API")
+	assert.Implements(t, (*orchestration.ObjectiveAPI)(nil), service, "service should implements objective API")
 }

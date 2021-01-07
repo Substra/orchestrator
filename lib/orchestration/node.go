@@ -12,56 +12,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package node defines the Node asset and its business logic.
-// A Node is an actor of the network.
-package node
+package orchestration
 
 import (
 	"encoding/json"
 
+	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
-const resource = "nodes"
+const nodeResource = "nodes"
 
-// API defines the methods to act on Nodes
-type API interface {
-	RegisterNode(*Node) error
-	GetNodes() ([]*Node, error)
+// NodeAPI defines the methods to act on Nodes
+type NodeAPI interface {
+	RegisterNode(*assets.Node) error
+	GetNodes() ([]*assets.Node, error)
 }
 
-// Service is the node manipulation entry point
-// it implements the API
-type Service struct {
+// NodeService is the node manipulation entry point
+// it implements NodeAPI
+type NodeService struct {
 	db persistence.Database
 }
 
-// NewService will create a new service with given persistence layer
-func NewService(db persistence.Database) *Service {
-	return &Service{db: db}
+// NewNodeService will create a new service with given persistence layer
+func NewNodeService(db persistence.Database) *NodeService {
+	return &NodeService{db: db}
 }
 
 // RegisterNode persist a node
-func (s *Service) RegisterNode(n *Node) error {
+func (s *NodeService) RegisterNode(n *assets.Node) error {
 	nodeBytes, err := json.Marshal(n)
 	if err != nil {
 		return err
 	}
 
-	return s.db.PutState(resource, n.GetId(), nodeBytes)
+	return s.db.PutState(nodeResource, n.GetId(), nodeBytes)
 }
 
 // GetNodes list all known nodes
-func (s *Service) GetNodes() ([]*Node, error) {
-	b, err := s.db.GetAll(resource)
+func (s *NodeService) GetNodes() ([]*assets.Node, error) {
+	b, err := s.db.GetAll(nodeResource)
 	if err != nil {
 		return nil, err
 	}
 
-	var nodes []*Node
+	var nodes []*assets.Node
 
 	for _, nodeBytes := range b {
-		n := Node{}
+		n := assets.Node{}
 		err = json.Unmarshal(nodeBytes, &n)
 		if err != nil {
 			return nil, err

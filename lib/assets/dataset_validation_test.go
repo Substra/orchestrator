@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package node
+package assets
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/mock"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestRegistration(t *testing.T) {
-	mockDB := new(persistenceHelper.MockDatabase)
-	node := Node{
-		Id: "uuid1",
-	}
+func TestDatasetValidation(t *testing.T) {
+	empty := &Dataset{}
 
-	mockDB.On("PutState", resource, "uuid1", mock.Anything).Return(nil).Once()
-
-	service := NewService(mockDB)
-
-	service.RegisterNode(&node)
+	assert.Error(t, empty.Validate(), "empty object is invalid")
 }

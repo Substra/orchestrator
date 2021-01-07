@@ -1,4 +1,4 @@
-// Copyright 2021 Owkin Inc.
+// Copyright 2020 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataset
-
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
-func TestDatasetValidation(t *testing.T) {
-	empty := &Dataset{}
-
-	assert.Error(t, empty.Validate(), "empty object is invalid")
-}
+// Package orchestration holds the business logic allowing the manipulation of assets.
+package orchestration

@@ -1,4 +1,4 @@
-// Copyright 2021 Owkin Inc.
+// Copyright 2020 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataset
+syntax = "proto3";
 
-import (
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-)
+package node;
 
-// Validate makes sure Dataset object is valid
-func (d *Dataset) Validate() error {
-	return validation.ValidateStruct(d,
-		validation.Field(&d.Key, validation.Required, validation.Length(36, 36)),
-		validation.Field(&d.SampleKeys, validation.Required, validation.Each(validation.Length(36, 36))),
-	)
+option go_package = "github.com/owkin/orchestrator/lib/assets";
+
+// Node is a member of the network
+message Node {
+    string id = 1;
+}
+
+message NodeQueryResponse {
+    repeated Node nodes = 1;
+}
+
+message NodeQueryParam {}
+
+service NodeService {
+    rpc RegisterNode(Node) returns (Node) {}
+    rpc QueryNodes(NodeQueryParam) returns (NodeQueryResponse) {}
 }

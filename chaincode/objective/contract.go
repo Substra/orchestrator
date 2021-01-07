@@ -20,23 +20,22 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/assets/dataset"
-	objectiveAsset "github.com/owkin/orchestrator/lib/assets/objective"
+	"github.com/owkin/orchestrator/lib/orchestration"
 )
 
-func getServiceFromContext(ctx contractapi.TransactionContextInterface) (objectiveAsset.API, error) {
+func getServiceFromContext(ctx contractapi.TransactionContextInterface) (orchestration.ObjectiveAPI, error) {
 	db, err := ledger.GetLedgerFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return objectiveAsset.NewService(db), nil
+	return orchestration.NewObjectiveService(db), nil
 }
 
 // SmartContract manages objectives
 type SmartContract struct {
 	contractapi.Contract
-	serviceFactory func(contractapi.TransactionContextInterface) (objectiveAsset.API, error)
+	serviceFactory func(contractapi.TransactionContextInterface) (orchestration.ObjectiveAPI, error)
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -55,7 +54,7 @@ func (s *SmartContract) RegisterObjective(
 	description *assets.Addressable,
 	metricsName string,
 	metrics *assets.Addressable,
-	testDataset *dataset.Dataset,
+	testDataset *assets.Dataset,
 	metadata map[string]string,
 	permissions *assets.Permissions,
 ) error {
@@ -69,7 +68,7 @@ func (s *SmartContract) RegisterObjective(
 		return err
 	}
 
-	o := objectiveAsset.Objective{
+	o := assets.Objective{
 		Key:         key,
 		Name:        name,
 		Description: description,
@@ -86,7 +85,7 @@ func (s *SmartContract) RegisterObjective(
 }
 
 // QueryObjectives returns the objectives
-func (s *SmartContract) QueryObjectives(ctx contractapi.TransactionContextInterface) ([]*objectiveAsset.Objective, error) {
+func (s *SmartContract) QueryObjectives(ctx contractapi.TransactionContextInterface) ([]*assets.Objective, error) {
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
 		return nil, err
@@ -96,7 +95,7 @@ func (s *SmartContract) QueryObjectives(ctx contractapi.TransactionContextInterf
 }
 
 // QueryLeaderboard returns for an objective all its certified testtuples with a done status
-func (s *SmartContract) QueryLeaderboard(ctx contractapi.TransactionContextInterface, key string, sortOrder assets.SortOrder) (*objectiveAsset.Leaderboard, error) {
+func (s *SmartContract) QueryLeaderboard(ctx contractapi.TransactionContextInterface, key string, sortOrder assets.SortOrder) (*assets.Leaderboard, error) {
 	return nil, errors.New("unimplemented")
 }
 

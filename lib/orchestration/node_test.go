@@ -12,7 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package assets defines the structures necessary to orchestrate a federated learning network.
-// Most of these files are generated from protobuf definitions.
-// This package also define validation rules for those assets.
-package assets
+package orchestration
+
+import (
+	"testing"
+
+	"github.com/owkin/orchestrator/lib/assets"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+func TestRegisterNode(t *testing.T) {
+	mockDB := new(persistenceHelper.MockDatabase)
+	node := assets.Node{
+		Id: "uuid1",
+	}
+
+	mockDB.On("PutState", nodeResource, "uuid1", mock.Anything).Return(nil).Once()
+
+	service := NewNodeService(mockDB)
+
+	err := service.RegisterNode(&node)
+	assert.NoError(t, err, "Node registration should not fail")
+}

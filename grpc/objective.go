@@ -12,27 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package objective
+package grpc
 
 import (
 	"log"
 
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/orchestration"
 	"golang.org/x/net/context"
 )
 
-// Server is the gRPC facade to Objective manipulation
-type Server struct {
-	UnimplementedObjectiveServiceServer
-	objectiveService *Service
+// ObjectiveServer is the gRPC facade to Objective manipulation
+type ObjectiveServer struct {
+	assets.UnimplementedObjectiveServiceServer
+	objectiveService orchestration.ObjectiveAPI
 }
 
-// NewServer creates a grpc server
-func NewServer(service *Service) *Server {
-	return &Server{objectiveService: service}
+// NewObjectiveServer creates a grpc server
+func NewObjectiveServer(service orchestration.ObjectiveAPI) *ObjectiveServer {
+	return &ObjectiveServer{objectiveService: service}
 }
 
 // RegisterObjective will persiste a new objective
-func (s *Server) RegisterObjective(ctx context.Context, o *Objective) (*Objective, error) {
+func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *assets.Objective) (*assets.Objective, error) {
 	log.Println(o)
 	log.Printf("objective: %s, %s, %s", o.GetKey(), o.GetName(), o.GetTestDataset())
 
@@ -41,6 +43,6 @@ func (s *Server) RegisterObjective(ctx context.Context, o *Objective) (*Objectiv
 }
 
 // QueryObjective fetches an objective by its key
-func (s *Server) QueryObjective(ctx context.Context, key string) (*Objective, error) {
+func (s *ObjectiveServer) QueryObjective(ctx context.Context, key string) (*assets.Objective, error) {
 	return s.objectiveService.GetObjective(key)
 }

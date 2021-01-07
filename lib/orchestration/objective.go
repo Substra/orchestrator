@@ -12,38 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package objective defines the Objective asset.
-// An Objective is the hypothesis against which a model is trained/evaluated.
-package objective
+package orchestration
 
 import (
 	"encoding/json"
 
+	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
-const resource = "objectives"
+const objectiveResource = "objectives"
 
-// API defines the methods to act on Objectives
-type API interface {
-	RegisterObjective(*Objective) error
-	GetObjective(string) (*Objective, error)
-	GetObjectives() ([]*Objective, error)
+// ObjectiveAPI defines the methods to act on Objectives
+type ObjectiveAPI interface {
+	RegisterObjective(*assets.Objective) error
+	GetObjective(string) (*assets.Objective, error)
+	GetObjectives() ([]*assets.Objective, error)
 }
 
-// Service is the objective manipulation entry point
+// ObjectiveService is the objective manipulation entry point
 // it implements the API interface
-type Service struct {
+type ObjectiveService struct {
 	db persistence.Database
 }
 
-// NewService will create a new service with given persistence layer
-func NewService(db persistence.Database) *Service {
-	return &Service{db: db}
+// NewObjectiveService will create a new service with given persistence layer
+func NewObjectiveService(db persistence.Database) *ObjectiveService {
+	return &ObjectiveService{db: db}
 }
 
 // RegisterObjective persist an objective
-func (s *Service) RegisterObjective(o *Objective) error {
+func (s *ObjectiveService) RegisterObjective(o *assets.Objective) error {
 	b, err := json.Marshal(o)
 	if err != nil {
 		return err
@@ -65,15 +64,15 @@ func (s *Service) RegisterObjective(o *Objective) error {
 	// This will use known nodes and tx creator
 	// o.Permissions := NewPermissions()
 
-	s.db.PutState(resource, o.GetKey(), b)
+	s.db.PutState(objectiveResource, o.GetKey(), b)
 	return nil
 }
 
 // GetObjective retrieves an objective by its ID
-func (s *Service) GetObjective(id string) (*Objective, error) {
-	o := Objective{}
+func (s *ObjectiveService) GetObjective(id string) (*assets.Objective, error) {
+	o := assets.Objective{}
 
-	b, err := s.db.GetState(resource, id)
+	b, err := s.db.GetState(objectiveResource, id)
 	if err != nil {
 		return &o, err
 	}
@@ -83,16 +82,16 @@ func (s *Service) GetObjective(id string) (*Objective, error) {
 }
 
 // GetObjectives returns all stored objectives
-func (s *Service) GetObjectives() ([]*Objective, error) {
-	b, err := s.db.GetAll(resource)
+func (s *ObjectiveService) GetObjectives() ([]*assets.Objective, error) {
+	b, err := s.db.GetAll(objectiveResource)
 	if err != nil {
 		return nil, err
 	}
 
-	var objectives []*Objective
+	var objectives []*assets.Objective
 
 	for _, nodeBytes := range b {
-		o := Objective{}
+		o := assets.Objective{}
 		err = json.Unmarshal(nodeBytes, &o)
 		if err != nil {
 			return nil, err

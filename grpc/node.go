@@ -12,34 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package node
+package grpc
 
 import (
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/orchestration"
 	"golang.org/x/net/context"
 )
 
-// Server is the gRPC server exposing node actions
-type Server struct {
-	UnimplementedNodeServiceServer
-	nodeService *Service
+// NodeServer is the gRPC server exposing node actions
+type NodeServer struct {
+	assets.UnimplementedNodeServiceServer
+	nodeService orchestration.NodeAPI
 }
 
-// NewServer creates a Server
-func NewServer(service *Service) *Server {
-	return &Server{nodeService: service}
+// NewNodeServer creates a Server
+func NewNodeServer(service orchestration.NodeAPI) *NodeServer {
+	return &NodeServer{nodeService: service}
 }
 
 // RegisterNode will add a new node to the network
-func (s *Server) RegisterNode(ctx context.Context, n *Node) (*Node, error) {
+func (s *NodeServer) RegisterNode(ctx context.Context, n *assets.Node) (*assets.Node, error) {
 	err := s.nodeService.RegisterNode(n)
 	return n, err
 }
 
 // QueryNodes will return all known nodes
-func (s *Server) QueryNodes(ctx context.Context, in *NodeQueryParam) (*NodeQueryResponse, error) {
+func (s *NodeServer) QueryNodes(ctx context.Context, in *assets.NodeQueryParam) (*assets.NodeQueryResponse, error) {
 	nodes, err := s.nodeService.GetNodes()
 
-	return &NodeQueryResponse{
+	return &assets.NodeQueryResponse{
 		Nodes: nodes,
 	}, err
 }

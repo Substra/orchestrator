@@ -4,12 +4,10 @@
 
 As explained in the [overview](./architecture.md), asset handling is done through the following components:
 
-- a protobuf definition in `lib/assets/<asset>/<asset>.proto`
-- a service definition in `lib/assets/<asset>/service.go`
-- a grpc server in `lib/assets/<asset>/grpc.go`
+- a protobuf definition in `lib/assets/<asset>.proto`
+- a service definition in `lib/orchestration/<asset>.go`
+- a grpc server in `grpc/<asset>.go`
 - a smart contract as a `chaincode` submodule
-
-We will later reference `lib/assets/<asset>` (where `<assets>` is your new asset name) as the "asset directory".
 
 ## Step by step implementation
 
@@ -28,22 +26,22 @@ Converting from the existing chaincode is mostly a 3 steps process:
 
 ### 2. Write business logic
 
-The business logic is abstracted behind an `asset.API` interface which exposes
+The business logic is abstracted behind an `AssetAPI` interface which exposes
 appropriate methods to manipulate the asset.
 
 Something along the line of:
 ```go
 // API defines the methods to act on Nodes
-type API interface {
+type NodeAPI interface {
     RegisterNode(*Node) error
 }
 ```
 
-Here `Node` comes from the protobuf description and go code was generated during the previous step (`make proto-codegen`).
+Here `Node` comes from the protobuf description (in `lib/assets`) and go code was generated during the previous step (`make proto-codegen`).
 
-This `API` interface is used by both the smartcontract and the grpc server.
+This `NodeAPI` interface is used by both the smartcontract and the grpc server.
 
-An `asset.Service` structure is then defined, holding a reference to the storage.
+An `orchestration.NodeService` structure is then defined, holding a reference to the storage.
 This is where the asset logic is defined.
 The service must implement the API.
 
@@ -71,19 +69,21 @@ func TestSomeMethod(t *testing.T) {
 
 Now that we have a service to manage our new asset, let's implement the gRPC server.
 
-Create a `grpc.go` file in the asset directory, and implement the server:
+Create an `asset.go` file in the `grpc` directory, and implement the server:
 
 ```go
-type Server {
-    UnimplementedAssetServiceServer // This is required by gRPC codegen
-    assetService *Service // This is your asset logic
+type AssetServer {
+    assets.UnimplementedAssetServiceServer // This is required by gRPC codegen
+    assetService AssetAPI
 }
 ```
 
 What's left to implement is for each gRPC method, how to convert from the gRPC layer to business logic and back:
 gRPC input -> assetService -> gRPC output.
 
-Since the gRPC server only rely on the business logic abstracted in `AssetService`, unit testing is only a matter of mocking the service. [stretchr/testify/mock](https://pkg.go.dev/github.com/stretchr/testify/mock) is a convenient helper for this.
+Since the gRPC server only rely on the business logic abstracted behind the `AssetAPI` interface,
+unit testing is only a matter of mocking the service.
+[stretchr/testify/mock](https://pkg.go.dev/github.com/stretchr/testify/mock) is a convenient helper for this.
 
 ### 5. Declare the smart contract
 

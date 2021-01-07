@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package objective
+package assets
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"

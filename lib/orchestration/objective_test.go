@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package objective
+package orchestration
 
 import (
 	"encoding/json"
@@ -25,9 +25,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRegistration(t *testing.T) {
+func TestRegisterObjective(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	service := NewService(mockDB)
+	service := NewObjectiveService(mockDB)
 
 	description := &assets.Addressable{
 		StorageAddress: "ftp://127.0.0.1/test",
@@ -39,7 +39,7 @@ func TestRegistration(t *testing.T) {
 	}
 	perms := &assets.Permissions{Process: &assets.Permission{Public: true}}
 
-	objective := Objective{
+	objective := assets.Objective{
 		Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:        "Test objective",
 		MetricsName: "test perf",
@@ -48,7 +48,7 @@ func TestRegistration(t *testing.T) {
 		Permissions: perms,
 	}
 
-	mockDB.On("PutState", resource, "08680966-97ae-4573-8b2d-6c4db2b3c532", mock.Anything).Return(nil).Once()
+	mockDB.On("PutState", objectiveResource, "08680966-97ae-4573-8b2d-6c4db2b3c532", mock.Anything).Return(nil).Once()
 
 	err := service.RegisterObjective(&objective)
 	assert.NoError(t, err, "Registration of valid objective should not fail")
@@ -56,11 +56,11 @@ func TestRegistration(t *testing.T) {
 	mockDB.AssertExpectations(t)
 }
 
-func TestQuery(t *testing.T) {
+func TestGetObjective(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	service := NewService(mockDB)
+	service := NewObjectiveService(mockDB)
 
-	objective := Objective{
+	objective := assets.Objective{
 		Key:  "objKey",
 		Name: "Test",
 	}
@@ -68,7 +68,7 @@ func TestQuery(t *testing.T) {
 	objBytes, err := json.Marshal(&objective)
 	require.Nil(t, err)
 
-	mockDB.On("GetState", resource, "objKey").Return(objBytes, nil).Once()
+	mockDB.On("GetState", objectiveResource, "objKey").Return(objBytes, nil).Once()
 
 	o, err := service.GetObjective("objKey")
 	require.Nil(t, err)
@@ -77,13 +77,13 @@ func TestQuery(t *testing.T) {
 
 func TestGetObjectives(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	service := NewService(mockDB)
+	service := NewObjectiveService(mockDB)
 
-	obj1 := Objective{
+	obj1 := assets.Objective{
 		Key:  "obj1",
 		Name: "Test 1",
 	}
-	obj2 := Objective{
+	obj2 := assets.Objective{
 		Key:  "obj2",
 		Name: "Test 2",
 	}
@@ -93,7 +93,7 @@ func TestGetObjectives(t *testing.T) {
 	bytes2, err := json.Marshal(&obj2)
 	require.Nil(t, err)
 
-	mockDB.On("GetAll", resource).Return([][]byte{bytes1, bytes2}, nil).Once()
+	mockDB.On("GetAll", objectiveResource).Return([][]byte{bytes1, bytes2}, nil).Once()
 
 	r, err := service.GetObjectives()
 	require.Nil(t, err)

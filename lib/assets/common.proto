@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package assets;
+package common;
 
 option go_package = "github.com/owkin/orchestrator/lib/assets";
 

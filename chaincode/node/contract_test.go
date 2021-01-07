@@ -20,29 +20,30 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric-protos-go/msp"
+	testHelper "github.com/owkin/orchestrator/chaincode/testing"
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/assets/node"
 )
 
 type MockedService struct {
 	mock.Mock
 }
 
-func (m *MockedService) RegisterNode(n *node.Node) error {
+func (m *MockedService) RegisterNode(n *assets.Node) error {
 	args := m.Called(n)
 	return args.Error(0)
 }
 
-func (m *MockedService) GetNodes() ([]*node.Node, error) {
+func (m *MockedService) GetNodes() ([]*assets.Node, error) {
 	args := m.Called()
-	return args.Get(0).([]*node.Node), args.Error(1)
+	return args.Get(0).([]*assets.Node), args.Error(1)
 }
 
-func mockFactory(mock node.API) func(c contractapi.TransactionContextInterface) (node.API, error) {
-	return func(_ contractapi.TransactionContextInterface) (node.API, error) {
+func mockFactory(mock orchestration.NodeAPI) func(c contractapi.TransactionContextInterface) (orchestration.NodeAPI, error) {
+	return func(_ contractapi.TransactionContextInterface) (orchestration.NodeAPI, error) {
 		return mock, nil
 	}
 }
@@ -55,7 +56,7 @@ func TestRegistration(t *testing.T) {
 
 	org := "TestOrg"
 
-	o := &node.Node{Id: org}
+	o := &assets.Node{Id: org}
 	mockService.On("RegisterNode", o).Return(nil).Once()
 
 	sID := msp.SerializedIdentity{
@@ -82,7 +83,7 @@ func TestQueryNodes(t *testing.T) {
 		serviceFactory: mockFactory(mockService),
 	}
 
-	nodes := []*node.Node{
+	nodes := []*assets.Node{
 		{Id: "org1"},
 		{Id: "org2"},
 	}

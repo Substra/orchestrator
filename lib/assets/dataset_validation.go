@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+package assets
 
-package dataset;
+import (
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+)
 
-option go_package = "github.com/owkin/orchestrator/lib/assets/dataset";
-
-// Dataset references several related samples
-message Dataset {
-  string key = 1;
-  repeated string sample_keys = 2;
+// Validate makes sure Dataset object is valid
+func (d *Dataset) Validate() error {
+	return validation.ValidateStruct(d,
+		validation.Field(&d.Key, validation.Required, validation.Length(36, 36)),
+		validation.Field(&d.SampleKeys, validation.Required, validation.Each(validation.Length(36, 36))),
+	)
 }

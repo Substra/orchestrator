@@ -25,8 +25,9 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/owkin/orchestrator/database/couchdb"
-	"github.com/owkin/orchestrator/lib/assets/node"
-	"github.com/owkin/orchestrator/lib/assets/objective"
+	orchestratorGrpc "github.com/owkin/orchestrator/grpc"
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/orchestration"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -99,8 +100,8 @@ func RunServerWithoutChainCode() {
 	}
 
 	server := grpc.NewServer()
-	node.RegisterNodeServiceServer(server, node.NewServer(node.NewService(couchPersistence)))
-	objective.RegisterObjectiveServiceServer(server, objective.NewServer(objective.NewService(couchPersistence)))
+	assets.RegisterNodeServiceServer(server, orchestratorGrpc.NewNodeServer(orchestration.NewNodeService(couchPersistence)))
+	assets.RegisterObjectiveServiceServer(server, orchestratorGrpc.NewObjectiveServer(orchestration.NewObjectiveService(couchPersistence)))
 
 	reflection.Register(server)
 
