@@ -32,3 +32,8 @@ type DBReader interface {
 	GetState(resource string, key string) ([]byte, error)
 	GetAll(resource string) ([][]byte, error)
 }
+
+// DatabaseProvider defines an object able to provide a Database instance
+type DatabaseProvider interface {
+	GetDatabase() Database
+}

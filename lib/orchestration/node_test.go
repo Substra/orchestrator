@@ -25,13 +25,17 @@ import (
 
 func TestRegisterNode(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
+	provider := new(mockServiceProvider)
+
+	provider.On("GetDatabase").Return(mockDB)
+
 	node := assets.Node{
 		Id: "uuid1",
 	}
 
 	mockDB.On("PutState", nodeResource, "uuid1", mock.Anything).Return(nil).Once()
 
-	service := NewNodeService(mockDB)
+	service := NewNodeService(provider)
 
 	err := service.RegisterNode(&node)
 	assert.NoError(t, err, "Node registration should not fail")

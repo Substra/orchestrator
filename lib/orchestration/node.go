@@ -29,15 +29,25 @@ type NodeAPI interface {
 	GetNodes() ([]*assets.Node, error)
 }
 
+// NodeServiceProvider defines an object able to provide a NodeAPI instance
+type NodeServiceProvider interface {
+	GetNodeService() NodeAPI
+}
+
+// NodeDependencyProvider defines what the NodeService needs to perform its duty
+type NodeDependencyProvider interface {
+	persistence.DatabaseProvider
+}
+
 // NodeService is the node manipulation entry point
 // it implements NodeAPI
 type NodeService struct {
-	db persistence.Database
+	NodeDependencyProvider
 }
 
 // NewNodeService will create a new service with given persistence layer
-func NewNodeService(db persistence.Database) *NodeService {
-	return &NodeService{db: db}
+func NewNodeService(provider NodeDependencyProvider) *NodeService {
+	return &NodeService{provider}
 }
 
 // RegisterNode persist a node
@@ -47,12 +57,12 @@ func (s *NodeService) RegisterNode(n *assets.Node) error {
 		return err
 	}
 
-	return s.db.PutState(nodeResource, n.GetId(), nodeBytes)
+	return s.GetDatabase().PutState(nodeResource, n.GetId(), nodeBytes)
 }
 
 // GetNodes list all known nodes
 func (s *NodeService) GetNodes() ([]*assets.Node, error) {
-	b, err := s.db.GetAll(nodeResource)
+	b, err := s.GetDatabase().GetAll(nodeResource)
 	if err != nil {
 		return nil, err
 	}

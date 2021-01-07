@@ -99,9 +99,11 @@ func RunServerWithoutChainCode() {
 		log.Fatalf("failed to listen on port 9000: %v", err)
 	}
 
+	provider := orchestration.NewServiceProvider(couchPersistence)
+
 	server := grpc.NewServer()
-	assets.RegisterNodeServiceServer(server, orchestratorGrpc.NewNodeServer(orchestration.NewNodeService(couchPersistence)))
-	assets.RegisterObjectiveServiceServer(server, orchestratorGrpc.NewObjectiveServer(orchestration.NewObjectiveService(couchPersistence)))
+	assets.RegisterNodeServiceServer(server, orchestratorGrpc.NewNodeServer(provider.GetNodeService()))
+	assets.RegisterObjectiveServiceServer(server, orchestratorGrpc.NewObjectiveServer(provider.GetObjectiveService()))
 
 	reflection.Register(server)
 

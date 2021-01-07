@@ -27,7 +27,9 @@ import (
 
 func TestRegisterObjective(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	service := NewObjectiveService(mockDB)
+	provider := new(mockServiceProvider)
+	provider.On("GetDatabase").Return(mockDB)
+	service := NewObjectiveService(provider)
 
 	description := &assets.Addressable{
 		StorageAddress: "ftp://127.0.0.1/test",
@@ -58,7 +60,9 @@ func TestRegisterObjective(t *testing.T) {
 
 func TestGetObjective(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	service := NewObjectiveService(mockDB)
+	provider := new(mockServiceProvider)
+	provider.On("GetDatabase").Return(mockDB)
+	service := NewObjectiveService(provider)
 
 	objective := assets.Objective{
 		Key:  "objKey",
@@ -77,7 +81,9 @@ func TestGetObjective(t *testing.T) {
 
 func TestGetObjectives(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	service := NewObjectiveService(mockDB)
+	provider := new(mockServiceProvider)
+	provider.On("GetDatabase").Return(mockDB)
+	service := NewObjectiveService(provider)
 
 	obj1 := assets.Objective{
 		Key:  "obj1",

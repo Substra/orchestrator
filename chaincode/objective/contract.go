@@ -29,7 +29,9 @@ func getServiceFromContext(ctx contractapi.TransactionContextInterface) (orchest
 		return nil, err
 	}
 
-	return orchestration.NewObjectiveService(db), nil
+	provider := orchestration.NewServiceProvider(db)
+
+	return provider.GetObjectiveService(), nil
 }
 
 // SmartContract manages objectives

@@ -13,4 +13,5 @@
 // limitations under the License.
 
 // Package orchestration holds the business logic allowing the manipulation of assets.
+// The main entry point is the ServiceProvider, from which the services are accessible.
 package orchestration

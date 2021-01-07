@@ -30,15 +30,25 @@ type ObjectiveAPI interface {
 	GetObjectives() ([]*assets.Objective, error)
 }
 
+// ObjectiveServiceProvider defines an object able to provide an ObjectiveAPI instance
+type ObjectiveServiceProvider interface {
+	GetObjectiveService() ObjectiveAPI
+}
+
+// ObjectiveDependencyProvider defines what the ObjectiveService needs to perform its duty
+type ObjectiveDependencyProvider interface {
+	persistence.DatabaseProvider
+}
+
 // ObjectiveService is the objective manipulation entry point
 // it implements the API interface
 type ObjectiveService struct {
-	db persistence.Database
+	ObjectiveDependencyProvider
 }
 
 // NewObjectiveService will create a new service with given persistence layer
-func NewObjectiveService(db persistence.Database) *ObjectiveService {
-	return &ObjectiveService{db: db}
+func NewObjectiveService(provider ObjectiveDependencyProvider) *ObjectiveService {
+	return &ObjectiveService{provider}
 }
 
 // RegisterObjective persist an objective
@@ -64,7 +74,7 @@ func (s *ObjectiveService) RegisterObjective(o *assets.Objective) error {
 	// This will use known nodes and tx creator
 	// o.Permissions := NewPermissions()
 
-	s.db.PutState(objectiveResource, o.GetKey(), b)
+	s.GetDatabase().PutState(objectiveResource, o.GetKey(), b)
 	return nil
 }
 
@@ -72,7 +82,7 @@ func (s *ObjectiveService) RegisterObjective(o *assets.Objective) error {
 func (s *ObjectiveService) GetObjective(id string) (*assets.Objective, error) {
 	o := assets.Objective{}
 
-	b, err := s.db.GetState(objectiveResource, id)
+	b, err := s.GetDatabase().GetState(objectiveResource, id)
 	if err != nil {
 		return &o, err
 	}
@@ -83,7 +93,7 @@ func (s *ObjectiveService) GetObjective(id string) (*assets.Objective, error) {
 
 // GetObjectives returns all stored objectives
 func (s *ObjectiveService) GetObjectives() ([]*assets.Objective, error) {
-	b, err := s.db.GetAll(objectiveResource)
+	b, err := s.GetDatabase().GetAll(objectiveResource)
 	if err != nil {
 		return nil, err
 	}

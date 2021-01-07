@@ -27,7 +27,9 @@ func getServiceFromContext(ctx contractapi.TransactionContextInterface) (orchest
 		return nil, err
 	}
 
-	return orchestration.NewNodeService(db), nil
+	provider := orchestration.NewServiceProvider(db)
+
+	return provider.GetNodeService(), nil
 }
 
 // SmartContract manages nodes
