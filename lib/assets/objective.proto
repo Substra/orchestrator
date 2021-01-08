@@ -34,6 +34,19 @@ message Objective {
     string owner = 9;
 }
 
+// NewObjective is used to register an Objective.
+// It will be processed into an Objective.
+message NewObjective {
+    string key = 1;
+    string name = 2;
+    dataset.Dataset test_dataset = 3;
+    common.Addressable description = 4;
+    string metrics_name = 5;
+    common.Addressable metrics = 6;
+    common.NewPermissions new_permissions = 7;
+    map<string, string> metadata = 8;
+}
+
 message ObjectiveQueryParam {}
 
 message ObjectiveQueryResponse {
@@ -61,7 +74,7 @@ message Leaderboard {
 }
 
 service ObjectiveService {
-    rpc RegisterObjective(Objective) returns (Objective) {}
+    rpc RegisterObjective(NewObjective) returns (Objective) {}
     rpc QueryObjectives(ObjectiveQueryParam) returns (ObjectiveQueryResponse) {}
     rpc GetLeaderboard(LeaderboardQueryParam) returns (Leaderboard) {}
 }

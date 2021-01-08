@@ -29,9 +29,9 @@ type MockedService struct {
 	mock.Mock
 }
 
-func (m *MockedService) RegisterObjective(o *assets.Objective) error {
-	args := m.Called(o)
-	return args.Error(0)
+func (m *MockedService) RegisterObjective(o *assets.NewObjective, owner string) (*assets.Objective, error) {
+	args := m.Called(o, owner)
+	return args.Get(0).(*assets.Objective), args.Error(1)
 }
 
 func (m *MockedService) GetObjective(key string) (*assets.Objective, error) {
@@ -56,26 +56,26 @@ func TestRegistration(t *testing.T) {
 		serviceFactory: mockFactory(mockService),
 	}
 
-	description := &assets.Addressable{}
-	metrics := &assets.Addressable{}
+	addressable := &assets.Addressable{}
 	testDataset := &assets.Dataset{}
-	permissions := &assets.Permissions{}
+	newPerms := &assets.NewPermissions{}
 	metadata := map[string]string{"test": "true"}
 
 	mspid := "org"
 
-	o := &assets.Objective{
-		Key:         "uuid1",
-		Name:        "Objective name",
-		Description: description,
-		MetricsName: "metrics name",
-		Metrics:     metrics,
-		TestDataset: testDataset,
-		Metadata:    metadata,
-		Permissions: permissions,
-		Owner:       mspid,
+	newObj := &assets.NewObjective{
+		Key:            "uuid1",
+		Name:           "Objective name",
+		Description:    addressable,
+		MetricsName:    "metrics name",
+		Metrics:        addressable,
+		TestDataset:    testDataset,
+		Metadata:       metadata,
+		NewPermissions: &assets.NewPermissions{},
 	}
-	mockService.On("RegisterObjective", o).Return(nil).Once()
+
+	o := &assets.Objective{}
+	mockService.On("RegisterObjective", newObj, mspid).Return(o, nil).Once()
 
 	ctx := new(testHelper.MockedContext)
 	stub := new(testHelper.MockedStub)
@@ -87,12 +87,12 @@ func TestRegistration(t *testing.T) {
 		ctx,
 		"uuid1",
 		"Objective name",
-		description,
+		addressable,
 		"metrics name",
-		metrics,
+		addressable,
 		testDataset,
 		metadata,
-		permissions,
+		newPerms,
 	)
 }
 

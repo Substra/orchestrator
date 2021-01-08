@@ -17,7 +17,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ObjectiveServiceClient interface {
-	RegisterObjective(ctx context.Context, in *Objective, opts ...grpc.CallOption) (*Objective, error)
+	RegisterObjective(ctx context.Context, in *NewObjective, opts ...grpc.CallOption) (*Objective, error)
 	QueryObjectives(ctx context.Context, in *ObjectiveQueryParam, opts ...grpc.CallOption) (*ObjectiveQueryResponse, error)
 	GetLeaderboard(ctx context.Context, in *LeaderboardQueryParam, opts ...grpc.CallOption) (*Leaderboard, error)
 }
@@ -30,7 +30,7 @@ func NewObjectiveServiceClient(cc grpc.ClientConnInterface) ObjectiveServiceClie
 	return &objectiveServiceClient{cc}
 }
 
-func (c *objectiveServiceClient) RegisterObjective(ctx context.Context, in *Objective, opts ...grpc.CallOption) (*Objective, error) {
+func (c *objectiveServiceClient) RegisterObjective(ctx context.Context, in *NewObjective, opts ...grpc.CallOption) (*Objective, error) {
 	out := new(Objective)
 	err := c.cc.Invoke(ctx, "/objective.ObjectiveService/RegisterObjective", in, out, opts...)
 	if err != nil {
@@ -61,7 +61,7 @@ func (c *objectiveServiceClient) GetLeaderboard(ctx context.Context, in *Leaderb
 // All implementations must embed UnimplementedObjectiveServiceServer
 // for forward compatibility
 type ObjectiveServiceServer interface {
-	RegisterObjective(context.Context, *Objective) (*Objective, error)
+	RegisterObjective(context.Context, *NewObjective) (*Objective, error)
 	QueryObjectives(context.Context, *ObjectiveQueryParam) (*ObjectiveQueryResponse, error)
 	GetLeaderboard(context.Context, *LeaderboardQueryParam) (*Leaderboard, error)
 	mustEmbedUnimplementedObjectiveServiceServer()
@@ -71,7 +71,7 @@ type ObjectiveServiceServer interface {
 type UnimplementedObjectiveServiceServer struct {
 }
 
-func (UnimplementedObjectiveServiceServer) RegisterObjective(context.Context, *Objective) (*Objective, error) {
+func (UnimplementedObjectiveServiceServer) RegisterObjective(context.Context, *NewObjective) (*Objective, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterObjective not implemented")
 }
 func (UnimplementedObjectiveServiceServer) QueryObjectives(context.Context, *ObjectiveQueryParam) (*ObjectiveQueryResponse, error) {
@@ -94,7 +94,7 @@ func RegisterObjectiveServiceServer(s grpc.ServiceRegistrar, srv ObjectiveServic
 }
 
 func _ObjectiveService_RegisterObjective_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Objective)
+	in := new(NewObjective)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func _ObjectiveService_RegisterObjective_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/objective.ObjectiveService/RegisterObjective",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ObjectiveServiceServer).RegisterObjective(ctx, req.(*Objective))
+		return srv.(ObjectiveServiceServer).RegisterObjective(ctx, req.(*NewObjective))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -58,7 +58,7 @@ func (s *SmartContract) RegisterObjective(
 	metrics *assets.Addressable,
 	testDataset *assets.Dataset,
 	metadata map[string]string,
-	permissions *assets.Permissions,
+	permissions *assets.NewPermissions,
 ) error {
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
@@ -70,19 +70,18 @@ func (s *SmartContract) RegisterObjective(
 		return err
 	}
 
-	o := assets.Objective{
-		Key:         key,
-		Name:        name,
-		Description: description,
-		MetricsName: metricsName,
-		Metrics:     metrics,
-		Metadata:    metadata,
-		Permissions: permissions,
-		TestDataset: testDataset,
-		Owner:       owner,
+	o := assets.NewObjective{
+		Key:            key,
+		Name:           name,
+		Description:    description,
+		MetricsName:    metricsName,
+		Metrics:        metrics,
+		Metadata:       metadata,
+		NewPermissions: permissions,
+		TestDataset:    testDataset,
 	}
 
-	err = service.RegisterObjective(&o)
+	_, err = service.RegisterObjective(&o, owner)
 	return err
 }
 

@@ -39,21 +39,23 @@ func TestRegisterObjective(t *testing.T) {
 		StorageAddress: "ftp://127.0.0.1/test",
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
-	perms := &assets.Permissions{Process: &assets.Permission{Public: true}}
+	perms := &assets.NewPermissions{Public: true}
 
-	objective := assets.Objective{
-		Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Name:        "Test objective",
-		MetricsName: "test perf",
-		Metrics:     metrics,
-		Description: description,
-		Permissions: perms,
+	objective := &assets.NewObjective{
+		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Name:           "Test objective",
+		MetricsName:    "test perf",
+		Metrics:        metrics,
+		Description:    description,
+		NewPermissions: perms,
 	}
 
 	mockDB.On("PutState", objectiveResource, "08680966-97ae-4573-8b2d-6c4db2b3c532", mock.Anything).Return(nil).Once()
 
-	err := service.RegisterObjective(&objective)
+	o, err := service.RegisterObjective(objective, "owner")
 	assert.NoError(t, err, "Registration of valid objective should not fail")
+	assert.NotNil(t, o, "Registration should return an Objective")
+	assert.Equal(t, "owner", o.Owner, "Owner should be set")
 
 	mockDB.AssertExpectations(t)
 }

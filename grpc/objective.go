@@ -34,12 +34,13 @@ func NewObjectiveServer(service orchestration.ObjectiveAPI) *ObjectiveServer {
 }
 
 // RegisterObjective will persiste a new objective
-func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *assets.Objective) (*assets.Objective, error) {
+func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *assets.NewObjective) (*assets.Objective, error) {
 	log.Println(o)
 	log.Printf("objective: %s, %s, %s", o.GetKey(), o.GetName(), o.GetTestDataset())
 
-	err := s.objectiveService.RegisterObjective(o)
-	return o, err
+	owner := "grpcFakeOrg" // TODO: extract that from request
+
+	return s.objectiveService.RegisterObjective(o, owner)
 }
 
 // QueryObjective fetches an objective by its key

@@ -21,7 +21,7 @@ import (
 )
 
 type testCase struct {
-	objective *Objective
+	objective *NewObjective
 	valid     bool
 }
 
@@ -31,28 +31,28 @@ func TestObjectiveValidate(t *testing.T) {
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 
-	validPerms := &Permissions{
-		Process:  &Permission{Public: false, AuthorizedIds: []string{"org1"}},
-		Download: &Permission{Public: false, AuthorizedIds: []string{"org1"}},
+	validPerms := &NewPermissions{
+		Public:        false,
+		AuthorizedIds: []string{"org1"},
 	}
 
 	cases := map[string]testCase{
-		"emtpy": {&Objective{}, false},
-		"invalidKey": {&Objective{
-			Key:         "not36chars",
-			Name:        "invalid key",
-			MetricsName: "Test metric",
-			Metrics:     validAddressable,
-			Description: validAddressable,
-			Permissions: validPerms,
+		"emtpy": {&NewObjective{}, false},
+		"invalidKey": {&NewObjective{
+			Key:            "not36chars",
+			Name:           "invalid key",
+			MetricsName:    "Test metric",
+			Metrics:        validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
 		}, false},
-		"valid": {&Objective{
-			Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Name:        "Test objective",
-			MetricsName: "test metric",
-			Metrics:     validAddressable,
-			Description: validAddressable,
-			Permissions: validPerms,
+		"valid": {&NewObjective{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test objective",
+			MetricsName:    "test metric",
+			Metrics:        validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
 		}, true},
 	}
 

@@ -25,7 +25,7 @@ const objectiveResource = "objectives"
 
 // ObjectiveAPI defines the methods to act on Objectives
 type ObjectiveAPI interface {
-	RegisterObjective(*assets.Objective) error
+	RegisterObjective(objective *assets.NewObjective, owner string) (*assets.Objective, error)
 	GetObjective(string) (*assets.Objective, error)
 	GetObjectives() ([]*assets.Objective, error)
 }
@@ -52,15 +52,10 @@ func NewObjectiveService(provider ObjectiveDependencyProvider) *ObjectiveService
 }
 
 // RegisterObjective persist an objective
-func (s *ObjectiveService) RegisterObjective(o *assets.Objective) error {
-	b, err := json.Marshal(o)
+func (s *ObjectiveService) RegisterObjective(o *assets.NewObjective, owner string) (*assets.Objective, error) {
+	err := o.Validate()
 	if err != nil {
-		return err
-	}
-
-	err = o.Validate()
-	if err != nil {
-		return err
+		return &assets.Objective{}, err
 	}
 
 	testDataset := o.TestDataset
@@ -71,11 +66,27 @@ func (s *ObjectiveService) RegisterObjective(o *assets.Objective) error {
 		// }
 	}
 
-	// This will use known nodes and tx creator
-	// o.Permissions := NewPermissions()
+	objective := &assets.Objective{
+		Key:         o.Key,
+		Name:        o.Name,
+		TestDataset: testDataset,
+		Description: o.Description,
+		MetricsName: o.MetricsName,
+		Metrics:     o.Metrics,
+		Metadata:    o.Metadata,
+		Owner:       owner,
+		// Permissions: ,// TODO
+	}
 
-	s.GetDatabase().PutState(objectiveResource, o.GetKey(), b)
-	return nil
+	// o.Permissions = s.GetPermissionService().NewPermissions(o.Owner)
+
+	b, err := json.Marshal(objective)
+	if err != nil {
+		return &assets.Objective{}, err
+	}
+
+	s.GetDatabase().PutState(objectiveResource, objective.Key, b)
+	return objective, nil
 }
 
 // GetObjective retrieves an objective by its ID

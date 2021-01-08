@@ -33,3 +33,9 @@ func (p *Permissions) Validate() error {
 		validation.Field(&p.Process, validation.Required),
 	)
 }
+
+func (np *NewPermissions) Validate() error {
+	return validation.ValidateStruct(np,
+		validation.Field(&np.AuthorizedIds, validation.When(!np.Public, validation.Required)),
+	)
+}

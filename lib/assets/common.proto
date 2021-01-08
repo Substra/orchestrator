@@ -41,3 +41,10 @@ message Permission {
   bool public = 1;
   repeated string authorized_ids = 2;
 }
+
+// NewPermissions is used to create a new permission set.
+// This will be transformed in a full Permissions structure on registration.
+message NewPermissions {
+  bool public = 1;
+  repeated string authorized_ids = 2;
+}
