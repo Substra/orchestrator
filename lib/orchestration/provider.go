@@ -22,9 +22,10 @@ import "github.com/owkin/orchestrator/lib/persistence"
 // Each service should define a ServiceDependencyProvider interface which states what are its requirements.
 // Since the ServiceProvider implements every ServiceProvider interface, it can fit all service dependencies.
 type ServiceProvider struct {
-	db        persistence.Database
-	node      NodeAPI
-	objective ObjectiveAPI
+	db         persistence.Database
+	node       NodeAPI
+	objective  ObjectiveAPI
+	permission PermissionAPI
 }
 
 // NewServiceProvider return an instance of ServiceProvider based on given persistence layer.
@@ -53,4 +54,13 @@ func (sc *ServiceProvider) GetObjectiveService() ObjectiveAPI {
 		sc.objective = NewObjectiveService(sc)
 	}
 	return sc.objective
+}
+
+// GetPermissionService returns a PermissionAPI instance.
+// The service will be instanciated if needed.
+func (sc *ServiceProvider) GetPermissionService() PermissionAPI {
+	if sc.permission == nil {
+		sc.permission = NewPermissionService(sc)
+	}
+	return sc.permission
 }

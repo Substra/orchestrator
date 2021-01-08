@@ -15,6 +15,7 @@
 package orchestration
 
 import (
+	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/mock"
 )
@@ -40,4 +41,33 @@ func (m *mockServiceProvider) GetNodeService() NodeAPI {
 func (m *mockServiceProvider) GetObjectiveService() ObjectiveAPI {
 	args := m.Called()
 	return args.Get(0).(ObjectiveAPI)
+}
+
+func (m *mockServiceProvider) GetPermissionService() PermissionAPI {
+	args := m.Called()
+	return args.Get(0).(PermissionAPI)
+}
+
+// mockNodeService is a mock implementing NodeAPI
+type mockNodeService struct {
+	mock.Mock
+}
+
+func (m *mockNodeService) GetNodes() ([]*assets.Node, error) {
+	args := m.Called()
+	return args.Get(0).([]*assets.Node), args.Error(1)
+}
+
+func (m *mockNodeService) RegisterNode(*assets.Node) error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+type mockPermissionService struct {
+	mock.Mock
+}
+
+func (m *mockPermissionService) CreatePermissions(owner string, perms *assets.NewPermissions) (*assets.Permissions, error) {
+	args := m.Called(owner, perms)
+	return args.Get(0).(*assets.Permissions), args.Error(1)
 }

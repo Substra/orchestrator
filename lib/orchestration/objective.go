@@ -38,6 +38,7 @@ type ObjectiveServiceProvider interface {
 // ObjectiveDependencyProvider defines what the ObjectiveService needs to perform its duty
 type ObjectiveDependencyProvider interface {
 	persistence.DatabaseProvider
+	PermissionServiceProvider
 }
 
 // ObjectiveService is the objective manipulation entry point
@@ -75,10 +76,12 @@ func (s *ObjectiveService) RegisterObjective(o *assets.NewObjective, owner strin
 		Metrics:     o.Metrics,
 		Metadata:    o.Metadata,
 		Owner:       owner,
-		// Permissions: ,// TODO
 	}
 
-	// o.Permissions = s.GetPermissionService().NewPermissions(o.Owner)
+	objective.Permissions, err = s.GetPermissionService().CreatePermissions(owner, o.NewPermissions)
+	if err != nil {
+		return &assets.Objective{}, err
+	}
 
 	b, err := json.Marshal(objective)
 	if err != nil {

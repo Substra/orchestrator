@@ -27,8 +27,12 @@ import (
 
 func TestRegisterObjective(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
+	mps := new(mockPermissionService)
 	provider := new(mockServiceProvider)
+
 	provider.On("GetDatabase").Return(mockDB)
+	provider.On("GetPermissionService").Return(mps)
+
 	service := NewObjectiveService(provider)
 
 	description := &assets.Addressable{
@@ -39,7 +43,7 @@ func TestRegisterObjective(t *testing.T) {
 		StorageAddress: "ftp://127.0.0.1/test",
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
-	perms := &assets.NewPermissions{Public: true}
+	newPerms := &assets.NewPermissions{Public: true}
 
 	objective := &assets.NewObjective{
 		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -47,14 +51,19 @@ func TestRegisterObjective(t *testing.T) {
 		MetricsName:    "test perf",
 		Metrics:        metrics,
 		Description:    description,
-		NewPermissions: perms,
+		NewPermissions: newPerms,
 	}
 
+	perms := &assets.Permissions{Process: &assets.Permission{Public: true}}
+
+	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
 	mockDB.On("PutState", objectiveResource, "08680966-97ae-4573-8b2d-6c4db2b3c532", mock.Anything).Return(nil).Once()
 
 	o, err := service.RegisterObjective(objective, "owner")
+
 	assert.NoError(t, err, "Registration of valid objective should not fail")
 	assert.NotNil(t, o, "Registration should return an Objective")
+	assert.Equal(t, perms, o.Permissions, "Permissions should be set")
 	assert.Equal(t, "owner", o.Owner, "Owner should be set")
 
 	mockDB.AssertExpectations(t)
