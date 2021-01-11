@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"io/ioutil"
 	"net"
 	"os"
@@ -31,6 +32,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
+
+// Whether to run in standalone mode or not
+var standalone = false
 
 // RunServerWithChainCode is exported
 func RunServerWithChainCode() {
@@ -117,5 +121,14 @@ func main() {
 	cLog := console.New(true)
 	log.AddHandler(cLog, log.AllLevels...)
 
-	RunServerWithoutChainCode()
+	flag.BoolVar(&standalone, "standalone", true, "Run the chaincode in standalone mode")
+	flag.BoolVar(&standalone, "s", true, "Run the chaincode in standalone mode (shorthand)")
+
+	flag.Parse()
+
+	if standalone {
+		RunServerWithoutChainCode()
+	} else {
+		RunServerWithChainCode()
+	}
 }
