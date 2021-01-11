@@ -12,8 +12,8 @@ RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
 COPY . ${SRC_DIR}
 WORKDIR ${SRC_DIR}
 
-RUN make chaincode.bin
-RUN mv chaincode.bin /bin/chaincode
+RUN make chaincode
+RUN mv ./bin/chaincode /bin/chaincode
 
 
 # Expose the binary
