@@ -12,7 +12,7 @@ RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
 COPY . ${SRC_DIR}
 WORKDIR ${SRC_DIR}
 
-RUN make chaincode
+RUN make ./bin/chaincode
 RUN mv ./bin/chaincode /bin/chaincode
 
 
