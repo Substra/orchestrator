@@ -1,15 +1,35 @@
 @startuml
-object "orchestrator (standalone)" as os
-object chaincode
+object "orchestrator" as os
+Note top of os: standalone server
+
+
+object chaincode {
+  shim.ChaincodeServer
+}
+note top of chaincode: chaincode server
 
 object "gRPC server" as grpc
-object "smartContract" as sc
-object "AssetService (business logic)" as services
+object "smartContract" as sc {
+  contractapi.Contract
+}
+object "AssetServices" as services
+note right of services
+business logic
+end note
+
 object "Persistence layer" as db
 
 os --> grpc
 grpc --> services
+grpc -[dotted]-> chaincode: in chaincode mode
 chaincode --> sc
 sc --> services
 services --> db
+
+note right of db
+multiple backends
+depending on mode
+(solo/ledger)
+end note
+
 @enduml

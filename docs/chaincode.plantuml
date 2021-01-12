@@ -1,0 +1,46 @@
+@startuml
+
+object "gRPC Server" as grpc
+note left
+same interface
+than solo mode
+end note
+
+object "Chaincode Gateway" as gw {
+  fabric SDK gateway
+}
+
+grpc --> gw: convert message
+
+package orchestrator.chaincode {
+    object chaincode {
+        shim.ChaincodeServer
+    }
+    object "smartContract" as sc {
+        contractapi.Contract
+    }
+    object "AssetServices" as services {
+        business logic
+    }
+    note right
+    this is the exact
+    same logic
+    than in solo mode
+    end note
+    object "Persistence layer" as db {
+        LedgerDB
+    }
+}
+note top of orchestrator.chaincode
+this is the chaincode executable
+launched in the fabric network
+end note
+
+chaincode --> sc
+sc --> services
+services --> db
+
+
+gw -[dotted]-> chaincode: chaincode invocation
+
+@enduml

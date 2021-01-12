@@ -1,0 +1,10 @@
+@startuml
+
+object "gRPC Server" as grpc
+object ServiceProvider
+object Database
+
+grpc --> ServiceProvider: assets are plain gRPC messages
+ServiceProvider --> Database: persistence with CouchDB
+
+@enduml

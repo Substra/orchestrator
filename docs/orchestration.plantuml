@@ -1,0 +1,26 @@
+@startuml
+
+interface orchestrator.persistence.Database
+orchestrator.persistence.Database <|-- database.CouchDB
+orchestrator.persistence.Database <|-- chaincode.LedgerDB
+
+orchestrator.persistence.Database *-- orchestrator.orchestration.Provider
+interface orchestrator.orchestration.ServiceProvider
+class orchestrator.orchestration.Provider {
+  ~DatabaseService
+  ~NodeService
+  ~ObjectiveService
+  ~...
+}
+orchestrator.orchestration.ServiceProvider <|-- orchestrator.orchestration.Provider
+
+orchestrator.orchestration.ServiceProvider *-- orchestrator.orchestration.NodeService
+orchestrator.orchestration.ServiceProvider *-- orchestrator.orchestration.ObjectiveService
+orchestrator.orchestration.ServiceProvider *-- orchestrator.orchestration.XXXService
+note bottom
+asset services depend
+on each other
+through the ServiceProvider
+end note
+
+@enduml
