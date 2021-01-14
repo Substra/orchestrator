@@ -1,0 +1,13 @@
+apiVersion: v2
+name: orchestrator
+description: substra orchestration
+
+type: application
+version: 0.1.0
+appVersion: 0.0.1
+
+dependencies:
+  - name: couchdb
+    repository: https://apache.github.io/couchdb-helm
+    version: 3.3.3
+    condition: couchdb.enabled

@@ -30,6 +30,8 @@ import (
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/orchestration"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -90,8 +92,10 @@ func RunServerWithChainCode() {
 // RunServerWithoutChainCode will expose the chaincode logic through gRPC.
 // State will be stored in a redis database.
 func RunServerWithoutChainCode() {
-	dsn := "http://dev:dev@localhost:5984"
-
+	dsn := os.Getenv("COUCHDB_DSN")
+	if dsn == "" {
+		dsn = "http://dev:dev@localhost:5984"
+	}
 	couchPersistence, err := couchdb.NewPersistence(context.TODO(), dsn, "substra_orchestrator")
 	defer couchPersistence.Close(context.TODO())
 	if err != nil {
@@ -106,10 +110,17 @@ func RunServerWithoutChainCode() {
 	provider := orchestration.NewServiceProvider(couchPersistence)
 
 	server := grpc.NewServer()
+
+	// Register application services
 	assets.RegisterNodeServiceServer(server, orchestratorGrpc.NewNodeServer(provider.GetNodeService()))
 	assets.RegisterObjectiveServiceServer(server, orchestratorGrpc.NewObjectiveServer(provider.GetObjectiveService()))
 
+	// Register reflection service
 	reflection.Register(server)
+
+	// Register healthcheck service
+	healthcheck := health.NewServer()
+	healthpb.RegisterHealthServer(server, healthcheck)
 
 	log.WithField("address", listen.Addr().String()).Info("Server listening")
 	if err := server.Serve(listen); err != nil {
@@ -125,6 +136,13 @@ func main() {
 	flag.BoolVar(&standalone, "s", true, "Run the chaincode in standalone mode (shorthand)")
 
 	flag.Parse()
+
+	switch os.Getenv("ORCHESTRATOR_MODE") {
+	case "chaincode":
+		standalone = false
+	case "standalone":
+		standalone = true
+	}
 
 	if standalone {
 		RunServerWithoutChainCode()

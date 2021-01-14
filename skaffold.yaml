@@ -1,0 +1,57 @@
+apiVersion: skaffold/v2beta10
+kind: Config
+build:
+  artifacts:
+    - image: owkin/orchestrator
+      context: .
+      docker:
+        dockerfile: Dockerfile.orchestrator
+deploy:
+  helm:
+    releases:
+      - name: owkin-orchestrator-org-1
+        chartPath: charts/orchestrator
+        namespace: org-1
+        artifactOverrides:
+          image: owkin/orchestrator
+        imageStrategy:
+          helm: {}
+        setValues:
+          orchestrator.mode: standalone
+          couchdb.enabled: true
+          couchdb.allowAdminParty: true
+          couchdb.couchdbConfig.couchdb.uuid: 00000001-ff16-4375-b81a-5c1742bc9f4c
+      - name: owkin-orchestrator-org-2
+        chartPath: charts/orchestrator
+        namespace: org-2
+        artifactOverrides:
+          image: owkin/orchestrator
+        imageStrategy:
+          helm: {}
+        setValues:
+          orchestrator.mode: standalone
+          couchdb.enabled: true
+          couchdb.allowAdminParty: true
+          couchdb.couchdbConfig.couchdb.uuid: 00000002-ff16-4375-b81a-5c1742bc9f4c
+
+profiles:
+- name: standalone
+  activation:
+    - command: dev
+
+- name: chaincode
+  activation:
+    - env: ORCHESTRATOR_MODE=chaincode
+  patches:
+    - op: replace
+      path: /deploy/helm/releases/0/setValues/couchdb.enabled
+      value: false
+    - op: replace
+      path: /deploy/helm/releases/0/setValues/orchestrator.mode
+      value: chaincode
+    - op: replace
+      path: /deploy/helm/releases/1/setValues/couchdb.enabled
+      value: false
+    - op: replace
+      path: /deploy/helm/releases/1/setValues/orchestrator.mode
+      value: chaincode

@@ -1,0 +1,41 @@
+# Build stage
+FROM golang:1.13.8-alpine AS build
+RUN apk add --no-cache git make protoc
+
+ENV GO111MODULE=on
+ENV SRC_DIR=/usr/src/chaincode
+
+RUN wget https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.3.6/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe
+RUN chmod +x /bin/grpc_health_probe
+
+# Install protobuf codegen dependencies
+RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
+         google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+WORKDIR ${SRC_DIR}
+
+# Download dependencies (cache them in a layer)
+COPY ./go.mod ./go.sum ./
+RUN go mod download
+
+COPY Makefile ./
+COPY server.go ./
+COPY chaincode ./chaincode
+COPY database ./database
+COPY grpc ./grpc
+COPY lib ./lib
+COPY utils ./utils
+
+RUN make ./bin/orchestrator
+RUN mv ./bin/orchestrator /bin/orchestrator
+
+
+# Expose the binary
+FROM alpine:3.12 as prod
+
+COPY --from=build /bin/orchestrator /app/orchestrator
+COPY --from=build /bin/grpc_health_probe /bin/grpc_health_probe
+USER 1000
+WORKDIR /app
+
+CMD ./orchestrator
