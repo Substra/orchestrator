@@ -43,18 +43,18 @@ func RunServerWithChainCode() {
 	os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
 	wallet, err := gateway.NewFileSystemWallet("wallet")
 	if err != nil {
-		log.Fatal("failed guess where")
+		log.Fatal("failed to open wallet")
 	}
 
 	if !wallet.Exists("appClient") {
-		cert, err := ioutil.ReadFile("/Users/inal/fabric/sampleconfig/msp/signcerts/peer.pem")
+		cert, err := ioutil.ReadFile("./secrets/cert.pem")
 		if err != nil {
-			log.Fatal("failed guess where")
+			log.Fatal("failed to read peer cert")
 		}
 
-		key, err := ioutil.ReadFile("/Users/inal/fabric/sampleconfig/msp/keystore/key.pem")
+		key, err := ioutil.ReadFile("./secrets/key.pem")
 		if err != nil {
-			log.Fatal("failed guess where")
+			log.Fatal("failed to read key")
 		}
 
 		identity := gateway.NewX509Identity("SampleOrg.member", string(cert), string(key))
@@ -65,25 +65,25 @@ func RunServerWithChainCode() {
 	// get config path
 
 	gw, err := gateway.Connect(
-		gateway.WithConfig(config.FromFile("/Users/inal/fabric/sampleconfig/config.json")),
+		gateway.WithConfig(config.FromFile("./config.yml")),
 		gateway.WithIdentity(wallet, "appClient"),
 	)
 
 	if err != nil {
-		log.Fatalf("failed guess where %v", err)
+		log.Fatalf("failed to instanciate gateway: %v", err)
 	}
 
 	defer gw.Close()
 
-	network, err := gw.GetNetwork("ch1")
+	network, err := gw.GetNetwork("mychannel")
 	if err != nil {
-		log.Fatal("failed guess where")
+		log.Fatalf("failed to get network: %v", err)
 	}
 
 	contract := network.GetContract("mycc")
 	result, err := contract.SubmitTransaction("RegisterNode", "1")
 	if err != nil {
-		log.Fatal("failed guess where")
+		log.Fatal("failed to invoke registration")
 	}
 
 	log.Debug(result)

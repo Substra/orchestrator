@@ -1,0 +1,32 @@
+---
+name: "local hlf network"
+description: "dev network"
+version: "1.0"
+
+client:
+  organization: "Org1"
+
+channels:
+  mychannel:
+    orderers:
+      - orderer.example.org
+    peers:
+      peer1.example.org:
+        endorsingPeer: true
+        eventSource: true
+        chaincodeQuery: true
+        ledgerQuery: true
+
+organizations:
+  Org1:
+    mspid: "MyOrg1MSP"
+    peers:
+      - peer1.example.org
+
+orderers:
+  orderer.example.org:
+    url: grpc://localhost:7050
+
+peers:
+  peer1.example.org:
+    url: grpc://localhost:7051
