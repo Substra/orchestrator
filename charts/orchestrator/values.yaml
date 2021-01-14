@@ -84,6 +84,39 @@ couchdb:
   allowAdminParty: false # If enabled, start cluster without admin account
   externalPort: 5984
 
+fabric:
+  organization: MyOrg1
+  mspID: MyOrg1MSP
+  channels:
+    - mychannel
+  user:
+    name: User
+  peer:
+    host: network-org-1-peer-1-hlf-peer.org-1
+    port: 7051
+  waitForEventTimeoutSeconds: 45
+  strategy:
+    invoke: ALL
+    query: SELF
+  secrets:
+    caCert: hlf-cacert
+    user:
+      cert: hlf-msp-cert-user
+      key: hlf-msp-key-user
+    peer:
+      tls:
+        client: hlf-tls-user
+        server: hlf-tls-admin
+
+grpcOptions:
+  keepalive:
+    timeMs: 120000
+  maxSendMessageLength: -1
+  maxReceiveMessageLength: -1
+  keepaliveTimeoutMs: 20000
+  http2MaxPingsWithoutData: 0
+  keepalivePermitWithoutCalls: 1
+
 # Orchestrator application specific parameters
 orchestrator:
   mode: standalone # the orchestrator can run in either "standalone" or "chaincode" mode

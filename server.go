@@ -40,15 +40,16 @@ var standalone = false
 
 // RunServerWithChainCode is exported
 func RunServerWithChainCode() {
+
 	wallet := gateway.NewInMemoryWallet()
 
 	if !wallet.Exists("appClient") {
-		cert, err := ioutil.ReadFile("./secrets/cert.pem")
+		cert, err := ioutil.ReadFile("/var/hyperledger/msp/signcerts/cert.pem")
 		if err != nil {
 			log.Fatal("failed to read peer cert")
 		}
 
-		key, err := ioutil.ReadFile("./secrets/key.pem")
+		key, err := ioutil.ReadFile("/var/hyperledger/msp/keystore/key.pem")
 		if err != nil {
 			log.Fatal("failed to read key")
 		}
@@ -58,10 +59,8 @@ func RunServerWithChainCode() {
 		wallet.Put("appClient", identity)
 	}
 
-	// get config path
-
 	gw, err := gateway.Connect(
-		gateway.WithConfig(config.FromFile("./config.yml")),
+		gateway.WithConfig(config.FromFile("/var/hyperledger/fabric-config.yaml")),
 		gateway.WithIdentity(wallet, "appClient"),
 	)
 
@@ -82,7 +81,7 @@ func RunServerWithChainCode() {
 		log.Fatalf("failed to invoke registration: %v", err)
 	}
 
-	log.Debug(result)
+	log.Debug(string(result))
 }
 
 // RunServerWithoutChainCode will expose the chaincode logic through gRPC.

@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "orchestrator.fullname" . }}-fabric
+data:
+  fabric-config.yaml: |
+    version: 1.0.0
+    name: "HLF orchestrator configuration"
+
+    client:
+      organization: {{ .Values.fabric.organization }}
+      # cryptoconfig:
+      #   path: /var/hyperledger/msp
+      #   credentialStore:
+      #     path: "/var/hyperledger/state-store"
+      #     cryptoStore:
+      #       path: /var/hyperledger/msp
+      credentialStore:
+        cryptoStore:
+            path: /tmp  # Without this, the SDK tries to write in $PWD
+      tlsCerts:
+        systemCertPool: false
+        client:
+          key:
+            path: /var/hyperledger/tls/client/pair/tls.key
+          cert:
+            path: /var/hyperledger/tls/client/pair/tls.crt
+        server:
+          key:
+            path: /var/hyperledger/tls/server/pair/tls.key
+          cert:
+            path: /var/hyperledger/tls/server/pair/tls.crt
+
+    channels:
+      {{- range $channel := .Values.channels }}
+      {{ $channel }}:
+        peers:
+          {{ .Values.fabric.peer.host }}:{{ .Values.fabric.peer.port }}:
+            endorsingPeer: true
+            eventSource: true
+            chaincodeQuery: true
+            ledgerQuery: true
+      {{ end }}
+        # orderers:
+        #   - orderer.example.org
+
+    organizations:
+      {{ .Values.fabric.organization }}:
+        mspid: {{ .Values.fabric.mspID }}
+        peers:
+          - {{ .Values.fabric.peer.host }}:{{ .Values.fabric.peer.port }}
+
+    # orderers:
+    #   orderer.example.org:
+    #     url: localhost:7050
+
+    peers:
+      {{ .Values.fabric.peer.host }}:{{ .Values.fabric.peer.port }}:
+        url: {{ .Values.fabric.peer.host }}:{{ .Values.fabric.peer.port }}
+        tlsCACerts:
+          path: /var/hyperledger/tls/server/cert/cacert.pem
+        # grpcOptions:
+        #   ssl-target-name-override: {{ .Values.fabric.peer.host }}
+        #   keep-alive-timeout: {{ .Values.grpcOptions.keepalive.timeoutMs }}
+        #   grpc.keepalive_time_ms: {{ .Values.grpcOptions.keepalive.timeoutMs }}
+        #   grpc-max-send-message-length: {{ .Values.grpcOptions.maxSendMessageLength }}
+        #   grpc-max-receive-message-length: {{ .Values.grpcOptions.maxReceiveMessageLength }}
+        #   grpc.http2.max_pings_without_data: {{ .Values.grpcOptions.http2MaxPingsWithoutData }}
+        #   grpc.keepalive_permit_without_calls: {{ .Values.grpcOptions.keepalivePermitWithoutCalls }}
