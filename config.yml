@@ -30,3 +30,4 @@ orderers:
 peers:
   peer1.example.org:
     url: grpc://localhost:7051
+

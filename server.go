@@ -57,7 +57,7 @@ func RunServerWithChainCode() {
 			log.Fatal("failed to read key")
 		}
 
-		identity := gateway.NewX509Identity("SampleOrg.member", string(cert), string(key))
+		identity := gateway.NewX509Identity("MyOrg1MSP", string(cert), string(key))
 
 		wallet.Put("appClient", identity)
 	}
