@@ -4,30 +4,50 @@ description: "dev network"
 version: "1.0"
 
 client:
-  organization: "Org1"
+  organization: "MyOrg1"
+  tlsCerts:
+    systemCertPool: false
+    client:
+      key:
+        path: crypto/org-1/tls/client/pair/tls.key
+      cert:
+        path: crypto/org-1/tls/client/pair/tls.crt
+    # server:
+    #   key:
+    #     path: crypto/org-1/tls/server/pair/tls.key
+    #   cert:
+    #     path: crypto/org-1/tls/server/pair/tls.crt
 
 channels:
   mychannel:
-    orderers:
-      - orderer.example.org
     peers:
-      peer1.example.org:
+      localhost:7051:
         endorsingPeer: true
         eventSource: true
         chaincodeQuery: true
         ledgerQuery: true
+    # orderers:
+    #   - orderer.example.org
 
 organizations:
-  Org1:
+  MyOrg1:
     mspid: "MyOrg1MSP"
     peers:
-      - peer1.example.org
+      - localhost:7051
 
-orderers:
-  orderer.example.org:
-    url: grpc://localhost:7050
+# orderers:
+#   orderer.example.org:
+#     url: localhost:7050
 
 peers:
-  peer1.example.org:
-    url: grpc://localhost:7051
-
+  localhost:7051:
+    url: localhost:7051
+    tlsCACerts:
+      path: crypto/org-1/tls/server/cert/cacert.pem
+    # grpcOptions:
+    #   ssl-target-name-override: network-org-1-peer-1-hlf-peer.org-1
+    #   keep-alive-time: 0s
+    #   keep-alive-timeout: 20s
+    #   keep-alive-permit: false
+    #   fail-fast: false
+    #   allow-insecure: false

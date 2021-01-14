@@ -40,11 +40,7 @@ var standalone = false
 
 // RunServerWithChainCode is exported
 func RunServerWithChainCode() {
-	os.Setenv("DISCOVERY_AS_LOCALHOST", "true")
-	wallet, err := gateway.NewFileSystemWallet("wallet")
-	if err != nil {
-		log.Fatal("failed to open wallet")
-	}
+	wallet := gateway.NewInMemoryWallet()
 
 	if !wallet.Exists("appClient") {
 		cert, err := ioutil.ReadFile("./secrets/cert.pem")
@@ -81,9 +77,9 @@ func RunServerWithChainCode() {
 	}
 
 	contract := network.GetContract("mycc")
-	result, err := contract.SubmitTransaction("RegisterNode", "1")
+	result, err := contract.SubmitTransaction("registerNode", "1")
 	if err != nil {
-		log.Fatal("failed to invoke registration")
+		log.Fatalf("failed to invoke registration: %v", err)
 	}
 
 	log.Debug(result)
