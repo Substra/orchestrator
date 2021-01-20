@@ -52,6 +52,20 @@ spec:
            {{- end}}
            - name: ORCHESTRATOR_MODE
              value: {{ .Values.orchestrator.mode }}
+           {{- if eq .Values.orchestrator.mode "chaincode" }}
+           - name: ORCHESTRATOR_CERT
+             value: {{ .Values.orchestrator.cert }}
+           - name: ORCHESTRATOR_KEY
+             value: {{ .Values.orchestrator.key }}
+           - name: ORCHESTRATOR_MSPID
+             value: {{ .Values.fabric.mspID }}
+           - name: ORCHESTRATOR_NETWORK_CONFIG
+             value: {{ .Values.orchestrator.networkConfig }}
+           - name: ORCHESTRATOR_CHANNEL
+             value: {{ .Values.orchestrator.channel }}
+           - name: ORCHESTRATOR_CHAINCODE
+             value: {{ .Values.orchestrator.chaincode }}
+           {{- end}}
           volumeMounts:
             {{- if eq .Values.orchestrator.mode "chaincode" }}
             - name: fabric-config

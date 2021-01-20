@@ -18,6 +18,8 @@ deploy:
           helm: {}
         setValues:
           orchestrator.mode: chaincode
+          orchestrator.channel: mychannel
+          orchestrator.chaincode: mycc
           fabric.organization: MyOrg1
           fabric.mspID: MyOrg1MSP
           fabric.peer.host: network-org-1-peer-1-hlf-peer.org-1
@@ -30,6 +32,8 @@ deploy:
           helm: {}
         setValues:
           orchestrator.mode: chaincode
+          orchestrator.channel: mychannel
+          orchestrator.chaincode: mycc
           fabric.organization: MyOrg2
           fabric.mspID: MyOrg2MSP
           fabric.peer.host: network-org-2-peer-1-hlf-peer.org-2

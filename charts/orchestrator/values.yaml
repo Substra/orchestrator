@@ -120,3 +120,8 @@ grpcOptions:
 # Orchestrator application specific parameters
 orchestrator:
   mode: standalone # the orchestrator can run in either "standalone" or "chaincode" mode
+  cert: /var/hyperledger/msp/signcerts/cert.pem
+  key: /var/hyperledger/msp/keystore/key.pem
+  networkConfig: /var/hyperledger/fabric-config.yaml
+  channel: mychannel
+  chaincode: mycc

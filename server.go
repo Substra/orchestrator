@@ -35,33 +35,47 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+const envPrefix = "ORCHESTRATOR_"
+const defaultIdentity = "appClient"
+
 // Whether to run in standalone mode or not
 var standalone = false
 
+// envOrFail extract environment variable or abort with an error message
+// Every env var is prefixed by ORCHESTRATOR_
+func envOrFail(name string) string {
+	n := envPrefix + name
+	v := os.Getenv(n)
+	log.Debug(name + ": " + v)
+	if v == "" {
+		log.Fatalf("Missing environment variable: %s", n)
+	}
+	return v
+}
+
 // RunServerWithChainCode is exported
 func RunServerWithChainCode() {
-
 	wallet := gateway.NewInMemoryWallet()
 
-	if !wallet.Exists("appClient") {
-		cert, err := ioutil.ReadFile("/var/hyperledger/msp/signcerts/cert.pem")
+	if !wallet.Exists(defaultIdentity) {
+		cert, err := ioutil.ReadFile(envOrFail("CERT"))
 		if err != nil {
 			log.Fatal("failed to read peer cert")
 		}
 
-		key, err := ioutil.ReadFile("/var/hyperledger/msp/keystore/key.pem")
+		key, err := ioutil.ReadFile(envOrFail("KEY"))
 		if err != nil {
 			log.Fatal("failed to read key")
 		}
 
-		identity := gateway.NewX509Identity("MyOrg1MSP", string(cert), string(key))
+		identity := gateway.NewX509Identity(envOrFail("MSPID"), string(cert), string(key))
 
-		wallet.Put("appClient", identity)
+		wallet.Put(defaultIdentity, identity)
 	}
 
 	gw, err := gateway.Connect(
-		gateway.WithConfig(config.FromFile("/var/hyperledger/fabric-config.yaml")),
-		gateway.WithIdentity(wallet, "appClient"),
+		gateway.WithConfig(config.FromFile(envOrFail("NETWORK_CONFIG"))),
+		gateway.WithIdentity(wallet, defaultIdentity),
 	)
 
 	if err != nil {
@@ -70,12 +84,12 @@ func RunServerWithChainCode() {
 
 	defer gw.Close()
 
-	network, err := gw.GetNetwork("mychannel")
+	network, err := gw.GetNetwork(envOrFail("CHANNEL"))
 	if err != nil {
 		log.Fatalf("failed to get network: %v", err)
 	}
 
-	contract := network.GetContract("mycc")
+	contract := network.GetContract(envOrFail("CHAINCODE"))
 	result, err := contract.SubmitTransaction("registerNode", "1")
 	if err != nil {
 		log.Fatalf("failed to invoke registration: %v", err)
@@ -132,7 +146,7 @@ func main() {
 
 	flag.Parse()
 
-	switch os.Getenv("ORCHESTRATOR_MODE") {
+	switch os.Getenv(envPrefix + "MODE") {
 	case "chaincode":
 		standalone = false
 	case "standalone":
