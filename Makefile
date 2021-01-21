@@ -11,7 +11,7 @@ pbgo = $(protobufs:.proto=.pb.go)
 all: $(ORCHESTRATOR_BIN) $(CHAINCODE_BIN)
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR)
-	go build -o $(ORCHESTRATOR_BIN) .
+	go build -o $(ORCHESTRATOR_BIN) ./orchestrator
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR)
 	go build -o $(CHAINCODE_BIN) ./chaincode
