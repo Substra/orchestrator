@@ -19,10 +19,8 @@ COPY ./go.mod ./go.sum ./
 RUN go mod download
 
 COPY Makefile ./
-COPY server.go ./
+COPY orchestrator ./orchestrator
 COPY chaincode ./chaincode
-COPY database ./database
-COPY grpc ./grpc
 COPY lib ./lib
 COPY utils ./utils
 
