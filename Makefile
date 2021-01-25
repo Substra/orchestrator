@@ -8,7 +8,14 @@ go_src = $(shell find . -type f -name '*.go')
 protobufs = $(wildcard $(protos)/*.proto)
 pbgo = $(protobufs:.proto=.pb.go)
 
-all: $(ORCHESTRATOR_BIN) $(CHAINCODE_BIN)
+.PHONY: all
+all: chaincode orchestrator
+
+.PHONY: chaincode
+chaincode: $(CHAINCODE_BIN)
+
+.PHONY: orchestrator
+orchestrator: $(ORCHESTRATOR_BIN)
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR)
 	go build -o $(ORCHESTRATOR_BIN) ./orchestrator
