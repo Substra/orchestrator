@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
-
-package orchestrator;
-
-option go_package = "github.com/owkin/orchestrator/lib/assets";
-
-// Node is a member of the network
-message Node {
-    string id = 1;
-}
-
-message NodeQueryResponse {
-    repeated Node nodes = 1;
-}
-
-message NodeRegistrationParam {}
-message NodeQueryParam {}
-
-service NodeService {
-    rpc RegisterNode(NodeRegistrationParam) returns (Node) {}
-    rpc QueryNodes(NodeQueryParam) returns (NodeQueryResponse) {}
-}
+// Package chaincode defines the HLF backend used when executing the orchestrator in "chaincode" mode.
+package chaincode

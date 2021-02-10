@@ -25,7 +25,7 @@ const nodeResource = "nodes"
 
 // NodeAPI defines the methods to act on Nodes
 type NodeAPI interface {
-	RegisterNode(*assets.Node) error
+	RegisterNode(id string) (*assets.Node, error)
 	GetNodes() ([]*assets.Node, error)
 }
 
@@ -51,13 +51,15 @@ func NewNodeService(provider NodeDependencyProvider) *NodeService {
 }
 
 // RegisterNode persist a node
-func (s *NodeService) RegisterNode(n *assets.Node) error {
-	nodeBytes, err := json.Marshal(n)
+func (s *NodeService) RegisterNode(id string) (*assets.Node, error) {
+	node := &assets.Node{Id: id}
+	nodeBytes, err := json.Marshal(node)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return s.GetDatabase().PutState(nodeResource, n.GetId(), nodeBytes)
+	err = s.GetDatabase().PutState(nodeResource, node.GetId(), nodeBytes)
+	return node, err
 }
 
 // GetNodes list all known nodes

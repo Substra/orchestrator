@@ -27,8 +27,8 @@ import (
 
 func TestRegisterObjective(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	mps := new(mockPermissionService)
-	provider := new(mockServiceProvider)
+	mps := new(MockPermissionService)
+	provider := new(MockServiceProvider)
 
 	provider.On("GetDatabase").Return(mockDB)
 	provider.On("GetPermissionService").Return(mps)
@@ -71,7 +71,7 @@ func TestRegisterObjective(t *testing.T) {
 
 func TestGetObjective(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	provider := new(mockServiceProvider)
+	provider := new(MockServiceProvider)
 	provider.On("GetDatabase").Return(mockDB)
 	service := NewObjectiveService(provider)
 
@@ -92,7 +92,7 @@ func TestGetObjective(t *testing.T) {
 
 func TestGetObjectives(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	provider := new(mockServiceProvider)
+	provider := new(MockServiceProvider)
 	provider.On("GetDatabase").Return(mockDB)
 	service := NewObjectiveService(provider)
 

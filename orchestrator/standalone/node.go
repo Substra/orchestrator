@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package grpc
+package standalone
 
 import (
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/owkin/orchestrator/orchestrator/common"
 	"golang.org/x/net/context"
 )
 
@@ -32,9 +33,14 @@ func NewNodeServer(service orchestration.NodeAPI) *NodeServer {
 }
 
 // RegisterNode will add a new node to the network
-func (s *NodeServer) RegisterNode(ctx context.Context, n *assets.Node) (*assets.Node, error) {
-	err := s.nodeService.RegisterNode(n)
-	return n, err
+func (s *NodeServer) RegisterNode(ctx context.Context, in *assets.NodeRegistrationParam) (*assets.Node, error) {
+	mspid, err := common.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := s.nodeService.RegisterNode(mspid)
+	return node, err
 }
 
 // QueryNodes will return all known nodes

@@ -49,40 +49,19 @@ func NewSmartContract() *SmartContract {
 
 // RegisterObjective creates a new objective in world state
 // If the key exists, it will override the existing value with the new one
-func (s *SmartContract) RegisterObjective(
-	ctx contractapi.TransactionContextInterface,
-	key string,
-	name string,
-	description *assets.Addressable,
-	metricsName string,
-	metrics *assets.Addressable,
-	testDataset *assets.Dataset,
-	metadata map[string]string,
-	permissions *assets.NewPermissions,
-) error {
+func (s *SmartContract) RegisterObjective(ctx contractapi.TransactionContextInterface, o *assets.NewObjective) (*assets.Objective, error) {
 	service, err := s.serviceFactory(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	o := assets.NewObjective{
-		Key:            key,
-		Name:           name,
-		Description:    description,
-		MetricsName:    metricsName,
-		Metrics:        metrics,
-		Metadata:       metadata,
-		NewPermissions: permissions,
-		TestDataset:    testDataset,
-	}
-
-	_, err = service.RegisterObjective(&o, owner)
-	return err
+	obj, err := service.RegisterObjective(o, owner)
+	return obj, err
 }
 
 // QueryObjectives returns the objectives

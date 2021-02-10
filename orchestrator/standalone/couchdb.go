@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package couchdb implements the assets persistence layer.
-// It relies on a couchdb backend.
-package couchdb
+package standalone
 
 import (
 	"context"

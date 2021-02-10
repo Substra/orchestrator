@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+package chaincode
 
-package orchestrator;
+import (
+	"testing"
 
-option go_package = "github.com/owkin/orchestrator/lib/assets";
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/stretchr/testify/assert"
+)
 
-// Node is a member of the network
-message Node {
-    string id = 1;
-}
-
-message NodeQueryResponse {
-    repeated Node nodes = 1;
-}
-
-message NodeRegistrationParam {}
-message NodeQueryParam {}
-
-service NodeService {
-    rpc RegisterNode(NodeRegistrationParam) returns (Node) {}
-    rpc QueryNodes(NodeQueryParam) returns (NodeQueryResponse) {}
+// TestNodeAdapterImplementServer makes sure the chaincode-baked orchestration exposes the same server than standalone mode.
+func TestNodeAdapterImplementServer(t *testing.T) {
+	adapter := NewNodeAdapter()
+	assert.Implementsf(t, (*assets.NodeServiceServer)(nil), adapter, "NodeAdapter should implements NodeServiceServer")
 }

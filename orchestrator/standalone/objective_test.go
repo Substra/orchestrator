@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+package standalone
 
-package orchestrator;
+import (
+	"testing"
 
-option go_package = "github.com/owkin/orchestrator/lib/assets";
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/stretchr/testify/assert"
+)
 
-// Node is a member of the network
-message Node {
-    string id = 1;
-}
-
-message NodeQueryResponse {
-    repeated Node nodes = 1;
-}
-
-message NodeRegistrationParam {}
-message NodeQueryParam {}
-
-service NodeService {
-    rpc RegisterNode(NodeRegistrationParam) returns (Node) {}
-    rpc QueryNodes(NodeQueryParam) returns (NodeQueryResponse) {}
+func TestObjectiveServerImplementServer(t *testing.T) {
+	mock := &orchestration.MockObjectiveService{}
+	server := NewObjectiveServer(mock)
+	assert.Implementsf(t, (*assets.ObjectiveServiceServer)(nil), server, "ObjectiveServer should implements ObjectiveServiceServer")
 }

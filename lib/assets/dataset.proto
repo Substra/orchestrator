@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package dataset;
+package orchestrator;
 
 option go_package = "github.com/owkin/orchestrator/lib/assets";
 

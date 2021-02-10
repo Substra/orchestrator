@@ -71,7 +71,7 @@ func TestRegistration(t *testing.T) {
 		Metrics:        addressable,
 		TestDataset:    testDataset,
 		Metadata:       metadata,
-		NewPermissions: &assets.NewPermissions{},
+		NewPermissions: newPerms,
 	}
 
 	o := &assets.Objective{}
@@ -83,17 +83,7 @@ func TestRegistration(t *testing.T) {
 
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	contract.RegisterObjective(
-		ctx,
-		"uuid1",
-		"Objective name",
-		addressable,
-		"metrics name",
-		addressable,
-		testDataset,
-		metadata,
-		newPerms,
-	)
+	contract.RegisterObjective(ctx, newObj)
 }
 
 func TestQueryObjectives(t *testing.T) {

@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package objective;
+package orchestrator;
 
 import "common.proto";
 import "dataset.proto";
@@ -25,11 +25,11 @@ option go_package = "github.com/owkin/orchestrator/lib/assets";
 message Objective {
     string key = 1;
     string name = 2;
-    dataset.Dataset test_dataset = 3;
-    common.Addressable description = 4;
+    Dataset test_dataset = 3;
+    Addressable description = 4;
     string metrics_name = 5;
-    common.Addressable metrics = 6;
-    common.Permissions permissions = 7;
+    Addressable metrics = 6;
+    Permissions permissions = 7;
     map<string, string> metadata = 8;
     string owner = 9;
 }
@@ -39,11 +39,11 @@ message Objective {
 message NewObjective {
     string key = 1;
     string name = 2;
-    dataset.Dataset test_dataset = 3;
-    common.Addressable description = 4;
+    Dataset test_dataset = 3;
+    Addressable description = 4;
     string metrics_name = 5;
-    common.Addressable metrics = 6;
-    common.NewPermissions new_permissions = 7;
+    Addressable metrics = 6;
+    NewPermissions new_permissions = 7;
     map<string, string> metadata = 8;
 }
 
@@ -55,7 +55,7 @@ message ObjectiveQueryResponse {
 
 message LeaderboardQueryParam {
     string objective_key = 1;
-    common.SortOrder sort_order = 2;
+    SortOrder sort_order = 2;
 }
 
 // This will probably live somewhere else once we implement test tuple assets

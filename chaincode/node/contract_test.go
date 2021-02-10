@@ -22,22 +22,7 @@ import (
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
-
-type MockedService struct {
-	mock.Mock
-}
-
-func (m *MockedService) RegisterNode(n *assets.Node) error {
-	args := m.Called(n)
-	return args.Error(0)
-}
-
-func (m *MockedService) GetNodes() ([]*assets.Node, error) {
-	args := m.Called()
-	return args.Get(0).([]*assets.Node), args.Error(1)
-}
 
 func mockFactory(mock orchestration.NodeAPI) func(c contractapi.TransactionContextInterface) (orchestration.NodeAPI, error) {
 	return func(_ contractapi.TransactionContextInterface) (orchestration.NodeAPI, error) {
@@ -46,7 +31,7 @@ func mockFactory(mock orchestration.NodeAPI) func(c contractapi.TransactionConte
 }
 
 func TestRegistration(t *testing.T) {
-	mockService := new(MockedService)
+	mockService := new(orchestration.MockNodeService)
 	contract := &SmartContract{
 		serviceFactory: mockFactory(mockService),
 	}
@@ -54,7 +39,7 @@ func TestRegistration(t *testing.T) {
 	org := "TestOrg"
 
 	o := &assets.Node{Id: org}
-	mockService.On("RegisterNode", o).Return(nil).Once()
+	mockService.On("RegisterNode", org).Return(o, nil).Once()
 
 	b := testHelper.FakeTxCreator(t, org)
 
@@ -71,7 +56,7 @@ func TestRegistration(t *testing.T) {
 }
 
 func TestQueryNodes(t *testing.T) {
-	mockService := new(MockedService)
+	mockService := new(orchestration.MockNodeService)
 	contract := &SmartContract{
 		serviceFactory: mockFactory(mockService),
 	}

@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-syntax = "proto3";
+package chaincode
 
-package orchestrator;
+import "github.com/stretchr/testify/mock"
 
-option go_package = "github.com/owkin/orchestrator/lib/assets";
-
-// Node is a member of the network
-message Node {
-    string id = 1;
+type mockedInvocator struct {
+	mock.Mock
 }
 
-message NodeQueryResponse {
-    repeated Node nodes = 1;
-}
-
-message NodeRegistrationParam {}
-message NodeQueryParam {}
-
-service NodeService {
-    rpc RegisterNode(NodeRegistrationParam) returns (Node) {}
-    rpc QueryNodes(NodeQueryParam) returns (NodeQueryResponse) {}
+func (m *mockedInvocator) Invoke(method string, args []string, output interface{}) error {
+	a := m.Called(method, args, output)
+	return a.Error(0)
 }

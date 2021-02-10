@@ -25,11 +25,11 @@ import (
 
 func TestRegisterNode(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
-	provider := new(mockServiceProvider)
+	provider := new(MockServiceProvider)
 
 	provider.On("GetDatabase").Return(mockDB)
 
-	node := assets.Node{
+	expected := assets.Node{
 		Id: "uuid1",
 	}
 
@@ -37,6 +37,7 @@ func TestRegisterNode(t *testing.T) {
 
 	service := NewNodeService(provider)
 
-	err := service.RegisterNode(&node)
+	node, err := service.RegisterNode("uuid1")
 	assert.NoError(t, err, "Node registration should not fail")
+	assert.Equal(t, &expected, node, "Registration should return a node")
 }

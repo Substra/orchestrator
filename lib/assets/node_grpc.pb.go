@@ -17,7 +17,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NodeServiceClient interface {
-	RegisterNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error)
+	RegisterNode(ctx context.Context, in *NodeRegistrationParam, opts ...grpc.CallOption) (*Node, error)
 	QueryNodes(ctx context.Context, in *NodeQueryParam, opts ...grpc.CallOption) (*NodeQueryResponse, error)
 }
 
@@ -29,9 +29,9 @@ func NewNodeServiceClient(cc grpc.ClientConnInterface) NodeServiceClient {
 	return &nodeServiceClient{cc}
 }
 
-func (c *nodeServiceClient) RegisterNode(ctx context.Context, in *Node, opts ...grpc.CallOption) (*Node, error) {
+func (c *nodeServiceClient) RegisterNode(ctx context.Context, in *NodeRegistrationParam, opts ...grpc.CallOption) (*Node, error) {
 	out := new(Node)
-	err := c.cc.Invoke(ctx, "/node.NodeService/RegisterNode", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/orchestrator.NodeService/RegisterNode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (c *nodeServiceClient) RegisterNode(ctx context.Context, in *Node, opts ...
 
 func (c *nodeServiceClient) QueryNodes(ctx context.Context, in *NodeQueryParam, opts ...grpc.CallOption) (*NodeQueryResponse, error) {
 	out := new(NodeQueryResponse)
-	err := c.cc.Invoke(ctx, "/node.NodeService/QueryNodes", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/orchestrator.NodeService/QueryNodes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *nodeServiceClient) QueryNodes(ctx context.Context, in *NodeQueryParam, 
 // All implementations must embed UnimplementedNodeServiceServer
 // for forward compatibility
 type NodeServiceServer interface {
-	RegisterNode(context.Context, *Node) (*Node, error)
+	RegisterNode(context.Context, *NodeRegistrationParam) (*Node, error)
 	QueryNodes(context.Context, *NodeQueryParam) (*NodeQueryResponse, error)
 	mustEmbedUnimplementedNodeServiceServer()
 }
@@ -60,7 +60,7 @@ type NodeServiceServer interface {
 type UnimplementedNodeServiceServer struct {
 }
 
-func (UnimplementedNodeServiceServer) RegisterNode(context.Context, *Node) (*Node, error) {
+func (UnimplementedNodeServiceServer) RegisterNode(context.Context, *NodeRegistrationParam) (*Node, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterNode not implemented")
 }
 func (UnimplementedNodeServiceServer) QueryNodes(context.Context, *NodeQueryParam) (*NodeQueryResponse, error) {
@@ -80,7 +80,7 @@ func RegisterNodeServiceServer(s grpc.ServiceRegistrar, srv NodeServiceServer) {
 }
 
 func _NodeService_RegisterNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Node)
+	in := new(NodeRegistrationParam)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -89,10 +89,10 @@ func _NodeService_RegisterNode_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/node.NodeService/RegisterNode",
+		FullMethod: "/orchestrator.NodeService/RegisterNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeServiceServer).RegisterNode(ctx, req.(*Node))
+		return srv.(NodeServiceServer).RegisterNode(ctx, req.(*NodeRegistrationParam))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -107,7 +107,7 @@ func _NodeService_QueryNodes_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/node.NodeService/QueryNodes",
+		FullMethod: "/orchestrator.NodeService/QueryNodes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NodeServiceServer).QueryNodes(ctx, req.(*NodeQueryParam))
@@ -119,7 +119,7 @@ func _NodeService_QueryNodes_Handler(srv interface{}, ctx context.Context, dec f
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var NodeService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "node.NodeService",
+	ServiceName: "orchestrator.NodeService",
 	HandlerType: (*NodeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

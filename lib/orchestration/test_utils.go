@@ -20,54 +20,82 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// mockDatabaseProvider is a mock implementing DatabaseProvider
-type mockServiceProvider struct {
+// MockServiceProvider is a mock implementing DatabaseProvider
+type MockServiceProvider struct {
 	mock.Mock
 }
 
-// GetDatabase will return whatever mock is passed
-func (m *mockServiceProvider) GetDatabase() persistence.Database {
+// GetDatabase returns whatever value is passed
+func (m *MockServiceProvider) GetDatabase() persistence.Database {
 	args := m.Called()
 	return args.Get(0).(persistence.Database)
 }
 
-// GetNodeService will return whatever mock is passed
-func (m *mockServiceProvider) GetNodeService() NodeAPI {
+// GetNodeService returns whatever value is passed
+func (m *MockServiceProvider) GetNodeService() NodeAPI {
 	args := m.Called()
 	return args.Get(0).(NodeAPI)
 }
 
-// GetObjectiveService will return whatever mock is passed
-func (m *mockServiceProvider) GetObjectiveService() ObjectiveAPI {
+// GetObjectiveService return whatever value is passed
+func (m *MockServiceProvider) GetObjectiveService() ObjectiveAPI {
 	args := m.Called()
 	return args.Get(0).(ObjectiveAPI)
 }
 
-func (m *mockServiceProvider) GetPermissionService() PermissionAPI {
+// GetPermissionService returns whatever value is passed
+func (m *MockServiceProvider) GetPermissionService() PermissionAPI {
 	args := m.Called()
 	return args.Get(0).(PermissionAPI)
 }
 
-// mockNodeService is a mock implementing NodeAPI
-type mockNodeService struct {
+// MockNodeService is a mock implementing NodeAPI
+type MockNodeService struct {
 	mock.Mock
 }
 
-func (m *mockNodeService) GetNodes() ([]*assets.Node, error) {
+// GetNodes returns whatever value is passed
+func (m *MockNodeService) GetNodes() ([]*assets.Node, error) {
 	args := m.Called()
 	return args.Get(0).([]*assets.Node), args.Error(1)
 }
 
-func (m *mockNodeService) RegisterNode(*assets.Node) error {
-	args := m.Called()
-	return args.Error(0)
+// RegisterNode returns whatever value is passed
+func (m *MockNodeService) RegisterNode(id string) (*assets.Node, error) {
+	args := m.Called(id)
+	return args.Get(0).(*assets.Node), args.Error(1)
 }
 
-type mockPermissionService struct {
+// MockPermissionService is a mock implementing PermissionAPI
+type MockPermissionService struct {
 	mock.Mock
 }
 
-func (m *mockPermissionService) CreatePermissions(owner string, perms *assets.NewPermissions) (*assets.Permissions, error) {
+// CreatePermissions returns whatever value is passed
+func (m *MockPermissionService) CreatePermissions(owner string, perms *assets.NewPermissions) (*assets.Permissions, error) {
 	args := m.Called(owner, perms)
 	return args.Get(0).(*assets.Permissions), args.Error(1)
+}
+
+// MockObjectiveService is a mock implementing ObjectiveAPI
+type MockObjectiveService struct {
+	mock.Mock
+}
+
+// RegisterObjective returns whatever value is passed
+func (m *MockObjectiveService) RegisterObjective(objective *assets.NewObjective, owner string) (*assets.Objective, error) {
+	args := m.Called(objective, owner)
+	return args.Get(0).(*assets.Objective), args.Error(1)
+}
+
+// GetObjective returns whatever value is passed
+func (m *MockObjectiveService) GetObjective(key string) (*assets.Objective, error) {
+	args := m.Called(key)
+	return args.Get(0).(*assets.Objective), args.Error(1)
+}
+
+// GetObjectives returns whatever value is passed
+func (m *MockObjectiveService) GetObjectives() ([]*assets.Objective, error) {
+	args := m.Called()
+	return args.Get(0).([]*assets.Objective), args.Error(1)
 }

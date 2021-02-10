@@ -59,10 +59,8 @@ func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface
 		return nil, err
 	}
 
-	node := assets.Node{Id: txCreator}
-
-	err = service.RegisterNode(&node)
-	return &node, err
+	node, err := service.RegisterNode(txCreator)
+	return node, err
 }
 
 // QueryNodes retrieves all known nodes

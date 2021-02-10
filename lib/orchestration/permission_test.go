@@ -30,8 +30,8 @@ func TestNewPermission(t *testing.T) {
 }
 
 func TestValidateAuthorizedIDs(t *testing.T) {
-	mockNodeService := new(mockNodeService)
-	provider := new(mockServiceProvider)
+	mockNodeService := new(MockNodeService)
+	provider := new(MockServiceProvider)
 	provider.On("GetNodeService").Return(mockNodeService)
 	service := NewPermissionService(provider)
 

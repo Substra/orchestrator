@@ -17,29 +17,27 @@ package main
 import (
 	"context"
 	"flag"
-	"io/ioutil"
 	"net"
 	"os"
 
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/console"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
-	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
-	"github.com/owkin/orchestrator/orchestrator/database/couchdb"
-	orchestratorGrpc "github.com/owkin/orchestrator/orchestrator/grpc"
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/owkin/orchestrator/orchestrator/chaincode"
+	"github.com/owkin/orchestrator/orchestrator/common"
+	"github.com/owkin/orchestrator/orchestrator/standalone"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
+// envPrefix is the string prefixing environment variables related to the orchestrator
 const envPrefix = "ORCHESTRATOR_"
-const defaultIdentity = "appClient"
 
 // Whether to run in standalone mode or not
-var standalone = false
+var standaloneMode = false
 
 // mustGetEnv extract environment variable or abort with an error message
 // Every env var is prefixed by ORCHESTRATOR_
@@ -54,47 +52,34 @@ func mustGetEnv(name string) string {
 
 // RunServerWithChainCode is exported
 func RunServerWithChainCode() {
-	wallet := gateway.NewInMemoryWallet()
-
-	if !wallet.Exists(defaultIdentity) {
-		cert, err := ioutil.ReadFile(mustGetEnv("CERT"))
-		if err != nil {
-			log.Fatal("failed to read peer cert")
-		}
-
-		key, err := ioutil.ReadFile(mustGetEnv("KEY"))
-		if err != nil {
-			log.Fatal("failed to read key")
-		}
-
-		identity := gateway.NewX509Identity(mustGetEnv("MSPID"), string(cert), string(key))
-
-		wallet.Put(defaultIdentity, identity)
-	}
-
-	gw, err := gateway.Connect(
-		gateway.WithConfig(config.FromFile(mustGetEnv("NETWORK_CONFIG"))),
-		gateway.WithIdentity(wallet, defaultIdentity),
-	)
-
+	chaincodeInterceptor, err := chaincode.NewInterceptor(mustGetEnv("NETWORK_CONFIG"), mustGetEnv("CERT"), mustGetEnv("KEY"))
 	if err != nil {
-		log.Fatalf("failed to instanciate gateway: %v", err)
+		log.Fatalf("Failed to instanciate chaincode interceptor: %v", err)
+
 	}
 
-	defer gw.Close()
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(common.InterceptMSPID, chaincodeInterceptor.Intercept))
 
-	network, err := gw.GetNetwork(mustGetEnv("CHANNEL"))
+	// Register application services
+	assets.RegisterNodeServiceServer(server, chaincode.NewNodeAdapter())
+	assets.RegisterObjectiveServiceServer(server, chaincode.NewObjectiveAdapter())
+
+	// Register reflection service
+	reflection.Register(server)
+
+	// Register healthcheck service
+	healthcheck := health.NewServer()
+	healthpb.RegisterHealthServer(server, healthcheck)
+
+	listen, err := net.Listen("tcp", ":9000")
 	if err != nil {
-		log.Fatalf("failed to get network: %v", err)
+		log.Fatalf("failed to listen on port 9000: %v", err)
 	}
 
-	contract := network.GetContract(mustGetEnv("CHAINCODE"))
-	result, err := contract.SubmitTransaction("registerNode", "1")
-	if err != nil {
-		log.Fatalf("failed to invoke registration: %v", err)
+	log.WithField("address", listen.Addr().String()).Info("Server listening")
+	if err := server.Serve(listen); err != nil {
+		log.Fatalf("failed to server grpc server on port 9000: %v", err)
 	}
-
-	log.Debug(string(result))
 }
 
 // RunServerWithoutChainCode will expose the chaincode logic through gRPC.
@@ -104,7 +89,7 @@ func RunServerWithoutChainCode() {
 	if dsn == "" {
 		dsn = "http://dev:dev@localhost:5984"
 	}
-	couchPersistence, err := couchdb.NewPersistence(context.TODO(), dsn, "substra_orchestrator")
+	couchPersistence, err := standalone.NewPersistence(context.TODO(), dsn, "substra_orchestrator")
 	defer couchPersistence.Close(context.TODO())
 	if err != nil {
 		log.Fatal(err)
@@ -117,11 +102,11 @@ func RunServerWithoutChainCode() {
 
 	provider := orchestration.NewServiceProvider(couchPersistence)
 
-	server := grpc.NewServer()
+	server := grpc.NewServer(grpc.UnaryInterceptor(common.InterceptMSPID))
 
 	// Register application services
-	assets.RegisterNodeServiceServer(server, orchestratorGrpc.NewNodeServer(provider.GetNodeService()))
-	assets.RegisterObjectiveServiceServer(server, orchestratorGrpc.NewObjectiveServer(provider.GetObjectiveService()))
+	assets.RegisterNodeServiceServer(server, standalone.NewNodeServer(provider.GetNodeService()))
+	assets.RegisterObjectiveServiceServer(server, standalone.NewObjectiveServer(provider.GetObjectiveService()))
 
 	// Register reflection service
 	reflection.Register(server)
@@ -140,19 +125,19 @@ func main() {
 	cLog := console.New(true)
 	log.AddHandler(cLog, log.AllLevels...)
 
-	flag.BoolVar(&standalone, "standalone", true, "Run the chaincode in standalone mode")
-	flag.BoolVar(&standalone, "s", true, "Run the chaincode in standalone mode (shorthand)")
+	flag.BoolVar(&standaloneMode, "standalone", true, "Run the chaincode in standalone mode")
+	flag.BoolVar(&standaloneMode, "s", true, "Run the chaincode in standalone mode (shorthand)")
 
 	flag.Parse()
 
 	switch os.Getenv(envPrefix + "MODE") {
 	case "chaincode":
-		standalone = false
+		standaloneMode = false
 	case "standalone":
-		standalone = true
+		standaloneMode = true
 	}
 
-	if standalone {
+	if standaloneMode {
 		RunServerWithoutChainCode()
 	} else {
 		RunServerWithChainCode()

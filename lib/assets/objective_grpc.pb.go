@@ -32,7 +32,7 @@ func NewObjectiveServiceClient(cc grpc.ClientConnInterface) ObjectiveServiceClie
 
 func (c *objectiveServiceClient) RegisterObjective(ctx context.Context, in *NewObjective, opts ...grpc.CallOption) (*Objective, error) {
 	out := new(Objective)
-	err := c.cc.Invoke(ctx, "/objective.ObjectiveService/RegisterObjective", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/orchestrator.ObjectiveService/RegisterObjective", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (c *objectiveServiceClient) RegisterObjective(ctx context.Context, in *NewO
 
 func (c *objectiveServiceClient) QueryObjectives(ctx context.Context, in *ObjectiveQueryParam, opts ...grpc.CallOption) (*ObjectiveQueryResponse, error) {
 	out := new(ObjectiveQueryResponse)
-	err := c.cc.Invoke(ctx, "/objective.ObjectiveService/QueryObjectives", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/orchestrator.ObjectiveService/QueryObjectives", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (c *objectiveServiceClient) QueryObjectives(ctx context.Context, in *Object
 
 func (c *objectiveServiceClient) GetLeaderboard(ctx context.Context, in *LeaderboardQueryParam, opts ...grpc.CallOption) (*Leaderboard, error) {
 	out := new(Leaderboard)
-	err := c.cc.Invoke(ctx, "/objective.ObjectiveService/GetLeaderboard", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/orchestrator.ObjectiveService/GetLeaderboard", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func _ObjectiveService_RegisterObjective_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/objective.ObjectiveService/RegisterObjective",
+		FullMethod: "/orchestrator.ObjectiveService/RegisterObjective",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjectiveServiceServer).RegisterObjective(ctx, req.(*NewObjective))
@@ -121,7 +121,7 @@ func _ObjectiveService_QueryObjectives_Handler(srv interface{}, ctx context.Cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/objective.ObjectiveService/QueryObjectives",
+		FullMethod: "/orchestrator.ObjectiveService/QueryObjectives",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjectiveServiceServer).QueryObjectives(ctx, req.(*ObjectiveQueryParam))
@@ -139,7 +139,7 @@ func _ObjectiveService_GetLeaderboard_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/objective.ObjectiveService/GetLeaderboard",
+		FullMethod: "/orchestrator.ObjectiveService/GetLeaderboard",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ObjectiveServiceServer).GetLeaderboard(ctx, req.(*LeaderboardQueryParam))
@@ -151,7 +151,7 @@ func _ObjectiveService_GetLeaderboard_Handler(srv interface{}, ctx context.Conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ObjectiveService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "objective.ObjectiveService",
+	ServiceName: "orchestrator.ObjectiveService",
 	HandlerType: (*ObjectiveServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

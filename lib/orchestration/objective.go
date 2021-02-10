@@ -17,6 +17,7 @@ package orchestration
 import (
 	"encoding/json"
 
+	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
@@ -54,9 +55,10 @@ func NewObjectiveService(provider ObjectiveDependencyProvider) *ObjectiveService
 
 // RegisterObjective persist an objective
 func (s *ObjectiveService) RegisterObjective(o *assets.NewObjective, owner string) (*assets.Objective, error) {
+	log.WithField("owner", owner).WithField("newObj", o).Debug("Registering objective")
 	err := o.Validate()
 	if err != nil {
-		return &assets.Objective{}, err
+		return nil, err
 	}
 
 	testDataset := o.TestDataset
