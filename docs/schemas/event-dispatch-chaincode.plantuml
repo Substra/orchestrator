@@ -1,0 +1,20 @@
+@startuml
+
+actor orchestrator
+
+orchestrator -> chaincode: SmartContract\ninvocation
+' first event
+chaincode --> dispatcher
+dispatcher --> dispatcher: store event
+chaincode <-- dispatcher
+' second event
+chaincode --> dispatcher
+dispatcher --> dispatcher: store event
+chaincode <-- dispatcher
+
+chaincode --> dispatcher: AfterTransaction hook
+chaincode <-- dispatcher: stub.SetEvent(storedEvent)
+
+orchestrator <- chaincode
+
+@enduml

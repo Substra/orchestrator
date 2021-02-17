@@ -12,16 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package standalone
+package ledger
 
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestObjectiveServerImplementServer(t *testing.T) {
-	server := NewObjectiveServer()
-	assert.Implementsf(t, (*assets.ObjectiveServiceServer)(nil), server, "ObjectiveServer should implements ObjectiveServiceServer")
+func TestGetProvider(t *testing.T) {
+	ctx := NewContext()
+
+	assert.Implements(t, (*orchestration.DependenciesProvider)(nil), ctx.GetProvider(), "GetProvider should return a service provider")
+}
+
+func TestAfterTransactionHook(t *testing.T) {
+	ctx := NewContext()
+
+	dispatcher := new(orchestration.MockDispatcher)
+	ctx.dispatcher = dispatcher
+
+	dispatcher.On("Dispatch").Once().Return(nil)
+
+	AfterTransactionHook(ctx, "whatever")
 }

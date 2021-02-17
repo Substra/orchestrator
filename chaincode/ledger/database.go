@@ -20,23 +20,15 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/lib/persistence"
 )
 
+// TODO: in-struct logger
 var logger log.Entry
 
 func init() {
 	logger = log.WithFields(
 		log.F("db_backend", "ledger"),
 	)
-}
-
-// GetLedgerFromContext will return the ledger DB from invocation context
-func GetLedgerFromContext(ctx contractapi.TransactionContextInterface) (persistence.Database, error) {
-	stub := ctx.GetStub()
-
-	return &DB{ccStub: stub}, nil
 }
 
 // DB is the distributed ledger persistence layer implementing persistence.Database

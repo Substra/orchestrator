@@ -85,6 +85,10 @@ couchdb:
   allowAdminParty: false # If enabled, start cluster without admin account
   externalPort: 5984
 
+rabbitmq:
+  auth:
+    erlangCookie: rabbitmqErlangCookie
+
 fabric:
   organization: MyOrg1
   mspID: MyOrg1MSP

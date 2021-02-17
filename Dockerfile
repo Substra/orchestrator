@@ -9,8 +9,13 @@ ENV SRC_DIR=/usr/src/chaincode
 RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
          google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
-COPY . ${SRC_DIR}
 WORKDIR ${SRC_DIR}
+
+# Cache dependencies
+COPY ./go.mod ./go.sum ${SRC_DIR}/
+RUN go mod download
+
+COPY . ${SRC_DIR}
 
 RUN make ./bin/chaincode
 RUN mv ./bin/chaincode /bin/chaincode

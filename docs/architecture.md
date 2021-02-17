@@ -4,19 +4,19 @@ The orchestrator is the core piece handling Substra assets such as Nodes, Comput
 
 This repository contains two binaries: `orchestrator` and `chaincode`.
 
-![](./archi.png)
+![](./schemas/archi.png)
 
 When running in independent (or solo) mode, the only dependency is a couchdb instance for persistence.
 Here is a basic overview of the solo mode execution mode:
 
-![](./solo.png)
+![](./schemas/solo.png)
 
 The chaincode comes into action when running in a hyperledger-fabric context,
 where it is deployed as a regular fabric chaincode.
 In that situation, the orchestrator lean on the chaincode and act as a facade,
 its sole purpose is to convert gRPC calls into chaincode invocation.
 
-![](./chaincode.png)
+![](./schemas/chaincode.png)
 
 By doing so, we always expose the same interface (gRPC) to external callers.
 That means the solo or chaincode deployments can be swapped without any impact on callers.
@@ -50,10 +50,39 @@ where each asset is managed by a dedicated service.
 
 Here is an overview of the orchestration part, which is completely independent of the execution mode (solo or ledger):
 
-![](./orchestration.png)
+![](./schemas/orchestration.png)
 
 To avoid tight coupling, the `Provider` implements a dependency injection pattern
 so that an asset service can call other services.
 
 There are two implementations of the Database interface:
 CouchDB in solo mode and LedgerDB when running as chaincode.
+
+## Event dispatch
+
+Consumers may need to react to events.
+To that end, the orchestrator will emit events on an AMQP broker (rabbitmq).
+
+When running in chaincode mode, there will be a conversion between ledger events from the chaincode
+and events emitted by the orchestrator.
+
+![](./schemas/events.png)
+
+Following the pattern of the gRPC API, events will be have the same structure regardless of the execution mode.
+Consumers should not have to adapt to the distributed ledger and should only interact with the broker.
+
+### Standalone execution
+
+Events are pushed in a queue during the transaction, and dispatched once the transaction has been successfully processed.
+
+![](./schemas/event-dispatch-standalone.png)
+
+### Chaincode execution
+
+In chaincode mode, events are stored during the transaction processing and _emitted_ once
+in the [AfterTransaction hook](https://github.com/hyperledger/fabric-contract-api-go/blob/master/tutorials/using-advanced-features.md#transaction-hooks).
+This address a limitation of fabric: [only one event can be set per transaction](https://github.com/hyperledger/fabric-chaincode-go/blob/f8ef75b1771978c17ed56e52b5bfc22d4bdae5e3/shim/interfaces.go#L344-L350).
+
+The workflow is represented below:
+
+![](./schemas/event-dispatch-standalone.png)

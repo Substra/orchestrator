@@ -9,6 +9,11 @@ couchdb:
     couchdb:
       uuid: 00000001-ff16-4375-b81a-5c1742bc9f4c
 
+rabbitmq:
+  auth:
+    username: user
+    password: password
+
 ingress:
   enabled: true
   hosts:

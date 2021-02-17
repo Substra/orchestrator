@@ -18,13 +18,11 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
 )
 
 // TestNodeServerImplementServer makes sure chaincode-baked and standalone orchestration are in sync
 func TestNodeServerImplementServer(t *testing.T) {
-	mock := &orchestration.MockNodeService{}
-	server := NewNodeServer(mock)
+	server := NewNodeServer()
 	assert.Implementsf(t, (*assets.NodeServiceServer)(nil), server, "NodeServer should implements NodeServiceServer")
 }

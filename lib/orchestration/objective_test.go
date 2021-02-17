@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -28,10 +29,13 @@ import (
 func TestRegisterObjective(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
 	mps := new(MockPermissionService)
+	dispatcher := new(MockDispatcher)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetDatabase").Return(mockDB)
 	provider.On("GetPermissionService").Return(mps)
+
+	provider.On("GetEventQueue").Return(dispatcher)
 
 	service := NewObjectiveService(provider)
 
@@ -53,6 +57,13 @@ func TestRegisterObjective(t *testing.T) {
 		Description:    description,
 		NewPermissions: newPerms,
 	}
+
+	e := &event.Event{
+		EventType: event.AssetCreated,
+		AssetType: "objective",
+		AssetID:   objective.Key,
+	}
+	dispatcher.On("Enqueue", e).Return(nil)
 
 	perms := &assets.Permissions{Process: &assets.Permission{Public: true}}
 

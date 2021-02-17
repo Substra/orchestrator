@@ -14,7 +14,19 @@
 
 package orchestration
 
-import "github.com/owkin/orchestrator/lib/persistence"
+import (
+	"github.com/owkin/orchestrator/lib/event"
+	"github.com/owkin/orchestrator/lib/persistence"
+)
+
+// DependenciesProvider describes a Provider exposing all orchestration services.
+type DependenciesProvider interface {
+	persistence.DatabaseProvider
+	event.QueueProvider
+	NodeServiceProvider
+	ObjectiveServiceProvider
+	PermissionServiceProvider
+}
 
 // ServiceProvider is the central part of the dependency injection pattern.
 // It is injected into each service, so that they can access their dependencies.
@@ -23,19 +35,25 @@ import "github.com/owkin/orchestrator/lib/persistence"
 // Since the ServiceProvider implements every ServiceProvider interface, it can fit all service dependencies.
 type ServiceProvider struct {
 	db         persistence.Database
+	eventQueue event.Queue
 	node       NodeAPI
 	objective  ObjectiveAPI
 	permission PermissionAPI
 }
 
 // NewServiceProvider return an instance of ServiceProvider based on given persistence layer.
-func NewServiceProvider(db persistence.Database) *ServiceProvider {
-	return &ServiceProvider{db: db}
+func NewServiceProvider(db persistence.Database, queue event.Queue) *ServiceProvider {
+	return &ServiceProvider{db: db, eventQueue: queue}
 }
 
 // GetDatabase returns a persistence layer.
 func (sc *ServiceProvider) GetDatabase() persistence.Database {
 	return sc.db
+}
+
+// GetEventQueue returns an event.Queue instance
+func (sc *ServiceProvider) GetEventQueue() event.Queue {
+	return sc.eventQueue
 }
 
 // GetNodeService returns a NodeAPI instance.

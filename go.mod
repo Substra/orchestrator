@@ -16,6 +16,7 @@ require (
 	github.com/hyperledger/fabric-sdk-go v1.0.0-rc1
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.4 // indirect
+	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
 	golang.org/x/sys v0.0.0-20201221093633-bc327ba9c2f0 // indirect

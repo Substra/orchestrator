@@ -2,5 +2,8 @@ dependencies:
 - name: couchdb
   repository: https://apache.github.io/couchdb-helm
   version: 3.3.3
-digest: sha256:c01c659f3964155040265b4117076816c82b0ef6978e8698da9d449b6da8ef70
-generated: "2021-01-11T13:35:51.027528675-05:00"
+- name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 8.9.1
+digest: sha256:decf9947b952b55ff87d9565193e535fd59287b4eb1858d8fa48a45d9f912495
+generated: "2021-02-03T09:40:40.182399+01:00"

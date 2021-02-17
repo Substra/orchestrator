@@ -22,9 +22,11 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/console"
+	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/owkin/orchestrator/orchestrator/chaincode"
+	chaincodeEvents "github.com/owkin/orchestrator/orchestrator/chaincode/events"
+	"github.com/owkin/orchestrator/orchestrator/chaincode/wallet"
 	"github.com/owkin/orchestrator/orchestrator/common"
 	"github.com/owkin/orchestrator/orchestrator/standalone"
 	"google.golang.org/grpc"
@@ -52,7 +54,31 @@ func mustGetEnv(name string) string {
 
 // RunServerWithChainCode is exported
 func RunServerWithChainCode() {
-	chaincodeInterceptor, err := chaincode.NewInterceptor(mustGetEnv("NETWORK_CONFIG"), mustGetEnv("CERT"), mustGetEnv("KEY"))
+	networkConfig := mustGetEnv("NETWORK_CONFIG")
+
+	rabbitDSN := mustGetEnv("AMQP_DSN")
+	session := common.NewSession("orchestrator", rabbitDSN)
+	defer session.Close()
+
+	wallet := wallet.New(mustGetEnv("CERT"), mustGetEnv("KEY"))
+
+	config := config.FromFile(networkConfig)
+
+	converter := chaincodeEvents.NewForwarder(session)
+
+	listener, err := chaincodeEvents.NewListener(
+		wallet,
+		config,
+		mustGetEnv("MSPID"),
+		mustGetEnv("CHANNEL"),
+		mustGetEnv("CHAINCODE"),
+		converter.Forward,
+	)
+	defer listener.Close()
+
+	go listener.Listen()
+
+	chaincodeInterceptor, err := chaincode.NewInterceptor(config, wallet)
 	if err != nil {
 		log.Fatalf("Failed to instanciate chaincode interceptor: %v", err)
 
@@ -85,28 +111,33 @@ func RunServerWithChainCode() {
 // RunServerWithoutChainCode will expose the chaincode logic through gRPC.
 // State will be stored in a redis database.
 func RunServerWithoutChainCode() {
-	dsn := os.Getenv("COUCHDB_DSN")
-	if dsn == "" {
-		dsn = "http://dev:dev@localhost:5984"
+	couchDSN := os.Getenv("COUCHDB_DSN")
+	if couchDSN == "" {
+		couchDSN = "http://dev:dev@localhost:5984"
 	}
-	couchPersistence, err := standalone.NewPersistence(context.TODO(), dsn, "substra_orchestrator")
+	couchPersistence, err := standalone.NewPersistence(context.TODO(), couchDSN, "substra_orchestrator")
 	defer couchPersistence.Close(context.TODO())
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	rabbitDSN := mustGetEnv("AMQP_DSN")
+	session := common.NewSession("orchestrator", rabbitDSN)
+	defer session.Close()
 
 	listen, err := net.Listen("tcp", ":9000")
 	if err != nil {
 		log.Fatalf("failed to listen on port 9000: %v", err)
 	}
 
-	provider := orchestration.NewServiceProvider(couchPersistence)
+	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
+	providerInterceptor := standalone.NewProviderInterceptor(couchPersistence, session)
 
-	server := grpc.NewServer(grpc.UnaryInterceptor(common.InterceptMSPID))
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(common.InterceptMSPID, providerInterceptor.Intercept))
 
 	// Register application services
-	assets.RegisterNodeServiceServer(server, standalone.NewNodeServer(provider.GetNodeService()))
-	assets.RegisterObjectiveServiceServer(server, standalone.NewObjectiveServer(provider.GetObjectiveService()))
+	assets.RegisterNodeServiceServer(server, standalone.NewNodeServer())
+	assets.RegisterObjectiveServiceServer(server, standalone.NewObjectiveServer())
 
 	// Register reflection service
 	reflection.Register(server)

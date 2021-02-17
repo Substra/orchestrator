@@ -11,3 +11,6 @@ dependencies:
     repository: https://apache.github.io/couchdb-helm
     version: 3.3.3
     condition: couchdb.enabled
+  - name: rabbitmq
+    repository: https://charts.bitnami.com/bitnami
+    version: 8.9.1

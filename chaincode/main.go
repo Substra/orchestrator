@@ -30,12 +30,14 @@ func main() {
 	cLog := console.New(true)
 	log.AddHandler(cLog, log.AllLevels...)
 
-	nodeContract := node.NewSmartContract()
-	nodeContract.Name = "org.substra.node"
-	objectiveContract := objective.NewSmartContract()
-	objectiveContract.Name = "org.substra.objective"
+	CCID := os.Getenv("CHAINCODE_CCID")
 
-	cc, err := contractapi.NewChaincode(nodeContract, objectiveContract)
+	contracts := []contractapi.ContractInterface{
+		node.NewSmartContract(),
+		objective.NewSmartContract(),
+	}
+
+	cc, err := contractapi.NewChaincode(contracts...)
 
 	if err != nil {
 		log.Fatal("error creating substra chaincode", err.Error())
@@ -62,7 +64,7 @@ func main() {
 	}
 
 	server := &shim.ChaincodeServer{
-		CCID:    os.Getenv("CHAINCODE_CCID"),
+		CCID:    CCID,
 		Address: os.Getenv("CHAINCODE_ADDRESS"),
 		CC:      cc,
 		TLSProps: shim.TLSProperties{

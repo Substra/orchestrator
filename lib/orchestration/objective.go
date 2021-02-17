@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -39,6 +40,7 @@ type ObjectiveServiceProvider interface {
 // ObjectiveDependencyProvider defines what the ObjectiveService needs to perform its duty
 type ObjectiveDependencyProvider interface {
 	persistence.DatabaseProvider
+	event.QueueProvider
 	PermissionServiceProvider
 }
 
@@ -90,8 +92,17 @@ func (s *ObjectiveService) RegisterObjective(o *assets.NewObjective, owner strin
 		return &assets.Objective{}, err
 	}
 
-	s.GetDatabase().PutState(objectiveResource, objective.Key, b)
-	return objective, nil
+	err = s.GetEventQueue().Enqueue(&event.Event{
+		EventType: event.AssetCreated,
+		AssetID:   o.Key,
+		AssetType: "objective",
+	})
+	if err != nil {
+		return &assets.Objective{}, err
+	}
+
+	err = s.GetDatabase().PutState(objectiveResource, objective.Key, b)
+	return objective, err
 }
 
 // GetObjective retrieves an objective by its ID

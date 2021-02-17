@@ -16,7 +16,6 @@ package standalone
 
 import (
 	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/owkin/orchestrator/orchestrator/common"
 	"golang.org/x/net/context"
 )
@@ -24,12 +23,11 @@ import (
 // NodeServer is the gRPC server exposing node actions
 type NodeServer struct {
 	assets.UnimplementedNodeServiceServer
-	nodeService orchestration.NodeAPI
 }
 
 // NewNodeServer creates a Server
-func NewNodeServer(service orchestration.NodeAPI) *NodeServer {
-	return &NodeServer{nodeService: service}
+func NewNodeServer() *NodeServer {
+	return &NodeServer{}
 }
 
 // RegisterNode will add a new node to the network
@@ -38,14 +36,22 @@ func (s *NodeServer) RegisterNode(ctx context.Context, in *assets.NodeRegistrati
 	if err != nil {
 		return nil, err
 	}
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	node, err := s.nodeService.RegisterNode(mspid)
+	node, err := services.GetNodeService().RegisterNode(mspid)
 	return node, err
 }
 
 // QueryNodes will return all known nodes
 func (s *NodeServer) QueryNodes(ctx context.Context, in *assets.NodeQueryParam) (*assets.NodeQueryResponse, error) {
-	nodes, err := s.nodeService.GetNodes()
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	nodes, err := services.GetNodeService().GetNodes()
 
 	return &assets.NodeQueryResponse{
 		Nodes: nodes,

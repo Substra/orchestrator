@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -26,8 +27,13 @@ import (
 func TestRegisterNode(t *testing.T) {
 	mockDB := new(persistenceHelper.MockDatabase)
 	provider := new(MockServiceProvider)
+	dispatcher := new(MockDispatcher)
 
 	provider.On("GetDatabase").Return(mockDB)
+	provider.On("GetEventQueue").Return(dispatcher)
+
+	e := &event.Event{EventType: event.AssetCreated, AssetType: "node", AssetID: "uuid1"}
+	dispatcher.On("Enqueue", e).Return(nil)
 
 	expected := assets.Node{
 		Id: "uuid1",

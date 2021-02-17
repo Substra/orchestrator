@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -37,6 +38,7 @@ type NodeServiceProvider interface {
 // NodeDependencyProvider defines what the NodeService needs to perform its duty
 type NodeDependencyProvider interface {
 	persistence.DatabaseProvider
+	event.QueueProvider
 }
 
 // NodeService is the node manipulation entry point
@@ -59,6 +61,10 @@ func (s *NodeService) RegisterNode(id string) (*assets.Node, error) {
 	}
 
 	err = s.GetDatabase().PutState(nodeResource, node.GetId(), nodeBytes)
+	if err != nil {
+		return nil, err
+	}
+	err = s.GetEventQueue().Enqueue(&event.Event{EventType: event.AssetCreated, AssetID: id, AssetType: "node"})
 	return node, err
 }
 

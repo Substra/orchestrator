@@ -18,14 +18,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"time"
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+	"github.com/owkin/orchestrator/orchestrator/chaincode/wallet"
 	"github.com/owkin/orchestrator/orchestrator/common"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -47,18 +46,13 @@ var ignoredMethods = [...]string{
 // Interceptor is a structure referencing a wallet which will keeps identities for the duration of program execution.
 // It is responsible for injecting a chaincode Invocator in the request's context.
 type Interceptor struct {
-	wallet   *gateway.Wallet
-	config   core.ConfigProvider
-	certPath string
-	keyPath  string
+	wallet *wallet.Wallet
+	config core.ConfigProvider
 }
 
 // NewInterceptor creates an Interceptor
-func NewInterceptor(configPath string, certPath string, keyPath string) (*Interceptor, error) {
-	wallet := gateway.NewInMemoryWallet()
-	config := config.FromFile(configPath)
-
-	return &Interceptor{wallet: wallet, config: config, certPath: certPath, keyPath: keyPath}, nil
+func NewInterceptor(config core.ConfigProvider, wallet *wallet.Wallet) (*Interceptor, error) {
+	return &Interceptor{wallet: wallet, config: config}, nil
 }
 
 // Intercept is a gRPC interceptor and will make the fabric contract available in the request context
@@ -88,7 +82,7 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 
 	label := mspid + "-id"
 
-	ci.ensureWalletIdentity(label, mspid)
+	ci.wallet.EnsureIdentity(label, mspid)
 	start := time.Now()
 	gw, err := gateway.Connect(
 		gateway.WithConfig(ci.config),
@@ -113,27 +107,6 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 
 	newCtx := context.WithValue(ctx, ctxInvocatorKey, invocator)
 	return handler(newCtx, req)
-}
-
-func (ci *Interceptor) ensureWalletIdentity(label string, mspid string) error {
-	if !ci.wallet.Exists(label) {
-		cert, err := ioutil.ReadFile(ci.certPath)
-		if err != nil {
-			return err
-		}
-
-		key, err := ioutil.ReadFile(ci.keyPath)
-		if err != nil {
-			return err
-		}
-
-		identity := gateway.NewX509Identity(mspid, string(cert), string(key))
-
-		ci.wallet.Put(label, identity)
-		log.WithField("label", label).WithField("mspid", mspid).Info("Identity added to wallet")
-	}
-
-	return nil
 }
 
 type ctxInvocatorMarker struct{}

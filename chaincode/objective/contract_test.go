@@ -17,44 +17,26 @@ package objective
 import (
 	"testing"
 
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-type MockedService struct {
-	mock.Mock
-}
+// getMockedService returns a service mocks and make sure the provider returns the mock as well.
+func getMockedService(ctx *testHelper.MockedContext) *orchestration.MockObjectiveService {
+	mockService := new(orchestration.MockObjectiveService)
 
-func (m *MockedService) RegisterObjective(o *assets.NewObjective, owner string) (*assets.Objective, error) {
-	args := m.Called(o, owner)
-	return args.Get(0).(*assets.Objective), args.Error(1)
-}
+	provider := new(orchestration.MockServiceProvider)
+	provider.On("GetObjectiveService").Return(mockService).Once()
 
-func (m *MockedService) GetObjective(key string) (*assets.Objective, error) {
-	args := m.Called(key)
-	return args.Get(0).(*assets.Objective), args.Error(1)
-}
+	ctx.On("GetProvider").Return(provider).Once()
 
-func (m *MockedService) GetObjectives() ([]*assets.Objective, error) {
-	args := m.Called()
-	return args.Get(0).([]*assets.Objective), args.Error(1)
-}
-
-func mockFactory(mock orchestration.ObjectiveAPI) func(c contractapi.TransactionContextInterface) (orchestration.ObjectiveAPI, error) {
-	return func(_ contractapi.TransactionContextInterface) (orchestration.ObjectiveAPI, error) {
-		return mock, nil
-	}
+	return mockService
 }
 
 func TestRegistration(t *testing.T) {
-	mockService := new(MockedService)
-	contract := &SmartContract{
-		serviceFactory: mockFactory(mockService),
-	}
+	contract := &SmartContract{}
 
 	addressable := &assets.Addressable{}
 	testDataset := &assets.Dataset{}
@@ -75,9 +57,12 @@ func TestRegistration(t *testing.T) {
 	}
 
 	o := &assets.Objective{}
-	mockService.On("RegisterObjective", newObj, mspid).Return(o, nil).Once()
 
 	ctx := new(testHelper.MockedContext)
+
+	service := getMockedService(ctx)
+	service.On("RegisterObjective", newObj, mspid).Return(o, nil).Once()
+
 	stub := new(testHelper.MockedStub)
 	ctx.On("GetStub").Return(stub).Once()
 
@@ -87,26 +72,24 @@ func TestRegistration(t *testing.T) {
 }
 
 func TestQueryObjectives(t *testing.T) {
-	mockService := new(MockedService)
-	contract := &SmartContract{
-		serviceFactory: mockFactory(mockService),
-	}
+	contract := &SmartContract{}
 
 	objectives := []*assets.Objective{
 		{Name: "test"},
 		{Name: "test2"},
 	}
 
-	mockService.On("GetObjectives").Return(objectives, nil).Once()
-
 	ctx := new(testHelper.MockedContext)
+	service := getMockedService(ctx)
+	service.On("GetObjectives").Return(objectives, nil).Once()
+
 	r, err := contract.QueryObjectives(ctx)
 	assert.Nil(t, err, "query should not fail")
 	assert.Len(t, r, len(objectives), "query should return all objectives")
 }
 
 func TestEvaluateTransactions(t *testing.T) {
-	contract := NewSmartContract()
+	contract := &SmartContract{}
 
 	queries := []string{
 		"QueryObjectives",
@@ -114,14 +97,4 @@ func TestEvaluateTransactions(t *testing.T) {
 	}
 
 	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
-}
-
-func TestGetServiceFromContext(t *testing.T) {
-	context := testHelper.MockedContext{}
-	context.On("GetStub").Return(&testHelper.MockedStub{}).Once()
-
-	service, err := getServiceFromContext(&context)
-
-	assert.Nil(t, err, "Creating service should not fail")
-	assert.Implements(t, (*orchestration.ObjectiveAPI)(nil), service, "service should implements objective API")
 }

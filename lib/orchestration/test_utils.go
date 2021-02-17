@@ -16,6 +16,7 @@ package orchestration
 
 import (
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/mock"
 )
@@ -29,6 +30,12 @@ type MockServiceProvider struct {
 func (m *MockServiceProvider) GetDatabase() persistence.Database {
 	args := m.Called()
 	return args.Get(0).(persistence.Database)
+}
+
+// GetEventQueue returns whatever value is passed
+func (m *MockServiceProvider) GetEventQueue() event.Queue {
+	args := m.Called()
+	return args.Get(0).(event.Queue)
 }
 
 // GetNodeService returns whatever value is passed
@@ -98,4 +105,33 @@ func (m *MockObjectiveService) GetObjective(key string) (*assets.Objective, erro
 func (m *MockObjectiveService) GetObjectives() ([]*assets.Objective, error) {
 	args := m.Called()
 	return args.Get(0).([]*assets.Objective), args.Error(1)
+}
+
+// MockDispatcher is a mock implenting Dispatcher behavior
+type MockDispatcher struct {
+	mock.Mock
+}
+
+// Enqueue returns whatever value is passed
+func (m *MockDispatcher) Enqueue(event *event.Event) error {
+	args := m.Called(event)
+	return args.Error(0)
+}
+
+// GetEvents returns whatever value is passed
+func (m *MockDispatcher) GetEvents() []*event.Event {
+	args := m.Called()
+	return args.Get(0).([]*event.Event)
+}
+
+// Len returns whatever value is passed
+func (m *MockDispatcher) Len() int {
+	args := m.Called()
+	return args.Int(0)
+}
+
+// Dispatch returns whatever value is passed
+func (m *MockDispatcher) Dispatch() error {
+	args := m.Called()
+	return args.Error(0)
 }

@@ -18,19 +18,18 @@ import (
 	"log"
 
 	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/owkin/orchestrator/orchestrator/common"
 	"golang.org/x/net/context"
 )
 
 // ObjectiveServer is the gRPC facade to Objective manipulation
 type ObjectiveServer struct {
 	assets.UnimplementedObjectiveServiceServer
-	objectiveService orchestration.ObjectiveAPI
 }
 
 // NewObjectiveServer creates a grpc server
-func NewObjectiveServer(service orchestration.ObjectiveAPI) *ObjectiveServer {
-	return &ObjectiveServer{objectiveService: service}
+func NewObjectiveServer() *ObjectiveServer {
+	return &ObjectiveServer{}
 }
 
 // RegisterObjective will persiste a new objective
@@ -38,12 +37,23 @@ func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *assets.NewOb
 	log.Println(o)
 	log.Printf("objective: %s, %s, %s", o.GetKey(), o.GetName(), o.GetTestDataset())
 
-	owner := "grpcFakeOrg" // TODO: extract that from request
+	mspid, err := common.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	return s.objectiveService.RegisterObjective(o, owner)
+	return services.GetObjectiveService().RegisterObjective(o, mspid)
 }
 
 // QueryObjective fetches an objective by its key
 func (s *ObjectiveServer) QueryObjective(ctx context.Context, key string) (*assets.Objective, error) {
-	return s.objectiveService.GetObjective(key)
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return services.GetObjectiveService().GetObjective(key)
 }

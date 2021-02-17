@@ -17,36 +17,39 @@ package node
 import (
 	"testing"
 
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
 )
 
-func mockFactory(mock orchestration.NodeAPI) func(c contractapi.TransactionContextInterface) (orchestration.NodeAPI, error) {
-	return func(_ contractapi.TransactionContextInterface) (orchestration.NodeAPI, error) {
-		return mock, nil
-	}
+// getMockedService returns a service mocks and make sure the provider returns the mock as well.
+func getMockedService(ctx *testHelper.MockedContext) *orchestration.MockNodeService {
+	mockService := new(orchestration.MockNodeService)
+
+	provider := new(orchestration.MockServiceProvider)
+	provider.On("GetNodeService").Return(mockService).Once()
+
+	ctx.On("GetProvider").Return(provider).Once()
+
+	return mockService
 }
 
 func TestRegistration(t *testing.T) {
-	mockService := new(orchestration.MockNodeService)
-	contract := &SmartContract{
-		serviceFactory: mockFactory(mockService),
-	}
+	contract := &SmartContract{}
 
 	org := "TestOrg"
-
 	o := &assets.Node{Id: org}
-	mockService.On("RegisterNode", org).Return(o, nil).Once()
-
 	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
 
 	ctx := new(testHelper.MockedContext)
+
+	service := getMockedService(ctx)
+	service.On("RegisterNode", org).Return(o, nil).Once()
+
 	ctx.On("GetStub").Return(stub).Once()
 
 	node, err := contract.RegisterNode(ctx)
@@ -56,19 +59,18 @@ func TestRegistration(t *testing.T) {
 }
 
 func TestQueryNodes(t *testing.T) {
-	mockService := new(orchestration.MockNodeService)
-	contract := &SmartContract{
-		serviceFactory: mockFactory(mockService),
-	}
+	contract := &SmartContract{}
 
 	nodes := []*assets.Node{
 		{Id: "org1"},
 		{Id: "org2"},
 	}
 
-	mockService.On("GetNodes").Return(nodes, nil).Once()
-
 	ctx := new(testHelper.MockedContext)
+
+	service := getMockedService(ctx)
+	service.On("GetNodes").Return(nodes, nil).Once()
+
 	resp, err := contract.QueryNodes(ctx)
 	assert.Nil(t, err, "querying nodes should not fail")
 	assert.Len(t, resp, len(nodes), "query should return all nodes")

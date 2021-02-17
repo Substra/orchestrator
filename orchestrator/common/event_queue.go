@@ -12,16 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package standalone
+package common
 
-import (
-	"testing"
+import "github.com/owkin/orchestrator/lib/event"
 
-	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/stretchr/testify/assert"
-)
+// MemoryQueue keeps events in memory
+type MemoryQueue struct {
+	events []*event.Event
+}
 
-func TestObjectiveServerImplementServer(t *testing.T) {
-	server := NewObjectiveServer()
-	assert.Implementsf(t, (*assets.ObjectiveServiceServer)(nil), server, "ObjectiveServer should implements ObjectiveServiceServer")
+// Enqueue adds an event to the queue
+func (q *MemoryQueue) Enqueue(event *event.Event) error {
+	q.events = append(q.events, event)
+
+	return nil
+}
+
+// GetEvents returns queued events
+func (q *MemoryQueue) GetEvents() []*event.Event {
+	return q.events
+}
+
+// Len returns the length of the queue
+func (q *MemoryQueue) Len() int {
+	return len(q.events)
 }

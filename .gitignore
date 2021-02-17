@@ -1,4 +1,4 @@
 # Produced binaries
 /bin
 .vscode/
-wallet/
+/wallet

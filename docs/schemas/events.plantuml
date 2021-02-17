@@ -1,0 +1,24 @@
+@startuml
+
+actor User as u
+
+rectangle "Standalone Mode" {
+    usecase Orchestrator as s_or
+}
+
+rectangle "Chaincode Mode" {
+    usecase Orchestrator as c_or
+    usecase Chaincode as cc
+}
+
+u --> s_or : gRPC request
+u --> c_or : gRPC request
+
+c_or --> cc: chaincode\ninvocation
+
+s_or --> (AMQP Broker): dispatch event
+c_or --> (AMQP Broker): dispatch event
+
+cc -> c_or: chaincode\nevents
+
+@enduml

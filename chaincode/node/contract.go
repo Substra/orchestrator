@@ -18,31 +18,21 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/orchestration"
 )
-
-func getServiceFromContext(ctx contractapi.TransactionContextInterface) (orchestration.NodeAPI, error) {
-	db, err := ledger.GetLedgerFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	provider := orchestration.NewServiceProvider(db)
-
-	return provider.GetNodeService(), nil
-}
 
 // SmartContract manages nodes
 type SmartContract struct {
 	contractapi.Contract
-	serviceFactory func(contractapi.TransactionContextInterface) (orchestration.NodeAPI, error)
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
-	return &SmartContract{
-		serviceFactory: getServiceFromContext,
-	}
+	contract := &SmartContract{}
+	contract.Name = "org.substra.node"
+	contract.TransactionContextHandler = ledger.NewContext()
+	contract.AfterTransaction = ledger.AfterTransactionHook
+
+	return contract
 }
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
@@ -51,24 +41,18 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 }
 
 // RegisterNode creates a new node in world state
-func (s *SmartContract) RegisterNode(ctx contractapi.TransactionContextInterface) (*assets.Node, error) {
+func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*assets.Node, error) {
 	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
 
-	service, err := s.serviceFactory(ctx)
-	if err != nil {
-		return nil, err
-	}
+	service := ctx.GetProvider().GetNodeService()
 
 	node, err := service.RegisterNode(txCreator)
 	return node, err
 }
 
 // QueryNodes retrieves all known nodes
-func (s *SmartContract) QueryNodes(ctx contractapi.TransactionContextInterface) ([]*assets.Node, error) {
-	service, err := s.serviceFactory(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) ([]*assets.Node, error) {
+	service := ctx.GetProvider().GetNodeService()
 
 	return service.GetNodes()
 }

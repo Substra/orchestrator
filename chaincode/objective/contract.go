@@ -20,40 +20,27 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/orchestration"
 )
-
-func getServiceFromContext(ctx contractapi.TransactionContextInterface) (orchestration.ObjectiveAPI, error) {
-	db, err := ledger.GetLedgerFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	provider := orchestration.NewServiceProvider(db)
-
-	return provider.GetObjectiveService(), nil
-}
 
 // SmartContract manages objectives
 type SmartContract struct {
 	contractapi.Contract
-	serviceFactory func(contractapi.TransactionContextInterface) (orchestration.ObjectiveAPI, error)
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
-	return &SmartContract{
-		serviceFactory: getServiceFromContext,
-	}
+	contract := &SmartContract{}
+	contract.Name = "org.substra.objective"
+	contract.TransactionContextHandler = ledger.NewContext()
+	contract.AfterTransaction = ledger.AfterTransactionHook
+
+	return contract
 }
 
 // RegisterObjective creates a new objective in world state
 // If the key exists, it will override the existing value with the new one
-func (s *SmartContract) RegisterObjective(ctx contractapi.TransactionContextInterface, o *assets.NewObjective) (*assets.Objective, error) {
-	service, err := s.serviceFactory(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, o *assets.NewObjective) (*assets.Objective, error) {
+	service := ctx.GetProvider().GetObjectiveService()
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
@@ -65,17 +52,14 @@ func (s *SmartContract) RegisterObjective(ctx contractapi.TransactionContextInte
 }
 
 // QueryObjectives returns the objectives
-func (s *SmartContract) QueryObjectives(ctx contractapi.TransactionContextInterface) ([]*assets.Objective, error) {
-	service, err := s.serviceFactory(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext) ([]*assets.Objective, error) {
+	service := ctx.GetProvider().GetObjectiveService()
 
 	return service.GetObjectives()
 }
 
 // QueryLeaderboard returns for an objective all its certified testtuples with a done status
-func (s *SmartContract) QueryLeaderboard(ctx contractapi.TransactionContextInterface, key string, sortOrder assets.SortOrder) (*assets.Leaderboard, error) {
+func (s *SmartContract) QueryLeaderboard(ctx ledger.TransactionContext, key string, sortOrder assets.SortOrder) (*assets.Leaderboard, error) {
 	return nil, errors.New("unimplemented")
 }
 
