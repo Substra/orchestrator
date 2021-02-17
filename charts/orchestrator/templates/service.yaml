@@ -8,8 +8,8 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: 9000
       protocol: TCP
-      name: http
+      name: grpc
   selector:
     {{- include "orchestrator.selectorLabels" . | nindent 4 }}

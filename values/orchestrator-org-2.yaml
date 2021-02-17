@@ -1,0 +1,21 @@
+---
+orchestrator:
+  mode: standalone
+
+couchdb:
+  enabled: true
+  allowAdminParty: true
+  couchdbConfig:
+    couchdb:
+      uuid: 00000001-ff16-4375-b81a-5c1742bc9f4c
+
+ingress:
+  enabled: true
+  hosts:
+  - host: orchestrator.node-2.com
+    paths:
+      - "/"
+  tls:
+    - hosts:
+      - orchestrator.node-2.com
+      secretName: orchestrator-tls

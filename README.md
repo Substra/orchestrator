@@ -2,9 +2,7 @@
 
 This repository contains the logic to orchestrate Substra assets.
 
-### Developping the orchestrator
-
-An overview of the code structure is [available in the docs directory](./docs/architecture.md)
+## Building the orchestrator
 
 #### Build
 
@@ -14,27 +12,41 @@ An overview of the code structure is [available in the docs directory](./docs/ar
 
 `make test`
 
-#### Local chaincode
+## Developping the orchestrator
 
-To alleviate the pain of running a local hyperledger fabric network, hyperledger has a [devmode](https://hyperledger-fabric.readthedocs.io/en/latest/peer-chaincode-devmode.html).
-You can run the described chaincode in devmode with a single command:
+An overview of the code structure is [available in the docs directory](./docs/architecture.md)
 
-`./devchain.sh`
-
-This does not require any configuration and will build the chaincode if needed.
-
-### Standalone orchestrator
+### Standalone mode
 
 When running in standalone mode, the orchestrator needs a [couchdb](https://couchdb.apache.org/)
-database to persist its data.
+database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker to dispatch events.
 
-During development process, you can spawn a couchdb server with docker-compose:
+To launch the orchestrator:
 ```
-docker-compose start
+skaffold dev
 ```
 
 Fauxton (the couchdb frontend) is accesible on http://localhost:5984/_utils
-Development credentials are `dev`/`dev`
+
+Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster, the following command should list available services:
+```
+grpcurl -insecure orchestrator.node-1.com:443 list
+```
+
+### Chaincode mode
+
+In chaincode mode, the orchestrator only requires a matching chaincode:
+
+```
+docker build -t my-chaincode:1.0.0 .
+```
+
+Make sure you deploy [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) on `orchestrator` branch.
+
+Then:
+```
+skaffold dev -p chaincode
+```
 
 #### Dev tools versions
 

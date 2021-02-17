@@ -12,27 +12,26 @@ deploy:
       - name: owkin-orchestrator-org-1
         chartPath: charts/orchestrator
         namespace: org-1
+        createNamespace: true
         artifactOverrides:
           image: owkin/orchestrator
         imageStrategy:
           helm: {}
-        setValues:
-          orchestrator.mode: standalone
-          couchdb.enabled: true
-          couchdb.allowAdminParty: true
-          couchdb.couchdbConfig.couchdb.uuid: 00000001-ff16-4375-b81a-5c1742bc9f4c
+        valuesFiles: [ values/orchestrator-org-1.yaml ]
       - name: owkin-orchestrator-org-2
         chartPath: charts/orchestrator
         namespace: org-2
+        createNamespace: true
         artifactOverrides:
           image: owkin/orchestrator
         imageStrategy:
           helm: {}
-        setValues:
-          orchestrator.mode: standalone
-          couchdb.enabled: true
-          couchdb.allowAdminParty: true
-          couchdb.couchdbConfig.couchdb.uuid: 00000002-ff16-4375-b81a-5c1742bc9f4c
+        valuesFiles: [ values/orchestrator-org-2.yaml ]
+
+  kubectl:
+    manifests:
+      - values/orchestrator-org-1-tls-secret.yaml
+      - values/orchestrator-org-2-tls-secret.yaml
 
 profiles:
 - name: standalone
@@ -43,15 +42,9 @@ profiles:
   activation:
     - env: ORCHESTRATOR_MODE=chaincode
   patches:
-    - op: replace
-      path: /deploy/helm/releases/0/setValues/couchdb.enabled
-      value: false
-    - op: replace
-      path: /deploy/helm/releases/0/setValues/orchestrator.mode
-      value: chaincode
-    - op: replace
-      path: /deploy/helm/releases/1/setValues/couchdb.enabled
-      value: false
-    - op: replace
-      path: /deploy/helm/releases/1/setValues/orchestrator.mode
-      value: chaincode
+    - op: add
+      path: /deploy/helm/releases/0/valuesFiles/-
+      value: values/orchestrator-org-1-chaincode.yaml
+    - op: add
+      path: /deploy/helm/releases/1/valuesFiles/-
+      value: values/orchestrator-org-2-chaincode.yaml

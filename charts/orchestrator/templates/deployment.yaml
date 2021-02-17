@@ -27,6 +27,12 @@ spec:
       serviceAccountName: {{ include "orchestrator.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.couchdb.enabled }}
+      initContainers:
+      - name: wait-couchdb
+        image: jwilder/dockerize
+        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-couchdb.{{ .Release.Namespace }}:{{ .Values.couchdb.service.externalPort }}']
+      {{- end}}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -34,7 +40,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
+            - name: grpc
               containerPort: 9000
               protocol: TCP
           livenessProbe:
