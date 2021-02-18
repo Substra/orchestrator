@@ -27,12 +27,15 @@ spec:
       serviceAccountName: {{ include "orchestrator.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.couchdb.enabled }}
       initContainers:
+      {{- if .Values.couchdb.enabled }}
       - name: wait-couchdb
         image: jwilder/dockerize
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-couchdb.{{ .Release.Namespace }}:{{ .Values.couchdb.service.externalPort }}']
       {{- end}}
+      - name: wait-rabbitmq
+        image: jwilder/dockerize
+        command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}']
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
