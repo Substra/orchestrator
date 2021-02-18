@@ -36,7 +36,12 @@ deploy:
 profiles:
 - name: standalone
   activation:
-    - command: dev
+    # Activate when env variable is empty/missing,
+    # effectively making this rule the default.
+    - env: ORCHESTRATOR_MODE=
+  patches:
+    - op: remove
+      path: /deploy/helm/releases/1
 
 - name: chaincode
   activation:
