@@ -32,14 +32,14 @@ func TestRegisterNode(t *testing.T) {
 	provider.On("GetDatabase").Return(mockDB)
 	provider.On("GetEventQueue").Return(dispatcher)
 
-	e := &event.Event{EventType: event.AssetCreated, AssetType: "node", AssetID: "uuid1"}
+	e := &event.Event{EventKind: event.AssetCreated, AssetKind: assets.NodeKind, AssetID: "uuid1"}
 	dispatcher.On("Enqueue", e).Return(nil)
 
 	expected := assets.Node{
 		Id: "uuid1",
 	}
 
-	mockDB.On("PutState", nodeResource, "uuid1", mock.Anything).Return(nil).Once()
+	mockDB.On("PutState", assets.NodeKind, "uuid1", mock.Anything).Return(nil).Once()
 
 	service := NewNodeService(provider)
 

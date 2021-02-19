@@ -59,8 +59,8 @@ func TestRegisterObjective(t *testing.T) {
 	}
 
 	e := &event.Event{
-		EventType: event.AssetCreated,
-		AssetType: "objective",
+		EventKind: event.AssetCreated,
+		AssetKind: assets.ObjectiveKind,
 		AssetID:   objective.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
@@ -68,7 +68,12 @@ func TestRegisterObjective(t *testing.T) {
 	perms := &assets.Permissions{Process: &assets.Permission{Public: true}}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
-	mockDB.On("PutState", objectiveResource, "08680966-97ae-4573-8b2d-6c4db2b3c532", mock.Anything).Return(nil).Once()
+	mockDB.On(
+		"PutState",
+		assets.ObjectiveKind,
+		"08680966-97ae-4573-8b2d-6c4db2b3c532",
+		mock.Anything,
+	).Return(nil).Once()
 
 	o, err := service.RegisterObjective(objective, "owner")
 
@@ -94,7 +99,7 @@ func TestGetObjective(t *testing.T) {
 	objBytes, err := json.Marshal(&objective)
 	require.Nil(t, err)
 
-	mockDB.On("GetState", objectiveResource, "objKey").Return(objBytes, nil).Once()
+	mockDB.On("GetState", assets.ObjectiveKind, "objKey").Return(objBytes, nil).Once()
 
 	o, err := service.GetObjective("objKey")
 	require.Nil(t, err)
@@ -121,7 +126,7 @@ func TestGetObjectives(t *testing.T) {
 	bytes2, err := json.Marshal(&obj2)
 	require.Nil(t, err)
 
-	mockDB.On("GetAll", objectiveResource).Return([][]byte{bytes1, bytes2}, nil).Once()
+	mockDB.On("GetAll", assets.ObjectiveKind).Return([][]byte{bytes1, bytes2}, nil).Once()
 
 	r, err := service.GetObjectives()
 	require.Nil(t, err)

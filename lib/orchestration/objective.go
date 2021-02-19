@@ -23,8 +23,6 @@ import (
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
-const objectiveResource = "objectives"
-
 // ObjectiveAPI defines the methods to act on Objectives
 type ObjectiveAPI interface {
 	RegisterObjective(objective *assets.NewObjective, owner string) (*assets.Objective, error)
@@ -93,15 +91,15 @@ func (s *ObjectiveService) RegisterObjective(o *assets.NewObjective, owner strin
 	}
 
 	err = s.GetEventQueue().Enqueue(&event.Event{
-		EventType: event.AssetCreated,
+		EventKind: event.AssetCreated,
 		AssetID:   o.Key,
-		AssetType: "objective",
+		AssetKind: assets.ObjectiveKind,
 	})
 	if err != nil {
 		return &assets.Objective{}, err
 	}
 
-	err = s.GetDatabase().PutState(objectiveResource, objective.Key, b)
+	err = s.GetDatabase().PutState(assets.ObjectiveKind, objective.Key, b)
 	return objective, err
 }
 
@@ -109,7 +107,7 @@ func (s *ObjectiveService) RegisterObjective(o *assets.NewObjective, owner strin
 func (s *ObjectiveService) GetObjective(id string) (*assets.Objective, error) {
 	o := assets.Objective{}
 
-	b, err := s.GetDatabase().GetState(objectiveResource, id)
+	b, err := s.GetDatabase().GetState(assets.ObjectiveKind, id)
 	if err != nil {
 		return &o, err
 	}
@@ -120,7 +118,7 @@ func (s *ObjectiveService) GetObjective(id string) (*assets.Objective, error) {
 
 // GetObjectives returns all stored objectives
 func (s *ObjectiveService) GetObjectives() ([]*assets.Objective, error) {
-	b, err := s.GetDatabase().GetAll(objectiveResource)
+	b, err := s.GetDatabase().GetAll(assets.ObjectiveKind)
 	if err != nil {
 		return nil, err
 	}

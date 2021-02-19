@@ -22,8 +22,6 @@ import (
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
-const nodeResource = "nodes"
-
 // NodeAPI defines the methods to act on Nodes
 type NodeAPI interface {
 	RegisterNode(id string) (*assets.Node, error)
@@ -60,17 +58,17 @@ func (s *NodeService) RegisterNode(id string) (*assets.Node, error) {
 		return nil, err
 	}
 
-	err = s.GetDatabase().PutState(nodeResource, node.GetId(), nodeBytes)
+	err = s.GetDatabase().PutState(assets.NodeKind, node.GetId(), nodeBytes)
 	if err != nil {
 		return nil, err
 	}
-	err = s.GetEventQueue().Enqueue(&event.Event{EventType: event.AssetCreated, AssetID: id, AssetType: "node"})
+	err = s.GetEventQueue().Enqueue(&event.Event{EventKind: event.AssetCreated, AssetID: id, AssetKind: assets.NodeKind})
 	return node, err
 }
 
 // GetNodes list all known nodes
 func (s *NodeService) GetNodes() ([]*assets.Node, error) {
-	b, err := s.GetDatabase().GetAll(nodeResource)
+	b, err := s.GetDatabase().GetAll(assets.NodeKind)
 	if err != nil {
 		return nil, err
 	}

@@ -14,6 +14,8 @@
 
 package event
 
+import "github.com/owkin/orchestrator/lib/assets"
+
 // Kind represent the kind of orchestration events
 type Kind string
 
@@ -27,7 +29,7 @@ const (
 // Event is an occurence of an orchestration event.
 // It is triggered during orchestration and allows a consumer to react to the orchestration process.
 type Event struct {
-	AssetType string `json:"asset_type"`
-	AssetID   string `json:"asset_id"`
-	EventType Kind   `json:"event_type"`
+	AssetKind assets.Kind `json:"asset_kind"`
+	AssetID   string      `json:"asset_id"`
+	EventKind Kind        `json:"event_kind"`
 }
