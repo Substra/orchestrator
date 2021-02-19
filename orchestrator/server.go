@@ -74,8 +74,12 @@ func RunServerWithChainCode() {
 		mustGetEnv("CHAINCODE"),
 		converter.Forward,
 	)
-	defer listener.Close()
 
+	if err != nil {
+		log.Fatalf("Failed to instanciate listener: %v", err)
+	}
+
+	defer listener.Close()
 	go listener.Listen()
 
 	chaincodeInterceptor, err := chaincode.NewInterceptor(config, wallet)
