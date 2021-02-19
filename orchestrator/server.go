@@ -88,7 +88,11 @@ func RunServerWithChainCode() {
 
 	}
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(common.InterceptMSPID, chaincodeInterceptor.Intercept))
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		common.LogRequest,
+		common.InterceptMSPID,
+		chaincodeInterceptor.Intercept,
+	))
 
 	// Register application services
 	assets.RegisterNodeServiceServer(server, chaincode.NewNodeAdapter())
@@ -137,7 +141,11 @@ func RunServerWithoutChainCode() {
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
 	providerInterceptor := standalone.NewProviderInterceptor(couchPersistence, session)
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(common.InterceptMSPID, providerInterceptor.Intercept))
+	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		common.LogRequest,
+		common.InterceptMSPID,
+		providerInterceptor.Intercept,
+	))
 
 	// Register application services
 	assets.RegisterNodeServiceServer(server, standalone.NewNodeServer())
