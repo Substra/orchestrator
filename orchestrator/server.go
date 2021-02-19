@@ -47,7 +47,7 @@ func mustGetEnv(name string) string {
 	n := envPrefix + name
 	v, ok := os.LookupEnv(n)
 	if !ok {
-		log.Fatalf("Missing environment variable: %s", n)
+		log.WithField("env_var", n).Fatal("Missing environment variable")
 	}
 	return v
 }
@@ -76,7 +76,7 @@ func RunServerWithChainCode() {
 	)
 
 	if err != nil {
-		log.Fatalf("Failed to instanciate listener: %v", err)
+		log.WithError(err).Fatal("Failed to instanciate listener")
 	}
 
 	defer listener.Close()
@@ -84,7 +84,7 @@ func RunServerWithChainCode() {
 
 	chaincodeInterceptor, err := chaincode.NewInterceptor(config, wallet)
 	if err != nil {
-		log.Fatalf("Failed to instanciate chaincode interceptor: %v", err)
+		log.WithError(err).Fatal("Failed to instanciate chaincode interceptor")
 
 	}
 
@@ -103,12 +103,12 @@ func RunServerWithChainCode() {
 
 	listen, err := net.Listen("tcp", ":9000")
 	if err != nil {
-		log.Fatalf("failed to listen on port 9000: %v", err)
+		log.WithError(err).Fatal("failed to listen on port 9000")
 	}
 
 	log.WithField("address", listen.Addr().String()).Info("Server listening")
 	if err := server.Serve(listen); err != nil {
-		log.Fatalf("failed to server grpc server on port 9000: %v", err)
+		log.WithError(err).Fatal("failed to server grpc server on port 9000")
 	}
 }
 
@@ -122,7 +122,7 @@ func RunServerWithoutChainCode() {
 	couchPersistence, err := standalone.NewPersistence(context.TODO(), couchDSN, "substra_orchestrator")
 	defer couchPersistence.Close(context.TODO())
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Fatal("Failed to create persistence layer")
 	}
 
 	rabbitDSN := mustGetEnv("AMQP_DSN")
@@ -131,7 +131,7 @@ func RunServerWithoutChainCode() {
 
 	listen, err := net.Listen("tcp", ":9000")
 	if err != nil {
-		log.Fatalf("failed to listen on port 9000: %v", err)
+		log.WithError(err).Fatal("failed to listen on port 9000")
 	}
 
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
@@ -152,7 +152,7 @@ func RunServerWithoutChainCode() {
 
 	log.WithField("address", listen.Addr().String()).Info("Server listening")
 	if err := server.Serve(listen); err != nil {
-		log.Fatalf("failed to server grpc server on port 9000: %v", err)
+		log.WithError(err).Fatal("failed to server grpc server on port 9000")
 	}
 }
 

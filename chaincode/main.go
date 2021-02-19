@@ -40,7 +40,7 @@ func main() {
 	cc, err := contractapi.NewChaincode(contracts...)
 
 	if err != nil {
-		log.Fatal("error creating substra chaincode", err.Error())
+		log.WithError(err).Fatal("error creating substra chaincode")
 	}
 
 	if os.Getenv("DEVMODE_ENABLED") != "" {
@@ -50,17 +50,17 @@ func main() {
 
 	key, err := ioutil.ReadFile(os.Getenv("TLS_KEY_FILE"))
 	if err != nil {
-		log.Errorf("unable to read key file with path=%s, error: %s", os.Getenv("TLS_KEY_FILE"), err)
+		log.WithError(err).WithField("path", os.Getenv("TLS_KEY_FILE")).Fatal("unable to read key file")
 	}
 
 	cert, err := ioutil.ReadFile(os.Getenv("TLS_CERT_FILE"))
 	if err != nil {
-		log.Errorf("unable to read cert file with path %s, error: %s", os.Getenv("TLS_CERT_FILE"), err)
+		log.WithError(err).WithField("path", os.Getenv("TLS_CERT_FILE")).Fatal("unable to read cert file")
 	}
 
 	ca, err := ioutil.ReadFile(os.Getenv("TLS_ROOTCERT_FILE"))
 	if err != nil {
-		log.Errorf("unable to read ca cert file with path: %s, error: %s", os.Getenv("TLS_CERT_FILE"), err)
+		log.WithError(err).WithField("path", os.Getenv("TLS_ROOTCERT_FILE")).Fatal("unable to read CA cert file")
 	}
 
 	server := &shim.ChaincodeServer{
@@ -76,8 +76,8 @@ func main() {
 	}
 
 	// Start the chaincode external server
-	log.Infof("starting substra chaincode server")
+	log.Info("starting substra chaincode server")
 	if err = server.Start(); err != nil {
-		log.Errorf("error happened while starting chaincode %s, version: %s : %s", cc.Info.Title, cc.Info.Version, err)
+		log.WithError(err).WithField("title", cc.Info.Title).WithField("version", cc.Info.Version).Fatal("error happened while starting chaincode")
 	}
 }
