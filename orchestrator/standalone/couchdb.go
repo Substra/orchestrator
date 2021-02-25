@@ -118,6 +118,14 @@ func (p *Persistence) GetState(resource string, key string) ([]byte, error) {
 	return s.Asset, err
 }
 
+// HasKey returns whether the key exists in DB
+func (p *Persistence) HasKey(resource string, key string) (bool, error) {
+	r := p.db.Get(context.TODO(), getFullKey(resource, key))
+
+	// Any existing document should have a revision
+	return r.Rev == "", nil
+}
+
 // GetAll retrieves all data for a resource kind
 func (p *Persistence) GetAll(resource string) (result [][]byte, err error) {
 	queryString := fmt.Sprintf(`{"selector":{"doc_type":"%s"}}`, resource)

@@ -15,9 +15,11 @@
 package orchestration
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/assets"
+	orchestrationError "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
@@ -39,6 +41,7 @@ func TestRegisterNode(t *testing.T) {
 		Id: "uuid1",
 	}
 
+	mockDB.On("HasKey", assets.NodeKind, "uuid1", mock.Anything).Return(false, nil).Once()
 	mockDB.On("PutState", assets.NodeKind, "uuid1", mock.Anything).Return(nil).Once()
 
 	service := NewNodeService(provider)
@@ -46,4 +49,19 @@ func TestRegisterNode(t *testing.T) {
 	node, err := service.RegisterNode("uuid1")
 	assert.NoError(t, err, "Node registration should not fail")
 	assert.Equal(t, &expected, node, "Registration should return a node")
+}
+
+func TestRegisterExistingNode(t *testing.T) {
+	mockDB := new(persistenceHelper.MockDatabase)
+	provider := new(MockServiceProvider)
+
+	provider.On("GetDatabase").Return(mockDB)
+
+	mockDB.On("HasKey", assets.NodeKind, "uuid1", mock.Anything).Return(true, nil).Once()
+
+	service := NewNodeService(provider)
+
+	_, err := service.RegisterNode("uuid1")
+	assert.Error(t, err, "Registration should fail for existing node")
+	assert.True(t, errors.Is(err, orchestrationError.ErrConflict))
 }

@@ -33,6 +33,7 @@ type DBWriter interface {
 type DBReader interface {
 	GetState(resource assets.Kind, key string) ([]byte, error)
 	GetAll(resource assets.Kind) ([][]byte, error)
+	HasKey(resource assets.Kind, key string) (bool, error)
 }
 
 // DatabaseProvider defines an object able to provide a Database instance

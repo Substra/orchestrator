@@ -34,6 +34,12 @@ func (m *MockDatabase) GetState(resource string, key string) ([]byte, error) {
 	return args.Get(0).([]byte), args.Error(1)
 }
 
+// HasKey check key existence
+func (m *MockDatabase) HasKey(resource string, key string) (bool, error) {
+	args := m.Called(resource, key)
+	return args.Bool(0), args.Error(1)
+}
+
 // GetAll retrieves all data for a resource kind
 func (m *MockDatabase) GetAll(resource string) ([][]byte, error) {
 	args := m.Called(resource)

@@ -16,8 +16,10 @@ package orchestration
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/owkin/orchestrator/lib/assets"
+	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
@@ -56,6 +58,15 @@ func (s *NodeService) RegisterNode(id string) (*assets.Node, error) {
 	nodeBytes, err := json.Marshal(node)
 	if err != nil {
 		return nil, err
+	}
+
+	exists, err := s.GetDatabase().HasKey(assets.NodeKind, node.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, fmt.Errorf("node %s already exists: %w", node.GetId(), orchestrationErrors.ErrConflict)
 	}
 
 	err = s.GetDatabase().PutState(assets.NodeKind, node.GetId(), nodeBytes)

@@ -93,6 +93,13 @@ func (l *DB) GetState(resource string, key string) ([]byte, error) {
 	return buf, nil
 }
 
+// HasKey returns true if a resource with the same key already exists
+func (l *DB) HasKey(resource string, key string) (bool, error) {
+	k := getFullKey(resource, key)
+	buff, err := l.ccStub.GetState(k)
+	return buff != nil, err
+}
+
 // GetAll fetch all data for a given resource kind
 func (l *DB) GetAll(resource string) (result [][]byte, err error) {
 	logger := logger.WithFields(
