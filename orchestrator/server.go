@@ -140,9 +140,11 @@ func RunServerWithoutChainCode() {
 
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
 	providerInterceptor := standalone.NewProviderInterceptor(couchPersistence, session)
+	concurrencyLimiter := new(standalone.ConcurrencyLimiter)
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		common.LogRequest,
+		concurrencyLimiter.Intercept,
 		common.InterceptMSPID,
 		providerInterceptor.Intercept,
 	))
