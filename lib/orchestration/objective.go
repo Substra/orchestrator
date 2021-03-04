@@ -15,8 +15,6 @@
 package orchestration
 
 import (
-	"encoding/json"
-
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/event"
@@ -37,7 +35,7 @@ type ObjectiveServiceProvider interface {
 
 // ObjectiveDependencyProvider defines what the ObjectiveService needs to perform its duty
 type ObjectiveDependencyProvider interface {
-	persistence.DatabaseProvider
+	persistence.ObjectiveDBALProvider
 	event.QueueProvider
 	PermissionServiceProvider
 }
@@ -85,11 +83,6 @@ func (s *ObjectiveService) RegisterObjective(o *assets.NewObjective, owner strin
 		return &assets.Objective{}, err
 	}
 
-	b, err := json.Marshal(objective)
-	if err != nil {
-		return &assets.Objective{}, err
-	}
-
 	err = s.GetEventQueue().Enqueue(&event.Event{
 		EventKind: event.AssetCreated,
 		AssetID:   o.Key,
@@ -99,40 +92,16 @@ func (s *ObjectiveService) RegisterObjective(o *assets.NewObjective, owner strin
 		return &assets.Objective{}, err
 	}
 
-	err = s.GetDatabase().PutState(assets.ObjectiveKind, objective.Key, b)
+	err = s.GetObjectiveDBAL().AddObjective(objective)
 	return objective, err
 }
 
 // GetObjective retrieves an objective by its ID
 func (s *ObjectiveService) GetObjective(id string) (*assets.Objective, error) {
-	o := assets.Objective{}
-
-	b, err := s.GetDatabase().GetState(assets.ObjectiveKind, id)
-	if err != nil {
-		return &o, err
-	}
-
-	err = json.Unmarshal(b, &o)
-	return &o, err
+	return s.GetObjectiveDBAL().GetObjective(id)
 }
 
 // GetObjectives returns all stored objectives
 func (s *ObjectiveService) GetObjectives() ([]*assets.Objective, error) {
-	b, err := s.GetDatabase().GetAll(assets.ObjectiveKind)
-	if err != nil {
-		return nil, err
-	}
-
-	var objectives []*assets.Objective
-
-	for _, nodeBytes := range b {
-		o := assets.Objective{}
-		err = json.Unmarshal(nodeBytes, &o)
-		if err != nil {
-			return nil, err
-		}
-		objectives = append(objectives, &o)
-	}
-
-	return objectives, nil
+	return s.GetObjectiveDBAL().GetObjectives()
 }

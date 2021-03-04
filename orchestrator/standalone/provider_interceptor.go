@@ -17,10 +17,11 @@ package standalone
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
+	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/orchestration"
-	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/orchestrator/common"
 	"github.com/owkin/orchestrator/orchestrator/standalone/events"
 	"google.golang.org/grpc"
@@ -34,8 +35,8 @@ var ignoredMethods = [...]string{
 // ProviderInterceptor intercepts gRPC requests and assign a request-scoped orchestration.Provider
 // to the request context.
 type ProviderInterceptor struct {
-	channel common.AMQPChannel
-	db      persistence.Database
+	channel      common.AMQPChannel
+	dbalProvider TransactionalDBALProvider
 }
 
 type ctxProviderInterceptorMarker struct{}
@@ -43,10 +44,10 @@ type ctxProviderInterceptorMarker struct{}
 var ctxProviderKey = &ctxProviderInterceptorMarker{}
 
 // NewProviderInterceptor returns an instance of ProviderInterceptor
-func NewProviderInterceptor(db persistence.Database, channel common.AMQPChannel) *ProviderInterceptor {
+func NewProviderInterceptor(dbalProvider TransactionalDBALProvider, channel common.AMQPChannel) *ProviderInterceptor {
 	return &ProviderInterceptor{
-		channel: channel,
-		db:      db,
+		channel:      channel,
+		dbalProvider: dbalProvider,
 	}
 }
 
@@ -62,14 +63,35 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 
 	// This dispatcher should stay scoped per request since there is a single event queue
 	dispatcher := events.NewAMQPDispatcher(pi.channel)
-	provider := orchestration.NewServiceProvider(pi.db, dispatcher)
+
+	tx, err := pi.dbalProvider.GetTransactionalDBAL()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to begin transaction: %w", err)
+	}
+
+	provider := orchestration.NewServiceProvider(tx, dispatcher)
 
 	newCtx := context.WithValue(ctx, ctxProviderKey, provider)
 	res, err := handler(newCtx, req)
 
 	// Events should be dispatched only on successful transactions
-	if err == nil {
-		dispatcher.Dispatch()
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return nil, fmt.Errorf("Failed to rollback transaction: %w", rollbackErr)
+		}
+	} else {
+		commitErr := tx.Commit()
+		if commitErr != nil {
+			return nil, fmt.Errorf("Failed to commit transaction: %w", commitErr)
+		}
+		dispatchErr := dispatcher.Dispatch()
+		if dispatchErr != nil {
+			log.WithError(dispatchErr).
+				WithField("events", dispatcher.GetEvents()).
+				Error("Failed to dispatch events after successful transaction commit")
+			return nil, fmt.Errorf("Failed to dispatch events: %w", dispatchErr)
+		}
 	}
 
 	return res, err

@@ -79,11 +79,11 @@ tolerations: []
 
 affinity: {}
 
-couchdb:
-  enabled: false
-  clusterSize: 1
-  allowAdminParty: false # If enabled, start cluster without admin account
-  externalPort: 5984
+postgresql:
+  enabled: true
+  postgresqlDatabase: orchestrator
+  postgresqlUsername: postgres
+  postgresqlPassword: postgres
 
 rabbitmq:
   auth:

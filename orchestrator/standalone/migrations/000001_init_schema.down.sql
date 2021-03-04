@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS objectives;
+DROP TABLE IF EXISTS nodes;

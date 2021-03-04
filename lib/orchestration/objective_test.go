@@ -15,24 +15,22 @@
 package orchestration
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterObjective(t *testing.T) {
-	mockDB := new(persistenceHelper.MockDatabase)
+	dbal := new(persistenceHelper.MockDBAL)
 	mps := new(MockPermissionService)
 	dispatcher := new(MockDispatcher)
 	provider := new(MockServiceProvider)
 
-	provider.On("GetDatabase").Return(mockDB)
+	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 
 	provider.On("GetEventQueue").Return(dispatcher)
@@ -67,12 +65,20 @@ func TestRegisterObjective(t *testing.T) {
 
 	perms := &assets.Permissions{Process: &assets.Permission{Public: true}}
 
+	storedObjective := &assets.Objective{
+		Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Name:        "Test objective",
+		MetricsName: "test perf",
+		Metrics:     metrics,
+		Description: description,
+		Permissions: perms,
+		Owner:       "owner",
+	}
+
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
-	mockDB.On(
-		"PutState",
-		assets.ObjectiveKind,
-		"08680966-97ae-4573-8b2d-6c4db2b3c532",
-		mock.Anything,
+	dbal.On(
+		"AddObjective",
+		storedObjective,
 	).Return(nil).Once()
 
 	o, err := service.RegisterObjective(objective, "owner")
@@ -82,13 +88,13 @@ func TestRegisterObjective(t *testing.T) {
 	assert.Equal(t, perms, o.Permissions, "Permissions should be set")
 	assert.Equal(t, "owner", o.Owner, "Owner should be set")
 
-	mockDB.AssertExpectations(t)
+	dbal.AssertExpectations(t)
 }
 
 func TestGetObjective(t *testing.T) {
-	mockDB := new(persistenceHelper.MockDatabase)
+	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
-	provider.On("GetDatabase").Return(mockDB)
+	provider.On("GetObjectiveDBAL").Return(dbal)
 	service := NewObjectiveService(provider)
 
 	objective := assets.Objective{
@@ -96,10 +102,7 @@ func TestGetObjective(t *testing.T) {
 		Name: "Test",
 	}
 
-	objBytes, err := json.Marshal(&objective)
-	require.Nil(t, err)
-
-	mockDB.On("GetState", assets.ObjectiveKind, "objKey").Return(objBytes, nil).Once()
+	dbal.On("GetObjective", "objKey").Return(&objective, nil).Once()
 
 	o, err := service.GetObjective("objKey")
 	require.Nil(t, err)
@@ -107,9 +110,9 @@ func TestGetObjective(t *testing.T) {
 }
 
 func TestGetObjectives(t *testing.T) {
-	mockDB := new(persistenceHelper.MockDatabase)
+	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
-	provider.On("GetDatabase").Return(mockDB)
+	provider.On("GetObjectiveDBAL").Return(dbal)
 	service := NewObjectiveService(provider)
 
 	obj1 := assets.Objective{
@@ -121,12 +124,7 @@ func TestGetObjectives(t *testing.T) {
 		Name: "Test 2",
 	}
 
-	bytes1, err := json.Marshal(&obj1)
-	require.Nil(t, err)
-	bytes2, err := json.Marshal(&obj2)
-	require.Nil(t, err)
-
-	mockDB.On("GetAll", assets.ObjectiveKind).Return([][]byte{bytes1, bytes2}, nil).Once()
+	dbal.On("GetObjectives").Return([]*assets.Objective{&obj1, &obj2}, nil).Once()
 
 	r, err := service.GetObjectives()
 	require.Nil(t, err)

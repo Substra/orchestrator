@@ -26,10 +26,16 @@ type MockServiceProvider struct {
 	mock.Mock
 }
 
-// GetDatabase returns whatever value is passed
-func (m *MockServiceProvider) GetDatabase() persistence.Database {
+// GetNodeDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetNodeDBAL() persistence.NodeDBAL {
 	args := m.Called()
-	return args.Get(0).(persistence.Database)
+	return args.Get(0).(persistence.NodeDBAL)
+}
+
+// GetObjectiveDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetObjectiveDBAL() persistence.ObjectiveDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.ObjectiveDBAL)
 }
 
 // GetEventQueue returns whatever value is passed

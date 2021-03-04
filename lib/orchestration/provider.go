@@ -21,7 +21,8 @@ import (
 
 // DependenciesProvider describes a Provider exposing all orchestration services.
 type DependenciesProvider interface {
-	persistence.DatabaseProvider
+	persistence.NodeDBALProvider
+	persistence.ObjectiveDBALProvider
 	event.QueueProvider
 	NodeServiceProvider
 	ObjectiveServiceProvider
@@ -34,7 +35,7 @@ type DependenciesProvider interface {
 // Each service should define a ServiceDependencyProvider interface which states what are its requirements.
 // Since the ServiceProvider implements every ServiceProvider interface, it can fit all service dependencies.
 type ServiceProvider struct {
-	db         persistence.Database
+	dbal       persistence.DBAL
 	eventQueue event.Queue
 	node       NodeAPI
 	objective  ObjectiveAPI
@@ -42,13 +43,18 @@ type ServiceProvider struct {
 }
 
 // NewServiceProvider return an instance of ServiceProvider based on given persistence layer.
-func NewServiceProvider(db persistence.Database, queue event.Queue) *ServiceProvider {
-	return &ServiceProvider{db: db, eventQueue: queue}
+func NewServiceProvider(dbal persistence.DBAL, queue event.Queue) *ServiceProvider {
+	return &ServiceProvider{dbal: dbal, eventQueue: queue}
 }
 
-// GetDatabase returns a persistence layer.
-func (sc *ServiceProvider) GetDatabase() persistence.Database {
-	return sc.db
+// GetNodeDBAL returns the database abstraction layer for Nodes
+func (sc *ServiceProvider) GetNodeDBAL() persistence.NodeDBAL {
+	return sc.dbal
+}
+
+// GetObjectiveDBAL returns the database abstraction layer for Objectives
+func (sc *ServiceProvider) GetObjectiveDBAL() persistence.ObjectiveDBAL {
+	return sc.dbal
 }
 
 // GetEventQueue returns an event.Queue instance

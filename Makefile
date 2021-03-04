@@ -2,8 +2,11 @@ OUTPUT_DIR = ./bin
 CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
 ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
 PROJECT_ROOT = .
+MIGRATIONS_DIR = $(PROJECT_ROOT)/orchestrator/standalone/migrations
 protos = $(PROJECT_ROOT)/lib/assets
 go_src = $(shell find . -type f -name '*.go')
+sql_migrations = $(wildcard $(MIGRATIONS_DIR)/*.sql)
+migrations_binpack = $(MIGRATIONS_DIR)/bindata.go
 
 protobufs = $(wildcard $(protos)/*.proto)
 pbgo = $(protobufs:.proto=.pb.go)
@@ -17,7 +20,7 @@ chaincode: $(CHAINCODE_BIN)
 .PHONY: orchestrator
 orchestrator: $(ORCHESTRATOR_BIN)
 
-$(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR)
+$(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack)
 	go build -o $(ORCHESTRATOR_BIN) ./orchestrator
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR)
@@ -34,11 +37,14 @@ $(pbgo): %.pb.go: %.proto
 	--go_out=$(protos) \
 	$<
 
+$(migrations_binpack): $(sql_migrations)
+	go-bindata -pkg migrations -prefix $(MIGRATIONS_DIR) -o $(migrations_binpack) $(MIGRATIONS_DIR)
+
 .PHONY: proto-codegen
 proto-codegen: $(pbgo)
 
 .PHONY: clean
-clean: clean-protos
+clean: clean-protos clean-migrations-binpack
 	rm -rf $(OUTPUT_DIR)
 
 .PHONY: test
@@ -48,3 +54,7 @@ test:
 .PHONY: clean-protos
 clean-protos:
 	rm $(wildcard $(protos)/*.pb.go)
+
+.PHONY: clean-migrations-binpack
+clean-migrations-binpack:
+	rm $(migrations_binpack)

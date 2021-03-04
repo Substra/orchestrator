@@ -7,10 +7,10 @@ version: 0.1.0
 appVersion: 0.0.1
 
 dependencies:
-  - name: couchdb
-    repository: https://apache.github.io/couchdb-helm
-    version: 3.3.3
-    condition: couchdb.enabled
+  - name: postgresql
+    repository: https://charts.bitnami.com/bitnami
+    version: 10.3.6
+    condition: postgresql.enabled
   - name: rabbitmq
     repository: https://charts.bitnami.com/bitnami
     version: 8.9.1

@@ -10,5 +10,5 @@ fabric:
   peer:
     host: network-org-2-peer-1-hlf-peer.org-2
 
-couchdb:
+postgresql:
   enabled: false

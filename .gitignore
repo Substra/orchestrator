@@ -2,3 +2,4 @@
 /bin
 .vscode/
 /wallet
+orchestrator/standalone/migrations/bindata.go

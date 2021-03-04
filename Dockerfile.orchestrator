@@ -10,7 +10,8 @@ RUN chmod +x /bin/grpc_health_probe
 
 # Install protobuf codegen dependencies
 RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
-         google.golang.org/grpc/cmd/protoc-gen-go-grpc
+    google.golang.org/grpc/cmd/protoc-gen-go-grpc \
+    github.com/go-bindata/go-bindata/...
 
 WORKDIR ${SRC_DIR}
 

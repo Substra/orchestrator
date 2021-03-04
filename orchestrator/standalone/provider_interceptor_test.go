@@ -37,6 +37,28 @@ func (m *mockedChannel) Publish(data []byte) error {
 	return args.Error(0)
 }
 
+type mockedTransactionDBAL struct {
+	persistenceTesting.MockDBAL
+}
+
+func (m *mockedTransactionDBAL) Commit() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+func (m *mockedTransactionDBAL) Rollback() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+type mockTransactionalDBALProvider struct {
+	m *mockedTransactionDBAL
+}
+
+func (p *mockTransactionalDBALProvider) GetTransactionalDBAL() (TransactionDBAL, error) {
+	return p.m, nil
+}
+
 func TestExtractProvider(t *testing.T) {
 	ctx := context.TODO()
 
@@ -55,9 +77,12 @@ func TestExtractProvider(t *testing.T) {
 
 func TestInjectProvider(t *testing.T) {
 	channel := new(mockedChannel)
-	db := new(persistenceTesting.MockDatabase)
 
-	interceptor := NewProviderInterceptor(db, channel)
+	db := new(mockedTransactionDBAL)
+	db.On("Commit").Once().Return(nil)
+	dbProvider := &mockTransactionalDBALProvider{db}
+
+	interceptor := NewProviderInterceptor(dbProvider, channel)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -71,13 +96,15 @@ func TestInjectProvider(t *testing.T) {
 	interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
 }
 
-func TestDispatchOnSuccess(t *testing.T) {
+func TestOnSuccess(t *testing.T) {
 	channel := new(mockedChannel)
-	db := new(persistenceTesting.MockDatabase)
+	db := new(mockedTransactionDBAL)
+	dbProvider := &mockTransactionalDBALProvider{db}
 
+	db.On("Commit").Once().Return(nil)
 	channel.On("Publish", mock.Anything).Once().Return(nil)
 
-	interceptor := NewProviderInterceptor(db, channel)
+	interceptor := NewProviderInterceptor(dbProvider, channel)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -94,11 +121,14 @@ func TestDispatchOnSuccess(t *testing.T) {
 	interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
 }
 
-func TestNoDispatchOnError(t *testing.T) {
+func TestOnError(t *testing.T) {
 	channel := new(mockedChannel)
-	db := new(persistenceTesting.MockDatabase)
+	db := new(mockedTransactionDBAL)
+	dbProvider := &mockTransactionalDBALProvider{db}
 
-	interceptor := NewProviderInterceptor(db, channel)
+	db.On("Rollback").Once().Return(nil)
+
+	interceptor := NewProviderInterceptor(dbProvider, channel)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -109,8 +139,10 @@ func TestNoDispatchOnError(t *testing.T) {
 
 		provider.GetEventQueue().Enqueue(&event.Event{})
 
-		return "test", errors.New("test error")
+		return nil, errors.New("test error")
 	}
 
-	interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
+	res, err := interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
+	assert.Nil(t, res)
+	assert.Error(t, err)
 }

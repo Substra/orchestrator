@@ -40,7 +40,7 @@ switching modes will result in a full reset.
 Since both the standalone orchestrator and the chaincode have to manipulate the assets,
 it makes sense that they rely on the same common lib; which you can find in the `lib` directory.
 
-It provides abstractions to manipulate the assets and implement your own persistence layer (`persistence.Database`).
+It provides abstractions to manipulate the assets and implement your own persistence layer (`persistence.DBAL`).
 
 All the assets are defined by their protobuf in `lib/assets`.
 You'll also find in this directory the validation implementation for each asset.
@@ -55,8 +55,8 @@ Here is an overview of the orchestration part, which is completely independent o
 To avoid tight coupling, the `Provider` implements a dependency injection pattern
 so that an asset service can call other services.
 
-There are two implementations of the Database interface:
-CouchDB in solo mode and LedgerDB when running as chaincode.
+There are two implementations of the DBAL interface:
+Postgresql in solo mode and LedgerDB when running as chaincode.
 
 ## Event dispatch
 

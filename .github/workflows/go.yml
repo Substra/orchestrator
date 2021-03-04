@@ -37,6 +37,10 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           go install google.golang.org/protobuf/cmd/protoc-gen-go
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+      - name: Install go-bindata
+        run: |
+          cd /tmp
+          go get -u github.com/go-bindata/go-bindata/...
       - name: Build
         run: make
       - name: Test

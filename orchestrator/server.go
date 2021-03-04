@@ -15,7 +15,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"net"
 	"os"
@@ -119,12 +118,9 @@ func RunServerWithChainCode() {
 // RunServerWithoutChainCode will expose the chaincode logic through gRPC.
 // State will be stored in a redis database.
 func RunServerWithoutChainCode() {
-	couchDSN := os.Getenv("COUCHDB_DSN")
-	if couchDSN == "" {
-		couchDSN = "http://dev:dev@localhost:5984"
-	}
-	couchPersistence, err := standalone.NewPersistence(context.TODO(), couchDSN, "substra_orchestrator")
-	defer couchPersistence.Close(context.TODO())
+	dbURL := mustGetEnv("DATABASE_URL")
+	pgDB, err := standalone.InitDatabase(dbURL)
+	defer pgDB.Close()
 	if err != nil {
 		log.WithError(err).Fatal("Failed to create persistence layer")
 	}
@@ -139,7 +135,7 @@ func RunServerWithoutChainCode() {
 	}
 
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
-	providerInterceptor := standalone.NewProviderInterceptor(couchPersistence, session)
+	providerInterceptor := standalone.NewProviderInterceptor(pgDB, session)
 	concurrencyLimiter := new(standalone.ConcurrencyLimiter)
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(

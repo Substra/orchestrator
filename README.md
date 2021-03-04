@@ -18,15 +18,13 @@ An overview of the code structure is [available in the docs directory](./docs/ar
 
 ### Standalone mode
 
-When running in standalone mode, the orchestrator needs a [couchdb](https://couchdb.apache.org/)
+When running in standalone mode, the orchestrator needs a [postgres](https://www.postgresql.org/)
 database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker to dispatch events.
 
 To launch the orchestrator:
 ```
 skaffold dev
 ```
-
-Fauxton (the couchdb frontend) is accesible on http://localhost:5984/_utils
 
 Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster, the following command should list available services:
 ```
@@ -65,3 +63,5 @@ evans --tls --cacert ca.crt --host orchestrator.node-1.com -p 443 -r repl
 - [go](https://golang.org/): v1.15.5
 - [protoc](https://github.com/protocolbuffers/protobuf): v3.14.0
 - [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.25.0
+- [go-bindata](https://github.com/go-bindata/go-bindata): v3.1.0
+- [golang-migrate](https://github.com/golang-migrate/migrate): optional, used to create migration files

@@ -19,7 +19,7 @@ type Kind = string
 
 var (
 	// NodeKind is the type of Node assets
-	NodeKind Kind = "nodes"
+	NodeKind Kind = "node"
 	// ObjectiveKind is the type of Objective assets
-	ObjectiveKind = "objectives"
+	ObjectiveKind = "objective"
 )

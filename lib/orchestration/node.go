@@ -15,7 +15,6 @@
 package orchestration
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/owkin/orchestrator/lib/assets"
@@ -37,7 +36,7 @@ type NodeServiceProvider interface {
 
 // NodeDependencyProvider defines what the NodeService needs to perform its duty
 type NodeDependencyProvider interface {
-	persistence.DatabaseProvider
+	persistence.NodeDBALProvider
 	event.QueueProvider
 }
 
@@ -55,12 +54,8 @@ func NewNodeService(provider NodeDependencyProvider) *NodeService {
 // RegisterNode persist a node
 func (s *NodeService) RegisterNode(id string) (*assets.Node, error) {
 	node := &assets.Node{Id: id}
-	nodeBytes, err := json.Marshal(node)
-	if err != nil {
-		return nil, err
-	}
 
-	exists, err := s.GetDatabase().HasKey(assets.NodeKind, node.GetId())
+	exists, err := s.GetNodeDBAL().NodeExists(id)
 	if err != nil {
 		return nil, err
 	}
@@ -69,31 +64,19 @@ func (s *NodeService) RegisterNode(id string) (*assets.Node, error) {
 		return nil, fmt.Errorf("node %s already exists: %w", node.GetId(), orchestrationErrors.ErrConflict)
 	}
 
-	err = s.GetDatabase().PutState(assets.NodeKind, node.GetId(), nodeBytes)
+	err = s.GetNodeDBAL().AddNode(node)
 	if err != nil {
 		return nil, err
 	}
 	err = s.GetEventQueue().Enqueue(&event.Event{EventKind: event.AssetCreated, AssetID: id, AssetKind: assets.NodeKind})
-	return node, err
-}
-
-// GetNodes list all known nodes
-func (s *NodeService) GetNodes() ([]*assets.Node, error) {
-	b, err := s.GetDatabase().GetAll(assets.NodeKind)
 	if err != nil {
 		return nil, err
 	}
 
-	var nodes []*assets.Node
+	return node, nil
+}
 
-	for _, nodeBytes := range b {
-		n := assets.Node{}
-		err = json.Unmarshal(nodeBytes, &n)
-		if err != nil {
-			return nil, err
-		}
-		nodes = append(nodes, &n)
-	}
-
-	return nodes, nil
+// GetNodes list all known nodes
+func (s *NodeService) GetNodes() ([]*assets.Node, error) {
+	return s.GetNodeDBAL().GetNodes()
 }

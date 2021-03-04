@@ -1,0 +1,152 @@
+// Copyright 2021 Owkin Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package standalone
+
+import (
+	"database/sql"
+	"encoding/json"
+
+	// migration driver
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+
+	// Database driver
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/persistence"
+)
+
+// TransactionDBAL is a persistence.DBAL augmented with transaction capabilities.
+// It's purpose is to be rollbacked in case of error or commited at the end of a successful request.
+type TransactionDBAL interface {
+	persistence.DBAL
+	Commit() error
+	Rollback() error
+}
+
+// DBAL is the Database Abstraction Layer around asset storage
+type DBAL struct {
+	tx *sql.Tx
+}
+
+// Commit the changes to the underlying storage backend
+func (d *DBAL) Commit() error {
+	return d.tx.Commit()
+}
+
+// Rollback the changes so that the storage is left untouched
+func (d *DBAL) Rollback() error {
+	return d.tx.Rollback()
+}
+
+// AddNode implements persistence.NodeDBAL
+func (d *DBAL) AddNode(node *assets.Node) error {
+	stmt := `insert into "nodes" ("id") values ($1)`
+	_, err := d.tx.Exec(stmt, node.GetId())
+	return err
+}
+
+// NodeExists implements persistence.NodeDBAL
+func (d *DBAL) NodeExists(key string) (bool, error) {
+	row := d.tx.QueryRow(`select count(id) from "nodes" where id=$1`, key)
+
+	var count int
+	err := row.Scan(&count)
+
+	return count == 1, err
+}
+
+// GetNodes implements persistence.NodeDBAL
+func (d *DBAL) GetNodes() ([]*assets.Node, error) {
+	rows, err := d.tx.Query(`select "id" from "nodes"`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var nodes []*assets.Node
+
+	for rows.Next() {
+		var id string
+
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+
+		n := assets.Node{Id: id}
+		nodes = append(nodes, &n)
+	}
+
+	return nodes, nil
+}
+
+// AddObjective implements persistence.ObjectiveDBAL
+func (d *DBAL) AddObjective(obj *assets.Objective) error {
+	objBytes, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	stmt := `insert into "objectives" ("id", "asset") values ($1, $2)`
+	_, err = d.tx.Exec(stmt, obj.GetKey(), objBytes)
+	return err
+}
+
+// GetObjective implements persistence.ObjectiveDBAL
+func (d *DBAL) GetObjective(id string) (*assets.Objective, error) {
+	row := d.tx.QueryRow(`select "asset" from "objectives" where id=$1`, id)
+
+	var serializedObj []byte
+	err := row.Scan(&serializedObj)
+	if err != nil {
+		return nil, err
+	}
+	o := assets.Objective{}
+	err = json.Unmarshal(serializedObj, &o)
+	if err != nil {
+		return nil, err
+	}
+
+	return &o, nil
+}
+
+// GetObjectives implements persistence.ObjectiveDBAL
+func (d *DBAL) GetObjectives() ([]*assets.Objective, error) {
+	rows, err := d.tx.Query(`select "asset" from "objectives"`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var objectives []*assets.Objective
+
+	for rows.Next() {
+		var serializedObj []byte
+
+		err = rows.Scan(&serializedObj)
+		if err != nil {
+			return nil, err
+		}
+
+		o := assets.Objective{}
+		err = json.Unmarshal(serializedObj, &o)
+		if err != nil {
+			return nil, err
+		}
+		objectives = append(objectives, &o)
+	}
+
+	return objectives, nil
+}

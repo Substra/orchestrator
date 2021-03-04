@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
+	"github.com/owkin/orchestrator/lib/assets"
 )
 
 // TODO: in-struct logger
@@ -31,7 +32,8 @@ func init() {
 	)
 }
 
-// DB is the distributed ledger persistence layer implementing persistence.Database
+// DB is the distributed ledger persistence layer implementing persistence.DBAL
+// This backend does not allow to read the current writes, they will only be commited after a successful response.
 type DB struct {
 	ccStub shim.ChaincodeStubInterface
 }
@@ -42,8 +44,8 @@ type storedAsset struct {
 	Asset   json.RawMessage `json:"asset"`
 }
 
-// PutState stores data in the ledger
-func (l *DB) PutState(resource string, key string, data []byte) error {
+// putState stores data in the ledger
+func (db *DB) putState(resource string, key string, data []byte) error {
 	k := getFullKey(resource, key)
 	logger := logger.WithFields(
 		log.F("resource", resource),
@@ -65,11 +67,11 @@ func (l *DB) PutState(resource string, key string, data []byte) error {
 	}
 	logger.WithField("serialized stored asset", b).Debug("Marshalling successful")
 
-	return l.ccStub.PutState(k, b)
+	return db.ccStub.PutState(k, b)
 }
 
-// GetState retrieves data for a given resource
-func (l *DB) GetState(resource string, key string) ([]byte, error) {
+// getState retrieves data for a given resource
+func (db *DB) getState(resource string, key string) ([]byte, error) {
 	k := getFullKey(resource, key)
 	logger := logger.WithFields(
 		log.F("resource", resource),
@@ -78,7 +80,7 @@ func (l *DB) GetState(resource string, key string) ([]byte, error) {
 	)
 	logger.Debug("get state")
 
-	b, err := l.ccStub.GetState(k)
+	b, err := db.ccStub.GetState(k)
 	if err != nil {
 		return nil, err
 	}
@@ -93,15 +95,15 @@ func (l *DB) GetState(resource string, key string) ([]byte, error) {
 	return buf, nil
 }
 
-// HasKey returns true if a resource with the same key already exists
-func (l *DB) HasKey(resource string, key string) (bool, error) {
+// hasKey returns true if a resource with the same key already exists
+func (db *DB) hasKey(resource string, key string) (bool, error) {
 	k := getFullKey(resource, key)
-	buff, err := l.ccStub.GetState(k)
+	buff, err := db.ccStub.GetState(k)
 	return buff != nil, err
 }
 
-// GetAll fetch all data for a given resource kind
-func (l *DB) GetAll(resource string) (result [][]byte, err error) {
+// getAll fetch all data for a given resource kind
+func (db *DB) getAll(resource string) (result [][]byte, err error) {
 	logger := logger.WithFields(
 		log.F("resource", resource),
 	)
@@ -109,7 +111,7 @@ func (l *DB) GetAll(resource string) (result [][]byte, err error) {
 
 	queryString := fmt.Sprintf(`{"selector":{"doc_type":"%s"}}`, resource)
 
-	resultsIterator, err := l.ccStub.GetQueryResult(queryString)
+	resultsIterator, err := db.ccStub.GetQueryResult(queryString)
 	if err != nil {
 		return nil, err
 	}
@@ -133,4 +135,82 @@ func (l *DB) GetAll(resource string) (result [][]byte, err error) {
 
 func getFullKey(resource string, key string) string {
 	return resource + ":" + key
+}
+
+// AddNode stores a new Node
+func (db *DB) AddNode(node *assets.Node) error {
+	nodeBytes, err := json.Marshal(node)
+	if err != nil {
+		return err
+	}
+	return db.putState(assets.NodeKind, node.GetId(), nodeBytes)
+}
+
+// GetNodes returns all known Nodes
+func (db *DB) GetNodes() ([]*assets.Node, error) {
+	b, err := db.getAll(assets.NodeKind)
+	if err != nil {
+		return nil, err
+	}
+
+	var nodes []*assets.Node
+
+	for _, nodeBytes := range b {
+		n := assets.Node{}
+		err = json.Unmarshal(nodeBytes, &n)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, &n)
+	}
+
+	return nodes, nil
+}
+
+// NodeExists test if a node with given ID is already stored
+func (db *DB) NodeExists(id string) (bool, error) {
+	return db.hasKey(assets.NodeKind, id)
+}
+
+// AddObjective stores a new objective
+func (db *DB) AddObjective(obj *assets.Objective) error {
+	objBytes, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+	return db.putState(assets.ObjectiveKind, obj.GetKey(), objBytes)
+}
+
+// GetObjective retrieves an objective by its ID
+func (db *DB) GetObjective(id string) (*assets.Objective, error) {
+	o := assets.Objective{}
+
+	b, err := db.getState(assets.ObjectiveKind, id)
+	if err != nil {
+		return &o, err
+	}
+
+	err = json.Unmarshal(b, &o)
+	return &o, err
+}
+
+// GetObjectives retrieves all objectives
+func (db *DB) GetObjectives() ([]*assets.Objective, error) {
+	b, err := db.getAll(assets.ObjectiveKind)
+	if err != nil {
+		return nil, err
+	}
+
+	var objectives []*assets.Objective
+
+	for _, nodeBytes := range b {
+		o := assets.Objective{}
+		err = json.Unmarshal(nodeBytes, &o)
+		if err != nil {
+			return nil, err
+		}
+		objectives = append(objectives, &o)
+	}
+
+	return objectives, nil
 }

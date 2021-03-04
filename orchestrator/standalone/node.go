@@ -42,7 +42,10 @@ func (s *NodeServer) RegisterNode(ctx context.Context, in *assets.NodeRegistrati
 	}
 
 	node, err := services.GetNodeService().RegisterNode(mspid)
-	return node, err
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
 }
 
 // QueryNodes will return all known nodes

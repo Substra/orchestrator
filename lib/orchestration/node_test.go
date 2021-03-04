@@ -23,15 +23,14 @@ import (
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestRegisterNode(t *testing.T) {
-	mockDB := new(persistenceHelper.MockDatabase)
+	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
 	dispatcher := new(MockDispatcher)
 
-	provider.On("GetDatabase").Return(mockDB)
+	provider.On("GetNodeDBAL").Return(dbal)
 	provider.On("GetEventQueue").Return(dispatcher)
 
 	e := &event.Event{EventKind: event.AssetCreated, AssetKind: assets.NodeKind, AssetID: "uuid1"}
@@ -41,8 +40,8 @@ func TestRegisterNode(t *testing.T) {
 		Id: "uuid1",
 	}
 
-	mockDB.On("HasKey", assets.NodeKind, "uuid1", mock.Anything).Return(false, nil).Once()
-	mockDB.On("PutState", assets.NodeKind, "uuid1", mock.Anything).Return(nil).Once()
+	dbal.On("NodeExists", "uuid1").Return(false, nil).Once()
+	dbal.On("AddNode", &expected).Return(nil).Once()
 
 	service := NewNodeService(provider)
 
@@ -52,12 +51,12 @@ func TestRegisterNode(t *testing.T) {
 }
 
 func TestRegisterExistingNode(t *testing.T) {
-	mockDB := new(persistenceHelper.MockDatabase)
+	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
 
-	provider.On("GetDatabase").Return(mockDB)
+	provider.On("GetNodeDBAL").Return(dbal)
 
-	mockDB.On("HasKey", assets.NodeKind, "uuid1", mock.Anything).Return(true, nil).Once()
+	dbal.On("NodeExists", "uuid1").Return(true, nil).Once()
 
 	service := NewNodeService(provider)
 

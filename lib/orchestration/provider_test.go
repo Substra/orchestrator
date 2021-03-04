@@ -22,18 +22,18 @@ import (
 )
 
 func TestServiceProviderInit(t *testing.T) {
-	mockDB := new(persistenceHelper.MockDatabase)
+	dbal := new(persistenceHelper.MockDBAL)
 	dispatcher := new(MockDispatcher)
-	provider := NewServiceProvider(mockDB, dispatcher)
+	provider := NewServiceProvider(dbal, dispatcher)
 
 	assert.Implements(t, (*NodeServiceProvider)(nil), provider, "service provider should provide NodeService")
 	assert.Implements(t, (*ObjectiveServiceProvider)(nil), provider, "service provider should provide NodeService")
 }
 
 func TestLazyInstanciation(t *testing.T) {
-	mockDB := new(persistenceHelper.MockDatabase)
+	dbal := new(persistenceHelper.MockDBAL)
 	dispatcher := new(MockDispatcher)
-	provider := NewServiceProvider(mockDB, dispatcher)
+	provider := NewServiceProvider(dbal, dispatcher)
 
 	assert.Nil(t, provider.node, "service should be instanciated when needed")
 
