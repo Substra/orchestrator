@@ -42,6 +42,8 @@ profiles:
   patches:
     - op: remove
       path: /deploy/helm/releases/1
+    - op: remove
+      path: /deploy/kubectl/manifests/1
 
 - name: chaincode
   activation:
