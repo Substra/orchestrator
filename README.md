@@ -4,6 +4,17 @@ This repository contains the logic to orchestrate Substra assets.
 
 ## Building the orchestrator
 
+#### Dev tools versions
+
+Make sure you have theses requirements fulfilled before trying to build the orchestrator:
+
+- [go](https://golang.org/): v1.15.5
+- [protoc](https://github.com/protocolbuffers/protobuf): v3.14.0
+- [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.25.0
+- [go-bindata](https://github.com/go-bindata/go-bindata): v3.1.0
+- [golang-migrate](https://github.com/golang-migrate/migrate): optional, used to create migration files
+- [skaffold](https://skaffold.dev/): used to run the orchestrator locally
+
 #### Build
 
 `make`
@@ -15,6 +26,7 @@ This repository contains the logic to orchestrate Substra assets.
 ## Developping the orchestrator
 
 An overview of the code structure is [available in the docs directory](./docs/architecture.md)
+There is also a step by step documentation on [how to implement an asset](./docs/asset-dev.md)
 
 ### Standalone mode
 
@@ -57,11 +69,3 @@ kubectl get secret orchestrator-tls -n org-1 -o 'go-template={{index .data "tls.
 # Then pass it to your client:
 evans --tls --cacert ca.crt --host orchestrator.node-1.com -p 443 -r repl
 ```
-
-#### Dev tools versions
-
-- [go](https://golang.org/): v1.15.5
-- [protoc](https://github.com/protocolbuffers/protobuf): v3.14.0
-- [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.25.0
-- [go-bindata](https://github.com/go-bindata/go-bindata): v3.1.0
-- [golang-migrate](https://github.com/golang-migrate/migrate): optional, used to create migration files
