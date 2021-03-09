@@ -19,25 +19,25 @@
 package persistence
 
 import (
-	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 )
 
 // NodeDBAL defines the database abstraction layer to manipulate nodes
 type NodeDBAL interface {
 	// AddNode stores a new node.
-	AddNode(node *assets.Node) error
+	AddNode(node *asset.Node) error
 	// NodeExists returns whether a node with the given ID is already in store
 	NodeExists(id string) (bool, error)
 	// GetNodes returns all known nodes
-	GetNodes() ([]*assets.Node, error)
+	GetNodes() ([]*asset.Node, error)
 }
 
 // ObjectiveDBAL is the database abstraction layer for Objectives
 type ObjectiveDBAL interface {
-	AddObjective(obj *assets.Objective) error
-	GetObjective(id string) (*assets.Objective, error)
-	GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error)
+	AddObjective(obj *asset.Objective) error
+	GetObjective(id string) (*asset.Objective, error)
+	GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
 }
 
 // NodeDBALProvider representes an object capable of providing a NodeDBAL

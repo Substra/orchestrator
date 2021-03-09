@@ -18,17 +18,17 @@ import (
 	"testing"
 
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *orchestration.MockObjectiveService {
-	mockService := new(orchestration.MockObjectiveService)
+func getMockedService(ctx *testHelper.MockedContext) *service.MockObjectiveService {
+	mockService := new(service.MockObjectiveService)
 
-	provider := new(orchestration.MockServiceProvider)
+	provider := new(service.MockServiceProvider)
 	provider.On("GetObjectiveService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
@@ -39,14 +39,14 @@ func getMockedService(ctx *testHelper.MockedContext) *orchestration.MockObjectiv
 func TestRegistration(t *testing.T) {
 	contract := &SmartContract{}
 
-	addressable := &assets.Addressable{}
-	testDataset := &assets.Dataset{}
-	newPerms := &assets.NewPermissions{}
+	addressable := &asset.Addressable{}
+	testDataset := &asset.Dataset{}
+	newPerms := &asset.NewPermissions{}
 	metadata := map[string]string{"test": "true"}
 
 	mspid := "org"
 
-	newObj := &assets.NewObjective{
+	newObj := &asset.NewObjective{
 		Key:            "uuid1",
 		Name:           "Objective name",
 		Description:    addressable,
@@ -57,7 +57,7 @@ func TestRegistration(t *testing.T) {
 		NewPermissions: newPerms,
 	}
 
-	o := &assets.Objective{}
+	o := &asset.Objective{}
 
 	ctx := new(testHelper.MockedContext)
 
@@ -75,7 +75,7 @@ func TestRegistration(t *testing.T) {
 func TestQueryObjectives(t *testing.T) {
 	contract := &SmartContract{}
 
-	objectives := []*assets.Objective{
+	objectives := []*asset.Objective{
 		{Name: "test"},
 		{Name: "test2"},
 	}
@@ -84,7 +84,7 @@ func TestQueryObjectives(t *testing.T) {
 	service := getMockedService(ctx)
 	service.On("GetObjectives", &common.Pagination{Token: "", Size: 20}).Return(objectives, "", nil).Once()
 
-	param := &assets.ObjectivesQueryParam{PageToken: "", PageSize: 20}
+	param := &asset.ObjectivesQueryParam{PageToken: "", PageSize: 20}
 
 	resp, err := contract.QueryObjectives(ctx, param)
 	assert.NoError(t, err, "query should not fail")

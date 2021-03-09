@@ -17,14 +17,14 @@ package ledger
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/owkin/orchestrator/lib/service"
 )
 
 // TransactionContext describes the context passed to every smart contract.
 // It's a base TransactionContext augmented with ServiceProvider.
 type TransactionContext interface {
 	contractapi.TransactionContextInterface
-	GetProvider() orchestration.DependenciesProvider
+	GetProvider() service.DependenciesProvider
 	GetDispatcher() event.Dispatcher
 }
 
@@ -45,12 +45,12 @@ func (c *Context) ensureDispatcher() {
 }
 
 // GetProvider returns a new instance of ServiceProvider
-func (c *Context) GetProvider() orchestration.DependenciesProvider {
+func (c *Context) GetProvider() service.DependenciesProvider {
 	stub := c.GetStub()
 	db := NewDB(stub)
 	c.ensureDispatcher()
 
-	return orchestration.NewServiceProvider(db, c.dispatcher)
+	return service.NewProvider(db, c.dispatcher)
 }
 
 // GetDispatcher returns inner event.Dispatcher

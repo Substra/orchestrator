@@ -18,16 +18,16 @@ import (
 	"testing"
 
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/assets"
-	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *orchestration.MockNodeService {
-	mockService := new(orchestration.MockNodeService)
+func getMockedService(ctx *testHelper.MockedContext) *service.MockNodeService {
+	mockService := new(service.MockNodeService)
 
-	provider := new(orchestration.MockServiceProvider)
+	provider := new(service.MockServiceProvider)
 	provider.On("GetNodeService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
@@ -39,7 +39,7 @@ func TestRegistration(t *testing.T) {
 	contract := &SmartContract{}
 
 	org := "TestOrg"
-	o := &assets.Node{Id: org}
+	o := &asset.Node{Id: org}
 	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
@@ -60,7 +60,7 @@ func TestRegistration(t *testing.T) {
 func TestQueryNodes(t *testing.T) {
 	contract := &SmartContract{}
 
-	nodes := []*assets.Node{
+	nodes := []*asset.Node{
 		{Id: "org1"},
 		{Id: "org2"},
 	}

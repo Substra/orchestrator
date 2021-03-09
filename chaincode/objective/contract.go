@@ -19,7 +19,7 @@ import (
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/ledger"
-	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 )
 
@@ -40,7 +40,7 @@ func NewSmartContract() *SmartContract {
 
 // RegisterObjective creates a new objective in world state
 // If the key exists, it will override the existing value with the new one
-func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, params *assets.NewObjective) (*assets.Objective, error) {
+func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, params *asset.NewObjective) (*asset.Objective, error) {
 	service := ctx.GetProvider().GetObjectiveService()
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
@@ -56,14 +56,14 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, params 
 }
 
 // QueryObjective returns the objective with given key
-func (s *SmartContract) QueryObjective(ctx ledger.TransactionContext, params *assets.ObjectiveQueryParam) (*assets.Objective, error) {
+func (s *SmartContract) QueryObjective(ctx ledger.TransactionContext, params *asset.ObjectiveQueryParam) (*asset.Objective, error) {
 	service := ctx.GetProvider().GetObjectiveService()
 
 	return service.GetObjective(params.GetKey())
 }
 
 // QueryObjectives returns the objectives
-func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, params *assets.ObjectivesQueryParam) (*assets.ObjectivesQueryResponse, error) {
+func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, params *asset.ObjectivesQueryParam) (*asset.ObjectivesQueryResponse, error) {
 	service := ctx.GetProvider().GetObjectiveService()
 
 	objectives, nextPage, err := service.GetObjectives(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
@@ -71,14 +71,14 @@ func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, params *a
 		return nil, err
 	}
 
-	return &assets.ObjectivesQueryResponse{
+	return &asset.ObjectivesQueryResponse{
 		Objectives:    objectives,
 		NextPageToken: nextPage,
 	}, nil
 }
 
 // QueryLeaderboard returns for an objective all its certified testtuples with a done status
-func (s *SmartContract) QueryLeaderboard(ctx ledger.TransactionContext, key string, sortOrder assets.SortOrder) (*assets.Leaderboard, error) {
+func (s *SmartContract) QueryLeaderboard(ctx ledger.TransactionContext, key string, sortOrder asset.SortOrder) (*asset.Leaderboard, error) {
 	return nil, errors.New("unimplemented")
 }
 

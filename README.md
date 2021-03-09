@@ -28,6 +28,8 @@ Make sure you have theses requirements fulfilled before trying to build the orch
 An overview of the code structure is [available in the docs directory](./docs/architecture.md)
 There is also a step by step documentation on [how to implement an asset](./docs/asset-dev.md)
 
+A good entry point to get an overview of the codebase is to launch `godoc -http=:6060` and [open module documentation](http://localhost:6060/pkg/github.com/owkin/orchestrator/).
+
 ### Standalone mode
 
 When running in standalone mode, the orchestrator needs a [postgres](https://www.postgresql.org/)

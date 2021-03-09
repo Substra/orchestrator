@@ -17,20 +17,20 @@ package ledger
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetProvider(t *testing.T) {
 	ctx := NewContext()
 
-	assert.Implements(t, (*orchestration.DependenciesProvider)(nil), ctx.GetProvider(), "GetProvider should return a service provider")
+	assert.Implements(t, (*service.DependenciesProvider)(nil), ctx.GetProvider(), "GetProvider should return a service provider")
 }
 
 func TestAfterTransactionHook(t *testing.T) {
 	ctx := NewContext()
 
-	dispatcher := new(orchestration.MockDispatcher)
+	dispatcher := new(service.MockDispatcher)
 	ctx.dispatcher = dispatcher
 
 	dispatcher.On("Dispatch").Once().Return(nil)

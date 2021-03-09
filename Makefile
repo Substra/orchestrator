@@ -3,12 +3,12 @@ CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
 ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
 LIBCODEGEN_BIN = $(OUTPUT_DIR)/libcodegen
 PROJECT_ROOT = .
-MIGRATIONS_DIR = $(PROJECT_ROOT)/orchestrator/standalone/migrations
-protos = $(PROJECT_ROOT)/lib/assets
+MIGRATIONS_DIR = $(PROJECT_ROOT)/server/standalone/migration
+protos = $(PROJECT_ROOT)/lib/asset
 go_src = $(shell find . -type f -name '*.go')
 sql_migrations = $(wildcard $(MIGRATIONS_DIR)/*.sql)
 migrations_binpack = $(MIGRATIONS_DIR)/bindata.go
-lib_generated = $(PROJECT_ROOT)/lib/assets/json.go
+lib_generated = $(PROJECT_ROOT)/lib/asset/json.go
 
 protobufs = $(wildcard $(protos)/*.proto)
 pbgo = $(protobufs:.proto=.pb.go)
@@ -23,7 +23,7 @@ chaincode: $(CHAINCODE_BIN)
 orchestrator: $(ORCHESTRATOR_BIN)
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
-	go build -o $(ORCHESTRATOR_BIN) ./orchestrator
+	go build -o $(ORCHESTRATOR_BIN) ./server
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 	go build -o $(CHAINCODE_BIN) ./chaincode
@@ -43,7 +43,7 @@ $(pbgo): %.pb.go: %.proto
 	$<
 
 $(migrations_binpack): $(sql_migrations)
-	go-bindata -pkg migrations -prefix $(MIGRATIONS_DIR) -o $(migrations_binpack) $(MIGRATIONS_DIR)
+	go-bindata -pkg migration -prefix $(MIGRATIONS_DIR) -o $(migrations_binpack) $(MIGRATIONS_DIR)
 
 $(lib_generated): $(LIBCODEGEN_BIN)
 	$(LIBCODEGEN_BIN) -path $(protos) > $(lib_generated)

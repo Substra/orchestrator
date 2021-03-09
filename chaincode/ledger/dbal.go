@@ -21,7 +21,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
-	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 )
 
@@ -216,25 +216,25 @@ func json2couch(in string) (out string) {
 }
 
 // AddNode stores a new Node
-func (db *DB) AddNode(node *assets.Node) error {
+func (db *DB) AddNode(node *asset.Node) error {
 	nodeBytes, err := json.Marshal(node)
 	if err != nil {
 		return err
 	}
-	return db.putState(assets.NodeKind, node.GetId(), nodeBytes)
+	return db.putState(asset.NodeKind, node.GetId(), nodeBytes)
 }
 
 // GetNodes returns all known Nodes
-func (db *DB) GetNodes() ([]*assets.Node, error) {
-	b, err := db.getAll(assets.NodeKind)
+func (db *DB) GetNodes() ([]*asset.Node, error) {
+	b, err := db.getAll(asset.NodeKind)
 	if err != nil {
 		return nil, err
 	}
 
-	var nodes []*assets.Node
+	var nodes []*asset.Node
 
 	for _, nodeBytes := range b {
-		n := assets.Node{}
+		n := asset.Node{}
 		err = json.Unmarshal(nodeBytes, &n)
 		if err != nil {
 			return nil, err
@@ -247,16 +247,16 @@ func (db *DB) GetNodes() ([]*assets.Node, error) {
 
 // NodeExists test if a node with given ID is already stored
 func (db *DB) NodeExists(id string) (bool, error) {
-	return db.hasKey(assets.NodeKind, id)
+	return db.hasKey(asset.NodeKind, id)
 }
 
 // AddObjective stores a new objective
-func (db *DB) AddObjective(obj *assets.Objective) error {
+func (db *DB) AddObjective(obj *asset.Objective) error {
 	objBytes, err := json.Marshal(obj)
 	if err != nil {
 		return err
 	}
-	err = db.putState(assets.ObjectiveKind, obj.GetKey(), objBytes)
+	err = db.putState(asset.ObjectiveKind, obj.GetKey(), objBytes)
 	if err != nil {
 		return err
 	}
@@ -269,10 +269,10 @@ func (db *DB) AddObjective(obj *assets.Objective) error {
 }
 
 // GetObjective retrieves an objective by its ID
-func (db *DB) GetObjective(id string) (*assets.Objective, error) {
-	o := assets.Objective{}
+func (db *DB) GetObjective(id string) (*asset.Objective, error) {
+	o := asset.Objective{}
 
-	b, err := db.getState(assets.ObjectiveKind, id)
+	b, err := db.getState(asset.ObjectiveKind, id)
 	if err != nil {
 		return &o, err
 	}
@@ -282,7 +282,7 @@ func (db *DB) GetObjective(id string) (*assets.Objective, error) {
 }
 
 // GetObjectives retrieves all objectives
-func (db *DB) GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error) {
+func (db *DB) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("objective~owner~key", []string{"objective"}, p.Size, p.Token)
 	if err != nil {
 		return nil, "", err
@@ -290,7 +290,7 @@ func (db *DB) GetObjectives(p *common.Pagination) ([]*assets.Objective, common.P
 
 	db.logger.WithField("keys", elementsKeys).Debug("GetObjectives")
 
-	var objectives []*assets.Objective
+	var objectives []*asset.Objective
 	for _, key := range elementsKeys {
 		objective, err := db.GetObjective(key)
 		if err != nil {

@@ -16,7 +16,7 @@
 package testing
 
 import (
-	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/stretchr/testify/mock"
 )
@@ -27,7 +27,7 @@ type MockDBAL struct {
 }
 
 // AddNode is a mock
-func (m *MockDBAL) AddNode(node *assets.Node) error {
+func (m *MockDBAL) AddNode(node *asset.Node) error {
 	args := m.Called(node)
 	return args.Error(0)
 }
@@ -39,25 +39,25 @@ func (m *MockDBAL) NodeExists(id string) (bool, error) {
 }
 
 // GetNodes is a mock
-func (m *MockDBAL) GetNodes() ([]*assets.Node, error) {
+func (m *MockDBAL) GetNodes() ([]*asset.Node, error) {
 	args := m.Called()
-	return args.Get(0).([]*assets.Node), args.Error(1)
+	return args.Get(0).([]*asset.Node), args.Error(1)
 }
 
 // AddObjective is a mock
-func (m *MockDBAL) AddObjective(obj *assets.Objective) error {
+func (m *MockDBAL) AddObjective(obj *asset.Objective) error {
 	args := m.Called(obj)
 	return args.Error(0)
 }
 
 // GetObjective is a mock
-func (m *MockDBAL) GetObjective(id string) (*assets.Objective, error) {
+func (m *MockDBAL) GetObjective(id string) (*asset.Objective, error) {
 	args := m.Called(id)
-	return args.Get(0).(*assets.Objective), args.Error(1)
+	return args.Get(0).(*asset.Objective), args.Error(1)
 }
 
 // GetObjectives is a mock
-func (m *MockDBAL) GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error) {
+func (m *MockDBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	args := m.Called(p)
-	return args.Get(0).([]*assets.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
+	return args.Get(0).([]*asset.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }

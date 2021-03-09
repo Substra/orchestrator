@@ -18,7 +18,7 @@ import (
 	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/lib/orchestration"
+	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -40,9 +40,9 @@ func (m *MockedContext) GetClientIdentity() cid.ClientIdentity {
 }
 
 // GetProvider is a mock
-func (m *MockedContext) GetProvider() orchestration.DependenciesProvider {
+func (m *MockedContext) GetProvider() service.DependenciesProvider {
 	args := m.Called()
-	return args.Get(0).(orchestration.DependenciesProvider)
+	return args.Get(0).(service.DependenciesProvider)
 }
 
 // GetDispatcher is a mock

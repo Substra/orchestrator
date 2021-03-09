@@ -3,5 +3,5 @@
 .vscode/
 /wallet
 # Generated files
-lib/assets/json.go
-orchestrator/standalone/migrations/bindata.go
+lib/asset/json.go
+server/standalone/migration/bindata.go

@@ -20,7 +20,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/orchestrator/common"
+	"github.com/owkin/orchestrator/server/common"
 )
 
 // EventName is the name used by the orchestration chaincode to register its events on the ledger.

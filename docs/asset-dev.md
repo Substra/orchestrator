@@ -4,9 +4,10 @@
 
 As explained in the [overview](./architecture.md), asset handling is done through the following components:
 
-- a protobuf definition in `lib/assets/<asset>.proto`
-- a service definition in `lib/orchestration/<asset>.go`
-- a grpc server in `orchestrator/standalone/<asset>.go`
+- a protobuf definition in `lib/asset/<asset>.proto`
+- a service definition in `lib/service/<asset>.go`
+- a standalone grpc server in `server/standalone/<asset>.go`
+- a distributed grpc server in `server/distributed/<asset>.go`
 - a smart contract as a `chaincode` submodule
 
 ## Step by step implementation
@@ -58,7 +59,7 @@ type NodeAPI interface {
 }
 ```
 
-Here `Node` comes from the protobuf description (in `lib/assets`) and go code was generated during the previous step (`make proto-codegen`).
+Here `Node` comes from the protobuf description (in `lib/asset`) and go code was generated during the previous step (`make proto-codegen`).
 
 This *AssetAPI* interface is used by both the smartcontract and the grpc server.
 
