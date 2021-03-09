@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
@@ -124,11 +125,14 @@ func TestGetObjectives(t *testing.T) {
 		Name: "Test 2",
 	}
 
-	dbal.On("GetObjectives").Return([]*assets.Objective{&obj1, &obj2}, nil).Once()
+	pagination := common.NewPagination("", 12)
 
-	r, err := service.GetObjectives()
+	dbal.On("GetObjectives", pagination).Return([]*assets.Objective{&obj1, &obj2}, "nextPage", nil).Once()
+
+	r, token, err := service.GetObjectives(pagination)
 	require.Nil(t, err)
 
 	assert.Len(t, r, 2)
 	assert.Equal(t, r[0].Key, obj1.Key)
+	assert.Equal(t, "nextPage", token, "next page token should be returned")
 }

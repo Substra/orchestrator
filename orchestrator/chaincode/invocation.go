@@ -19,18 +19,31 @@ import (
 	"time"
 
 	"github.com/go-playground/log/v7"
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
+
+// GatewayContract is the interface implemented by gateway.Contract.
+// It should be in gateway module, but fabric rely on a concrete implementation rather than an interface...
+type GatewayContract interface {
+	Name() string
+	EvaluateTransaction(name string, args ...string) ([]byte, error)
+	SubmitTransaction(name string, args ...string) ([]byte, error)
+	CreateTransaction(name string, opts ...gateway.TransactionOption) (*gateway.Transaction, error)
+	RegisterEvent(eventFilter string) (fab.Registration, <-chan *fab.CCEvent, error)
+	Unregister(registration fab.Registration)
+}
 
 // Invocator describe how to invoke chaincode in a somewhat generic way.
 // This is the Gandalf of fabric.
 type Invocator interface {
-	Invoke(method string, args []string, output interface{}) error
+	Invoke(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error
 }
 
 // ContractInvocator implements the Invocator interface.
 type ContractInvocator struct {
-	contract *gateway.Contract
+	contract GatewayContract
 }
 
 // NewContractInvocator creates an Invocator based on given smart contract.
@@ -39,21 +52,25 @@ func NewContractInvocator(c *gateway.Contract) *ContractInvocator {
 }
 
 // Invoke will submit a transaction to the ledger, deserializing its result in the output parameter.
-func (i *ContractInvocator) Invoke(method string, args []string, output interface{}) error {
+func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
 	logger := log.WithField("method", method)
 
-	logger.WithField("args", args).Debug("Invoking chaincode")
+	logger.WithField("param", param).Debug("Invoking chaincode")
 	start := time.Now()
 
-	data, err := i.contract.SubmitTransaction(method, args...)
+	args, err := json.Marshal(param)
+	if err != nil {
+		return nil
+	}
+
+	data, err := i.contract.SubmitTransaction(method, string(args))
 
 	if err != nil {
 		logger.WithError(err).Error("Failed to invoke chaincode")
 		return err
 	}
 
-	err = json.Unmarshal(data, output)
-
+	err = json.Unmarshal(data, &output)
 	if err != nil {
 		logger.WithError(err).WithField("data", data).Error("Failed to deserialize")
 		return err

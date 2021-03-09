@@ -17,6 +17,7 @@ package standalone
 import (
 	"database/sql"
 	"encoding/json"
+	"strconv"
 
 	// migration driver
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -24,6 +25,7 @@ import (
 	// Database driver
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -123,30 +125,64 @@ func (d *DBAL) GetObjective(id string) (*assets.Objective, error) {
 }
 
 // GetObjectives implements persistence.ObjectiveDBAL
-func (d *DBAL) GetObjectives() ([]*assets.Objective, error) {
-	rows, err := d.tx.Query(`select "asset" from "objectives"`)
+func (d *DBAL) GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error) {
+	var rows *sql.Rows
+	var err error
+
+	offset, err := getOffset(p.Token)
 	if err != nil {
-		return nil, err
+		return nil, "", err
+	}
+
+	query := `select "asset" from "objectives" order by created_at asc limit $1 offset $2`
+	rows, err = d.tx.Query(query, p.Size+1, offset)
+	if err != nil {
+		return nil, "", err
 	}
 	defer rows.Close()
 
 	var objectives []*assets.Objective
+	var count int
 
 	for rows.Next() {
 		var serializedObj []byte
 
 		err = rows.Scan(&serializedObj)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		o := assets.Objective{}
 		err = json.Unmarshal(serializedObj, &o)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		objectives = append(objectives, &o)
+		count++
+
+		if count == int(p.Size) {
+			break
+		}
 	}
 
-	return objectives, nil
+	bookmark := ""
+	if count == int(p.Size) && rows.Next() {
+		// there is more to fetch
+		bookmark = strconv.Itoa(offset + count)
+	}
+
+	return objectives, bookmark, nil
+}
+
+func getOffset(token string) (int, error) {
+	if token == "" {
+		token = "0"
+	}
+
+	offset, err := strconv.Atoi(token)
+	if err != nil {
+		return 0, err
+	}
+
+	return offset, nil
 }

@@ -18,7 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ObjectiveServiceClient interface {
 	RegisterObjective(ctx context.Context, in *NewObjective, opts ...grpc.CallOption) (*Objective, error)
-	QueryObjectives(ctx context.Context, in *ObjectiveQueryParam, opts ...grpc.CallOption) (*ObjectiveQueryResponse, error)
+	QueryObjective(ctx context.Context, in *ObjectiveQueryParam, opts ...grpc.CallOption) (*Objective, error)
+	QueryObjectives(ctx context.Context, in *ObjectivesQueryParam, opts ...grpc.CallOption) (*ObjectivesQueryResponse, error)
 	GetLeaderboard(ctx context.Context, in *LeaderboardQueryParam, opts ...grpc.CallOption) (*Leaderboard, error)
 }
 
@@ -39,8 +40,17 @@ func (c *objectiveServiceClient) RegisterObjective(ctx context.Context, in *NewO
 	return out, nil
 }
 
-func (c *objectiveServiceClient) QueryObjectives(ctx context.Context, in *ObjectiveQueryParam, opts ...grpc.CallOption) (*ObjectiveQueryResponse, error) {
-	out := new(ObjectiveQueryResponse)
+func (c *objectiveServiceClient) QueryObjective(ctx context.Context, in *ObjectiveQueryParam, opts ...grpc.CallOption) (*Objective, error) {
+	out := new(Objective)
+	err := c.cc.Invoke(ctx, "/orchestrator.ObjectiveService/QueryObjective", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *objectiveServiceClient) QueryObjectives(ctx context.Context, in *ObjectivesQueryParam, opts ...grpc.CallOption) (*ObjectivesQueryResponse, error) {
+	out := new(ObjectivesQueryResponse)
 	err := c.cc.Invoke(ctx, "/orchestrator.ObjectiveService/QueryObjectives", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -62,7 +72,8 @@ func (c *objectiveServiceClient) GetLeaderboard(ctx context.Context, in *Leaderb
 // for forward compatibility
 type ObjectiveServiceServer interface {
 	RegisterObjective(context.Context, *NewObjective) (*Objective, error)
-	QueryObjectives(context.Context, *ObjectiveQueryParam) (*ObjectiveQueryResponse, error)
+	QueryObjective(context.Context, *ObjectiveQueryParam) (*Objective, error)
+	QueryObjectives(context.Context, *ObjectivesQueryParam) (*ObjectivesQueryResponse, error)
 	GetLeaderboard(context.Context, *LeaderboardQueryParam) (*Leaderboard, error)
 	mustEmbedUnimplementedObjectiveServiceServer()
 }
@@ -74,7 +85,10 @@ type UnimplementedObjectiveServiceServer struct {
 func (UnimplementedObjectiveServiceServer) RegisterObjective(context.Context, *NewObjective) (*Objective, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterObjective not implemented")
 }
-func (UnimplementedObjectiveServiceServer) QueryObjectives(context.Context, *ObjectiveQueryParam) (*ObjectiveQueryResponse, error) {
+func (UnimplementedObjectiveServiceServer) QueryObjective(context.Context, *ObjectiveQueryParam) (*Objective, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueryObjective not implemented")
+}
+func (UnimplementedObjectiveServiceServer) QueryObjectives(context.Context, *ObjectivesQueryParam) (*ObjectivesQueryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryObjectives not implemented")
 }
 func (UnimplementedObjectiveServiceServer) GetLeaderboard(context.Context, *LeaderboardQueryParam) (*Leaderboard, error) {
@@ -111,8 +125,26 @@ func _ObjectiveService_RegisterObjective_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ObjectiveService_QueryObjectives_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ObjectiveService_QueryObjective_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ObjectiveQueryParam)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ObjectiveServiceServer).QueryObjective(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/orchestrator.ObjectiveService/QueryObjective",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ObjectiveServiceServer).QueryObjective(ctx, req.(*ObjectiveQueryParam))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ObjectiveService_QueryObjectives_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ObjectivesQueryParam)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -124,7 +156,7 @@ func _ObjectiveService_QueryObjectives_Handler(srv interface{}, ctx context.Cont
 		FullMethod: "/orchestrator.ObjectiveService/QueryObjectives",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ObjectiveServiceServer).QueryObjectives(ctx, req.(*ObjectiveQueryParam))
+		return srv.(ObjectiveServiceServer).QueryObjectives(ctx, req.(*ObjectivesQueryParam))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -157,6 +189,10 @@ var ObjectiveService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterObjective",
 			Handler:    _ObjectiveService_RegisterObjective_Handler,
+		},
+		{
+			MethodName: "QueryObjective",
+			Handler:    _ObjectiveService_QueryObjective_Handler,
 		},
 		{
 			MethodName: "QueryObjectives",

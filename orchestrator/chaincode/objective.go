@@ -15,9 +15,6 @@
 package chaincode
 
 import (
-	"encoding/json"
-	"errors"
-
 	"github.com/owkin/orchestrator/lib/assets"
 	"golang.org/x/net/context"
 )
@@ -41,21 +38,39 @@ func (a *ObjectiveAdapter) RegisterObjective(ctx context.Context, in *assets.New
 	}
 	method := "org.substra.objective:RegisterObjective"
 
-	objective := &assets.Objective{}
+	response := &assets.Objective{}
 
-	param, err := json.Marshal(in)
+	err = invocator.Invoke(method, in, response)
+
+	return response, err
+}
+
+// QueryObjective returns an objective from its key
+func (a *ObjectiveAdapter) QueryObjective(ctx context.Context, query *assets.ObjectiveQueryParam) (*assets.Objective, error) {
+	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
+	method := "org.substra.objective:QueryObjective"
 
-	params := []string{string(param)}
+	response := &assets.Objective{}
 
-	err = invocator.Invoke(method, params, objective)
+	err = invocator.Invoke(method, query, response)
 
-	return objective, err
+	return response, err
 }
 
-// QueryObjective will return all known objectives
-func (a *ObjectiveAdapter) QueryObjective(ctx context.Context, key string) (*assets.Objective, error) {
-	return nil, errors.New("Unimplemented")
+// QueryObjectives returns all known objectives
+func (a *ObjectiveAdapter) QueryObjectives(ctx context.Context, query *assets.ObjectivesQueryParam) (*assets.ObjectivesQueryResponse, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "org.substra.objective:QueryObjectives"
+
+	response := &assets.ObjectivesQueryResponse{}
+
+	err = invocator.Invoke(method, query, response)
+
+	return response, err
 }

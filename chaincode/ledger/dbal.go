@@ -17,25 +17,31 @@ package ledger
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
 )
-
-// TODO: in-struct logger
-var logger log.Entry
-
-func init() {
-	logger = log.WithFields(
-		log.F("db_backend", "ledger"),
-	)
-}
 
 // DB is the distributed ledger persistence layer implementing persistence.DBAL
 // This backend does not allow to read the current writes, they will only be commited after a successful response.
 type DB struct {
 	ccStub shim.ChaincodeStubInterface
+	logger log.Entry
+}
+
+// NewDB creates a ledger.DB instance based on given stub
+func NewDB(stub shim.ChaincodeStubInterface) *DB {
+	logger := log.WithFields(
+		log.F("db_backend", "ledger"),
+	)
+
+	return &DB{
+		ccStub: stub,
+		logger: logger,
+	}
 }
 
 // storedAsset wraps an asset to add docType metadata
@@ -47,7 +53,7 @@ type storedAsset struct {
 // putState stores data in the ledger
 func (db *DB) putState(resource string, key string, data []byte) error {
 	k := getFullKey(resource, key)
-	logger := logger.WithFields(
+	logger := db.logger.WithFields(
 		log.F("resource", resource),
 		log.F("key", key),
 		log.F("fullkey", k),
@@ -73,7 +79,7 @@ func (db *DB) putState(resource string, key string, data []byte) error {
 // getState retrieves data for a given resource
 func (db *DB) getState(resource string, key string) ([]byte, error) {
 	k := getFullKey(resource, key)
-	logger := logger.WithFields(
+	logger := db.logger.WithFields(
 		log.F("resource", resource),
 		log.F("key", key),
 		log.F("fullkey", k),
@@ -85,14 +91,14 @@ func (db *DB) getState(resource string, key string) ([]byte, error) {
 		return nil, err
 	}
 
-	var buf []byte
-	err = json.Unmarshal(b, &buf)
+	var stored storedAsset
+	err = json.Unmarshal(b, &stored)
 	if err != nil {
 		logger.WithError(err).Error("Failed to unmarshal stored asset")
 		return nil, err
 	}
 
-	return buf, nil
+	return stored.Asset, nil
 }
 
 // hasKey returns true if a resource with the same key already exists
@@ -104,7 +110,7 @@ func (db *DB) hasKey(resource string, key string) (bool, error) {
 
 // getAll fetch all data for a given resource kind
 func (db *DB) getAll(resource string) (result [][]byte, err error) {
-	logger := logger.WithFields(
+	logger := db.logger.WithFields(
 		log.F("resource", resource),
 	)
 	logger.Debug("get all")
@@ -133,8 +139,80 @@ func (db *DB) getAll(resource string) (result [][]byte, err error) {
 	return result, nil
 }
 
+func (db *DB) createIndex(index string, attributes []string) error {
+	db.logger.WithField("index", index).WithField("attributes", attributes).Debug("Create index")
+	compositeKey, err := db.ccStub.CreateCompositeKey(index, attributes)
+	if err != nil {
+		return err
+	}
+	value := []byte{0x00}
+	if err = db.ccStub.PutState(compositeKey, value); err != nil {
+		return err
+	}
+	return nil
+}
+
+// getIndexKeysWithPagination returns keys matching composite key values from the chaincode db.
+func (db *DB) getIndexKeysWithPagination(index string, attributes []string, pageSize uint32, bookmark common.PaginationToken) ([]string, common.PaginationToken, error) {
+	keys := []string{}
+	db.logger.WithFields(
+		log.F("index", index),
+		log.F("attributes", attributes),
+		log.F("bookmark", bookmark),
+		log.F("pageSize", pageSize),
+	).Debug("Get index keys")
+
+	bookmark = json2couch(bookmark)
+
+	iterator, metadata, err := db.ccStub.GetStateByPartialCompositeKeyWithPagination(index, attributes, int32(pageSize), bookmark)
+	if err != nil {
+		return nil, "", err
+	}
+	defer iterator.Close()
+	for iterator.HasNext() {
+		compositeKey, err := iterator.Next()
+		if err != nil {
+			return nil, "", err
+		}
+		_, keyParts, err := db.ccStub.SplitCompositeKey(compositeKey.Key)
+		if err != nil {
+			return nil, "", err
+		}
+		keys = append(keys, keyParts[len(keyParts)-1])
+	}
+
+	var nextPageToken string
+	if metadata != nil {
+		nextPageToken = couch2json(metadata.Bookmark)
+	}
+
+	return keys, nextPageToken, nil
+}
+
 func getFullKey(resource string, key string) string {
 	return resource + ":" + key
+}
+
+// couch2json sanitizes input from CouchDB format to JSON-friendly format
+func couch2json(in string) (out string) {
+	if in == "" {
+		return
+	}
+	out = strings.Replace(in, "\x00", "/", -1)
+	out = strings.Replace(out, "\\u0000", "#", -1)
+	out = strings.Replace(out, "\U0010ffff", "END", -1)
+	return
+}
+
+// json2couch sanitizes input from JSON-friendly format to CouchDB format
+func json2couch(in string) (out string) {
+	if in == "" {
+		return
+	}
+	out = strings.Replace(in, "/", "\x00", -1)
+	out = strings.Replace(out, "#", "\\u0000", -1)
+	out = strings.Replace(out, "END", "\U0010ffff", -1)
+	return
 }
 
 // AddNode stores a new Node
@@ -178,7 +256,16 @@ func (db *DB) AddObjective(obj *assets.Objective) error {
 	if err != nil {
 		return err
 	}
-	return db.putState(assets.ObjectiveKind, obj.GetKey(), objBytes)
+	err = db.putState(assets.ObjectiveKind, obj.GetKey(), objBytes)
+	if err != nil {
+		return err
+	}
+
+	if err = db.createIndex("objective~owner~key", []string{"objective", obj.Owner, obj.Key}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetObjective retrieves an objective by its ID
@@ -195,22 +282,22 @@ func (db *DB) GetObjective(id string) (*assets.Objective, error) {
 }
 
 // GetObjectives retrieves all objectives
-func (db *DB) GetObjectives() ([]*assets.Objective, error) {
-	b, err := db.getAll(assets.ObjectiveKind)
+func (db *DB) GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error) {
+	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("objective~owner~key", []string{"objective"}, p.Size, p.Token)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
+
+	db.logger.WithField("keys", elementsKeys).Debug("GetObjectives")
 
 	var objectives []*assets.Objective
-
-	for _, nodeBytes := range b {
-		o := assets.Objective{}
-		err = json.Unmarshal(nodeBytes, &o)
+	for _, key := range elementsKeys {
+		objective, err := db.GetObjective(key)
 		if err != nil {
-			return nil, err
+			return objectives, bookmark, err
 		}
-		objectives = append(objectives, &o)
+		objectives = append(objectives, objective)
 	}
 
-	return objectives, nil
+	return objectives, bookmark, nil
 }

@@ -40,7 +40,7 @@ func (a *NodeAdapter) RegisterNode(ctx context.Context, in *assets.NodeRegistrat
 
 	node := &assets.Node{}
 
-	err = invocator.Invoke(method, []string{}, node)
+	err = invocator.Invoke(method, in, node)
 
 	return node, err
 }
@@ -53,11 +53,9 @@ func (a *NodeAdapter) QueryNodes(ctx context.Context, in *assets.NodeQueryParam)
 	}
 	method := "org.substra.node:QueryNodes"
 
-	nodes := []*assets.Node{}
+	nodes := &assets.NodeQueryResponse{}
 
-	err = invocator.Invoke(method, []string{}, &nodes)
+	err = invocator.Invoke(method, in, nodes)
 
-	return &assets.NodeQueryResponse{
-		Nodes: nodes,
-	}, err
+	return nodes, err
 }

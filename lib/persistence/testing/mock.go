@@ -17,6 +17,7 @@ package testing
 
 import (
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -56,7 +57,7 @@ func (m *MockDBAL) GetObjective(id string) (*assets.Objective, error) {
 }
 
 // GetObjectives is a mock
-func (m *MockDBAL) GetObjectives() ([]*assets.Objective, error) {
-	args := m.Called()
-	return args.Get(0).([]*assets.Objective), args.Error(1)
+func (m *MockDBAL) GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*assets.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }

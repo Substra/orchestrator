@@ -18,7 +18,10 @@
 // Each request is a transaction which is only commited once a successful response is returned.
 package persistence
 
-import "github.com/owkin/orchestrator/lib/assets"
+import (
+	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
+)
 
 // NodeDBAL defines the database abstraction layer to manipulate nodes
 type NodeDBAL interface {
@@ -34,7 +37,7 @@ type NodeDBAL interface {
 type ObjectiveDBAL interface {
 	AddObjective(obj *assets.Objective) error
 	GetObjective(id string) (*assets.Objective, error)
-	GetObjectives() ([]*assets.Objective, error) // TODO: pagination
+	GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error)
 }
 
 // NodeDBALProvider representes an object capable of providing a NodeDBAL

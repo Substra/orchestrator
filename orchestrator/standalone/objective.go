@@ -17,9 +17,11 @@ package standalone
 import (
 	"log"
 
+	"context"
+
 	"github.com/owkin/orchestrator/lib/assets"
+	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/orchestrator/common"
-	"golang.org/x/net/context"
 )
 
 // ObjectiveServer is the gRPC facade to Objective manipulation
@@ -50,10 +52,28 @@ func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *assets.NewOb
 }
 
 // QueryObjective fetches an objective by its key
-func (s *ObjectiveServer) QueryObjective(ctx context.Context, key string) (*assets.Objective, error) {
+func (s *ObjectiveServer) QueryObjective(ctx context.Context, params *assets.ObjectiveQueryParam) (*assets.Objective, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return services.GetObjectiveService().GetObjective(key)
+	return services.GetObjectiveService().GetObjective(params.Key)
+}
+
+// QueryObjectives returns a paginated list of all known objectives
+func (s *ObjectiveServer) QueryObjectives(ctx context.Context, params *assets.ObjectivesQueryParam) (*assets.ObjectivesQueryResponse, error) {
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	objectives, paginationToken, err := services.GetObjectiveService().GetObjectives(libCommon.NewPagination(params.PageToken, params.PageSize))
+	if err != nil {
+		return nil, err
+	}
+
+	return &assets.ObjectivesQueryResponse{
+		Objectives:    objectives,
+		NextPageToken: paginationToken,
+	}, nil
 }

@@ -16,6 +16,7 @@ package orchestration
 
 import (
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/mock"
@@ -108,9 +109,9 @@ func (m *MockObjectiveService) GetObjective(key string) (*assets.Objective, erro
 }
 
 // GetObjectives returns whatever value is passed
-func (m *MockObjectiveService) GetObjectives() ([]*assets.Objective, error) {
-	args := m.Called()
-	return args.Get(0).([]*assets.Objective), args.Error(1)
+func (m *MockObjectiveService) GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*assets.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
 // MockDispatcher is a mock implenting Dispatcher behavior

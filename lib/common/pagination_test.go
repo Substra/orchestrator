@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaincode
+// Package common contains generic entities used by other modules of the library.
+package common
 
 import (
-	"github.com/stretchr/testify/mock"
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type mockedInvocator struct {
-	mock.Mock
-}
+func TestNewPagination(t *testing.T) {
+	paginationWithoutSize := NewPagination("", 0)
+	assert.Equal(t, uint32(DefaultPageSize), paginationWithoutSize.Size)
 
-func (m *mockedInvocator) Invoke(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
-	a := m.Called(method, param, output)
-	return a.Error(0)
+	paginationWithSize := NewPagination("uuid", 12)
+	assert.Equal(t, uint32(12), paginationWithSize.Size)
+	assert.Equal(t, "uuid", paginationWithSize.Token)
 }

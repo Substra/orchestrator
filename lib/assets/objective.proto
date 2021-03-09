@@ -23,58 +23,67 @@ option go_package = "github.com/owkin/orchestrator/lib/assets";
 
 // Objective represents the hypothesis against which a model is trained and evaluated.
 message Objective {
-    string key = 1;
-    string name = 2;
-    Dataset test_dataset = 3;
-    Addressable description = 4;
-    string metrics_name = 5;
-    Addressable metrics = 6;
-    Permissions permissions = 7;
-    map<string, string> metadata = 8;
-    string owner = 9;
+  string key = 1;
+  string name = 2;
+  Dataset test_dataset = 3;
+  Addressable description = 4;
+  string metrics_name = 5;
+  Addressable metrics = 6;
+  Permissions permissions = 7;
+  map<string, string> metadata = 8;
+  string owner = 9;
 }
 
 // NewObjective is used to register an Objective.
 // It will be processed into an Objective.
 message NewObjective {
-    string key = 1;
-    string name = 2;
-    Dataset test_dataset = 3;
-    Addressable description = 4;
-    string metrics_name = 5;
-    Addressable metrics = 6;
-    NewPermissions new_permissions = 7;
-    map<string, string> metadata = 8;
+  string key = 1;
+  string name = 2;
+  Dataset test_dataset = 3;
+  Addressable description = 4;
+  string metrics_name = 5;
+  Addressable metrics = 6;
+  NewPermissions new_permissions = 7;
+  map<string, string> metadata = 8;
 }
 
-message ObjectiveQueryParam {}
+message ObjectiveQueryParam {
+  string key = 1;
+}
 
-message ObjectiveQueryResponse {
-    repeated Objective objectives = 1;
+message ObjectivesQueryResponse {
+  repeated Objective objectives = 1;
+  string next_page_token = 2;
+}
+
+message ObjectivesQueryParam {
+  string page_token = 1;
+  uint32 page_size = 2;
 }
 
 message LeaderboardQueryParam {
-    string objective_key = 1;
-    SortOrder sort_order = 2;
+  string objective_key = 1;
+  SortOrder sort_order = 2;
 }
 
 // This will probably live somewhere else once we implement test tuple assets
 message BoardTuple {
-    string algo = 1;
-    string creator = 2;
-    string key = 3;
-    string traintuple_key = 4;
-    float perf = 5;
-    string tag = 6;
+  string algo = 1;
+  string creator = 2;
+  string key = 3;
+  string traintuple_key = 4;
+  float perf = 5;
+  string tag = 6;
 }
 
 message Leaderboard {
-    Objective objective = 1;
-    repeated BoardTuple test_tuples = 2;
+  Objective objective = 1;
+  repeated BoardTuple test_tuples = 2;
 }
 
 service ObjectiveService {
-    rpc RegisterObjective(NewObjective) returns (Objective) {}
-    rpc QueryObjectives(ObjectiveQueryParam) returns (ObjectiveQueryResponse) {}
-    rpc GetLeaderboard(LeaderboardQueryParam) returns (Leaderboard) {}
+  rpc RegisterObjective(NewObjective) returns (Objective) {}
+  rpc QueryObjective(ObjectiveQueryParam) returns (Objective) {}
+  rpc QueryObjectives(ObjectivesQueryParam) returns (ObjectivesQueryResponse) {}
+  rpc GetLeaderboard(LeaderboardQueryParam) returns (Leaderboard) {}
 }

@@ -17,6 +17,7 @@ package orchestration
 import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
@@ -25,7 +26,7 @@ import (
 type ObjectiveAPI interface {
 	RegisterObjective(objective *assets.NewObjective, owner string) (*assets.Objective, error)
 	GetObjective(string) (*assets.Objective, error)
-	GetObjectives() ([]*assets.Objective, error)
+	GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error)
 }
 
 // ObjectiveServiceProvider defines an object able to provide an ObjectiveAPI instance
@@ -102,6 +103,6 @@ func (s *ObjectiveService) GetObjective(id string) (*assets.Objective, error) {
 }
 
 // GetObjectives returns all stored objectives
-func (s *ObjectiveService) GetObjectives() ([]*assets.Objective, error) {
-	return s.GetObjectiveDBAL().GetObjectives()
+func (s *ObjectiveService) GetObjectives(p *common.Pagination) ([]*assets.Objective, common.PaginationToken, error) {
+	return s.GetObjectiveDBAL().GetObjectives(p)
 }

@@ -19,6 +19,7 @@ import (
 
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/orchestration"
 	"github.com/stretchr/testify/assert"
 )
@@ -81,17 +82,20 @@ func TestQueryObjectives(t *testing.T) {
 
 	ctx := new(testHelper.MockedContext)
 	service := getMockedService(ctx)
-	service.On("GetObjectives").Return(objectives, nil).Once()
+	service.On("GetObjectives", &common.Pagination{Token: "", Size: 20}).Return(objectives, "", nil).Once()
 
-	r, err := contract.QueryObjectives(ctx)
-	assert.Nil(t, err, "query should not fail")
-	assert.Len(t, r, len(objectives), "query should return all objectives")
+	param := &assets.ObjectivesQueryParam{PageToken: "", PageSize: 20}
+
+	resp, err := contract.QueryObjectives(ctx, param)
+	assert.NoError(t, err, "query should not fail")
+	assert.Len(t, resp.Objectives, len(objectives), "query should return all objectives")
 }
 
 func TestEvaluateTransactions(t *testing.T) {
 	contract := &SmartContract{}
 
 	queries := []string{
+		"QueryObjective",
 		"QueryObjectives",
 		"QueryLeaderboard",
 	}

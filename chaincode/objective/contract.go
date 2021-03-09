@@ -20,6 +20,7 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/assets"
+	"github.com/owkin/orchestrator/lib/common"
 )
 
 // SmartContract manages objectives
@@ -39,7 +40,7 @@ func NewSmartContract() *SmartContract {
 
 // RegisterObjective creates a new objective in world state
 // If the key exists, it will override the existing value with the new one
-func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, o *assets.NewObjective) (*assets.Objective, error) {
+func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, params *assets.NewObjective) (*assets.Objective, error) {
 	service := ctx.GetProvider().GetObjectiveService()
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
@@ -47,15 +48,33 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, o *asse
 		return nil, err
 	}
 
-	obj, err := service.RegisterObjective(o, owner)
-	return obj, err
+	obj, err := service.RegisterObjective(params, owner)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// QueryObjective returns the objective with given key
+func (s *SmartContract) QueryObjective(ctx ledger.TransactionContext, params *assets.ObjectiveQueryParam) (*assets.Objective, error) {
+	service := ctx.GetProvider().GetObjectiveService()
+
+	return service.GetObjective(params.GetKey())
 }
 
 // QueryObjectives returns the objectives
-func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext) ([]*assets.Objective, error) {
+func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, params *assets.ObjectivesQueryParam) (*assets.ObjectivesQueryResponse, error) {
 	service := ctx.GetProvider().GetObjectiveService()
 
-	return service.GetObjectives()
+	objectives, nextPage, err := service.GetObjectives(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
+	if err != nil {
+		return nil, err
+	}
+
+	return &assets.ObjectivesQueryResponse{
+		Objectives:    objectives,
+		NextPageToken: nextPage,
+	}, nil
 }
 
 // QueryLeaderboard returns for an objective all its certified testtuples with a done status
@@ -65,5 +84,5 @@ func (s *SmartContract) QueryLeaderboard(ctx ledger.TransactionContext, key stri
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryObjectives", "QueryLeaderboard"}
+	return []string{"QueryObjective", "QueryObjectives", "QueryLeaderboard"}
 }

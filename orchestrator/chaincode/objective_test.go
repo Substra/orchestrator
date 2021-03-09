@@ -16,12 +16,10 @@ package chaincode
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/assets"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestObjectiveAdapterImplementServer(t *testing.T) {
@@ -35,19 +33,49 @@ func TestRegisterObjective(t *testing.T) {
 	newObj := &assets.NewObjective{
 		Key: "uuid",
 	}
-	oBytes, err := json.Marshal(newObj)
-	require.NoError(t, err)
 
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	params := []string{string(oBytes)}
-
-	invocator.On("Invoke", "org.substra.objective:RegisterObjective", params, &assets.Objective{}).Return(nil)
+	invocator.On("Invoke", "org.substra.objective:RegisterObjective", newObj, &assets.Objective{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
-	_, err = adapter.RegisterObjective(ctx, newObj)
+	_, err := adapter.RegisterObjective(ctx, newObj)
 
 	assert.NoError(t, err, "Registration should pass")
+}
+
+func TestQueryObjective(t *testing.T) {
+	adapter := NewObjectiveAdapter()
+
+	newCtx := context.TODO()
+	invocator := &mockedInvocator{}
+
+	param := &assets.ObjectiveQueryParam{Key: "uuid"}
+
+	invocator.On("Invoke", "org.substra.objective:QueryObjective", param, &assets.Objective{}).Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.QueryObjective(ctx, param)
+
+	assert.NoError(t, err, "Query should pass")
+}
+
+func TestQueryObjectives(t *testing.T) {
+	adapter := NewObjectiveAdapter()
+
+	newCtx := context.TODO()
+	invocator := &mockedInvocator{}
+
+	param := &assets.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
+
+	invocator.On("Invoke", "org.substra.objective:QueryObjectives", param, &assets.ObjectivesQueryResponse{}).Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.QueryObjectives(ctx, param)
+
+	assert.NoError(t, err, "Query should pass")
 }

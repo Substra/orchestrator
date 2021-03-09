@@ -18,6 +18,7 @@ package testing
 import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
+	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/stretchr/testify/mock"
 )
@@ -247,4 +248,27 @@ func (m *MockedStub) GetTxTimestamp() (*timestamp.Timestamp, error) {
 func (m *MockedStub) SetEvent(name string, payload []byte) error {
 	args := m.Called(name, payload)
 	return args.Error(0)
+}
+
+// MockedStateQueryIterator implements StateQueryIterator
+type MockedStateQueryIterator struct {
+	mock.Mock
+}
+
+// HasNext is a mock
+func (m *MockedStateQueryIterator) HasNext() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
+// Close is a mock
+func (m *MockedStateQueryIterator) Close() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
+// Next is a mock
+func (m *MockedStateQueryIterator) Next() (*queryresult.KV, error) {
+	args := m.Called()
+	return args.Get(0).(*queryresult.KV), args.Error(1)
 }

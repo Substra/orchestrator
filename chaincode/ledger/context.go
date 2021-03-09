@@ -47,7 +47,7 @@ func (c *Context) ensureDispatcher() {
 // GetProvider returns a new instance of ServiceProvider
 func (c *Context) GetProvider() orchestration.DependenciesProvider {
 	stub := c.GetStub()
-	db := &DB{ccStub: stub}
+	db := NewDB(stub)
 	c.ensureDispatcher()
 
 	return orchestration.NewServiceProvider(db, c.dispatcher)

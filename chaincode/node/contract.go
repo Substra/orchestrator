@@ -43,16 +43,25 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 // RegisterNode creates a new node in world state
 func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*assets.Node, error) {
 	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		return nil, err
+	}
 
 	service := ctx.GetProvider().GetNodeService()
 
-	node, err := service.RegisterNode(txCreator)
-	return node, err
+	return service.RegisterNode(txCreator)
 }
 
 // QueryNodes retrieves all known nodes
-func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) ([]*assets.Node, error) {
+func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) (*assets.NodeQueryResponse, error) {
 	service := ctx.GetProvider().GetNodeService()
 
-	return service.GetNodes()
+	nodes, err := service.GetNodes()
+	if err != nil {
+		return nil, err
+	}
+
+	return &assets.NodeQueryResponse{
+		Nodes: nodes,
+	}, nil
 }

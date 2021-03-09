@@ -1,12 +1,14 @@
 OUTPUT_DIR = ./bin
 CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
 ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
+LIBCODEGEN_BIN = $(OUTPUT_DIR)/libcodegen
 PROJECT_ROOT = .
 MIGRATIONS_DIR = $(PROJECT_ROOT)/orchestrator/standalone/migrations
 protos = $(PROJECT_ROOT)/lib/assets
 go_src = $(shell find . -type f -name '*.go')
 sql_migrations = $(wildcard $(MIGRATIONS_DIR)/*.sql)
 migrations_binpack = $(MIGRATIONS_DIR)/bindata.go
+lib_generated = $(PROJECT_ROOT)/lib/assets/json.go
 
 protobufs = $(wildcard $(protos)/*.proto)
 pbgo = $(protobufs:.proto=.pb.go)
@@ -20,11 +22,14 @@ chaincode: $(CHAINCODE_BIN)
 .PHONY: orchestrator
 orchestrator: $(ORCHESTRATOR_BIN)
 
-$(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack)
+$(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
 	go build -o $(ORCHESTRATOR_BIN) ./orchestrator
 
-$(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR)
+$(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 	go build -o $(CHAINCODE_BIN) ./chaincode
+
+$(LIBCODEGEN_BIN): $(PROJECT_ROOT)/lib/codegen/main.go
+	go build -o $(LIBCODEGEN_BIN) $(PROJECT_ROOT)/lib/codegen
 
 $(OUTPUT_DIR):
 	mkdir $(OUTPUT_DIR)
@@ -39,6 +44,9 @@ $(pbgo): %.pb.go: %.proto
 
 $(migrations_binpack): $(sql_migrations)
 	go-bindata -pkg migrations -prefix $(MIGRATIONS_DIR) -o $(migrations_binpack) $(MIGRATIONS_DIR)
+
+$(lib_generated): $(LIBCODEGEN_BIN)
+	$(LIBCODEGEN_BIN) -path $(protos) > $(lib_generated)
 
 .PHONY: proto-codegen
 proto-codegen: $(pbgo)

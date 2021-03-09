@@ -2,4 +2,6 @@
 /bin
 .vscode/
 /wallet
+# Generated files
+lib/assets/json.go
 orchestrator/standalone/migrations/bindata.go

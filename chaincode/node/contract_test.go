@@ -53,8 +53,7 @@ func TestRegistration(t *testing.T) {
 	ctx.On("GetStub").Return(stub).Once()
 
 	node, err := contract.RegisterNode(ctx)
-	assert.Nil(t, err, "node registration should not fail")
-
+	assert.NoError(t, err, "node registration should not fail")
 	assert.Equal(t, node, o)
 }
 
@@ -71,7 +70,7 @@ func TestQueryNodes(t *testing.T) {
 	service := getMockedService(ctx)
 	service.On("GetNodes").Return(nodes, nil).Once()
 
-	resp, err := contract.QueryNodes(ctx)
-	assert.Nil(t, err, "querying nodes should not fail")
-	assert.Len(t, resp, len(nodes), "query should return all nodes")
+	queryResult, err := contract.QueryNodes(ctx)
+	assert.NoError(t, err, "querying nodes should not fail")
+	assert.Len(t, queryResult.Nodes, len(nodes), "query should return all nodes")
 }
