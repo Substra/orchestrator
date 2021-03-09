@@ -27,6 +27,10 @@ Converting from the existing chaincode is mostly a 3 steps process:
 - define the parameter messages from the existing [inputs](https://github.com/SubstraFoundation/substra-chaincode/blob/0.2.0/chaincode/input.go)
 - define the response messages from the existing [output](https://github.com/SubstraFoundation/substra-chaincode/blob/0.2.0/chaincode/output.go)
 
+**Validation**: some assets are expected to have specific properties enforced: a valid URL, SHA256 hash, string length, etc
+This validation should be implemented in `lib/asset/<asset>_validation.go`, there are several existing examples.
+Validation is done with [ozzo-validation](https://github.com/go-ozzo/ozzo-validation) library.
+
 ### 2. Database Abstraction Layer
 
 Once the asset defined, you can define its <abbr title="database abstraction layer">DBAL</abbr> in `lib/persistence` module.
