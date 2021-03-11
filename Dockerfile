@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.13.8-alpine AS build
+FROM golang:1.16-alpine AS build
 RUN apk add --no-cache git make protoc
 
 ENV GO111MODULE=on
@@ -22,7 +22,7 @@ RUN mv ./bin/chaincode /bin/chaincode
 
 
 # Expose the binary
-FROM alpine:3.12 as prod
+FROM alpine:3.13 as prod
 
 COPY --from=build /bin/chaincode /app/chaincode
 USER 1000
