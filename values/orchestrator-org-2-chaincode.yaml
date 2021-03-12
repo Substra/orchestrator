@@ -12,3 +12,21 @@ fabric:
 
 postgresql:
   enabled: false
+
+rabbitmq:
+  auth:
+    username: user
+    password: password
+  persistence:
+    enabled: false
+
+ingress:
+  enabled: true
+  hosts:
+  - host: orchestrator.node-2.com
+    paths:
+      - "/"
+  tls:
+    - hosts:
+      - orchestrator.node-2.com
+      secretName: orchestrator-tls
