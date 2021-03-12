@@ -4,11 +4,15 @@ orchestrator:
 
 postgresql:
   enabled: true
+  persistence:
+    enabled: false
 
 rabbitmq:
   auth:
     username: user
     password: password
+  persistence:
+    enabled: false
 
 ingress:
   enabled: true
