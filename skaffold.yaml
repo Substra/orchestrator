@@ -34,7 +34,8 @@ deploy:
       - values/orchestrator-org-2-tls-secret.yaml
 
 profiles:
-- name: standalone
+  # Only org1 in standalone mode
+- name: solo
   activation:
     # Activate when env variable is empty/missing,
     # effectively making this rule the default.
