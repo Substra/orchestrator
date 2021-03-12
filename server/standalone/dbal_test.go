@@ -45,8 +45,8 @@ func TestGetObjectives(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow("{}").
-		AddRow("{}")
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(13, 0, testChannel).WillReturnRows(rows)
 
@@ -75,8 +75,8 @@ func TestGetPaginatedObjectives(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow("{}").
-		AddRow("{}")
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(2, 0, testChannel).WillReturnRows(rows)
 

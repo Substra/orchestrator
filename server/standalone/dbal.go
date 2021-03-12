@@ -16,7 +16,6 @@ package standalone
 
 import (
 	"database/sql"
-	"encoding/json"
 	"strconv"
 
 	// migration driver
@@ -81,15 +80,14 @@ func (d *DBAL) GetNodes() ([]*asset.Node, error) {
 	var nodes []*asset.Node
 
 	for rows.Next() {
-		var id string
+		node := new(asset.Node)
 
-		err = rows.Scan(&id)
+		err = rows.Scan(&node.Id)
 		if err != nil {
 			return nil, err
 		}
 
-		n := asset.Node{Id: id}
-		nodes = append(nodes, &n)
+		nodes = append(nodes, node)
 	}
 
 	return nodes, nil
@@ -97,13 +95,8 @@ func (d *DBAL) GetNodes() ([]*asset.Node, error) {
 
 // AddObjective implements persistence.ObjectiveDBAL
 func (d *DBAL) AddObjective(obj *asset.Objective) error {
-	objBytes, err := json.Marshal(obj)
-	if err != nil {
-		return err
-	}
-
 	stmt := `insert into "objectives" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err = d.tx.Exec(stmt, obj.GetKey(), objBytes, d.channel)
+	_, err := d.tx.Exec(stmt, obj.GetKey(), obj, d.channel)
 	return err
 }
 
@@ -111,18 +104,13 @@ func (d *DBAL) AddObjective(obj *asset.Objective) error {
 func (d *DBAL) GetObjective(id string) (*asset.Objective, error) {
 	row := d.tx.QueryRow(`select "asset" from "objectives" where id=$1 and channel=$2`, id, d.channel)
 
-	var serializedObj []byte
-	err := row.Scan(&serializedObj)
-	if err != nil {
-		return nil, err
-	}
-	o := asset.Objective{}
-	err = json.Unmarshal(serializedObj, &o)
+	objective := new(asset.Objective)
+	err := row.Scan(&objective)
 	if err != nil {
 		return nil, err
 	}
 
-	return &o, nil
+	return objective, nil
 }
 
 // GetObjectives implements persistence.ObjectiveDBAL
@@ -146,19 +134,14 @@ func (d *DBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.P
 	var count int
 
 	for rows.Next() {
-		var serializedObj []byte
+		objective := new(asset.Objective)
 
-		err = rows.Scan(&serializedObj)
+		err = rows.Scan(&objective)
 		if err != nil {
 			return nil, "", err
 		}
 
-		o := asset.Objective{}
-		err = json.Unmarshal(serializedObj, &o)
-		if err != nil {
-			return nil, "", err
-		}
-		objectives = append(objectives, &o)
+		objectives = append(objectives, objective)
 		count++
 
 		if count == int(p.Size) {

@@ -36,6 +36,10 @@ Validation is done with [ozzo-validation](https://github.com/go-ozzo/ozzo-valida
 Once the asset defined, you can define its <abbr title="database abstraction layer">DBAL</abbr> in `lib/persistence` module.
 This should be the only interface used to manipulate the asset (ie. each asset's DBAL should be isolated).
 
+The ability to scan a raw database value into an asset, this can be done by implementing the *sql.Scanner* interface.
+Converting the other way around, from an asset into a database value can be done by implementing *driver.Value*.
+Examples of such implementations are available in `lib/asset/sql.go` file, it boils down to serializing/deserializing the assets in JSON.
+
 Now, implement the DBAL interface for both storage backends: postgres in `orchestrator/standalone` module and the ledger in `chaincode/ledger` module.
 You may have to create a new table for postgres, this can be done by adding a migration in `orchestrator/standalone/migrations` module.
 
