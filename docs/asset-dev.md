@@ -46,7 +46,7 @@ At this point tests should pass, meaning other assets are not impacted by your c
 
 ### 3. Write business logic
 
-You can proceed with writing the orchestration logic for the new asset, in a `lib/orchestration/<asset>.go` file.
+You can proceed with writing the orchestration logic for the new asset, in a `lib/service/<asset>.go` file.
 To match the existing patterns, you should define (*Asset* is the place-holder for the new asset):
 
 - an **AssetAPI** which defines the public interface of the service, ie: what you can do with the asset.
@@ -69,7 +69,7 @@ This *AssetAPI* interface is used by both the smartcontract and the grpc server.
 
 #### Unit testing
 
-There is a *MockServiceProvider* defined in `lib/orchestration` module, it should be updated to implement *AssetServiceProvider*.
+There is a *MockServiceProvider* defined in `lib/service` module, it should be updated to implement *AssetServiceProvider*.
 You can also define a **MockAssetService** for future use by other tests (chaincode and standalone gRPC service).
 
 There are also helpers defined in `github.com/owkin/orchestrator/lib/persistence/testing` to mock the persistence layer.
@@ -78,7 +78,7 @@ There are also helpers defined in `github.com/owkin/orchestrator/lib/persistence
 
 Define a gRPC server in `orchestrator/standalone/<asset>.go`, it should implement `assets.AssetServiceServer` (interface generated from the protobuf).
 
-This server will be able to get an *orchestration.DependenciesProvider* from the context using `ExtractProvider` function.
+This server will be able to get an *service.DependenciesProvider* from the context using `ExtractProvider` function.
 This is the dependency injection store, from which you can retrieve your dependencies (Database, other service, event queue, etc).
 
 You may need the MSPID in your logic, this can also be retrieved from context through the `common.ExtractMSPID` function.
