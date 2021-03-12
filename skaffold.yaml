@@ -49,9 +49,9 @@ profiles:
   activation:
     - env: ORCHESTRATOR_MODE=chaincode
   patches:
-    - op: add
-      path: /deploy/helm/releases/0/valuesFiles/-
-      value: values/orchestrator-org-1-chaincode.yaml
-    - op: add
-      path: /deploy/helm/releases/1/valuesFiles/-
-      value: values/orchestrator-org-2-chaincode.yaml
+    - op: replace
+      path: /deploy/helm/releases/0/valuesFiles
+      value: [ values/orchestrator-org-1-chaincode.yaml ]
+    - op: replace
+      path: /deploy/helm/releases/1/valuesFiles
+      value: [ values/orchestrator-org-2-chaincode.yaml ]
