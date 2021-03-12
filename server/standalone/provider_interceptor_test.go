@@ -22,6 +22,7 @@ import (
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceTesting "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/owkin/orchestrator/lib/service"
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -93,7 +94,9 @@ func TestInjectProvider(t *testing.T) {
 		return "test", nil
 	}
 
-	interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
+	ctx := common.WithChannel(context.TODO(), "testChannel")
+	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
+	assert.NoError(t, err)
 }
 
 func TestOnSuccess(t *testing.T) {
@@ -113,12 +116,15 @@ func TestOnSuccess(t *testing.T) {
 		provider, err := ExtractProvider(ctx)
 		require.NoError(t, err)
 
-		provider.GetEventQueue().Enqueue(&event.Event{})
+		err = provider.GetEventQueue().Enqueue(&event.Event{})
+		require.NoError(t, err)
 
 		return "test", nil
 	}
 
-	interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
+	ctx := common.WithChannel(context.TODO(), "testChannel")
+	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
+	assert.NoError(t, err)
 }
 
 func TestOnError(t *testing.T) {
@@ -137,12 +143,14 @@ func TestOnError(t *testing.T) {
 		provider, err := ExtractProvider(ctx)
 		require.NoError(t, err)
 
-		provider.GetEventQueue().Enqueue(&event.Event{})
+		err = provider.GetEventQueue().Enqueue(&event.Event{})
+		require.NoError(t, err)
 
 		return nil, errors.New("test error")
 	}
 
-	res, err := interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
+	ctx := common.WithChannel(context.TODO(), "testChannel")
+	res, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.Nil(t, res)
 	assert.Error(t, err)
 }

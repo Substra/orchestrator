@@ -15,7 +15,8 @@
 package ledger
 
 import (
-	"github.com/golang/protobuf/proto"
+	// fabric-protos-go/msp still rely on this deprecated lib
+	"github.com/golang/protobuf/proto" // nolint:staticcheck
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-protos-go/msp"
 )

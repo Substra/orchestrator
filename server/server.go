@@ -124,10 +124,10 @@ func RunServerWithChainCode() {
 func RunServerWithoutChainCode() {
 	dbURL := mustGetEnv("DATABASE_URL")
 	pgDB, err := standalone.InitDatabase(dbURL)
-	defer pgDB.Close()
 	if err != nil {
 		log.WithError(err).Fatal("Failed to create persistence layer")
 	}
+	defer pgDB.Close()
 
 	rabbitDSN := mustGetEnv("AMQP_DSN")
 	session := common.NewSession("orchestrator", rabbitDSN)

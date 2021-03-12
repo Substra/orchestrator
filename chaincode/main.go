@@ -45,11 +45,6 @@ func main() {
 		log.WithError(err).Fatal("error creating substra chaincode")
 	}
 
-	if os.Getenv("DEVMODE_ENABLED") != "" {
-		cc.Start()
-		return
-	}
-
 	key, err := ioutil.ReadFile(os.Getenv("TLS_KEY_FILE"))
 	if err != nil {
 		log.WithError(err).WithField("path", os.Getenv("TLS_KEY_FILE")).Fatal("unable to read key file")

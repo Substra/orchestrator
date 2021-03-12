@@ -32,11 +32,6 @@ import (
 
 const headerChaincode = "chaincode"
 
-type chaincodeMetadata struct {
-	channel   string
-	chaincode string
-}
-
 var ignoredMethods = [...]string{
 	"grpc.health",
 }
@@ -90,7 +85,10 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 
 	label := mspid + "-id"
 
-	ci.wallet.EnsureIdentity(label, mspid)
+	err = ci.wallet.EnsureIdentity(label, mspid)
+	if err != nil {
+		return nil, err
+	}
 	start := time.Now()
 	gw, err := gateway.Connect(
 		gateway.WithConfig(ci.config),

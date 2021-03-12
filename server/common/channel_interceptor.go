@@ -46,7 +46,7 @@ func InterceptChannel(ctx context.Context, req interface{}, info *grpc.UnaryServ
 
 	channel := md.Get(headerChannel)[0]
 
-	newCtx := context.WithValue(ctx, ctxChannelKey, channel)
+	newCtx := WithChannel(ctx, channel)
 	return handler(newCtx, req)
 }
 
@@ -55,6 +55,11 @@ type ctxChannelMarker struct{}
 var (
 	ctxChannelKey = &ctxChannelMarker{}
 )
+
+// WithChannel add channel information to a context
+func WithChannel(ctx context.Context, channel string) context.Context {
+	return context.WithValue(ctx, ctxChannelKey, channel)
+}
 
 // ExtractChannel retrieves channel from request context
 // channel is expected to be set by InterceptChannel

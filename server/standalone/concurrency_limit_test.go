@@ -40,7 +40,7 @@ func TestBlockOnRequest(t *testing.T) {
 		defer wg.Done()
 		v, ok := req.(int)
 		if ok && v == 1 {
-			_ = <-lock // Fake processing
+			<-lock // Fake processing
 		}
 		done = v
 
@@ -50,13 +50,13 @@ func TestBlockOnRequest(t *testing.T) {
 	wg.Add(3)
 
 	// First request come in
-	go limiter.Intercept(context.TODO(), 1, unaryInfo, unaryHandler)
+	go limiter.Intercept(context.TODO(), 1, unaryInfo, unaryHandler) //nolint:errcheck
 
 	// Second request come in
-	go limiter.Intercept(context.TODO(), 2, unaryInfo, unaryHandler)
+	go limiter.Intercept(context.TODO(), 2, unaryInfo, unaryHandler) //nolint:errcheck
 
 	// Third request come in
-	go limiter.Intercept(context.TODO(), 3, unaryInfo, unaryHandler)
+	go limiter.Intercept(context.TODO(), 3, unaryInfo, unaryHandler) //nolint:errcheck
 
 	assert.Equal(t, 0, done, "no request should have been processed")
 

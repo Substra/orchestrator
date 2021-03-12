@@ -90,7 +90,8 @@ func TestParamWrapping(t *testing.T) {
 	contract.On("SubmitTransaction", "org.substra.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
 
 	output := &asset.ObjectivesQueryResponse{}
-	invocator.Invoke("org.substra.objective:QueryObjectives", param, output)
+	err = invocator.Invoke("org.substra.objective:QueryObjectives", param, output)
+	assert.NoError(t, err)
 
 	assert.Equal(t, "test", output.NextPageToken, "response should be properly unwrapped")
 }

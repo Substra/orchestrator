@@ -61,7 +61,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 	}
 
 	testDataset := o.TestDataset
-	if testDataset != nil {
+	if testDataset != nil { // nolint TODO
 		// err = datasetService.RegisterDataset(testDataset)
 		// if err != nil {
 		//	return err

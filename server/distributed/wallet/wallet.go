@@ -50,7 +50,10 @@ func (w *Wallet) EnsureIdentity(label string, mspid string) error {
 
 		identity := gateway.NewX509Identity(mspid, string(cert), string(key))
 
-		w.Put(label, identity)
+		err = w.Put(label, identity)
+		if err != nil {
+			return err
+		}
 		log.WithField("label", label).WithField("mspid", mspid).Info("Identity added to wallet")
 	}
 

@@ -69,7 +69,8 @@ func TestRegistration(t *testing.T) {
 
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	contract.RegisterObjective(ctx, newObj)
+	_, err := contract.RegisterObjective(ctx, newObj)
+	assert.NoError(t, err)
 }
 
 func TestQueryObjectives(t *testing.T) {

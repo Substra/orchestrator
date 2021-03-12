@@ -22,6 +22,9 @@ chaincode: $(CHAINCODE_BIN)
 .PHONY: orchestrator
 orchestrator: $(ORCHESTRATOR_BIN)
 
+.PHONY: codegen
+codegen: $(pbgo) $(migrations_binpack) $(lib_generated)
+
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
 	go build -o $(ORCHESTRATOR_BIN) ./server
 

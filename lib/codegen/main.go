@@ -43,9 +43,14 @@ func main() {
 	rc, wc, _ := pipe.Commands(
 		exec.Command("gofmt"),
 	)
-	t.Execute(wc, assets)
+
+	if err := t.Execute(wc, assets); err != nil {
+		log.Fatal(err)
+	}
 	wc.Close()
-	io.Copy(os.Stdout, rc)
+	if _, err := io.Copy(os.Stdout, rc); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Extract asset names from lib/asset code
@@ -64,6 +69,9 @@ func getAssets(path string) []string {
 		}
 		defer f.Close()
 		proto, err := protoparser.Parse(f)
+		if err != nil {
+			log.Fatalf("failed to parse %s: %s", p, err)
+		}
 		for _, item := range proto.ProtoBody {
 			if msg, ok := item.(*parser.Message); ok {
 				protoMessages = append(protoMessages, msg.MessageName)

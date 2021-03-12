@@ -35,5 +35,6 @@ func TestAfterTransactionHook(t *testing.T) {
 
 	dispatcher.On("Dispatch").Once().Return(nil)
 
-	AfterTransactionHook(ctx, "whatever")
+	err := AfterTransactionHook(ctx, "whatever")
+	assert.NoError(t, err)
 }

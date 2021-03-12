@@ -49,7 +49,10 @@ func NewListener(
 	onEvent Handler,
 ) (*Listener, error) {
 	label := mspid + "-listener"
-	wallet.EnsureIdentity(label, mspid)
+	err := wallet.EnsureIdentity(label, mspid)
+	if err != nil {
+		return nil, err
+	}
 
 	gw, err := gateway.Connect(gateway.WithConfig(config), gateway.WithIdentity(wallet, label))
 

@@ -1,22 +1,18 @@
-name: Build and test
-
+name: golangci-lint
 on:
   push:
+    tags:
+      - v*
     branches:
-    - "master"
+      - master
+      - main
   pull_request:
-    branches:
-    - "master"
-env:
-    GO111MODULE: on
-
 jobs:
-  build:
-    name: Build and test
+  golangci:
+    name: lint
     runs-on: ubuntu-latest
     steps:
-      - name: Check out source code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
       - name: Install Go
         uses: actions/setup-go@v2
         with:
@@ -38,6 +34,8 @@ jobs:
           cd /tmp
           go get -u github.com/go-bindata/go-bindata/...
       - name: Build
-        run: make
-      - name: Test
-        run: make test
+        run: make codegen
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.29

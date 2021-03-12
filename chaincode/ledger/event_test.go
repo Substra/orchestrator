@@ -19,6 +19,7 @@ import (
 
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/event"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -28,16 +29,20 @@ func TestEventDispatcher(t *testing.T) {
 
 	dispatcher := newEventDispatcher(stub)
 
-	dispatcher.Enqueue(&event.Event{})
-	dispatcher.Enqueue(&event.Event{})
+	err := dispatcher.Enqueue(&event.Event{})
+	assert.NoError(t, err)
+	err = dispatcher.Enqueue(&event.Event{})
+	assert.NoError(t, err)
 
-	dispatcher.Dispatch()
+	err = dispatcher.Dispatch()
+	assert.NoError(t, err)
 }
 
 func TestDispatchNoEvent(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	dispatcher := newEventDispatcher(stub)
 
-	dispatcher.Dispatch()
 	// No "SetEvent" expected on stub: this will panic if SetEvent is called
+	err := dispatcher.Dispatch()
+	assert.NoError(t, err)
 }
