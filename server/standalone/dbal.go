@@ -39,7 +39,8 @@ type TransactionDBAL interface {
 
 // DBAL is the Database Abstraction Layer around asset storage
 type DBAL struct {
-	tx *sql.Tx
+	tx      *sql.Tx
+	channel string
 }
 
 // Commit the changes to the underlying storage backend
@@ -54,14 +55,14 @@ func (d *DBAL) Rollback() error {
 
 // AddNode implements persistence.NodeDBAL
 func (d *DBAL) AddNode(node *asset.Node) error {
-	stmt := `insert into "nodes" ("id") values ($1)`
-	_, err := d.tx.Exec(stmt, node.GetId())
+	stmt := `insert into "nodes" ("id", "channel") values ($1, $2)`
+	_, err := d.tx.Exec(stmt, node.GetId(), d.channel)
 	return err
 }
 
 // NodeExists implements persistence.NodeDBAL
 func (d *DBAL) NodeExists(key string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "nodes" where id=$1`, key)
+	row := d.tx.QueryRow(`select count(id) from "nodes" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -71,7 +72,7 @@ func (d *DBAL) NodeExists(key string) (bool, error) {
 
 // GetNodes implements persistence.NodeDBAL
 func (d *DBAL) GetNodes() ([]*asset.Node, error) {
-	rows, err := d.tx.Query(`select "id" from "nodes"`)
+	rows, err := d.tx.Query(`select "id" from "nodes" where channel=$1`, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -101,14 +102,14 @@ func (d *DBAL) AddObjective(obj *asset.Objective) error {
 		return err
 	}
 
-	stmt := `insert into "objectives" ("id", "asset") values ($1, $2)`
-	_, err = d.tx.Exec(stmt, obj.GetKey(), objBytes)
+	stmt := `insert into "objectives" ("id", "asset", "channel") values ($1, $2, $3)`
+	_, err = d.tx.Exec(stmt, obj.GetKey(), objBytes, d.channel)
 	return err
 }
 
 // GetObjective implements persistence.ObjectiveDBAL
 func (d *DBAL) GetObjective(id string) (*asset.Objective, error) {
-	row := d.tx.QueryRow(`select "asset" from "objectives" where id=$1`, id)
+	row := d.tx.QueryRow(`select "asset" from "objectives" where id=$1 and channel=$2`, id, d.channel)
 
 	var serializedObj []byte
 	err := row.Scan(&serializedObj)
@@ -134,8 +135,8 @@ func (d *DBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.P
 		return nil, "", err
 	}
 
-	query := `select "asset" from "objectives" order by created_at asc limit $1 offset $2`
-	rows, err = d.tx.Query(query, p.Size+1, offset)
+	query := `select "asset" from "objectives" where channel=$3 order by created_at asc limit $1 offset $2`
+	rows, err = d.tx.Query(query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}

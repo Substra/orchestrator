@@ -93,6 +93,7 @@ func RunServerWithChainCode() {
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		common.LogRequest,
 		common.InterceptMSPID,
+		common.InterceptChannel,
 		chaincodeInterceptor.Intercept,
 	))
 
@@ -145,6 +146,7 @@ func RunServerWithoutChainCode() {
 		common.LogRequest,
 		concurrencyLimiter.Intercept,
 		common.InterceptMSPID,
+		common.InterceptChannel,
 		providerInterceptor.Intercept,
 	))
 

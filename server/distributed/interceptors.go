@@ -31,14 +31,12 @@ import (
 )
 
 const headerChaincode = "chaincode"
-const headerChannel = "channel"
 
 type chaincodeMetadata struct {
 	channel   string
 	chaincode string
 }
 
-var requiredHeaders = [...]string{headerChaincode, headerChannel}
 var ignoredMethods = [...]string{
 	"grpc.health",
 }
@@ -69,16 +67,26 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 		return nil, err
 	}
 
+	channel, err := common.ExtractChannel(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errors.New("Could not extract metadata")
 	}
 
-	ccMetadata, err := getCCMetadata(md)
-	if err != nil {
-		return nil, err
+	if len(md.Get(headerChaincode)) != 1 {
+		return nil, fmt.Errorf("Missing or invalid header '%s'", headerChaincode)
 	}
-	log.WithField("ccMetadata", ccMetadata).Debug("Successfully retrieved chaincode metadata from headers")
+
+	chaincode := md.Get(headerChaincode)[0]
+
+	log.WithField("chaincode", chaincode).
+		WithField("channel", channel).
+		WithField("mspid", mspid).
+		Debug("Successfully retrieved chaincode metadata from headers")
 
 	label := mspid + "-id"
 
@@ -97,12 +105,12 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 
 	defer gw.Close()
 
-	network, err := gw.GetNetwork(ccMetadata.channel)
+	network, err := gw.GetNetwork(channel)
 	if err != nil {
 		return nil, err
 	}
 
-	contract := network.GetContract(ccMetadata.chaincode)
+	contract := network.GetContract(chaincode)
 	invocator := NewContractInvocator(contract)
 
 	newCtx := context.WithValue(ctx, ctxInvocatorKey, invocator)
@@ -123,20 +131,4 @@ func ExtractInvocator(ctx context.Context) (Invocator, error) {
 		return nil, errors.New("Invocator not found in context")
 	}
 	return invocator, nil
-}
-
-// getCCMetadata make sure all necessary headers are set and returns
-// chaincode-related metadata
-func getCCMetadata(md metadata.MD) (*chaincodeMetadata, error) {
-	for _, h := range requiredHeaders {
-		values := md.Get(h)
-		if len(values) != 1 {
-			return nil, fmt.Errorf("Missing or invalid header '%s'", h)
-		}
-	}
-
-	return &chaincodeMetadata{
-		channel:   md.Get(headerChannel)[0],
-		chaincode: md.Get(headerChaincode)[0],
-	}, nil
 }

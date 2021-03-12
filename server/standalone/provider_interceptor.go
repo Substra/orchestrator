@@ -35,7 +35,7 @@ var ignoredMethods = [...]string{
 // ProviderInterceptor intercepts gRPC requests and assign a request-scoped orchestration.Provider
 // to the request context.
 type ProviderInterceptor struct {
-	channel      common.AMQPChannel
+	amqp         common.AMQPChannel
 	dbalProvider TransactionalDBALProvider
 }
 
@@ -44,9 +44,9 @@ type ctxProviderInterceptorMarker struct{}
 var ctxProviderKey = &ctxProviderInterceptorMarker{}
 
 // NewProviderInterceptor returns an instance of ProviderInterceptor
-func NewProviderInterceptor(dbalProvider TransactionalDBALProvider, channel common.AMQPChannel) *ProviderInterceptor {
+func NewProviderInterceptor(dbalProvider TransactionalDBALProvider, amqp common.AMQPChannel) *ProviderInterceptor {
 	return &ProviderInterceptor{
-		channel:      channel,
+		amqp:         amqp,
 		dbalProvider: dbalProvider,
 	}
 }
@@ -61,10 +61,15 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		}
 	}
 
-	// This dispatcher should stay scoped per request since there is a single event queue
-	dispatcher := event.NewAMQPDispatcher(pi.channel)
+	channel, err := common.ExtractChannel(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	tx, err := pi.dbalProvider.GetTransactionalDBAL()
+	// This dispatcher should stay scoped per request since there is a single event queue
+	dispatcher := event.NewAMQPDispatcher(pi.amqp, channel)
+
+	tx, err := pi.dbalProvider.GetTransactionalDBAL(channel)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to begin transaction: %w", err)
 	}

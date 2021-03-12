@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package distributed
+package common
 
 import (
 	"context"
@@ -21,17 +21,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExtractInvocator(t *testing.T) {
+func TestExtractChannel(t *testing.T) {
 	ctx := context.TODO()
 
-	i := &mockedInvocator{}
+	ctxWithChannel := context.WithValue(ctx, ctxChannelKey, "mychannel")
 
-	ctxWithInvocator := context.WithValue(ctx, ctxInvocatorKey, i)
-
-	extracted, err := ExtractInvocator(ctxWithInvocator)
+	extracted, err := ExtractChannel(ctxWithChannel)
 	assert.NoError(t, err, "extraction should not fail")
-	assert.Equal(t, i, extracted, "Invocator should be extracted from context")
+	assert.Equal(t, "mychannel", extracted, "Channel should be extracted from context")
 
-	_, err = ExtractInvocator(ctx)
+	_, err = ExtractChannel(ctx)
 	assert.Error(t, err, "Extraction should fail on empty context")
 }

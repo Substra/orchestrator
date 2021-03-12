@@ -32,4 +32,5 @@ type Event struct {
 	AssetKind asset.Kind `json:"asset_kind"`
 	AssetID   string     `json:"asset_id"`
 	EventKind Kind       `json:"event_kind"`
+	Channel   string     `jsnon:"channel"`
 }

@@ -23,6 +23,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testChannel = "testchannel"
+
 func TestGetOffset(t *testing.T) {
 	emptyOffset, err := getOffset("")
 	assert.NoError(t, err)
@@ -46,12 +48,12 @@ func TestGetObjectives(t *testing.T) {
 		AddRow("{}").
 		AddRow("{}")
 
-	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(13, 0).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(13, 0, testChannel).WillReturnRows(rows)
 
 	tx, err := db.Begin()
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx}
+	dbal := &DBAL{tx, testChannel}
 
 	res, bookmark, err := dbal.GetObjectives(common.NewPagination("", 12))
 	assert.NoError(t, err)
@@ -76,12 +78,12 @@ func TestGetPaginatedObjectives(t *testing.T) {
 		AddRow("{}").
 		AddRow("{}")
 
-	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(2, 0).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(2, 0, testChannel).WillReturnRows(rows)
 
 	tx, err := db.Begin()
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx}
+	dbal := &DBAL{tx, testChannel}
 
 	res, bookmark, err := dbal.GetObjectives(common.NewPagination("", 1))
 	assert.NoError(t, err)

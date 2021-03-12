@@ -25,7 +25,7 @@ import (
 
 // TransactionalDBALProvider describe an object able to return a TransactionalDBAL
 type TransactionalDBALProvider interface {
-	GetTransactionalDBAL() (TransactionDBAL, error)
+	GetTransactionalDBAL(string) (TransactionDBAL, error)
 }
 
 // Database is a thin wrapper around sql.DB.
@@ -81,11 +81,11 @@ func (d *Database) Close() {
 }
 
 // GetTransactionalDBAL returns a new transactional DBAL
-func (d *Database) GetTransactionalDBAL() (TransactionDBAL, error) {
+func (d *Database) GetTransactionalDBAL(channel string) (TransactionDBAL, error) {
 	tx, err := d.pool.Begin()
 	if err != nil {
 		return nil, err
 	}
 
-	return &DBAL{tx: tx}, nil
+	return &DBAL{tx: tx, channel: channel}, nil
 }

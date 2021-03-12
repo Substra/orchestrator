@@ -55,7 +55,7 @@ type mockTransactionalDBALProvider struct {
 	m *mockedTransactionDBAL
 }
 
-func (p *mockTransactionalDBALProvider) GetTransactionalDBAL() (TransactionDBAL, error) {
+func (p *mockTransactionalDBALProvider) GetTransactionalDBAL(_ string) (TransactionDBAL, error) {
 	return p.m, nil
 }
 

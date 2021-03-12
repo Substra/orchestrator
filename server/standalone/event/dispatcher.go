@@ -26,27 +26,34 @@ import (
 // AMQPDispatcher dispatch events on an AMQP channel
 type AMQPDispatcher struct {
 	event.Queue
-	channel common.AMQPChannel
+	amqp common.AMQPChannel
+	// channel is the context of assets and computations
+	channel string
 }
 
-// NewAMQPDispatcher creates a new dispatcher based on given AMQP session
-func NewAMQPDispatcher(channel common.AMQPChannel) *AMQPDispatcher {
+// NewAMQPDispatcher creates a new dispatcher based on given AMQP session.
+// channel argument has nothing to do with AMQP but identifies the context of assets and computation events.
+func NewAMQPDispatcher(amqp common.AMQPChannel, channel string) *AMQPDispatcher {
 	return &AMQPDispatcher{
 		Queue:   new(common.MemoryQueue),
+		amqp:    amqp,
 		channel: channel,
 	}
 }
 
 // Dispatch sends events one by one to the AMQP channel
 func (d *AMQPDispatcher) Dispatch() error {
-	log.WithField("num_events", d.Len()).Debug("Dispatching events")
+	log.WithField("num_events", d.Len()).WithField("channel", d.channel).Debug("Dispatching events")
 	for _, event := range d.GetEvents() {
+		// Contextualize the event in a channel
+		event.Channel = d.channel
+
 		data, err := json.Marshal(event)
 		if err != nil {
 			return err
 		}
 
-		err = d.channel.Publish(data)
+		err = d.amqp.Publish(data)
 		if err != nil {
 			return err
 		}
