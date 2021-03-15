@@ -12,18 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package errors defines orchestration errors.
-// This is following the patterns from https://blog.golang.org/go1.13-errors
-// so it mostly contains sentinel values.
-package errors
+package asset
 
-import "errors"
+import (
+	"testing"
 
-// ErrByteArray happens when attempting to load invalid data as json byte array
-var ErrByteArray = errors.New("not a byte array")
+	"github.com/stretchr/testify/assert"
+)
 
-// ErrConflict is a sentinel value to mark conflicting asset errors
-var ErrConflict = errors.New("conflict")
+func TestObjectiveValue(t *testing.T) {
+	objective := &Objective{
+		Name:  "test",
+		Owner: "testOwner",
+	}
 
-// ErrInvalidAsset mark asset validation errors
-var ErrInvalidAsset = errors.New("invalid asset")
+	value, err := objective.Value()
+	assert.NoError(t, err, "objective serialization should not fail")
+
+	scanned := new(Objective)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "objective scan should not fail")
+
+	assert.Equal(t, objective, scanned)
+}
