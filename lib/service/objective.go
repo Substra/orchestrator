@@ -15,9 +15,12 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
@@ -57,7 +60,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 	log.WithField("owner", owner).WithField("newObj", o).Debug("Registering objective")
 	err := o.Validate()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
 	}
 
 	testDataset := o.TestDataset

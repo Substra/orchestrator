@@ -21,3 +21,6 @@ import "errors"
 
 // ErrConflict is a sentinel value to mark conflicting asset errors
 var ErrConflict = errors.New("conflict")
+
+// ErrInvalidAsset mark asset validation errors
+var ErrInvalidAsset = errors.New("invalid asset")
