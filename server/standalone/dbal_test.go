@@ -121,3 +121,90 @@ func TestGetDataSampleFail(t *testing.T) {
 	assert.Error(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGetAlgos(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectBegin()
+
+	rows := sqlmock.NewRows([]string{"asset"}).
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
+
+	mock.ExpectQuery(`select "asset" from "algos"`).WithArgs(13, 0, testChannel).WillReturnRows(rows)
+
+	tx, err := db.Begin()
+	require.NoError(t, err)
+
+	dbal := &DBAL{tx, testChannel}
+
+	res, bookmark, err := dbal.GetAlgos(common.NewPagination("", 12))
+	assert.NoError(t, err)
+	assert.Len(t, res, 2)
+	assert.Equal(t, "", bookmark, "last page should be reached")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetPaginatedAlgos(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectBegin()
+
+	rows := sqlmock.NewRows([]string{"asset"}).
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
+
+	mock.ExpectQuery(`select "asset" from "algos"`).WithArgs(2, 0, testChannel).WillReturnRows(rows)
+
+	tx, err := db.Begin()
+	require.NoError(t, err)
+
+	dbal := &DBAL{tx, testChannel}
+
+	res, bookmark, err := dbal.GetAlgos(common.NewPagination("", 1))
+	assert.NoError(t, err)
+	assert.Len(t, res, 1)
+	assert.Equal(t, "1", bookmark, "There should be another page")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetAlgoFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	require.NoError(t, err)
+
+	defer db.Close()
+
+	mock.ExpectBegin()
+
+	rows := sqlmock.NewRows([]string{"asset"})
+
+	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
+	mock.ExpectQuery(`select "asset" from "algos" where id=`).WithArgs(uid, testChannel).WillReturnRows(rows)
+
+	tx, err := db.Begin()
+	require.NoError(t, err)
+
+	dbal := &DBAL{
+		tx:      tx,
+		channel: testChannel,
+	}
+
+	_, err = dbal.GetAlgo(uid)
+
+	assert.Error(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

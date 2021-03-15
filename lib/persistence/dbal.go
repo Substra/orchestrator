@@ -48,6 +48,13 @@ type DataSampleDBAL interface {
 	GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
 }
 
+// AlgoDBAL is the database abstraction layer for Algos
+type AlgoDBAL interface {
+	AddAlgo(obj *asset.Algo) error
+	GetAlgo(id string) (*asset.Algo, error)
+	GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
+}
+
 // NodeDBALProvider representes an object capable of providing a NodeDBAL
 type NodeDBALProvider interface {
 	GetNodeDBAL() NodeDBAL
@@ -63,9 +70,15 @@ type DataSampleDBALProvider interface {
 	GetDataSampleDBAL() DataSampleDBAL
 }
 
+// AlgoDBALProvider represents an object capable of providing an AlgoDBAL
+type AlgoDBALProvider interface {
+	GetAlgoDBAL() AlgoDBAL
+}
+
 // DBAL stands for Database Abstraction Layer, it exposes methods to interact with asset storage.
 type DBAL interface {
 	NodeDBAL
 	ObjectiveDBAL
 	DataSampleDBAL
+	AlgoDBAL
 }

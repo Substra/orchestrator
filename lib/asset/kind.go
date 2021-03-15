@@ -24,4 +24,6 @@ var (
 	ObjectiveKind = "objective"
 	// DataSampleKind is the type of DataSample assets
 	DataSampleKind = "datasample"
+	// AlgoKind is the type of Algo assets
+	AlgoKind = "algo"
 )

@@ -85,3 +85,21 @@ func (m *MockDBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, co
 	args := m.Called(p)
 	return args.Get(0).([]*asset.DataSample), args.Get(1).(common.PaginationToken), args.Error(2)
 }
+
+// AddAlgo is a mock
+func (m *MockDBAL) AddAlgo(obj *asset.Algo) error {
+	args := m.Called(obj)
+	return args.Error(0)
+}
+
+// GetAlgo is a mock
+func (m *MockDBAL) GetAlgo(id string) (*asset.Algo, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.Algo), args.Error(1)
+}
+
+// GetAlgos is a mock
+func (m *MockDBAL) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
+}

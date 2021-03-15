@@ -53,3 +53,19 @@ func TestDataSampleValue(t *testing.T) {
 
 	assert.Equal(t, datasample, scanned)
 }
+
+func TestAlgoValue(t *testing.T) {
+	algo := &Algo{
+		Name:  "test",
+		Owner: "testOwner",
+	}
+
+	value, err := algo.Value()
+	assert.NoError(t, err, "algo serialization should not fail")
+
+	scanned := new(Algo)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "algo scan should not fail")
+
+	assert.Equal(t, algo, scanned)
+}
