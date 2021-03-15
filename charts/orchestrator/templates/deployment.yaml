@@ -55,6 +55,8 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
+           - name: LOG_LEVEL
+             value: {{ .Values.orchestrator.logLevel | default "INFO" }}
            - name: ORCHESTRATOR_AMQP_DSN
              value: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
            {{- if .Values.postgresql.enabled }}

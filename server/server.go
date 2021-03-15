@@ -23,7 +23,6 @@ import (
 	"os"
 
 	"github.com/go-playground/log/v7"
-	"github.com/go-playground/log/v7/handlers/console"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
@@ -168,8 +167,7 @@ func RunServerWithoutChainCode() {
 }
 
 func main() {
-	cLog := console.New(true)
-	log.AddHandler(cLog, log.AllLevels...)
+	common.InitLogging()
 
 	flag.BoolVar(&standaloneMode, "standalone", true, "Run the chaincode in standalone mode")
 	flag.BoolVar(&standaloneMode, "s", true, "Run the chaincode in standalone mode (shorthand)")
