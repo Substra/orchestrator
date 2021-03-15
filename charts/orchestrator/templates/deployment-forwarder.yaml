@@ -1,7 +1,8 @@
+{{- if eq .Values.orchestrator.mode "chaincode" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "orchestrator.fullname" . }}
+  name: {{ include "orchestrator.fullname" . }}-forwarder
   labels:
     {{- include "orchestrator.labels" . | nindent 4 }}
 spec:
@@ -28,11 +29,6 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
-      {{- if .Values.postgresql.enabled }}
-      - name: wait-postgresql
-        image: jwilder/dockerize
-        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}']
-      {{- end}}
       - name: wait-rabbitmq
         image: jwilder/dockerize
         command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}']
@@ -40,48 +36,44 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.orchestrator.image.repository }}:{{ .Values.orchestrator.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy }}
+          image: "{{ .Values.forwarder.image.repository }}:{{ .Values.forwarder.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.forwarder.image.pullPolicy }}
           ports:
-            - name: grpc
-              containerPort: 9000
+            - name: http
+              containerPort: 8000
               protocol: TCP
           livenessProbe:
-            exec:
-              command: ["/bin/grpc_health_probe", "-addr=:9000"]
+            httpGet:
+              path: /
+              port: http
           readinessProbe:
-            exec:
-              command: ["/bin/grpc_health_probe", "-addr=:9000"]
+            httpGet:
+              path: /
+              port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
-           - name: ORCHESTRATOR_AMQP_DSN
+           - name: FORWARDER_AMQP_DSN
              value: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
-           {{- if .Values.postgresql.enabled }}
-           - name: ORCHESTRATOR_DATABASE_URL
-             value: postgresql://{{ .Values.postgresql.postgresqlUsername}}:{{ .Values.postgresql.postgresqlPassword}}@{{ .Release.Name }}-postgresql.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}/{{ .Values.postgresql.postgresqlDatabase}}?sslmode=disable
-           {{- end}}
-           - name: ORCHESTRATOR_MODE
-             value: {{ .Values.orchestrator.mode }}
-           {{- if eq .Values.orchestrator.mode "chaincode" }}
-           - name: ORCHESTRATOR_CERT
+           - name: FORWARDER_CERT
              value: {{ .Values.orchestrator.cert }}
-           - name: ORCHESTRATOR_KEY
+           - name: FORWARDER_KEY
              value: {{ .Values.orchestrator.key }}
-           - name: ORCHESTRATOR_MSPID
+           - name: FORWARDER_MSPID
              value: {{ .Values.fabric.mspID }}
-           - name: ORCHESTRATOR_NETWORK_CONFIG
+           - name: FORWARDER_NETWORK_CONFIG
              value: {{ .Values.orchestrator.networkConfig }}
-           - name: ORCHESTRATOR_CHAINCODE
-             value: {{ .Values.orchestrator.chaincode }}
-           {{- end}}
+           - name: FORWARDER_CONFIG_PATH
+             value: /var/hyperledger/forwarder-config.yaml
           volumeMounts:
-            {{- if eq .Values.orchestrator.mode "chaincode" }}
             - name: fabric-config
               mountPath: /var/hyperledger/fabric-config.yaml
               subPath: fabric-config.yaml
+            - name: forwarder-config
+              mountPath: /var/hyperledger/forwarder-config.yaml
+              subPath: forwarder-config.yaml
             - name: fabric-config
               mountPath: /var/hyperledger/xxx
             - name: user-cert
@@ -96,9 +88,7 @@ spec:
               mountPath: /var/hyperledger/tls/client/pair
             - name: cacert
               mountPath: /var/hyperledger/tls/server/cert/
-            {{- end }}
       volumes:
-        {{- if eq .Values.orchestrator.mode "chaincode" }}
         - name: user-cert
           secret:
             secretName: {{ $.Values.fabric.secrets.user.cert }}
@@ -120,7 +110,9 @@ spec:
         - name: fabric-config
           configMap:
             name: {{ include "orchestrator.fullname" . }}-fabric
-        {{- end }}
+        - name: forwarder-config
+          configMap:
+            name: {{ include "orchestrator.fullname" . }}-forwarder
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -133,3 +125,5 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
+{{- end }} # if chaincode mode

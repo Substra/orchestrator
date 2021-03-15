@@ -5,7 +5,11 @@ build:
     - image: owkin/orchestrator
       context: .
       docker:
-        dockerfile: Dockerfile.orchestrator
+        dockerfile: docker/server/Dockerfile
+    - image: owkin/forwarder
+      context: .
+      docker:
+        dockerfile: docker/forwarder/Dockerfile
 deploy:
   helm:
     releases:
@@ -14,7 +18,8 @@ deploy:
         namespace: org-1
         createNamespace: true
         artifactOverrides:
-          image: owkin/orchestrator
+          orchestrator.image: owkin/orchestrator
+          forwarder.image: owkin/forwarder
         imageStrategy:
           helm: {}
         valuesFiles: [ values/orchestrator-org-1.yaml ]
@@ -23,7 +28,8 @@ deploy:
         namespace: org-2
         createNamespace: true
         artifactOverrides:
-          image: owkin/orchestrator
+          orchestrator.image: owkin/orchestrator
+          forwarder.image: owkin/forwarder
         imageStrategy:
           helm: {}
         valuesFiles: [ values/orchestrator-org-2.yaml ]

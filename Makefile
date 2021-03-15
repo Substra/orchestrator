@@ -2,6 +2,7 @@ OUTPUT_DIR = ./bin
 CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
 ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
 LIBCODEGEN_BIN = $(OUTPUT_DIR)/libcodegen
+FORWARDER_BIN = $(OUTPUT_DIR)/forwarder
 PROJECT_ROOT = .
 MIGRATIONS_DIR = $(PROJECT_ROOT)/server/standalone/migration
 protos = $(PROJECT_ROOT)/lib/asset
@@ -14,13 +15,16 @@ protobufs = $(wildcard $(protos)/*.proto)
 pbgo = $(protobufs:.proto=.pb.go)
 
 .PHONY: all
-all: chaincode orchestrator
+all: chaincode orchestrator forwarder
 
 .PHONY: chaincode
 chaincode: $(CHAINCODE_BIN)
 
 .PHONY: orchestrator
 orchestrator: $(ORCHESTRATOR_BIN)
+
+.PHONY: forwarder
+orchestrator: $(FORWARDER_BIN)
 
 .PHONY: codegen
 codegen: $(pbgo) $(migrations_binpack) $(lib_generated)
@@ -33,6 +37,9 @@ $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 
 $(LIBCODEGEN_BIN): $(PROJECT_ROOT)/lib/codegen/main.go
 	go build -o $(LIBCODEGEN_BIN) $(PROJECT_ROOT)/lib/codegen
+
+$(FORWARDER_BIN): ${go_src} $(OUTPUT_DIR) $(pbgo)
+	go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/server/distributed/forwarder
 
 $(OUTPUT_DIR):
 	mkdir $(OUTPUT_DIR)

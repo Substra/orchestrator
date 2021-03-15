@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "orchestrator.fullname" . }}-forwarder
+data:
+  forwarder-config.yaml: |
+    listeners:
+      mychannel:
+        - mycc
+      yourchannel:
+        - yourcc

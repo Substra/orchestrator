@@ -4,12 +4,6 @@
 
 replicaCount: 1
 
-image:
-  repository: owkin/orchestrator
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
-
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
@@ -94,6 +88,7 @@ fabric:
   mspID: MyOrg1MSP
   channels:
     - mychannel
+    - yourchannel
   user:
     name: User
   peer:
@@ -124,10 +119,22 @@ grpcOptions:
 
 # Orchestrator application specific parameters
 orchestrator:
+  image:
+    repository: owkin/orchestrator
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
   logLevel: DEBUG
   mode: standalone # the orchestrator can run in either "standalone" or "chaincode" mode
   cert: /var/hyperledger/msp/signcerts/cert.pem
   key: /var/hyperledger/msp/keystore/key.pem
   networkConfig: /var/hyperledger/fabric-config.yaml
-  channel: mychannel
   chaincode: mycc
+
+forwarder:
+  image:
+    repository: owkin/forwarder
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""

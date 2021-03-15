@@ -27,7 +27,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/distributed"
-	chaincodeEvent "github.com/owkin/orchestrator/server/distributed/event"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"github.com/owkin/orchestrator/server/standalone"
 	"google.golang.org/grpc"
@@ -53,35 +52,12 @@ func mustGetEnv(name string) string {
 	return v
 }
 
-// RunServerWithChainCode is exported
-func RunServerWithChainCode() {
+func runDistributed() {
 	networkConfig := mustGetEnv("NETWORK_CONFIG")
-
-	rabbitDSN := mustGetEnv("AMQP_DSN")
-	session := common.NewSession("orchestrator", rabbitDSN)
-	defer session.Close()
 
 	wallet := wallet.New(mustGetEnv("CERT"), mustGetEnv("KEY"))
 
 	config := config.FromFile(networkConfig)
-
-	converter := chaincodeEvent.NewForwarder(session)
-
-	listener, err := chaincodeEvent.NewListener(
-		wallet,
-		config,
-		mustGetEnv("MSPID"),
-		mustGetEnv("CHANNEL"),
-		mustGetEnv("CHAINCODE"),
-		converter.Forward,
-	)
-
-	if err != nil {
-		log.WithError(err).Fatal("Failed to instanciate listener")
-	}
-
-	defer listener.Close()
-	go listener.Listen()
 
 	chaincodeInterceptor, err := distributed.NewInterceptor(config, wallet)
 	if err != nil {
@@ -118,9 +94,9 @@ func RunServerWithChainCode() {
 	}
 }
 
-// RunServerWithoutChainCode will expose the chaincode logic through gRPC.
+// runStandalone will expose the chaincode logic through gRPC.
 // State will be stored in a redis database.
-func RunServerWithoutChainCode() {
+func runStandalone() {
 	dbURL := mustGetEnv("DATABASE_URL")
 	pgDB, err := standalone.InitDatabase(dbURL)
 	if err != nil {
@@ -183,8 +159,8 @@ func main() {
 	}
 
 	if standaloneMode {
-		RunServerWithoutChainCode()
+		runStandalone()
 	} else {
-		RunServerWithChainCode()
+		runDistributed()
 	}
 }

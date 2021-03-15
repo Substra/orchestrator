@@ -17,6 +17,7 @@ package wallet
 
 import (
 	"io/ioutil"
+	"sync"
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
@@ -28,16 +29,23 @@ type Wallet struct {
 	*gateway.Wallet
 	certPath string
 	keyPath  string
+	m        sync.RWMutex
 }
 
 // New returns a ready to use instance of in-memory wallet
 func New(certPath string, keyPath string) *Wallet {
-	return &Wallet{gateway.NewInMemoryWallet(), certPath, keyPath}
+	return &Wallet{gateway.NewInMemoryWallet(), certPath, keyPath, sync.RWMutex{}}
 }
 
 // EnsureIdentity make sure the given identity is present in the wallet.
 func (w *Wallet) EnsureIdentity(label string, mspid string) error {
-	if !w.Exists(label) {
+	w.m.RLock()
+	knownIdentity := w.Exists(label)
+	w.m.RUnlock()
+
+	if !knownIdentity {
+		w.m.Lock()
+		defer w.m.Unlock()
 		cert, err := ioutil.ReadFile(w.certPath)
 		if err != nil {
 			return err

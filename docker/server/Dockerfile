@@ -3,7 +3,7 @@ FROM golang:1.16-alpine AS build
 RUN apk add --no-cache git make protoc
 
 ENV GO111MODULE=on
-ENV SRC_DIR=/usr/src/chaincode
+ENV SRC_DIR=/usr/src/orchestrator
 
 RUN wget https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.3.6/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe
 RUN chmod +x /bin/grpc_health_probe

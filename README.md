@@ -50,7 +50,7 @@ grpcurl -insecure orchestrator.node-1.com:443 list
 In chaincode mode, the orchestrator only requires a matching chaincode:
 
 ```
-docker build -t my-chaincode:1.0.0 .
+docker build -f docker/chaincode/Dockerfile -t my-chaincode:1.0.0 .
 ```
 
 Make sure you deploy [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) on `orchestrator` branch.
