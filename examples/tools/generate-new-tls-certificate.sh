@@ -15,7 +15,7 @@ DOMAIN="node-2.com"
 # Uncomment these lines to generate a new CA cert/key pair instead.
 #
 # openssl genrsa -out ca.key 2048
-# openssl req -new -x509 -days 365 -key ca.key -subj "/C=CN/ST=GD/L=SZ/O=Orchestrator Root CA/CN=Orchestrator Root CA" -out ca.crt
+# openssl req -new -x509 -days 365 -key ca.key -subj "/C=FR/ST=Loire-Atlantique/L=Nantes/O=Orchestrator Root CA/CN=Orchestrator Root CA" -out ca.crt
 
 
 ###############
