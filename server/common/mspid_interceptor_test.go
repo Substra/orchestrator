@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,110 +46,136 @@ func TestExtractMSPID(t *testing.T) {
 }
 
 func TestVerifyClientMSPID(t *testing.T) {
-
 	MSPID := "my-msp-id"
-	var p *peer.Peer
 
-	//
-	// Error cases
-	//
-	p = nil
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with a missing peer should not be validated with success")
-
-	p = &peer.Peer{}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an invalid peer should not be validated with success")
-
-	p = &peer.Peer{AuthInfo: FakeTLSAuthInfo{}}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an incorrect auth info type should not be validated with success")
-
-	p = &peer.Peer{AuthInfo: credentials.TLSInfo{}}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an empty TLS info should not be validated with success")
-
-	p = &peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{}}}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an empty connection state should not be validated with success")
-
-	p = &peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{VerifiedChains: [][]*x509.Certificate{}}}}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an empty certificate should not be validated with success")
-
-	p = &peer.Peer{
-		AuthInfo: credentials.TLSInfo{
-			State: tls.ConnectionState{
-				VerifiedChains: [][]*x509.Certificate{
-					{},
+	params := []struct {
+		peer          *peer.Peer
+		shouldSucceed bool
+		msg           string
+	}{
+		{
+			nil,
+			false,
+			"Certificate with a missing peer",
+		},
+		{
+			&peer.Peer{},
+			false,
+			"Certificate with an invalid peer",
+		},
+		{
+			&peer.Peer{AuthInfo: FakeTLSAuthInfo{}},
+			false,
+			"Certificate with an incorrect auth info type",
+		},
+		{
+			&peer.Peer{AuthInfo: credentials.TLSInfo{}},
+			false,
+			"Certificate with an empty TLS info",
+		},
+		{
+			&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{}}},
+			false,
+			"Certificate with an empty connection state",
+		},
+		{
+			&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{VerifiedChains: [][]*x509.Certificate{}}}},
+			false,
+			"Certificate with an empty certificate",
+		},
+		{
+			&peer.Peer{
+				AuthInfo: credentials.TLSInfo{
+					State: tls.ConnectionState{
+						VerifiedChains: [][]*x509.Certificate{
+							{},
+						},
+					},
 				},
 			},
+			false,
+			"Certificate with an empty certificate",
 		},
-	}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an empty certificate should not be validated with success")
-
-	p = &peer.Peer{
-		AuthInfo: credentials.TLSInfo{
-			State: tls.ConnectionState{
-				VerifiedChains: [][]*x509.Certificate{
-					{&x509.Certificate{}},
+		{
+			&peer.Peer{
+				AuthInfo: credentials.TLSInfo{
+					State: tls.ConnectionState{
+						VerifiedChains: [][]*x509.Certificate{
+							{&x509.Certificate{}},
+						},
+					},
 				},
 			},
+			false,
+			"Certificate with an empty certificate",
 		},
-	}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an empty certificate should not be validated with success")
-
-	p = &peer.Peer{
-		AuthInfo: credentials.TLSInfo{
-			State: tls.ConnectionState{
-				VerifiedChains: [][]*x509.Certificate{
-					{&x509.Certificate{Subject: pkix.Name{}}},
+		{
+			&peer.Peer{
+				AuthInfo: credentials.TLSInfo{
+					State: tls.ConnectionState{
+						VerifiedChains: [][]*x509.Certificate{
+							{&x509.Certificate{Subject: pkix.Name{}}},
+						},
+					},
 				},
 			},
+			false,
+			"Certificate with an empty subject",
 		},
-	}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an empty subject should not be validated with success")
-
-	p = &peer.Peer{
-		AuthInfo: credentials.TLSInfo{
-			State: tls.ConnectionState{
-				VerifiedChains: [][]*x509.Certificate{
-					{&x509.Certificate{Subject: pkix.Name{Organization: []string{}}}},
+		{
+			&peer.Peer{
+				AuthInfo: credentials.TLSInfo{
+					State: tls.ConnectionState{
+						VerifiedChains: [][]*x509.Certificate{
+							{&x509.Certificate{Subject: pkix.Name{Organization: []string{}}}},
+						},
+					},
 				},
 			},
+			false,
+			"Certificate with an empty list of organizations",
 		},
-	}
-	testVerifyClientMSPID(t, MSPID, p, false, "Certificate with an empty list of organizations should not be validated with success")
-
-	//
-	// Success cases
-	//
-	p = &peer.Peer{
-		AuthInfo: credentials.TLSInfo{
-			State: tls.ConnectionState{
-				VerifiedChains: [][]*x509.Certificate{
-					{&x509.Certificate{Subject: pkix.Name{Organization: []string{MSPID}}}},
+		{
+			&peer.Peer{
+				AuthInfo: credentials.TLSInfo{
+					State: tls.ConnectionState{
+						VerifiedChains: [][]*x509.Certificate{
+							{&x509.Certificate{Subject: pkix.Name{Organization: []string{MSPID}}}},
+						},
+					},
 				},
 			},
+			true,
+			"Certificate with a valid MSPID",
 		},
-	}
-	testVerifyClientMSPID(t, MSPID, p, true, "Certificate with a valid MSPID should be verified without error")
-
-	p = &peer.Peer{
-		AuthInfo: credentials.TLSInfo{
-			State: tls.ConnectionState{
-				VerifiedChains: [][]*x509.Certificate{
-					{&x509.Certificate{Subject: pkix.Name{Organization: []string{"some other mspid", MSPID}}}},
+		{
+			&peer.Peer{
+				AuthInfo: credentials.TLSInfo{
+					State: tls.ConnectionState{
+						VerifiedChains: [][]*x509.Certificate{
+							{&x509.Certificate{Subject: pkix.Name{Organization: []string{"some other mspid", MSPID}}}},
+						},
+					},
 				},
 			},
+			true,
+			"Certificate with both a valid MSPID and and invalid one",
 		},
 	}
-	testVerifyClientMSPID(t, MSPID, p, true, "Certificate with both a valid MSPID and and invalid one should be verified without error")
+
+	for i := range params {
+		actual := testVerifyClientMSPID(t, MSPID, params[i].peer, params[i].shouldSucceed, params[i].msg)
+		shouldSucceed := params[i].shouldSucceed
+		prefix := "Should return a validation error"
+		if shouldSucceed {
+			prefix = "Should not return a validation error"
+		}
+		assert.Equal(t, shouldSucceed, actual == nil, fmt.Sprintf("%v: %v", prefix, params[i].msg))
+	}
 }
 
-func testVerifyClientMSPID(t *testing.T, MSPID string, p *peer.Peer, shouldSucceed bool, msg string) {
+func testVerifyClientMSPID(t *testing.T, MSPID string, p *peer.Peer, shouldSucceed bool, msg string) error {
 	ctx := context.TODO()
 	ctx = peer.NewContext(ctx, p)
-
-	err := VerifyClientMSPID(ctx, MSPID)
-
-	if shouldSucceed {
-		assert.NoError(t, err, msg)
-	} else {
-		assert.Error(t, err, msg)
-	}
+	return VerifyClientMSPID(ctx, MSPID)
 }
