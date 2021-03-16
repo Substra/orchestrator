@@ -21,7 +21,9 @@ import (
 	"strings"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 )
 
 const headerMSPID = "mspid"
@@ -41,17 +43,43 @@ func InterceptMSPID(ctx context.Context, req interface{}, info *grpc.UnaryServer
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, errors.New("Could not extract metadata")
+		return nil, errors.New("could not extract metadata")
 	}
 
 	if len(md.Get(headerMSPID)) != 1 {
-		return nil, fmt.Errorf("Missing or invalid header '%s'", headerMSPID)
+		return nil, fmt.Errorf("missing or invalid header '%s'", headerMSPID)
 	}
 
 	MSPID := md.Get(headerMSPID)[0]
 
+	if MustGetEnvFlag("VERIFY_CLIENT_MSP_ID") {
+		err := verifyClientMSPID(ctx, MSPID)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	newCtx := context.WithValue(ctx, ctxMSPIDKey, MSPID)
 	return handler(newCtx, req)
+}
+
+func verifyClientMSPID(ctx context.Context, MSPID string) error {
+	peer, ok := peer.FromContext(ctx)
+
+	if !ok || peer.AuthInfo == nil {
+		return fmt.Errorf("error validating client MSPID: failed to extract MSP ID from context")
+	}
+
+	tlsInfo := peer.AuthInfo.(credentials.TLSInfo)
+	orgs := tlsInfo.State.VerifiedChains[0][0].Subject.Organization
+
+	for _, org := range orgs {
+		if org == MSPID {
+			return nil // OK
+		}
+	}
+
+	return fmt.Errorf("error validating client MSPID: cannot find MSPID %v in client certificate subject organizations %v", MSPID, orgs)
 }
 
 type ctxMSPIDMarker struct{}

@@ -6,9 +6,6 @@ metadata:
   labels:
     {{- include "orchestrator.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "orchestrator.selectorLabels" . | nindent 6 }}
@@ -57,14 +54,14 @@ spec:
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
            - name: FORWARDER_AMQP_DSN
              value: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
-           - name: FORWARDER_CERT
-             value: {{ .Values.orchestrator.cert }}
-           - name: FORWARDER_KEY
-             value: {{ .Values.orchestrator.key }}
+           - name: FORWARDER_FABRIC_CERT
+             value: /var/hyperledger/msp/signcerts/cert.pem
+           - name: FORWARDER_FABRIC_KEY
+             value: /var/hyperledger/msp/keystore/key.pem
            - name: FORWARDER_MSPID
              value: {{ .Values.fabric.mspID }}
            - name: FORWARDER_NETWORK_CONFIG
-             value: {{ .Values.orchestrator.networkConfig }}
+             value: /var/hyperledger/fabric-config.yaml
            - name: FORWARDER_CONFIG_PATH
              value: /var/hyperledger/forwarder-config.yaml
           volumeMounts:

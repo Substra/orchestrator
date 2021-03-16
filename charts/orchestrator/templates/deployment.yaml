@@ -5,9 +5,6 @@ metadata:
   labels:
     {{- include "orchestrator.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "orchestrator.selectorLabels" . | nindent 6 }}
@@ -35,7 +32,7 @@ spec:
       {{- end}}
       - name: wait-rabbitmq
         image: jwilder/dockerize
-        command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}']
+        command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{- if $.Values.rabbitmq.auth.tls.enabled -}}{{.Values.rabbitmq.service.tlsPort}}{{- else -}}{{.Values.rabbitmq.service.port}}{{- end -}}']
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -48,10 +45,34 @@ spec:
               protocol: TCP
           livenessProbe:
             exec:
-              command: ["/bin/grpc_health_probe", "-addr=:9000"]
+              command:
+                - "/bin/grpc_health_probe"
+                - "-addr=:9000"
+               {{- if $.Values.orchestrator.tls.enabled }}
+                - "-tls"
+                - "-tls-ca-cert=/var/orchestrator/tls/server/cacert/ca.crt"
+                - "-tls-server-name={{ include "orchestrator.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+                {{- if $.Values.orchestrator.tls.mtls.enabled }}
+                - "-tls-client-key=/var/orchestrator/tls/server/pair/tls.key"
+                - "-tls-client-cert=/var/orchestrator/tls/server/pair/tls.crt"
+                - "-v"
+                {{- end }}
+                {{- end }}
           readinessProbe:
             exec:
-              command: ["/bin/grpc_health_probe", "-addr=:9000"]
+              command:
+                - "/bin/grpc_health_probe"
+                - "-addr=:9000"
+               {{- if $.Values.orchestrator.tls.enabled }}
+                - "-tls"
+                - "-tls-ca-cert=/var/orchestrator/tls/server/cacert/ca.crt"
+                - "-tls-server-name={{ include "orchestrator.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+                {{- if $.Values.orchestrator.tls.mtls.enabled }}
+                - "-tls-client-key=/var/orchestrator/tls/server/pair/tls.key"
+                - "-tls-client-cert=/var/orchestrator/tls/server/pair/tls.crt"
+                - "-v"
+                {{- end }}
+                {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
@@ -66,17 +87,35 @@ spec:
            - name: ORCHESTRATOR_MODE
              value: {{ .Values.orchestrator.mode }}
            {{- if eq .Values.orchestrator.mode "chaincode" }}
-           - name: ORCHESTRATOR_CERT
-             value: {{ .Values.orchestrator.cert }}
-           - name: ORCHESTRATOR_KEY
-             value: {{ .Values.orchestrator.key }}
+           - name: ORCHESTRATOR_FABRIC_CERT
+             value: /var/hyperledger/msp/signcerts/cert.pem
+           - name: ORCHESTRATOR_FABRIC_KEY
+             value: /var/hyperledger/msp/keystore/key.pem
            - name: ORCHESTRATOR_MSPID
              value: {{ .Values.fabric.mspID }}
            - name: ORCHESTRATOR_NETWORK_CONFIG
-             value: {{ .Values.orchestrator.networkConfig }}
+             value: /var/hyperledger/fabric-config.yaml
            - name: ORCHESTRATOR_CHAINCODE
              value: {{ .Values.orchestrator.chaincode }}
            {{- end}}
+           - name: ORCHESTRATOR_TLS_ENABLED
+             value: "{{ $.Values.orchestrator.tls.enabled }}"
+           - name: ORCHESTRATOR_MTLS_ENABLED
+             value: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled }}"
+           {{- if $.Values.orchestrator.tls.enabled }}
+           - name: ORCHESTRATOR_TLS_CERT_PATH
+             value: /var/orchestrator/tls/server/pair/tls.crt
+           - name: ORCHESTRATOR_TLS_KEY_PATH
+             value: /var/orchestrator/tls/server/pair/tls.key
+           {{- if $.Values.orchestrator.tls.mtls.enabled }}
+           - name: ORCHESTRATOR_TLS_SERVER_CA_CERT
+             value: /var/orchestrator/tls/server/cacert/ca.crt
+           - name: ORCHESTRATOR_TLS_CLIENT_CA_CERT_DIR
+             value: /var/orchestrator/tls/client/
+           {{- end }}
+           {{- end }}
+           - name: ORCHESTRATOR_VERIFY_CLIENT_MSP_ID
+             value: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled $.Values.orchestrator.verifyClientMSPID }}"
           volumeMounts:
             {{- if eq .Values.orchestrator.mode "chaincode" }}
             - name: fabric-config
@@ -88,14 +127,27 @@ spec:
               mountPath: /var/hyperledger/msp/signcerts
             - name: user-key
               mountPath: /var/hyperledger/msp/keystore
-              # subPath: mykey.pem
-              # readOnly: true
             - name: peer-tls-server
               mountPath: /var/hyperledger/tls/server/pair
             - name: peer-tls-client
               mountPath: /var/hyperledger/tls/client/pair
             - name: cacert
               mountPath: /var/hyperledger/tls/server/cert/
+            {{- end }}
+            {{- if $.Values.orchestrator.tls.enabled }}
+            - name: orchestrator-tls-server-pair
+              mountPath: /var/orchestrator/tls/server/pair
+              readOnly: true
+            - name: orchestrator-tls-cacert
+              mountPath: /var/orchestrator/tls/server/cacert
+              readOnly: true
+            {{- if $.Values.orchestrator.tls.mtls.enabled }}
+            {{- range $org, $secret := $.Values.orchestrator.tls.mtls.secrets.clientCACerts }}
+            - name: orchestrator-tls-client-cacert-{{ $org }}
+              mountPath: /var/orchestrator/tls/client/{{ $org }}
+              readOnly: true
+            {{- end }}
+            {{- end }}
             {{- end }}
       volumes:
         {{- if eq .Values.orchestrator.mode "chaincode" }}
@@ -105,9 +157,6 @@ spec:
         - name: user-key
           secret:
             secretName: {{ $.Values.fabric.secrets.user.key }}
-            # items:
-            #  - key: key.pem
-            #    path: mykey.pem
         - name: peer-tls-server
           secret:
             secretName: {{ $.Values.fabric.secrets.peer.tls.server }}
@@ -120,6 +169,21 @@ spec:
         - name: fabric-config
           configMap:
             name: {{ include "orchestrator.fullname" . }}-fabric
+        {{- end }}
+        {{- if $.Values.orchestrator.tls.enabled }}
+        - name: orchestrator-tls-cacert
+          secret:
+            secretName: {{ $.Values.orchestrator.tls.secrets.cacert }}
+        - name: orchestrator-tls-server-pair
+          secret:
+            secretName: {{ $.Values.orchestrator.tls.secrets.pair }}
+        {{- if $.Values.orchestrator.tls.mtls.enabled }}
+        {{- range $org, $secret := $.Values.orchestrator.tls.mtls.secrets.clientCACerts }}
+        - name: orchestrator-tls-client-cacert-{{ $org }}
+          secret:
+            secretName: {{ $secret }}
+        {{- end }}
+        {{- end }}
         {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

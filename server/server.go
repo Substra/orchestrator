@@ -20,7 +20,6 @@ package main
 import (
 	"flag"
 	"net"
-	"os"
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
@@ -35,42 +34,34 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-// envPrefix is the string prefixing environment variables related to the orchestrator
-const envPrefix = "ORCHESTRATOR_"
-
-// Whether to run in standalone mode or not
-var standaloneMode = false
-
-// mustGetEnv extract environment variable or abort with an error message
-// Every env var is prefixed by ORCHESTRATOR_
-func mustGetEnv(name string) string {
-	n := envPrefix + name
-	v, ok := os.LookupEnv(n)
-	if !ok {
-		log.WithField("env_var", n).Fatal("Missing environment variable")
-	}
-	return v
-}
-
 func runDistributed() {
-	networkConfig := mustGetEnv("NETWORK_CONFIG")
+	networkConfig := common.MustGetEnv("NETWORK_CONFIG")
 
-	wallet := wallet.New(mustGetEnv("CERT"), mustGetEnv("KEY"))
+	wallet := wallet.New(common.MustGetEnv("FABRIC_CERT"), common.MustGetEnv("FABRIC_KEY"))
 
 	config := config.FromFile(networkConfig)
+
+	var serverOptions []grpc.ServerOption
 
 	chaincodeInterceptor, err := distributed.NewInterceptor(config, wallet)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to instanciate chaincode interceptor")
-
 	}
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+	interceptor := grpc.ChainUnaryInterceptor(
 		common.LogRequest,
 		common.InterceptMSPID,
 		common.InterceptChannel,
 		chaincodeInterceptor.Intercept,
-	))
+	)
+
+	serverOptions = append(serverOptions, interceptor)
+
+	if tlsOptions := getTLSOptions(); tlsOptions != nil {
+		serverOptions = append(serverOptions, tlsOptions)
+	}
+
+	server := grpc.NewServer(serverOptions...)
 
 	// Register application services
 	asset.RegisterNodeServiceServer(server, distributed.NewNodeAdapter())
@@ -95,16 +86,15 @@ func runDistributed() {
 }
 
 // runStandalone will expose the chaincode logic through gRPC.
-// State will be stored in a redis database.
 func runStandalone() {
-	dbURL := mustGetEnv("DATABASE_URL")
+	dbURL := common.MustGetEnv("DATABASE_URL")
 	pgDB, err := standalone.InitDatabase(dbURL)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to create persistence layer")
 	}
 	defer pgDB.Close()
 
-	rabbitDSN := mustGetEnv("AMQP_DSN")
+	rabbitDSN := common.MustGetEnv("AMQP_DSN")
 	session := common.NewSession("orchestrator", rabbitDSN)
 	defer session.Close()
 
@@ -113,18 +103,28 @@ func runStandalone() {
 		log.WithError(err).Fatal("failed to listen on port 9000")
 	}
 
+	var serverOptions []grpc.ServerOption
+
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
 	providerInterceptor := standalone.NewProviderInterceptor(pgDB, session)
 	concurrencyLimiter := new(standalone.ConcurrencyLimiter)
-
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+	interceptor := grpc.ChainUnaryInterceptor(
 		common.LogRequest,
 		common.InterceptErrors,
 		concurrencyLimiter.Intercept,
 		common.InterceptMSPID,
 		common.InterceptChannel,
 		providerInterceptor.Intercept,
-	))
+	)
+	serverOptions = append(serverOptions, interceptor)
+
+	// TLS
+	if tlsOptions := getTLSOptions(); tlsOptions != nil {
+		serverOptions = append(serverOptions, tlsOptions)
+	}
+
+	// Declare GRPC server
+	server := grpc.NewServer(serverOptions...)
 
 	// Register application services
 	asset.RegisterNodeServiceServer(server, standalone.NewNodeServer())
@@ -144,6 +144,8 @@ func runStandalone() {
 }
 
 func main() {
+	var standaloneMode = false
+
 	common.InitLogging()
 
 	flag.BoolVar(&standaloneMode, "standalone", true, "Run the chaincode in standalone mode")
@@ -151,11 +153,14 @@ func main() {
 
 	flag.Parse()
 
-	switch os.Getenv(envPrefix + "MODE") {
-	case "chaincode":
-		standaloneMode = false
-	case "standalone":
-		standaloneMode = true
+	mode, ok := common.GetEnv("MODE")
+	if ok {
+		switch mode {
+		case "chaincode":
+			standaloneMode = false
+		case "standalone":
+			standaloneMode = true
+		}
 	}
 
 	if standaloneMode {

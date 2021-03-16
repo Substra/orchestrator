@@ -60,14 +60,12 @@ Then:
 skaffold dev -p chaincode
 ```
 
-### CA certificate
+### Testing
 
-In developpement environment, we rely on self signed certificates.
-Some clients (such as evans) complain that the certificate is not valid.
-You can explicitely provide the certificate itself as CA (since it's self-signed):
+You can call the local orchestrator gRPC endpoint using [evans](https://github.com/ktr0731/evans)
 
+```bash
+evans --tls --cacert examples/tools/ca.crt --host orchestrator.node-1.com -p 443 -r repl --cert examples/tools/client-org-1.crt --certkey examples/tools/client-org-1.key
 ```
-kubectl get secret orchestrator-tls -n org-1 -o 'go-template={{index .data "tls.crt"}}' | base64 -d > ca.crt
-# Then pass it to your client:
-evans --tls --cacert ca.crt --host orchestrator.node-1.com -p 443 -r repl
-```
+
+Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress)

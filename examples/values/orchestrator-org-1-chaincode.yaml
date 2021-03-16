@@ -1,0 +1,41 @@
+---
+orchestrator:
+  mode: chaincode
+  channel: mychannel
+  chaincode: mycc
+  tls:
+    enabled: true
+    secrets:
+      pair: orchestrator-tls-server-pair
+      cacert: orchestrator-tls-cacert
+    mtls:
+      enabled: true
+      secrets:
+        clientCACerts:
+          orchestrator-ca: orchestrator-tls-cacert
+
+rabbitmq:
+  auth:
+    username: user
+    password: password
+    tls:
+      enabled: true
+      existingSecret: orchestrator-tls-server-pair
+  persistence:
+    enabled: false
+
+fabric:
+  organization: MyOrg1
+  mspID: MyOrg1MSP
+  peer:
+    host: network-org-1-peer-1-hlf-peer.org-1
+
+postgresql:
+  enabled: false
+
+ingress:
+  enabled: true
+  hosts:
+  - host: orchestrator.node-1.com
+    paths:
+      - "/"
