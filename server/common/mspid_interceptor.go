@@ -53,7 +53,7 @@ func InterceptMSPID(ctx context.Context, req interface{}, info *grpc.UnaryServer
 	MSPID := md.Get(headerMSPID)[0]
 
 	if MustGetEnvFlag("VERIFY_CLIENT_MSP_ID") {
-		err := verifyClientMSPID(ctx, MSPID)
+		err := VerifyClientMSPID(ctx, MSPID)
 		if err != nil {
 			return nil, err
 		}
@@ -63,23 +63,31 @@ func InterceptMSPID(ctx context.Context, req interface{}, info *grpc.UnaryServer
 	return handler(newCtx, req)
 }
 
-func verifyClientMSPID(ctx context.Context, MSPID string) error {
+// VerifyClientMSPID returns an error if the provided MSPID string doesn't match
+// one of the Subject Organizations of the provided context's client TLS certificate.
+func VerifyClientMSPID(ctx context.Context, MSPID string) error {
 	peer, ok := peer.FromContext(ctx)
 
-	if !ok || peer.AuthInfo == nil {
+	if !ok || peer == nil || peer.AuthInfo == nil {
 		return fmt.Errorf("error validating client MSPID: failed to extract MSP ID from context")
 	}
 
-	tlsInfo := peer.AuthInfo.(credentials.TLSInfo)
-	orgs := tlsInfo.State.VerifiedChains[0][0].Subject.Organization
+	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
 
-	for _, org := range orgs {
-		if org == MSPID {
-			return nil // OK
+	if ok &&
+		len(tlsInfo.State.VerifiedChains) != 0 &&
+		len(tlsInfo.State.VerifiedChains[0]) != 0 &&
+		len(tlsInfo.State.VerifiedChains[0][0].Subject.Organization) != 0 {
+
+		orgs := tlsInfo.State.VerifiedChains[0][0].Subject.Organization
+		for _, org := range orgs {
+			if org == MSPID {
+				return nil // OK
+			}
 		}
 	}
 
-	return fmt.Errorf("error validating client MSPID: cannot find MSPID %v in client certificate subject organizations %v", MSPID, orgs)
+	return fmt.Errorf("error validating client MSPID: cannot find MSPID %v in client TLS certificate Subject Organizations", MSPID)
 }
 
 type ctxMSPIDMarker struct{}
