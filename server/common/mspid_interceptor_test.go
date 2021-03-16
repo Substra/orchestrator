@@ -79,85 +79,35 @@ func TestVerifyClientMSPID(t *testing.T) {
 			"Certificate with an empty connection state",
 		},
 		{
-			&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{VerifiedChains: [][]*x509.Certificate{}}}},
+			&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{PeerCertificates: []*x509.Certificate{{}}}}},
 			false,
 			"Certificate with an empty certificate",
 		},
 		{
-			&peer.Peer{
-				AuthInfo: credentials.TLSInfo{
-					State: tls.ConnectionState{
-						VerifiedChains: [][]*x509.Certificate{
-							{},
-						},
-					},
-				},
-			},
-			false,
-			"Certificate with an empty certificate",
-		},
-		{
-			&peer.Peer{
-				AuthInfo: credentials.TLSInfo{
-					State: tls.ConnectionState{
-						VerifiedChains: [][]*x509.Certificate{
-							{&x509.Certificate{}},
-						},
-					},
-				},
-			},
-			false,
-			"Certificate with an empty certificate",
-		},
-		{
-			&peer.Peer{
-				AuthInfo: credentials.TLSInfo{
-					State: tls.ConnectionState{
-						VerifiedChains: [][]*x509.Certificate{
-							{&x509.Certificate{Subject: pkix.Name{}}},
-						},
-					},
-				},
-			},
+			&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{PeerCertificates: []*x509.Certificate{{
+				Subject: pkix.Name{},
+			}}}}},
 			false,
 			"Certificate with an empty subject",
 		},
 		{
-			&peer.Peer{
-				AuthInfo: credentials.TLSInfo{
-					State: tls.ConnectionState{
-						VerifiedChains: [][]*x509.Certificate{
-							{&x509.Certificate{Subject: pkix.Name{Organization: []string{}}}},
-						},
-					},
-				},
-			},
+			&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{PeerCertificates: []*x509.Certificate{{
+				Subject: pkix.Name{Organization: []string{}},
+			}}}}},
 			false,
 			"Certificate with an empty list of organizations",
 		},
 		{
-			&peer.Peer{
-				AuthInfo: credentials.TLSInfo{
-					State: tls.ConnectionState{
-						VerifiedChains: [][]*x509.Certificate{
-							{&x509.Certificate{Subject: pkix.Name{Organization: []string{MSPID}}}},
-						},
-					},
-				},
-			},
+			&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{PeerCertificates: []*x509.Certificate{{
+				Subject: pkix.Name{Organization: []string{MSPID}},
+			}}}}},
 			true,
 			"Certificate with a valid MSPID",
 		},
 		{
-			&peer.Peer{
-				AuthInfo: credentials.TLSInfo{
-					State: tls.ConnectionState{
-						VerifiedChains: [][]*x509.Certificate{
-							{&x509.Certificate{Subject: pkix.Name{Organization: []string{"some other mspid", MSPID}}}},
-						},
-					},
-				},
-			},
+			&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{PeerCertificates: []*x509.Certificate{{
+				Subject: pkix.Name{Organization: []string{"some other mspid", MSPID}},
+			}}}}},
 			true,
 			"Certificate with both a valid MSPID and and invalid one",
 		},

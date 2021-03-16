@@ -75,11 +75,10 @@ func VerifyClientMSPID(ctx context.Context, MSPID string) error {
 	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
 
 	if ok &&
-		len(tlsInfo.State.VerifiedChains) != 0 &&
-		len(tlsInfo.State.VerifiedChains[0]) != 0 &&
-		len(tlsInfo.State.VerifiedChains[0][0].Subject.Organization) != 0 {
+		len(tlsInfo.State.PeerCertificates) != 0 &&
+		len(tlsInfo.State.PeerCertificates[0].Subject.Organization) != 0 {
 
-		orgs := tlsInfo.State.VerifiedChains[0][0].Subject.Organization
+		orgs := tlsInfo.State.PeerCertificates[0].Subject.Organization
 		for _, org := range orgs {
 			if org == MSPID {
 				return nil // OK
