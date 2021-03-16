@@ -117,7 +117,7 @@ ingress:
       - "/"
 ```
 
-Note: The `orchestrator.verifyClientMSPID` security option requires TLS termination to be enabled at the orchestrator application level (see "Orchestrator endpoint" above). TLS termination at the LB / reverse proxy level can optionally come in addition to, and not instead of, SSL termination in the app. If `orchestrator.verifyClientMSPID` is set to true and TLS termination at the ingress level is enabled, then the ingress should pass the client certificate upstream so that it can be validated.
+Note: The `orchestrator.verifyClientMSPID` security option (See "MSPID check" below) requires TLS termination to be enabled at the orchestrator application level (see "Orchestrator endpoint" above). TLS termination at the LB / reverse proxy level can optionally come in addition to, and not instead of, SSL termination in the app. If `orchestrator.verifyClientMSPID` is set to true and TLS termination at the ingress level is enabled, then the ingress should pass the client certificate upstream so that it can be validated.
 
 Note: If you use nginx-ingress, use the `--enable-ssl-passthrough`.
 
@@ -136,6 +136,6 @@ rabbitmq:
 
 ### MSPID check
 
-In additional to the protections offered by mutual TLS, the identity of users can be validated with the setting `Values.verifyClientMSPID`. Without this extra check, it is possible for malicious users with a valid certificate to impersonate other valid users. The verification checks that the SSL certificate provided by the client matches the  `mspid` supplied by the client in gRPC headers.
+In additional to the protections offered by mutual TLS, the identity of users can be validated with the setting `Values.verifyClientMSPID`. Without this extra check, it is possible for malicious users with a valid certificate to impersonate other valid users. The verification checks that the "Subject Organization" (`O=...`) of the SSL certificate provided by the client matches the  `mspid` gRPC header supplied by the client.
 
 This options needs both `orchestrator.tls.enabled` and `orchestrator.tls.mtls.enabled` to be true.
