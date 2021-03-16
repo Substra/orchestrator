@@ -51,6 +51,7 @@ profiles:
       path: /deploy/helm/releases/1
     - op: remove
       path: /deploy/kubectl/manifests/3
+      # don't remove the org-2 CA cert as it is mounted by substra-backend (namespace org-2)
 
 - name: chaincode
   activation:
