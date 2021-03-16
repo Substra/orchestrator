@@ -70,7 +70,8 @@ The following table lists the configurable parameters of the orchestrator chart 
 | `orchestrator.tls.secrets.pair` | A secret containing the server TLS cert/key pair `tls.crt` and `tls.key` | `orchestrator-tls-server-pair` |
 | `orchestrator.tls.secrets.cacert` | A secret containing the server TLS CA Cert `ca.crt` | `orchestrator-tls-cacert` |
 | `orchestrator.tls.mtls.enabled` | If true, enable TLS client verification | `false` |
-| `orchestrator.tls.mtls.secrets.clientCACerts` | A map whose keys are names of CAs, and values are secrets containing CA certs `ca.crt` | `forwarder.image.repository` | Event forwarder image repository | `owkin/forwarder` |
+| `orchestrator.tls.mtls.secrets.clientCACerts` | A map whose keys are names of CAs, and values are secrets containing CA certs `ca.crt` | |
+| `forwarder.image.repository` | Event forwarder image repository | `owkin/forwarder` |
 | `forwarder.image.tag` | Event forwarder image tag | *Chart version*  |
 | `forwarder.image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `{}` |
