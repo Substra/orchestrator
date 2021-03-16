@@ -69,7 +69,7 @@ func VerifyClientMSPID(ctx context.Context, MSPID string) error {
 	peer, ok := peer.FromContext(ctx)
 
 	if !ok || peer == nil || peer.AuthInfo == nil {
-		return fmt.Errorf("error validating client MSPID: failed to extract MSP ID from context")
+		return fmt.Errorf("error validating client MSPID: failed to extract MSP ID from TLS context")
 	}
 
 	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
