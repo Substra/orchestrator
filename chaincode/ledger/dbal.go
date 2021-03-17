@@ -414,7 +414,7 @@ func (db *DB) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.
 // AddAlgo stores a new algo
 func (db *DB) AddAlgo(algo *asset.Algo) error {
 
-	exists, err := db.hasKey(asset.Algo, Algo.GetKey())
+	exists, err := db.hasKey(asset.AlgoKind, algo.GetKey())
 	if err != nil {
 		return err
 	}

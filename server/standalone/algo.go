@@ -15,7 +15,7 @@
 package standalone
 
 import (
-	"log"
+	"github.com/go-playground/log/v7"
 
 	"context"
 
@@ -36,8 +36,7 @@ func NewAlgoServer() *AlgoServer {
 
 // RegisterAlgo will persiste a new algo
 func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset.Algo, error) {
-	log.WithField("algo", a).Debug("register algo")
-	log.Printf("algo: %s, %s, %s", a.GetKey(), a.GetName(), a.GetCategory())
+	log.WithField("algo", a).Debug("Register Algo")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
