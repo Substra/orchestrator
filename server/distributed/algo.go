@@ -19,7 +19,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-// AlgoAdapter is a grpc server exposing the same node interface,
+// AlgoAdapter is a grpc server exposing the same algo interface than standalone,
 // but relies on a remote chaincode to actually manage the asset.
 type AlgoAdapter struct {
 	asset.UnimplementedAlgoServiceServer

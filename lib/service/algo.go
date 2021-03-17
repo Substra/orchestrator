@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 
 	algo.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)
 	if err != nil {
-		return &asset.Algo{}, err
+		return nil, err
 	}
 
 	err = s.GetEventQueue().Enqueue(&event.Event{
