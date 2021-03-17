@@ -23,13 +23,9 @@ import (
 	"os"
 
 	"github.com/go-playground/log/v7"
-	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/distributed"
-	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"github.com/owkin/orchestrator/server/standalone"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
@@ -52,100 +48,29 @@ func mustGetEnv(name string) string {
 	return v
 }
 
-func runDistributed() {
+func getDistributedServer() common.Runnable {
 	networkConfig := mustGetEnv("NETWORK_CONFIG")
+	certificate := mustGetEnv("CERT")
+	key := mustGetEnv("KEY")
 
-	wallet := wallet.New(mustGetEnv("CERT"), mustGetEnv("KEY"))
-
-	config := config.FromFile(networkConfig)
-
-	chaincodeInterceptor, err := distributed.NewInterceptor(config, wallet)
+	server, err := distributed.GetServer(networkConfig, certificate, key)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to instanciate chaincode interceptor")
-
+		log.WithError(err).Fatal("failed to create standalone server")
 	}
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		common.LogRequest,
-		common.InterceptDistributedErrors,
-		common.InterceptMSPID,
-		common.InterceptChannel,
-		chaincodeInterceptor.Intercept,
-	))
-
-	// Register application services
-	asset.RegisterNodeServiceServer(server, distributed.NewNodeAdapter())
-	asset.RegisterObjectiveServiceServer(server, distributed.NewObjectiveAdapter())
-	asset.RegisterDataSampleServiceServer(server, distributed.NewDataSampleAdapter())
-	asset.RegisterAlgoServiceServer(server, distributed.NewAlgoAdapter())
-
-	// Register reflection service
-	reflection.Register(server)
-
-	// Register healthcheck service
-	healthcheck := health.NewServer()
-	healthpb.RegisterHealthServer(server, healthcheck)
-
-	listen, err := net.Listen("tcp", ":9000")
-	if err != nil {
-		log.WithError(err).Fatal("failed to listen on port 9000")
-	}
-
-	log.WithField("address", listen.Addr().String()).Info("Server listening")
-	if err := server.Serve(listen); err != nil {
-		log.WithError(err).Fatal("failed to server grpc server on port 9000")
-	}
+	return server
 }
 
-// runStandalone will expose the chaincode logic through gRPC.
-// State will be stored in a redis database.
-func runStandalone() {
+func getStandaloneServer() common.Runnable {
 	dbURL := mustGetEnv("DATABASE_URL")
-	pgDB, err := standalone.InitDatabase(dbURL)
-	if err != nil {
-		log.WithError(err).Fatal("Failed to create persistence layer")
-	}
-	defer pgDB.Close()
-
 	rabbitDSN := mustGetEnv("AMQP_DSN")
-	session := common.NewSession("orchestrator", rabbitDSN)
-	defer session.Close()
 
-	listen, err := net.Listen("tcp", ":9000")
+	server, err := standalone.GetServer(dbURL, rabbitDSN)
 	if err != nil {
-		log.WithError(err).Fatal("failed to listen on port 9000")
+		log.WithError(err).Fatal("failed to create standalone server")
 	}
 
-	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
-	providerInterceptor := standalone.NewProviderInterceptor(pgDB, session)
-	concurrencyLimiter := new(standalone.ConcurrencyLimiter)
-
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		common.LogRequest,
-		common.InterceptStandaloneErrors,
-		concurrencyLimiter.Intercept,
-		common.InterceptMSPID,
-		common.InterceptChannel,
-		providerInterceptor.Intercept,
-	))
-
-	// Register application services
-	asset.RegisterNodeServiceServer(server, standalone.NewNodeServer())
-	asset.RegisterObjectiveServiceServer(server, standalone.NewObjectiveServer())
-	asset.RegisterDataSampleServiceServer(server, standalone.NewDataSampleServer())
-	asset.RegisterAlgoServiceServer(server, standalone.NewAlgoServer())
-
-	// Register reflection service
-	reflection.Register(server)
-
-	// Register healthcheck service
-	healthcheck := health.NewServer()
-	healthpb.RegisterHealthServer(server, healthcheck)
-
-	log.WithField("address", listen.Addr().String()).Info("Server listening")
-	if err := server.Serve(listen); err != nil {
-		log.WithError(err).Fatal("failed to server grpc server on port 9000")
-	}
+	return server
 }
 
 func main() {
@@ -163,9 +88,28 @@ func main() {
 		standaloneMode = true
 	}
 
+	var app common.Runnable
 	if standaloneMode {
-		runStandalone()
+		app = getStandaloneServer()
 	} else {
-		runDistributed()
+		app = getDistributedServer()
+	}
+	defer app.Stop()
+
+	// Register reflection service
+	reflection.Register(app.GetGrpcServer())
+
+	// Register healthcheck service
+	healthcheck := health.NewServer()
+	healthpb.RegisterHealthServer(app.GetGrpcServer(), healthcheck)
+
+	listen, err := net.Listen("tcp", ":9000")
+	if err != nil {
+		log.WithError(err).Fatal("failed to listen on port 9000")
+	}
+
+	log.WithField("address", listen.Addr().String()).Info("Server listening")
+	if err := app.GetGrpcServer().Serve(listen); err != nil {
+		log.WithError(err).Fatal("failed to server grpc server on port 9000")
 	}
 }
