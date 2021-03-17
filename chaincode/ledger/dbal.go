@@ -418,3 +418,64 @@ func (db *DB) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.
 
 	return datasamples, bookmark, nil
 }
+
+// AddAlgo stores a new algo
+func (db *DB) AddAlgo(algo *asset.Algo) error {
+
+	exists, err := db.hasKey(asset.AlgoKind, algo.GetKey())
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("failed to add algo: %w", errors.ErrConflict)
+	}
+
+	algoBytes, err := json.Marshal(algo)
+	if err != nil {
+		return err
+	}
+	err = db.putState(asset.AlgoKind, algo.GetKey(), algoBytes)
+	if err != nil {
+		return err
+	}
+
+	if err = db.createIndex("algo~owner~key", []string{"algo", algo.Owner, algo.Key}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetAlgo retrieves an algo by its ID
+func (db *DB) GetAlgo(id string) (*asset.Algo, error) {
+	a := asset.Algo{}
+
+	b, err := db.getState(asset.AlgoKind, id)
+	if err != nil {
+		return &a, err
+	}
+
+	err = json.Unmarshal(b, &a)
+	return &a, err
+}
+
+// GetAlgos retrieves all algos
+func (db *DB) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("algo~owner~key", []string{"algo"}, p.Size, p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+
+	db.logger.WithField("keys", elementsKeys).Debug("GetAlgos")
+
+	var algos []*asset.Algo
+	for _, key := range elementsKeys {
+		algo, err := db.GetAlgo(key)
+		if err != nil {
+			return algos, bookmark, err
+		}
+		algos = append(algos, algo)
+	}
+
+	return algos, bookmark, nil
+}

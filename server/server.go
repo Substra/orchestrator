@@ -76,6 +76,7 @@ func runDistributed() {
 	asset.RegisterNodeServiceServer(server, distributed.NewNodeAdapter())
 	asset.RegisterObjectiveServiceServer(server, distributed.NewObjectiveAdapter())
 	asset.RegisterDataSampleServiceServer(server, distributed.NewDataSampleAdapter())
+	asset.RegisterAlgoServiceServer(server, distributed.NewAlgoAdapter())
 
 	// Register reflection service
 	reflection.Register(server)
@@ -131,6 +132,7 @@ func runStandalone() {
 	asset.RegisterNodeServiceServer(server, standalone.NewNodeServer())
 	asset.RegisterObjectiveServiceServer(server, standalone.NewObjectiveServer())
 	asset.RegisterDataSampleServiceServer(server, standalone.NewDataSampleServer())
+	asset.RegisterAlgoServiceServer(server, standalone.NewAlgoServer())
 
 	// Register reflection service
 	reflection.Register(server)

@@ -27,6 +27,7 @@ type DependenciesProvider interface {
 	NodeServiceProvider
 	ObjectiveServiceProvider
 	DataSampleServiceProvider
+	AlgoServiceProvider
 	PermissionServiceProvider
 }
 
@@ -42,6 +43,7 @@ type Provider struct {
 	objective  ObjectiveAPI
 	permission PermissionAPI
 	datasample DataSampleAPI
+	algo       AlgoAPI
 }
 
 // NewProvider return an instance of Provider based on given persistence layer.
@@ -61,6 +63,11 @@ func (sc *Provider) GetObjectiveDBAL() persistence.ObjectiveDBAL {
 
 // GetDataSampleDBAL returns the database abstraction layer for DataSamples
 func (sc *Provider) GetDataSampleDBAL() persistence.DataSampleDBAL {
+	return sc.dbal
+}
+
+// GetAlgoDBAL returns the database abstraction layer for Algos
+func (sc *Provider) GetAlgoDBAL() persistence.AlgoDBAL {
 	return sc.dbal
 }
 
@@ -94,6 +101,15 @@ func (sc *Provider) GetDataSampleService() DataSampleAPI {
 		sc.datasample = NewDataSampleService(sc)
 	}
 	return sc.datasample
+}
+
+// GetAlgoService returns an AlgoAPI instance.
+// The service will be instanciated if needed.
+func (sc *Provider) GetAlgoService() AlgoAPI {
+	if sc.algo == nil {
+		sc.algo = NewAlgoService(sc)
+	}
+	return sc.algo
 }
 
 // GetPermissionService returns a PermissionAPI instance.

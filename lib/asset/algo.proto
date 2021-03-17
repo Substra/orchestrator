@@ -1,0 +1,73 @@
+// Copyright 2021 Owkin Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package orchestrator;
+
+import "common.proto";
+
+option go_package = "github.com/owkin/orchestrator/lib/asset";
+
+enum AlgoCategory {
+    SIMPLE = 0;
+    COMPOSITE = 1;
+    AGGREGATE = 2;
+}
+
+
+// Algo represents the algorithm code which will be used
+// to produce or test a model.
+message Algo {
+  string key = 1;
+  string name = 2;
+  AlgoCategory category = 3;
+  Addressable description = 4;
+  Addressable algorithm = 5;
+  Permissions permissions = 6;
+  map<string, string> metadata = 7;
+  string owner = 8;
+}
+
+// NewAlgo is used to register an Algo.
+// It will be processed into an Algo.
+message NewAlgo {
+  string key = 1;
+  string name = 2;
+  AlgoCategory category = 3;
+  Addressable description = 4;
+  Addressable algorithm = 5;
+  NewPermissions new_permissions = 6;
+  map<string, string> metadata = 7;
+}
+
+message AlgoQueryParam {
+  string key = 1;
+}
+
+message AlgosQueryResponse {
+  repeated Algo Algos = 1;
+  string next_page_token = 2;
+}
+
+message AlgosQueryParam {
+  string page_token = 1;
+  uint32 page_size = 2;
+}
+
+service AlgoService {
+  rpc RegisterAlgo(NewAlgo) returns (Algo) {}
+  rpc QueryAlgo(AlgoQueryParam) returns (Algo) {}
+  rpc QueryAlgos(AlgosQueryParam) returns (AlgosQueryResponse) {}
+}
