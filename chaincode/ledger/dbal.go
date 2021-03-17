@@ -255,6 +255,14 @@ func (db *DB) NodeExists(id string) (bool, error) {
 
 // AddObjective stores a new objective
 func (db *DB) AddObjective(obj *asset.Objective) error {
+	exists, err := db.hasKey(asset.ObjectiveKind, obj.GetKey())
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("objective already exists: %w", errors.ErrConflict)
+	}
+
 	objBytes, err := json.Marshal(obj)
 	if err != nil {
 		return err
