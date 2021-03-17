@@ -49,6 +49,8 @@ func toStatus(err error) error {
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, orchestrationErrors.ErrConflict):
 		return status.Error(codes.AlreadyExists, err.Error())
+	case errors.Is(err, orchestrationErrors.ErrPermissionDenied):
+		return status.Error(codes.PermissionDenied, err.Error())
 	default:
 		return status.Error(codes.Unknown, err.Error())
 	}

@@ -158,6 +158,78 @@ func (d *DBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.P
 	return objectives, bookmark, nil
 }
 
+// AddDataSample implements persistence.DataSampleDBAL
+func (d *DBAL) AddDataSample(dataSample *asset.DataSample) error {
+	stmt := `insert into "datasamples" ("id", "asset", "channel") values ($1, $2, $3)`
+	_, err := d.tx.Exec(stmt, dataSample.GetKey(), dataSample, d.channel)
+	return err
+}
+
+// UpdateDataSample implements persistence.DataSampleDBAL
+func (d *DBAL) UpdateDataSample(dataSample *asset.DataSample) error {
+	stmt := `update "datasamples" set asset=$3 where id=$1 and channel=$2`
+	_, err := d.tx.Exec(stmt, dataSample.GetKey(), d.channel, dataSample)
+	return err
+}
+
+// GetDataSample implements persistence.DataSample
+func (d *DBAL) GetDataSample(id string) (*asset.DataSample, error) {
+	row := d.tx.QueryRow(`select "asset" from "datasamples" where id=$1 and channel=$2`, id, d.channel)
+
+	datasample := new(asset.DataSample)
+	err := row.Scan(&datasample)
+	if err != nil {
+		return nil, err
+	}
+
+	return datasample, nil
+}
+
+// GetDataSamples implements persistence.DataSample
+func (d *DBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+	var rows *sql.Rows
+	var err error
+
+	offset, err := getOffset(p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+
+	query := `select "asset" from "datasamples" where channel=$3 order by created_at asc limit $1 offset $2`
+	rows, err = d.tx.Query(query, p.Size+1, offset, d.channel)
+	if err != nil {
+		return nil, "", err
+	}
+	defer rows.Close()
+
+	var datasamples []*asset.DataSample
+	var count int
+
+	for rows.Next() {
+		datasample := new(asset.DataSample)
+
+		err = rows.Scan(&datasample)
+		if err != nil {
+			return nil, "", err
+		}
+
+		datasamples = append(datasamples, datasample)
+		count++
+
+		if count == int(p.Size) {
+			break
+		}
+	}
+
+	bookmark := ""
+	if count == int(p.Size) && rows.Next() {
+		// there is more to fetch
+		bookmark = strconv.Itoa(offset + count)
+	}
+
+	return datasamples, bookmark, nil
+}
+
 func getOffset(token string) (int, error) {
 	if token == "" {
 		token = "0"

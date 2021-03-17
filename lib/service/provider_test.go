@@ -27,7 +27,8 @@ func TestServiceProviderInit(t *testing.T) {
 	provider := NewProvider(dbal, dispatcher)
 
 	assert.Implements(t, (*NodeServiceProvider)(nil), provider, "service provider should provide NodeService")
-	assert.Implements(t, (*ObjectiveServiceProvider)(nil), provider, "service provider should provide NodeService")
+	assert.Implements(t, (*ObjectiveServiceProvider)(nil), provider, "service provider should provide ObjectiveService")
+	assert.Implements(t, (*DataSampleServiceProvider)(nil), provider, "service provider should provide DataSampleService")
 }
 
 func TestLazyInstanciation(t *testing.T) {

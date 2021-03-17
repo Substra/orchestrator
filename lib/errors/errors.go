@@ -27,3 +27,7 @@ var ErrConflict = errors.New("conflict")
 
 // ErrInvalidAsset mark asset validation errors
 var ErrInvalidAsset = errors.New("invalid asset")
+
+// ErrPermissionDenied happens when you try to perform an action on an asset
+// that you do not own.
+var ErrPermissionDenied = errors.New("permission denied")

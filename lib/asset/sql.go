@@ -38,3 +38,20 @@ func (o *Objective) Scan(value interface{}) error {
 
 	return protojson.Unmarshal(b, o)
 }
+
+// Value implements the driver.Valuer interface.
+// Returns the JSON-encoded representation of the DataSample.
+func (d *DataSample) Value() (driver.Value, error) {
+	return protojson.Marshal(d)
+}
+
+// Scan implements the sql.Scanner interface.
+// Decodes JSON into a DataSample.
+func (d *DataSample) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot scan datasample: %w", errors.ErrByteArray)
+	}
+
+	return protojson.Unmarshal(b, d)
+}

@@ -61,3 +61,27 @@ func (m *MockDBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, comm
 	args := m.Called(p)
 	return args.Get(0).([]*asset.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }
+
+// AddDataSample is a mock
+func (m *MockDBAL) AddDataSample(dataSample *asset.DataSample) error {
+	args := m.Called(dataSample)
+	return args.Error(0)
+}
+
+// UpdateDataSample is a mock
+func (m *MockDBAL) UpdateDataSample(dataSample *asset.DataSample) error {
+	args := m.Called(dataSample)
+	return args.Error(0)
+}
+
+// GetDataSample is a mock
+func (m *MockDBAL) GetDataSample(id string) (*asset.DataSample, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.DataSample), args.Error(1)
+}
+
+// GetDataSamples is a mock
+func (m *MockDBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*asset.DataSample), args.Get(1).(common.PaginationToken), args.Error(2)
+}

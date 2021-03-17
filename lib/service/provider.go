@@ -26,6 +26,7 @@ type DependenciesProvider interface {
 	event.QueueProvider
 	NodeServiceProvider
 	ObjectiveServiceProvider
+	DataSampleServiceProvider
 	PermissionServiceProvider
 }
 
@@ -40,6 +41,7 @@ type Provider struct {
 	node       NodeAPI
 	objective  ObjectiveAPI
 	permission PermissionAPI
+	datasample DataSampleAPI
 }
 
 // NewProvider return an instance of Provider based on given persistence layer.
@@ -54,6 +56,11 @@ func (sc *Provider) GetNodeDBAL() persistence.NodeDBAL {
 
 // GetObjectiveDBAL returns the database abstraction layer for Objectives
 func (sc *Provider) GetObjectiveDBAL() persistence.ObjectiveDBAL {
+	return sc.dbal
+}
+
+// GetDataSampleDBAL returns the database abstraction layer for DataSamples
+func (sc *Provider) GetDataSampleDBAL() persistence.DataSampleDBAL {
 	return sc.dbal
 }
 
@@ -78,6 +85,15 @@ func (sc *Provider) GetObjectiveService() ObjectiveAPI {
 		sc.objective = NewObjectiveService(sc)
 	}
 	return sc.objective
+}
+
+// GetDataSampleService returns a DataSampleAPI instance.
+// The service will be instanciated if needed.
+func (sc *Provider) GetDataSampleService() DataSampleAPI {
+	if sc.datasample == nil {
+		sc.datasample = NewDataSampleService(sc)
+	}
+	return sc.datasample
 }
 
 // GetPermissionService returns a PermissionAPI instance.
