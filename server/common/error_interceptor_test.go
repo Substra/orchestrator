@@ -36,9 +36,14 @@ func TestStatusConversion(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		status := status.Convert(toStatus(tc.err))
-		assert.Equal(t, tc.code, status.Code(), fmt.Sprintf("Code conversion should match for %s", name))
+		t.Run(fmt.Sprintf("fromError(%s)", name), func(t *testing.T) {
+			assert.Equal(t, tc.code, status.Convert(fromError(tc.err)).Code())
+		})
+		err := fmt.Errorf("new error with embedded code: %s in the message", tc.err.Error())
+		t.Run(fmt.Sprintf("fromMessage(%s)", name), func(t *testing.T) {
+			assert.Equal(t, tc.code, status.Convert(fromMessage(err.Error())).Code())
+		})
 	}
 
-	assert.Nil(t, toStatus(nil), "nil should not be mapped")
+	assert.Nil(t, fromError(nil), "nil should not be mapped")
 }

@@ -67,6 +67,7 @@ func runDistributed() {
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		common.LogRequest,
+		common.InterceptDistributedErrors,
 		common.InterceptMSPID,
 		common.InterceptChannel,
 		chaincodeInterceptor.Intercept,
@@ -121,7 +122,7 @@ func runStandalone() {
 
 	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		common.LogRequest,
-		common.InterceptErrors,
+		common.InterceptStandaloneErrors,
 		concurrencyLimiter.Intercept,
 		common.InterceptMSPID,
 		common.InterceptChannel,

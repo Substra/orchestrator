@@ -66,13 +66,11 @@ func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessag
 	data, err := i.contract.SubmitTransaction(method, string(args))
 
 	if err != nil {
-		logger.WithError(err).Error("Failed to invoke chaincode")
 		return err
 	}
 
 	err = json.Unmarshal(data, &output)
 	if err != nil {
-		logger.WithError(err).WithField("data", data).Error("Failed to deserialize")
 		return err
 	}
 

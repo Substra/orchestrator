@@ -15,19 +15,32 @@
 // Package errors defines orchestration errors.
 // This is following the patterns from https://blog.golang.org/go1.13-errors
 // so it mostly contains sentinel values.
+// Sentinel values should contain a unique code easily parsable from string representation.
+// This limitation comes from the fact that chaincode only returns string representation of errors,
+// meaning we loose the grpc return code between chaincode and orchestrator. This error ID is a way to circumvent that.
+// Error IDs are 4 digit prefixed by "OE" (for Orchestration Error).
+// Each error kind has 100 numbers reserved, here are the assigned ranges:
+// - generic errors: 0-99
+// - asset related errors: 100-199
 package errors
 
 import "errors"
 
-// ErrByteArray happens when attempting to load invalid data as json byte array
-var ErrByteArray = errors.New("not a byte array")
+// Generic errors
+// Range 0-99
 
-// ErrConflict is a sentinel value to mark conflicting asset errors
-var ErrConflict = errors.New("conflict")
+// ErrByteArray happens when attempting to load invalid data as json byte array
+var ErrByteArray = errors.New("OE0001")
+
+// ErrConflict is a sentinel value to mark conflicting asset errors.
+var ErrConflict = errors.New("OE0006") // value 6 match gRPC AlreadyExists status code
+
+// Asset specific errors
+// Range 100-199
 
 // ErrInvalidAsset mark asset validation errors
-var ErrInvalidAsset = errors.New("invalid asset")
+var ErrInvalidAsset = errors.New("OE0101")
 
 // ErrPermissionDenied happens when you try to perform an action on an asset
 // that you do not own.
-var ErrPermissionDenied = errors.New("permission denied")
+var ErrPermissionDenied = errors.New("OE0102")
