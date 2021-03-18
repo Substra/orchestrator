@@ -26,7 +26,7 @@ type AppServer struct {
 	db   *Database
 }
 
-func GetServer(dbURL string, rabbitDSN string) (*AppServer, error) {
+func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOption) (*AppServer, error) {
 	pgDB, err := InitDatabase(dbURL)
 	if err != nil {
 		return nil, err
@@ -38,14 +38,18 @@ func GetServer(dbURL string, rabbitDSN string) (*AppServer, error) {
 	providerInterceptor := NewProviderInterceptor(pgDB, session)
 	concurrencyLimiter := new(ConcurrencyLimiter)
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+	interceptor := grpc.ChainUnaryInterceptor(
 		common.LogRequest,
 		common.InterceptStandaloneErrors,
 		concurrencyLimiter.Intercept,
 		common.InterceptMSPID,
 		common.InterceptChannel,
 		providerInterceptor.Intercept,
-	))
+	)
+
+	serverOptions := append(additionalOptions, interceptor)
+
+	server := grpc.NewServer(serverOptions...)
 
 	// Register application services
 	asset.RegisterNodeServiceServer(server, NewNodeServer())

@@ -52,7 +52,7 @@ func newTestApp() *testApp {
 		log.Fatal("Missing RABBITMQ_DSN")
 	}
 
-	server, err := standalone.GetServer(dbURL, rabbitDSN)
+	server, err := standalone.GetServer(dbURL, rabbitDSN, nil)
 	if err != nil {
 		log.Fatalf("Cannot initialize test server: %s", err.Error())
 	}

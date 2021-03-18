@@ -20,40 +20,23 @@ package main
 import (
 	"flag"
 	"net"
-	"os"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/distributed"
 	"github.com/owkin/orchestrator/server/standalone"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
-// envPrefix is the string prefixing environment variables related to the orchestrator
-const envPrefix = "ORCHESTRATOR_"
+func getDistributedServer(tlsOption []grpc.ServerOption) common.Runnable {
+	networkConfig := common.MustGetEnv("NETWORK_CONFIG")
+	certificate := common.MustGetEnv("FABRIC_CERT")
+	key := common.MustGetEnv("FABRIC_KEY")
 
-// Whether to run in standalone mode or not
-var standaloneMode = false
-
-// mustGetEnv extract environment variable or abort with an error message
-// Every env var is prefixed by ORCHESTRATOR_
-func mustGetEnv(name string) string {
-	n := envPrefix + name
-	v, ok := os.LookupEnv(n)
-	if !ok {
-		log.WithField("env_var", n).Fatal("Missing environment variable")
-	}
-	return v
-}
-
-func getDistributedServer() common.Runnable {
-	networkConfig := mustGetEnv("NETWORK_CONFIG")
-	certificate := mustGetEnv("CERT")
-	key := mustGetEnv("KEY")
-
-	server, err := distributed.GetServer(networkConfig, certificate, key)
+	server, err := distributed.GetServer(networkConfig, certificate, key, tlsOption)
 	if err != nil {
 		log.WithError(err).Fatal("failed to create standalone server")
 	}
@@ -61,11 +44,11 @@ func getDistributedServer() common.Runnable {
 	return server
 }
 
-func getStandaloneServer() common.Runnable {
-	dbURL := mustGetEnv("DATABASE_URL")
-	rabbitDSN := mustGetEnv("AMQP_DSN")
+func getStandaloneServer(tlsOptions []grpc.ServerOption) common.Runnable {
+	dbURL := common.MustGetEnv("DATABASE_URL")
+	rabbitDSN := common.MustGetEnv("AMQP_DSN")
 
-	server, err := standalone.GetServer(dbURL, rabbitDSN)
+	server, err := standalone.GetServer(dbURL, rabbitDSN, tlsOptions)
 	if err != nil {
 		log.WithError(err).Fatal("failed to create standalone server")
 	}
@@ -74,6 +57,8 @@ func getStandaloneServer() common.Runnable {
 }
 
 func main() {
+	var standaloneMode = false
+
 	common.InitLogging()
 
 	flag.BoolVar(&standaloneMode, "standalone", true, "Run the chaincode in standalone mode")
@@ -81,18 +66,26 @@ func main() {
 
 	flag.Parse()
 
-	switch os.Getenv(envPrefix + "MODE") {
-	case "chaincode":
-		standaloneMode = false
-	case "standalone":
-		standaloneMode = true
+	mode, ok := common.GetEnv("MODE")
+	if ok {
+		switch mode {
+		case "chaincode":
+			standaloneMode = false
+		case "standalone":
+			standaloneMode = true
+		}
+	}
+
+	serverOptions := []grpc.ServerOption{}
+	if tlsOptions := getTLSOptions(); tlsOptions != nil {
+		serverOptions = append(serverOptions, tlsOptions)
 	}
 
 	var app common.Runnable
 	if standaloneMode {
-		app = getStandaloneServer()
+		app = getStandaloneServer(serverOptions)
 	} else {
-		app = getDistributedServer()
+		app = getDistributedServer(serverOptions)
 	}
 	defer app.Stop()
 

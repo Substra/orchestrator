@@ -55,3 +55,4 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
           RABBITMQ_DSN: amqp://guest:guest@localhost:5672/
+          ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false

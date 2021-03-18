@@ -26,7 +26,7 @@ type AppServer struct {
 	grpc *grpc.Server
 }
 
-func GetServer(networkConfig string, certificate string, key string) (*AppServer, error) {
+func GetServer(networkConfig string, certificate string, key string, additionalOptions []grpc.ServerOption) (*AppServer, error) {
 	wallet := wallet.New(certificate, key)
 	config := config.FromFile(networkConfig)
 
@@ -36,13 +36,17 @@ func GetServer(networkConfig string, certificate string, key string) (*AppServer
 
 	}
 
-	server := grpc.NewServer(grpc.ChainUnaryInterceptor(
+	interceptor := grpc.ChainUnaryInterceptor(
 		common.LogRequest,
 		common.InterceptDistributedErrors,
 		common.InterceptMSPID,
 		common.InterceptChannel,
 		chaincodeInterceptor.Intercept,
-	))
+	)
+
+	serverOptions := append(additionalOptions, interceptor)
+
+	server := grpc.NewServer(serverOptions...)
 
 	// Register application services
 	asset.RegisterNodeServiceServer(server, NewNodeAdapter())

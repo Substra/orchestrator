@@ -26,7 +26,3 @@ ingress:
   - host: orchestrator.node-1.com
     paths:
       - "/"
-  tls:
-    - hosts:
-      - orchestrator.node-1.com
-      secretName: orchestrator-tls

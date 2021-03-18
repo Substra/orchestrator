@@ -56,7 +56,7 @@ func main() {
 	session := common.NewSession("orchestrator", rabbitDSN)
 	defer session.Close()
 
-	wallet := wallet.New(mustGetEnv("CERT"), mustGetEnv("KEY"))
+	wallet := wallet.New(mustGetEnv("FABRIC_CERT"), mustGetEnv("FABRIC_KEY"))
 
 	config := config.FromFile(networkConfig)
 	log.Info("network config loaded")
