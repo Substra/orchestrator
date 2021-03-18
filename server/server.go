@@ -33,8 +33,8 @@ import (
 
 func getDistributedServer(tlsOption []grpc.ServerOption) common.Runnable {
 	networkConfig := common.MustGetEnv("NETWORK_CONFIG")
-	certificate := common.MustGetEnv("CERT")
-	key := common.MustGetEnv("KEY")
+	certificate := common.MustGetEnv("FABRIC_CERT")
+	key := common.MustGetEnv("FABRIC_KEY")
 
 	server, err := distributed.GetServer(networkConfig, certificate, key, tlsOption)
 	if err != nil {
