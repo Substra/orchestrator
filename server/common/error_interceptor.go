@@ -57,14 +57,17 @@ func InterceptDistributedErrors(ctx context.Context, req interface{}, info *grpc
 		}
 	}
 
-	return res, fromMessage(err.Error())
+	var wrappedErr error
+	if err != nil {
+		wrappedErr = fromMessage(err.Error())
+	}
+
+	return res, wrappedErr
 }
 
 // fromMessage converts an error to a gRPC status by matching its error message
 func fromMessage(msg string) error {
 	switch true {
-	case msg == "":
-		return nil
 	case strings.Contains(msg, orchestrationErrors.ErrInvalidAsset.Error()):
 		return status.Error(codes.InvalidArgument, msg)
 	case strings.Contains(msg, orchestrationErrors.ErrConflict.Error()):
