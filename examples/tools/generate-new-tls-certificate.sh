@@ -21,7 +21,7 @@ DOMAIN="node-2.com"
 ###############
 # Target cert #
 ###############
-openssl req -newkey rsa:2048 -nodes -keyout tls.key -subj "/C=CN/ST=GD/L=SZ/O=${ORGANIZATION}/CN=orchestrator.${DOMAIN}" -out cert.csr
+openssl req -newkey rsa:2048 -nodes -keyout tls.key -subj "/C=FR/ST=Loire-Atlantique/L=Nantes/O=${ORGANIZATION}/CN=orchestrator.${DOMAIN}" -out cert.csr
 openssl x509 -req \
     -days 365 -in cert.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out tls.crt \
     -extfile <(printf "subjectAltName=DNS:orchestrator.${DOMAIN},DNS:owkin-orchestrator-${NAMESPACE}.${NAMESPACE}.svc.cluster.local,DNS:owkin-orchestrator-${NAMESPACE}-rabbitmq.${NAMESPACE}.svc.cluster.local")
