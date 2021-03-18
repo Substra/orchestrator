@@ -15,11 +15,14 @@
 package ledger
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
+	"github.com/owkin/orchestrator/lib/asset"
+	orchestrationError "github.com/owkin/orchestrator/lib/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -75,4 +78,17 @@ func TestGetPagination(t *testing.T) {
 	_, _, err = db.getIndexKeysWithPagination(index, attributes, 1, firstBmark)
 	assert.NoError(t, err)
 
+}
+
+func TestAddExistingObjective(t *testing.T) {
+	stub := new(testHelper.MockedStub)
+
+	db := NewDB(stub)
+
+	objective := &asset.Objective{Key: "test"}
+
+	stub.On("GetState", "objective:test").Return([]byte("{}"), nil).Once()
+
+	err := db.AddObjective(objective)
+	assert.True(t, errors.Is(err, orchestrationError.ErrConflict))
 }

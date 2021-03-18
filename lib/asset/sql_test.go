@@ -35,3 +35,37 @@ func TestObjectiveValue(t *testing.T) {
 
 	assert.Equal(t, objective, scanned)
 }
+
+func TestDataSampleValue(t *testing.T) {
+	datasample := &DataSample{
+		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+		Owner:           "testOwner",
+		TestOnly:        false,
+	}
+
+	value, err := datasample.Value()
+	assert.NoError(t, err, "datasample serialization should not fail")
+
+	scanned := new(DataSample)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "datasample scan should not fail")
+
+	assert.Equal(t, datasample, scanned)
+}
+
+func TestAlgoValue(t *testing.T) {
+	algo := &Algo{
+		Name:  "test",
+		Owner: "testOwner",
+	}
+
+	value, err := algo.Value()
+	assert.NoError(t, err, "algo serialization should not fail")
+
+	scanned := new(Algo)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "algo scan should not fail")
+
+	assert.Equal(t, algo, scanned)
+}

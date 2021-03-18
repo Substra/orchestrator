@@ -29,15 +29,21 @@ func TestStatusConversion(t *testing.T) {
 		err  error
 		code codes.Code
 	}{
-		"conflict":   {err: errors.ErrConflict, code: codes.AlreadyExists},
-		"validation": {err: errors.ErrInvalidAsset, code: codes.InvalidArgument},
-		"unknown":    {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
+		"conflict":     {err: errors.ErrConflict, code: codes.AlreadyExists},
+		"validation":   {err: errors.ErrInvalidAsset, code: codes.InvalidArgument},
+		"unknown":      {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
+		"unauthorized": {err: errors.ErrPermissionDenied, code: codes.PermissionDenied},
 	}
 
 	for name, tc := range cases {
-		status := status.Convert(toStatus(tc.err))
-		assert.Equal(t, tc.code, status.Code(), fmt.Sprintf("Code conversion should match for %s", name))
+		t.Run(fmt.Sprintf("fromError(%s)", name), func(t *testing.T) {
+			assert.Equal(t, tc.code, status.Convert(fromError(tc.err)).Code())
+		})
+		err := fmt.Errorf("new error with embedded code: %s in the message", tc.err.Error())
+		t.Run(fmt.Sprintf("fromMessage(%s)", name), func(t *testing.T) {
+			assert.Equal(t, tc.code, status.Convert(fromMessage(err.Error())).Code())
+		})
 	}
 
-	assert.Nil(t, toStatus(nil), "nil should not be mapped")
+	assert.Nil(t, fromError(nil), "nil should not be mapped")
 }

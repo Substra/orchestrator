@@ -39,6 +39,18 @@ func (m *MockServiceProvider) GetObjectiveDBAL() persistence.ObjectiveDBAL {
 	return args.Get(0).(persistence.ObjectiveDBAL)
 }
 
+// GetDataSampleDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetDataSampleDBAL() persistence.DataSampleDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.DataSampleDBAL)
+}
+
+// GetAlgoDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetAlgoDBAL() persistence.AlgoDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.AlgoDBAL)
+}
+
 // GetEventQueue returns whatever value is passed
 func (m *MockServiceProvider) GetEventQueue() event.Queue {
 	args := m.Called()
@@ -61,6 +73,18 @@ func (m *MockServiceProvider) GetObjectiveService() ObjectiveAPI {
 func (m *MockServiceProvider) GetPermissionService() PermissionAPI {
 	args := m.Called()
 	return args.Get(0).(PermissionAPI)
+}
+
+// GetDataSampleService returns whatever value is passed
+func (m *MockServiceProvider) GetDataSampleService() DataSampleAPI {
+	args := m.Called()
+	return args.Get(0).(DataSampleAPI)
+}
+
+// GetAlgoService return whatever value is passed
+func (m *MockServiceProvider) GetAlgoService() AlgoAPI {
+	args := m.Called()
+	return args.Get(0).(AlgoAPI)
 }
 
 // MockNodeService is a mock implementing NodeAPI
@@ -112,6 +136,52 @@ func (m *MockObjectiveService) GetObjective(key string) (*asset.Objective, error
 func (m *MockObjectiveService) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
+}
+
+// MockDataSampleService is a mock implementing DataSampleAPI
+type MockDataSampleService struct {
+	mock.Mock
+}
+
+// RegisterDataSample returns whatever value is passed
+func (m *MockDataSampleService) RegisterDataSample(datasample *asset.NewDataSample, owner string) error {
+	args := m.Called(datasample, owner)
+	return args.Error(0)
+}
+
+// UpdateDataSample returns whatever value is passed
+func (m *MockDataSampleService) UpdateDataSample(datasample *asset.DataSampleUpdateParam, owner string) error {
+	args := m.Called(datasample, owner)
+	return args.Error(0)
+}
+
+// GetDataSamples returns whatever value is passed
+func (m *MockDataSampleService) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*asset.DataSample), args.Get(1).(common.PaginationToken), args.Error(2)
+}
+
+// MockAlgoService is a mock implementing AlgoAPI
+type MockAlgoService struct {
+	mock.Mock
+}
+
+// RegisterAlgo returns whatever value is passed
+func (m *MockAlgoService) RegisterAlgo(algo *asset.NewAlgo, owner string) (*asset.Algo, error) {
+	args := m.Called(algo, owner)
+	return args.Get(0).(*asset.Algo), args.Error(1)
+}
+
+// GetAlgo returns whatever value is passed
+func (m *MockAlgoService) GetAlgo(key string) (*asset.Algo, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.Algo), args.Error(1)
+}
+
+// GetAlgos returns whatever value is passed
+func (m *MockAlgoService) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
 // MockDispatcher is a mock implenting Dispatcher behavior

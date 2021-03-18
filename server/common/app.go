@@ -12,18 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asset
+package common
 
-// Kind represent the type of assets handled by the orchestrator
-type Kind = string
+import "google.golang.org/grpc"
 
-var (
-	// NodeKind is the type of Node assets
-	NodeKind Kind = "node"
-	// ObjectiveKind is the type of Objective assets
-	ObjectiveKind = "objective"
-	// DataSampleKind is the type of DataSample assets
-	DataSampleKind = "datasample"
-	// AlgoKind is the type of Algo assets
-	AlgoKind = "algo"
-)
+// Runnable is the opaque interface behind which standalone and distributed servers are handled
+type Runnable interface {
+	GetGrpcServer() *grpc.Server
+	Stop()
+}

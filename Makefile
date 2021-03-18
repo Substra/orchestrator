@@ -66,8 +66,12 @@ clean: clean-protos clean-migrations-binpack
 	rm -rf $(OUTPUT_DIR)
 
 .PHONY: test
-test:
-	go test -cover ./...
+test: codegen
+	go test -cover ./... -short
+
+.PHONE: e2e-tests
+e2e-tests: codegen
+	go test ./e2e -count=1 -tags e2e
 
 .PHONY: clean-protos
 clean-protos:
