@@ -1,4 +1,8 @@
 /bin
 .git
 skaffold.yaml
+/docker
 /charts
+/values
+/examples
+/docs
