@@ -64,9 +64,9 @@ func WithChannel(ctx context.Context, channel string) context.Context {
 // ExtractChannel retrieves channel from request context
 // channel is expected to be set by InterceptChannel
 func ExtractChannel(ctx context.Context) (string, error) {
-	invocator, ok := ctx.Value(ctxChannelKey).(string)
+	channel, ok := ctx.Value(ctxChannelKey).(string)
 	if !ok {
 		return "", errors.New("channel not found in context")
 	}
-	return invocator, nil
+	return channel, nil
 }
