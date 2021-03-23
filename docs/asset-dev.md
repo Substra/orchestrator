@@ -40,8 +40,8 @@ The ability to scan a raw database value into an asset, this can be done by impl
 Converting the other way around, from an asset into a database value can be done by implementing *driver.Value*.
 Examples of such implementations are available in `lib/asset/sql.go` file, it boils down to serializing/deserializing the assets in JSON.
 
-Now, implement the DBAL interface for both storage backends: postgres in `orchestrator/standalone` module and the ledger in `chaincode/ledger` module.
-You may have to create a new table for postgres, this can be done by adding a migration in `orchestrator/standalone/migrations` module.
+Now, implement the DBAL interface for both storage backends: postgres in `server/standalone` module and the ledger in `chaincode/ledger` module.
+You may have to create a new table for postgres, this can be done by adding a migration in `server/standalone/migration` module.
 
 You will also have to implement this new DBAL on the mocked persistence layer in `lib/persistence/testing` module.
 This should be pretty straightforward: add missing methods and pass the arguments to the underlying mock.
@@ -80,14 +80,14 @@ There are also helpers defined in `github.com/owkin/orchestrator/lib/persistence
 
 ### 4. Create the standalone gRPC server
 
-Define a gRPC server in `orchestrator/standalone/<asset>.go`, it should implement `assets.AssetServiceServer` (interface generated from the protobuf).
+Define a gRPC server in `server/standalone/<asset>.go`, it should implement `assets.AssetServiceServer` (interface generated from the protobuf).
 
 This server will be able to get an *service.DependenciesProvider* from the context using `ExtractProvider` function.
 This is the dependency injection store, from which you can retrieve your dependencies (Database, other service, event queue, etc).
 
 You may need the MSPID in your logic, this can also be retrieved from context through the `common.ExtractMSPID` function.
 
-The new gRPC service can be registered into the gRPC server: this happen in the `orchestrator/server.go` file somewhere in the *RunServerWithoutChaincode* function.
+The new gRPC service can be registered into the gRPC server: this happen in the `server/standalone/server.go` file somewhere in the *GetServer* function.
 
 At this point, standalone orchestration should be functional, you can launch the orchestrator in standalone mode and manually test your gRPC service.
 
@@ -122,7 +122,7 @@ That way, the *Invocator* (more below) can transparently handle the serializatio
 
 #### gRPC adapter
 
-gRPC service relying on chaincode is defined in `orchestrator/chaincode/<asset>.go`
+gRPC service relying on chaincode is defined in `server/distributed/<asset>.go`
 
 This is done the same way than for the standalone mode, except that there is a chaincode invocation instead of orchestration logic.
 
@@ -144,3 +144,5 @@ func (a *AssetAdapter) DoSomething(ctx context.Context, input *assets.AssetDoSom
     return response, err
 }
 ```
+
+The new gRPC service can be registered into the gRPC server: this happen in the `server/distributed/server.go` file somewhere in the *GetServer* function.
