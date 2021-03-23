@@ -35,7 +35,7 @@ var ignoredMethods = [...]string{
 // ProviderInterceptor intercepts gRPC requests and assign a request-scoped orchestration.Provider
 // to the request context.
 type ProviderInterceptor struct {
-	amqp         common.AMQPChannel
+	amqp         common.AMQPPublisher
 	dbalProvider TransactionalDBALProvider
 }
 
@@ -44,7 +44,7 @@ type ctxProviderInterceptorMarker struct{}
 var ctxProviderKey = &ctxProviderInterceptorMarker{}
 
 // NewProviderInterceptor returns an instance of ProviderInterceptor
-func NewProviderInterceptor(dbalProvider TransactionalDBALProvider, amqp common.AMQPChannel) *ProviderInterceptor {
+func NewProviderInterceptor(dbalProvider TransactionalDBALProvider, amqp common.AMQPPublisher) *ProviderInterceptor {
 	return &ProviderInterceptor{
 		amqp:         amqp,
 		dbalProvider: dbalProvider,

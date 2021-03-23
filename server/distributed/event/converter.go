@@ -25,18 +25,21 @@ import (
 
 // Forwarder is responsible for converting chaincode events to AMQP ones and publishing them on an AMQPChannel.
 type Forwarder struct {
-	channel common.AMQPChannel
+	channel   string
+	publisher common.AMQPPublisher
 }
 
 // NewForwarder returns a Converter instance which will publish chaincode events on the given AMQP session.
-func NewForwarder(channel common.AMQPChannel) *Forwarder {
+// It takes a channel which will be used as routing key when publishing messages.
+func NewForwarder(channel string, publisher common.AMQPPublisher) *Forwarder {
 	return &Forwarder{
-		channel: channel,
+		channel:   channel,
+		publisher: publisher,
 	}
 }
 
 // Forward takes a chaincode event, converts it to orchestration events and publish them as AMQP messages.
-func (c *Forwarder) Forward(ccEvent *fab.CCEvent) {
+func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 	payload := ccEvent.Payload
 
 	events := []event.Event{}
@@ -55,7 +58,7 @@ func (c *Forwarder) Forward(ccEvent *fab.CCEvent) {
 		if err != nil {
 			logger.WithError(err).Error("Failed to serialize")
 		}
-		err = c.channel.Publish(data)
+		err = f.publisher.Publish(f.channel, data)
 		if err != nil {
 			logger.WithError(err).Error("Failed to push event")
 		}

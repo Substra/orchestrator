@@ -30,8 +30,8 @@ type MockAMQPChannel struct {
 	mock.Mock
 }
 
-func (m *MockAMQPChannel) Publish(data []byte) error {
-	args := m.Called(data)
+func (m *MockAMQPChannel) Publish(routingKey string, data []byte) error {
+	args := m.Called(routingKey, data)
 	return args.Error(0)
 }
 
@@ -49,7 +49,7 @@ func TestEventChannel(t *testing.T) {
 	data, err := json.Marshal(eventWithChannel)
 	require.NoError(t, err)
 
-	amqp.On("Publish", data).Once().Return(nil)
+	amqp.On("Publish", "testChannel", data).Once().Return(nil)
 
 	err = dispatcher.Dispatch()
 	assert.NoError(t, err)

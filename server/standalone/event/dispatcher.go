@@ -26,14 +26,14 @@ import (
 // AMQPDispatcher dispatch events on an AMQP channel
 type AMQPDispatcher struct {
 	event.Queue
-	amqp common.AMQPChannel
+	amqp common.AMQPPublisher
 	// channel is the context of assets and computations
 	channel string
 }
 
 // NewAMQPDispatcher creates a new dispatcher based on given AMQP session.
 // channel argument has nothing to do with AMQP but identifies the context of assets and computation events.
-func NewAMQPDispatcher(amqp common.AMQPChannel, channel string) *AMQPDispatcher {
+func NewAMQPDispatcher(amqp common.AMQPPublisher, channel string) *AMQPDispatcher {
 	return &AMQPDispatcher{
 		Queue:   new(common.MemoryQueue),
 		amqp:    amqp,
@@ -53,7 +53,7 @@ func (d *AMQPDispatcher) Dispatch() error {
 			return err
 		}
 
-		err = d.amqp.Publish(data)
+		err = d.amqp.Publish(d.channel, data)
 		if err != nil {
 			return err
 		}

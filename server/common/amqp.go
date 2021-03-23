@@ -22,9 +22,9 @@ import (
 	"github.com/streadway/amqp"
 )
 
-// AMQPChannel represents a channel to a broker on which one can Push data.
-type AMQPChannel interface {
-	Publish(data []byte) error
+// AMQPPublisher represent the ability to push a message to a broker.
+type AMQPPublisher interface {
+	Publish(routingKey string, data []byte) error
 }
 
 // Session object wraps amqp library.
@@ -64,6 +64,7 @@ var (
 
 // NewSession creates a new consumer state instance, and automatically
 // attempts to connect to the server.
+// Session's name will be used to define the exchange on which events are published.
 func NewSession(name string, addr string) *Session {
 	session := Session{
 		name: name,
@@ -152,19 +153,19 @@ func (session *Session) init(conn *amqp.Connection) error {
 	}
 
 	err = ch.Confirm(false)
-
 	if err != nil {
 		return err
 	}
-	_, err = ch.QueueDeclare(
-		session.name,
-		false, // Durable
-		false, // Delete when unused
-		false, // Exclusive
-		false, // No-wait
-		nil,   // Arguments
-	)
 
+	err = ch.ExchangeDeclare(
+		session.name, // name
+		"topic",      // type
+		true,         // durable
+		false,        // auto-deleted
+		false,        // internal
+		false,        // no-wait
+		nil,          // arguments
+	)
 	if err != nil {
 		return err
 	}
@@ -199,14 +200,14 @@ func (session *Session) changeChannel(channel *amqp.Channel) {
 // it continuously re-sends messages until a confirm is received.
 // This will block until the server sends a confirm. Errors are
 // only returned if the push action itself fails, see UnsafePush.
-func (session *Session) Publish(data []byte) error {
+func (session *Session) Publish(routingKey string, data []byte) error {
 	log := log.WithField("data", data)
 
 	if !session.isReady {
 		return errors.New("failed to push message: not connected")
 	}
 	for {
-		err := session.UnsafePush(data)
+		err := session.UnsafePush((routingKey), data)
 		if err != nil {
 			log.WithError(err).Warn("Push failed. Retrying...")
 			select {
@@ -232,13 +233,13 @@ func (session *Session) Publish(data []byte) error {
 // confirmation. It returns an error if it fails to connect.
 // No guarantees are provided for whether the server will
 // recieve the message.
-func (session *Session) UnsafePush(data []byte) error {
+func (session *Session) UnsafePush(routingKey string, data []byte) error {
 	if !session.isReady {
 		return errNotConnected
 	}
 	return session.channel.Publish(
-		"",           // Exchange
-		session.name, // Routing key
+		session.name, // Exchange
+		routingKey,   // Routing key
 		false,        // Mandatory
 		false,        // Immediate
 		amqp.Publishing{

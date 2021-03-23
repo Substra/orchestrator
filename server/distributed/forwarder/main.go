@@ -61,14 +61,14 @@ func main() {
 	config := config.FromFile(networkConfig)
 	log.Info("network config loaded")
 
-	forwarder := event.NewForwarder(session)
-	log.Info("instanciated AMQP forwarder")
-
 	mspID := mustGetEnv("MSPID")
 
 	conf := getConf(mustGetEnv("CONFIG_PATH"))
 
 	for channel, chaincodes := range conf.Listeners {
+		forwarder := event.NewForwarder(channel, session)
+		log.WithField("channel", channel).Info("instanciated AMQP forwarder")
+
 		for _, chaincode := range chaincodes {
 			go listenToChannel(wallet, config, forwarder, mspID, chaincode, channel)
 		}

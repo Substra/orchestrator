@@ -29,12 +29,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-type mockedChannel struct {
+type mockedPublisher struct {
 	mock.Mock
 }
 
-func (m *mockedChannel) Publish(data []byte) error {
-	args := m.Called(data)
+func (m *mockedPublisher) Publish(routingKey string, data []byte) error {
+	args := m.Called(routingKey, data)
 	return args.Error(0)
 }
 
@@ -77,13 +77,13 @@ func TestExtractProvider(t *testing.T) {
 }
 
 func TestInjectProvider(t *testing.T) {
-	channel := new(mockedChannel)
+	publisher := new(mockedPublisher)
 
 	db := new(mockedTransactionDBAL)
 	db.On("Commit").Once().Return(nil)
 	dbProvider := &mockTransactionalDBALProvider{db}
 
-	interceptor := NewProviderInterceptor(dbProvider, channel)
+	interceptor := NewProviderInterceptor(dbProvider, publisher)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -100,14 +100,14 @@ func TestInjectProvider(t *testing.T) {
 }
 
 func TestOnSuccess(t *testing.T) {
-	channel := new(mockedChannel)
+	publisher := new(mockedPublisher)
 	db := new(mockedTransactionDBAL)
 	dbProvider := &mockTransactionalDBALProvider{db}
 
 	db.On("Commit").Once().Return(nil)
-	channel.On("Publish", mock.Anything).Once().Return(nil)
+	publisher.On("Publish", "testChannel", mock.Anything).Once().Return(nil)
 
-	interceptor := NewProviderInterceptor(dbProvider, channel)
+	interceptor := NewProviderInterceptor(dbProvider, publisher)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -128,13 +128,13 @@ func TestOnSuccess(t *testing.T) {
 }
 
 func TestOnError(t *testing.T) {
-	channel := new(mockedChannel)
+	publisher := new(mockedPublisher)
 	db := new(mockedTransactionDBAL)
 	dbProvider := &mockTransactionalDBALProvider{db}
 
 	db.On("Rollback").Once().Return(nil)
 
-	interceptor := NewProviderInterceptor(dbProvider, channel)
+	interceptor := NewProviderInterceptor(dbProvider, publisher)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
