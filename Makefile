@@ -29,6 +29,10 @@ orchestrator: $(FORWARDER_BIN)
 .PHONY: codegen
 codegen: $(pbgo) $(migrations_binpack) $(lib_generated)
 
+.PHONY: lint
+lint: codegen
+	golangci-lint run
+
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
 	go build -o $(ORCHESTRATOR_BIN) ./server
 
