@@ -51,6 +51,12 @@ func (m *MockServiceProvider) GetAlgoDBAL() persistence.AlgoDBAL {
 	return args.Get(0).(persistence.AlgoDBAL)
 }
 
+// GetDataManagerDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetDataManagerDBAL() persistence.DataManagerDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.DataManagerDBAL)
+}
+
 // GetEventQueue returns whatever value is passed
 func (m *MockServiceProvider) GetEventQueue() event.Queue {
 	args := m.Called()
@@ -79,6 +85,12 @@ func (m *MockServiceProvider) GetPermissionService() PermissionAPI {
 func (m *MockServiceProvider) GetDataSampleService() DataSampleAPI {
 	args := m.Called()
 	return args.Get(0).(DataSampleAPI)
+}
+
+// GetDataManagerService returns whatever value is passed
+func (m *MockServiceProvider) GetDataManagerService() DataManagerAPI {
+	args := m.Called()
+	return args.Get(0).(DataManagerAPI)
 }
 
 // GetAlgoService return whatever value is passed
@@ -138,6 +150,18 @@ func (m *MockObjectiveService) GetObjectives(p *common.Pagination) ([]*asset.Obj
 	return args.Get(0).([]*asset.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
+// ObjectiveExists returns whatever value is passed
+func (m *MockObjectiveService) ObjectiveExists(id string) (bool, error) {
+	args := m.Called(id)
+	return args.Bool(0), args.Error(1)
+}
+
+// CanDownload returns whatever value is passed
+func (m *MockObjectiveService) CanDownload(id string, requester string) (bool, error) {
+	args := m.Called(id, requester)
+	return args.Bool(0), args.Error(1)
+}
+
 // MockDataSampleService is a mock implementing DataSampleAPI
 type MockDataSampleService struct {
 	mock.Mock
@@ -182,6 +206,41 @@ func (m *MockAlgoService) GetAlgo(key string) (*asset.Algo, error) {
 func (m *MockAlgoService) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
+}
+
+// MockDataManagerService is a mock implementing DataManagerAPI
+type MockDataManagerService struct {
+	mock.Mock
+}
+
+// RegisterDataManager returns whatever value is passed
+func (m *MockDataManagerService) RegisterDataManager(datamanager *asset.NewDataManager, owner string) error {
+	args := m.Called(datamanager, owner)
+	return args.Error(0)
+}
+
+// UpdateDataManager returns whatever value is passed
+func (m *MockDataManagerService) UpdateDataManager(datamanager *asset.DataManagerUpdateParam, requester string) error {
+	args := m.Called(datamanager, requester)
+	return args.Error(0)
+}
+
+// GetDataManager returns whatever value is passed
+func (m *MockDataManagerService) GetDataManager(id string) (*asset.DataManager, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.DataManager), args.Error(1)
+}
+
+// GetDataManagers returns whatever value is passed
+func (m *MockDataManagerService) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*asset.DataManager), args.Get(1).(common.PaginationToken), args.Error(2)
+}
+
+// CheckOwner returns whatever value is passed
+func (m *MockDataManagerService) CheckOwner(keys []string, requester string) error {
+	args := m.Called(keys, requester)
+	return args.Error(0)
 }
 
 // MockDispatcher is a mock implenting Dispatcher behavior

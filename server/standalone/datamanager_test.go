@@ -12,20 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asset
+package standalone
 
-// Kind represent the type of assets handled by the orchestrator
-type Kind = string
+import (
+	"testing"
 
-var (
-	// NodeKind is the type of Node assets
-	NodeKind Kind = "node"
-	// ObjectiveKind is the type of Objective assets
-	ObjectiveKind = "objective"
-	// DataSampleKind is the type of DataSample assets
-	DataSampleKind = "datasample"
-	// AlgoKind is the type of Algo assets
-	AlgoKind = "algo"
-	// DataManagerKind is the type of DataManager assets
-	DataManagerKind = "datamanager"
+	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestDataManagerServerImplementServer(t *testing.T) {
+	server := NewDataManagerServer()
+	assert.Implementsf(t, (*asset.DataManagerServiceServer)(nil), server, "DataManagerServer should implements DataManagerServiceServer")
+}

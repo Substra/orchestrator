@@ -45,6 +45,12 @@ func (d *DataSample) Value() (driver.Value, error) {
 	return protojson.Marshal(d)
 }
 
+// Value implements the driver.Valuer interface.
+// Returns the JSON-encoded representation of the DataManager.
+func (d *DataManager) Value() (driver.Value, error) {
+	return protojson.Marshal(d)
+}
+
 // Scan implements the sql.Scanner interface.
 // Decodes JSON into a DataSample.
 func (d *DataSample) Scan(value interface{}) error {
@@ -71,4 +77,15 @@ func (a *Algo) Scan(value interface{}) error {
 	}
 
 	return protojson.Unmarshal(b, a)
+}
+
+// Scan implements the sql.Scanner interface.
+// Decodes JSON into the DataManager
+func (d *DataManager) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot scan datamanager: %w", errors.ErrByteArray)
+	}
+
+	return protojson.Unmarshal(b, d)
 }

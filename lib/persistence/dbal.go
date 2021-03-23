@@ -38,6 +38,7 @@ type ObjectiveDBAL interface {
 	AddObjective(obj *asset.Objective) error
 	GetObjective(id string) (*asset.Objective, error)
 	GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
+	ObjectiveExists(id string) (bool, error)
 }
 
 // DataSampleDBAL is the database abstraction layer for DataSamples
@@ -53,6 +54,15 @@ type AlgoDBAL interface {
 	AddAlgo(obj *asset.Algo) error
 	GetAlgo(id string) (*asset.Algo, error)
 	GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
+}
+
+// DataManagerDBAL is the database abstraction layer for DataManagers
+type DataManagerDBAL interface {
+	AddDataManager(datamanager *asset.DataManager) error
+	UpdateDataManager(datamanager *asset.DataManager) error
+	GetDataManager(id string) (*asset.DataManager, error)
+	GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
+	DataManagersExists(id string) (bool, error)
 }
 
 // NodeDBALProvider representes an object capable of providing a NodeDBAL
@@ -75,10 +85,16 @@ type AlgoDBALProvider interface {
 	GetAlgoDBAL() AlgoDBAL
 }
 
+// DataManagerDBALProvider represents an object capable of providing a DataManagerDBAL
+type DataManagerDBALProvider interface {
+	GetDataManagerDBAL() DataManagerDBAL
+}
+
 // DBAL stands for Database Abstraction Layer, it exposes methods to interact with asset storage.
 type DBAL interface {
 	NodeDBAL
 	ObjectiveDBAL
 	DataSampleDBAL
 	AlgoDBAL
+	DataManagerDBAL
 }

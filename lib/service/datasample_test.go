@@ -27,8 +27,10 @@ import (
 
 func TestRegisterSingleDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
+	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
+	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
 
 	datasample := &asset.NewDataSample{
@@ -45,6 +47,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	}
 
 	dbal.On("AddDataSample", storedDataSample).Return(nil).Once()
+	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
 
 	err := service.RegisterDataSample(datasample, "owner")
 
@@ -53,10 +56,35 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	dbal.AssertExpectations(t)
 }
 
-func TestRegisterMultipleDataSamples(t *testing.T) {
+func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
+	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
+	provider.On("GetDataManagerService").Return(dm)
+	service := NewDataSampleService(provider)
+
+	datasample := &asset.NewDataSample{
+		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
+		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+		TestOnly:        false,
+	}
+
+	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(errors.New("unknown datamanager")).Once()
+
+	err := service.RegisterDataSample(datasample, "owner")
+
+	assert.Error(t, err, "Registration of datasample with invalid datamanager key should fail")
+
+	dbal.AssertExpectations(t)
+}
+
+func TestRegisterMultipleDataSamples(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	dm := new(MockDataManagerService)
+	provider := new(MockServiceProvider)
+	provider.On("GetDataSampleDBAL").Return(dbal)
+	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
 
 	datasamples := &asset.NewDataSample{
@@ -79,6 +107,7 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 		TestOnly:        false,
 	}
 
+	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
 	dbal.On("AddDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("AddDataSample", storedDataSample2).Return(nil).Once()
 
@@ -91,8 +120,10 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 
 func TestUpdateSingleExistingDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
+	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
+	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
 
 	existingDataSample := &asset.DataSample{
@@ -116,6 +147,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 
 	dbal.On("GetDataSample", existingDataSample.GetKey()).Return(existingDataSample, nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample).Return(nil).Once()
+	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
 
 	err := service.UpdateDataSample(updatedDataSample, "owner")
 
@@ -126,8 +158,10 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 
 func TestUpdateMultipleExistingDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
+	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
+	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
 
 	existingDataSample1 := &asset.DataSample{
@@ -165,6 +199,7 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 
 	dbal.On("GetDataSample", existingDataSample1.GetKey()).Return(existingDataSample1, nil).Once()
 	dbal.On("GetDataSample", existingDataSample2.GetKey()).Return(existingDataSample2, nil).Once()
+	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample2).Return(nil).Once()
 
@@ -177,8 +212,10 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 
 func TestUpdateSingleNewDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
+	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
+	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
 
 	updatedDataSample := &asset.DataSampleUpdateParam{
@@ -186,6 +223,7 @@ func TestUpdateSingleNewDataSample(t *testing.T) {
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
 	}
 
+	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
 	dbal.On("GetDataSample", updatedDataSample.GetKeys()[0]).Return(&asset.DataSample{}, errors.New("sql Error")).Once()
 
 	err := service.UpdateDataSample(updatedDataSample, "owner")

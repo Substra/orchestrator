@@ -136,3 +136,47 @@ func TestGetObjectives(t *testing.T) {
 	assert.Equal(t, r[0].Key, obj1.Key)
 	assert.Equal(t, "nextPage", token, "next page token should be returned")
 }
+
+func TestObjectiveExists(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	provider := new(MockServiceProvider)
+	provider.On("GetObjectiveDBAL").Return(dbal)
+	service := NewObjectiveService(provider)
+
+	dbal.On("ObjectiveExists", "obj1").Return(true, nil).Once()
+
+	ok, err := service.ObjectiveExists("obj1")
+
+	assert.Equal(t, ok, true)
+	assert.NoError(t, err)
+}
+
+func TestCanDownload(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	provider := new(MockServiceProvider)
+	provider.On("GetObjectiveDBAL").Return(dbal)
+	service := NewObjectiveService(provider)
+
+	perms := &asset.Permissions{
+		Process: &asset.Permission{Public: true},
+		Download: &asset.Permission{
+			Public:        false,
+			AuthorizedIds: []string{"org-2"},
+		},
+	}
+
+	objective := &asset.Objective{
+		Key:         "obj1",
+		Name:        "Test",
+		Permissions: perms,
+	}
+
+	dbal.On("GetObjective", "obj1").Return(objective, nil).Once()
+
+	ok, err := service.CanDownload("obj1", "org-2")
+
+	assert.Equal(t, ok, true)
+	assert.NoError(t, err)
+
+	dbal.AssertExpectations(t)
+}

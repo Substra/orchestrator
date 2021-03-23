@@ -40,6 +40,7 @@ type DataSampleServiceProvider interface {
 // DataSampleDependencyProvider defines what the DataSampleService needs to perform its duty
 type DataSampleDependencyProvider interface {
 	persistence.DataSampleDBALProvider
+	DataManagerServiceProvider
 }
 
 // DataSampleService is the data samples manipulation entry point
@@ -58,10 +59,13 @@ func (s *DataSampleService) RegisterDataSample(d *asset.NewDataSample, owner str
 	log.WithField("owner", owner).WithField("newDataSample", d).Debug("Registering data sample")
 	err := d.Validate()
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
 	}
 
-	//TODO: Add DataManager validation
+	err = s.GetDataManagerService().CheckOwner(d.GetDataManagerKeys(), owner)
+	if err != nil {
+		return err
+	}
 
 	for _, dataSampleKey := range d.GetKeys() {
 		datasample := &asset.DataSample{
@@ -85,15 +89,18 @@ func (s *DataSampleService) UpdateDataSample(d *asset.DataSampleUpdateParam, own
 	log.WithField("owner", owner).WithField("dataSampleUpdate", d).Debug("Updating data sample")
 	err := d.Validate()
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
 	}
 
-	//TODO: Add DataManager validation
+	err = s.GetDataManagerService().CheckOwner(d.GetDataManagerKeys(), owner)
+	if err != nil {
+		return err
+	}
 
 	for _, dataSampleKey := range d.GetKeys() {
 		datasample, err := s.GetDataSampleDBAL().GetDataSample(dataSampleKey)
 		if err != nil {
-			return err
+			return fmt.Errorf("datasample not found: %w key: %s ", orchestrationErrors.ErrNotFound, dataSampleKey)
 		}
 
 		if datasample.GetOwner() != owner {

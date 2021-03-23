@@ -1,0 +1,53 @@
+graph LR
+%% Nodes definition
+start((Start))
+
+input_valid{{Input is valid}}
+err_input_valid[Error]
+
+dm_exists{{Datamanager already exists}}
+err_dm_exists[Error]
+
+obj_owner{{Owner can download Objective}}
+err_obj_owner[Error]
+
+set_owner(Set asset owner)
+
+obj_set{{Is objective_key set}}
+
+store_dm(Store dataManager)
+
+obj_exists{{Objective exists}}
+err_obj_exists[Error]
+
+End1((End))
+
+%% Dependency graph
+start --> input_valid
+
+input_valid --yes--> obj_set
+input_valid --no--> err_input_valid
+
+obj_set --no--> set_owner
+obj_set --yes--> obj_exists
+
+obj_exists --yes--> obj_owner
+obj_exists --no--> err_obj_exists
+
+obj_owner --yes--> set_owner
+obj_owner --no--> err_obj_owner
+
+set_owner --> store_dm
+
+store_dm --> dm_exists
+
+dm_exists --no--> End1
+dm_exists --yes--> err_dm_exists
+
+%% Style
+classDef default fill:#5b6fb3,color:#ffffff;
+classDef startEnd fill:#C961A1,color:#ffffff;
+classDef error fill:#ffab40,color:#ffffff;
+
+class start,End1 startEnd;
+class err_input_valid,err_dm_exists,err_obj_exists,err_obj_owner error;

@@ -1,0 +1,23 @@
+graph LR
+
+start((Start))
+q1{{Requester is owner}}
+q2{{Process permissions are public}}
+q3{{Requester is in process.AuthorizedIds}}
+ret1[Return true]
+ret2[Return false]
+End1((End))
+
+start --> q1
+q1 --yes--> ret1
+q1 --no--> q2
+q2 --yes--> ret1
+q2 --no--> q3
+q3 --yes--> ret1
+q3 --no--> ret2
+ret2 --> End1
+ret1 --> End1
+
+classDef default fill:#5b6fb3,color:#ffffff;
+classDef startEnd fill:#C961A1,color:#ffffff;
+class start,End1 startEnd;

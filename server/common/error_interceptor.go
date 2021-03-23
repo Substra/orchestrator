@@ -74,6 +74,12 @@ func fromMessage(msg string) error {
 		return status.Error(codes.AlreadyExists, msg)
 	case strings.Contains(msg, orchestrationErrors.ErrPermissionDenied.Error()):
 		return status.Error(codes.PermissionDenied, msg)
+	case strings.Contains(msg, orchestrationErrors.ErrReferenceNotFound.Error()):
+		return status.Error(codes.InvalidArgument, msg)
+	case strings.Contains(msg, orchestrationErrors.ErrNotFound.Error()):
+		return status.Error(codes.NotFound, msg)
+	case strings.Contains(msg, orchestrationErrors.ErrBadRequest.Error()):
+		return status.Error(codes.FailedPrecondition, msg)
 	default:
 		return status.Error(codes.Unknown, msg)
 	}
@@ -90,6 +96,12 @@ func fromError(err error) error {
 		return status.Error(codes.AlreadyExists, err.Error())
 	case errors.Is(err, orchestrationErrors.ErrPermissionDenied):
 		return status.Error(codes.PermissionDenied, err.Error())
+	case errors.Is(err, orchestrationErrors.ErrReferenceNotFound):
+		return status.Error(codes.InvalidArgument, err.Error())
+	case errors.Is(err, orchestrationErrors.ErrNotFound):
+		return status.Error(codes.NotFound, err.Error())
+	case errors.Is(err, orchestrationErrors.ErrBadRequest):
+		return status.Error(codes.FailedPrecondition, err.Error())
 	default:
 		return status.Error(codes.Unknown, err.Error())
 	}

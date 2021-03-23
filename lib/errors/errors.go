@@ -32,6 +32,12 @@ import "errors"
 // ErrByteArray happens when attempting to load invalid data as json byte array
 var ErrByteArray = errors.New("OE0001")
 
+// ErrNotFound happens when the asset is not present in the persistence layer
+var ErrNotFound = errors.New("OE0002")
+
+// ErrBadRequest happens when the request can't be fulfilled
+var ErrBadRequest = errors.New("OE0003")
+
 // ErrConflict is a sentinel value to mark conflicting asset errors.
 var ErrConflict = errors.New("OE0006") // value 6 match gRPC AlreadyExists status code
 
@@ -44,3 +50,6 @@ var ErrInvalidAsset = errors.New("OE0101")
 // ErrPermissionDenied happens when you try to perform an action on an asset
 // that you do not own.
 var ErrPermissionDenied = errors.New("OE0102")
+
+// ErrReferenceNotFound happens when an asset is not present in the persistence layer
+var ErrReferenceNotFound = errors.New("OE0103")

@@ -62,6 +62,12 @@ func (m *MockDBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, comm
 	return args.Get(0).([]*asset.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
+// ObjectiveExists is a mock
+func (m *MockDBAL) ObjectiveExists(id string) (bool, error) {
+	args := m.Called(id)
+	return args.Bool(0), args.Error(1)
+}
+
 // AddDataSample is a mock
 func (m *MockDBAL) AddDataSample(dataSample *asset.DataSample) error {
 	args := m.Called(dataSample)
@@ -102,4 +108,34 @@ func (m *MockDBAL) GetAlgo(id string) (*asset.Algo, error) {
 func (m *MockDBAL) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
+}
+
+// AddDataManager is a mock
+func (m *MockDBAL) AddDataManager(datamanager *asset.DataManager) error {
+	args := m.Called(datamanager)
+	return args.Error(0)
+}
+
+// UpdateDataManager is a mock
+func (m *MockDBAL) UpdateDataManager(datamanager *asset.DataManager) error {
+	args := m.Called(datamanager)
+	return args.Error(0)
+}
+
+// GetDataManager is a mock
+func (m *MockDBAL) GetDataManager(id string) (*asset.DataManager, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.DataManager), args.Error(1)
+}
+
+// GetDataManagers is a mock
+func (m *MockDBAL) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*asset.DataManager), args.Get(1).(common.PaginationToken), args.Error(2)
+}
+
+// DataManagersExists is a mock
+func (m *MockDBAL) DataManagersExists(id string) (bool, error) {
+	args := m.Called(id)
+	return args.Bool(0), args.Error(1)
 }

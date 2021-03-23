@@ -29,10 +29,13 @@ func TestStatusConversion(t *testing.T) {
 		err  error
 		code codes.Code
 	}{
-		"conflict":     {err: errors.ErrConflict, code: codes.AlreadyExists},
-		"validation":   {err: errors.ErrInvalidAsset, code: codes.InvalidArgument},
-		"unknown":      {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
-		"unauthorized": {err: errors.ErrPermissionDenied, code: codes.PermissionDenied},
+		"conflict":          {err: errors.ErrConflict, code: codes.AlreadyExists},
+		"validation":        {err: errors.ErrInvalidAsset, code: codes.InvalidArgument},
+		"unknown":           {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
+		"unauthorized":      {err: errors.ErrPermissionDenied, code: codes.PermissionDenied},
+		"invalid_reference": {err: errors.ErrReferenceNotFound, code: codes.InvalidArgument},
+		"notfound":          {err: errors.ErrNotFound, code: codes.NotFound},
+		"badrequest":        {err: errors.ErrBadRequest, code: codes.FailedPrecondition},
 	}
 
 	for name, tc := range cases {

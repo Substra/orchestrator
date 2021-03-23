@@ -113,6 +113,16 @@ func (d *DBAL) GetObjective(id string) (*asset.Objective, error) {
 	return objective, nil
 }
 
+// ObjectiveExists implements persistence.ObjectiveDBAL
+func (d *DBAL) ObjectiveExists(id string) (bool, error) {
+	row := d.tx.QueryRow(`select count(id) from "objectives" where id=$1 and channel=$2`, id, d.channel)
+
+	var count int
+	err := row.Scan(&count)
+
+	return count == 1, err
+}
+
 // GetObjectives implements persistence.ObjectiveDBAL
 func (d *DBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	var rows *sql.Rows

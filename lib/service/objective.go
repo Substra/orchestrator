@@ -23,6 +23,7 @@ import (
 	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"github.com/owkin/orchestrator/utils"
 )
 
 // ObjectiveAPI defines the methods to act on Objectives
@@ -30,6 +31,8 @@ type ObjectiveAPI interface {
 	RegisterObjective(objective *asset.NewObjective, owner string) (*asset.Objective, error)
 	GetObjective(string) (*asset.Objective, error)
 	GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
+	ObjectiveExists(id string) (bool, error)
+	CanDownload(id string, requester string) (bool, error)
 }
 
 // ObjectiveServiceProvider defines an object able to provide an ObjectiveAPI instance
@@ -108,4 +111,24 @@ func (s *ObjectiveService) GetObjective(id string) (*asset.Objective, error) {
 // GetObjectives returns all stored objectives
 func (s *ObjectiveService) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	return s.GetObjectiveDBAL().GetObjectives(p)
+}
+
+// ObjectiveExists checks if an objective with the provided key exists in the persistence layer
+func (s *ObjectiveService) ObjectiveExists(id string) (bool, error) {
+	return s.GetObjectiveDBAL().ObjectiveExists(id)
+}
+
+// CanDownload checks if the requester can download the objective corresponding to the provided key
+func (s *ObjectiveService) CanDownload(id string, requester string) (bool, error) {
+	obj, err := s.GetObjective(id)
+
+	if err != nil {
+		return false, err
+	}
+
+	if obj.Permissions.Download.Public || utils.StringInSlice(obj.Permissions.Download.AuthorizedIds, requester) {
+		return true, nil
+	}
+
+	return false, nil
 }

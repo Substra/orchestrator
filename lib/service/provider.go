@@ -29,6 +29,7 @@ type DependenciesProvider interface {
 	DataSampleServiceProvider
 	AlgoServiceProvider
 	PermissionServiceProvider
+	DataManagerServiceProvider
 }
 
 // Provider is the central part of the dependency injection pattern.
@@ -37,13 +38,14 @@ type DependenciesProvider interface {
 // Each service should define a ServiceDependencyProvider interface which states what are its requirements.
 // Since the Provider implements every Provider interface, it can fit all service dependencies.
 type Provider struct {
-	dbal       persistence.DBAL
-	eventQueue event.Queue
-	node       NodeAPI
-	objective  ObjectiveAPI
-	permission PermissionAPI
-	datasample DataSampleAPI
-	algo       AlgoAPI
+	dbal        persistence.DBAL
+	eventQueue  event.Queue
+	node        NodeAPI
+	objective   ObjectiveAPI
+	permission  PermissionAPI
+	datasample  DataSampleAPI
+	algo        AlgoAPI
+	datamanager DataManagerAPI
 }
 
 // NewProvider return an instance of Provider based on given persistence layer.
@@ -63,6 +65,11 @@ func (sc *Provider) GetObjectiveDBAL() persistence.ObjectiveDBAL {
 
 // GetDataSampleDBAL returns the database abstraction layer for DataSamples
 func (sc *Provider) GetDataSampleDBAL() persistence.DataSampleDBAL {
+	return sc.dbal
+}
+
+// GetDataManagerDBAL returns the database abstraction layer for DataSamples
+func (sc *Provider) GetDataManagerDBAL() persistence.DataManagerDBAL {
 	return sc.dbal
 }
 
@@ -101,6 +108,15 @@ func (sc *Provider) GetDataSampleService() DataSampleAPI {
 		sc.datasample = NewDataSampleService(sc)
 	}
 	return sc.datasample
+}
+
+// GetDataManagerService returns a DataSampleAPI instance.
+// The service will be instanciated if needed.
+func (sc *Provider) GetDataManagerService() DataManagerAPI {
+	if sc.datamanager == nil {
+		sc.datamanager = NewDataManagerService(sc)
+	}
+	return sc.datamanager
 }
 
 // GetAlgoService returns an AlgoAPI instance.

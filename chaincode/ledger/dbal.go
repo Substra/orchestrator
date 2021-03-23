@@ -279,6 +279,11 @@ func (db *DB) AddObjective(obj *asset.Objective) error {
 	return nil
 }
 
+// ObjectiveExists implements persistence.ObjectiveDBAL
+func (db *DB) ObjectiveExists(id string) (bool, error) {
+	return db.hasKey(asset.ObjectiveKind, id)
+}
+
 // GetObjective retrieves an objective by its ID
 func (db *DB) GetObjective(id string) (*asset.Objective, error) {
 	o := asset.Objective{}
