@@ -26,7 +26,7 @@ Make sure you have theses requirements fulfilled before trying to build the orch
 End to end testing requires some dependencies: a postgres database and a rabbitmq broker.
 Assuming you use minikube, e2e tests can be run with the following:
 
-```
+```bash
 docker run --name e2e-pg -e POSTGRES_PASSWORD=postgres -p5432:5432 -d postgres
 docker run --name e2e-rabbit -p5672:5672 -d rabbitmq
 export DATABASE_URL=postgresql://postgres:postgres@$(minikube ip):5432/postgres?sslmode=disable
@@ -49,29 +49,59 @@ When running in standalone mode, the orchestrator needs a [postgres](https://www
 database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker to dispatch events.
 
 To launch the orchestrator:
-```
-skaffold dev
+```bash
+skaffold dev -p solo
+skaffold run -p solo
 ```
 
-Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster, the following command should list available services:
+Or
+
+```bash
+ORCHESTRATOR_MODE="" skaffold dev
+ORCHESTRATOR_MODE="" skaffold run
+
 ```
+
+Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
+```bash
 grpcurl -insecure orchestrator.node-1.com:443 list
 ```
+
+You can also deploy [connect-backend](https://github.com/owkin/connect-backend/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev` or `skaffold run`
 
 ### Chaincode mode
 
 In chaincode mode, the orchestrator only requires a matching chaincode:
+So you need to build the chaincode image (from this repo) to be used in `hlf-k8s` in your k8s cluster
 
-```
+```bash
+# In minikube context do not forget to set your docker-env like this: `eval $(minikube -p minikube docker-env)
 docker build -f docker/chaincode/Dockerfile -t my-chaincode:1.0.0 .
 ```
 
-Make sure you deploy [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) on `orchestrator` branch.
+Make sure you deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev` or `skaffold run`
 
-Then:
+Then, in the orchestrator repo:
+
+```bash
+skaffold dev -p chaincode -p -solo
+skaffold run -p chaincode -p -solo
 ```
-skaffold dev -p chaincode
+
+Or
+
+```bash
+ORCHESTRATOR_MODE="chaincode" skaffold dev
+ORCHESTRATOR_MODE="chaincode" skaffold run
 ```
+
+Assuming `orchestrator.node-1.com` and `orchestrator.node-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
+```bash
+grpcurl -insecure orchestrator.node-1.com:443 list
+grpcurl -insecure orchestrator.node-2.com:443 list
+```
+
+You can also deploy [connect-backend](https://github.com/owkin/connect-backend/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev -p distributed` or `skaffold run -p distributed`
 
 ### Testing
 
@@ -81,4 +111,34 @@ You can call the local orchestrator gRPC endpoint using [evans](https://github.c
 evans --tls --cacert examples/tools/ca.crt --host orchestrator.node-1.com -p 443 -r repl --cert examples/tools/client-org-1.crt --certkey examples/tools/client-org-1.key
 ```
 
+Then you can launch call like this :
+```
+package orchestrator
+service NodeService
+header mspid=MyOrg1MSP channel=mychannel chaincode=mycc
+call QueryNodes
+```
+
 Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress)
+
+In minikube, you can patch it with something like this :
+
+```yaml
+---
+spec:
+  template:
+    spec:
+      containers:
+      - name: controller
+        args:
+          - /nginx-ingress-controller
+          - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-conf
+          - --report-node-internal-ip-address
+          - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
+          - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
+          - --validating-webhook=:8443
+          - --validating-webhook-certificate=/usr/local/certificates/cert
+          - --validating-webhook-key=/usr/local/certificates/key
+          - --enable-ssl-passthrough
+
+```
