@@ -38,11 +38,10 @@ func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.N
 		return nil, err
 	}
 	method := "org.substra.datamanager:RegisterDataManager"
-	response := &asset.NewDataManagerResponse{}
 
-	err = invocator.Invoke(method, d, response)
+	err = invocator.Invoke(method, d, nil)
 
-	return response, err
+	return &asset.NewDataManagerResponse{}, err
 }
 
 // UpdateDataManager will update the objective of an existing DataManager
@@ -52,11 +51,10 @@ func (s *DataManagerAdapter) UpdateDataManager(ctx context.Context, d *asset.Dat
 		return nil, err
 	}
 	method := "org.substra.datamanager:UpdateDataManager"
-	response := &asset.DataManagerUpdateResponse{}
 
-	err = invocator.Invoke(method, d, response)
+	err = invocator.Invoke(method, d, nil)
 
-	return response, err
+	return &asset.DataManagerUpdateResponse{}, err
 }
 
 // QueryDataManager fetches a datamanager by its key

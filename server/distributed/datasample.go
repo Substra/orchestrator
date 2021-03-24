@@ -37,11 +37,10 @@ func (a *DataSampleAdapter) RegisterDataSample(ctx context.Context, param *asset
 		return nil, err
 	}
 	method := "org.substra.datasample:RegisterDataSample"
-	response := &asset.NewDataSampleResponse{}
 
-	err = invocator.Invoke(method, param, response)
+	err = invocator.Invoke(method, param, nil)
 
-	return response, err
+	return &asset.NewDataSampleResponse{}, err
 }
 
 // UpdateDataSample will update a DataSample from the state
@@ -51,11 +50,10 @@ func (a *DataSampleAdapter) UpdateDataSample(ctx context.Context, param *asset.D
 		return nil, err
 	}
 	method := "org.substra.datasample:UpdateDataSample"
-	response := &asset.DataSampleUpdateResponse{}
 
-	err = invocator.Invoke(method, param, response)
+	err = invocator.Invoke(method, param, nil)
 
-	return response, err
+	return &asset.DataSampleUpdateResponse{}, err
 }
 
 // QueryDataSamples returns all DataSamples

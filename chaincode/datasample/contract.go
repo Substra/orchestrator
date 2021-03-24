@@ -38,36 +38,36 @@ func NewSmartContract() *SmartContract {
 
 // RegisterDataSample creates a new data sample in world state
 // If the key exists, it will throw an error
-func (s *SmartContract) RegisterDataSample(ctx ledger.TransactionContext, params *asset.NewDataSample) (*asset.NewDataSampleResponse, error) {
+func (s *SmartContract) RegisterDataSample(ctx ledger.TransactionContext, params *asset.NewDataSample) error {
 	service := ctx.GetProvider().GetDataSampleService()
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = service.RegisterDataSample(params, owner)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &asset.NewDataSampleResponse{}, nil
+	return nil
 }
 
 // UpdateDataSample updates a data sample in world state
 // If the key does not exist, it will throw an error
-func (s *SmartContract) UpdateDataSample(ctx ledger.TransactionContext, params *asset.DataSampleUpdateParam) (*asset.DataSampleUpdateResponse, error) {
+func (s *SmartContract) UpdateDataSample(ctx ledger.TransactionContext, params *asset.DataSampleUpdateParam) error {
 	service := ctx.GetProvider().GetDataSampleService()
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = service.UpdateDataSample(params, owner)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &asset.DataSampleUpdateResponse{}, nil
+	return nil
 }
 
 // QueryDataSamples returns the datasamples

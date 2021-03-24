@@ -93,6 +93,6 @@ func TestRegistration(t *testing.T) {
 
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	_, err := contract.RegisterDataManager(ctx, newObj)
+	err := contract.RegisterDataManager(ctx, newObj)
 	assert.NoError(t, err)
 }

@@ -69,9 +69,11 @@ func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessag
 		return err
 	}
 
-	err = json.Unmarshal(data, &output)
-	if err != nil {
-		return err
+	if output != nil {
+		err = json.Unmarshal(data, &output)
+		if err != nil {
+			return err
+		}
 	}
 
 	elapsed := time.Since(start)

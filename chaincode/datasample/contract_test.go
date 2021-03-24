@@ -54,7 +54,7 @@ func TestRegistration(t *testing.T) {
 	ctx.On("GetStub").Return(stub).Once()
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	_, err := contract.RegisterDataSample(ctx, newDataSample)
+	err := contract.RegisterDataSample(ctx, newDataSample)
 	assert.NoError(t, err, "Smart contract execution should not fail")
 }
 
@@ -76,7 +76,7 @@ func TestUpdate(t *testing.T) {
 	ctx.On("GetStub").Return(stub).Once()
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	_, err := contract.UpdateDataSample(ctx, updateDataSample)
+	err := contract.UpdateDataSample(ctx, updateDataSample)
 	assert.NoError(t, err, "Smart contract execution should not fail")
 }
 

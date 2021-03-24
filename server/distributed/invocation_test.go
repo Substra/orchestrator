@@ -95,3 +95,23 @@ func TestParamWrapping(t *testing.T) {
 
 	assert.Equal(t, "test", output.NextPageToken, "response should be properly unwrapped")
 }
+
+func TestNoOutput(t *testing.T) {
+	contract := &mockContract{}
+
+	invocator := &ContractInvocator{contract: contract}
+
+	// Invocation param is a protoreflect.ProtoMessage
+	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
+
+	// Which is serialized
+	serializedInput, err := json.Marshal(param)
+	assert.NoError(t, err)
+	// And converted to strings to match gateway contract
+	expectedInput := []string{string(serializedInput)}
+
+	contract.On("SubmitTransaction", "org.test:NoOutput", expectedInput).Return([]byte{}, nil)
+
+	err = invocator.Invoke("org.test:NoOutput", param, nil)
+	assert.NoError(t, err)
+}

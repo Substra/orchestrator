@@ -38,36 +38,36 @@ func NewSmartContract() *SmartContract {
 
 // RegisterDataManager creates a new data Manager in world state
 // If the key exists, it will throw an error
-func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, params *asset.NewDataManager) (*asset.NewDataManagerResponse, error) {
+func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, params *asset.NewDataManager) error {
 	service := ctx.GetProvider().GetDataManagerService()
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = service.RegisterDataManager(params, owner)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &asset.NewDataManagerResponse{}, nil
+	return nil
 }
 
 // UpdateDataManager updates a data manager in world state
 // If the key does not exist, it will throw an error
-func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, params *asset.DataManagerUpdateParam) (*asset.DataManagerUpdateResponse, error) {
+func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, params *asset.DataManagerUpdateParam) error {
 	service := ctx.GetProvider().GetDataManagerService()
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = service.UpdateDataManager(params, owner)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &asset.DataManagerUpdateResponse{}, nil
+	return nil
 }
 
 // QueryDataManager returns the DataManager with given key

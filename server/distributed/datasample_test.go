@@ -39,7 +39,7 @@ func TestRegisterDataSample(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Invoke", "org.substra.datasample:RegisterDataSample", newDS, &asset.NewDataSampleResponse{}).Return(nil)
+	invocator.On("Invoke", "org.substra.datasample:RegisterDataSample", newDS, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -59,7 +59,7 @@ func TestUpdateDataSample(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Invoke", "org.substra.datasample:UpdateDataSample", updatedDS, &asset.DataSampleUpdateResponse{}).Return(nil)
+	invocator.On("Invoke", "org.substra.datasample:UpdateDataSample", updatedDS, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
