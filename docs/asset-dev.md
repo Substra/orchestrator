@@ -117,6 +117,8 @@ Don't forget to flag the evaluate transaction (query only) by implementing `GetE
 
 Using the *DependenciesProvider* is as easy as writing: `provider := ctx.GetProvider()` in your contracts.
 
+Finally you can add your smart contract to the `contracts` struct in `chaincode/main.go` to have it published.
+
 **Note**: contracts should have the same inputs and outputs than the gRPC service.
 That way, the *Invocator* (more below) can transparently handle the serialization/deserialization.
 
