@@ -59,7 +59,7 @@ $(pbgo): %.pb.go: %.proto
 $(migrations_binpack): $(sql_migrations)
 	go-bindata -pkg migration -prefix $(MIGRATIONS_DIR) -o $(migrations_binpack) $(MIGRATIONS_DIR)
 
-$(lib_generated): $(LIBCODEGEN_BIN)
+$(lib_generated): $(LIBCODEGEN_BIN) $(pbgo)
 	$(LIBCODEGEN_BIN) -path $(protos) > $(lib_generated)
 
 .PHONY: proto-codegen
