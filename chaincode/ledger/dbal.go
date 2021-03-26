@@ -338,6 +338,10 @@ func (db *DB) AddDataSample(dataSample *asset.DataSample) error {
 		return err
 	}
 
+	if err = db.createIndex("dataSample~owner~key", []string{"dataSample", dataSample.Owner, dataSample.Key}); err != nil {
+		return err
+	}
+
 	for _, dataManagerKey := range dataSample.GetDataManagerKeys() {
 		// create composite keys to find all dataSample associated with a dataManager
 		if err = db.createIndex("dataSample~dataManager~key", []string{"dataSample", dataManagerKey, dataSample.GetKey()}); err != nil {
@@ -405,7 +409,7 @@ func (db *DB) GetDataSample(id string) (*asset.DataSample, error) {
 
 // GetDataSamples implements persistence.DataSampleDBAL
 func (db *DB) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
-	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("dataSample~dataManager~key", []string{"dataSample"}, p.Size, p.Token)
+	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("dataSample~owner~key", []string{"dataSample"}, p.Size, p.Token)
 	if err != nil {
 		return nil, "", err
 	}
