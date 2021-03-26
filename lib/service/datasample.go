@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/utils"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -30,6 +31,8 @@ type DataSampleAPI interface {
 	RegisterDataSample(datasample *asset.NewDataSample, owner string) error
 	UpdateDataSample(datasample *asset.DataSampleUpdateParam, owner string) error
 	GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
+	CheckSameManager(managerKey string, sampleKeys []string) error
+	IsTestOnly(sampleKeys []string) (bool, error)
 }
 
 // DataSampleServiceProvider defines an object able to provide a DataSampleAPI instance
@@ -121,4 +124,31 @@ func (s *DataSampleService) UpdateDataSample(d *asset.DataSampleUpdateParam, own
 // GetDataSamples returns all stored datasamples
 func (s *DataSampleService) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
 	return s.GetDataSampleDBAL().GetDataSamples(p)
+}
+
+// CheckSameManager validates that samples all have in common the given manager.
+func (s *DataSampleService) CheckSameManager(managerKey string, sampleKeys []string) error {
+	for _, sampleKey := range sampleKeys {
+		dataSample, err := s.GetDataSampleDBAL().GetDataSample(sampleKey)
+		if err != nil {
+			return err
+		}
+		if !utils.StringInSlice(dataSample.DataManagerKeys, managerKey) {
+			return fmt.Errorf("datasamples do not share a common manager: %w", orchestrationErrors.ErrInvalidAsset)
+		}
+	}
+	return nil
+}
+
+// IsOnlyUsage returns if givens samples are for sanctuarized test data
+func (s *DataSampleService) IsTestOnly(sampleKeys []string) (bool, error) {
+	testOnly := true
+	for _, sampleKey := range sampleKeys {
+		dataSample, err := s.GetDataSampleDBAL().GetDataSample(sampleKey)
+		if err != nil {
+			return false, err
+		}
+		testOnly = testOnly && dataSample.TestOnly
+	}
+	return testOnly, nil
 }

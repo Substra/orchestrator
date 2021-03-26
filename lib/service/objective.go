@@ -45,6 +45,7 @@ type ObjectiveDependencyProvider interface {
 	persistence.ObjectiveDBALProvider
 	event.QueueProvider
 	PermissionServiceProvider
+	DataSampleServiceProvider
 }
 
 // ObjectiveService is the objective manipulation entry point
@@ -66,23 +67,32 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		return nil, fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
 	}
 
-	testDataset := o.TestDataset
-	if testDataset != nil { // nolint TODO
-		// err = datasetService.RegisterDataset(testDataset)
-		// if err != nil {
-		//	return err
-		// }
-	}
-
 	objective := &asset.Objective{
 		Key:         o.Key,
 		Name:        o.Name,
-		TestDataset: testDataset,
 		Description: o.Description,
 		MetricsName: o.MetricsName,
 		Metrics:     o.Metrics,
 		Metadata:    o.Metadata,
 		Owner:       owner,
+	}
+
+	if o.DataManagerKey != "" {
+		err := s.GetDataSampleService().CheckSameManager(o.GetDataManagerKey(), o.GetDataSampleKeys())
+		if err != nil {
+			return nil, err
+		}
+		testOnly, err := s.GetDataSampleService().IsTestOnly(o.GetDataSampleKeys())
+		if err != nil {
+			return nil, err
+		}
+		if !testOnly {
+			return nil, fmt.Errorf("datasamples are not test only: %w", orchestrationErrors.ErrInvalidAsset)
+		}
+
+		// Couple manager + samples is valid, let's associate them with the objective
+		objective.DataManagerKey = o.GetDataManagerKey()
+		objective.DataSampleKeys = o.GetDataSampleKeys()
 	}
 
 	objective.Permissions, err = s.GetPermissionService().CreatePermissions(owner, o.NewPermissions)

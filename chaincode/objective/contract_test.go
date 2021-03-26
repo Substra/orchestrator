@@ -40,7 +40,6 @@ func TestRegistration(t *testing.T) {
 	contract := &SmartContract{}
 
 	addressable := &asset.Addressable{}
-	testDataset := &asset.Dataset{}
 	newPerms := &asset.NewPermissions{}
 	metadata := map[string]string{"test": "true"}
 
@@ -52,7 +51,6 @@ func TestRegistration(t *testing.T) {
 		Description:    addressable,
 		MetricsName:    "metrics name",
 		Metrics:        addressable,
-		TestDataset:    testDataset,
 		Metadata:       metadata,
 		NewPermissions: newPerms,
 	}

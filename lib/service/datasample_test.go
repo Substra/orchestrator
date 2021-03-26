@@ -260,3 +260,73 @@ func TestGetDataSamples(t *testing.T) {
 	assert.Equal(t, r[0].Key, ds1.Key)
 	assert.Equal(t, "nextPage", token, "next page token should be returned")
 }
+
+func TestCheckSameManager(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	provider := new(MockServiceProvider)
+	provider.On("GetDataSampleDBAL").Return(dbal)
+	service := NewDataSampleService(provider)
+
+	ds1 := &asset.DataSample{
+		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+		Owner:           "owner",
+		TestOnly:        false,
+	}
+
+	ds2 := &asset.DataSample{
+		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
+		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
+		Owner:           "owner",
+		TestOnly:        false,
+	}
+
+	dbal.On("GetDataSample", ds1.GetKey()).Return(ds1, nil)
+	dbal.On("GetDataSample", ds2.GetKey()).Return(ds2, nil)
+
+	err := service.CheckSameManager("9eef1e88-951a-44fb-944a-c3dbd1d72d85", []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84"})
+	assert.NoError(t, err, "samples share a common manager")
+
+	err = service.CheckSameManager("4da124eb-4da3-45e2-bc61-1924be259032", []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84"})
+	assert.Error(t, err, "samples do not share a common manager")
+}
+
+func TestIsTestOnly(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	provider := new(MockServiceProvider)
+	provider.On("GetDataSampleDBAL").Return(dbal)
+	service := NewDataSampleService(provider)
+
+	ds1 := &asset.DataSample{
+		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+		Owner:           "owner",
+		TestOnly:        true,
+	}
+
+	ds2 := &asset.DataSample{
+		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
+		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
+		Owner:           "owner",
+		TestOnly:        true,
+	}
+
+	ds3 := &asset.DataSample{
+		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a85",
+		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
+		Owner:           "owner",
+		TestOnly:        false,
+	}
+
+	dbal.On("GetDataSample", ds1.GetKey()).Return(ds1, nil)
+	dbal.On("GetDataSample", ds2.GetKey()).Return(ds2, nil)
+	dbal.On("GetDataSample", ds3.GetKey()).Return(ds3, nil)
+
+	testOnly, err := service.IsTestOnly([]string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a85"})
+	assert.NoError(t, err, "check on usage should not fail")
+	assert.False(t, testOnly)
+
+	testOnly, err = service.IsTestOnly([]string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84"})
+	assert.NoError(t, err, "check on usage should not fail")
+	assert.True(t, testOnly)
+}

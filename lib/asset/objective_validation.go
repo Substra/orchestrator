@@ -16,7 +16,7 @@ package asset
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	is "github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 // Validate returns an error if the new objective is not valid:
@@ -30,6 +30,7 @@ func (o *NewObjective) Validate() error {
 		validation.Field(&o.Description, validation.Required),
 		validation.Field(&o.NewPermissions, validation.Required),
 		validation.Field(&o.Metrics, validation.Required),
-		validation.Field(&o.TestDataset),
+		validation.Field(&o.DataManagerKey, is.UUID),
+		validation.Field(&o.DataSampleKeys, validation.When(o.DataManagerKey != "", validation.Each(validation.Required, is.UUID))),
 	)
 }
