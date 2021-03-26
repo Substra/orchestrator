@@ -17,7 +17,6 @@ syntax = "proto3";
 package orchestrator;
 
 import "common.proto";
-import "dataset.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
@@ -25,13 +24,14 @@ option go_package = "github.com/owkin/orchestrator/lib/asset";
 message Objective {
   string key = 1;
   string name = 2;
-  Dataset test_dataset = 3;
-  Addressable description = 4;
-  string metrics_name = 5;
-  Addressable metrics = 6;
-  Permissions permissions = 7;
-  map<string, string> metadata = 8;
-  string owner = 9;
+  string data_manager_key = 3;
+  repeated string data_sample_keys = 4;
+  Addressable description = 5;
+  string metrics_name = 6;
+  Addressable metrics = 7;
+  Permissions permissions = 8;
+  map<string, string> metadata = 9;
+  string owner = 10;
 }
 
 // NewObjective is used to register an Objective.
@@ -39,12 +39,13 @@ message Objective {
 message NewObjective {
   string key = 1;
   string name = 2;
-  Dataset test_dataset = 3;
-  Addressable description = 4;
-  string metrics_name = 5;
-  Addressable metrics = 6;
-  NewPermissions new_permissions = 7;
-  map<string, string> metadata = 8;
+  string data_manager_key = 3;
+  repeated string data_sample_keys = 4;
+  Addressable description = 5;
+  string metrics_name = 6;
+  Addressable metrics = 7;
+  NewPermissions new_permissions = 8;
+  map<string, string> metadata = 9;
 }
 
 message ObjectiveQueryParam {

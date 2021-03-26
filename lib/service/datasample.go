@@ -32,7 +32,7 @@ type DataSampleAPI interface {
 	UpdateDataSample(datasample *asset.DataSampleUpdateParam, owner string) error
 	GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
 	CheckSameManager(managerKey string, sampleKeys []string) error
-	CheckTestOnly(sampleKeys []string) (bool, error)
+	IsTestOnly(sampleKeys []string) (bool, error)
 }
 
 // DataSampleServiceProvider defines an object able to provide a DataSampleAPI instance
@@ -140,8 +140,8 @@ func (s *DataSampleService) CheckSameManager(managerKey string, sampleKeys []str
 	return nil
 }
 
-// CheckOnlyUsage returns if givens samples are for sanctuarized test data
-func (s *DataSampleService) CheckTestOnly(sampleKeys []string) (bool, error) {
+// IsOnlyUsage returns if givens samples are for sanctuarized test data
+func (s *DataSampleService) IsTestOnly(sampleKeys []string) (bool, error) {
 	testOnly := true
 	for _, sampleKey := range sampleKeys {
 		dataSample, err := s.GetDataSampleDBAL().GetDataSample(sampleKey)

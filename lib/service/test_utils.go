@@ -185,6 +185,18 @@ func (m *MockDataSampleService) GetDataSamples(p *common.Pagination) ([]*asset.D
 	return args.Get(0).([]*asset.DataSample), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
+// IsTestOnly returns whatever value is passed
+func (m *MockDataSampleService) IsTestOnly(keys []string) (bool, error) {
+	args := m.Called(keys)
+	return args.Bool(0), args.Error(1)
+}
+
+// CheckSameManager returns whatever value is passed
+func (m *MockDataSampleService) CheckSameManager(managerKey string, sampleKeys []string) error {
+	args := m.Called(managerKey, sampleKeys)
+	return args.Error(0)
+}
+
 // MockAlgoService is a mock implementing AlgoAPI
 type MockAlgoService struct {
 	mock.Mock

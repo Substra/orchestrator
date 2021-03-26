@@ -15,10 +15,9 @@
 package standalone
 
 import (
-	"log"
-
 	"context"
 
+	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
@@ -36,8 +35,7 @@ func NewObjectiveServer() *ObjectiveServer {
 
 // RegisterObjective will persiste a new objective
 func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *asset.NewObjective) (*asset.Objective, error) {
-	log.Println(o)
-	log.Printf("objective: %s, %s, %s", o.GetKey(), o.GetName(), o.GetTestDataset())
+	log.WithField("objective", o).Debug("register objective")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
