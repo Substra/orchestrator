@@ -50,6 +50,13 @@ jobs:
         run: |
           cd /tmp
           go get -u github.com/go-bindata/go-bindata/...
+      - name: wait for rabbitmq
+        # We don't explicitely wait for postgres since it will almost certainly come up before rabbit
+        run: |
+          while ! $(nc localhost 5672 -z); do
+            sleep 2
+          done
+        timeout-minutes: 1
       - name: end2end testing
         run: make e2e-tests
         env:
