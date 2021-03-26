@@ -34,23 +34,23 @@ func TestNewDataSampleValidate(t *testing.T) {
 	cases := map[string]datasampleTestCase{
 		"empty": {&NewDataSample{}, false},
 		"invalidDataSampleKey": {&NewDataSample{
-			Keys:            []string{"not36chars", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
-			DataManagerKeys: []string{"08680966-97ae-4573-8b2d-6c4db2b3saz2", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
+			Keys:            []string{"not36chars", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
+			DataManagerKeys: []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
 			TestOnly:        false,
 		}, false},
 		"invalidDataManagerKey": {&NewDataSample{
-			Keys:            []string{"08680966-97ae-4573-8b2d-6c4db2b3cdd2", "08680966-97ae-4573-8b2d-6c4db2b3dsds"},
-			DataManagerKeys: []string{"not36chars", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
+			Keys:            []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
+			DataManagerKeys: []string{"not36chars", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
 			TestOnly:        false,
 		}, false},
 		"valid": {&NewDataSample{
-			Keys:            []string{"08680966-97ae-4573-8b2d-6c4db2b3saz2", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
-			DataManagerKeys: []string{"08680966-945e-4573-8b2d-6c4db2b3saz2", "0868dzs6-97ae-4573-8b2d-6c4db2b3cdd2"},
+			Keys:            []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
+			DataManagerKeys: []string{"3dd165f8-8822-481a-8bf9-23bf135152cf", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
 			TestOnly:        false,
 		}, true},
 		"validTestOnly": {&NewDataSample{
-			Keys:            []string{"08680966-97ae-4573-8b2d-6c4db2b3saz2", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
-			DataManagerKeys: []string{"08680966-945e-4573-8b2d-6c4db2b3saz2", "0868dzs6-97ae-4573-8b2d-6c4db2b3cdd2"},
+			Keys:            []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
+			DataManagerKeys: []string{"3dd165f8-8822-481a-8bf9-23bf135152cf", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
 			TestOnly:        true,
 		}, true},
 	}
@@ -69,15 +69,15 @@ func TestUpdateDataSampleValidate(t *testing.T) {
 		"empty": {&DataSampleUpdateParam{}, false},
 		"invalidDataSampleKey": {&DataSampleUpdateParam{
 			Keys:            []string{"not36chars", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
-			DataManagerKeys: []string{"08680966-97ae-4573-8b2d-6c4db2b3saz2", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
+			DataManagerKeys: []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
 		}, false},
 		"invalidDataManagerKey": {&DataSampleUpdateParam{
-			Keys:            []string{"08680966-97ae-4573-8b2d-6c4db2b3cdd2", "08680966-97ae-4573-8b2d-6c4db2b3dsds"},
+			Keys:            []string{"08680966-97ae-4573-8b2d-6c4db2b3cdd2", "3dd165f8-8822-481a-8bf9-23bf135152cf"},
 			DataManagerKeys: []string{"not36chars", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
 		}, false},
 		"valid": {&DataSampleUpdateParam{
-			Keys:            []string{"08680966-97ae-4573-8b2d-6c4db2b3saz2", "08680966-97ae-4573-8b2d-6c4db2b3cdd2"},
-			DataManagerKeys: []string{"08680966-945e-4573-8b2d-6c4db2b3saz2", "0868dzs6-97ae-4573-8b2d-6c4db2b3cdd2"},
+			Keys:            []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
+			DataManagerKeys: []string{"3dd165f8-8822-481a-8bf9-23bf135152cf", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
 		}, true},
 	}
 

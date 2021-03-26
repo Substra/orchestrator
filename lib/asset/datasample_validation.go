@@ -16,14 +16,15 @@ package asset
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	is "github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 // Validate returns an error if the new datasample is not valid:
 // missing required data, incompatible values, etc.
 func (o *NewDataSample) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.Keys, validation.Required, validation.Each(validation.Length(36, 36))),
-		validation.Field(&o.DataManagerKeys, validation.Each(validation.Length(36, 36))),
+		validation.Field(&o.Keys, validation.Required, validation.Each(is.UUID)),
+		validation.Field(&o.DataManagerKeys, validation.Each(is.UUID)),
 		validation.Field(&o.TestOnly, validation.NotNil),
 	)
 }
@@ -32,7 +33,7 @@ func (o *NewDataSample) Validate() error {
 // missing required data, incompatible values, etc.
 func (o *DataSampleUpdateParam) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.Keys, validation.Required, validation.Each(validation.Length(36, 36))),
-		validation.Field(&o.DataManagerKeys, validation.Each(validation.Length(36, 36))),
+		validation.Field(&o.Keys, validation.Required, validation.Each(is.UUID)),
+		validation.Field(&o.DataManagerKeys, validation.Each(is.UUID)),
 	)
 }

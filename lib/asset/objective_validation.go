@@ -16,13 +16,14 @@ package asset
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	is "github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
 // Validate returns an error if the new objective is not valid:
 // missing required data, incompatible values, etc.
 func (o *NewObjective) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.Key, validation.Required, validation.Length(36, 36)),
+		validation.Field(&o.Key, validation.Required, is.UUID),
 		validation.Field(&o.Name, validation.Required, validation.Length(1, 100)),
 		validation.Field(&o.MetricsName, validation.Required, validation.Length(1, 100)),
 		validation.Field(&o.Metadata, validation.Each(validation.Length(0, 100))),

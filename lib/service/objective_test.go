@@ -166,7 +166,7 @@ func TestCanDownload(t *testing.T) {
 	}
 
 	objective := &asset.Objective{
-		Key:         "obj1",
+		Key:         "837B2E87-35CA-48F9-B83C-B40FB3FBA4E6",
 		Name:        "Test",
 		Permissions: perms,
 	}
