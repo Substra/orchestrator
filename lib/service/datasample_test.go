@@ -135,7 +135,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 
 	updatedDataSample := &asset.DataSampleUpdateParam{
 		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
-		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
+		DataManagerKeys: []string{"4da124eb-4da3-45e2-bc61-1924be259032"},
 	}
 
 	storedDataSample := &asset.DataSample{
@@ -147,7 +147,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 
 	dbal.On("GetDataSample", existingDataSample.GetKey()).Return(existingDataSample, nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample).Return(nil).Once()
-	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
+	dm.On("CheckOwner", []string{"4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
 
 	err := service.UpdateDataSample(updatedDataSample, "owner")
 

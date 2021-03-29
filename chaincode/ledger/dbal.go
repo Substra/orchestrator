@@ -371,17 +371,16 @@ func (db *DB) UpdateDataSample(dataSample *asset.DataSample) error {
 		return err
 	}
 
+	newDataManagers := utils.Filter(dataSample.GetDataManagerKeys(), currentDataSample.GetDataManagerKeys())
+
 	// We add indexes for the potential new DataManagerKeys
-	for _, dataManagerKey := range dataSample.GetDataManagerKeys() {
-		if !utils.StringInSlice(currentDataSample.GetDataManagerKeys(), dataManagerKey) {
+	for _, dataManagerKey := range newDataManagers {
+		if err = db.createIndex("dataSample~dataManager~key", []string{"dataSample", dataManagerKey, dataSample.GetKey()}); err != nil {
+			return err
+		}
 
-			if err = db.createIndex("dataSample~dataManager~key", []string{"dataSample", dataManagerKey, dataSample.GetKey()}); err != nil {
-				return err
-			}
-
-			if err = db.createIndex("dataSample~dataManager~testOnly~key", []string{"dataSample", dataManagerKey, strconv.FormatBool(dataSample.GetTestOnly()), dataSample.GetKey()}); err != nil {
-				return err
-			}
+		if err = db.createIndex("dataSample~dataManager~testOnly~key", []string{"dataSample", dataManagerKey, strconv.FormatBool(dataSample.GetTestOnly()), dataSample.GetKey()}); err != nil {
+			return err
 		}
 	}
 

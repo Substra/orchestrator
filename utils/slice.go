@@ -24,3 +24,21 @@ func StringInSlice(haystack []string, needle string) bool {
 	}
 	return false
 }
+
+// Combine combines two lists of string in a single one without duplicates.
+func Combine(list1 []string, list2 []string) []string {
+	return append(list1, Filter(list2, list1)...)
+}
+
+// Returns the content of list 1 not present in list 2.
+// list1 - list1 U list2
+func Filter(list1 []string, list2 []string) []string {
+	var output []string
+	for _, item := range list1 {
+		ok := StringInSlice(list2, item)
+		if !ok {
+			output = append(output, item)
+		}
+	}
+	return output
+}

@@ -110,7 +110,7 @@ func (s *DataSampleService) UpdateDataSample(d *asset.DataSampleUpdateParam, own
 			return fmt.Errorf("Requester does not own the datasample: %w", orchestrationErrors.ErrPermissionDenied)
 		}
 
-		datasample.DataManagerKeys = d.GetDataManagerKeys()
+		datasample.DataManagerKeys = utils.Combine(datasample.GetDataManagerKeys(), d.GetDataManagerKeys())
 
 		err = s.GetDataSampleDBAL().UpdateDataSample(datasample)
 		if err != nil {
