@@ -1,0 +1,64 @@
+graph TD
+%% Nodes definition
+start((Start))
+
+input_valid{{Input is valid}}
+err_input_valid[Error]
+
+loop_datasample{{Iterate over DataSample keys}}
+
+loop_datamanagers{{Iterate over DataManager keys}}
+
+datamanager_exist{{DataManager exist}}
+err_datamanager_exist[Error]
+
+check_datamanagers_owner{{Same owner}}
+err_check_datamanagers_owner[Error]
+
+check_ds_owner{{Requester own the DataSample}}
+err_check_ds_owner[Error]
+
+get_datasample(Get datasample)
+err_ds_query[Error]
+
+append_dm_keys(Append the new DataManager keys)
+
+store_ds(Store datasample)
+
+End1((End))
+
+%% Dependency graph
+start --> input_valid
+
+input_valid --yes--> loop_datamanagers
+input_valid --no--> err_input_valid
+
+loop_datamanagers --key--> datamanager_exist
+loop_datamanagers --no more key--> loop_datasample
+
+datamanager_exist --yes--> check_datamanagers_owner
+datamanager_exist --no--> err_datamanager_exist
+
+check_datamanagers_owner --yes--> loop_datamanagers
+check_datamanagers_owner --no--> err_check_datamanagers_owner
+
+loop_datasample --key--> get_datasample
+loop_datasample --no more key--> End1
+
+get_datasample --exists--> check_ds_owner
+get_datasample --unknown--> err_ds_query
+
+check_ds_owner --yes--> append_dm_keys
+check_ds_owner --no--> err_check_ds_owner
+
+append_dm_keys --> store_ds
+
+store_ds --> loop_datasample
+
+%% Style
+classDef default fill:#5b6fb3,color:#ffffff;
+classDef startEnd fill:#C961A1,color:#ffffff;
+classDef error fill:#ffab40,color:#ffffff;
+
+class start,End1 startEnd;
+class err_input_valid,err_datamanager_exist,err_check_datamanagers_owner,err_check_ds_owner,err_ds_query error;

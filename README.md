@@ -39,8 +39,8 @@ docker rm e2e-pg e2e-rabbit
 
 ## Developping the orchestrator
 
-An overview of the code structure is [available in the docs directory](./docs/architecture.md)
-There is also a step by step documentation on [how to implement an asset](./docs/asset-dev.md)
+An overview of the code structure is [available in the docs directory](./docs/architecture.md) and there is also a [documentation of the assets](./docs/assets/README.md).
+If you are interested in adding a new asset there is a [step by step documentation](./docs/asset-dev.md) on this subject.
 
 A good entry point to get an overview of the codebase is to launch `godoc -http=:6060` and [open module documentation](http://localhost:6060/pkg/github.com/owkin/orchestrator/).
 

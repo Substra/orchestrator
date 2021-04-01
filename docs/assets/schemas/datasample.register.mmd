@@ -1,0 +1,57 @@
+graph TD
+%% Nodes definition
+start((Start))
+
+input_valid{{Input is valid}}
+err_input_valid[Error]
+
+loop_datasample{{Iterate over DataSample keys}}
+
+loop_datamanagers{{Iterate over DataManager keys}}
+
+datamanager_exist{{DataManager exist}}
+err_datamanager_exist[Error]
+
+check_datamanagers_owner{{Same owner}}
+err_check_datamanagers_owner[Error]
+
+set_owner(Set asset owner)
+
+store_ds(Store datasample)
+
+ds_exists{{DataSample already exists}}
+err_ds_exists[Error]
+
+End1((End))
+
+%% Dependency graph
+start --> input_valid
+
+input_valid --yes--> loop_datamanagers
+input_valid --no--> err_input_valid
+
+loop_datamanagers --key--> datamanager_exist
+loop_datamanagers --no more key---> loop_datasample
+
+datamanager_exist --yes--> check_datamanagers_owner
+datamanager_exist --no--> err_datamanager_exist
+
+check_datamanagers_owner --yes--> loop_datamanagers
+check_datamanagers_owner --no--> err_check_datamanagers_owner
+
+loop_datasample --key--> ds_exists
+loop_datasample --no more key----> End1
+
+ds_exists --yes-->err_ds_exists
+ds_exists --no--> set_owner
+
+set_owner --> store_ds
+store_ds --> loop_datasample
+
+%% Style
+classDef default fill:#5b6fb3,color:#ffffff;
+classDef startEnd fill:#C961A1,color:#ffffff;
+classDef error fill:#ffab40,color:#ffffff;
+
+class start,End1 startEnd;
+class err_input_valid,err_datamanager_exist,err_check_datamanagers_owner,err_ds_exists error;
