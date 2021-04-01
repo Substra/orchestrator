@@ -45,7 +45,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		Owner:           "owner",
 		TestOnly:        false,
 	}
-
+	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
 	dbal.On("AddDataSample", storedDataSample).Return(nil).Once()
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
 
@@ -108,6 +108,8 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	}
 
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
+	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
+	dbal.On("DataSampleExists", "0b4b4466-9a81-4084-9bab-80939b78addd").Return(false, nil).Once()
 	dbal.On("AddDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("AddDataSample", storedDataSample2).Return(nil).Once()
 

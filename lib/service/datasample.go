@@ -71,6 +71,13 @@ func (s *DataSampleService) RegisterDataSample(d *asset.NewDataSample, owner str
 	}
 
 	for _, dataSampleKey := range d.GetKeys() {
+		exists, err := s.GetDataSampleDBAL().DataSampleExists(dataSampleKey)
+		if err != nil {
+			return err
+		}
+		if exists {
+			return fmt.Errorf("datasample whith the same key already exist: %w key: %s", orchestrationErrors.ErrConflict, dataSampleKey)
+		}
 		datasample := &asset.DataSample{
 			Key:             dataSampleKey,
 			DataManagerKeys: d.GetDataManagerKeys(),

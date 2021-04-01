@@ -47,6 +47,7 @@ type DataSampleDBAL interface {
 	UpdateDataSample(dataSample *asset.DataSample) error
 	GetDataSample(id string) (*asset.DataSample, error)
 	GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
+	DataSampleExists(id string) (bool, error)
 }
 
 // AlgoDBAL is the database abstraction layer for Algos

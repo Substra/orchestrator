@@ -95,33 +95,6 @@ func TestGetPaginatedObjectives(t *testing.T) {
 	}
 }
 
-func TestGetDataSampleFail(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	require.NoError(t, err)
-
-	defer db.Close()
-
-	mock.ExpectBegin()
-
-	rows := sqlmock.NewRows([]string{"asset"})
-
-	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`select "asset" from "datasamples" where id=`).WithArgs(uid, testChannel).WillReturnRows(rows)
-
-	tx, err := db.Begin()
-	require.NoError(t, err)
-
-	dbal := &DBAL{
-		tx:      tx,
-		channel: testChannel,
-	}
-
-	_, err = dbal.GetDataSample(uid)
-
-	assert.Error(t, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestGetAlgos(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {

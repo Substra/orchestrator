@@ -92,6 +92,12 @@ func (m *MockDBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, co
 	return args.Get(0).([]*asset.DataSample), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
+// DataSampleExists is a mock
+func (m *MockDBAL) DataSampleExists(id string) (bool, error) {
+	args := m.Called(id)
+	return args.Bool(0), args.Error(1)
+}
+
 // AddAlgo is a mock
 func (m *MockDBAL) AddAlgo(obj *asset.Algo) error {
 	args := m.Called(obj)
