@@ -86,3 +86,15 @@ This address a limitation of fabric: [only one event can be set per transaction]
 The workflow is represented below:
 
 ![](./schemas/event-dispatch-standalone.png)
+
+### Rabbitmq routing
+
+In order to both support multiple channels and provide isolation between them,
+we leverage rabbitmq routing capabilities to keep things as simple as possible for producer and consumers.
+
+That means there is only one entry point (the *orchestration*  exchange) on which the orchestrator publishes
+and one queue per consumer.
+
+Consumers only have access to their own queue, which may receives events from multiple channels (according to the configuration).
+
+![](./schemas/rabbitmq-routing.png)

@@ -32,10 +32,10 @@ data:
             path: /var/hyperledger/tls/server/pair/tls.crt
 
     channels:
-      {{- range $channel := .Values.channels }}
+      {{- range $channel := .Values.fabric.channels }}
       {{ $channel }}:
         peers:
-          {{ .Values.fabric.peer.host }}:{{ .Values.fabric.peer.port }}:
+          {{ $.Values.fabric.peer.host }}:{{ $.Values.fabric.peer.port }}:
             endorsingPeer: true
             eventSource: true
             chaincodeQuery: true

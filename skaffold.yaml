@@ -10,6 +10,10 @@ build:
       context: .
       docker:
         dockerfile: docker/forwarder/Dockerfile
+    - image: owkin/rabbitmq-operator
+      context: .
+      docker:
+        dockerfile: docker/rabbitmq-operator/Dockerfile
 deploy:
   helm:
     releases:
@@ -20,6 +24,7 @@ deploy:
         artifactOverrides:
           orchestrator.image: owkin/orchestrator
           forwarder.image: owkin/forwarder
+          rabbitmqOperator.image: owkin/rabbitmq-operator
         imageStrategy:
           helm: {}
         valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
@@ -30,6 +35,7 @@ deploy:
         artifactOverrides:
           orchestrator.image: owkin/orchestrator
           forwarder.image: owkin/forwarder
+          rabbitmqOperator.image: owkin/rabbitmq-operator
         imageStrategy:
           helm: {}
         valuesFiles: [ examples/values/orchestrator-org-2.yaml ]

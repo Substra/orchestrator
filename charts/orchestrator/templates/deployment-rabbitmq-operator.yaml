@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "orchestrator.fullname" . }}-rabbitmq-operator
+  labels:
+    {{- include "orchestrator.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "orchestrator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "orchestrator.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "orchestrator.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: wait-rabbitmq
+        image: jwilder/dockerize
+        command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}']
+      containers:
+        - name: rabbitmq-operator
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.rabbitmqOperator.image.repository }}:{{ .Values.rabbitmqOperator.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
+          command: ['bash', '-c']
+          args:
+            - |
+              ## Configure rabbitmqctl
+              echo "
+              [default]
+              hostname = {{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}
+              port = {{.Values.rabbitmq.service.managerPort}}
+              username = {{.Values.rabbitmq.auth.username}}
+              password = {{.Values.rabbitmq.auth.password}}
+              " > ~/.rabbitmqadmin.conf
+
+              echo "rabbitmqadmin configured"
+
+              ## List wanted users
+              echo "
+              {{.Values.rabbitmq.auth.username}}
+              {{- range $user, $_ := .Values.rabbitmqOperator.credentials }}
+              {{$user}}
+              {{- end}}
+              " > ~/wanted_users
+
+              while true; do
+
+              ## Remove extra users
+              rabbitmqadmin list users | awk -F"|" '{if (NR>=4) {gsub(/ /,""); print $2}}' | head -n -1 > /tmp/users
+              for u in $(cat /tmp/users); do
+                if ! grep -q $u  ~/wanted_users; then
+                  echo "Removing unwanted user $u"
+                  rabbitmqadmin delete user name=$u
+                  echo "Removing unwanted queue $u"
+                  rabbitmqadmin delete queue name=$u
+                fi
+              done
+
+              ## Create users
+              rabbitmqadmin list users > /tmp/users
+              {{- range $user, $password := .Values.rabbitmqOperator.credentials }}
+              until grep -q "{{$user}}" /tmp/users; do
+                echo "creating user {{$user}}"
+                rabbitmqadmin declare user name={{$user}} password={{$password}} tags=""
+                rabbitmqadmin list users > /tmp/users
+              done
+              {{- end }}
+
+              ## Set permissions
+              rabbitmqadmin list permissions user read > /tmp/permissions
+              {{- range $user, $_ := .Values.rabbitmqOperator.credentials }}
+              until grep -q "{{$user}}.*{{$user}}" /tmp/permissions; do
+                echo "settings permissions for user {{$user}}"
+                ## Users can only read their dedicated queue
+                rabbitmqadmin declare permission vhost=/ user={{$user}} configure="" write="" read={{$user}}
+                echo "creating queue {{$user}}"
+                rabbitmqadmin declare queue name={{$user}}
+                rabbitmqadmin list permissions user read > /tmp/permissions
+              done
+              {{- end }}
+
+              ## Create exchanges
+              rabbitmqadmin list exchanges > /tmp/exchanges
+              {{- range $channel := .Values.channels }}
+              until grep -q "{{$channel.name}}" /tmp/exchanges; do
+                echo "creating exchange for channel {{$channel.name}}"
+                rabbitmqadmin declare exchange name={{$channel.name}} type=fanout
+                rabbitmqadmin declare binding source=orchestrator destination={{$channel.name}} destination_type=exchange routing_key={{$channel.name}}
+                {{- range $channel.organizations }}
+                echo "binding from {{$channel.name}} exchange to {{.}} queue"
+                rabbitmqadmin declare binding source={{$channel.name}} destination={{.}}
+                {{- end}}
+                rabbitmqadmin list exchanges > /tmp/exchanges
+              done
+              {{- end }}
+
+              sleep 30
+              done # main loop
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

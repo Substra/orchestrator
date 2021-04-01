@@ -5,7 +5,9 @@ metadata:
 data:
   forwarder-config.yaml: |
     listeners:
-      mychannel:
-        - mycc
-      yourchannel:
-        - yourcc
+      {{- range $.Values.channels }}
+      {{ .name }}:
+        {{- range .fabric.chaincodes }}
+        - {{.}}
+        {{- end }}
+      {{- end}}

@@ -125,9 +125,27 @@ orchestrator:
       secrets:
         clientCACerts: {}
 
+channels:
+  - name: mychannel
+    organizations: [ Org1MSP, Org2MSP ]
+    fabric: # relevant only in distributed mode
+      chaincodes: [ mycc ]
+  - name: yourchannel
+    organizations: [ Org1MSP, Org2MSP ]
+    fabric:
+      chaincodes: [ yourcc ]
+
 forwarder:
   image:
     repository: owkin/forwarder
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: ""
+
+rabbitmqOperator:
+  image:
+    repository: owkin/rabbitmq-operator
+    pullPolicy: IfNotPresent
+  credentials:
+    Org1MSP: password1
+    Org2MSP: password2
