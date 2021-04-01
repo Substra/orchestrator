@@ -31,8 +31,6 @@ type AMQPPublisher interface {
 // It automatically reconnects when the connection fails,
 // and blocks all pushes until the connection succeeds.
 // It also confirms every outgoing message, so none are lost.
-// It doesn't automatically ack each message,
-// but leaves that to the parent process, since it is usage-dependent.
 // Implementation is adapted from https://github.com/streadway/amqp/blob/master/example_client_test.go
 type Session struct {
 	name            string
@@ -71,6 +69,12 @@ func NewSession(name string, addr string) *Session {
 		done: make(chan bool),
 	}
 	go session.handleReconnect(addr)
+
+	for !session.isReady {
+		log.WithField("delay", reconnectDelay).Info("AMQP session not yet ready, waiting")
+		<-time.After(reconnectDelay)
+	}
+
 	return &session
 }
 
@@ -246,25 +250,6 @@ func (session *Session) UnsafePush(routingKey string, data []byte) error {
 			ContentType: "text/plain", // TODO: choose a proper format
 			Body:        data,
 		},
-	)
-}
-
-// Stream will continuously put queue items on the channel.
-// It is required to call delivery.Ack when it has been
-// successfully processed, or delivery.Nack when it fails.
-// Ignoring this will cause data to build up on the server.
-func (session *Session) Stream() (<-chan amqp.Delivery, error) {
-	if !session.isReady {
-		return nil, errNotConnected
-	}
-	return session.channel.Consume(
-		session.name,
-		"",    // Consumer
-		false, // Auto-Ack
-		false, // Exclusive
-		false, // No-local
-		false, // No-Wait
-		nil,   // Args
 	)
 }
 
