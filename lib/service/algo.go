@@ -63,6 +63,14 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		return nil, fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
 	}
 
+	exists, err := s.GetAlgoDBAL().AlgoExists(a.Key)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("There is already an algo with this key: %w", orchestrationErrors.ErrConflict)
+	}
+
 	algo := &asset.Algo{
 		Key:         a.Key,
 		Name:        a.Name,

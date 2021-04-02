@@ -376,3 +376,8 @@ func (db *DB) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationTo
 
 	return algos, bookmark, nil
 }
+
+// AlgoExists implements persistence.ObjectiveDBAL
+func (db *DB) AlgoExists(id string) (bool, error) {
+	return db.hasKey(asset.AlgoKind, id)
+}

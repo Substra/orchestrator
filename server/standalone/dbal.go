@@ -233,6 +233,16 @@ func (d *DBAL) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationT
 	return algos, bookmark, nil
 }
 
+// AlgoExists implements persistence.ObjectiveDBAL
+func (d *DBAL) AlgoExists(id string) (bool, error) {
+	row := d.tx.QueryRow(`select count(id) from "algos" where id=$1 and channel=$2`, id, d.channel)
+
+	var count int
+	err := row.Scan(&count)
+
+	return count == 1, err
+}
+
 func getOffset(token string) (int, error) {
 	if token == "" {
 		token = "0"

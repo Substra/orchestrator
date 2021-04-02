@@ -116,6 +116,12 @@ func (m *MockDBAL) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.Paginat
 	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
+// AlgoExists is a mock
+func (m *MockDBAL) AlgoExists(id string) (bool, error) {
+	args := m.Called(id)
+	return args.Bool(0), args.Error(1)
+}
+
 // AddDataManager is a mock
 func (m *MockDBAL) AddDataManager(datamanager *asset.DataManager) error {
 	args := m.Called(datamanager)

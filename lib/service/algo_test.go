@@ -77,6 +77,7 @@ func TestRegisterAlgo(t *testing.T) {
 	}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
+	dbal.On("AlgoExists", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(false, nil).Once()
 	dbal.On(
 		"AddAlgo",
 		storedAlgo,

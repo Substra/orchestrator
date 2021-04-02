@@ -55,6 +55,7 @@ type AlgoDBAL interface {
 	AddAlgo(obj *asset.Algo) error
 	GetAlgo(id string) (*asset.Algo, error)
 	GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
+	AlgoExists(id string) (bool, error)
 }
 
 // DataManagerDBAL is the database abstraction layer for DataManagers
