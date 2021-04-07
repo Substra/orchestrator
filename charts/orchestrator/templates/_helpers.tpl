@@ -51,6 +51,26 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Common labels
+*/}}
+{{- define "rabbitmqOperator.labels" -}}
+helm.sh/chart: {{ include "orchestrator.chart" . }}
+{{ include "rabbitmqOperator.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Rabbitmq operator selector label
+*/}}
+{{- define "rabbitmqOperator.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "orchestrator.name" . }}-rabbitmq-operator
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "orchestrator.serviceAccountName" -}}
