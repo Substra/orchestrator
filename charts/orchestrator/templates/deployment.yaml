@@ -10,8 +10,9 @@ spec:
       {{- include "orchestrator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -75,47 +76,12 @@ spec:
                 {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "orchestrator.fullname" . }}
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
-           - name: ORCHESTRATOR_AMQP_DSN
-             value: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
-           {{- if .Values.postgresql.enabled }}
-           - name: ORCHESTRATOR_DATABASE_URL
-             value: postgresql://{{ .Values.postgresql.postgresqlUsername}}:{{ .Values.postgresql.postgresqlPassword}}@{{ .Release.Name }}-postgresql.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}/{{ .Values.postgresql.postgresqlDatabase}}?sslmode=disable
-           {{- end}}
-           - name: ORCHESTRATOR_MODE
-             value: {{ .Values.orchestrator.mode }}
-           {{- if eq .Values.orchestrator.mode "chaincode" }}
-           - name: ORCHESTRATOR_FABRIC_CERT
-             value: /var/hyperledger/msp/signcerts/cert.pem
-           - name: ORCHESTRATOR_FABRIC_KEY
-             value: /var/hyperledger/msp/keystore/key.pem
-           - name: ORCHESTRATOR_MSPID
-             value: {{ .Values.fabric.mspID }}
-           - name: ORCHESTRATOR_NETWORK_CONFIG
-             value: /var/hyperledger/fabric-config.yaml
-           - name: ORCHESTRATOR_CHAINCODE
-             value: {{ .Values.orchestrator.chaincode }}
-           {{- end}}
-           - name: ORCHESTRATOR_TLS_ENABLED
-             value: "{{ $.Values.orchestrator.tls.enabled }}"
-           - name: ORCHESTRATOR_MTLS_ENABLED
-             value: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled }}"
-           {{- if $.Values.orchestrator.tls.enabled }}
-           - name: ORCHESTRATOR_TLS_CERT_PATH
-             value: /var/orchestrator/tls/server/pair/tls.crt
-           - name: ORCHESTRATOR_TLS_KEY_PATH
-             value: /var/orchestrator/tls/server/pair/tls.key
-           {{- if $.Values.orchestrator.tls.mtls.enabled }}
-           - name: ORCHESTRATOR_TLS_SERVER_CA_CERT
-             value: /var/orchestrator/tls/server/cacert/ca.crt
-           - name: ORCHESTRATOR_TLS_CLIENT_CA_CERT_DIR
-             value: /var/orchestrator/tls/client/
-           {{- end }}
-           {{- end }}
-           - name: ORCHESTRATOR_VERIFY_CLIENT_MSP_ID
-             value: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled $.Values.orchestrator.verifyClientMSPID }}"
           volumeMounts:
             {{- if eq .Values.orchestrator.mode "chaincode" }}
             - name: fabric-config

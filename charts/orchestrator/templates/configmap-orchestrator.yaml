@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "orchestrator.fullname" . }}
+  labels:
+    {{- include "orchestrator.labels" . | nindent 4 }}
+data:
+  # Global settings
+  ORCHESTRATOR_MODE: {{ .Values.orchestrator.mode }}
+  ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled $.Values.orchestrator.verifyClientMSPID }}"
+  ORCHESTRATOR_AMQP_DSN: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
+
+  # Standalone settings
+  {{- if .Values.postgresql.enabled }}
+  ORCHESTRATOR_DATABASE_URL: postgresql://{{ .Values.postgresql.postgresqlUsername}}:{{ .Values.postgresql.postgresqlPassword}}@{{ .Release.Name }}-postgresql.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}/{{ .Values.postgresql.postgresqlDatabase}}?sslmode=disable
+  {{- end }}
+
+  # Distributed settings
+  {{- if eq .Values.orchestrator.mode "chaincode" }}
+  ORCHESTRATOR_FABRIC_CERT: /var/hyperledger/msp/signcerts/cert.pem
+  ORCHESTRATOR_FABRIC_KEY: /var/hyperledger/msp/keystore/key.pem
+  ORCHESTRATOR_MSPID: {{ .Values.fabric.mspID }}
+  ORCHESTRATOR_NETWORK_CONFIG: /var/hyperledger/fabric-config.yaml
+  ORCHESTRATOR_CHAINCODE: {{ .Values.orchestrator.chaincode }}
+  {{- end }}
+
+  # TLS settings
+  ORCHESTRATOR_TLS_ENABLED: "{{ $.Values.orchestrator.tls.enabled }}"
+  ORCHESTRATOR_MTLS_ENABLED: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled }}"
+  {{- if $.Values.orchestrator.tls.enabled }}
+  ORCHESTRATOR_TLS_CERT_PATH: /var/orchestrator/tls/server/pair/tls.crt
+  ORCHESTRATOR_TLS_KEY_PATH: /var/orchestrator/tls/server/pair/tls.key
+  {{- if $.Values.orchestrator.tls.mtls.enabled }}
+  ORCHESTRATOR_TLS_SERVER_CA_CERT: /var/orchestrator/tls/server/cacert/ca.crt
+  ORCHESTRATOR_TLS_CLIENT_CA_CERT_DIR: /var/orchestrator/tls/client/
+  {{- end }}
+  {{- end }}
