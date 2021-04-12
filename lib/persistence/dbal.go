@@ -64,7 +64,7 @@ type DataManagerDBAL interface {
 	UpdateDataManager(datamanager *asset.DataManager) error
 	GetDataManager(id string) (*asset.DataManager, error)
 	GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
-	DataManagersExists(id string) (bool, error)
+	DataManagerExists(id string) (bool, error)
 }
 
 // NodeDBALProvider representes an object capable of providing a NodeDBAL

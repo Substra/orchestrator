@@ -36,8 +36,8 @@ func (d *DBAL) UpdateDataManager(datamanager *asset.DataManager) error {
 	return err
 }
 
-// DataManagersExists implements persistence.DataManagerDBAL
-func (d *DBAL) DataManagersExists(id string) (bool, error) {
+// DataManagerExists implements persistence.DataManagerDBAL
+func (d *DBAL) DataManagerExists(id string) (bool, error) {
 	row := d.tx.QueryRow(`select count(id) from "datamanagers" where id=$1 and channel=$2`, id, d.channel)
 
 	var count int

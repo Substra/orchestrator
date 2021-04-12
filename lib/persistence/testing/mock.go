@@ -146,8 +146,8 @@ func (m *MockDBAL) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, 
 	return args.Get(0).([]*asset.DataManager), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
-// DataManagersExists is a mock
-func (m *MockDBAL) DataManagersExists(id string) (bool, error) {
+// DataManagerExists is a mock
+func (m *MockDBAL) DataManagerExists(id string) (bool, error) {
 	args := m.Called(id)
 	return args.Bool(0), args.Error(1)
 }

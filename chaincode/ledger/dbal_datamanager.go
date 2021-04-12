@@ -84,8 +84,8 @@ func (db *DB) UpdateDataManager(datamanager *asset.DataManager) error {
 	return nil
 }
 
-// DataManagersExists implements persistence.DataManagerDBAL
-func (db *DB) DataManagersExists(id string) (bool, error) {
+// DataManagerExists implements persistence.DataManagerDBAL
+func (db *DB) DataManagerExists(id string) (bool, error) {
 	return db.hasKey(asset.DataManagerKind, id)
 }
 

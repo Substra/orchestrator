@@ -25,8 +25,11 @@ End1((End))
 %% Dependency graph
 start --> input_valid
 
-input_valid --yes--> obj_set
+input_valid --yes--> dm_exists
 input_valid --no--> err_input_valid
+
+dm_exists --no--> obj_set
+dm_exists --yes--> err_dm_exists
 
 obj_set --no--> set_owner
 obj_set --yes--> obj_exists
@@ -39,10 +42,7 @@ obj_owner --no--> err_obj_owner
 
 set_owner --> store_dm
 
-store_dm --> dm_exists
-
-dm_exists --no--> End1
-dm_exists --yes--> err_dm_exists
+store_dm --> End1
 
 %% Style
 classDef default fill:#5b6fb3,color:#ffffff;

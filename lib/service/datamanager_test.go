@@ -73,6 +73,7 @@ func TestRegisterDataManager(t *testing.T) {
 	}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
+	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(true, nil).Once()
 
@@ -129,6 +130,7 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
+	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()
 
 	err := service.RegisterDataManager(newDataManager, "owner")
@@ -138,11 +140,13 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 }
 
 func TestRegisterDataManagerUnknownObjective(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
 	mps := new(MockPermissionService)
 	obj := new(MockObjectiveService)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetObjectiveService").Return(obj)
+	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 
 	service := NewDataManagerService(provider)
@@ -169,6 +173,7 @@ func TestRegisterDataManagerUnknownObjective(t *testing.T) {
 		NewPermissions: newPerms,
 	}
 
+	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(false, errors.New("not found")).Once()
 
 	err := service.RegisterDataManager(newDataManager, "owner")

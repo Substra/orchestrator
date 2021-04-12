@@ -69,6 +69,15 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 		return fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
 	}
 
+	exists, err := s.GetDataManagerDBAL().DataManagerExists(d.GetKey())
+
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("there is already a datamanager with this key: %w", orchestrationErrors.ErrConflict)
+	}
+
 	// The objective key should be empty or referencing a valid objective
 	if d.GetObjectiveKey() != "" {
 		ok, err := s.GetObjectiveService().CanDownload(d.GetObjectiveKey(), owner)
@@ -76,7 +85,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 			return err
 		}
 		if !ok {
-			return fmt.Errorf("The datamanager owner can't download the provided objective: %w", orchestrationErrors.ErrConflict)
+			return fmt.Errorf("the datamanager owner can't download the provided objective: %w", orchestrationErrors.ErrConflict)
 		}
 	}
 
@@ -113,7 +122,7 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 	}
 
 	if !s.canUpdate(datamanager, requester) {
-		return fmt.Errorf("Requester does not have the permissions to update the datamanager: %w", orchestrationErrors.ErrPermissionDenied)
+		return fmt.Errorf("requester does not have the permissions to update the datamanager: %w", orchestrationErrors.ErrPermissionDenied)
 	}
 
 	if datamanager.GetObjectiveKey() != "" {
@@ -127,7 +136,7 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 		return err
 	}
 	if !ok {
-		return fmt.Errorf("The datamanager owner can't download the provided objective: %w", orchestrationErrors.ErrConflict)
+		return fmt.Errorf("the datamanager owner can't download the provided objective: %w", orchestrationErrors.ErrConflict)
 	}
 
 	datamanager.ObjectiveKey = d.GetObjectiveKey()
@@ -153,7 +162,7 @@ func (s *DataManagerService) CheckOwner(keys []string, requester string) error {
 			return err
 		}
 		if !ok {
-			return fmt.Errorf("Requester does not own the datamanager: %w datamanager: %s", orchestrationErrors.ErrPermissionDenied, dataManagerKey)
+			return fmt.Errorf("requester does not own the datamanager: %w datamanager: %s", orchestrationErrors.ErrPermissionDenied, dataManagerKey)
 		}
 	}
 	return nil
@@ -163,7 +172,7 @@ func (s *DataManagerService) CheckOwner(keys []string, requester string) error {
 func (s *DataManagerService) isOwner(id string, requester string) (bool, error) {
 	dm, err := s.GetDataManagerDBAL().GetDataManager(id)
 	if err != nil {
-		return false, fmt.Errorf("Provided datamanager not found: %w datamanager: %s", orchestrationErrors.ErrNotFound, id)
+		return false, fmt.Errorf("provided datamanager not found: %w datamanager: %s", orchestrationErrors.ErrNotFound, id)
 	}
 
 	return dm.GetOwner() == requester, nil
