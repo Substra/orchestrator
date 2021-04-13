@@ -1,0 +1,16 @@
+{{- if eq .Values.orchestrator.mode "chaincode" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "orchestrator.fullname" . }}-forwarder-env
+  labels:
+    {{- include "orchestrator.labels" . | nindent 4 }}
+data:
+  FORWARDER_AMQP_DSN: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
+  FORWARDER_CONFIG_PATH: /var/hyperledger/forwarder-config.yaml
+  
+  FORWARDER_FABRIC_CERT: /var/hyperledger/msp/signcerts/cert.pem
+  FORWARDER_FABRIC_KEY: /var/hyperledger/msp/keystore/key.pem
+  FORWARDER_MSPID: {{ .Values.fabric.mspID }}
+  FORWARDER_NETWORK_CONFIG: /var/hyperledger/fabric-config.yaml
+{{- end }}

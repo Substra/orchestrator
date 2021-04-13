@@ -11,8 +11,9 @@ spec:
       {{- include "orchestrator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-env-forwarder.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -49,21 +50,12 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ template "orchestrator.fullname" . }}-forwarder-env
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
-           - name: FORWARDER_AMQP_DSN
-             value: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
-           - name: FORWARDER_FABRIC_CERT
-             value: /var/hyperledger/msp/signcerts/cert.pem
-           - name: FORWARDER_FABRIC_KEY
-             value: /var/hyperledger/msp/keystore/key.pem
-           - name: FORWARDER_MSPID
-             value: {{ .Values.fabric.mspID }}
-           - name: FORWARDER_NETWORK_CONFIG
-             value: /var/hyperledger/fabric-config.yaml
-           - name: FORWARDER_CONFIG_PATH
-             value: /var/hyperledger/forwarder-config.yaml
           volumeMounts:
             - name: fabric-config
               mountPath: /var/hyperledger/fabric-config.yaml

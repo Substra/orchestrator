@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "orchestrator.fullname" . }}
+  name: {{ template "orchestrator.fullname" . }}-env
   labels:
     {{- include "orchestrator.labels" . | nindent 4 }}
 data:

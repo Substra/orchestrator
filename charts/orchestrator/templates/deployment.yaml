@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap-orchestrator.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-env-orchestrator.yaml") . | sha256sum }}
       {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -78,7 +78,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
             - configMapRef:
-                name: {{ template "orchestrator.fullname" . }}
+                name: {{ template "orchestrator.fullname" . }}-env
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
