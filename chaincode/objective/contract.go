@@ -18,6 +18,7 @@ import (
 	"errors"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -40,8 +41,14 @@ func NewSmartContract() *SmartContract {
 
 // RegisterObjective creates a new objective in world state
 // If the key exists, it will override the existing value with the new one
-func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, params *asset.NewObjective) (*asset.Objective, error) {
+func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetObjectiveService()
+
+	params := new(asset.NewObjective)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return nil, err
+	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
@@ -52,29 +59,58 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, params 
 	if err != nil {
 		return nil, err
 	}
-	return obj, nil
+	wrapped, err := communication.Wrap(obj)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 // QueryObjective returns the objective with given key
-func (s *SmartContract) QueryObjective(ctx ledger.TransactionContext, params *asset.ObjectiveQueryParam) (*asset.Objective, error) {
+func (s *SmartContract) QueryObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetObjectiveService()
 
-	return service.GetObjective(params.GetKey())
+	params := new(asset.ObjectiveQueryParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return nil, err
+	}
+
+	obj, err := service.GetObjective(params.GetKey())
+	if err != nil {
+		return nil, err
+	}
+	wrapped, err := communication.Wrap(obj)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 // QueryObjectives returns the objectives
-func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, params *asset.ObjectivesQueryParam) (*asset.ObjectivesQueryResponse, error) {
+func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetObjectiveService()
+
+	params := new(asset.ObjectivesQueryParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return nil, err
+	}
 
 	objectives, nextPage, err := service.GetObjectives(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.ObjectivesQueryResponse{
+	resp := &asset.ObjectivesQueryResponse{
 		Objectives:    objectives,
 		NextPageToken: nextPage,
-	}, nil
+	}
+	wrapped, err := communication.Wrap(resp)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 // QueryLeaderboard returns for an objective all its certified testtuples with a done status

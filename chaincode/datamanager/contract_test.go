@@ -17,6 +17,7 @@ package datamanager
 import (
 	"testing"
 
+	"github.com/owkin/orchestrator/chaincode/communication"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -57,9 +58,14 @@ func TestQueryDataManagers(t *testing.T) {
 	service.On("GetDataManagers", &common.Pagination{Token: "", Size: 10}).Return(datamanagers, "", nil).Once()
 
 	param := &asset.DataManagersQueryParam{PageToken: "", PageSize: 10}
+	wrapper, err := communication.Wrap(param)
+	assert.NoError(t, err)
 
-	resp, err := contract.QueryDataManagers(ctx, param)
+	wrapped, err := contract.QueryDataManagers(ctx, wrapper)
 	assert.NoError(t, err, "Query should not fail")
+	resp := new(asset.DataManagersQueryResponse)
+	err = wrapped.Unwrap(resp)
+	assert.NoError(t, err)
 	assert.Len(t, resp.DataManagers, len(datamanagers), "Query should return all datasamples")
 }
 
@@ -82,6 +88,8 @@ func TestRegistration(t *testing.T) {
 		Opener:         addressable,
 		Type:           "test",
 	}
+	wrapper, err := communication.Wrap(newObj)
+	assert.NoError(t, err)
 
 	ctx := new(testHelper.MockedContext)
 
@@ -93,6 +101,6 @@ func TestRegistration(t *testing.T) {
 
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	err := contract.RegisterDataManager(ctx, newObj)
+	err = contract.RegisterDataManager(ctx, wrapper)
 	assert.NoError(t, err)
 }

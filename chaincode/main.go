@@ -25,6 +25,7 @@ import (
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/algo"
+	"github.com/owkin/orchestrator/chaincode/computetask"
 	"github.com/owkin/orchestrator/chaincode/datamanager"
 	"github.com/owkin/orchestrator/chaincode/datasample"
 	"github.com/owkin/orchestrator/chaincode/node"
@@ -43,6 +44,7 @@ func main() {
 		datasample.NewSmartContract(),
 		algo.NewSmartContract(),
 		datamanager.NewSmartContract(),
+		computetask.NewSmartContract(),
 	}
 
 	cc, err := contractapi.NewChaincode(contracts...)

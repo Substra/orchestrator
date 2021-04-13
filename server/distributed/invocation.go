@@ -21,6 +21,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+	"github.com/owkin/orchestrator/chaincode/communication"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -58,7 +59,11 @@ func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessag
 	logger.WithField("param", param).Debug("Invoking chaincode")
 	start := time.Now()
 
-	args, err := json.Marshal(param)
+	wrapper, err := communication.Wrap(param)
+	if err != nil {
+		return err
+	}
+	args, err := json.Marshal(wrapper)
 	if err != nil {
 		return nil
 	}
@@ -70,7 +75,7 @@ func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessag
 	}
 
 	if output != nil {
-		err = json.Unmarshal(data, &output)
+		err := communication.Unwrap(data, output)
 		if err != nil {
 			return err
 		}

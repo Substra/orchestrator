@@ -57,6 +57,12 @@ func (m *MockServiceProvider) GetDataManagerDBAL() persistence.DataManagerDBAL {
 	return args.Get(0).(persistence.DataManagerDBAL)
 }
 
+// GetComputeTaskDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetComputeTaskDBAL() persistence.ComputeTaskDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.ComputeTaskDBAL)
+}
+
 // GetEventQueue returns whatever value is passed
 func (m *MockServiceProvider) GetEventQueue() event.Queue {
 	args := m.Called()
@@ -99,6 +105,12 @@ func (m *MockServiceProvider) GetAlgoService() AlgoAPI {
 	return args.Get(0).(AlgoAPI)
 }
 
+// GetComputeTaskService return whatever value is passed
+func (m *MockServiceProvider) GetComputeTaskService() ComputeTaskAPI {
+	args := m.Called()
+	return args.Get(0).(ComputeTaskAPI)
+}
+
 // MockNodeService is a mock implementing NodeAPI
 type MockNodeService struct {
 	mock.Mock
@@ -108,6 +120,12 @@ type MockNodeService struct {
 func (m *MockNodeService) GetNodes() ([]*asset.Node, error) {
 	args := m.Called()
 	return args.Get(0).([]*asset.Node), args.Error(1)
+}
+
+// GetNode returns whatever value is passed
+func (m *MockNodeService) GetNode(id string) (*asset.Node, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.Node), args.Error(1)
 }
 
 // RegisterNode returns whatever value is passed
@@ -125,6 +143,18 @@ type MockPermissionService struct {
 func (m *MockPermissionService) CreatePermissions(owner string, perms *asset.NewPermissions) (*asset.Permissions, error) {
 	args := m.Called(owner, perms)
 	return args.Get(0).(*asset.Permissions), args.Error(1)
+}
+
+// CanProcess returns whatever value is passed
+func (m *MockPermissionService) CanProcess(perms *asset.Permissions, requester string) bool {
+	args := m.Called(perms, requester)
+	return args.Bool(0)
+}
+
+// MergePermissions returns whatever is passed
+func (m *MockPermissionService) MergePermissions(x, y *asset.Permissions) *asset.Permissions {
+	args := m.Called(x, y)
+	return args.Get(0).(*asset.Permissions)
 }
 
 // MockObjectiveService is a mock implementing ObjectiveAPI
@@ -183,6 +213,12 @@ func (m *MockDataSampleService) UpdateDataSample(datasample *asset.DataSampleUpd
 func (m *MockDataSampleService) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.DataSample), args.Get(1).(common.PaginationToken), args.Error(2)
+}
+
+// ContainsTestSample returns whatever value is passed
+func (m *MockDataSampleService) ContainsTestSample(keys []string) (bool, error) {
+	args := m.Called(keys)
+	return args.Bool(0), args.Error(1)
 }
 
 // IsTestOnly returns whatever value is passed
@@ -282,4 +318,18 @@ func (m *MockDispatcher) Len() int {
 func (m *MockDispatcher) Dispatch() error {
 	args := m.Called()
 	return args.Error(0)
+}
+
+type MockComputeTaskService struct {
+	mock.Mock
+}
+
+func (m *MockComputeTaskService) RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error) {
+	args := m.Called(task, owner)
+	return args.Get(0).(*asset.ComputeTask), args.Error(1)
+}
+
+func (m *MockComputeTaskService) GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
+	args := m.Called(p, filter)
+	return args.Get(0).([]*asset.ComputeTask), args.String(1), args.Error(2)
 }

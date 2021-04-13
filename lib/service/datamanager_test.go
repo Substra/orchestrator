@@ -236,6 +236,7 @@ func TestUpdateDataManager(t *testing.T) {
 	dbal.On("GetDataManager", "65afb5fe-f6bc-4f8c-b488-f5e24a9d94a6").Return(storedDataManager, nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(true, nil).Once()
 	dbal.On("UpdateDataManager", updatedDataManager).Return(nil).Once()
+	mps.On("CanProcess", perms, "owner").Return(true)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "owner")
 
@@ -298,6 +299,7 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 	dbal.On("GetDataManager", "65afb5fe-f6bc-4f8c-b488-f5e24a9d94a6").Return(storedDataManager, nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(true, nil).Once()
 	dbal.On("UpdateDataManager", updatedDataManager).Return(nil).Once()
+	mps.On("CanProcess", perms, "other_owner").Return(true)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "other_owner")
 
@@ -345,6 +347,7 @@ func TestUpdateDataManagerObjectiveKeyAlreadySet(t *testing.T) {
 	}
 
 	dbal.On("GetDataManager", "65afb5fe-f6bc-4f8c-b488-f5e24a9d94a6").Return(storedDataManager, nil).Once()
+	mps.On("CanProcess", perms, "owner").Return(true)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "owner")
 
@@ -394,6 +397,7 @@ func TestUpdateDataManagerUnknownObjective(t *testing.T) {
 
 	dbal.On("GetDataManager", "65afb5fe-f6bc-4f8c-b488-f5e24a9d94a6").Return(storedDataManager, nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(false, errors.New("unknown objective")).Once()
+	mps.On("CanProcess", perms, "owner").Return(true)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "owner")
 
@@ -467,24 +471,4 @@ func TestIsOwner(t *testing.T) {
 	assert.NoError(t, err, "is owner should not fail")
 	assert.Equal(t, ok, true, "owner owns the datamanager")
 	dbal.AssertExpectations(t)
-}
-
-func TestCanUpdate(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
-	provider.On("GetDataManagerDBAL").Return(dbal)
-	service := NewDataManagerService(provider)
-
-	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
-
-	dm := &asset.DataManager{
-		Key:         "obj1",
-		Name:        "Test 1",
-		Owner:       "owner",
-		Permissions: perms,
-	}
-
-	ok := service.canUpdate(dm, "owner")
-
-	assert.Equal(t, ok, true, "owner should be able to update")
 }

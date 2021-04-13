@@ -41,7 +41,7 @@ func TestAlgoValidate(t *testing.T) {
 		"invalidKey": {&NewAlgo{
 			Key:            "not36chars",
 			Name:           "invalid key",
-			Category:       AlgoCategory_SIMPLE,
+			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -49,7 +49,7 @@ func TestAlgoValidate(t *testing.T) {
 		"invalidCategory": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "invalid category",
-			Category:       3,
+			Category:       23,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -57,7 +57,7 @@ func TestAlgoValidate(t *testing.T) {
 		"valid": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_AGGREGATE,
+			Category:       AlgoCategory_ALGO_AGGREGATE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,

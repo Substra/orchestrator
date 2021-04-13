@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package algo
+package computetask
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -22,7 +22,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 )
 
-// SmartContract manages algos
+// SmartContract manages ComputeTask
 type SmartContract struct {
 	contractapi.Contract
 }
@@ -30,20 +30,18 @@ type SmartContract struct {
 // NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
 	contract := &SmartContract{}
-	contract.Name = "org.substra.algo"
+	contract.Name = "org.substra.computetask"
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.AfterTransaction = ledger.AfterTransactionHook
 
 	return contract
 }
 
-// RegisterAlgo creates a new algo in world state
-// If the key exists, it will override the existing value with the new one
-func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	service := ctx.GetProvider().GetAlgoService()
+func (s *SmartContract) RegisterTask(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetComputeTaskService()
 
-	params := new(asset.NewAlgo)
-	err := wrapper.Unwrap(params)
+	newTask := new(asset.NewComputeTask)
+	err := wrapper.Unwrap(newTask)
 	if err != nil {
 		return nil, err
 	}
@@ -53,56 +51,35 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 		return nil, err
 	}
 
-	a, err := service.RegisterAlgo(params, owner)
+	t, err := service.RegisterTask(newTask, owner)
 	if err != nil {
 		return nil, err
 	}
-	response, err := communication.Wrap(a)
-	if err != nil {
-		return nil, err
-	}
-	return response, nil
-}
-
-// QueryAlgo returns the algo with given key
-func (s *SmartContract) QueryAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	service := ctx.GetProvider().GetAlgoService()
-
-	params := new(asset.AlgoQueryParam)
-	err := wrapper.Unwrap(params)
-	if err != nil {
-		return nil, err
-	}
-
-	algo, err := service.GetAlgo(params.GetKey())
-	if err != nil {
-		return nil, err
-	}
-
-	wrapped, err := communication.Wrap(algo)
+	wrapped, err := communication.Wrap(t)
 	if err != nil {
 		return nil, err
 	}
 	return wrapped, nil
 }
 
-// QueryAlgos returns the algos
-func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	service := ctx.GetProvider().GetAlgoService()
+func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetComputeTaskService()
 
-	params := new(asset.AlgosQueryParam)
-	err := wrapper.Unwrap(params)
+	param := new(asset.QueryTasksParam)
+	err := wrapper.Unwrap(param)
 	if err != nil {
 		return nil, err
 	}
 
-	algos, nextPage, err := service.GetAlgos(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
+	pagination := common.NewPagination(param.PageToken, param.PageSize)
+
+	tasks, nextPage, err := service.GetTasks(pagination, param.Filter)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := &asset.AlgosQueryResponse{
-		Algos:         algos,
+	resp := &asset.QueryTasksResponse{
+		Tasks:         tasks,
 		NextPageToken: nextPage,
 	}
 
@@ -115,5 +92,5 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryAlgo", "QueryAlgos"}
+	return []string{"QueryTasks"}
 }

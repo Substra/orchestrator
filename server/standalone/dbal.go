@@ -93,6 +93,19 @@ func (d *DBAL) GetNodes() ([]*asset.Node, error) {
 	return nodes, nil
 }
 
+// GetNode implements persistence.NodeDBAL
+func (d *DBAL) GetNode(id string) (*asset.Node, error) {
+	row := d.tx.QueryRow(`select "asset" from "nodes" where id=$1 and channel=$2`, id, d.channel)
+
+	node := new(asset.Node)
+	err := row.Scan(&node)
+	if err != nil {
+		return nil, err
+	}
+
+	return node, nil
+}
+
 // AddObjective implements persistence.ObjectiveDBAL
 func (d *DBAL) AddObjective(obj *asset.Objective) error {
 	stmt := `insert into "objectives" ("id", "asset", "channel") values ($1, $2, $3)`

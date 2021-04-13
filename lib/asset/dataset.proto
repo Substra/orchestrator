@@ -16,10 +16,18 @@ syntax = "proto3";
 
 package orchestrator;
 
+import "datamanager.proto";
+
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
 // Dataset references several related samples
 message Dataset {
-  string key = 1;
-  repeated string sample_keys = 2;
+  DataManager data_manager = 1;
+  repeated string train_sample_keys = 2;
+  repeated string test_sample_keys = 3;
+}
+
+message NewDataset {
+  string datamanager_key = 1;
+  repeated string datasample_keys = 2;
 }

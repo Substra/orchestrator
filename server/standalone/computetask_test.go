@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asset
+package standalone
 
 import (
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	is "github.com/go-ozzo/ozzo-validation/v4/is"
+	"testing"
+
+	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/stretchr/testify/assert"
 )
 
-// Validate makes sure Dataset object is valid
-func (d *Dataset) Validate() error {
-	return validation.ValidateStruct(d,
-		validation.Field(&d.Key, validation.Required, is.UUID),
-		validation.Field(&d.SampleKeys, validation.Required, validation.Each(is.UUID)),
-	)
+func TestComputeTaskServerImplementServer(t *testing.T) {
+	server := NewComputeTaskServer()
+	assert.Implements(t, (*asset.ComputeTaskServiceServer)(nil), server)
 }

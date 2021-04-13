@@ -30,6 +30,7 @@ type DependenciesProvider interface {
 	AlgoServiceProvider
 	PermissionServiceProvider
 	DataManagerServiceProvider
+	ComputeTaskServiceProvider
 }
 
 // Provider is the central part of the dependency injection pattern.
@@ -46,6 +47,7 @@ type Provider struct {
 	datasample  DataSampleAPI
 	algo        AlgoAPI
 	datamanager DataManagerAPI
+	computeTask ComputeTaskAPI
 }
 
 // NewProvider return an instance of Provider based on given persistence layer.
@@ -75,6 +77,11 @@ func (sc *Provider) GetDataManagerDBAL() persistence.DataManagerDBAL {
 
 // GetAlgoDBAL returns the database abstraction layer for Algos
 func (sc *Provider) GetAlgoDBAL() persistence.AlgoDBAL {
+	return sc.dbal
+}
+
+// GetComputeTaskDBAL returns the database abstraction layer for Tasks
+func (sc *Provider) GetComputeTaskDBAL() persistence.ComputeTaskDBAL {
 	return sc.dbal
 }
 
@@ -135,4 +142,13 @@ func (sc *Provider) GetPermissionService() PermissionAPI {
 		sc.permission = NewPermissionService(sc)
 	}
 	return sc.permission
+}
+
+// GetComputeTaskService returns a ComputeTaskAPI instance.
+// The service will be instanciated if needed.
+func (sc *Provider) GetComputeTaskService() ComputeTaskAPI {
+	if sc.computeTask == nil {
+		sc.computeTask = NewComputeTaskService(sc)
+	}
+	return sc.computeTask
 }

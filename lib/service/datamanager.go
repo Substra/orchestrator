@@ -22,7 +22,6 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
-	"github.com/owkin/orchestrator/utils"
 )
 
 // DataSampleAPI defines the methods to act on DataSamples
@@ -121,7 +120,7 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 		return fmt.Errorf("datamanager not found: %w", orchestrationErrors.ErrNotFound)
 	}
 
-	if !s.canUpdate(datamanager, requester) {
+	if !s.GetPermissionService().CanProcess(datamanager.Permissions, requester) {
 		return fmt.Errorf("requester does not have the permissions to update the datamanager: %w", orchestrationErrors.ErrPermissionDenied)
 	}
 
@@ -176,13 +175,4 @@ func (s *DataManagerService) isOwner(id string, requester string) (bool, error) 
 	}
 
 	return dm.GetOwner() == requester, nil
-}
-
-// canUpdate checks whether the requester can update the asset
-func (s *DataManagerService) canUpdate(d *asset.DataManager, requester string) bool {
-	if requester == d.Owner || d.Permissions.Process.Public || utils.StringInSlice(d.Permissions.Process.AuthorizedIds, requester) {
-		return true
-	}
-
-	return false
 }

@@ -33,6 +33,7 @@ type DataSampleAPI interface {
 	GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
 	CheckSameManager(managerKey string, sampleKeys []string) error
 	IsTestOnly(sampleKeys []string) (bool, error)
+	ContainsTestSample(sampleKeys []string) (bool, error)
 }
 
 // DataSampleServiceProvider defines an object able to provide a DataSampleAPI instance
@@ -158,4 +159,17 @@ func (s *DataSampleService) IsTestOnly(sampleKeys []string) (bool, error) {
 		testOnly = testOnly && dataSample.TestOnly
 	}
 	return testOnly, nil
+}
+
+// ContainsTestSample returns true if there is at least a test sample in the list
+func (s *DataSampleService) ContainsTestSample(sampleKeys []string) (bool, error) {
+	hasTest := false
+	for _, sampleKey := range sampleKeys {
+		dataSample, err := s.GetDataSampleDBAL().GetDataSample(sampleKey)
+		if err != nil {
+			return false, err
+		}
+		hasTest = hasTest || dataSample.TestOnly
+	}
+	return hasTest, nil
 }

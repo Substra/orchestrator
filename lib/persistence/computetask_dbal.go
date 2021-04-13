@@ -12,22 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asset
+package persistence
 
-// Kind represent the type of assets handled by the orchestrator
-type Kind = string
-
-var (
-	// NodeKind is the type of Node assets
-	NodeKind Kind = "node"
-	// ObjectiveKind is the type of Objective assets
-	ObjectiveKind = "objective"
-	// DataSampleKind is the type of DataSample assets
-	DataSampleKind = "datasample"
-	// AlgoKind is the type of Algo assets
-	AlgoKind = "algo"
-	// DataManagerKind is the type of DataManager assets
-	DataManagerKind = "datamanager"
-	// ComputeTaskKind is the type of ComputeTask assets
-	ComputeTaskKind = "computetask"
+import (
+	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 )
+
+type ComputeTaskDBAL interface {
+	ComputeTaskExists(key string) (bool, error)
+	GetComputeTasks(keys []string) ([]*asset.ComputeTask, error)
+	AddComputeTask(task *asset.ComputeTask) error
+	QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
+}
+
+type ComputeTaskDBALProvider interface {
+	GetComputeTaskDBAL() ComputeTaskDBAL
+}

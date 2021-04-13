@@ -27,6 +27,7 @@ import (
 type NodeAPI interface {
 	RegisterNode(id string) (*asset.Node, error)
 	GetNodes() ([]*asset.Node, error)
+	GetNode(id string) (*asset.Node, error)
 }
 
 // NodeServiceProvider defines an object able to provide a NodeAPI instance
@@ -79,4 +80,9 @@ func (s *NodeService) RegisterNode(id string) (*asset.Node, error) {
 // GetNodes list all known nodes
 func (s *NodeService) GetNodes() ([]*asset.Node, error) {
 	return s.GetNodeDBAL().GetNodes()
+}
+
+// GetNode returns a Node by its ID
+func (s *NodeService) GetNode(id string) (*asset.Node, error) {
+	return s.GetNodeDBAL().GetNode(id)
 }

@@ -20,6 +20,7 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -74,17 +75,21 @@ func TestParamWrapping(t *testing.T) {
 
 	// Invocation param is a protoreflect.ProtoMessage
 	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
+	wrapper, err := communication.Wrap(param)
+	assert.NoError(t, err)
 
 	// Which is serialized
-	serializedInput, err := json.Marshal(param)
+	serializedInput, err := json.Marshal(wrapper)
 	assert.NoError(t, err)
 	// And converted to strings to match gateway contract
 	expectedInput := []string{string(serializedInput)}
 
-	// Response is also a protoreflect.ProtoMessage
+	// Response is also a wrapper
 	response := &asset.ObjectivesQueryResponse{Objectives: []*asset.Objective{}, NextPageToken: "test"}
+	wrappedResponse, err := communication.Wrap(response)
+	assert.NoError(t, err)
 	// Then serialized to match contractapi
-	serializedResponse, err := json.Marshal(response)
+	serializedResponse, err := json.Marshal(wrappedResponse)
 	assert.NoError(t, err)
 
 	contract.On("SubmitTransaction", "org.substra.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
@@ -103,9 +108,11 @@ func TestNoOutput(t *testing.T) {
 
 	// Invocation param is a protoreflect.ProtoMessage
 	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
+	wrapper, err := communication.Wrap(param)
+	assert.NoError(t, err)
 
 	// Which is serialized
-	serializedInput, err := json.Marshal(param)
+	serializedInput, err := json.Marshal(wrapper)
 	assert.NoError(t, err)
 	// And converted to strings to match gateway contract
 	expectedInput := []string{string(serializedInput)}

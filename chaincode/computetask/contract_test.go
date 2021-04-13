@@ -1,4 +1,4 @@
-// Copyright 2020 Owkin Inc.
+// Copyright 2021 Owkin Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package node
+package computetask
 
 import (
 	"testing"
 
+	"github.com/owkin/orchestrator/chaincode/communication"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
@@ -24,11 +25,11 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *service.MockNodeService {
-	mockService := new(service.MockNodeService)
+func getMockedService(ctx *testHelper.MockedContext) *service.MockComputeTaskService {
+	mockService := new(service.MockComputeTaskService)
 
 	provider := new(service.MockServiceProvider)
-	provider.On("GetNodeService").Return(mockService).Once()
+	provider.On("GetComputeTaskService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
 
@@ -39,7 +40,10 @@ func TestRegistration(t *testing.T) {
 	contract := &SmartContract{}
 
 	org := "TestOrg"
-	o := &asset.Node{Id: org}
+	input := &asset.NewComputeTask{}
+	wrapper, err := communication.Wrap(input)
+	assert.NoError(t, err)
+	output := &asset.ComputeTask{Key: "test"}
 	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
@@ -48,35 +52,14 @@ func TestRegistration(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterNode", org).Return(o, nil).Once()
+	service.On("RegisterTask", input, org).Return(output, nil).Once()
 
 	ctx.On("GetStub").Return(stub).Once()
 
-	wrapped, err := contract.RegisterNode(ctx)
-	assert.NoError(t, err, "node registration should not fail")
-	node := new(asset.Node)
-	err = wrapped.Unwrap(node)
+	resp, err := contract.RegisterTask(ctx, wrapper)
+	assert.NoError(t, err, "task registration should not fail")
+	task := new(asset.ComputeTask)
+	err = resp.Unwrap(task)
 	assert.NoError(t, err)
-	assert.Equal(t, node, o)
-}
-
-func TestQueryNodes(t *testing.T) {
-	contract := &SmartContract{}
-
-	nodes := []*asset.Node{
-		{Id: "org1"},
-		{Id: "org2"},
-	}
-
-	ctx := new(testHelper.MockedContext)
-
-	service := getMockedService(ctx)
-	service.On("GetNodes").Return(nodes, nil).Once()
-
-	wrapped, err := contract.QueryNodes(ctx)
-	assert.NoError(t, err, "querying nodes should not fail")
-	queryResult := new(asset.NodeQueryResponse)
-	err = wrapped.Unwrap(queryResult)
-	assert.NoError(t, err)
-	assert.Len(t, queryResult.Nodes, len(nodes), "query should return all nodes")
+	assert.Equal(t, task, output)
 }

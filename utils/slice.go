@@ -15,6 +15,11 @@
 // Package utils contains various small utility functions
 package utils
 
+import (
+	"reflect"
+	"sort"
+)
+
 // StringInSlice will check if needle is found in haystack
 func StringInSlice(haystack []string, needle string) bool {
 	for _, s := range haystack {
@@ -41,4 +46,34 @@ func Filter(list1 []string, list2 []string) []string {
 		}
 	}
 	return output
+
+}
+
+// IsEqual compares two slices and returns true if they both contains the same set of items.
+func IsEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	aCopy := make([]string, len(a))
+	bCopy := make([]string, len(b))
+
+	copy(aCopy, a)
+	copy(bCopy, b)
+
+	sort.Strings(aCopy)
+	sort.Strings(bCopy)
+
+	return reflect.DeepEqual(aCopy, bCopy)
+}
+
+// Intersection returns a new slice containing items in common from a and b
+func Intersection(a, b []string) []string {
+	res := []string{}
+	for _, n := range a {
+		if StringInSlice(b, n) {
+			res = append(res, n)
+		}
+	}
+	return res
 }

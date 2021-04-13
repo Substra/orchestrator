@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package asset
+package distributed
 
 import (
 	"testing"
 
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDatasetValidation(t *testing.T) {
-	empty := &Dataset{}
-
-	assert.Error(t, empty.Validate(), "empty object is invalid")
+func TestComputeTaskAdapterImplementServer(t *testing.T) {
+	adapter := NewComputeTaskAdapter()
+	assert.Implements(t, (*asset.ComputeTaskServiceServer)(nil), adapter)
 }

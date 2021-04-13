@@ -17,6 +17,7 @@ package objective
 import (
 	"testing"
 
+	"github.com/owkin/orchestrator/chaincode/communication"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -54,6 +55,8 @@ func TestRegistration(t *testing.T) {
 		Metadata:       metadata,
 		NewPermissions: newPerms,
 	}
+	wrapper, err := communication.Wrap(newObj)
+	assert.NoError(t, err)
 
 	o := &asset.Objective{}
 
@@ -67,7 +70,7 @@ func TestRegistration(t *testing.T) {
 
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	_, err := contract.RegisterObjective(ctx, newObj)
+	_, err = contract.RegisterObjective(ctx, wrapper)
 	assert.NoError(t, err)
 }
 
@@ -84,9 +87,15 @@ func TestQueryObjectives(t *testing.T) {
 	service.On("GetObjectives", &common.Pagination{Token: "", Size: 20}).Return(objectives, "", nil).Once()
 
 	param := &asset.ObjectivesQueryParam{PageToken: "", PageSize: 20}
+	wrapper, err := communication.Wrap(param)
+	assert.NoError(t, err)
 
-	resp, err := contract.QueryObjectives(ctx, param)
+	wrapped, err := contract.QueryObjectives(ctx, wrapper)
 	assert.NoError(t, err, "query should not fail")
+
+	resp := new(asset.ObjectivesQueryResponse)
+	err = wrapped.Unwrap(resp)
+	assert.NoError(t, err)
 	assert.Len(t, resp.Objectives, len(objectives), "query should return all objectives")
 }
 

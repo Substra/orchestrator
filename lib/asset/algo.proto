@@ -21,11 +21,11 @@ import "common.proto";
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
 enum AlgoCategory {
-    SIMPLE = 0;
-    COMPOSITE = 1;
-    AGGREGATE = 2;
+  ALGO_UNKNOWN = 0;
+  ALGO_SIMPLE = 1;
+  ALGO_AGGREGATE = 2;
+  ALGO_COMPOSITE = 3;
 }
-
 
 // Algo represents the algorithm code which will be used
 // to produce or test a model.

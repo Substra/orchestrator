@@ -16,6 +16,7 @@ package datamanager
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -38,8 +39,14 @@ func NewSmartContract() *SmartContract {
 
 // RegisterDataManager creates a new data Manager in world state
 // If the key exists, it will throw an error
-func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, params *asset.NewDataManager) error {
+func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	service := ctx.GetProvider().GetDataManagerService()
+
+	params := new(asset.NewDataManager)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return err
+	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
@@ -55,8 +62,14 @@ func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, param
 
 // UpdateDataManager updates a data manager in world state
 // If the key does not exist, it will throw an error
-func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, params *asset.DataManagerUpdateParam) error {
+func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	service := ctx.GetProvider().GetDataManagerService()
+
+	params := new(asset.DataManagerUpdateParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return err
+	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
@@ -71,25 +84,50 @@ func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, params 
 }
 
 // QueryDataManager returns the DataManager with given key
-func (s *SmartContract) QueryDataManager(ctx ledger.TransactionContext, params *asset.DataManagerQueryParam) (*asset.DataManager, error) {
+func (s *SmartContract) QueryDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetDataManagerService()
 
-	return service.GetDataManager(params.GetKey())
+	params := new(asset.DataManagerQueryParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return nil, err
+	}
+
+	dataManager, err := service.GetDataManager(params.GetKey())
+	if err != nil {
+		return nil, err
+	}
+	wrapped, err := communication.Wrap(dataManager)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 // QueryDataManagers returns the DataManager
-func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, params *asset.DataManagersQueryParam) (*asset.DataManagersQueryResponse, error) {
+func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetDataManagerService()
+
+	params := new(asset.DataManagersQueryParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return nil, err
+	}
 
 	datamanagers, nextPage, err := service.GetDataManagers(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.DataManagersQueryResponse{
+	resp := &asset.DataManagersQueryResponse{
 		DataManagers:  datamanagers,
 		NextPageToken: nextPage,
-	}, nil
+	}
+	wrapped, err := communication.Wrap(resp)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit

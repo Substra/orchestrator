@@ -54,6 +54,7 @@ func GetServer(networkConfig string, certificate string, key string, additionalO
 	asset.RegisterDataSampleServiceServer(server, NewDataSampleAdapter())
 	asset.RegisterAlgoServiceServer(server, NewAlgoAdapter())
 	asset.RegisterDataManagerServiceServer(server, NewDataManagerAdapter())
+	asset.RegisterComputeTaskServiceServer(server, NewComputeTaskAdapter())
 
 	return &AppServer{server}, nil
 }

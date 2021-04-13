@@ -22,7 +22,7 @@ option go_package = "github.com/owkin/orchestrator/lib/asset";
 // algorithm to produce or test a model.
 message DataSample {
     string key = 1;
-    repeated string data_manager_keys = 2;
+    repeated string data_manager_keys = 2; // mutable
     string owner = 3;
     bool test_only = 4;
 }

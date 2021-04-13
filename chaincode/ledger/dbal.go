@@ -246,6 +246,19 @@ func (db *DB) GetNodes() ([]*asset.Node, error) {
 	return nodes, nil
 }
 
+// GetNode returns a node by its ID
+func (db *DB) GetNode(id string) (*asset.Node, error) {
+	n := asset.Node{}
+
+	b, err := db.getState(asset.NodeKind, id)
+	if err != nil {
+		return &n, err
+	}
+
+	err = json.Unmarshal(b, &n)
+	return &n, err
+}
+
 // NodeExists test if a node with given ID is already stored
 func (db *DB) NodeExists(id string) (bool, error) {
 	return db.hasKey(asset.NodeKind, id)

@@ -17,6 +17,7 @@ package algo
 import (
 	"testing"
 
+	"github.com/owkin/orchestrator/chaincode/communication"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -48,12 +49,15 @@ func TestRegistration(t *testing.T) {
 	newObj := &asset.NewAlgo{
 		Key:            "uuid1",
 		Name:           "Algo name",
-		Category:       asset.AlgoCategory_COMPOSITE,
+		Category:       asset.AlgoCategory_ALGO_COMPOSITE,
 		Description:    addressable,
 		Algorithm:      addressable,
 		Metadata:       metadata,
 		NewPermissions: newPerms,
 	}
+
+	params, err := communication.Wrap(newObj)
+	assert.NoError(t, err)
 
 	a := &asset.Algo{}
 
@@ -67,7 +71,7 @@ func TestRegistration(t *testing.T) {
 
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	_, err := contract.RegisterAlgo(ctx, newObj)
+	_, err = contract.RegisterAlgo(ctx, params)
 	assert.NoError(t, err)
 }
 
@@ -84,9 +88,14 @@ func TestQueryAlgos(t *testing.T) {
 	service.On("GetAlgos", &common.Pagination{Token: "", Size: 20}).Return(algos, "", nil).Once()
 
 	param := &asset.AlgosQueryParam{PageToken: "", PageSize: 20}
+	wrapper, err := communication.Wrap(param)
+	assert.NoError(t, err)
 
-	resp, err := contract.QueryAlgos(ctx, param)
+	wrapped, err := contract.QueryAlgos(ctx, wrapper)
 	assert.NoError(t, err, "query should not fail")
+	resp := new(asset.AlgosQueryResponse)
+	err = wrapped.Unwrap(resp)
+	assert.NoError(t, err)
 	assert.Len(t, resp.Algos, len(algos), "query should return all algos")
 }
 

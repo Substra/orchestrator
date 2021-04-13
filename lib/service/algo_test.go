@@ -51,7 +51,7 @@ func TestRegisterAlgo(t *testing.T) {
 	algo := &asset.NewAlgo{
 		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:           "Test algo",
-		Category:       asset.AlgoCategory_SIMPLE,
+		Category:       asset.AlgoCategory_ALGO_SIMPLE,
 		Algorithm:      algorithm,
 		Description:    description,
 		NewPermissions: newPerms,
@@ -69,7 +69,7 @@ func TestRegisterAlgo(t *testing.T) {
 	storedAlgo := &asset.Algo{
 		Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:        "Test algo",
-		Category:    asset.AlgoCategory_SIMPLE,
+		Category:    asset.AlgoCategory_ALGO_SIMPLE,
 		Algorithm:   algorithm,
 		Description: description,
 		Permissions: perms,

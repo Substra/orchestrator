@@ -24,6 +24,8 @@ import (
 // PermissionAPI defines the methods to act on Permissions
 type PermissionAPI interface {
 	CreatePermissions(owner string, newPerms *asset.NewPermissions) (*asset.Permissions, error)
+	CanProcess(perms *asset.Permissions, requester string) bool
+	MergePermissions(x, y *asset.Permissions) *asset.Permissions
 }
 
 // PermissionServiceProvider defines an object able to provide a PermissionAPI instance.
@@ -49,6 +51,12 @@ func NewPermissionService(provider PermissionDependencyProvider) *PermissionServ
 
 // CreatePermissions process a NewPermissions object into a Permissions one.
 func (s *PermissionService) CreatePermissions(owner string, newPerms *asset.NewPermissions) (*asset.Permissions, error) {
+	if newPerms == nil {
+		newPerms = &asset.NewPermissions{
+			Public: false,
+		}
+	}
+
 	if !newPerms.Public {
 		// Restricted access, let's check that authorizedIds are valid
 		if err := s.validateAuthorizedIDs(newPerms.AuthorizedIds); err != nil {
@@ -88,6 +96,36 @@ func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
 	}
 
 	return nil
+}
+
+func (s *PermissionService) CanProcess(perms *asset.Permissions, requester string) bool {
+	if perms.Process.Public || utils.StringInSlice(perms.Process.AuthorizedIds, requester) {
+		return true
+	}
+
+	return false
+}
+
+func (s *PermissionService) MergePermissions(x, y *asset.Permissions) *asset.Permissions {
+	return &asset.Permissions{
+		Process:  mergePermission(x.Process, y.Process),
+		Download: mergePermission(x.Download, y.Download),
+	}
+}
+
+func mergePermission(x, y *asset.Permission) *asset.Permission {
+	priv := &asset.Permission{}
+	priv.Public = x.Public && y.Public
+
+	switch {
+	case !x.Public && y.Public:
+		priv.AuthorizedIds = x.AuthorizedIds
+	case x.Public && !y.Public:
+		priv.AuthorizedIds = y.AuthorizedIds
+	default:
+		priv.AuthorizedIds = utils.Intersection(x.AuthorizedIds, y.AuthorizedIds)
+	}
+	return priv
 }
 
 // newPermission processes a NewPermission into a Permission.

@@ -16,6 +16,7 @@ package node
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 )
@@ -41,7 +42,7 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 }
 
 // RegisterNode creates a new node in world state
-func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*asset.Node, error) {
+func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*communication.Wrapper, error) {
 	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
 		return nil, err
@@ -49,11 +50,19 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*asset.Node
 
 	service := ctx.GetProvider().GetNodeService()
 
-	return service.RegisterNode(txCreator)
+	node, err := service.RegisterNode(txCreator)
+	if err != nil {
+		return nil, err
+	}
+	wrapped, err := communication.Wrap(node)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 // QueryNodes retrieves all known nodes
-func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) (*asset.NodeQueryResponse, error) {
+func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetNodeService()
 
 	nodes, err := service.GetNodes()
@@ -61,7 +70,13 @@ func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) (*asset.NodeQu
 		return nil, err
 	}
 
-	return &asset.NodeQueryResponse{
+	resp := &asset.NodeQueryResponse{
 		Nodes: nodes,
-	}, nil
+	}
+
+	wrapped, err := communication.Wrap(resp)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, nil
 }

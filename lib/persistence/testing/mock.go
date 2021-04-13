@@ -44,6 +44,12 @@ func (m *MockDBAL) GetNodes() ([]*asset.Node, error) {
 	return args.Get(0).([]*asset.Node), args.Error(1)
 }
 
+// GetNode is a mock
+func (m *MockDBAL) GetNode(id string) (*asset.Node, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.Node), args.Error(1)
+}
+
 // AddObjective is a mock
 func (m *MockDBAL) AddObjective(obj *asset.Objective) error {
 	args := m.Called(obj)
@@ -150,4 +156,27 @@ func (m *MockDBAL) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, 
 func (m *MockDBAL) DataManagerExists(id string) (bool, error) {
 	args := m.Called(id)
 	return args.Bool(0), args.Error(1)
+}
+
+// ComputeTaskExists is a mock
+func (m *MockDBAL) ComputeTaskExists(id string) (bool, error) {
+	args := m.Called(id)
+	return args.Bool(0), args.Error(1)
+}
+
+// GetComputeTasks is a mock
+func (m *MockDBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
+	args := m.Called(keys)
+	return args.Get(0).([]*asset.ComputeTask), args.Error(1)
+}
+
+// AddComputeTask is a mock
+func (m *MockDBAL) AddComputeTask(t *asset.ComputeTask) error {
+	args := m.Called(t)
+	return args.Error(0)
+}
+
+func (m *MockDBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
+	args := m.Called(p, filter)
+	return args.Get(0).([]*asset.ComputeTask), args.String(1), args.Error(2)
 }

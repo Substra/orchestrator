@@ -16,6 +16,7 @@ package datasample
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -38,8 +39,14 @@ func NewSmartContract() *SmartContract {
 
 // RegisterDataSample creates a new data sample in world state
 // If the key exists, it will throw an error
-func (s *SmartContract) RegisterDataSample(ctx ledger.TransactionContext, params *asset.NewDataSample) error {
+func (s *SmartContract) RegisterDataSample(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	service := ctx.GetProvider().GetDataSampleService()
+
+	params := new(asset.NewDataSample)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return err
+	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
@@ -55,8 +62,14 @@ func (s *SmartContract) RegisterDataSample(ctx ledger.TransactionContext, params
 
 // UpdateDataSample updates a data sample in world state
 // If the key does not exist, it will throw an error
-func (s *SmartContract) UpdateDataSample(ctx ledger.TransactionContext, params *asset.DataSampleUpdateParam) error {
+func (s *SmartContract) UpdateDataSample(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	service := ctx.GetProvider().GetDataSampleService()
+
+	params := new(asset.DataSampleUpdateParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return err
+	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
@@ -71,18 +84,29 @@ func (s *SmartContract) UpdateDataSample(ctx ledger.TransactionContext, params *
 }
 
 // QueryDataSamples returns the datasamples
-func (s *SmartContract) QueryDataSamples(ctx ledger.TransactionContext, params *asset.DataSamplesQueryParam) (*asset.DataSamplesQueryResponse, error) {
+func (s *SmartContract) QueryDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetDataSampleService()
+
+	params := new(asset.DataSamplesQueryParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return nil, err
+	}
 
 	datasamples, paginationToken, err := service.GetDataSamples(&common.Pagination{Token: params.PageToken, Size: params.GetPageSize()})
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.DataSamplesQueryResponse{
+	resp := &asset.DataSamplesQueryResponse{
 		DataSamples:   datasamples,
 		NextPageToken: paginationToken,
-	}, nil
+	}
+	wrapped, err := communication.Wrap(resp)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, err
 }
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit

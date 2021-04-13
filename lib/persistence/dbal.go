@@ -31,6 +31,8 @@ type NodeDBAL interface {
 	NodeExists(id string) (bool, error)
 	// GetNodes returns all known nodes
 	GetNodes() ([]*asset.Node, error)
+	// GetNode returns a Node by its ID
+	GetNode(id string) (*asset.Node, error)
 }
 
 // ObjectiveDBAL is the database abstraction layer for Objectives
@@ -99,4 +101,5 @@ type DBAL interface {
 	DataSampleDBAL
 	AlgoDBAL
 	DataManagerDBAL
+	ComputeTaskDBAL
 }
