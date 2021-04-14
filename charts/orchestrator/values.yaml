@@ -114,7 +114,7 @@ orchestrator:
     tag: ""
 
   logLevel: DEBUG
-  mode: standalone # the orchestrator can run in either "standalone" or "chaincode" mode
+  mode: standalone # the orchestrator can run in either "standalone" or "distributed" mode
   chaincode: mycc
   verifyClientMSPID: true
 

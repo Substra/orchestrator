@@ -6,20 +6,20 @@ This repository contains two binaries: `orchestrator` and `chaincode`.
 
 ![](./schemas/archi.png)
 
-When running in independent (or solo) mode, the only dependency is a couchdb instance for persistence.
-Here is a basic overview of the solo mode execution mode:
+When running in standalone mode, the only dependency is a PostgreSQL instance for persistence.
+Here is a basic overview of the standalone execution mode:
 
-![](./schemas/solo.png)
+![](./schemas/standalone.png)
 
 The chaincode comes into action when running in a hyperledger-fabric context,
 where it is deployed as a regular fabric chaincode.
 In that situation, the orchestrator lean on the chaincode and act as a facade,
 its sole purpose is to convert gRPC calls into chaincode invocation.
 
-![](./schemas/chaincode.png)
+![](./schemas/distributed.png)
 
 By doing so, we always expose the same interface (gRPC) to external callers.
-That means the solo or chaincode deployments can be swapped without any impact on callers.
+That means the standalone or distributed deployments can be swapped without any impact on callers.
 
 However please note that there is no data migration.
 Since persistence layers are different from a mode to another,
@@ -37,7 +37,7 @@ switching modes will result in a full reset.
 
 ## Common lib
 
-Since both the standalone orchestrator and the chaincode have to manipulate the assets,
+Since both the standalone orchestrator and the distributed orchestrator have to manipulate the assets,
 it makes sense that they rely on the same common lib; which you can find in the `lib` directory.
 
 It provides abstractions to manipulate the assets and implement your own persistence layer (`persistence.DBAL`).
@@ -48,7 +48,7 @@ You'll also find in this directory the validation implementation for each asset.
 The business logic to handle those assets is defined in `lib/service`,
 where each asset is managed by a dedicated service.
 
-Here is an overview of the orchestration part, which is completely independent of the execution mode (solo or ledger):
+Here is an overview of the orchestration part, which is completely independent of the execution mode (standalone or distributed):
 
 ![](./schemas/orchestration.png)
 
@@ -56,14 +56,14 @@ To avoid tight coupling, the `Provider` implements a dependency injection patter
 so that an asset service can call other services.
 
 There are two implementations of the DBAL interface:
-Postgresql in solo mode and LedgerDB when running as chaincode.
+Postgresql in standalone mode and LedgerDB when running in distributed mode.
 
 ## Event dispatch
 
 Consumers may need to react to events.
 To that end, the orchestrator will emit events on an AMQP broker (rabbitmq).
 
-When running in chaincode mode, there will be a conversion between ledger events from the chaincode
+When running in distributed mode, there will be a conversion between ledger events from the chaincode
 and events emitted by the orchestrator.
 
 ![](./schemas/events.png)
@@ -77,15 +77,15 @@ Events are pushed in a queue during the transaction, and dispatched once the tra
 
 ![](./schemas/event-dispatch-standalone.png)
 
-### Chaincode execution
+### Distributed execution
 
-In chaincode mode, events are stored during the transaction processing and _emitted_ once
+In distributed mode, events are stored during the transaction processing and _emitted_ once
 in the [AfterTransaction hook](https://github.com/hyperledger/fabric-contract-api-go/blob/master/tutorials/using-advanced-features.md#transaction-hooks).
 This address a limitation of fabric: [only one event can be set per transaction](https://github.com/hyperledger/fabric-chaincode-go/blob/f8ef75b1771978c17ed56e52b5bfc22d4bdae5e3/shim/interfaces.go#L344-L350).
 
 The workflow is represented below:
 
-![](./schemas/event-dispatch-standalone.png)
+![](./schemas/event-dispatch-distributed.png)
 
 ### Rabbitmq routing
 

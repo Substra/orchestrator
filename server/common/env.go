@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// server binary exposing a gRPC interface to manage distributed learning asset.
-// It can run in either standalone or distributed mode.
-// In standalone mode it handle all the logic while in distributed mode everything is delegated to a chaincode.
 package common
 
 import (

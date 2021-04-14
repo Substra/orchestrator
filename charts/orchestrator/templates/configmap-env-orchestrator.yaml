@@ -16,7 +16,7 @@ data:
   {{- end }}
 
   # Distributed settings
-  {{- if eq .Values.orchestrator.mode "chaincode" }}
+  {{- if eq .Values.orchestrator.mode "distributed" }}
   ORCHESTRATOR_FABRIC_CERT: /var/hyperledger/msp/signcerts/cert.pem
   ORCHESTRATOR_FABRIC_KEY: /var/hyperledger/msp/keystore/key.pem
   ORCHESTRATOR_MSPID: {{ .Values.fabric.mspID }}

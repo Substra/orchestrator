@@ -3,7 +3,7 @@
 object "gRPC Server" as grpc
 note left
 same interface
-than solo mode
+as in standalone mode
 end note
 
 object "Chaincode Gateway" as gw {
@@ -25,7 +25,7 @@ package orchestrator.chaincode {
     note right
     this is the exact
     same logic
-    than in solo mode
+    than in standalone mode
     end note
     object "Persistence layer" as db {
         LedgerDB

@@ -1,4 +1,4 @@
-{{- if eq .Values.orchestrator.mode "chaincode" }}
+{{- if eq .Values.orchestrator.mode "distributed" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -115,4 +115,4 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 
-{{- end }} # if chaincode mode
+{{- end }} # if distributed mode

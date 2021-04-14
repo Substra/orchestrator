@@ -1,6 +1,6 @@
 ---
 orchestrator:
-  mode: chaincode
+  mode: distributed
   channel: mychannel
   chaincode: mycc
   tls:

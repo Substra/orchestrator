@@ -6,7 +6,7 @@ rectangle "Standalone Mode" {
     usecase Orchestrator as s_or
 }
 
-rectangle "Chaincode Mode" {
+rectangle "Distributed Mode" {
     usecase Orchestrator as c_or
     usecase Chaincode as cc
 }

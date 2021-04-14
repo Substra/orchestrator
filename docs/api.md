@@ -2,16 +2,16 @@
 
 ## Common interface
 
-The orchestrator should behave the same, whether it runs as a standalone or as a chaincode powered one.
+The orchestrator should behave the same, whether it runs as in standalone or distributed mode.
 
-The interface is the same, however additional headers might be required in chaincode mode.
+The interface is the same, however additional headers might be required in distributed mode.
 
 ## Consuming the gRPC API
 
 When running in development mode, the orchestrator exposes a gRPC endpoint on port 9000.
 gRPC reflection is enabled, and protobuf definitions are in [lib/assets](../lib/assets) directory.
 
-**chaincode mode**: requests **MUST** have the following 3 headers set:
+**distributed mode**: requests **MUST** have the following 3 headers set:
 - mspid, example `MyOrg1MSP`
 - channel, example `mychannel`
 - chaincode, example `mycc`

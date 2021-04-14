@@ -51,8 +51,8 @@ database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker 
 
 To launch the orchestrator:
 ```bash
-skaffold dev -p solo
-skaffold run -p solo
+skaffold dev -p standalone
+skaffold run -p standalone
 ```
 
 Or
@@ -70,9 +70,9 @@ grpcurl -insecure orchestrator.node-1.com:443 list
 
 You can also deploy [connect-backend](https://github.com/owkin/connect-backend/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev` or `skaffold run`
 
-### Chaincode mode
+### Distributed mode
 
-In chaincode mode, the orchestrator only requires a matching chaincode:
+In distributed mode, the orchestrator only requires a matching chaincode:
 So you need to build the chaincode image (from this repo) to be used in `hlf-k8s` in your k8s cluster
 
 ```bash
@@ -85,15 +85,15 @@ Make sure you deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s/
 Then, in the orchestrator repo:
 
 ```bash
-skaffold dev -p chaincode -p -solo
-skaffold run -p chaincode -p -solo
+skaffold dev -p distributed -p -standalone
+skaffold run -p distributed -p -standalone
 ```
 
 Or
 
 ```bash
-ORCHESTRATOR_MODE="chaincode" skaffold dev
-ORCHESTRATOR_MODE="chaincode" skaffold run
+ORCHESTRATOR_MODE="distributed" skaffold dev
+ORCHESTRATOR_MODE="distributed" skaffold run
 ```
 
 Assuming `orchestrator.node-1.com` and `orchestrator.node-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:

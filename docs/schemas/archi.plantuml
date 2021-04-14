@@ -1,6 +1,6 @@
 @startuml
 object "orchestrator" as os
-Note top of os: standalone server
+Note top of os: standalone/distributed server
 
 
 object chaincode {
@@ -21,7 +21,7 @@ object "Persistence layer" as db
 
 os --> grpc
 grpc --> services
-grpc -[dotted]-> chaincode: in chaincode mode
+grpc -[dotted]-> chaincode: in distributed mode
 chaincode --> sc
 sc --> services
 services --> db
@@ -29,7 +29,7 @@ services --> db
 note right of db
 multiple backends
 depending on mode
-(solo/ledger)
+(distributed/standalone)
 end note
 
 @enduml

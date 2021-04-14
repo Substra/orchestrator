@@ -61,15 +61,15 @@ func main() {
 
 	common.InitLogging()
 
-	flag.BoolVar(&standaloneMode, "standalone", true, "Run the chaincode in standalone mode")
-	flag.BoolVar(&standaloneMode, "s", true, "Run the chaincode in standalone mode (shorthand)")
+	flag.BoolVar(&standaloneMode, "standalone", true, "Run the server in standalone mode")
+	flag.BoolVar(&standaloneMode, "s", true, "Run the server in standalone mode (shorthand)")
 
 	flag.Parse()
 
 	mode, ok := common.GetEnv("MODE")
 	if ok {
 		switch mode {
-		case "chaincode":
+		case "distributed":
 			standaloneMode = false
 		case "standalone":
 			standaloneMode = true

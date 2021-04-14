@@ -1,3 +1,4 @@
+{{- if eq .Values.orchestrator.mode "distributed" }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,3 +12,4 @@ data:
         - {{.}}
         {{- end }}
       {{- end}}
+{{- end }}

@@ -1,4 +1,4 @@
-{{- if eq .Values.orchestrator.mode "chaincode" }}
+{{- if eq .Values.orchestrator.mode "distributed" }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

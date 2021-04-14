@@ -83,7 +83,7 @@ spec:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
           volumeMounts:
-            {{- if eq .Values.orchestrator.mode "chaincode" }}
+            {{- if eq .Values.orchestrator.mode "distributed" }}
             - name: fabric-config
               mountPath: /var/hyperledger/fabric-config.yaml
               subPath: fabric-config.yaml
@@ -116,7 +116,7 @@ spec:
             {{- end }}
             {{- end }}
       volumes:
-        {{- if eq .Values.orchestrator.mode "chaincode" }}
+        {{- if eq .Values.orchestrator.mode "distributed" }}
         - name: user-cert
           secret:
             secretName: {{ $.Values.fabric.secrets.user.cert }}
