@@ -62,8 +62,9 @@ message AlgosQueryResponse {
 }
 
 message AlgosQueryParam {
-  string page_token = 1;
-  uint32 page_size = 2;
+  AlgoCategory category = 1;
+  string page_token = 2;
+  uint32 page_size = 3;
 }
 
 service AlgoService {

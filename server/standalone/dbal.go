@@ -21,6 +21,8 @@ import (
 	// migration driver
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 
+	"github.com/Masterminds/squirrel"
+
 	// Database driver
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -202,7 +204,7 @@ func (d *DBAL) GetAlgo(id string) (*asset.Algo, error) {
 }
 
 // GetAlgos implements persistence.AlgoDBAL
-func (d *DBAL) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+func (d *DBAL) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
 	var rows *sql.Rows
 	var err error
 
@@ -211,8 +213,24 @@ func (d *DBAL) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationT
 		return nil, "", err
 	}
 
-	query := `select "asset" from "algos" where channel=$3 order by created_at asc limit $1 offset $2`
-	rows, err = d.tx.Query(query, p.Size+1, offset, d.channel)
+	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	builder := pgDialect.Select("asset").
+		From("algos").
+		Where(squirrel.Eq{"channel": d.channel}).
+		OrderByClause("created_at ASC").
+		Offset(uint64(offset)).
+		Limit(uint64(p.Size + 1))
+
+	if c != asset.AlgoCategory_ALGO_UNKNOWN {
+		builder = builder.Where(squirrel.Eq{"asset->>'category'": c.String()})
+	}
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, "", err
+	}
+
+	rows, err = d.tx.Query(query, args...)
 	if err != nil {
 		return nil, "", err
 	}

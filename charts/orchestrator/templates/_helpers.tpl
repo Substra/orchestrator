@@ -70,6 +70,28 @@ app.kubernetes.io/name: {{ include "orchestrator.name" . }}-rabbitmq-operator
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+
+{{/*
+Common labels
+*/}}
+{{- define "forwarder.labels" -}}
+helm.sh/chart: {{ include "orchestrator.chart" . }}
+{{ include "forwarder.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+
+{{/*
+Forwader selector label
+*/}}
+{{- define "forwarder.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "orchestrator.name" . }}-forwarder
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
 {{/*
 Create the name of the service account to use
 */}}

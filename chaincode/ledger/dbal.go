@@ -353,6 +353,10 @@ func (db *DB) AddAlgo(algo *asset.Algo) error {
 		return err
 	}
 
+	if err = db.createIndex("algo~category~key", []string{"algo", algo.Category.String(), algo.Key}); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -370,24 +374,61 @@ func (db *DB) GetAlgo(id string) (*asset.Algo, error) {
 }
 
 // GetAlgos retrieves all algos
-func (db *DB) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
-	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("algo~owner~key", []string{"algo"}, p.Size, p.Token)
+func (db *DB) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+	logger := db.logger.WithFields(
+		log.F("pagination", p),
+		log.F("algo_category", c.String()),
+	)
+	logger.Debug("get algos")
+
+	selector := couchTaskQuery{
+		DocType: asset.AlgoKind,
+	}
+
+	assetFilter := map[string]interface{}{}
+	if c != asset.AlgoCategory_ALGO_UNKNOWN {
+		assetFilter["category"] = c.String()
+	}
+	if len(assetFilter) > 0 {
+		selector.Asset = assetFilter
+	}
+
+	b, err := json.Marshal(selector)
 	if err != nil {
 		return nil, "", err
 	}
 
-	db.logger.WithField("keys", elementsKeys).Debug("GetAlgos")
+	queryString := fmt.Sprintf(`{"selector":%s}}`, string(b))
+	log.WithField("couchQuery", queryString).Debug("mango query")
 
-	var algos []*asset.Algo
-	for _, key := range elementsKeys {
-		algo, err := db.GetAlgo(key)
+	resultsIterator, bookmark, err := db.ccStub.GetQueryResultWithPagination(queryString, int32(p.Size), p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resultsIterator.Close()
+
+	algos := make([]*asset.Algo, 0)
+
+	for resultsIterator.HasNext() {
+		queryResult, err := resultsIterator.Next()
 		if err != nil {
-			return algos, bookmark, err
+			return nil, "", err
 		}
+		var storedAsset storedAsset
+		err = json.Unmarshal(queryResult.Value, &storedAsset)
+		if err != nil {
+			return nil, "", err
+		}
+		algo := &asset.Algo{}
+		err = json.Unmarshal(storedAsset.Asset, algo)
+		if err != nil {
+			return nil, "", err
+		}
+
 		algos = append(algos, algo)
 	}
 
-	return algos, bookmark, nil
+	return algos, bookmark.Bookmark, nil
 }
 
 // AlgoExists implements persistence.ObjectiveDBAL

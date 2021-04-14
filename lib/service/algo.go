@@ -29,7 +29,7 @@ import (
 type AlgoAPI interface {
 	RegisterAlgo(algo *asset.NewAlgo, owner string) (*asset.Algo, error)
 	GetAlgo(string) (*asset.Algo, error)
-	GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
+	GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
 }
 
 // AlgoServiceProvider defines an object able to provide an AlgoAPI instance
@@ -105,6 +105,6 @@ func (s *AlgoService) GetAlgo(id string) (*asset.Algo, error) {
 }
 
 // GetAlgos returns all stored algos
-func (s *AlgoService) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
-	return s.GetAlgoDBAL().GetAlgos(p)
+func (s *AlgoService) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+	return s.GetAlgoDBAL().GetAlgos(c, p)
 }

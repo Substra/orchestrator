@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -108,14 +109,14 @@ func TestGetAlgos(t *testing.T) {
 		AddRow([]byte("{}")).
 		AddRow([]byte("{}"))
 
-	mock.ExpectQuery(`select "asset" from "algos"`).WithArgs(13, 0, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT asset FROM algos`).WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(rows)
 
 	tx, err := db.Begin()
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}
 
-	res, bookmark, err := dbal.GetAlgos(common.NewPagination("", 12))
+	res, bookmark, err := dbal.GetAlgos(asset.AlgoCategory_ALGO_COMPOSITE, common.NewPagination("", 12))
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 	assert.Equal(t, "", bookmark, "last page should be reached")
@@ -138,14 +139,14 @@ func TestGetPaginatedAlgos(t *testing.T) {
 		AddRow([]byte("{}")).
 		AddRow([]byte("{}"))
 
-	mock.ExpectQuery(`select "asset" from "algos"`).WithArgs(2, 0, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT asset FROM algos`).WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(rows)
 
 	tx, err := db.Begin()
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}
 
-	res, bookmark, err := dbal.GetAlgos(common.NewPagination("", 1))
+	res, bookmark, err := dbal.GetAlgos(asset.AlgoCategory_ALGO_COMPOSITE, common.NewPagination("", 1))
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "1", bookmark, "There should be another page")

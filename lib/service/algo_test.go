@@ -118,19 +118,21 @@ func TestGetAlgos(t *testing.T) {
 	service := NewAlgoService(provider)
 
 	algo1 := asset.Algo{
-		Key:  "algo1",
-		Name: "Test 1",
+		Key:      "algo1",
+		Name:     "Test 1",
+		Category: asset.AlgoCategory_ALGO_SIMPLE,
 	}
 	algo2 := asset.Algo{
-		Key:  "algo2",
-		Name: "Test 2",
+		Key:      "algo2",
+		Name:     "Test 2",
+		Category: asset.AlgoCategory_ALGO_SIMPLE,
 	}
 
 	pagination := common.NewPagination("", 12)
 
-	dbal.On("GetAlgos", pagination).Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
+	dbal.On("GetAlgos", asset.AlgoCategory_ALGO_SIMPLE, pagination).Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
 
-	r, token, err := service.GetAlgos(pagination)
+	r, token, err := service.GetAlgos(asset.AlgoCategory_ALGO_SIMPLE, pagination)
 	require.Nil(t, err)
 
 	assert.Len(t, r, 2)

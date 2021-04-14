@@ -56,7 +56,7 @@ type DataSampleDBAL interface {
 type AlgoDBAL interface {
 	AddAlgo(obj *asset.Algo) error
 	GetAlgo(id string) (*asset.Algo, error)
-	GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
+	GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
 	AlgoExists(id string) (bool, error)
 }
 

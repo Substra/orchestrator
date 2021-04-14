@@ -4,11 +4,11 @@ kind: Deployment
 metadata:
   name: {{ include "orchestrator.fullname" . }}-forwarder
   labels:
-    {{- include "orchestrator.labels" . | nindent 4 }}
+    {{- include "forwarder.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "orchestrator.selectorLabels" . | nindent 6 }}
+      {{- include "forwarder.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -17,7 +17,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "orchestrator.selectorLabels" . | nindent 8 }}
+        {{- include "forwarder.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

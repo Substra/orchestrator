@@ -117,8 +117,8 @@ func (m *MockDBAL) GetAlgo(id string) (*asset.Algo, error) {
 }
 
 // GetAlgos is a mock
-func (m *MockDBAL) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
-	args := m.Called(p)
+func (m *MockDBAL) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+	args := m.Called(c, p)
 	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 

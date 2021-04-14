@@ -79,15 +79,15 @@ func TestQueryAlgos(t *testing.T) {
 	contract := &SmartContract{}
 
 	algos := []*asset.Algo{
-		{Name: "test"},
-		{Name: "test2"},
+		{Name: "test", Category: asset.AlgoCategory_ALGO_SIMPLE},
+		{Name: "test2", Category: asset.AlgoCategory_ALGO_SIMPLE},
 	}
 
 	ctx := new(testHelper.MockedContext)
 	service := getMockedService(ctx)
-	service.On("GetAlgos", &common.Pagination{Token: "", Size: 20}).Return(algos, "", nil).Once()
+	service.On("GetAlgos", asset.AlgoCategory_ALGO_SIMPLE, &common.Pagination{Token: "", Size: 20}).Return(algos, "", nil).Once()
 
-	param := &asset.AlgosQueryParam{PageToken: "", PageSize: 20}
+	param := &asset.AlgosQueryParam{Category: asset.AlgoCategory_ALGO_SIMPLE, PageToken: "", PageSize: 20}
 	wrapper, err := communication.Wrap(param)
 	assert.NoError(t, err)
 

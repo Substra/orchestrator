@@ -251,8 +251,8 @@ func (m *MockAlgoService) GetAlgo(key string) (*asset.Algo, error) {
 }
 
 // GetAlgos returns whatever value is passed
-func (m *MockAlgoService) GetAlgos(p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
-	args := m.Called(p)
+func (m *MockAlgoService) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+	args := m.Called(c, p)
 	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
