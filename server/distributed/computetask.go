@@ -54,7 +54,7 @@ func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryT
 
 	response := &asset.QueryTasksResponse{}
 
-	err = invocator.Invoke(method, param, response)
+	err = invocator.Evaluate(method, param, response)
 
 	return response, err
 }

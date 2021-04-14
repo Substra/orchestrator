@@ -74,7 +74,7 @@ func TestQueryDataSamples(t *testing.T) {
 	invocator := &mockedInvocator{}
 
 	queryParam := &asset.DataSamplesQueryParam{PageToken: "", PageSize: 10}
-	invocator.On("Invoke", "org.substra.datasample:QueryDataSamples", queryParam, &asset.DataSamplesQueryResponse{}).Return(nil)
+	invocator.On("Evaluate", "org.substra.datasample:QueryDataSamples", queryParam, &asset.DataSamplesQueryResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

@@ -40,6 +40,7 @@ type GatewayContract interface {
 // This is the Gandalf of fabric.
 type Invocator interface {
 	Invoke(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error
+	Evaluate(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error
 }
 
 // ContractInvocator implements the Invocator interface.
@@ -65,7 +66,7 @@ func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessag
 	}
 	args, err := json.Marshal(wrapper)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	data, err := i.contract.SubmitTransaction(method, string(args))
@@ -84,6 +85,43 @@ func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessag
 	elapsed := time.Since(start)
 
 	logger.WithField("duration", elapsed).Debug("Invokation successful")
+
+	return nil
+}
+
+// Evaluate evaluates a transaction (without submitting it to the ledger), deserializing its result in the output parameter.
+func (i *ContractInvocator) Evaluate(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
+	logger := log.WithField("method", method)
+
+	logger.WithField("param", param).Debug("Evaluate chaincode")
+	start := time.Now()
+
+	wrapper, err := communication.Wrap(param)
+	if err != nil {
+		return err
+	}
+
+	args, err := json.Marshal(wrapper)
+	if err != nil {
+		return err
+	}
+
+	data, err := i.contract.EvaluateTransaction(method, string(args))
+
+	if err != nil {
+		return err
+	}
+
+	if output != nil {
+		err := communication.Unwrap(data, output)
+		if err != nil {
+			return err
+		}
+	}
+
+	elapsed := time.Since(start)
+
+	logger.WithField("duration", elapsed).Debug("Evaluation successful")
 
 	return nil
 }

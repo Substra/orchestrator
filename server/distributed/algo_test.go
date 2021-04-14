@@ -54,7 +54,7 @@ func TestQueryAlgo(t *testing.T) {
 
 	param := &asset.AlgoQueryParam{Key: "uuid"}
 
-	invocator.On("Invoke", "org.substra.algo:QueryAlgo", param, &asset.Algo{}).Return(nil)
+	invocator.On("Evaluate", "org.substra.algo:QueryAlgo", param, &asset.Algo{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -71,7 +71,7 @@ func TestQueryAlgos(t *testing.T) {
 
 	param := &asset.AlgosQueryParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Invoke", "org.substra.algo:QueryAlgos", param, &asset.AlgosQueryResponse{}).Return(nil)
+	invocator.On("Evaluate", "org.substra.algo:QueryAlgos", param, &asset.AlgosQueryResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

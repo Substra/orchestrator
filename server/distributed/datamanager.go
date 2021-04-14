@@ -66,7 +66,7 @@ func (s *DataManagerAdapter) QueryDataManager(ctx context.Context, params *asset
 	method := "org.substra.datamanager:QueryDataManager"
 	response := &asset.DataManager{}
 
-	err = invocator.Invoke(method, params, response)
+	err = invocator.Evaluate(method, params, response)
 
 	return response, err
 }
@@ -80,7 +80,7 @@ func (s *DataManagerAdapter) QueryDataManagers(ctx context.Context, params *asse
 	method := "org.substra.datamanager:QueryDataManagers"
 	response := &asset.DataManagersQueryResponse{}
 
-	err = invocator.Invoke(method, params, response)
+	err = invocator.Evaluate(method, params, response)
 
 	return response, err
 }

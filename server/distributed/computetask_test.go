@@ -15,6 +15,7 @@
 package distributed
 
 import (
+	"context"
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
@@ -24,4 +25,38 @@ import (
 func TestComputeTaskAdapterImplementServer(t *testing.T) {
 	adapter := NewComputeTaskAdapter()
 	assert.Implements(t, (*asset.ComputeTaskServiceServer)(nil), adapter)
+}
+
+func TestRegisterTask(t *testing.T) {
+	adapter := NewComputeTaskAdapter()
+
+	newCtx := context.TODO()
+	invocator := &mockedInvocator{}
+
+	param := &asset.NewComputeTask{}
+
+	invocator.On("Invoke", "org.substra.computetask:RegisterTask", param, &asset.ComputeTask{}).Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.RegisterTask(ctx, param)
+
+	assert.NoError(t, err, "Query should pass")
+}
+
+func TestQueryTasks(t *testing.T) {
+	adapter := NewComputeTaskAdapter()
+
+	newCtx := context.TODO()
+	invocator := &mockedInvocator{}
+
+	param := &asset.QueryTasksParam{PageToken: "uuid", PageSize: 20}
+
+	invocator.On("Evaluate", "org.substra.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.QueryTasks(ctx, param)
+
+	assert.NoError(t, err, "Query should pass")
 }

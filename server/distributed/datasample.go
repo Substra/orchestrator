@@ -65,7 +65,7 @@ func (a *DataSampleAdapter) QueryDataSamples(ctx context.Context, param *asset.D
 	method := "org.substra.datasample:QueryDataSamples"
 	response := &asset.DataSamplesQueryResponse{}
 
-	err = invocator.Invoke(method, param, response)
+	err = invocator.Evaluate(method, param, response)
 
 	return response, err
 }

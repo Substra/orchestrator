@@ -55,7 +55,7 @@ func (a *NodeAdapter) QueryNodes(ctx context.Context, in *asset.NodeQueryParam) 
 
 	nodes := &asset.NodeQueryResponse{}
 
-	err = invocator.Invoke(method, in, nodes)
+	err = invocator.Evaluate(method, in, nodes)
 
 	return nodes, err
 }

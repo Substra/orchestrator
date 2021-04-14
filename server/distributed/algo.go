@@ -55,7 +55,7 @@ func (a *AlgoAdapter) QueryAlgo(ctx context.Context, query *asset.AlgoQueryParam
 
 	response := &asset.Algo{}
 
-	err = invocator.Invoke(method, query, response)
+	err = invocator.Evaluate(method, query, response)
 
 	return response, err
 }
@@ -70,7 +70,7 @@ func (a *AlgoAdapter) QueryAlgos(ctx context.Context, query *asset.AlgosQueryPar
 
 	response := &asset.AlgosQueryResponse{}
 
-	err = invocator.Invoke(method, query, response)
+	err = invocator.Evaluate(method, query, response)
 
 	return response, err
 }

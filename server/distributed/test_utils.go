@@ -27,3 +27,8 @@ func (m *mockedInvocator) Invoke(method string, param protoreflect.ProtoMessage,
 	a := m.Called(method, param, output)
 	return a.Error(0)
 }
+
+func (m *mockedInvocator) Evaluate(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
+	a := m.Called(method, param, output)
+	return a.Error(0)
+}
