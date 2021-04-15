@@ -1,3 +1,4 @@
+{{- if eq .Values.orchestrator.mode "distributed" }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -70,3 +71,4 @@ data:
         #   grpc.http2.max_pings_without_data: {{ .Values.grpcOptions.http2MaxPingsWithoutData }}
         #   grpc.keepalive_permit_without_calls: {{ .Values.grpcOptions.keepalivePermitWithoutCalls }}
         */}}
+  {{- end }}

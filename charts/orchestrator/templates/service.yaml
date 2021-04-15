@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "orchestrator.fullname" . }}
+  name: {{ include "orchestrator.server.fullname" . }}
   labels:
-    {{- include "orchestrator.labels" . | nindent 4 }}
+    {{- include "orchestrator.server.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: grpc
   selector:
-    {{- include "orchestrator.selectorLabels" . | nindent 4 }}
+    {{- include "orchestrator.server.selectorLabels" . | nindent 4 }}

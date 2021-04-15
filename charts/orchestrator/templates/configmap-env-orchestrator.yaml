@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "orchestrator.fullname" . }}-env
+  name: {{ template "orchestrator.server.fullname" . }}-env
   labels:
-    {{- include "orchestrator.labels" . | nindent 4 }}
+    {{- include "orchestrator.server.labels" . | nindent 4 }}
 data:
   # Global settings
   ORCHESTRATOR_MODE: {{ .Values.orchestrator.mode }}

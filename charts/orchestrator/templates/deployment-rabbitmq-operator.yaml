@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "orchestrator.fullname" . }}-rabbitmq-operator
+  name: {{ include "orchestrator.rabbitmqOperator.fullname" . }}
   labels:
-    {{- include "rabbitmqOperator.labels" . | nindent 4 }}
+    {{- include "orchestrator.rabbitmqOperator.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "rabbitmqOperator.selectorLabels" . | nindent 6 }}
+      {{- include "orchestrator.rabbitmqOperator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -15,7 +15,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "rabbitmqOperator.selectorLabels" . | nindent 8 }}
+        {{- include "orchestrator.rabbitmqOperator.labels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

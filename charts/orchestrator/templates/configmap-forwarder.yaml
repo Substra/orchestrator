@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "orchestrator.fullname" . }}-forwarder
+  name: {{ template "orchestrator.eventForwarder.fullname" . }}
 data:
   forwarder-config.yaml: |
     listeners:

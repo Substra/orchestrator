@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "orchestrator.fullname" . }}
+  name: {{ include "orchestrator.server.fullname" . }}
   labels:
-    {{- include "orchestrator.labels" . | nindent 4 }}
+    {{- include "orchestrator.server.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "orchestrator.selectorLabels" . | nindent 6 }}
+      {{- include "orchestrator.server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -16,7 +16,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "orchestrator.selectorLabels" . | nindent 8 }}
+        {{- include "orchestrator.server.labels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -78,7 +78,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
             - configMapRef:
-                name: {{ template "orchestrator.fullname" . }}-env
+                name: {{ template "orchestrator.server.fullname" . }}-env
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
