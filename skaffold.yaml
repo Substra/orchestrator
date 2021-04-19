@@ -28,7 +28,23 @@ deploy:
         imageStrategy:
           helm: {}
         valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
-      - name: owkin-orchestrator-org-2
+
+  kubectl:
+    manifests:
+      - examples/secrets/secret-tls-org-1-cacert.yaml
+      - examples/secrets/secret-tls-org-1-server-pair.yaml
+      - examples/secrets/secret-tls-org-2-cacert.yaml
+
+profiles:
+- name: distributed
+  patches:
+    - op: replace
+      path: /deploy/helm/releases/0/valuesFiles
+      value: [ examples/values/orchestrator-org-1-distributed.yaml ]
+    - op: add
+      path: "/deploy/helm/releases/-"
+      value:
+        name: owkin-orchestrator-org-2
         chartPath: charts/orchestrator
         namespace: org-2
         createNamespace: true
@@ -38,34 +54,8 @@ deploy:
           rabbitmqOperator.image: owkin/rabbitmq-operator
         imageStrategy:
           helm: {}
-        valuesFiles: [ examples/values/orchestrator-org-2.yaml ]
-
-  kubectl:
-    manifests:
-      - examples/secrets/secret-tls-org-1-cacert.yaml
-      - examples/secrets/secret-tls-org-1-server-pair.yaml
-      - examples/secrets/secret-tls-org-2-cacert.yaml
-      - examples/secrets/secret-tls-org-2-server-pair.yaml
-
-profiles:
-  # Only org1 in standalone mode
-- name: standalone
-  activation:
-    - env: ORCHESTRATOR_MODE=  # env variable is empty/missing,
-  patches:
-    - op: remove
-      path: /deploy/helm/releases/1
-    - op: remove
-      path: /deploy/kubectl/manifests/3
-      # don't remove the org-2 CA cert as it is mounted by substra-backend (namespace org-2)
-
-- name: distributed
-  activation:
-    - env: ORCHESTRATOR_MODE=distributed
-  patches:
-    - op: replace
-      path: /deploy/helm/releases/0/valuesFiles
-      value: [ examples/values/orchestrator-org-1-distributed.yaml ]
-    - op: replace
-      path: /deploy/helm/releases/1/valuesFiles
-      value: [ examples/values/orchestrator-org-2-distributed.yaml ]
+        valuesFiles: [ examples/values/orchestrator-org-2-distributed.yaml ]
+    - op: add
+      path: "/deploy/kubectl/manifests/-"
+      value:
+        examples/secrets/secret-tls-org-2-server-pair.yaml

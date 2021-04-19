@@ -51,16 +51,8 @@ database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker 
 
 To launch the orchestrator:
 ```bash
-skaffold dev -p standalone
-skaffold run -p standalone
-```
-
-Or
-
-```bash
-ORCHESTRATOR_MODE="" skaffold dev
-ORCHESTRATOR_MODE="" skaffold run
-
+skaffold dev
+skaffold run
 ```
 
 Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
@@ -85,15 +77,8 @@ Make sure you deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s/
 Then, in the orchestrator repo:
 
 ```bash
-skaffold dev -p distributed -p -standalone
-skaffold run -p distributed -p -standalone
-```
-
-Or
-
-```bash
-ORCHESTRATOR_MODE="distributed" skaffold dev
-ORCHESTRATOR_MODE="distributed" skaffold run
+skaffold dev -p distributed
+skaffold run -p distributed
 ```
 
 Assuming `orchestrator.node-1.com` and `orchestrator.node-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
