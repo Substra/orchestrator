@@ -103,13 +103,17 @@ func NewSmartContract() *SmartContract {
     contract := &SmartContract{}
     contract.Name = "org.substra.<asset>"
     contract.TransactionContextHandler = ledger.NewContext()
+    contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
     contract.AfterTransaction = ledger.AfterTransactionHook
 
     return contract
 }
 ```
 
-It is **essential** that the contract has `ledger.AfterTransactionHook` as AfterTransaction to properly dispatch events.
+It is **essential** that the contract has:
+- `BeforeTransaction` set to `ledger.GetBeforeTransactionHook(contract)` to properly set the transaction context
+- `AfterTransaction` set to `ledger.AfterTransactionHook` to properly dispatch events
+
 The TransactionContextHandler is also necessary since that's how you can retrieve the *DependenciesProvider*.
 
 Don't forget to flag the evaluate transaction (query only) by implementing `GetEvaluateTransactions() []string`

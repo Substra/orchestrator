@@ -32,6 +32,7 @@ func NewSmartContract() *SmartContract {
 	contract := &SmartContract{}
 	contract.Name = "org.substra.algo"
 	contract.TransactionContextHandler = ledger.NewContext()
+	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
 
 	return contract

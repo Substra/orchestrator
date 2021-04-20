@@ -15,6 +15,8 @@
 package testing
 
 import (
+	"context"
+
 	"github.com/hyperledger/fabric-chaincode-go/pkg/cid"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/owkin/orchestrator/lib/event"
@@ -25,6 +27,15 @@ import (
 // MockedContext is a convenience mock of the OrchestrationTransactionContext
 type MockedContext struct {
 	mock.Mock
+}
+
+// SetContext is a mock
+func (m *MockedContext) SetContext(ctx context.Context) {
+}
+
+// GetContext is a mock
+func (m *MockedContext) GetContext() context.Context {
+	return context.Background()
 }
 
 // GetStub is a mock

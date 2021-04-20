@@ -15,33 +15,38 @@
 package ledger
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
+	pb "github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/utils"
 )
 
 // DB is the distributed ledger persistence layer implementing persistence.DBAL
 // This backend does not allow to read the current writes, they will only be commited after a successful response.
 type DB struct {
-	ccStub shim.ChaincodeStubInterface
-	logger log.Entry
+	context context.Context
+	ccStub  shim.ChaincodeStubInterface
+	logger  log.Entry
 }
 
 // NewDB creates a ledger.DB instance based on given stub
-func NewDB(stub shim.ChaincodeStubInterface) *DB {
+func NewDB(ctx context.Context, stub shim.ChaincodeStubInterface) *DB {
 	logger := log.WithFields(
 		log.F("db_backend", "ledger"),
 	)
 
 	return &DB{
-		ccStub: stub,
-		logger: logger,
+		context: ctx,
+		ccStub:  stub,
+		logger:  logger,
 	}
 }
 
@@ -118,7 +123,7 @@ func (db *DB) getAll(resource string) (result [][]byte, err error) {
 
 	queryString := fmt.Sprintf(`{"selector":{"doc_type":"%s"}}`, resource)
 
-	resultsIterator, err := db.ccStub.GetQueryResult(queryString)
+	resultsIterator, err := db.getQueryResult(queryString)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +143,45 @@ func (db *DB) getAll(resource string) (result [][]byte, err error) {
 	}
 
 	return result, nil
+}
+
+// validateQueryContext returns an error unless it is called in the context of an "Evaluate" transaction.
+// validateQueryContext should ALWAYS be called from DB functions which perform CouchDB rich queries,
+// and it should only be called from such functions. CouchDB rich queries provide no stability between chaincode
+// execution and commit, hence they should only be executed in the context of "Evaluate" transactions.
+// For more info, see https://hyperledger-fabric.readthedocs.io/en/release-1.4/couchdb_as_state_database.html#state-database-options
+func (db *DB) validateQueryContext() error {
+	isEvalTx := db.context.Value(ctxIsEvaluateTransaction)
+
+	if isEvalTx == nil {
+		return fmt.Errorf("missing key ctxIsEvaluateTransaction in transaction context: %w", errors.ErrInternalError)
+	}
+
+	if isEvalTx != true {
+		fnName, err := utils.GetCaller(1)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("function \"%s\" must be called from an \"Evaluate\" transaction: %w", fnName, errors.ErrInternalError)
+	}
+
+	return nil
+}
+
+func (db *DB) getQueryResult(query string) (shim.StateQueryIteratorInterface, error) {
+	if err := db.validateQueryContext(); err != nil {
+		return nil, err
+	}
+
+	return db.ccStub.GetQueryResult(query)
+}
+
+func (db *DB) getQueryResultWithPagination(query string, pageSize int32, bookmark string) (shim.StateQueryIteratorInterface, *pb.QueryResponseMetadata, error) {
+	if err := db.validateQueryContext(); err != nil {
+		return nil, nil, err
+	}
+
+	return db.ccStub.GetQueryResultWithPagination(query, pageSize, bookmark)
 }
 
 func (db *DB) createIndex(index string, attributes []string) error {
@@ -401,7 +445,7 @@ func (db *DB) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Alg
 	queryString := fmt.Sprintf(`{"selector":%s}}`, string(b))
 	log.WithField("couchQuery", queryString).Debug("mango query")
 
-	resultsIterator, bookmark, err := db.ccStub.GetQueryResultWithPagination(queryString, int32(p.Size), p.Token)
+	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
 	if err != nil {
 		return nil, "", err
 	}

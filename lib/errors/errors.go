@@ -41,6 +41,9 @@ var ErrBadRequest = errors.New("OE0003")
 // ErrConflict is a sentinel value to mark conflicting asset errors.
 var ErrConflict = errors.New("OE0006") // value 6 match gRPC AlreadyExists status code
 
+// ErrInternalError happens when an unexpected error occurs (eg; unreachable code)
+var ErrInternalError = errors.New("OE0007")
+
 // Asset specific errors
 // Range 100-199
 

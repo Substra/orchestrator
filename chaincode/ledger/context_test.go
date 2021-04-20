@@ -23,7 +23,6 @@ import (
 
 func TestGetProvider(t *testing.T) {
 	ctx := NewContext()
-
 	assert.Implements(t, (*service.DependenciesProvider)(nil), ctx.GetProvider(), "GetProvider should return a service provider")
 }
 
@@ -37,4 +36,14 @@ func TestAfterTransactionHook(t *testing.T) {
 
 	err := AfterTransactionHook(ctx, "whatever")
 	assert.NoError(t, err)
+}
+
+func TestIsEvaluateTransaction(t *testing.T) {
+	evalFuncs := []string{"QueryNodes"}
+
+	assert.True(t, IsEvaluateTransaction("org.substra.node:QueryNodes", evalFuncs))
+	assert.True(t, IsEvaluateTransaction("QueryNodes", evalFuncs))
+
+	assert.False(t, IsEvaluateTransaction("org.substra.node:RegisterNodes", evalFuncs))
+	assert.False(t, IsEvaluateTransaction("RegisterNodes", evalFuncs))
 }

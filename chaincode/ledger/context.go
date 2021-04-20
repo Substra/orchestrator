@@ -15,53 +15,94 @@
 package ledger
 
 import (
+	"context"
+	"strings"
+
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
+	"github.com/owkin/orchestrator/utils"
 )
 
 // TransactionContext describes the context passed to every smart contract.
-// It's a base TransactionContext augmented with ServiceProvider.
+// It's a base contractapi.TransactionContextInterface augmented with ServiceProvider.
 type TransactionContext interface {
 	contractapi.TransactionContextInterface
+	SetContext(context.Context)
+	GetContext() context.Context
 	GetProvider() service.DependenciesProvider
 	GetDispatcher() event.Dispatcher
 }
 
 // Context is a TransactionContext implementation
 type Context struct {
+	context.Context
 	contractapi.TransactionContext
 	dispatcher event.Dispatcher
 }
 
-// ensureDispatcher instanciates an eventDispatcher if needed.
-// This kind of lazy loading is needed since the stub in not available at instanciation time.
-func (c *Context) ensureDispatcher() {
-	if c.dispatcher == nil {
-		stub := c.GetStub()
-		dispatcher := newEventDispatcher(stub)
-		c.dispatcher = dispatcher
-	}
+// NewContext returns a Context instance
+func NewContext() *Context {
+	// contractapi will NOT use this instance.
+	// Instead, it will remember the *type* of the instance, and create a fresh
+	// instance from this type. So, don't set properties here: they will not be
+	// accessible later.
+	return &Context{}
+}
+
+// SetContext sets the wrapped context.Context
+func (c *Context) SetContext(ctx context.Context) {
+	c.Context = ctx
+}
+
+// GetContext returns the wrapped context
+func (c *Context) GetContext() context.Context {
+	return c.Context
 }
 
 // GetProvider returns a new instance of ServiceProvider
 func (c *Context) GetProvider() service.DependenciesProvider {
 	stub := c.GetStub()
-	db := NewDB(stub)
-	c.ensureDispatcher()
 
-	return service.NewProvider(db, c.dispatcher)
+	ctx := c.GetContext()
+	db := NewDB(ctx, stub)
+	dispatcher := c.GetDispatcher()
+
+	return service.NewProvider(db, dispatcher)
 }
 
 // GetDispatcher returns inner event.Dispatcher
 func (c *Context) GetDispatcher() event.Dispatcher {
-	c.ensureDispatcher()
+	if c.dispatcher == nil {
+		stub := c.GetStub()
+		c.dispatcher = newEventDispatcher(stub)
+	}
 	return c.dispatcher
 }
 
-// NewContext returns a Context instance
-func NewContext() *Context {
-	return &Context{}
+type ctxIsInvokeMarker struct{}
+
+var (
+	ctxIsEvaluateTransaction = &ctxIsInvokeMarker{}
+)
+
+// GetBeforeTransactionHook handles pre-transaction logic:
+// - setting the "IsEvaluateTransaction" boolean field
+// Smart contracts MUST use this function as their "BeforeTransaction" attribute
+func GetBeforeTransactionHook(contract contractapi.EvaluationContractInterface) func(TransactionContext) error {
+
+	return func(c TransactionContext) error {
+
+		// Determine is method being called is an "Evaluation" method (v.s. "Invoke" method)
+		fnName, _ := c.GetStub().GetFunctionAndParameters()
+		evalFuncs := contract.GetEvaluateTransactions()
+		isEval := IsEvaluateTransaction(fnName, evalFuncs)
+
+		// Populate context
+		ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, isEval)
+		c.SetContext(ctx)
+		return nil
+	}
 }
 
 // AfterTransactionHook handles post transaction logic:
@@ -69,4 +110,16 @@ func NewContext() *Context {
 // It MUST be called after orchestration logic happened.
 func AfterTransactionHook(ctx TransactionContext, iface interface{}) error {
 	return ctx.GetDispatcher().Dispatch()
+}
+
+// IsEvaluateTransaction returns true if the passed method name is one of the "evaluate transactions"
+// within the evaluateTransactions parameter. The parameter fnName can be either:
+// - a method name (eg; "QueryNodes")
+// - a full smart contract + method name (eg; "org.substra.node:QueryNodes")
+func IsEvaluateTransaction(fnName string, evalFuncs []string) bool {
+	idx := strings.LastIndex(fnName, ":")
+	if idx != -1 {
+		fnName = fnName[idx+1:]
+	}
+	return utils.StringInSlice(evalFuncs, fnName)
 }

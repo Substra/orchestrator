@@ -15,6 +15,7 @@
 package ledger
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -38,7 +39,7 @@ func TestGetPagination(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	stub.On("SplitCompositeKey", mock.Anything).Return("", []string{"1", "2", "2"}, nil) // Don't really care about keys here
 
-	db := NewDB(stub)
+	db := NewDB(context.TODO(), stub)
 
 	index := "objective~owner~key"
 	attributes := []string{"objective"}
@@ -83,7 +84,7 @@ func TestGetPagination(t *testing.T) {
 func TestAddExistingObjective(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 
-	db := NewDB(stub)
+	db := NewDB(context.TODO(), stub)
 
 	objective := &asset.Objective{Key: "test"}
 
@@ -91,4 +92,42 @@ func TestAddExistingObjective(t *testing.T) {
 
 	err := db.AddObjective(objective)
 	assert.True(t, errors.Is(err, orchestrationError.ErrConflict))
+}
+
+func TestValidateQueryContext(t *testing.T) {
+	var db *DB
+	var err error
+	mockStub := new(testHelper.MockedStub)
+
+	// no context: error
+	db = NewDB(context.Background(), mockStub)
+	err = db.validateQueryContext()
+	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
+
+	// context with isEval=false: error
+	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, false), mockStub)
+	err = db.validateQueryContext()
+	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
+
+	// context with isEval=true: ok
+	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), mockStub)
+	err = db.validateQueryContext()
+	assert.NoError(t, err)
+}
+
+// ensure CouchDB calls the validateQueryContext method()
+func TestCheckQueryContext(t *testing.T) {
+	var db *DB
+	var err error
+	mockStub := new(testHelper.MockedStub)
+
+	// getQueryResult
+	db = NewDB(context.Background(), mockStub)
+	_, err = db.getQueryResult("some query")
+	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
+
+	// getQueryResultWithPagination
+	db = NewDB(context.Background(), mockStub)
+	_, _, err = db.getQueryResultWithPagination("some query", 0, "bookmark")
+	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
 }

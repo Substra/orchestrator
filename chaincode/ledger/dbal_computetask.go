@@ -151,7 +151,7 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 	queryString := fmt.Sprintf(`{"selector":%s}}`, string(b))
 	log.WithField("couchQuery", queryString).Debug("mango query")
 
-	resultsIterator, bookmark, err := db.ccStub.GetQueryResultWithPagination(queryString, int32(p.Size), p.Token)
+	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
 	if err != nil {
 		return nil, "", err
 	}
