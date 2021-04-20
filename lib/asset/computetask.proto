@@ -155,7 +155,24 @@ message QueryTasksResponse {
   string next_page_token = 2;
 }
 
+enum ComputeTaskAction {
+  TASK_ACTION_UNKNOWN = 0;
+  TASK_ACTION_DOING = 1;
+  TASK_ACTION_DONE = 2;
+  TASK_ACTION_CANCELED = 3;
+  TASK_ACTION_FAILED = 4;
+}
+
+message ApplyTaskActionParam {
+  string compute_task_key = 1;
+  ComputeTaskAction action = 2;
+  string log = 3;
+}
+
+message ApplyTaskActionResponse {}
+
 service ComputeTaskService {
   rpc RegisterTask(NewComputeTask) returns (ComputeTask) {}
   rpc QueryTasks(QueryTasksParam) returns (QueryTasksResponse) {}
+  rpc ApplyTaskAction(ApplyTaskActionParam) returns (ApplyTaskActionResponse) {}
 }

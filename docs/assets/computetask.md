@@ -27,3 +27,18 @@ Here is the expected cardinality for each task category:
 | Test                  | 1*    | 0    | 0         | 1*        |
 | Aggregate             | n     | 0    | n         | n         |
 | Composite             | 0     | 0    | (1)       | 1         |
+
+## State
+
+A compute task will go through different state during a compute plan execution.
+This is an overview of a task's lifecycle:
+
+![](./schemas/computetask.state.svg)
+
+A task can be created in almost any state (except DOING/DONE) depending on its parents.
+
+During the ComputePlan execution, as tasks are done or failed, their statuses will be reflected to their children.
+This is done in a recursive way: a failed or canceled task propagate a "CANCELED" status to all its children.
+
+In case of success (task DONE), this is a bit more convoluted since we need to iterate over the children
+and all their parents to update them to TODO if all the parents are DONE.

@@ -58,3 +58,18 @@ func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryT
 
 	return response, err
 }
+
+func (a *ComputeTaskAdapter) ApplyTaskAction(ctx context.Context, param *asset.ApplyTaskActionParam) (*asset.ApplyTaskActionResponse, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "org.substra.computetask:ApplyTaskAction"
+
+	err = invocator.Invoke(method, param, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.ApplyTaskActionResponse{}, nil
+}

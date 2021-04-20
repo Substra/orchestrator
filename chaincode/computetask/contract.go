@@ -91,6 +91,23 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 	return wrapped, nil
 }
 
+func (s *SmartContract) ApplyTaskAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	service := ctx.GetProvider().GetComputeTaskService()
+
+	param := new(asset.ApplyTaskActionParam)
+	err := wrapper.Unwrap(param)
+	if err != nil {
+		return err
+	}
+
+	err = service.ApplyTaskAction(param.ComputeTaskKey, param.Action, param.Log)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
 	return []string{"QueryTasks"}

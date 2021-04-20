@@ -1,0 +1,280 @@
+// Copyright 2021 Owkin Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package service
+
+import (
+	"fmt"
+
+	"github.com/go-playground/log/v7"
+	"github.com/looplab/fsm"
+	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/event"
+)
+
+var transitionTodo = "todo"
+var transitionCanceled = asset.ComputeTaskAction_TASK_ACTION_CANCELED.String()
+var transitionFailed = asset.ComputeTaskAction_TASK_ACTION_FAILED.String()
+var transitionDoing = asset.ComputeTaskAction_TASK_ACTION_DOING.String()
+var transitionDone = asset.ComputeTaskAction_TASK_ACTION_DONE.String()
+
+// taskStateEvents is the definition of the state machine representing task states
+var taskStateEvents = fsm.Events{
+	{
+		Name: transitionCanceled,
+		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String(), asset.ComputeTaskStatus_STATUS_WAITING.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Dst:  asset.ComputeTaskStatus_STATUS_CANCELED.String(),
+	},
+	{
+		Name: transitionTodo,
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING.String()},
+		Dst:  asset.ComputeTaskStatus_STATUS_TODO.String(),
+	},
+	{
+		Name: transitionDoing,
+		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String()},
+		Dst:  asset.ComputeTaskStatus_STATUS_DOING.String(),
+	},
+	{
+		Name: transitionDone,
+		Src:  []string{asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Dst:  asset.ComputeTaskStatus_STATUS_DONE.String(),
+	},
+	{
+		Name: transitionFailed,
+		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String(), asset.ComputeTaskStatus_STATUS_WAITING.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Dst:  asset.ComputeTaskStatus_STATUS_FAILED.String(),
+	},
+}
+
+// taskStateUpdater defines a structure capable of handling task updates
+type taskStateUpdater interface {
+	// On state change will receive the ORIGINAL (before transition) task as first argument
+	// and the transition reason as second argument
+	// any error should be registered as e.Err
+	onStateChange(e *fsm.Event)
+	// Cascade Canceled status to children. Parent task is given as argument
+	// any error should be registered as e.Err
+	cascadeCancel(e *fsm.Event)
+	// Recompute children status according to all its parents
+	// Task is received as argument
+	// any error should be registered as e.Err
+	updateChildrenStatus(e *fsm.Event)
+}
+
+func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
+	return fsm.NewFSM(
+		task.Status.String(),
+		taskStateEvents,
+		fsm.Callbacks{
+			"enter_state":                updater.onStateChange,
+			"enter_TASK_ACTION_CANCELED": updater.cascadeCancel,
+			"enter_TASK_ACTION_FAILED":   updater.cascadeCancel,
+			"enter_TASK_ACTION_DONE":     updater.updateChildrenStatus,
+		},
+	)
+}
+
+// ApplyTaskAction apply an asset.ComputeTaskAction to the task.
+// Depending on the current state and action, this may update children tasks
+func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string) error {
+	transition := action.String()
+	if reason == "" {
+		reason = "User action"
+	}
+	return s.applyTaskAction(key, transition, reason)
+}
+
+// applyTaskAction is the internal method allowing any transition (string).
+// This allows to use this method with internal only transitions (abort).
+func (s *ComputeTaskService) applyTaskAction(key string, action string, reason string) error {
+	task, err := s.GetComputeTaskDBAL().GetComputeTask(key)
+	if err != nil {
+		return err
+	}
+
+	state := newState(s, task)
+	return state.Event(action, task, reason)
+}
+
+// updateChildrenStatus will iterate over task children to update their statuses
+func (s *ComputeTaskService) updateChildrenStatus(e *fsm.Event) {
+	if len(e.Args) != 1 {
+		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
+		return
+	}
+	task, ok := e.Args[0].(*asset.ComputeTask)
+	if !ok {
+		e.Err = fmt.Errorf("cannot cast argument into task")
+		return
+	}
+
+	children, err := s.GetComputeTaskDBAL().GetComputeTaskChildren(task.Key)
+	if err != nil {
+		e.Err = err
+		return
+	}
+
+	for _, child := range children {
+		err := s.propagateDone(task, child)
+		if err != nil {
+			e.Err = err
+			return
+		}
+	}
+}
+
+// propagateDone propagates the DONE status of a parent to the task.
+// This will iterate over task parents and mark it as TODO if all parents are DONE.
+func (s *ComputeTaskService) propagateDone(parent, child *asset.ComputeTask) error {
+	state := newState(s, child)
+	if !state.Can(transitionTodo) {
+		log.WithFields(
+			log.F("parent", parent.Key),
+			log.F("child", child.Key),
+			log.F("childStatus", child.Status),
+		).Info("propagateDone: skipping child due to incompatible state")
+		// this is expected as we might go over already failed children (from another parent)
+		return nil
+	}
+
+	// loop over parent, only change status if all parents are DONE
+	for _, parentKey := range child.ParentTaskKeys {
+		parent, err := s.GetComputeTaskDBAL().GetComputeTask(parentKey)
+		if err != nil {
+			return err
+		}
+
+		if parent.Status != asset.ComputeTaskStatus_STATUS_DONE {
+			// At least one of the parents is not done, so no change for children
+			// but no error, this is expected.
+			return nil
+		}
+	}
+	err := s.applyTaskAction(child.Key, transitionTodo, fmt.Sprintf("Last parent task %s done", parent.Key))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// cascadeCancel iterate over children to propagate the cancellation
+func (s *ComputeTaskService) cascadeCancel(e *fsm.Event) {
+	s.cascadeTransition(e, transitionCanceled)
+}
+
+func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition string) {
+	if len(e.Args) != 1 {
+		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
+		return
+	}
+	task, ok := e.Args[0].(*asset.ComputeTask)
+	if !ok {
+		e.Err = fmt.Errorf("cannot cast argument into task")
+		return
+	}
+
+	children, err := s.GetComputeTaskDBAL().GetComputeTaskChildren(task.Key)
+	if err != nil {
+		e.Err = err
+		return
+	}
+
+	for _, child := range children {
+		err := s.applyTaskAction(child.Key, transition, fmt.Sprintf("Cascading status from parent %s", task.Key))
+		if err != nil {
+			e.Err = err
+			return
+		}
+	}
+}
+
+// onStateChange enqueue an orchestration event and saves the task
+func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
+	if len(e.Args) != 2 {
+		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
+		return
+	}
+	task, ok := e.Args[0].(*asset.ComputeTask)
+	if !ok {
+		e.Err = fmt.Errorf("cannot cast into task: %v", e.Args[0])
+		return
+	}
+	reason, ok := e.Args[1].(string)
+	if !ok {
+		e.Err = fmt.Errorf("cannot cast into string: %v", e.Args[1])
+	}
+
+	statusVal, ok := asset.ComputeTaskStatus_value[e.Dst]
+	if !ok {
+		// This should not happen since state codes are string representation of statuses
+		e.Err = fmt.Errorf("unknown task status: %s", e.Dst)
+		return
+	}
+	task.Status = asset.ComputeTaskStatus(statusVal)
+
+	err := s.GetComputeTaskDBAL().UpdateComputeTask(task)
+	if err != nil {
+		e.Err = err
+		return
+	}
+
+	event := event.Event{
+		AssetKind: asset.ComputeTaskKind,
+		AssetID:   task.Key,
+		EventKind: event.AssetUpdated,
+		Metadata: map[string]string{
+			"status": task.Status.String(),
+			"reason": reason,
+		},
+	}
+
+	err = s.GetEventQueue().Enqueue(&event)
+	if err != nil {
+		e.Err = err
+		return
+	}
+}
+
+// getInitialStatusFromParents will infer task status from its parents statuses.
+func getInitialStatusFromParents(parents []*asset.ComputeTask) asset.ComputeTaskStatus {
+	var status asset.ComputeTaskStatus
+
+	statusCount := map[asset.ComputeTaskStatus]int{
+		// preset DONE counter to make sure we match TODO status for tasks without parents
+		asset.ComputeTaskStatus_STATUS_DONE: 0,
+	}
+
+	for _, task := range parents {
+		statusCount[task.Status]++
+	}
+
+	if c, ok := statusCount[asset.ComputeTaskStatus_STATUS_FAILED]; ok && c > 0 {
+		status = asset.ComputeTaskStatus_STATUS_CANCELED
+		return status
+	}
+	if c, ok := statusCount[asset.ComputeTaskStatus_STATUS_CANCELED]; ok && c > 0 {
+		status = asset.ComputeTaskStatus_STATUS_CANCELED
+		return status
+	}
+
+	if c, ok := statusCount[asset.ComputeTaskStatus_STATUS_DONE]; ok && c == len(parents) {
+		status = asset.ComputeTaskStatus_STATUS_TODO
+	} else {
+		status = asset.ComputeTaskStatus_STATUS_WAITING
+	}
+
+	return status
+}

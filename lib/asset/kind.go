@@ -30,4 +30,6 @@ var (
 	DataManagerKind = "datamanager"
 	// ComputeTaskKind is the type of ComputeTask assets
 	ComputeTaskKind = "computetask"
+	// ComputePlanKind is the type of ComputePlan assets
+	ComputePlanKind = "computeplan"
 )

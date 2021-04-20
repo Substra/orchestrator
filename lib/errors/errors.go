@@ -44,6 +44,9 @@ var ErrConflict = errors.New("OE0006") // value 6 match gRPC AlreadyExists statu
 // ErrInternalError happens when an unexpected error occurs (eg; unreachable code)
 var ErrInternalError = errors.New("OE0007")
 
+// ErrUnimplemented occurs when unimplemented code is triggered
+var ErrUnimplemented = errors.New("OE0010")
+
 // Asset specific errors
 // Range 100-199
 
@@ -56,3 +59,6 @@ var ErrPermissionDenied = errors.New("OE0102")
 
 // ErrReferenceNotFound happens when an asset is not present in the persistence layer
 var ErrReferenceNotFound = errors.New("OE0103")
+
+// ErrIncompatibleTaskStatus occurs when a task cannot be processed due to its status
+var ErrIncompatibleTaskStatus = errors.New("OE0104")

@@ -164,6 +164,18 @@ func (m *MockDBAL) ComputeTaskExists(id string) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
+// GetComputeTask is a mock
+func (m *MockDBAL) GetComputeTask(id string) (*asset.ComputeTask, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.ComputeTask), args.Error(1)
+}
+
+// GetComputeTaskChildren is a mock
+func (m *MockDBAL) GetComputeTaskChildren(id string) ([]*asset.ComputeTask, error) {
+	args := m.Called(id)
+	return args.Get(0).([]*asset.ComputeTask), args.Error(1)
+}
+
 // GetComputeTasks is a mock
 func (m *MockDBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 	args := m.Called(keys)
@@ -172,6 +184,12 @@ func (m *MockDBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) 
 
 // AddComputeTask is a mock
 func (m *MockDBAL) AddComputeTask(t *asset.ComputeTask) error {
+	args := m.Called(t)
+	return args.Error(0)
+}
+
+// UpdateComputeTask is a mock
+func (m *MockDBAL) UpdateComputeTask(t *asset.ComputeTask) error {
 	args := m.Called(t)
 	return args.Error(0)
 }

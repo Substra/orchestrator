@@ -333,3 +333,8 @@ func (m *MockComputeTaskService) GetTasks(p *common.Pagination, filter *asset.Ta
 	args := m.Called(p, filter)
 	return args.Get(0).([]*asset.ComputeTask), args.String(1), args.Error(2)
 }
+
+func (m *MockComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string) error {
+	args := m.Called(key, action, reason)
+	return args.Error(0)
+}

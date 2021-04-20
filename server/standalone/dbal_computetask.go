@@ -30,6 +30,13 @@ func (d *DBAL) AddComputeTask(t *asset.ComputeTask) error {
 	return err
 }
 
+// UpdateComputeTask updates an existing task
+func (d *DBAL) UpdateComputeTask(t *asset.ComputeTask) error {
+	stmt := `update "compute_tasks" set asset=$3 where id=$1 and channel=$2`
+	_, err := d.tx.Exec(stmt, t.GetKey(), d.channel, t)
+	return err
+}
+
 // ComputeTaskExists returns true if a task with the given ID exists
 func (d *DBAL) ComputeTaskExists(id string) (bool, error) {
 	row := d.tx.QueryRow(`select count(id) from "compute_tasks" where id=$1 and channel=$2`, id, d.channel)
@@ -40,12 +47,22 @@ func (d *DBAL) ComputeTaskExists(id string) (bool, error) {
 	return count == 1, err
 }
 
+// GetComputeTask returns a single task by its key
+func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
+	row := d.tx.QueryRow(`select asset from "compute_tasks" where id=$1 and channel=$2`, key, d.channel)
+
+	task := new(asset.ComputeTask)
+	err := row.Scan(task)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
 // GetComputeTasks returns all compute tasks identified by the provided IDs.
 // It should not be used where pagination is expected!
 func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
-	var rows *sql.Rows
-	var err error
-
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	query, args, err := pgDialect.Select("asset").
@@ -55,7 +72,7 @@ func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 		return nil, err
 	}
 
-	rows, err = d.tx.Query(query, args...)
+	rows, err := d.tx.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +88,27 @@ func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 			return nil, err
 		}
 
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
+
+// GetComputeTaskChildren returns the children of the task identified by the given key
+func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
+	rows, err := d.tx.Query(`select asset from "compute_tasks" where asset->'parentTaskKeys' ? $1 and channel=$2`, key, d.channel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tasks := []*asset.ComputeTask{}
+	for rows.Next() {
+		task := new(asset.ComputeTask)
+		err := rows.Scan(task)
+		if err != nil {
+			return nil, err
+		}
 		tasks = append(tasks, task)
 	}
 

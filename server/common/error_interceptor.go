@@ -80,6 +80,10 @@ func fromMessage(msg string) error {
 		return status.Error(codes.NotFound, msg)
 	case strings.Contains(msg, orchestrationErrors.ErrBadRequest.Error()):
 		return status.Error(codes.FailedPrecondition, msg)
+	case strings.Contains(msg, orchestrationErrors.ErrIncompatibleTaskStatus.Error()):
+		return status.Error(codes.InvalidArgument, msg)
+	case strings.Contains(msg, orchestrationErrors.ErrUnimplemented.Error()):
+		return status.Error(codes.Unimplemented, msg)
 	default:
 		return status.Error(codes.Unknown, msg)
 	}
@@ -102,6 +106,10 @@ func fromError(err error) error {
 		return status.Error(codes.NotFound, err.Error())
 	case errors.Is(err, orchestrationErrors.ErrBadRequest):
 		return status.Error(codes.FailedPrecondition, err.Error())
+	case errors.Is(err, orchestrationErrors.ErrIncompatibleTaskStatus):
+		return status.Error(codes.InvalidArgument, err.Error())
+	case errors.Is(err, orchestrationErrors.ErrUnimplemented):
+		return status.Error(codes.Unimplemented, err.Error())
 	default:
 		return status.Error(codes.Unknown, err.Error())
 	}

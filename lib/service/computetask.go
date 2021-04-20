@@ -32,6 +32,7 @@ type ComputeTaskAPI interface {
 	// RegisterTask creates a new ComputeTask
 	RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error)
 	GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
+	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string) error
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance
@@ -61,6 +62,7 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 	return &ComputeTaskService{provider}
 }
 
+// GetTasks returns tasks matching filter
 func (s *ComputeTaskService) GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	log.WithField("pagination", p).WithField("filter", filter).Debug("Querying ComputeTasks")
 
@@ -98,9 +100,11 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, err
 	}
 
-	// TODO: update when we handle events
-	log.Error("TODO: task status in not implemented")
-	status := asset.ComputeTaskStatus_STATUS_TODO
+	status := getInitialStatusFromParents(parentTasks)
+
+	if status == asset.ComputeTaskStatus_STATUS_CANCELED || status == asset.ComputeTaskStatus_STATUS_FAILED {
+		return nil, fmt.Errorf("cannot create a task with status %s: %w", status, orchestrationErrors.ErrIncompatibleTaskStatus)
+	}
 
 	task := &asset.ComputeTask{
 		Key:            input.Key,
@@ -131,6 +135,20 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 	}
 
 	err = s.GetComputeTaskDBAL().AddComputeTask(task)
+	if err != nil {
+		return nil, err
+	}
+
+	event := event.Event{
+		AssetKind: asset.ComputeTaskKind,
+		AssetID:   task.Key,
+		EventKind: event.AssetCreated,
+		Metadata: map[string]string{
+			"status": task.Status.String(),
+		},
+	}
+
+	err = s.GetEventQueue().Enqueue(&event)
 	if err != nil {
 		return nil, err
 	}

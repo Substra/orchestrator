@@ -89,7 +89,7 @@ func TestRegisterComputeTask(t *testing.T) {
 		TestOnly:        false,
 	})
 	if err != nil {
-		t.Errorf("RegisterDataManager failed: %v", err)
+		t.Errorf("RegisterDataSample failed: %v", err)
 	}
 
 	computeTaskClient := asset.NewComputeTaskServiceClient(conn)
@@ -107,6 +107,31 @@ func TestRegisterComputeTask(t *testing.T) {
 		},
 	})
 	if err != nil {
-		t.Errorf("RegisterDataManager failed: %v", err)
+		t.Errorf("RegisterComputeTask failed: %v", err)
+	}
+
+	// Register a child task
+	_, err = computeTaskClient.RegisterTask(ctx, &asset.NewComputeTask{
+		Key:            "2d57ec20-3059-4eeb-9ae2-d909681eeb4a",
+		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        algoKey,
+		Rank:           1,
+		ParentTaskKeys: []string{"0c742318-bac2-43b7-8ce9-f629567d930c"},
+		ComputePlanKey: "a26c95ef-7283-44f6-a280-5a3e7df1ee86",
+		Data: &asset.NewComputeTask_Train{
+			Train: &asset.NewTrainTaskData{
+				DataManagerKey: dataManagerKey,
+				DataSampleKeys: []string{"fef7e71a-27aa-47de-bd9b-44e86d063af8"},
+			},
+		},
+	})
+	if err != nil {
+		t.Errorf("RegisterComputeTask failed: %v", err)
+	}
+
+	// start processing parent
+	_, err = computeTaskClient.ApplyTaskAction(ctx, &asset.ApplyTaskActionParam{ComputeTaskKey: "0c742318-bac2-43b7-8ce9-f629567d930c", Action: asset.ComputeTaskAction_TASK_ACTION_DOING})
+	if err != nil {
+		t.Errorf("RegisterComputeTask failed: %v", err)
 	}
 }

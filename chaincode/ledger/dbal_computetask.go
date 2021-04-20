@@ -17,6 +17,7 @@ package ledger
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/go-playground/log/v7"
@@ -45,21 +46,20 @@ func (db *DB) AddComputeTask(t *asset.ComputeTask) error {
 		return err
 	}
 
-	// TODO: Status ?
-	if err := db.createIndex("computeTask~category~worker~status~algo~key", []string{"computeTask", t.Category.String(), t.Worker, t.Status.String(), t.Algo.Key, t.Key}); err != nil {
+	if err := db.createIndex("computeTask~category~worker~status~algo~key", []string{asset.ComputeTaskKind, t.Category.String(), t.Worker, t.Status.String(), t.Algo.Key, t.Key}); err != nil {
 		return err
 	}
 	for _, parentTask := range t.ParentTaskKeys {
-		err = db.createIndex("computeTask~parenttask~key", []string{"computeTask", parentTask, t.Key})
+		err = db.createIndex("computeTask~parentTask~key", []string{asset.ComputeTaskKind, parentTask, t.Key})
 		if err != nil {
 			return err
 		}
 	}
 	if t.ComputePlanKey != "" {
-		if err := db.createIndex("computePlan~computeplankey~worker~rank~key", []string{"computePlan", t.ComputePlanKey, t.Worker, strconv.Itoa(int(t.Rank)), t.Key}); err != nil {
+		if err := db.createIndex("computePlan~computePlanKey~worker~rank~key", []string{asset.ComputePlanKind, t.ComputePlanKey, t.Worker, strconv.Itoa(int(t.Rank)), t.Key}); err != nil {
 			return err
 		}
-		if err := db.createIndex("algo~computeplankey~key", []string{"algo", t.ComputePlanKey, t.Algo.Key}); err != nil {
+		if err := db.createIndex("algo~computeplankey~key", []string{asset.AlgoKind, t.ComputePlanKey, t.Algo.Key}); err != nil {
 			return err
 		}
 	}
@@ -70,16 +70,58 @@ func (db *DB) AddComputeTask(t *asset.ComputeTask) error {
 			return fmt.Errorf("compute task data does not match task category: %w", errors.ErrInvalidAsset)
 		}
 
-		if err := db.createIndex("computeTask~category~objective~certified~key", []string{"computeTask", t.Category.String(), testData.Test.ObjectiveKey, strconv.FormatBool(testData.Test.Certified), t.Key}); err != nil {
+		if err := db.createIndex("computeTask~category~objective~certified~key", []string{asset.ComputeTaskKind, t.Category.String(), testData.Test.ObjectiveKey, strconv.FormatBool(testData.Test.Certified), t.Key}); err != nil {
 			return err
 		}
 		for _, parentTask := range t.ParentTaskKeys {
-			if err = db.createIndex("computeTask~category~parenttask~certified~key", []string{"computeTask", t.Category.String(), parentTask, strconv.FormatBool(testData.Test.Certified), t.Key}); err != nil {
+			if err = db.createIndex("computeTask~category~parentTask~certified~key", []string{asset.ComputeTaskKind, t.Category.String(), parentTask, strconv.FormatBool(testData.Test.Certified), t.Key}); err != nil {
 				return err
 			}
 		}
 	}
 
+	return nil
+}
+
+// UpdateComputeTask updates an existing task.
+func (db *DB) UpdateComputeTask(task *asset.ComputeTask) error {
+	// We need the current task to be able to update its indexes
+	prevTask, err := db.GetComputeTask(task.Key)
+	if err != nil {
+		return err
+	}
+
+	// We only handle status update for now
+	prevStatus := prevTask.Status
+	// Ignore status in comparison
+	prevTask.Status = task.Status
+	if !reflect.DeepEqual(prevTask, task) {
+		// We only implement status update, so prevent any other update as it would require full index update
+		return fmt.Errorf("only task status update is implemented: %w", errors.ErrUnimplemented)
+	}
+	prevTask.Status = prevStatus
+
+	b, err := json.Marshal(task)
+	if err != nil {
+		return err
+	}
+
+	err = db.putState(asset.ComputeTaskKind, task.Key, b)
+	if err != nil {
+		return err
+	}
+
+	// Update status indexes
+	if prevTask.Status != task.Status {
+		err = db.updateIndex(
+			"computeTask~category~worker~status~algo~key",
+			[]string{asset.ComputeTaskKind, prevTask.Category.String(), prevTask.Worker, prevTask.Status.String()},
+			[]string{asset.ComputeTaskKind, task.Category.String(), task.Worker, task.Status.String()},
+		)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -106,6 +148,43 @@ func (db *DB) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 		task := &asset.ComputeTask{}
 
 		err = json.Unmarshal(bytes, task)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
+
+// GetComputeTask returns a ComputeTask by its key
+func (db *DB) GetComputeTask(key string) (*asset.ComputeTask, error) {
+	task := new(asset.ComputeTask)
+
+	b, err := db.getState(asset.ComputeTaskKind, key)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(b, task)
+	if err != nil {
+		return nil, err
+	}
+	return task, nil
+}
+
+// GetComputeTaskChildren returns the children of the task identified by the given key
+func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
+	elementKeys, err := db.getIndexKeys("computeTask~parentTask~key", []string{asset.ComputeTaskKind, key})
+	if err != nil {
+		return nil, err
+	}
+
+	db.logger.WithField("num_children", len(elementKeys)).Debug("GetComputeTaskChildren")
+
+	tasks := []*asset.ComputeTask{}
+	for _, childKey := range elementKeys {
+		task, err := db.GetComputeTask(childKey)
 		if err != nil {
 			return nil, err
 		}

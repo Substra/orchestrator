@@ -29,13 +29,15 @@ func TestStatusConversion(t *testing.T) {
 		err  error
 		code codes.Code
 	}{
-		"conflict":          {err: errors.ErrConflict, code: codes.AlreadyExists},
-		"validation":        {err: errors.ErrInvalidAsset, code: codes.InvalidArgument},
-		"unknown":           {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
-		"unauthorized":      {err: errors.ErrPermissionDenied, code: codes.PermissionDenied},
-		"invalid_reference": {err: errors.ErrReferenceNotFound, code: codes.InvalidArgument},
-		"notfound":          {err: errors.ErrNotFound, code: codes.NotFound},
-		"badrequest":        {err: errors.ErrBadRequest, code: codes.FailedPrecondition},
+		"conflict":            {err: errors.ErrConflict, code: codes.AlreadyExists},
+		"validation":          {err: errors.ErrInvalidAsset, code: codes.InvalidArgument},
+		"unknown":             {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
+		"unauthorized":        {err: errors.ErrPermissionDenied, code: codes.PermissionDenied},
+		"invalid_reference":   {err: errors.ErrReferenceNotFound, code: codes.InvalidArgument},
+		"notfound":            {err: errors.ErrNotFound, code: codes.NotFound},
+		"badrequest":          {err: errors.ErrBadRequest, code: codes.FailedPrecondition},
+		"incompatible_status": {err: errors.ErrIncompatibleTaskStatus, code: codes.InvalidArgument},
+		"unimplemented":       {err: errors.ErrUnimplemented, code: codes.Unimplemented},
 	}
 
 	for name, tc := range cases {

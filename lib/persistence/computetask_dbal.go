@@ -21,9 +21,12 @@ import (
 
 type ComputeTaskDBAL interface {
 	ComputeTaskExists(key string) (bool, error)
+	GetComputeTask(key string) (*asset.ComputeTask, error)
 	GetComputeTasks(keys []string) ([]*asset.ComputeTask, error)
 	AddComputeTask(task *asset.ComputeTask) error
+	UpdateComputeTask(task *asset.ComputeTask) error
 	QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
+	GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error)
 }
 
 type ComputeTaskDBALProvider interface {

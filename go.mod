@@ -16,6 +16,7 @@ require (
 	github.com/hyperledger/fabric-sdk-go v1.0.0-rc1
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/joncalhoun/pipe v0.0.0-20170510025636-72505674a733
+	github.com/looplab/fsm v0.2.0
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.4 // indirect
 	github.com/streadway/amqp v1.0.0

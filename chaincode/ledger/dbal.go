@@ -197,6 +197,42 @@ func (db *DB) createIndex(index string, attributes []string) error {
 	return nil
 }
 
+func (db *DB) deleteIndex(index string, attributes []string) error {
+	compositeKey, err := db.ccStub.CreateCompositeKey(index, attributes)
+	if err != nil {
+		return err
+	}
+	return db.ccStub.DelState(compositeKey)
+}
+
+func (db *DB) updateIndex(index string, oldAttributes []string, newAttribues []string) error {
+	if err := db.deleteIndex(index, oldAttributes); err != nil {
+		return err
+	}
+	return db.createIndex(index, newAttribues)
+}
+
+func (db *DB) getIndexKeys(index string, attributes []string) ([]string, error) {
+	keys := make([]string, 0)
+	iterator, err := db.ccStub.GetStateByPartialCompositeKey(index, attributes)
+	if err != nil {
+		return nil, err
+	}
+	defer iterator.Close()
+	for iterator.HasNext() {
+		compositeKey, err := iterator.Next()
+		if err != nil {
+			return nil, err
+		}
+		_, keyParts, err := db.ccStub.SplitCompositeKey(compositeKey.Key)
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, keyParts[len(keyParts)-1])
+	}
+	return keys, nil
+}
+
 // getIndexKeysWithPagination returns keys matching composite key values from the chaincode db.
 func (db *DB) getIndexKeysWithPagination(index string, attributes []string, pageSize uint32, bookmark common.PaginationToken) ([]string, common.PaginationToken, error) {
 	keys := []string{}
@@ -327,7 +363,7 @@ func (db *DB) AddObjective(obj *asset.Objective) error {
 		return err
 	}
 
-	if err = db.createIndex("objective~owner~key", []string{"objective", obj.Owner, obj.Key}); err != nil {
+	if err = db.createIndex("objective~owner~key", []string{asset.ObjectiveKind, obj.Owner, obj.Key}); err != nil {
 		return err
 	}
 
@@ -354,7 +390,7 @@ func (db *DB) GetObjective(id string) (*asset.Objective, error) {
 
 // GetObjectives retrieves all objectives
 func (db *DB) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
-	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("objective~owner~key", []string{"objective"}, p.Size, p.Token)
+	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("objective~owner~key", []string{asset.ObjectiveKind}, p.Size, p.Token)
 	if err != nil {
 		return nil, "", err
 	}
@@ -393,7 +429,7 @@ func (db *DB) AddAlgo(algo *asset.Algo) error {
 		return err
 	}
 
-	if err = db.createIndex("algo~owner~key", []string{"algo", algo.Owner, algo.Key}); err != nil {
+	if err = db.createIndex("algo~owner~key", []string{asset.AlgoKind, algo.Owner, algo.Key}); err != nil {
 		return err
 	}
 

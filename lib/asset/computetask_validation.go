@@ -81,3 +81,15 @@ func (t *NewAggregateTrainTaskData) Validate() error {
 		validation.Field(&t.Worker, validation.Required),
 	)
 }
+
+func (p *ApplyTaskActionParam) Validate() error {
+	return validation.ValidateStruct(p,
+		validation.Field(&p.ComputeTaskKey, validation.Required, is.UUID),
+		validation.Field(&p.Action, validation.Required, validation.In(
+			ComputeTaskAction_TASK_ACTION_DOING,
+			ComputeTaskAction_TASK_ACTION_DONE,
+			ComputeTaskAction_TASK_ACTION_FAILED,
+			ComputeTaskAction_TASK_ACTION_CANCELED,
+		)),
+	)
+}

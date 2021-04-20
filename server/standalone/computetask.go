@@ -76,3 +76,17 @@ func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasks
 		NextPageToken: paginationToken,
 	}, nil
 }
+
+func (s *ComputeTaskServer) ApplyTaskAction(ctx context.Context, param *asset.ApplyTaskActionParam) (*asset.ApplyTaskActionResponse, error) {
+	provider, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = provider.GetComputeTaskService().ApplyTaskAction(param.ComputeTaskKey, param.Action, param.Log)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.ApplyTaskActionResponse{}, nil
+}
