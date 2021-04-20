@@ -6,10 +6,6 @@ build:
       context: .
       docker:
         dockerfile: docker/server/Dockerfile
-    - image: owkin/forwarder
-      context: .
-      docker:
-        dockerfile: docker/forwarder/Dockerfile
     - image: owkin/rabbitmq-operator
       context: .
       docker:
@@ -23,7 +19,6 @@ deploy:
         createNamespace: true
         artifactOverrides:
           orchestrator.image: owkin/orchestrator
-          forwarder.image: owkin/forwarder
           rabbitmqOperator.image: owkin/rabbitmq-operator
         imageStrategy:
           helm: {}
@@ -38,24 +33,35 @@ deploy:
 profiles:
 - name: distributed
   patches:
-    - op: replace
-      path: /deploy/helm/releases/0/valuesFiles
-      value: [ examples/values/orchestrator-org-1-distributed.yaml ]
-    - op: add
-      path: "/deploy/helm/releases/-"
-      value:
-        name: owkin-orchestrator-org-2
-        chartPath: charts/orchestrator
-        namespace: org-2
-        createNamespace: true
-        artifactOverrides:
-          orchestrator.image: owkin/orchestrator
-          forwarder.image: owkin/forwarder
-          rabbitmqOperator.image: owkin/rabbitmq-operator
-        imageStrategy:
-          helm: {}
-        valuesFiles: [ examples/values/orchestrator-org-2-distributed.yaml ]
-    - op: add
-      path: "/deploy/kubectl/manifests/-"
-      value:
-        examples/secrets/secret-tls-org-2-server-pair.yaml
+  - op: add
+    path: "/build/artifacts/-"
+    value:
+      image: owkin/forwarder
+      context: .
+      docker:
+        dockerfile: docker/forwarder/Dockerfile
+  - op: replace
+    path: /deploy/helm/releases/0/valuesFiles
+    value: [ examples/values/orchestrator-org-1-distributed.yaml ]
+  - op: add
+    path: /deploy/helm/releases/0/artifactOverrides
+    value:
+      forwarder.image: owkin/forwarder
+  - op: add
+    path: "/deploy/helm/releases/-"
+    value:
+      name: owkin-orchestrator-org-2
+      chartPath: charts/orchestrator
+      namespace: org-2
+      createNamespace: true
+      artifactOverrides:
+        orchestrator.image: owkin/orchestrator
+        forwarder.image: owkin/forwarder
+        rabbitmqOperator.image: owkin/rabbitmq-operator
+      imageStrategy:
+        helm: {}
+      valuesFiles: [ examples/values/orchestrator-org-2-distributed.yaml ]
+  - op: add
+    path: "/deploy/kubectl/manifests/-"
+    value:
+      examples/secrets/secret-tls-org-2-server-pair.yaml
