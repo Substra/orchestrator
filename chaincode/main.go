@@ -24,12 +24,7 @@ import (
 	"github.com/go-playground/log/v7/handlers/console"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/chaincode/algo"
-	"github.com/owkin/orchestrator/chaincode/computetask"
-	"github.com/owkin/orchestrator/chaincode/datamanager"
-	"github.com/owkin/orchestrator/chaincode/datasample"
-	"github.com/owkin/orchestrator/chaincode/node"
-	"github.com/owkin/orchestrator/chaincode/objective"
+	"github.com/owkin/orchestrator/chaincode/contracts"
 )
 
 func main() {
@@ -38,16 +33,9 @@ func main() {
 
 	CCID := os.Getenv("CHAINCODE_CCID")
 
-	contracts := []contractapi.ContractInterface{
-		node.NewSmartContract(),
-		objective.NewSmartContract(),
-		datasample.NewSmartContract(),
-		algo.NewSmartContract(),
-		datamanager.NewSmartContract(),
-		computetask.NewSmartContract(),
-	}
+	allContracts := contracts.NewContractCollection().GetAllContracts()
 
-	cc, err := contractapi.NewChaincode(contracts...)
+	cc, err := contractapi.NewChaincode(allContracts...)
 
 	if err != nil {
 		log.WithError(err).Fatal("error creating substra chaincode")

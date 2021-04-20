@@ -121,7 +121,7 @@ Don't forget to flag the evaluate transaction (query only) by implementing `GetE
 
 Using the *DependenciesProvider* is as easy as writing: `provider := ctx.GetProvider()` in your contracts.
 
-Finally you can add your smart contract to the `contracts` struct in `chaincode/main.go` to have it published.
+Finally you can add your smart contract to the contract provider in `chaincode/contracts/provider.go` to have it published.
 
 **Note**: contracts should have the same inputs and outputs than the gRPC service.
 That way, the *Invocator* (more below) can transparently handle the serialization/deserialization.
@@ -145,7 +145,7 @@ func (a *AssetAdapter) DoSomething(ctx context.Context, input *assets.AssetDoSom
     }
     response := &assets.DoSomethingResponse
 
-    err = invocator.Invoke("org.substra.asset:DoSomething", input, response)
+    err = invocator.Call("org.substra.asset:DoSomething", input, response)
 
     return response, err
 }

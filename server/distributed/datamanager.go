@@ -39,7 +39,7 @@ func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.N
 	}
 	method := "org.substra.datamanager:RegisterDataManager"
 
-	err = invocator.Invoke(method, d, nil)
+	err = invocator.Call(method, d, nil)
 
 	return &asset.NewDataManagerResponse{}, err
 }
@@ -52,7 +52,7 @@ func (s *DataManagerAdapter) UpdateDataManager(ctx context.Context, d *asset.Dat
 	}
 	method := "org.substra.datamanager:UpdateDataManager"
 
-	err = invocator.Invoke(method, d, nil)
+	err = invocator.Call(method, d, nil)
 
 	return &asset.DataManagerUpdateResponse{}, err
 }
@@ -66,7 +66,7 @@ func (s *DataManagerAdapter) QueryDataManager(ctx context.Context, params *asset
 	method := "org.substra.datamanager:QueryDataManager"
 	response := &asset.DataManager{}
 
-	err = invocator.Evaluate(method, params, response)
+	err = invocator.Call(method, params, response)
 
 	return response, err
 }
@@ -80,7 +80,7 @@ func (s *DataManagerAdapter) QueryDataManagers(ctx context.Context, params *asse
 	method := "org.substra.datamanager:QueryDataManagers"
 	response := &asset.DataManagersQueryResponse{}
 
-	err = invocator.Evaluate(method, params, response)
+	err = invocator.Call(method, params, response)
 
 	return response, err
 }

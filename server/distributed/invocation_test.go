@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/owkin/orchestrator/chaincode/communication"
@@ -60,18 +61,35 @@ func (m *mockContract) Unregister(registration fab.Registration) {
 	m.Called(registration)
 }
 
+// mockContract in a mock of contracts.ContractCollection
+type mockContractCollection struct {
+	mock.Mock
+}
+
+func (m *mockContractCollection) GetAllContracts() []contractapi.ContractInterface {
+	args := m.Called()
+	return args.Get(0).([]contractapi.ContractInterface)
+}
+
+func (m *mockContractCollection) IsEvaluateMethod(method string) bool {
+	args := m.Called(method)
+	return args.Get(0).(bool)
+}
+
 func TestContractInvocator(t *testing.T) {
 	contract := &gateway.Contract{}
+	checker := &mockContractCollection{}
 
-	invocator := NewContractInvocator(contract)
+	invocator := NewContractInvocator(contract, checker)
 
 	assert.Implementsf(t, (*Invocator)(nil), invocator, "ContractInvocator should implements Invocator")
 }
 
 func TestParamWrapping(t *testing.T) {
 	contract := &mockContract{}
+	checker := &mockContractCollection{}
 
-	invocator := &ContractInvocator{contract: contract}
+	invocator := NewContractInvocator(contract, checker)
 
 	// Invocation param is a protoreflect.ProtoMessage
 	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
@@ -92,10 +110,11 @@ func TestParamWrapping(t *testing.T) {
 	serializedResponse, err := json.Marshal(wrappedResponse)
 	assert.NoError(t, err)
 
-	contract.On("SubmitTransaction", "org.substra.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
+	checker.On("IsEvaluateMethod", "org.substra.objective:QueryObjectives").Return(true)
+	contract.On("EvaluateTransaction", "org.substra.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
 
 	output := &asset.ObjectivesQueryResponse{}
-	err = invocator.Invoke("org.substra.objective:QueryObjectives", param, output)
+	err = invocator.Call("org.substra.objective:QueryObjectives", param, output)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "test", output.NextPageToken, "response should be properly unwrapped")
@@ -103,22 +122,57 @@ func TestParamWrapping(t *testing.T) {
 
 func TestNoOutput(t *testing.T) {
 	contract := &mockContract{}
+	checker := &mockContractCollection{}
 
-	invocator := &ContractInvocator{contract: contract}
+	invocator := NewContractInvocator(contract, checker)
+
+	expectedInput := getEmptyExpectedInput(t)
+
+	checker.On("IsEvaluateMethod", "org.test:NoOutput").Return(false)
+	contract.On("SubmitTransaction", "org.test:NoOutput", expectedInput).Return([]byte{}, nil)
+
+	err := invocator.Call("org.test:NoOutput", nil, nil)
+	assert.NoError(t, err)
+}
+
+func TestEvaluate(t *testing.T) {
+	contract := &mockContract{}
+	checker := &mockContractCollection{}
+
+	invocator := NewContractInvocator(contract, checker)
+	expectedInput := getEmptyExpectedInput(t)
+
+	checker.On("IsEvaluateMethod", "org.substra.some_contract:SomeMethod").Return(true)
+	contract.On("EvaluateTransaction", "org.substra.some_contract:SomeMethod", expectedInput).Return([]byte{}, nil)
+
+	err := invocator.Call("org.substra.some_contract:SomeMethod", nil, nil)
+	assert.NoError(t, err)
+}
+
+func TestInvoke(t *testing.T) {
+	contract := &mockContract{}
+	checker := &mockContractCollection{}
+
+	invocator := NewContractInvocator(contract, checker)
+	expectedInput := getEmptyExpectedInput(t)
+
+	checker.On("IsEvaluateMethod", "org.substra.some_contract:SomeMethod").Return(false)
+	contract.On("SubmitTransaction", "org.substra.some_contract:SomeMethod", expectedInput).Return([]byte{}, nil)
+
+	err := invocator.Call("org.substra.some_contract:SomeMethod", nil, nil)
+	assert.NoError(t, err)
+}
+
+func getEmptyExpectedInput(t *testing.T) []string {
 
 	// Invocation param is a protoreflect.ProtoMessage
-	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(nil)
 	assert.NoError(t, err)
 
 	// Which is serialized
 	serializedInput, err := json.Marshal(wrapper)
 	assert.NoError(t, err)
+
 	// And converted to strings to match gateway contract
-	expectedInput := []string{string(serializedInput)}
-
-	contract.On("SubmitTransaction", "org.test:NoOutput", expectedInput).Return([]byte{}, nil)
-
-	err = invocator.Invoke("org.test:NoOutput", param, nil)
-	assert.NoError(t, err)
+	return []string{string(serializedInput)}
 }

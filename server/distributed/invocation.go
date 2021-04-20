@@ -22,6 +22,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/contracts"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -39,25 +40,33 @@ type GatewayContract interface {
 // Invocator describe how to invoke chaincode in a somewhat generic way.
 // This is the Gandalf of fabric.
 type Invocator interface {
-	Invoke(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error
-	Evaluate(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error
+	Call(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error
 }
 
 // ContractInvocator implements the Invocator interface.
 type ContractInvocator struct {
 	contract GatewayContract
+	checker  contracts.TransactionChecker
 }
 
 // NewContractInvocator creates an Invocator based on given smart contract.
-func NewContractInvocator(c *gateway.Contract) *ContractInvocator {
-	return &ContractInvocator{c}
+func NewContractInvocator(c GatewayContract, checker contracts.TransactionChecker) *ContractInvocator {
+	return &ContractInvocator{contract: c, checker: checker}
 }
 
-// Invoke will submit a transaction to the ledger, deserializing its result in the output parameter.
-func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
-	logger := log.WithField("method", method)
+// Call will evaluate or invoke a transaction to the ledger, deserializing its result in the output parameter.
+// The choice of evaluation or invocation is based on contracts.AllEvaluateTransactions.
+func (i *ContractInvocator) Call(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
+	isEvaluate := i.checker.IsEvaluateMethod(method)
 
-	logger.WithField("param", param).Debug("Invoking chaincode")
+	txType := "Invoke"
+	if isEvaluate {
+		txType = "Evaluate"
+	}
+
+	logger := log.WithField("method", method).WithField("param", param).WithField("txType", txType)
+	logger.Debug("Calling chaincode")
+
 	start := time.Now()
 
 	wrapper, err := communication.Wrap(param)
@@ -69,7 +78,13 @@ func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessag
 		return err
 	}
 
-	data, err := i.contract.SubmitTransaction(method, string(args))
+	var data []byte
+
+	if isEvaluate {
+		data, err = i.contract.EvaluateTransaction(method, string(args))
+	} else {
+		data, err = i.contract.SubmitTransaction(method, string(args))
+	}
 
 	if err != nil {
 		return err
@@ -84,44 +99,7 @@ func (i *ContractInvocator) Invoke(method string, param protoreflect.ProtoMessag
 
 	elapsed := time.Since(start)
 
-	logger.WithField("duration", elapsed).Debug("Invokation successful")
-
-	return nil
-}
-
-// Evaluate evaluates a transaction (without submitting it to the ledger), deserializing its result in the output parameter.
-func (i *ContractInvocator) Evaluate(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
-	logger := log.WithField("method", method)
-
-	logger.WithField("param", param).Debug("Evaluate chaincode")
-	start := time.Now()
-
-	wrapper, err := communication.Wrap(param)
-	if err != nil {
-		return err
-	}
-
-	args, err := json.Marshal(wrapper)
-	if err != nil {
-		return err
-	}
-
-	data, err := i.contract.EvaluateTransaction(method, string(args))
-
-	if err != nil {
-		return err
-	}
-
-	if output != nil {
-		err := communication.Unwrap(data, output)
-		if err != nil {
-			return err
-		}
-	}
-
-	elapsed := time.Since(start)
-
-	logger.WithField("duration", elapsed).Debug("Evaluation successful")
+	logger.WithField("duration", elapsed).Debug("Successfully called chaincode")
 
 	return nil
 }

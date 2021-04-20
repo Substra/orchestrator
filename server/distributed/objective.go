@@ -40,7 +40,7 @@ func (a *ObjectiveAdapter) RegisterObjective(ctx context.Context, in *asset.NewO
 
 	response := &asset.Objective{}
 
-	err = invocator.Invoke(method, in, response)
+	err = invocator.Call(method, in, response)
 
 	return response, err
 }
@@ -55,7 +55,7 @@ func (a *ObjectiveAdapter) QueryObjective(ctx context.Context, query *asset.Obje
 
 	response := &asset.Objective{}
 
-	err = invocator.Evaluate(method, query, response)
+	err = invocator.Call(method, query, response)
 
 	return response, err
 }
@@ -70,7 +70,7 @@ func (a *ObjectiveAdapter) QueryObjectives(ctx context.Context, query *asset.Obj
 
 	response := &asset.ObjectivesQueryResponse{}
 
-	err = invocator.Evaluate(method, query, response)
+	err = invocator.Call(method, query, response)
 
 	return response, err
 }

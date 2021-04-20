@@ -39,7 +39,7 @@ func TestRegisterDataSample(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Invoke", "org.substra.datasample:RegisterDataSample", newDS, nil).Return(nil)
+	invocator.On("Call", "org.substra.datasample:RegisterDataSample", newDS, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -59,7 +59,7 @@ func TestUpdateDataSample(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Invoke", "org.substra.datasample:UpdateDataSample", updatedDS, nil).Return(nil)
+	invocator.On("Call", "org.substra.datasample:UpdateDataSample", updatedDS, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -74,7 +74,7 @@ func TestQueryDataSamples(t *testing.T) {
 	invocator := &mockedInvocator{}
 
 	queryParam := &asset.DataSamplesQueryParam{PageToken: "", PageSize: 10}
-	invocator.On("Evaluate", "org.substra.datasample:QueryDataSamples", queryParam, &asset.DataSamplesQueryResponse{}).Return(nil)
+	invocator.On("Call", "org.substra.datasample:QueryDataSamples", queryParam, &asset.DataSamplesQueryResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

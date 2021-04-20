@@ -24,6 +24,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+	"github.com/owkin/orchestrator/chaincode/contracts"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"google.golang.org/grpc"
@@ -109,7 +110,8 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 	}
 
 	contract := network.GetContract(chaincode)
-	invocator := NewContractInvocator(contract)
+	checker := contracts.NewContractCollection()
+	invocator := NewContractInvocator(contract, checker)
 
 	newCtx := context.WithValue(ctx, ctxInvocatorKey, invocator)
 	return handler(newCtx, req)

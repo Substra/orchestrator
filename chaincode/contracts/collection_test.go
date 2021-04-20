@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package distributed
+package contracts
 
 import (
-	"github.com/stretchr/testify/mock"
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type mockedInvocator struct {
-	mock.Mock
-}
-
-func (m *mockedInvocator) Call(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
-	a := m.Called(method, param, output)
-	return a.Error(0)
+func TestIsEvaluateMethod(t *testing.T) {
+	p := NewContractCollection()
+	assert.Equal(t, true, p.IsEvaluateMethod("org.substra.objective:QueryObjectives"))
+	assert.Equal(t, false, p.IsEvaluateMethod("org.substra.objective:RegisterObjective"))
+	assert.Equal(t, false, p.IsEvaluateMethod("org.substra.objective:DoesntExist"))
 }

@@ -40,7 +40,7 @@ func (a *AlgoAdapter) RegisterAlgo(ctx context.Context, in *asset.NewAlgo) (*ass
 
 	response := &asset.Algo{}
 
-	err = invocator.Invoke(method, in, response)
+	err = invocator.Call(method, in, response)
 
 	return response, err
 }
@@ -55,7 +55,7 @@ func (a *AlgoAdapter) QueryAlgo(ctx context.Context, query *asset.AlgoQueryParam
 
 	response := &asset.Algo{}
 
-	err = invocator.Evaluate(method, query, response)
+	err = invocator.Call(method, query, response)
 
 	return response, err
 }
@@ -70,7 +70,7 @@ func (a *AlgoAdapter) QueryAlgos(ctx context.Context, query *asset.AlgosQueryPar
 
 	response := &asset.AlgosQueryResponse{}
 
-	err = invocator.Evaluate(method, query, response)
+	err = invocator.Call(method, query, response)
 
 	return response, err
 }

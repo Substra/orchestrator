@@ -38,7 +38,7 @@ func (a *DataSampleAdapter) RegisterDataSample(ctx context.Context, param *asset
 	}
 	method := "org.substra.datasample:RegisterDataSample"
 
-	err = invocator.Invoke(method, param, nil)
+	err = invocator.Call(method, param, nil)
 
 	return &asset.NewDataSampleResponse{}, err
 }
@@ -51,7 +51,7 @@ func (a *DataSampleAdapter) UpdateDataSample(ctx context.Context, param *asset.D
 	}
 	method := "org.substra.datasample:UpdateDataSample"
 
-	err = invocator.Invoke(method, param, nil)
+	err = invocator.Call(method, param, nil)
 
 	return &asset.DataSampleUpdateResponse{}, err
 }
@@ -65,7 +65,7 @@ func (a *DataSampleAdapter) QueryDataSamples(ctx context.Context, param *asset.D
 	method := "org.substra.datasample:QueryDataSamples"
 	response := &asset.DataSamplesQueryResponse{}
 
-	err = invocator.Evaluate(method, param, response)
+	err = invocator.Call(method, param, response)
 
 	return response, err
 }

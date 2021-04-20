@@ -40,7 +40,7 @@ func (a *ComputeTaskAdapter) RegisterTask(ctx context.Context, in *asset.NewComp
 
 	response := &asset.ComputeTask{}
 
-	err = invocator.Invoke(method, in, response)
+	err = invocator.Call(method, in, response)
 
 	return response, err
 }
@@ -54,7 +54,7 @@ func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryT
 
 	response := &asset.QueryTasksResponse{}
 
-	err = invocator.Evaluate(method, param, response)
+	err = invocator.Call(method, param, response)
 
 	return response, err
 }
