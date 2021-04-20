@@ -4,3 +4,5 @@ CREATE TABLE algos (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     asset JSONB NOT NULL
 );
+
+CREATE INDEX ix_algos_category ON algos USING HASH ((asset->>'category'));
