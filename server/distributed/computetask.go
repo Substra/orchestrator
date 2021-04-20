@@ -66,7 +66,7 @@ func (a *ComputeTaskAdapter) ApplyTaskAction(ctx context.Context, param *asset.A
 	}
 	method := "org.substra.computetask:ApplyTaskAction"
 
-	err = invocator.Invoke(method, param, nil)
+	err = invocator.Call(method, param, nil)
 	if err != nil {
 		return nil, err
 	}
