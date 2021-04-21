@@ -92,7 +92,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		AssetKind: asset.AlgoKind,
 	})
 	if err != nil {
-		return &asset.Algo{}, err
+		return nil, err
 	}
 
 	err = s.GetAlgoDBAL().AddAlgo(algo)

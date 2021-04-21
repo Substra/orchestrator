@@ -97,7 +97,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 
 	objective.Permissions, err = s.GetPermissionService().CreatePermissions(owner, o.NewPermissions)
 	if err != nil {
-		return &asset.Objective{}, err
+		return nil, err
 	}
 
 	err = s.GetEventQueue().Enqueue(&event.Event{
@@ -106,7 +106,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		AssetKind: asset.ObjectiveKind,
 	})
 	if err != nil {
-		return &asset.Objective{}, err
+		return nil, err
 	}
 
 	err = s.GetObjectiveDBAL().AddObjective(objective)

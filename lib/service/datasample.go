@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/utils"
 
 	"github.com/go-playground/log/v7"
@@ -45,6 +46,7 @@ type DataSampleServiceProvider interface {
 type DataSampleDependencyProvider interface {
 	persistence.DataSampleDBALProvider
 	DataManagerServiceProvider
+	event.QueueProvider
 }
 
 // DataSampleService is the data samples manipulation entry point
@@ -86,6 +88,15 @@ func (s *DataSampleService) RegisterDataSample(d *asset.NewDataSample, owner str
 			Owner:           owner,
 		}
 
+		err = s.GetEventQueue().Enqueue(&event.Event{
+			EventKind: event.AssetCreated,
+			AssetID:   dataSampleKey,
+			AssetKind: asset.DataSampleKind,
+		})
+		if err != nil {
+			return err
+		}
+
 		err = s.GetDataSampleDBAL().AddDataSample(datasample)
 		if err != nil {
 			return err
@@ -119,6 +130,15 @@ func (s *DataSampleService) UpdateDataSample(d *asset.DataSampleUpdateParam, own
 		}
 
 		datasample.DataManagerKeys = utils.Combine(datasample.GetDataManagerKeys(), d.GetDataManagerKeys())
+
+		err = s.GetEventQueue().Enqueue(&event.Event{
+			EventKind: event.AssetUpdated,
+			AssetID:   dataSampleKey,
+			AssetKind: asset.DataSampleKind,
+		})
+		if err != nil {
+			return err
+		}
 
 		err = s.GetDataSampleDBAL().UpdateDataSample(datasample)
 		if err != nil {

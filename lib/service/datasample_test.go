@@ -20,8 +20,10 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,6 +31,8 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
+	dispatcher := new(MockDispatcher)
+	provider.On("GetEventQueue").Return(dispatcher)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -48,6 +52,13 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
 	dbal.On("AddDataSample", storedDataSample).Return(nil).Once()
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
+
+	e := &event.Event{
+		EventKind: event.AssetCreated,
+		AssetKind: asset.DataSampleKind,
+		AssetID:   storedDataSample.Key,
+	}
+	dispatcher.On("Enqueue", e).Return(nil)
 
 	err := service.RegisterDataSample(datasample, "owner")
 
@@ -83,6 +94,8 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
+	dispatcher := new(MockDispatcher)
+	provider.On("GetEventQueue").Return(dispatcher)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -113,6 +126,8 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	dbal.On("AddDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("AddDataSample", storedDataSample2).Return(nil).Once()
 
+	dispatcher.On("Enqueue", mock.AnythingOfType("*event.Event")).Times(2).Return(nil)
+
 	err := service.RegisterDataSample(datasamples, "owner")
 
 	assert.NoError(t, err, "Registration of multiple valid assets should not fail")
@@ -124,6 +139,8 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
+	dispatcher := new(MockDispatcher)
+	provider.On("GetEventQueue").Return(dispatcher)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -151,6 +168,13 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 	dbal.On("UpdateDataSample", storedDataSample).Return(nil).Once()
 	dm.On("CheckOwner", []string{"4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
 
+	e := &event.Event{
+		EventKind: event.AssetUpdated,
+		AssetKind: asset.DataSampleKind,
+		AssetID:   storedDataSample.Key,
+	}
+	dispatcher.On("Enqueue", e).Return(nil)
+
 	err := service.UpdateDataSample(updatedDataSample, "owner")
 
 	assert.NoError(t, err, "Update of single valid assets should not fail")
@@ -162,6 +186,8 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
+	dispatcher := new(MockDispatcher)
+	provider.On("GetEventQueue").Return(dispatcher)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -204,6 +230,8 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample2).Return(nil).Once()
+
+	dispatcher.On("Enqueue", mock.AnythingOfType("*event.Event")).Times(2).Return(nil)
 
 	err := service.UpdateDataSample(updatedDataSample, "owner")
 

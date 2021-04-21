@@ -20,6 +20,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,10 +31,12 @@ func TestRegisterDataManager(t *testing.T) {
 	mps := new(MockPermissionService)
 	obj := new(MockObjectiveService)
 	provider := new(MockServiceProvider)
+	dispatcher := new(MockDispatcher)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
+	provider.On("GetEventQueue").Return(dispatcher)
 
 	service := NewDataManagerService(provider)
 
@@ -76,6 +79,12 @@ func TestRegisterDataManager(t *testing.T) {
 	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(true, nil).Once()
+	e := &event.Event{
+		EventKind: event.AssetCreated,
+		AssetKind: asset.DataManagerKind,
+		AssetID:   storedDataManager.Key,
+	}
+	dispatcher.On("Enqueue", e).Return(nil)
 
 	err := service.RegisterDataManager(newDataManager, "owner")
 
@@ -87,10 +96,12 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	mps := new(MockPermissionService)
 	provider := new(MockServiceProvider)
+	dispatcher := new(MockDispatcher)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
+	provider.On("GetEventQueue").Return(dispatcher)
 
 	service := NewDataManagerService(provider)
 
@@ -132,6 +143,12 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
 	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()
+	e := &event.Event{
+		EventKind: event.AssetCreated,
+		AssetKind: asset.DataManagerKind,
+		AssetID:   storedDataManager.Key,
+	}
+	dispatcher.On("Enqueue", e).Return(nil)
 
 	err := service.RegisterDataManager(newDataManager, "owner")
 
@@ -178,7 +195,7 @@ func TestRegisterDataManagerUnknownObjective(t *testing.T) {
 
 	err := service.RegisterDataManager(newDataManager, "owner")
 
-	assert.Error(t, err, "Registration of valid datamanager should not fail")
+	assert.Error(t, err, "Registration of an invalid datamanager should fail")
 	obj.AssertExpectations(t)
 }
 
@@ -187,10 +204,12 @@ func TestUpdateDataManager(t *testing.T) {
 	mps := new(MockPermissionService)
 	obj := new(MockObjectiveService)
 	provider := new(MockServiceProvider)
+	dispatcher := new(MockDispatcher)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
+	provider.On("GetEventQueue").Return(dispatcher)
 
 	service := NewDataManagerService(provider)
 
@@ -238,6 +257,13 @@ func TestUpdateDataManager(t *testing.T) {
 	dbal.On("UpdateDataManager", updatedDataManager).Return(nil).Once()
 	mps.On("CanProcess", perms, "owner").Return(true)
 
+	e := &event.Event{
+		EventKind: event.AssetUpdated,
+		AssetKind: asset.DataManagerKind,
+		AssetID:   updatedDataManager.Key,
+	}
+	dispatcher.On("Enqueue", e).Return(nil)
+
 	err := service.UpdateDataManager(dataManagerUpdate, "owner")
 
 	assert.NoError(t, err, "Update should not fail")
@@ -250,10 +276,12 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 	mps := new(MockPermissionService)
 	provider := new(MockServiceProvider)
 	obj := new(MockObjectiveService)
+	dispatcher := new(MockDispatcher)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
+	provider.On("GetEventQueue").Return(dispatcher)
 
 	service := NewDataManagerService(provider)
 
@@ -300,6 +328,13 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(true, nil).Once()
 	dbal.On("UpdateDataManager", updatedDataManager).Return(nil).Once()
 	mps.On("CanProcess", perms, "other_owner").Return(true)
+
+	e := &event.Event{
+		EventKind: event.AssetUpdated,
+		AssetKind: asset.DataManagerKind,
+		AssetID:   updatedDataManager.Key,
+	}
+	dispatcher.On("Enqueue", e).Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "other_owner")
 
