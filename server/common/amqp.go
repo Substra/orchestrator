@@ -205,7 +205,7 @@ func (session *Session) changeChannel(channel *amqp.Channel) {
 // This will block until the server sends a confirm. Errors are
 // only returned if the push action itself fails, see UnsafePush.
 func (session *Session) Publish(routingKey string, data []byte) error {
-	log := log.WithField("data", data)
+	log := log.WithField("numBytes", len(data))
 
 	if !session.isReady {
 		return errors.New("failed to push message: not connected")

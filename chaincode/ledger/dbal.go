@@ -77,7 +77,7 @@ func (db *DB) putState(resource string, key string, data []byte) error {
 		logger.WithError(err).Error("Failed to marshal stored asset")
 		return err
 	}
-	logger.WithField("serialized stored asset", b).Debug("Marshalling successful")
+	logger.WithField("numBytes", len(b)).Debug("Marshalling successful")
 
 	return db.ccStub.PutState(k, b)
 }

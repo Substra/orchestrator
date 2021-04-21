@@ -57,7 +57,7 @@ func (ed *eventDispatcher) Dispatch() error {
 		return err
 	}
 
-	ed.logger.WithField("payload", payload).Debug("Setting event to the transaction")
+	ed.logger.WithField("numBytes", len(payload)).Debug("Setting event to the transaction")
 
 	err = ed.stub.SetEvent(EventName, payload)
 
