@@ -52,7 +52,7 @@ spec:
                {{- if $.Values.orchestrator.tls.enabled }}
                 - "-tls"
                 - "-tls-ca-cert=/var/orchestrator/tls/server/cacert/ca.crt"
-                - "-tls-server-name={{ include "orchestrator.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+                - "-tls-server-name={{ include "orchestrator.server.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
                 {{- if $.Values.orchestrator.tls.mtls.enabled }}
                 - "-tls-client-key=/var/orchestrator/tls/server/pair/tls.key"
                 - "-tls-client-cert=/var/orchestrator/tls/server/pair/tls.crt"
@@ -67,7 +67,7 @@ spec:
                {{- if $.Values.orchestrator.tls.enabled }}
                 - "-tls"
                 - "-tls-ca-cert=/var/orchestrator/tls/server/cacert/ca.crt"
-                - "-tls-server-name={{ include "orchestrator.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+                - "-tls-server-name={{ include "orchestrator.server.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
                 {{- if $.Values.orchestrator.tls.mtls.enabled }}
                 - "-tls-client-key=/var/orchestrator/tls/server/pair/tls.key"
                 - "-tls-client-cert=/var/orchestrator/tls/server/pair/tls.crt"
