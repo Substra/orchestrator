@@ -43,10 +43,12 @@ profiles:
   - op: replace
     path: /deploy/helm/releases/0/valuesFiles
     value: [ examples/values/orchestrator-org-1-distributed.yaml ]
-  - op: add
+  - op: replace
     path: /deploy/helm/releases/0/artifactOverrides
     value:
+      orchestrator.image: owkin/orchestrator
       forwarder.image: owkin/forwarder
+      rabbitmqOperator.image: owkin/rabbitmq-operator
   - op: add
     path: "/deploy/helm/releases/-"
     value:
