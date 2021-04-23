@@ -16,6 +16,8 @@ package standalone
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"strconv"
 
 	// migration driver
@@ -27,6 +29,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -101,7 +104,11 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 
 	node := new(asset.Node)
 	err := row.Scan(&node)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("node not found: %w", orchestrationErrors.ErrNotFound)
+		}
 		return nil, err
 	}
 
@@ -112,6 +119,7 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 func (d *DBAL) AddObjective(obj *asset.Objective) error {
 	stmt := `insert into "objectives" ("id", "asset", "channel") values ($1, $2, $3)`
 	_, err := d.tx.Exec(stmt, obj.GetKey(), obj, d.channel)
+
 	return err
 }
 
@@ -121,7 +129,11 @@ func (d *DBAL) GetObjective(id string) (*asset.Objective, error) {
 
 	objective := new(asset.Objective)
 	err := row.Scan(&objective)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("objective not found: %w", orchestrationErrors.ErrNotFound)
+		}
 		return nil, err
 	}
 
@@ -196,7 +208,11 @@ func (d *DBAL) GetAlgo(id string) (*asset.Algo, error) {
 
 	algo := new(asset.Algo)
 	err := row.Scan(&algo)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("algo not found: %w", orchestrationErrors.ErrNotFound)
+		}
 		return nil, err
 	}
 

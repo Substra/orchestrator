@@ -26,7 +26,7 @@ func (o *NewObjective) Validate() error {
 		validation.Field(&o.Key, validation.Required, is.UUID),
 		validation.Field(&o.Name, validation.Required, validation.Length(1, 100)),
 		validation.Field(&o.MetricsName, validation.Required, validation.Length(1, 100)),
-		validation.Field(&o.Metadata, validation.Each(validation.Length(0, 100))),
+		validation.Field(&o.Metadata, validation.By(validateMetadata)),
 		validation.Field(&o.Description, validation.Required),
 		validation.Field(&o.NewPermissions, validation.Required),
 		validation.Field(&o.Metrics, validation.Required),

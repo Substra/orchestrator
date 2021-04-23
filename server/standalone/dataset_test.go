@@ -12,20 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataset
+package standalone
 
 import (
 	"testing"
 
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEvaluateTransactions(t *testing.T) {
-	contract := NewSmartContract()
-
-	queries := []string{
-		"QueryDataset",
-	}
-
-	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
+func TestDatasetServerImplementServer(t *testing.T) {
+	server := NewDatasetServer()
+	assert.Implementsf(t, (*asset.DatasetServiceServer)(nil), server, "DatasetServer should implements DatasetServiceServer")
 }

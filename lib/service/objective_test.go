@@ -186,12 +186,14 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	mps := new(MockPermissionService)
 	mds := new(MockDataSampleService)
+	mdm := new(MockDataManagerService)
 	dispatcher := new(MockDispatcher)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 	provider.On("GetDataSampleService").Return(mds)
+	provider.On("GetDataManagerService").Return(mdm)
 
 	provider.On("GetEventQueue").Return(dispatcher)
 
@@ -218,6 +220,11 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 		DataSampleKeys: []string{"6c34f9da-5575-44f6-8f02-d911d3898f77"},
 	}
 
+	dataManagerUpdate := &asset.DataManagerUpdateParam{
+		Key:          objective.DataManagerKey,
+		ObjectiveKey: objective.Key,
+	}
+
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.ObjectiveKind,
@@ -227,6 +234,7 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 
 	mds.On("CheckSameManager", objective.DataManagerKey, objective.DataSampleKeys).Return(nil).Once()
 	mds.On("IsTestOnly", objective.DataSampleKeys).Return(true, nil).Once()
+	mdm.On("UpdateDataManager", dataManagerUpdate, "owner").Return(nil).Once()
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 

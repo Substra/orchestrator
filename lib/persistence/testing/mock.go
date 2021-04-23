@@ -158,6 +158,12 @@ func (m *MockDBAL) DataManagerExists(id string) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
+// GetDataset is a mock
+func (m *MockDBAL) GetDataset(id string) (*asset.Dataset, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.Dataset), args.Error(1)
+}
+
 // ComputeTaskExists is a mock
 func (m *MockDBAL) ComputeTaskExists(id string) (bool, error) {
 	args := m.Called(id)

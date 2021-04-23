@@ -69,6 +69,11 @@ type DataManagerDBAL interface {
 	DataManagerExists(id string) (bool, error)
 }
 
+// DatasetDBAL is the database abstraction layer for Datasets
+type DatasetDBAL interface {
+	GetDataset(id string) (*asset.Dataset, error)
+}
+
 // NodeDBALProvider representes an object capable of providing a NodeDBAL
 type NodeDBALProvider interface {
 	GetNodeDBAL() NodeDBAL
@@ -94,6 +99,11 @@ type DataManagerDBALProvider interface {
 	GetDataManagerDBAL() DataManagerDBAL
 }
 
+// DatasetDBALProvider represents an object capable of providing a DatasetDBAL
+type DatasetDBALProvider interface {
+	GetDatasetDBAL() DatasetDBAL
+}
+
 // DBAL stands for Database Abstraction Layer, it exposes methods to interact with asset storage.
 type DBAL interface {
 	NodeDBAL
@@ -101,6 +111,7 @@ type DBAL interface {
 	DataSampleDBAL
 	AlgoDBAL
 	DataManagerDBAL
+	DatasetDBAL
 	ComputeTaskDBAL
 	ModelDBAL
 }

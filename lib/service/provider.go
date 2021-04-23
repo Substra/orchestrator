@@ -28,6 +28,7 @@ type DependenciesProvider interface {
 	AlgoServiceProvider
 	PermissionServiceProvider
 	DataManagerServiceProvider
+	DatasetServiceProvider
 	ComputeTaskServiceProvider
 	ModelServiceProvider
 }
@@ -46,6 +47,7 @@ type Provider struct {
 	datasample  DataSampleAPI
 	algo        AlgoAPI
 	datamanager DataManagerAPI
+	dataset     DatasetAPI
 	computeTask ComputeTaskAPI
 	model       ModelAPI
 }
@@ -70,8 +72,13 @@ func (sc *Provider) GetDataSampleDBAL() persistence.DataSampleDBAL {
 	return sc.dbal
 }
 
-// GetDataManagerDBAL returns the database abstraction layer for DataSamples
+// GetDataManagerDBAL returns the database abstraction layer for DataManagers
 func (sc *Provider) GetDataManagerDBAL() persistence.DataManagerDBAL {
+	return sc.dbal
+}
+
+// GetDatasetDBAL returns the database abstraction layer for Dataset
+func (sc *Provider) GetDatasetDBAL() persistence.DatasetDBAL {
 	return sc.dbal
 }
 
@@ -122,13 +129,22 @@ func (sc *Provider) GetDataSampleService() DataSampleAPI {
 	return sc.datasample
 }
 
-// GetDataManagerService returns a DataSampleAPI instance.
+// GetDataManagerService returns a DataManagerAPI instance.
 // The service will be instanciated if needed.
 func (sc *Provider) GetDataManagerService() DataManagerAPI {
 	if sc.datamanager == nil {
 		sc.datamanager = NewDataManagerService(sc)
 	}
 	return sc.datamanager
+}
+
+// GetDatasetService returns a DataSampleAPI instance.
+// The service will be instanciated if needed.
+func (sc *Provider) GetDatasetService() DatasetAPI {
+	if sc.dataset == nil {
+		sc.dataset = NewDatasetService(sc)
+	}
+	return sc.dataset
 }
 
 // GetAlgoService returns an AlgoAPI instance.

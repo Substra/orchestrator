@@ -28,7 +28,7 @@ func (a *NewAlgo) Validate() error {
 		validation.Field(&a.Category, validation.In(AlgoCategory_ALGO_SIMPLE, AlgoCategory_ALGO_COMPOSITE, AlgoCategory_ALGO_AGGREGATE)),
 		validation.Field(&a.Description, validation.Required),
 		validation.Field(&a.Algorithm, validation.Required),
-		validation.Field(&a.Metadata, validation.Each(validation.Length(0, 100))),
+		validation.Field(&a.Metadata, validation.By(validateMetadata)),
 		validation.Field(&a.NewPermissions, validation.Required),
 	)
 }

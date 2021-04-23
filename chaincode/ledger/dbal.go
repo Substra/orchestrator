@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
@@ -32,9 +33,11 @@ import (
 // DB is the distributed ledger persistence layer implementing persistence.DBAL
 // This backend does not allow to read the current writes, they will only be commited after a successful response.
 type DB struct {
-	context context.Context
-	ccStub  shim.ChaincodeStubInterface
-	logger  log.Entry
+	context          context.Context
+	ccStub           shim.ChaincodeStubInterface
+	logger           log.Entry
+	transactionState map[string]([]byte)
+	transactionMutex sync.RWMutex
 }
 
 // NewDB creates a ledger.DB instance based on given stub
@@ -44,9 +47,11 @@ func NewDB(ctx context.Context, stub shim.ChaincodeStubInterface) *DB {
 	)
 
 	return &DB{
-		context: ctx,
-		ccStub:  stub,
-		logger:  logger,
+		context:          ctx,
+		ccStub:           stub,
+		logger:           logger,
+		transactionState: make(map[string]([]byte)),
+		transactionMutex: sync.RWMutex{},
 	}
 }
 
@@ -54,6 +59,30 @@ func NewDB(ctx context.Context, stub shim.ChaincodeStubInterface) *DB {
 type storedAsset struct {
 	DocType string          `json:"doc_type"`
 	Asset   json.RawMessage `json:"asset"`
+}
+
+// getTransactionState returns a copy of an object that has been updated or created during the transaction
+func (db *DB) getTransactionState(key string) ([]byte, bool) {
+	db.transactionMutex.RLock()
+	defer db.transactionMutex.RUnlock()
+
+	state, ok := db.transactionState[key]
+	if !ok {
+		return nil, false
+	}
+
+	b := make([]byte, len(state))
+	copy(b, state)
+
+	return b, true
+}
+
+// putTransactionState stores an object during a transaction lifetime
+func (db *DB) putTransactionState(key string, b []byte) {
+	db.transactionMutex.Lock()
+	defer db.transactionMutex.Unlock()
+
+	db.transactionState[key] = b
 }
 
 // putState stores data in the ledger
@@ -79,22 +108,46 @@ func (db *DB) putState(resource string, key string, data []byte) error {
 	}
 	logger.WithField("numBytes", len(b)).Debug("Marshalling successful")
 
-	return db.ccStub.PutState(k, b)
+	err = db.ccStub.PutState(k, b)
+
+	if err != nil {
+		return err
+	}
+
+	// TransactionState is updated to ensure that even if the data is not committed,
+	// a further call to get this struct will return the updated one and not the original one
+	db.putTransactionState(k, b)
+
+	return nil
+
 }
 
 // getState retrieves data for a given resource
 func (db *DB) getState(resource string, key string) ([]byte, error) {
+
 	k := getFullKey(resource, key)
 	logger := db.logger.WithFields(
 		log.F("resource", resource),
 		log.F("key", key),
 		log.F("fullkey", k),
 	)
+
 	logger.Debug("get state")
 
-	b, err := db.ccStub.GetState(k)
-	if err != nil {
-		return nil, err
+	b, ok := db.getTransactionState(k)
+
+	var err error
+	if !ok {
+		b, err = db.ccStub.GetState(k)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(b) == 0 {
+			return nil, fmt.Errorf("%s not found: %w key: %s", resource, errors.ErrNotFound, key)
+		}
+
+		db.putTransactionState(k, b)
 	}
 
 	var stored storedAsset

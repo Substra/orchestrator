@@ -25,7 +25,7 @@ import (
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
-// DataSampleAPI defines the methods to act on DataSamples
+// DataManagerAPI defines the methods to act on DataManagers
 type DataManagerAPI interface {
 	RegisterDataManager(datamanager *asset.NewDataManager, owner string) error
 	UpdateDataManager(datamanager *asset.DataManagerUpdateParam, requester string) error

@@ -30,7 +30,7 @@ func (t *NewComputeTask) Validate() error {
 		validation.Field(&t.Category, validation.Required, validation.In(ComputeTaskCategory_TASK_TRAIN, ComputeTaskCategory_TASK_COMPOSITE, ComputeTaskCategory_TASK_AGGREGATE)),
 		validation.Field(&t.AlgoKey, validation.Required, is.UUID),
 		validation.Field(&t.ComputePlanKey, validation.Required, is.UUID),
-		validation.Field(&t.Metadata, validation.Each(validation.Length(0, 100))),
+		validation.Field(&t.Metadata, validation.By(validateMetadata)),
 		validation.Field(&t.ParentTaskKeys, validation.Each(is.UUID)),
 		validation.Field(&t.Data, validation.Required),
 	)

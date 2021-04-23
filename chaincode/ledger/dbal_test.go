@@ -16,6 +16,7 @@ package ledger
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -130,4 +131,22 @@ func TestCheckQueryContext(t *testing.T) {
 	db = NewDB(context.Background(), mockStub)
 	_, _, err = db.getQueryResultWithPagination("some query", 0, "bookmark")
 	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
+}
+
+func TestTransactionState(t *testing.T) {
+	mockStub := new(testHelper.MockedStub)
+
+	db := NewDB(context.Background(), mockStub)
+	fullkey := getFullKey("test", "key")
+	storedAsset := &storedAsset{
+		DocType: "test",
+		Asset:   []byte("{}"),
+	}
+
+	sab, _ := json.Marshal(storedAsset)
+	db.putTransactionState(fullkey, sab)
+
+	b, err := db.getState("test", "key")
+	assert.Equal(t, b, []byte("{}"))
+	assert.NoError(t, err)
 }

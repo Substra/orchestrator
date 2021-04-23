@@ -15,62 +15,50 @@
 package dataset
 
 import (
-	"errors"
-
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/ledger"
+	"github.com/owkin/orchestrator/lib/asset"
 )
 
-// SmartContract manages Datasets
+// SmartContract manages datasets
 type SmartContract struct {
 	contractapi.Contract
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
-	return &SmartContract{}
+	contract := &SmartContract{}
+	contract.Name = "org.substra.dataset"
+	contract.TransactionContextHandler = ledger.NewContext()
+	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
+	contract.AfterTransaction = ledger.AfterTransactionHook
+
+	return contract
 }
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryDataManager", "QueryDataManagers", "QueryDataset", "QuerySamples"}
+	return []string{"QueryDataset"}
 }
 
-// RegisterDataManager stores a new dataManager in the ledger
-func (s *SmartContract) RegisterDataManager() error {
-	return errors.New("unimplemented")
-}
+// QueryDataset returns the Dataset with given key
+func (s *SmartContract) QueryDataset(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetDatasetService()
 
-// RegisterSample stores new Sample in the ledger (one or more).
-func (s *SmartContract) RegisterSample() error {
-	return errors.New("unimplemented")
-}
+	params := new(asset.DatasetQueryParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		return nil, err
+	}
 
-// UpdateSample associates one or more dataManagerKeys to one or more Samples
-func (s *SmartContract) UpdateSample() error {
-	return errors.New("unimplemented")
-}
-
-// UpdateDataManager associates a objectiveKey to an existing dataManager
-func (s *SmartContract) UpdateDataManager() error {
-	return errors.New("unimplemented")
-}
-
-// QueryDataManager returns dataManager and its key
-func (s *SmartContract) QueryDataManager() error {
-	return errors.New("unimplemented")
-}
-
-// QueryDataManagers returns all DataManagers of the ledger
-func (s *SmartContract) QueryDataManagers() error {
-	return errors.New("unimplemented")
-}
-
-// QueryDataset returns info about a dataManager and all related dataSample
-func (s *SmartContract) QueryDataset() error {
-	return errors.New("unimplemented")
-}
-
-// QuerySamples list samples
-func (s *SmartContract) QuerySamples() error {
-	return errors.New("unimplemented")
+	dataset, err := service.GetDataset(params.GetKey())
+	if err != nil {
+		return nil, err
+	}
+	wrapped, err := communication.Wrap(dataset)
+	if err != nil {
+		return nil, err
+	}
+	return wrapped, nil
 }

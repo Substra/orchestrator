@@ -21,6 +21,7 @@ import (
 
 // Validate returns an error if the new DataManager is not valid
 func (d *NewDataManager) Validate() error {
+
 	return validation.ValidateStruct(d,
 		validation.Field(&d.Key, validation.Required, is.UUID),
 		validation.Field(&d.Name, validation.Required, validation.Length(1, 100)),
@@ -28,7 +29,7 @@ func (d *NewDataManager) Validate() error {
 		validation.Field(&d.ObjectiveKey, validation.When(d.GetObjectiveKey() != ""), is.UUID),
 		validation.Field(&d.Description, validation.Required),
 		validation.Field(&d.Opener, validation.Required),
-		validation.Field(&d.Metadata, validation.Each(validation.Length(0, 100))),
+		validation.Field(&d.Metadata, validation.By(validateMetadata)),
 		validation.Field(&d.Type, validation.Required, validation.Length(1, 30)),
 	)
 }

@@ -50,18 +50,18 @@ func (db *DB) AddDataSample(dataSample *asset.DataSample) error {
 		return err
 	}
 
-	if err = db.createIndex("dataSample~owner~key", []string{"dataSample", dataSample.Owner, dataSample.Key}); err != nil {
+	if err = db.createIndex("dataSample~owner~key", []string{asset.DataSampleKind, dataSample.Owner, dataSample.Key}); err != nil {
 		return err
 	}
 
 	for _, dataManagerKey := range dataSample.GetDataManagerKeys() {
 		// create composite keys to find all dataSample associated with a dataManager
-		if err = db.createIndex("dataSample~dataManager~key", []string{"dataSample", dataManagerKey, dataSample.GetKey()}); err != nil {
+		if err = db.createIndex("dataSample~dataManager~key", []string{asset.DataSampleKind, dataManagerKey, dataSample.GetKey()}); err != nil {
 			return err
 		}
 
 		// create composite keys to find all dataSample associated with a dataManager that are for test only or not
-		if err = db.createIndex("dataSample~dataManager~testOnly~key", []string{"dataSample", dataManagerKey, strconv.FormatBool(dataSample.GetTestOnly()), dataSample.GetKey()}); err != nil {
+		if err = db.createIndex("dataSample~dataManager~testOnly~key", []string{asset.DataSampleKind, dataManagerKey, strconv.FormatBool(dataSample.GetTestOnly()), dataSample.GetKey()}); err != nil {
 			return err
 		}
 	}
@@ -87,11 +87,11 @@ func (db *DB) UpdateDataSample(dataSample *asset.DataSample) error {
 
 	// We add indexes for the potential new DataManagerKeys
 	for _, dataManagerKey := range newDataManagers {
-		if err = db.createIndex("dataSample~dataManager~key", []string{"dataSample", dataManagerKey, dataSample.GetKey()}); err != nil {
+		if err = db.createIndex("dataSample~dataManager~key", []string{asset.DataSampleKind, dataManagerKey, dataSample.GetKey()}); err != nil {
 			return err
 		}
 
-		if err = db.createIndex("dataSample~dataManager~testOnly~key", []string{"dataSample", dataManagerKey, strconv.FormatBool(dataSample.GetTestOnly()), dataSample.GetKey()}); err != nil {
+		if err = db.createIndex("dataSample~dataManager~testOnly~key", []string{asset.DataSampleKind, dataManagerKey, strconv.FormatBool(dataSample.GetTestOnly()), dataSample.GetKey()}); err != nil {
 			return err
 		}
 	}
@@ -120,7 +120,7 @@ func (db *DB) GetDataSample(id string) (*asset.DataSample, error) {
 
 // GetDataSamples implements persistence.DataSampleDBAL
 func (db *DB) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
-	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("dataSample~owner~key", []string{"dataSample"}, p.Size, p.Token)
+	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("dataSample~owner~key", []string{asset.DataSampleKind}, p.Size, p.Token)
 	if err != nil {
 		return nil, "", err
 	}
@@ -137,4 +137,16 @@ func (db *DB) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.
 	}
 
 	return datasamples, bookmark, nil
+}
+
+// GetDataSamples implements persistence.DataSampleDBAL
+func (db *DB) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bool) ([]string, error) {
+	dataSampleKeys, err := db.getIndexKeys("dataSample~dataManager~testOnly~key", []string{asset.DataSampleKind, dataManagerKey, strconv.FormatBool(testOnly)})
+	if err != nil {
+		return nil, err
+	}
+
+	db.logger.WithField("keys", dataSampleKeys).Debug("GetDataSamplesKeysByDataManager")
+
+	return dataSampleKeys, nil
 }

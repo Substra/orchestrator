@@ -57,6 +57,12 @@ func (m *MockServiceProvider) GetDataManagerDBAL() persistence.DataManagerDBAL {
 	return args.Get(0).(persistence.DataManagerDBAL)
 }
 
+// GetDatasetDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetDatasetDBAL() persistence.DatasetDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.DatasetDBAL)
+}
+
 // GetComputeTaskDBAL returns whatever value is passed
 func (m *MockServiceProvider) GetComputeTaskDBAL() persistence.ComputeTaskDBAL {
 	args := m.Called()
@@ -103,6 +109,12 @@ func (m *MockServiceProvider) GetDataSampleService() DataSampleAPI {
 func (m *MockServiceProvider) GetDataManagerService() DataManagerAPI {
 	args := m.Called()
 	return args.Get(0).(DataManagerAPI)
+}
+
+// GetDatasetService returns whatever value is passed
+func (m *MockServiceProvider) GetDatasetService() DatasetAPI {
+	args := m.Called()
+	return args.Get(0).(DatasetAPI)
 }
 
 // GetAlgoService return whatever value is passed
@@ -301,6 +313,17 @@ func (m *MockDataManagerService) GetDataManagers(p *common.Pagination) ([]*asset
 func (m *MockDataManagerService) CheckOwner(keys []string, requester string) error {
 	args := m.Called(keys, requester)
 	return args.Error(0)
+}
+
+// MockDatasetService is a mock implementing DatasetAPI
+type MockDatasetService struct {
+	mock.Mock
+}
+
+// GetDataset returns whatever value is passed
+func (m *MockDatasetService) GetDataset(id string) (*asset.Dataset, error) {
+	args := m.Called(id)
+	return args.Get(0).(*asset.Dataset), args.Error(1)
 }
 
 // MockDispatcher is a mock implenting Dispatcher behavior

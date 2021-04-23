@@ -16,10 +16,13 @@ package standalone
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 // DataSampleExists implements persistence.DataSampleDBAL
@@ -52,7 +55,11 @@ func (d *DBAL) GetDataSample(id string) (*asset.DataSample, error) {
 
 	datasample := new(asset.DataSample)
 	err := row.Scan(&datasample)
+
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("datasample not found: %w", orchestrationErrors.ErrNotFound)
+		}
 		return nil, err
 	}
 
@@ -102,4 +109,40 @@ func (d *DBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common
 	}
 
 	return datasamples, bookmark, nil
+}
+
+// GetDataSamplesByDataManager implements persistence.DataSample
+func (d *DBAL) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bool) ([]string, error) {
+
+	var rows *sql.Rows
+	var err error
+
+	testOnlyFilter := `not`
+	if testOnly {
+		testOnlyFilter = ``
+	}
+
+	query := `select "id" from "datasamples" where channel=$1 and (asset->'dataManagerKeys') ? $2 and ` + testOnlyFilter + ` (asset ? 'testOnly' and (asset->'testOnly')::boolean) order by created_at asc`
+
+	rows, err = d.tx.Query(query, d.channel, dataManagerKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var datasampleKeys []string
+
+	for rows.Next() {
+		var datasampleKey string
+
+		err = rows.Scan(&datasampleKey)
+		if err != nil {
+			return nil, err
+		}
+		datasampleKeys = append(datasampleKeys, datasampleKey)
+	}
+
+	return datasampleKeys, nil
 }

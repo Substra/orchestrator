@@ -15,8 +15,11 @@
 package asset
 
 import (
+	"fmt"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/owkin/orchestrator/lib/errors"
 )
 
 // Validate makes sure the Addressable object is valid
@@ -39,4 +42,22 @@ func (np *NewPermissions) Validate() error {
 	return validation.ValidateStruct(np,
 		validation.Field(&np.AuthorizedIds, validation.When(!np.Public, validation.Required)),
 	)
+}
+
+func validateMetadata(input interface{}) error {
+	metadata, ok := input.(map[string]string)
+	if !ok {
+		return fmt.Errorf("metadata is not a proper map %w", errors.ErrInvalidAsset)
+	}
+
+	for k, v := range metadata {
+		if len(k) > 100 {
+			return fmt.Errorf("metadata key '%v' is too long, %w", k, errors.ErrInvalidAsset)
+		}
+		if len(v) > 100 {
+			return fmt.Errorf("metadata value for key '%v' is too long, %w", k, errors.ErrInvalidAsset)
+		}
+	}
+
+	return nil
 }

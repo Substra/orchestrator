@@ -46,6 +46,7 @@ type ObjectiveDependencyProvider interface {
 	event.QueueProvider
 	PermissionServiceProvider
 	DataSampleServiceProvider
+	DataManagerServiceProvider
 }
 
 // ObjectiveService is the objective manipulation entry point
@@ -93,6 +94,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		// Couple manager + samples is valid, let's associate them with the objective
 		objective.DataManagerKey = o.GetDataManagerKey()
 		objective.DataSampleKeys = o.GetDataSampleKeys()
+
 	}
 
 	objective.Permissions, err = s.GetPermissionService().CreatePermissions(owner, o.NewPermissions)
@@ -110,6 +112,23 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 	}
 
 	err = s.GetObjectiveDBAL().AddObjective(objective)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if o.DataManagerKey != "" {
+		// Associates an objective to a datamanager, more precisely, it adds the objective key to the datamanager
+		dataManagerUpdate := &asset.DataManagerUpdateParam{
+			Key:          objective.DataManagerKey,
+			ObjectiveKey: objective.Key,
+		}
+		err = s.GetDataManagerService().UpdateDataManager(dataManagerUpdate, owner)
+		if err != nil {
+			return nil, fmt.Errorf("datamanager cannot be associated with the objective: %w", orchestrationErrors.ErrBadRequest)
+		}
+	}
+
 	return objective, err
 }
 
