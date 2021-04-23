@@ -180,7 +180,7 @@ func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 		return nil, err
 	}
 
-	db.logger.WithField("num_children", len(elementKeys)).Debug("GetComputeTaskChildren")
+	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetComputeTaskChildren")
 
 	tasks := []*asset.ComputeTask{}
 	for _, childKey := range elementKeys {

@@ -21,8 +21,6 @@ import (
 
 // DependenciesProvider describes a Provider exposing all orchestration services.
 type DependenciesProvider interface {
-	persistence.NodeDBALProvider
-	persistence.ObjectiveDBALProvider
 	event.QueueProvider
 	NodeServiceProvider
 	ObjectiveServiceProvider
@@ -31,6 +29,7 @@ type DependenciesProvider interface {
 	PermissionServiceProvider
 	DataManagerServiceProvider
 	ComputeTaskServiceProvider
+	ModelServiceProvider
 }
 
 // Provider is the central part of the dependency injection pattern.
@@ -48,6 +47,7 @@ type Provider struct {
 	algo        AlgoAPI
 	datamanager DataManagerAPI
 	computeTask ComputeTaskAPI
+	model       ModelAPI
 }
 
 // NewProvider return an instance of Provider based on given persistence layer.
@@ -82,6 +82,11 @@ func (sc *Provider) GetAlgoDBAL() persistence.AlgoDBAL {
 
 // GetComputeTaskDBAL returns the database abstraction layer for Tasks
 func (sc *Provider) GetComputeTaskDBAL() persistence.ComputeTaskDBAL {
+	return sc.dbal
+}
+
+// GetModelDBAL returns the database abstraction layer for Tasks
+func (sc *Provider) GetModelDBAL() persistence.ModelDBAL {
 	return sc.dbal
 }
 
@@ -151,4 +156,13 @@ func (sc *Provider) GetComputeTaskService() ComputeTaskAPI {
 		sc.computeTask = NewComputeTaskService(sc)
 	}
 	return sc.computeTask
+}
+
+// GetModelService returns a ModelAPI instance.
+// The service will be instanciated if needed.
+func (sc *Provider) GetModelService() ModelAPI {
+	if sc.model == nil {
+		sc.model = NewModelService(sc)
+	}
+	return sc.model
 }

@@ -58,6 +58,7 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 	asset.RegisterAlgoServiceServer(server, NewAlgoServer())
 	asset.RegisterDataManagerServiceServer(server, NewDataManagerServer())
 	asset.RegisterComputeTaskServiceServer(server, NewComputeTaskServer())
+	asset.RegisterModelServiceServer(server, NewModelServer())
 
 	return &AppServer{
 		grpc: server,

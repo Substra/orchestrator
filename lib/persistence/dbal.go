@@ -102,4 +102,5 @@ type DBAL interface {
 	AlgoDBAL
 	DataManagerDBAL
 	ComputeTaskDBAL
+	ModelDBAL
 }

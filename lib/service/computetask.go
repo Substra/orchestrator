@@ -223,9 +223,6 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 		return err
 	}
 
-	// TODO: check parent models and type consistency (trunk = composite or aggregate)
-	log.Error("TODO check parent models")
-
 	taskData := &asset.CompositeTrainTaskData{
 		DataManagerKey:   datamanager.Key,
 		DataSampleKeys:   specificInput.DataSampleKeys,
@@ -350,9 +347,6 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 
 		certified = input.DataManagerKey == objective.DataManagerKey && utils.IsEqual(input.DataSampleKeys, objective.DataSampleKeys)
 	}
-
-	// TODO: get in model from parent
-	log.Error("TODO get models from parent")
 
 	taskData := &asset.TestTaskData{
 		DataManagerKey: dataManagerKey,

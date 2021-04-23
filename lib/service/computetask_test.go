@@ -155,7 +155,6 @@ func TestRegisterTrainTask(t *testing.T) {
 			Train: &asset.TrainTaskData{
 				DataManagerKey:   dataManagerKey,
 				DataSampleKeys:   dataSampleKeys,
-				ModelKey:         "",
 				ModelPermissions: modelPerms,
 			},
 		},

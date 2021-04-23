@@ -10,6 +10,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.4 // indirect
+	github.com/google/uuid v1.2.0 // indirect
 	github.com/hyperledger/fabric-chaincode-go v0.0.0-20200728190242-9b3ae92d8664
 	github.com/hyperledger/fabric-contract-api-go v1.1.2-0.20210104111150-d852efd3f6af
 	github.com/hyperledger/fabric-protos-go v0.0.0-20200917184523-71c4060efc42

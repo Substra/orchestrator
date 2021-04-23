@@ -19,62 +19,12 @@
 package e2e
 
 import (
-	"context"
 	"flag"
-	"log"
-	"net"
 	"os"
 	"testing"
-
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/standalone"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/test/bufconn"
 )
 
-const bufSize = 1024 * 1024
-
-type testApp struct {
-	runnable common.Runnable
-	listener *bufconn.Listener
-}
-
-func newTestApp() *testApp {
-	dbURL := os.Getenv("DATABASE_URL")
-	if dbURL == "" {
-		log.Fatal("Missing DATABASE_URL env var")
-	}
-
-	rabbitDSN := os.Getenv("RABBITMQ_DSN")
-	if rabbitDSN == "" {
-		log.Fatal("Missing RABBITMQ_DSN")
-	}
-
-	server, err := standalone.GetServer(dbURL, rabbitDSN, nil)
-	if err != nil {
-		log.Fatalf("Cannot initialize test server: %s", err.Error())
-	}
-
-	return &testApp{
-		runnable: server,
-		listener: bufconn.Listen(bufSize),
-	}
-}
-
-func (a *testApp) listen() {
-	go func() {
-		if err := a.runnable.GetGrpcServer().Serve(a.listener); err != nil {
-			log.Fatalf("failed to listen: %s", err.Error())
-		}
-	}()
-}
-
-func (a *testApp) getDialer(context.Context, string) (net.Conn, error) {
-	return a.listener.Dial()
-}
-
+// orchestration app, see harness.go for more details
 var app *testApp
 
 func TestMain(m *testing.M) {
@@ -93,23 +43,35 @@ func TestMain(m *testing.M) {
 	os.Exit(ret)
 }
 
-func TestRegisterNode(t *testing.T) {
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(app.getDialer), grpc.WithInsecure())
+// This is a test scenario: it will run all steps in order
+func TestTrainTaskLifecycle(t *testing.T) {
+	appClient, err := newAppClient("MyOrg1Test", "test-train-task-lifecycle")
 	if err != nil {
-		t.Errorf("Failed to dial bufnet: %v", err)
+		t.Error(err)
 	}
-	defer conn.Close()
+	defer appClient.Close()
 
-	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", "MyOrg1MSP", "channel", "mychannel")
+	t.Run("register node", appClient.registerNode)
+	t.Run("register algo", appClient.registerAlgo)
+	t.Run("register datamanager", appClient.registerDataManager)
+	t.Run("register datasample", appClient.registerDataSample)
+	t.Run("register train task", appClient.registerTrainTask)
+	t.Run("register child task", appClient.registerChildTask)
+	t.Run("start train task", appClient.startTrainTask)
+}
 
-	client := asset.NewNodeServiceClient(conn)
-	resp, err := client.RegisterNode(ctx, &asset.NodeRegistrationParam{})
+func TestRegisterModel(t *testing.T) {
+	appClient, err := newAppClient("MyOrg1Test", "test-register-model")
 	if err != nil {
-		t.Errorf("RegisterNode failed: %v", err)
+		t.Error(err)
 	}
+	defer appClient.Close()
 
-	if resp.GetId() != "MyOrg1MSP" {
-		t.Errorf("Unexpected node ID: %s", resp.GetId())
-	}
+	t.Run("register node", appClient.registerNode)
+	t.Run("register algo", appClient.registerAlgo)
+	t.Run("register datamanager", appClient.registerDataManager)
+	t.Run("register datasample", appClient.registerDataSample)
+	t.Run("register train task", appClient.registerTrainTask)
+	t.Run("start train task", appClient.startTrainTask)
+	t.Run("register model", appClient.registerModel)
 }

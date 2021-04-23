@@ -18,24 +18,8 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/chaincode/algo"
-	"github.com/owkin/orchestrator/chaincode/computetask"
-	"github.com/owkin/orchestrator/chaincode/datamanager"
-	"github.com/owkin/orchestrator/chaincode/datasample"
-	"github.com/owkin/orchestrator/chaincode/node"
-	"github.com/owkin/orchestrator/chaincode/objective"
 	"github.com/owkin/orchestrator/utils"
 )
-
-// Static list of all contracts
-var allContracts []contractapi.ContractInterface = []contractapi.ContractInterface{
-	node.NewSmartContract(),
-	objective.NewSmartContract(),
-	datasample.NewSmartContract(),
-	algo.NewSmartContract(),
-	datamanager.NewSmartContract(),
-	computetask.NewSmartContract(),
-}
 
 // Type definitions
 
@@ -73,8 +57,7 @@ func (c *ContractCollection) IsEvaluateMethod(method string) bool {
 
 func buildAllEvaluateTransactions() []string {
 	res := make([]string, 0)
-	allContracts := allContracts
-	for _, c := range allContracts {
+	for _, c := range AllContracts {
 		contract := c.GetName()
 		if eci, ok := c.(contractapi.EvaluationContractInterface); ok {
 			for _, method := range eci.GetEvaluateTransactions() {

@@ -198,3 +198,23 @@ func (m *MockDBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQue
 	args := m.Called(p, filter)
 	return args.Get(0).([]*asset.ComputeTask), args.String(1), args.Error(2)
 }
+
+func (m *MockDBAL) ModelExists(key string) (bool, error) {
+	args := m.Called(key)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockDBAL) GetModel(key string) (*asset.Model, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.Model), args.Error(1)
+}
+
+func (m *MockDBAL) GetTaskModels(key string) ([]*asset.Model, error) {
+	args := m.Called(key)
+	return args.Get(0).([]*asset.Model), args.Error(1)
+}
+
+func (m *MockDBAL) AddModel(model *asset.Model) error {
+	args := m.Called(model)
+	return args.Error(0)
+}

@@ -91,17 +91,34 @@ func (d *DataManager) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the Algo.
+// Simply returns the JSON-encoded representation of the ComputeTask.
 func (a *ComputeTask) Value() (driver.Value, error) {
 	return protojson.Marshal(a)
 }
 
 // Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the Algo.
+// Simply decodes JSON into the ComputeTask.
 func (a *ComputeTask) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf("cannot scan compute task: %w", errors.ErrByteArray)
+	}
+
+	return protojson.Unmarshal(b, a)
+}
+
+// Value implements the driver.Valuer interface.
+// Simply returns the JSON-encoded representation of the Model.
+func (a *Model) Value() (driver.Value, error) {
+	return protojson.Marshal(a)
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes JSON into the Model.
+func (a *Model) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot scan model: %w", errors.ErrByteArray)
 	}
 
 	return protojson.Unmarshal(b, a)

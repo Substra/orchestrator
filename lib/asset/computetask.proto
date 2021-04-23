@@ -81,7 +81,6 @@ message NewComputeTask {
 message TrainTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  string model_key = 3; // mutable
   Permissions model_permissions = 4;
 }
 
@@ -108,8 +107,6 @@ message NewTestTaskData {
 message CompositeTrainTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  string head_model_key = 3; // mutable
-  string trunk_model_key = 4; // mutable
   Permissions head_permissions = 5;
   Permissions trunk_permissions = 6;
 }
@@ -121,21 +118,12 @@ message NewCompositeTrainTaskData {
 }
 
 message AggregateTrainTaskData {
-  string model_key = 1; // mutable
   Permissions model_permissions = 2;
   string worker = 3;
 }
 
 message NewAggregateTrainTaskData {
   string worker = 2;
-}
-
-message Model {
-  string key = 1;
-  string compute_task_key = 2;
-  Addressable address = 3;
-  Permissions permissions = 4 ;
-  // string owner = 5;  TODO: in case we remove the storage address
 }
 
 message TaskQueryFilter {

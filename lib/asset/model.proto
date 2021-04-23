@@ -1,0 +1,55 @@
+// Copyright 2021 Owkin Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package orchestrator;
+
+option go_package = "github.com/owkin/orchestrator/lib/asset";
+
+import "common.proto";
+
+enum ModelCategory {
+  MODEL_UNKNOWN = 0;
+  MODEL_SIMPLE = 1;
+  MODEL_HEAD = 2;
+  MODEL_TRUNK = 3;
+}
+
+message Model {
+  string key = 1;
+  ModelCategory category = 2;
+  string compute_task_key = 3;
+  Addressable address = 4;
+}
+
+message NewModel {
+  string key = 1;
+  ModelCategory category = 2;
+  string compute_task_key = 3;
+  Addressable address = 4;
+}
+
+message GetComputeTaskModelsParam {
+  string compute_task_key = 1;
+}
+
+message GetComputeTaskModelsResponse {
+  repeated Model models = 1;
+}
+
+service ModelService {
+  rpc RegisterModel(NewModel) returns (Model) {}
+  rpc GetComputeTaskModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {}
+}

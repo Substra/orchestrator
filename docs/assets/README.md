@@ -6,3 +6,4 @@ Asset list:
 - [ComputeTask](./computetask.md)
 - [DataManager](./datamanager.md)
 - [DataSamples](./datasamples.md)
+- [Model](./model.md)

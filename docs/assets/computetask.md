@@ -42,3 +42,6 @@ This is done in a recursive way: a failed or canceled task propagate a "CANCELED
 
 In case of success (task DONE), this is a bit more convoluted since we need to iterate over the children
 and all their parents to update them to TODO if all the parents are DONE.
+
+A task may produces one or more [models](./model.md), they can only be registered when the task in in DOING.
+This is to ensure that when a task starts (switch to DOING), all its inputs are available.

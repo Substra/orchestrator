@@ -63,6 +63,12 @@ func (m *MockServiceProvider) GetComputeTaskDBAL() persistence.ComputeTaskDBAL {
 	return args.Get(0).(persistence.ComputeTaskDBAL)
 }
 
+// GetComputeTaskDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetModelDBAL() persistence.ModelDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.ModelDBAL)
+}
+
 // GetEventQueue returns whatever value is passed
 func (m *MockServiceProvider) GetEventQueue() event.Queue {
 	args := m.Called()
@@ -109,6 +115,12 @@ func (m *MockServiceProvider) GetAlgoService() AlgoAPI {
 func (m *MockServiceProvider) GetComputeTaskService() ComputeTaskAPI {
 	args := m.Called()
 	return args.Get(0).(ComputeTaskAPI)
+}
+
+// GetModelService return whatever value is passed
+func (m *MockServiceProvider) GetModelService() ModelAPI {
+	args := m.Called()
+	return args.Get(0).(ModelAPI)
 }
 
 // MockNodeService is a mock implementing NodeAPI
@@ -337,4 +349,18 @@ func (m *MockComputeTaskService) GetTasks(p *common.Pagination, filter *asset.Ta
 func (m *MockComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string) error {
 	args := m.Called(key, action, reason)
 	return args.Error(0)
+}
+
+type MockModelService struct {
+	mock.Mock
+}
+
+func (m *MockModelService) RegisterModel(newModel *asset.NewModel, requester string) (*asset.Model, error) {
+	args := m.Called(newModel, requester)
+	return args.Get(0).(*asset.Model), args.Error(1)
+}
+
+func (m *MockModelService) GetTaskModels(key string) ([]*asset.Model, error) {
+	args := m.Called(key)
+	return args.Get(0).([]*asset.Model), args.Error(1)
 }

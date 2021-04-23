@@ -32,4 +32,6 @@ var (
 	ComputeTaskKind = "computetask"
 	// ComputePlanKind is the type of ComputePlan assets
 	ComputePlanKind = "computeplan"
+	// ModelKind is the type of Model assets
+	ModelKind = "model"
 )
