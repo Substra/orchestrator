@@ -99,9 +99,9 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 	return algo, err
 }
 
-// GetAlgo retrieves an algo by its ID
-func (s *AlgoService) GetAlgo(id string) (*asset.Algo, error) {
-	return s.GetAlgoDBAL().GetAlgo(id)
+// GetAlgo retrieves an algo by its key
+func (s *AlgoService) GetAlgo(key string) (*asset.Algo, error) {
+	return s.GetAlgoDBAL().GetAlgo(key)
 }
 
 // GetAlgos returns all stored algos

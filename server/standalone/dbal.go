@@ -124,8 +124,8 @@ func (d *DBAL) AddObjective(obj *asset.Objective) error {
 }
 
 // GetObjective implements persistence.ObjectiveDBAL
-func (d *DBAL) GetObjective(id string) (*asset.Objective, error) {
-	row := d.tx.QueryRow(`select "asset" from "objectives" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) GetObjective(key string) (*asset.Objective, error) {
+	row := d.tx.QueryRow(`select "asset" from "objectives" where id=$1 and channel=$2`, key, d.channel)
 
 	objective := new(asset.Objective)
 	err := row.Scan(&objective)
@@ -141,8 +141,8 @@ func (d *DBAL) GetObjective(id string) (*asset.Objective, error) {
 }
 
 // ObjectiveExists implements persistence.ObjectiveDBAL
-func (d *DBAL) ObjectiveExists(id string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "objectives" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) ObjectiveExists(key string) (bool, error) {
+	row := d.tx.QueryRow(`select count(id) from "objectives" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -203,8 +203,8 @@ func (d *DBAL) AddAlgo(algo *asset.Algo) error {
 }
 
 // GetAlgo implements persistence.AlgoDBAL
-func (d *DBAL) GetAlgo(id string) (*asset.Algo, error) {
-	row := d.tx.QueryRow(`select "asset" from "algos" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
+	row := d.tx.QueryRow(`select "asset" from "algos" where id=$1 and channel=$2`, key, d.channel)
 
 	algo := new(asset.Algo)
 	err := row.Scan(&algo)
@@ -281,8 +281,8 @@ func (d *DBAL) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Al
 }
 
 // AlgoExists implements persistence.ObjectiveDBAL
-func (d *DBAL) AlgoExists(id string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "algos" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) AlgoExists(key string) (bool, error) {
+	row := d.tx.QueryRow(`select count(id) from "algos" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)

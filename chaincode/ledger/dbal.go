@@ -424,15 +424,15 @@ func (db *DB) AddObjective(obj *asset.Objective) error {
 }
 
 // ObjectiveExists implements persistence.ObjectiveDBAL
-func (db *DB) ObjectiveExists(id string) (bool, error) {
-	return db.hasKey(asset.ObjectiveKind, id)
+func (db *DB) ObjectiveExists(key string) (bool, error) {
+	return db.hasKey(asset.ObjectiveKind, key)
 }
 
-// GetObjective retrieves an objective by its ID
-func (db *DB) GetObjective(id string) (*asset.Objective, error) {
+// GetObjective retrieves an objective by its key
+func (db *DB) GetObjective(key string) (*asset.Objective, error) {
 	o := asset.Objective{}
 
-	b, err := db.getState(asset.ObjectiveKind, id)
+	b, err := db.getState(asset.ObjectiveKind, key)
 	if err != nil {
 		return &o, err
 	}
@@ -493,11 +493,11 @@ func (db *DB) AddAlgo(algo *asset.Algo) error {
 	return nil
 }
 
-// GetAlgo retrieves an algo by its ID
-func (db *DB) GetAlgo(id string) (*asset.Algo, error) {
+// GetAlgo retrieves an algo by its key
+func (db *DB) GetAlgo(key string) (*asset.Algo, error) {
 	a := asset.Algo{}
 
-	b, err := db.getState(asset.AlgoKind, id)
+	b, err := db.getState(asset.AlgoKind, key)
 	if err != nil {
 		return &a, err
 	}
@@ -565,6 +565,6 @@ func (db *DB) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Alg
 }
 
 // AlgoExists implements persistence.ObjectiveDBAL
-func (db *DB) AlgoExists(id string) (bool, error) {
-	return db.hasKey(asset.AlgoKind, id)
+func (db *DB) AlgoExists(key string) (bool, error) {
+	return db.hasKey(asset.AlgoKind, key)
 }

@@ -57,8 +57,8 @@ func (m *MockDBAL) AddObjective(obj *asset.Objective) error {
 }
 
 // GetObjective is a mock
-func (m *MockDBAL) GetObjective(id string) (*asset.Objective, error) {
-	args := m.Called(id)
+func (m *MockDBAL) GetObjective(key string) (*asset.Objective, error) {
+	args := m.Called(key)
 	return args.Get(0).(*asset.Objective), args.Error(1)
 }
 
@@ -69,8 +69,8 @@ func (m *MockDBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, comm
 }
 
 // ObjectiveExists is a mock
-func (m *MockDBAL) ObjectiveExists(id string) (bool, error) {
-	args := m.Called(id)
+func (m *MockDBAL) ObjectiveExists(key string) (bool, error) {
+	args := m.Called(key)
 	return args.Bool(0), args.Error(1)
 }
 
@@ -87,8 +87,8 @@ func (m *MockDBAL) UpdateDataSample(dataSample *asset.DataSample) error {
 }
 
 // GetDataSample is a mock
-func (m *MockDBAL) GetDataSample(id string) (*asset.DataSample, error) {
-	args := m.Called(id)
+func (m *MockDBAL) GetDataSample(key string) (*asset.DataSample, error) {
+	args := m.Called(key)
 	return args.Get(0).(*asset.DataSample), args.Error(1)
 }
 
@@ -99,8 +99,8 @@ func (m *MockDBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, co
 }
 
 // DataSampleExists is a mock
-func (m *MockDBAL) DataSampleExists(id string) (bool, error) {
-	args := m.Called(id)
+func (m *MockDBAL) DataSampleExists(key string) (bool, error) {
+	args := m.Called(key)
 	return args.Bool(0), args.Error(1)
 }
 
@@ -111,8 +111,8 @@ func (m *MockDBAL) AddAlgo(obj *asset.Algo) error {
 }
 
 // GetAlgo is a mock
-func (m *MockDBAL) GetAlgo(id string) (*asset.Algo, error) {
-	args := m.Called(id)
+func (m *MockDBAL) GetAlgo(key string) (*asset.Algo, error) {
+	args := m.Called(key)
 	return args.Get(0).(*asset.Algo), args.Error(1)
 }
 
@@ -123,8 +123,8 @@ func (m *MockDBAL) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asse
 }
 
 // AlgoExists is a mock
-func (m *MockDBAL) AlgoExists(id string) (bool, error) {
-	args := m.Called(id)
+func (m *MockDBAL) AlgoExists(key string) (bool, error) {
+	args := m.Called(key)
 	return args.Bool(0), args.Error(1)
 }
 
@@ -141,8 +141,8 @@ func (m *MockDBAL) UpdateDataManager(datamanager *asset.DataManager) error {
 }
 
 // GetDataManager is a mock
-func (m *MockDBAL) GetDataManager(id string) (*asset.DataManager, error) {
-	args := m.Called(id)
+func (m *MockDBAL) GetDataManager(key string) (*asset.DataManager, error) {
+	args := m.Called(key)
 	return args.Get(0).(*asset.DataManager), args.Error(1)
 }
 
@@ -153,8 +153,8 @@ func (m *MockDBAL) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, 
 }
 
 // DataManagerExists is a mock
-func (m *MockDBAL) DataManagerExists(id string) (bool, error) {
-	args := m.Called(id)
+func (m *MockDBAL) DataManagerExists(key string) (bool, error) {
+	args := m.Called(key)
 	return args.Bool(0), args.Error(1)
 }
 
@@ -165,20 +165,20 @@ func (m *MockDBAL) GetDataset(id string) (*asset.Dataset, error) {
 }
 
 // ComputeTaskExists is a mock
-func (m *MockDBAL) ComputeTaskExists(id string) (bool, error) {
-	args := m.Called(id)
+func (m *MockDBAL) ComputeTaskExists(key string) (bool, error) {
+	args := m.Called(key)
 	return args.Bool(0), args.Error(1)
 }
 
 // GetComputeTask is a mock
-func (m *MockDBAL) GetComputeTask(id string) (*asset.ComputeTask, error) {
-	args := m.Called(id)
+func (m *MockDBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
+	args := m.Called(key)
 	return args.Get(0).(*asset.ComputeTask), args.Error(1)
 }
 
 // GetComputeTaskChildren is a mock
-func (m *MockDBAL) GetComputeTaskChildren(id string) ([]*asset.ComputeTask, error) {
-	args := m.Called(id)
+func (m *MockDBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
+	args := m.Called(key)
 	return args.Get(0).([]*asset.ComputeTask), args.Error(1)
 }
 

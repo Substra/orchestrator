@@ -38,35 +38,35 @@ type NodeDBAL interface {
 // ObjectiveDBAL is the database abstraction layer for Objectives
 type ObjectiveDBAL interface {
 	AddObjective(obj *asset.Objective) error
-	GetObjective(id string) (*asset.Objective, error)
+	GetObjective(key string) (*asset.Objective, error)
 	GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
-	ObjectiveExists(id string) (bool, error)
+	ObjectiveExists(key string) (bool, error)
 }
 
 // DataSampleDBAL is the database abstraction layer for DataSamples
 type DataSampleDBAL interface {
 	AddDataSample(dataSample *asset.DataSample) error
 	UpdateDataSample(dataSample *asset.DataSample) error
-	GetDataSample(id string) (*asset.DataSample, error)
+	GetDataSample(key string) (*asset.DataSample, error)
 	GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
-	DataSampleExists(id string) (bool, error)
+	DataSampleExists(key string) (bool, error)
 }
 
 // AlgoDBAL is the database abstraction layer for Algos
 type AlgoDBAL interface {
 	AddAlgo(obj *asset.Algo) error
-	GetAlgo(id string) (*asset.Algo, error)
+	GetAlgo(key string) (*asset.Algo, error)
 	GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
-	AlgoExists(id string) (bool, error)
+	AlgoExists(key string) (bool, error)
 }
 
 // DataManagerDBAL is the database abstraction layer for DataManagers
 type DataManagerDBAL interface {
 	AddDataManager(datamanager *asset.DataManager) error
 	UpdateDataManager(datamanager *asset.DataManager) error
-	GetDataManager(id string) (*asset.DataManager, error)
+	GetDataManager(key string) (*asset.DataManager, error)
 	GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
-	DataManagerExists(id string) (bool, error)
+	DataManagerExists(key string) (bool, error)
 }
 
 // DatasetDBAL is the database abstraction layer for Datasets

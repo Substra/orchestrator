@@ -205,14 +205,14 @@ func (m *MockObjectiveService) GetObjectives(p *common.Pagination) ([]*asset.Obj
 }
 
 // ObjectiveExists returns whatever value is passed
-func (m *MockObjectiveService) ObjectiveExists(id string) (bool, error) {
-	args := m.Called(id)
+func (m *MockObjectiveService) ObjectiveExists(key string) (bool, error) {
+	args := m.Called(key)
 	return args.Bool(0), args.Error(1)
 }
 
 // CanDownload returns whatever value is passed
-func (m *MockObjectiveService) CanDownload(id string, requester string) (bool, error) {
-	args := m.Called(id, requester)
+func (m *MockObjectiveService) CanDownload(key string, requester string) (bool, error) {
+	args := m.Called(key, requester)
 	return args.Bool(0), args.Error(1)
 }
 
@@ -298,8 +298,8 @@ func (m *MockDataManagerService) UpdateDataManager(datamanager *asset.DataManage
 }
 
 // GetDataManager returns whatever value is passed
-func (m *MockDataManagerService) GetDataManager(id string) (*asset.DataManager, error) {
-	args := m.Called(id)
+func (m *MockDataManagerService) GetDataManager(key string) (*asset.DataManager, error) {
+	args := m.Called(key)
 	return args.Get(0).(*asset.DataManager), args.Error(1)
 }
 

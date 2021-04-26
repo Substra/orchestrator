@@ -38,8 +38,8 @@ func (d *DBAL) UpdateComputeTask(t *asset.ComputeTask) error {
 }
 
 // ComputeTaskExists returns true if a task with the given ID exists
-func (d *DBAL) ComputeTaskExists(id string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "compute_tasks" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) ComputeTaskExists(key string) (bool, error) {
+	row := d.tx.QueryRow(`select count(id) from "compute_tasks" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)

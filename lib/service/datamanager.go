@@ -29,7 +29,7 @@ import (
 type DataManagerAPI interface {
 	RegisterDataManager(datamanager *asset.NewDataManager, owner string) error
 	UpdateDataManager(datamanager *asset.DataManagerUpdateParam, requester string) error
-	GetDataManager(id string) (*asset.DataManager, error)
+	GetDataManager(key string) (*asset.DataManager, error)
 	GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	CheckOwner(keys []string, requester string) error
 }
@@ -163,9 +163,9 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 	return s.GetDataManagerDBAL().UpdateDataManager(datamanager)
 }
 
-// GetDataManager retrieves a single DataManager by its ID
-func (s *DataManagerService) GetDataManager(id string) (*asset.DataManager, error) {
-	return s.GetDataManagerDBAL().GetDataManager(id)
+// GetDataManager retrieves a single DataManager by its key
+func (s *DataManagerService) GetDataManager(key string) (*asset.DataManager, error) {
+	return s.GetDataManagerDBAL().GetDataManager(key)
 }
 
 // GetDataManagers returns all stored DataManagers
@@ -188,10 +188,10 @@ func (s *DataManagerService) CheckOwner(keys []string, requester string) error {
 }
 
 // isOwner validates that the requester owns the asset
-func (s *DataManagerService) isOwner(id string, requester string) (bool, error) {
-	dm, err := s.GetDataManagerDBAL().GetDataManager(id)
+func (s *DataManagerService) isOwner(key string, requester string) (bool, error) {
+	dm, err := s.GetDataManagerDBAL().GetDataManager(key)
 	if err != nil {
-		return false, fmt.Errorf("provided datamanager not found: %w datamanager: %s", orchestrationErrors.ErrNotFound, id)
+		return false, fmt.Errorf("provided datamanager not found: %w datamanager: %s", orchestrationErrors.ErrNotFound, key)
 	}
 
 	return dm.GetOwner() == requester, nil

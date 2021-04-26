@@ -85,15 +85,15 @@ func (db *DB) UpdateDataManager(datamanager *asset.DataManager) error {
 }
 
 // DataManagerExists implements persistence.DataManagerDBAL
-func (db *DB) DataManagerExists(id string) (bool, error) {
-	return db.hasKey(asset.DataManagerKind, id)
+func (db *DB) DataManagerExists(key string) (bool, error) {
+	return db.hasKey(asset.DataManagerKind, key)
 }
 
 // GetDataManager implements persistence.DataManagerDBAL
-func (db *DB) GetDataManager(id string) (*asset.DataManager, error) {
+func (db *DB) GetDataManager(key string) (*asset.DataManager, error) {
 	d := asset.DataManager{}
 
-	b, err := db.getState(asset.DataManagerKind, id)
+	b, err := db.getState(asset.DataManagerKind, key)
 	if err != nil {
 		return nil, err
 	}

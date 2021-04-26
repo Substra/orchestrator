@@ -26,8 +26,8 @@ import (
 )
 
 // DataSampleExists implements persistence.DataSampleDBAL
-func (db *DB) DataSampleExists(id string) (bool, error) {
-	return db.hasKey(asset.DataSampleKind, id)
+func (db *DB) DataSampleExists(key string) (bool, error) {
+	return db.hasKey(asset.DataSampleKind, key)
 }
 
 // AddDataSample implements persistence.DataSampleDBAL
@@ -105,10 +105,10 @@ func (db *DB) UpdateDataSample(dataSample *asset.DataSample) error {
 }
 
 // GetDataSample implements persistence.DataSampleDBAL
-func (db *DB) GetDataSample(id string) (*asset.DataSample, error) {
+func (db *DB) GetDataSample(key string) (*asset.DataSample, error) {
 	o := asset.DataSample{}
 
-	b, err := db.getState(asset.DataSampleKind, id)
+	b, err := db.getState(asset.DataSampleKind, key)
 
 	if err != nil {
 		return nil, err

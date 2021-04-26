@@ -26,8 +26,8 @@ import (
 )
 
 // DataSampleExists implements persistence.DataSampleDBAL
-func (d *DBAL) DataSampleExists(id string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "datasamples" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) DataSampleExists(key string) (bool, error) {
+	row := d.tx.QueryRow(`select count(id) from "datasamples" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -50,8 +50,8 @@ func (d *DBAL) UpdateDataSample(dataSample *asset.DataSample) error {
 }
 
 // GetDataSample implements persistence.DataSample
-func (d *DBAL) GetDataSample(id string) (*asset.DataSample, error) {
-	row := d.tx.QueryRow(`select "asset" from "datasamples" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
+	row := d.tx.QueryRow(`select "asset" from "datasamples" where id=$1 and channel=$2`, key, d.channel)
 
 	datasample := new(asset.DataSample)
 	err := row.Scan(&datasample)

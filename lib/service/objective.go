@@ -31,8 +31,8 @@ type ObjectiveAPI interface {
 	RegisterObjective(objective *asset.NewObjective, owner string) (*asset.Objective, error)
 	GetObjective(string) (*asset.Objective, error)
 	GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
-	ObjectiveExists(id string) (bool, error)
-	CanDownload(id string, requester string) (bool, error)
+	ObjectiveExists(key string) (bool, error)
+	CanDownload(key string, requester string) (bool, error)
 }
 
 // ObjectiveServiceProvider defines an object able to provide an ObjectiveAPI instance
@@ -132,9 +132,9 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 	return objective, err
 }
 
-// GetObjective retrieves an objective by its ID
-func (s *ObjectiveService) GetObjective(id string) (*asset.Objective, error) {
-	return s.GetObjectiveDBAL().GetObjective(id)
+// GetObjective retrieves an objective by its key
+func (s *ObjectiveService) GetObjective(key string) (*asset.Objective, error) {
+	return s.GetObjectiveDBAL().GetObjective(key)
 }
 
 // GetObjectives returns all stored objectives
@@ -143,13 +143,13 @@ func (s *ObjectiveService) GetObjectives(p *common.Pagination) ([]*asset.Objecti
 }
 
 // ObjectiveExists checks if an objective with the provided key exists in the persistence layer
-func (s *ObjectiveService) ObjectiveExists(id string) (bool, error) {
-	return s.GetObjectiveDBAL().ObjectiveExists(id)
+func (s *ObjectiveService) ObjectiveExists(key string) (bool, error) {
+	return s.GetObjectiveDBAL().ObjectiveExists(key)
 }
 
 // CanDownload checks if the requester can download the objective corresponding to the provided key
-func (s *ObjectiveService) CanDownload(id string, requester string) (bool, error) {
-	obj, err := s.GetObjective(id)
+func (s *ObjectiveService) CanDownload(key string, requester string) (bool, error) {
+	obj, err := s.GetObjective(key)
 
 	if err != nil {
 		return false, err

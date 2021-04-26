@@ -40,8 +40,8 @@ func (d *DBAL) UpdateDataManager(datamanager *asset.DataManager) error {
 }
 
 // DataManagerExists implements persistence.DataManagerDBAL
-func (d *DBAL) DataManagerExists(id string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "datamanagers" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) DataManagerExists(key string) (bool, error) {
+	row := d.tx.QueryRow(`select count(id) from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -50,8 +50,8 @@ func (d *DBAL) DataManagerExists(id string) (bool, error) {
 }
 
 // GetDataManager implements persistence.DataManagerDBAL
-func (d *DBAL) GetDataManager(id string) (*asset.DataManager, error) {
-	row := d.tx.QueryRow(`select "asset" from "datamanagers" where id=$1 and channel=$2`, id, d.channel)
+func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
+	row := d.tx.QueryRow(`select "asset" from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
 
 	datamanager := new(asset.DataManager)
 	err := row.Scan(&datamanager)

@@ -125,9 +125,9 @@ func (db *DB) UpdateComputeTask(task *asset.ComputeTask) error {
 	return nil
 }
 
-// ComputeTaskExists returns true if a task with the given ID exists
-func (db *DB) ComputeTaskExists(id string) (bool, error) {
-	exists, err := db.hasKey(asset.ComputeTaskKind, id)
+// ComputeTaskExists returns true if a task with the given key exists
+func (db *DB) ComputeTaskExists(key string) (bool, error) {
+	exists, err := db.hasKey(asset.ComputeTaskKind, key)
 	if err != nil {
 		return false, err
 	}
@@ -135,7 +135,7 @@ func (db *DB) ComputeTaskExists(id string) (bool, error) {
 	return exists, nil
 }
 
-// GetComputeTasks returns all compute tasks identified by the provided IDs.
+// GetComputeTasks returns all compute tasks identified by the provided keys.
 // It should not be used where pagination is expected!
 func (db *DB) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 	tasks := make([]*asset.ComputeTask, 0, len(keys))
