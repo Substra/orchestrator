@@ -102,6 +102,16 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 		return nil, err
 	}
 
+	configBackend, err := ci.config()
+	if err != nil {
+		return nil, err
+	}
+
+	peers, err := extractChannelLocalPeers(configBackend, channel)
+	if err != nil {
+		return nil, err
+	}
+
 	defer gw.Close()
 
 	network, err := gw.GetNetwork(channel)
@@ -111,7 +121,7 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 
 	contract := network.GetContract(chaincode)
 	checker := contracts.NewContractCollection()
-	invocator := NewContractInvocator(contract, checker)
+	invocator := NewContractInvocator(contract, checker, peers)
 
 	newCtx := context.WithValue(ctx, ctxInvocatorKey, invocator)
 	return handler(newCtx, req)
@@ -131,4 +141,26 @@ func ExtractInvocator(ctx context.Context) (Invocator, error) {
 		return nil, errors.New("Invocator not found in context")
 	}
 	return invocator, nil
+}
+
+// ExtractChannelLocalPeers retrieves the local peers present in the provided channel from the config file
+func extractChannelLocalPeers(configBackend []core.ConfigBackend, channel string) ([]string, error) {
+	if len(configBackend) != 1 {
+		return nil, errors.New("invalid config file")
+	}
+
+	config := configBackend[0]
+	channelPeers, _ := config.Lookup(fmt.Sprintf("channels.%s.peers", channel))
+
+	peersMap, ok := channelPeers.(map[string]interface{})
+
+	if !ok {
+		return nil, errors.New("invalid config structure")
+	}
+
+	peers := make([]string, 0, len(peersMap))
+	for k := range peersMap {
+		peers = append(peers, k)
+	}
+	return peers, nil
 }

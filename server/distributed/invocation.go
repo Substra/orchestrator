@@ -45,13 +45,14 @@ type Invocator interface {
 
 // ContractInvocator implements the Invocator interface.
 type ContractInvocator struct {
-	contract GatewayContract
-	checker  contracts.TransactionChecker
+	contract      GatewayContract
+	checker       contracts.TransactionChecker
+	evaluatePeers []string
 }
 
 // NewContractInvocator creates an Invocator based on given smart contract.
-func NewContractInvocator(c GatewayContract, checker contracts.TransactionChecker) *ContractInvocator {
-	return &ContractInvocator{contract: c, checker: checker}
+func NewContractInvocator(c GatewayContract, checker contracts.TransactionChecker, evaluatePeers []string) *ContractInvocator {
+	return &ContractInvocator{contract: c, checker: checker, evaluatePeers: evaluatePeers}
 }
 
 // Call will evaluate or invoke a transaction to the ledger, deserializing its result in the output parameter.
@@ -81,7 +82,14 @@ func (i *ContractInvocator) Call(method string, param protoreflect.ProtoMessage,
 	var data []byte
 
 	if isEvaluate {
-		data, err = i.contract.EvaluateTransaction(method, string(args))
+		var tx *gateway.Transaction
+		tx, err = i.contract.CreateTransaction(method, gateway.WithEndorsingPeers(i.evaluatePeers...))
+
+		if err != nil {
+			return err
+		}
+
+		data, err = tx.Evaluate(string(args))
 	} else {
 		data, err = i.contract.SubmitTransaction(method, string(args))
 	}

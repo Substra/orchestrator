@@ -80,7 +80,7 @@ func TestContractInvocator(t *testing.T) {
 	contract := &gateway.Contract{}
 	checker := &mockContractCollection{}
 
-	invocator := NewContractInvocator(contract, checker)
+	invocator := NewContractInvocator(contract, checker, []string{})
 
 	assert.Implementsf(t, (*Invocator)(nil), invocator, "ContractInvocator should implements Invocator")
 }
@@ -89,7 +89,7 @@ func TestParamWrapping(t *testing.T) {
 	contract := &mockContract{}
 	checker := &mockContractCollection{}
 
-	invocator := NewContractInvocator(contract, checker)
+	invocator := NewContractInvocator(contract, checker, []string{})
 
 	// Invocation param is a protoreflect.ProtoMessage
 	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
@@ -110,8 +110,10 @@ func TestParamWrapping(t *testing.T) {
 	serializedResponse, err := json.Marshal(wrappedResponse)
 	assert.NoError(t, err)
 
-	checker.On("IsEvaluateMethod", "org.substra.objective:QueryObjectives").Return(true)
-	contract.On("EvaluateTransaction", "org.substra.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
+	// Here we use a submit where it should be an evaluate because evaluation is impossible to test due to limitations
+	// from fabric.
+	checker.On("IsEvaluateMethod", "org.substra.objective:QueryObjectives").Return(false)
+	contract.On("SubmitTransaction", "org.substra.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
 
 	output := &asset.ObjectivesQueryResponse{}
 	err = invocator.Call("org.substra.objective:QueryObjectives", param, output)
@@ -124,7 +126,7 @@ func TestNoOutput(t *testing.T) {
 	contract := &mockContract{}
 	checker := &mockContractCollection{}
 
-	invocator := NewContractInvocator(contract, checker)
+	invocator := NewContractInvocator(contract, checker, []string{})
 
 	expectedInput := getEmptyExpectedInput(t)
 
@@ -135,25 +137,11 @@ func TestNoOutput(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestEvaluate(t *testing.T) {
-	contract := &mockContract{}
-	checker := &mockContractCollection{}
-
-	invocator := NewContractInvocator(contract, checker)
-	expectedInput := getEmptyExpectedInput(t)
-
-	checker.On("IsEvaluateMethod", "org.substra.some_contract:SomeMethod").Return(true)
-	contract.On("EvaluateTransaction", "org.substra.some_contract:SomeMethod", expectedInput).Return([]byte{}, nil)
-
-	err := invocator.Call("org.substra.some_contract:SomeMethod", nil, nil)
-	assert.NoError(t, err)
-}
-
 func TestInvoke(t *testing.T) {
 	contract := &mockContract{}
 	checker := &mockContractCollection{}
 
-	invocator := NewContractInvocator(contract, checker)
+	invocator := NewContractInvocator(contract, checker, []string{})
 	expectedInput := getEmptyExpectedInput(t)
 
 	checker.On("IsEvaluateMethod", "org.substra.some_contract:SomeMethod").Return(false)
