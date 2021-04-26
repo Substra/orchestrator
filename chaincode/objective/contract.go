@@ -17,6 +17,7 @@ package objective
 import (
 	"errors"
 
+	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
@@ -27,6 +28,7 @@ import (
 // SmartContract manages objectives
 type SmartContract struct {
 	contractapi.Contract
+	logger log.Entry
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -36,6 +38,8 @@ func NewSmartContract() *SmartContract {
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
+
+	contract.logger = log.WithField("contract", contract.Name)
 
 	return contract
 }
@@ -48,20 +52,24 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper
 	params := new(asset.NewObjective)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
 		return nil, err
 	}
 
 	obj, err := service.RegisterObjective(params, owner)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to register objective")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(obj)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -74,15 +82,18 @@ func (s *SmartContract) QueryObjective(ctx ledger.TransactionContext, wrapper *c
 	params := new(asset.ObjectiveQueryParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	obj, err := service.GetObjective(params.GetKey())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to query objective")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(obj)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -95,11 +106,13 @@ func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *
 	params := new(asset.ObjectivesQueryParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	objectives, nextPage, err := service.GetObjectives(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
+		s.logger.WithError(err).Error("failed to query objectives")
 		return nil, err
 	}
 
@@ -109,6 +122,7 @@ func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *
 	}
 	wrapped, err := communication.Wrap(resp)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil

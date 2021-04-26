@@ -15,6 +15,7 @@
 package node
 
 import (
+	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
@@ -24,6 +25,7 @@ import (
 // SmartContract manages nodes
 type SmartContract struct {
 	contractapi.Contract
+	logger log.Entry
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -33,6 +35,8 @@ func NewSmartContract() *SmartContract {
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
+
+	contract.logger = log.WithField("contract", contract.Name)
 
 	return contract
 }
@@ -46,6 +50,7 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*communication.Wrapper, error) {
 	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
 		return nil, err
 	}
 
@@ -53,10 +58,12 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*communicat
 
 	node, err := service.RegisterNode(txCreator)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to register node")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(node)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -68,6 +75,7 @@ func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) (*communicatio
 
 	nodes, err := service.GetNodes()
 	if err != nil {
+		s.logger.WithError(err).Error("failed to query nodes")
 		return nil, err
 	}
 
@@ -77,6 +85,7 @@ func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) (*communicatio
 
 	wrapped, err := communication.Wrap(resp)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil

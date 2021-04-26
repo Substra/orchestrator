@@ -25,6 +25,7 @@ import (
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/distributed"
 	"github.com/owkin/orchestrator/server/standalone"
+	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -59,7 +60,7 @@ func getStandaloneServer(tlsOptions []grpc.ServerOption) common.Runnable {
 func main() {
 	var standaloneMode = false
 
-	common.InitLogging()
+	utils.InitLogging()
 
 	flag.BoolVar(&standaloneMode, "standalone", true, "Run the server in standalone mode")
 	flag.BoolVar(&standaloneMode, "s", true, "Run the server in standalone mode (shorthand)")

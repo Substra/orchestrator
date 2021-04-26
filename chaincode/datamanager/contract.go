@@ -15,6 +15,7 @@
 package datamanager
 
 import (
+	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
@@ -25,6 +26,7 @@ import (
 // SmartContract manages datasamples
 type SmartContract struct {
 	contractapi.Contract
+	logger log.Entry
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -34,6 +36,8 @@ func NewSmartContract() *SmartContract {
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
+
+	contract.logger = log.WithField("contract", contract.Name)
 
 	return contract
 }
@@ -46,16 +50,19 @@ func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapp
 	params := new(asset.NewDataManager)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
 		return err
 	}
 
 	err = service.RegisterDataManager(params, owner)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to register datamanager")
 		return err
 	}
 	return nil
@@ -69,16 +76,19 @@ func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, wrapper
 	params := new(asset.DataManagerUpdateParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
 		return err
 	}
 
 	err = service.UpdateDataManager(params, owner)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to update datamanager")
 		return err
 	}
 	return nil
@@ -91,15 +101,18 @@ func (s *SmartContract) QueryDataManager(ctx ledger.TransactionContext, wrapper 
 	params := new(asset.DataManagerQueryParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	dataManager, err := service.GetDataManager(params.GetKey())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to query datamanager")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(dataManager)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -112,11 +125,13 @@ func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper
 	params := new(asset.DataManagersQueryParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	datamanagers, nextPage, err := service.GetDataManagers(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
+		s.logger.WithError(err).Error("failed to query datamanagers")
 		return nil, err
 	}
 
@@ -126,6 +141,7 @@ func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper
 	}
 	wrapped, err := communication.Wrap(resp)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil

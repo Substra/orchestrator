@@ -28,6 +28,7 @@ import (
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/distributed/event"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
+	"github.com/owkin/orchestrator/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -48,7 +49,7 @@ type forwarderConf struct {
 }
 
 func main() {
-	common.InitLogging()
+	utils.InitLogging()
 
 	networkConfig := mustGetEnv("NETWORK_CONFIG")
 

@@ -15,6 +15,7 @@
 package computetask
 
 import (
+	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
@@ -25,6 +26,7 @@ import (
 // SmartContract manages ComputeTask
 type SmartContract struct {
 	contractapi.Contract
+	logger log.Entry
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -35,6 +37,8 @@ func NewSmartContract() *SmartContract {
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
 
+	contract.logger = log.WithField("contract", contract.Name)
+
 	return contract
 }
 
@@ -44,20 +48,24 @@ func (s *SmartContract) RegisterTask(ctx ledger.TransactionContext, wrapper *com
 	newTask := new(asset.NewComputeTask)
 	err := wrapper.Unwrap(newTask)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
 		return nil, err
 	}
 
 	t, err := service.RegisterTask(newTask, owner)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to register task")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(t)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -69,6 +77,7 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 	param := new(asset.QueryTasksParam)
 	err := wrapper.Unwrap(param)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
@@ -76,6 +85,7 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 
 	tasks, nextPage, err := service.GetTasks(pagination, param.Filter)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to query tasks")
 		return nil, err
 	}
 
@@ -86,6 +96,7 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 
 	wrapped, err := communication.Wrap(resp)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -97,11 +108,13 @@ func (s *SmartContract) ApplyTaskAction(ctx ledger.TransactionContext, wrapper *
 	param := new(asset.ApplyTaskActionParam)
 	err := wrapper.Unwrap(param)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return err
 	}
 
 	err = service.ApplyTaskAction(param.ComputeTaskKey, param.Action, param.Log)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to apply task action")
 		return err
 	}
 

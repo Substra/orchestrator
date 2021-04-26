@@ -21,15 +21,14 @@ import (
 	"os"
 
 	"github.com/go-playground/log/v7"
-	"github.com/go-playground/log/v7/handlers/console"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/contracts"
+	"github.com/owkin/orchestrator/utils"
 )
 
 func main() {
-	cLog := console.New(true)
-	log.AddHandler(cLog, log.AllLevels...)
+	utils.InitLogging()
 
 	CCID := os.Getenv("CHAINCODE_CCID")
 

@@ -15,6 +15,7 @@
 package model
 
 import (
+	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
@@ -24,6 +25,7 @@ import (
 // SmartContract manages Models
 type SmartContract struct {
 	contractapi.Contract
+	logger log.Entry
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -33,6 +35,8 @@ func NewSmartContract() *SmartContract {
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
+
+	contract.logger = log.WithField("contract", contract.Name)
 
 	return contract
 }
@@ -44,20 +48,24 @@ func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *co
 	params := new(asset.NewModel)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	requester, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
 		return nil, err
 	}
 
 	obj, err := service.RegisterModel(params, requester)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to register model")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(obj)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -69,11 +77,13 @@ func (s *SmartContract) GetComputeTaskModels(ctx ledger.TransactionContext, wrap
 	param := new(asset.GetComputeTaskModelsParam)
 	err := wrapper.Unwrap(param)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	models, err := service.GetTaskModels(param.ComputeTaskKey)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to get models for compute task")
 		return nil, err
 	}
 	response := &asset.GetComputeTaskModelsResponse{
@@ -82,6 +92,7 @@ func (s *SmartContract) GetComputeTaskModels(ctx ledger.TransactionContext, wrap
 
 	wrapped, err := communication.Wrap(response)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil

@@ -15,6 +15,7 @@
 package algo
 
 import (
+	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
@@ -25,6 +26,7 @@ import (
 // SmartContract manages algos
 type SmartContract struct {
 	contractapi.Contract
+	logger log.Entry
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -34,6 +36,8 @@ func NewSmartContract() *SmartContract {
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
+
+	contract.logger = log.WithField("contract", contract.Name)
 
 	return contract
 }
@@ -46,20 +50,24 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 	params := new(asset.NewAlgo)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
 		return nil, err
 	}
 
 	a, err := service.RegisterAlgo(params, owner)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to register algo")
 		return nil, err
 	}
 	response, err := communication.Wrap(a)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return response, nil
@@ -72,16 +80,19 @@ func (s *SmartContract) QueryAlgo(ctx ledger.TransactionContext, wrapper *commun
 	params := new(asset.AlgoQueryParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	algo, err := service.GetAlgo(params.GetKey())
 	if err != nil {
+		s.logger.WithError(err).Error("failed to query algo")
 		return nil, err
 	}
 
 	wrapped, err := communication.Wrap(algo)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -94,11 +105,13 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 	params := new(asset.AlgosQueryParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
 	algos, nextPage, err := service.GetAlgos(params.Category, &common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
+		s.logger.WithError(err).Error("failed to query algos")
 		return nil, err
 	}
 
@@ -109,6 +122,7 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 
 	wrapped, err := communication.Wrap(resp)
 	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
