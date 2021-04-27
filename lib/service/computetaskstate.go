@@ -109,6 +109,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 // applyTaskAction is the internal method allowing any transition (string).
 // This allows to use this method with internal only transitions (abort).
 func (s *ComputeTaskService) applyTaskAction(key string, action string, reason string) error {
+	log.WithField("taskKey", key).WithField("action", action).WithField("reason", reason).Debug("Applying task action")
 	task, err := s.GetComputeTaskDBAL().GetComputeTask(key)
 	if err != nil {
 		return err
@@ -136,6 +137,12 @@ func (s *ComputeTaskService) updateChildrenStatus(e *fsm.Event) {
 		return
 	}
 
+	log.WithFields(
+		log.F("taskKey", task.Key),
+		log.F("taskStatus", task.Status),
+		log.F("numChildren", len(children)),
+	).Debug("Updating children statuses")
+
 	for _, child := range children {
 		err := s.propagateDone(task, child)
 		if err != nil {
@@ -152,6 +159,7 @@ func (s *ComputeTaskService) propagateDone(parent, child *asset.ComputeTask) err
 	if !state.Can(transitionTodo) {
 		log.WithFields(
 			log.F("parent", parent.Key),
+			log.F("parentStatus", parent.Status),
 			log.F("child", child.Key),
 			log.F("childStatus", child.Status),
 		).Info("propagateDone: skipping child due to incompatible state")
@@ -202,6 +210,13 @@ func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition string) 
 		return
 	}
 
+	log.WithFields(
+		log.F("taskKey", task.Key),
+		log.F("taskStatus", task.Status),
+		log.F("numChildren", len(children)),
+		log.F("transition", transition),
+	).Debug("Cascading task transition")
+
 	for _, child := range children {
 		err := s.applyTaskAction(child.Key, transition, fmt.Sprintf("Cascading status from parent %s", task.Key))
 		if err != nil {
@@ -234,6 +249,12 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 		return
 	}
 	task.Status = asset.ComputeTaskStatus(statusVal)
+
+	log.WithFields(
+		log.F("taskKey", task.Key),
+		log.F("newStatus", task.Status),
+		log.F("reason", reason),
+	).Debug("Updating task status")
 
 	err := s.GetComputeTaskDBAL().UpdateComputeTask(task)
 	if err != nil {
