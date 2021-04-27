@@ -45,3 +45,19 @@ and all their parents to update them to TODO if all the parents are DONE.
 
 A task may produces one or more [models](./model.md), they can only be registered when the task in in DOING.
 This is to ensure that when a task starts (switch to DOING), all its inputs are available.
+
+### Status change
+
+A status change is a reaction to an action.
+Task actions should match the following restrictions:
+
+| action ↓ / sender → | Owner | Worker | Other |
+|---------------------|-------|--------|-------|
+| DOING               | n     | y      | n     |
+| DONE                | n     | y      | n     |
+| CANCELED            | y     | n      | n     |
+| FAILED              | n     | y      | n     |
+
+Basically:
+- only the owner can cancel a task
+- only the worker can act on a task processing (DOING/DONE/FAILED)

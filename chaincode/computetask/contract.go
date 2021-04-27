@@ -105,14 +105,19 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 func (s *SmartContract) ApplyTaskAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	service := ctx.GetProvider().GetComputeTaskService()
 
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		return err
+	}
+
 	param := new(asset.ApplyTaskActionParam)
-	err := wrapper.Unwrap(param)
+	err = wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return err
 	}
 
-	err = service.ApplyTaskAction(param.ComputeTaskKey, param.Action, param.Log)
+	err = service.ApplyTaskAction(param.ComputeTaskKey, param.Action, param.Log, requester)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to apply task action")
 		return err

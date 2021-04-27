@@ -20,6 +20,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 )
 
@@ -88,11 +89,20 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 
 // ApplyTaskAction apply an asset.ComputeTaskAction to the task.
 // Depending on the current state and action, this may update children tasks
-func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string) error {
+func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error {
 	transition := action.String()
 	if reason == "" {
 		reason = "User action"
 	}
+
+	task, err := s.GetComputeTaskDBAL().GetComputeTask(key)
+	if err != nil {
+		return err
+	}
+	if !updateAllowed(task, action, requester) {
+		return fmt.Errorf("only task owner can update it: %w", errors.ErrPermissionDenied)
+	}
+
 	return s.applyTaskAction(key, transition, reason)
 }
 
@@ -277,4 +287,17 @@ func getInitialStatusFromParents(parents []*asset.ComputeTask) asset.ComputeTask
 	}
 
 	return status
+}
+
+// updateAllowed returns true if the requester can update the task with given action.
+// This does not take into account the task status, only ownership.
+func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requester string) bool {
+	switch action {
+	case asset.ComputeTaskAction_TASK_ACTION_CANCELED:
+		return requester == task.Owner
+	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_DONE, asset.ComputeTaskAction_TASK_ACTION_FAILED:
+		return requester == task.Worker
+	default:
+		return false
+	}
 }

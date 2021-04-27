@@ -103,12 +103,14 @@ func TestDispatchOnTransition(t *testing.T) {
 	returnedTask := &asset.ComputeTask{
 		Key:    "uuid",
 		Status: asset.ComputeTaskStatus_STATUS_TODO,
+		Worker: "worker",
 	}
-	dbal.On("GetComputeTask", "uuid").Once().Return(returnedTask, nil)
+	dbal.On("GetComputeTask", "uuid").Return(returnedTask, nil)
 
 	expectedTask := &asset.ComputeTask{
 		Key:    "uuid",
 		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "worker",
 	}
 	dbal.On("UpdateComputeTask", expectedTask).Once().Return(nil)
 
@@ -124,7 +126,7 @@ func TestDispatchOnTransition(t *testing.T) {
 
 	dispatcher.On("Enqueue", expectedEvent).Once().Return(nil)
 
-	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DOING, "")
+	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DOING, "", "worker")
 	assert.NoError(t, err)
 }
 
@@ -137,15 +139,67 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 	provider.On("GetEventQueue").Return(dispatcher)
 
 	// task is retrieved from persistence layer
-	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_WAITING}, nil)
+	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
+		Status: asset.ComputeTaskStatus_STATUS_WAITING,
+		Owner:  "owner",
+	}, nil)
 	// An update event should be enqueued
 	dispatcher.On("Enqueue", mock.Anything).Return(nil)
 	// Updated task should be saved
-	updatedTask := &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_CANCELED}
+	updatedTask := &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_CANCELED, Owner: "owner"}
 	dbal.On("UpdateComputeTask", updatedTask).Return(nil)
 
 	service := NewComputeTaskService(provider)
 
-	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_CANCELED, "")
+	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_CANCELED, "", "owner")
 	assert.NoError(t, err)
+}
+
+func TestUpdateAllowed(t *testing.T) {
+	task := &asset.ComputeTask{
+		Worker: "worker",
+		Owner:  "owner",
+	}
+	cases := map[string]struct {
+		requester string
+		action    asset.ComputeTaskAction
+		outcome   bool
+	}{
+		"owner cancel": {
+			requester: "owner",
+			action:    asset.ComputeTaskAction_TASK_ACTION_CANCELED,
+			outcome:   true,
+		},
+		"worker cancel": {
+			requester: "worker",
+			action:    asset.ComputeTaskAction_TASK_ACTION_CANCELED,
+			outcome:   false,
+		},
+		"worker fail": {
+			requester: "worker",
+			action:    asset.ComputeTaskAction_TASK_ACTION_FAILED,
+			outcome:   true,
+		},
+		"worker doing": {
+			requester: "worker",
+			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
+			outcome:   true,
+		},
+		"owner doing": {
+			requester: "owner",
+			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
+			outcome:   false,
+		},
+		"worker done": {
+			requester: "worker",
+			action:    asset.ComputeTaskAction_TASK_ACTION_DONE,
+			outcome:   true,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.outcome, updateAllowed(task, tc.action, tc.requester))
+		})
+	}
 }

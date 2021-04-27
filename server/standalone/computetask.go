@@ -78,12 +78,16 @@ func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasks
 }
 
 func (s *ComputeTaskServer) ApplyTaskAction(ctx context.Context, param *asset.ApplyTaskActionParam) (*asset.ApplyTaskActionResponse, error) {
+	requester, err := common.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
 	provider, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = provider.GetComputeTaskService().ApplyTaskAction(param.ComputeTaskKey, param.Action, param.Log)
+	err = provider.GetComputeTaskService().ApplyTaskAction(param.ComputeTaskKey, param.Action, param.Log, requester)
 	if err != nil {
 		return nil, err
 	}

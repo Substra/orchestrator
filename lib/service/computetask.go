@@ -32,7 +32,7 @@ type ComputeTaskAPI interface {
 	// RegisterTask creates a new ComputeTask
 	RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error)
 	GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
-	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string) error
+	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance
