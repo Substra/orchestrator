@@ -92,7 +92,6 @@ func (db *DB) putState(resource string, key string, data []byte) error {
 		log.F("resource", resource),
 		log.F("key", key),
 		log.F("fullkey", k),
-		log.F("data", data),
 	)
 	logger.Debug("put state")
 
