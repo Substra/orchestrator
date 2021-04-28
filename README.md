@@ -105,26 +105,5 @@ header mspid=MyOrg1MSP channel=mychannel chaincode=mycc
 call QueryNodes
 ```
 
-Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress)
-
-In minikube, you can patch it with something like this :
-
-```yaml
----
-spec:
-  template:
-    spec:
-      containers:
-      - name: controller
-        args:
-          - /nginx-ingress-controller
-          - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-conf
-          - --report-node-internal-ip-address
-          - --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
-          - --udp-services-configmap=$(POD_NAMESPACE)/udp-services
-          - --validating-webhook=:8443
-          - --validating-webhook-certificate=/usr/local/certificates/cert
-          - --validating-webhook-key=/usr/local/certificates/key
-          - --enable-ssl-passthrough
-
-```
+Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress).
+Refer to [the wiki](https://github.com/owkin/orchestrator/wiki/Enabling-ssl-passthrough-for-ingress-in-minikube) for detailed instructions.
