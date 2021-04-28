@@ -106,3 +106,21 @@ func TestModelValue(t *testing.T) {
 
 	assert.Equal(t, model, scanned)
 }
+
+func TestComputePlanValue(t *testing.T) {
+	computeplan := &ComputePlan{
+		Key: "08bcb3b9-015c-4b6a-a9b5-033b3b324a7c",
+		Metadata: map[string]string{
+			"test": "true",
+		},
+	}
+
+	value, err := computeplan.Value()
+	assert.NoError(t, err, "compute plan serialization should not fail")
+
+	scanned := new(ComputePlan)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "compute plan scan should not fail")
+
+	assert.Equal(t, computeplan, scanned)
+}

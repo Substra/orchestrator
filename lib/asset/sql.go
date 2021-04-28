@@ -123,3 +123,20 @@ func (a *Model) Scan(value interface{}) error {
 
 	return protojson.Unmarshal(b, a)
 }
+
+// Value implements the driver.Valuer interface.
+// Simply returns the JSON-encoded representation of the ComputePlan.
+func (cp *ComputePlan) Value() (driver.Value, error) {
+	return protojson.Marshal(cp)
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes JSON into the ComputePlan.
+func (cp *ComputePlan) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot scan compute plan: %w", errors.ErrByteArray)
+	}
+
+	return protojson.Unmarshal(b, cp)
+}

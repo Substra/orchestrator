@@ -27,6 +27,8 @@ type ComputeTaskDBAL interface {
 	UpdateComputeTask(task *asset.ComputeTask) error
 	QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error)
+	// GetComputePlanTasks returns the tasks of the compute plan identified by the given key
+	GetComputePlanTasks(key string) ([]*asset.ComputeTask, error)
 }
 
 type ComputeTaskDBALProvider interface {

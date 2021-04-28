@@ -114,4 +114,5 @@ type DBAL interface {
 	DatasetDBAL
 	ComputeTaskDBAL
 	ModelDBAL
+	ComputePlanDBAL
 }

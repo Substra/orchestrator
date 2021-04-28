@@ -22,6 +22,8 @@ import (
 	"flag"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // orchestration app, see harness.go for more details
@@ -55,6 +57,7 @@ func TestTrainTaskLifecycle(t *testing.T) {
 	t.Run("register algo", appClient.registerAlgo)
 	t.Run("register datamanager", appClient.registerDataManager)
 	t.Run("register datasample", appClient.registerDataSample)
+	t.Run("register cp", appClient.registerComputePlan)
 	t.Run("register train task", appClient.registerTrainTask)
 	t.Run("register child task", appClient.registerChildTask)
 	t.Run("start train task", appClient.startTrainTask)
@@ -71,6 +74,9 @@ func TestRegisterModel(t *testing.T) {
 	t.Run("register algo", appClient.registerAlgo)
 	t.Run("register datamanager", appClient.registerDataManager)
 	t.Run("register datasample", appClient.registerDataSample)
+	t.Run("register cp", appClient.registerComputePlan)
+	t.Run("query cp", appClient.queryComputePlans)
+	assert.Len(t, appClient.plans, 1)
 	t.Run("register train task", appClient.registerTrainTask)
 	t.Run("start train task", appClient.startTrainTask)
 	t.Run("register model", appClient.registerModel)

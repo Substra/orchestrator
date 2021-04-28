@@ -69,6 +69,12 @@ func (m *MockServiceProvider) GetComputeTaskDBAL() persistence.ComputeTaskDBAL {
 	return args.Get(0).(persistence.ComputeTaskDBAL)
 }
 
+// GetComputePlanDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetComputePlanDBAL() persistence.ComputePlanDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.ComputePlanDBAL)
+}
+
 // GetComputeTaskDBAL returns whatever value is passed
 func (m *MockServiceProvider) GetModelDBAL() persistence.ModelDBAL {
 	args := m.Called()
@@ -133,6 +139,12 @@ func (m *MockServiceProvider) GetComputeTaskService() ComputeTaskAPI {
 func (m *MockServiceProvider) GetModelService() ModelAPI {
 	args := m.Called()
 	return args.Get(0).(ModelAPI)
+}
+
+// GetComputePlanService return whatever value is passed
+func (m *MockServiceProvider) GetComputePlanService() ComputePlanAPI {
+	args := m.Called()
+	return args.Get(0).(ComputePlanAPI)
 }
 
 // MockNodeService is a mock implementing NodeAPI
@@ -386,4 +398,28 @@ func (m *MockModelService) RegisterModel(newModel *asset.NewModel, requester str
 func (m *MockModelService) GetTaskModels(key string) ([]*asset.Model, error) {
 	args := m.Called(key)
 	return args.Get(0).([]*asset.Model), args.Error(1)
+}
+
+type MockComputePlanService struct {
+	mock.Mock
+}
+
+func (m *MockComputePlanService) RegisterPlan(plan *asset.NewComputePlan, owner string) (*asset.ComputePlan, error) {
+	args := m.Called(plan, owner)
+	return args.Get(0).(*asset.ComputePlan), args.Error(1)
+}
+
+func (m *MockComputePlanService) GetPlan(key string) (*asset.ComputePlan, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.ComputePlan), args.Error(1)
+}
+
+func (m *MockComputePlanService) GetPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*asset.ComputePlan), args.String(1), args.Error(2)
+}
+
+func (m *MockComputePlanService) ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error {
+	args := m.Called(key, action, requester)
+	return args.Error(0)
 }

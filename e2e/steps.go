@@ -156,3 +156,23 @@ func (c *AppClient) registerModel(t *testing.T) {
 		t.Errorf("RegisterModel failed: %v", err)
 	}
 }
+
+func (c *AppClient) registerComputePlan(t *testing.T) {
+	modelClient := asset.NewComputePlanServiceClient(c.conn)
+	_, err := modelClient.RegisterPlan(c.ctx, &asset.NewComputePlan{
+		Key: c.GetKey("cp"),
+	})
+	if err != nil {
+		t.Errorf("RegisterPlan failed: %v", err)
+	}
+}
+
+func (c *AppClient) queryComputePlans(t *testing.T) {
+	modelClient := asset.NewComputePlanServiceClient(c.conn)
+	resp, err := modelClient.QueryPlans(c.ctx, &asset.QueryPlansParam{})
+	if err != nil {
+		t.Errorf("RegisterPlan failed: %v", err)
+	}
+
+	c.plans = resp.Plans
+}

@@ -17,6 +17,7 @@ package contracts
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/algo"
+	"github.com/owkin/orchestrator/chaincode/computeplan"
 	"github.com/owkin/orchestrator/chaincode/computetask"
 	"github.com/owkin/orchestrator/chaincode/datamanager"
 	"github.com/owkin/orchestrator/chaincode/datasample"
@@ -35,4 +36,5 @@ var AllContracts []contractapi.ContractInterface = []contractapi.ContractInterfa
 	dataset.NewSmartContract(),
 	computetask.NewSmartContract(),
 	model.NewSmartContract(),
+	computeplan.NewSmartContract(),
 }

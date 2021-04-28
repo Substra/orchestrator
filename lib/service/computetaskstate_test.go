@@ -90,6 +90,21 @@ func TestOnStateChange(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// Make sure fsm returns expected errors
+func TestFailedStateChange(t *testing.T) {
+	updater := new(mockStateUpdater)
+	updater.On("onStateChange", mock.Anything).Once()
+
+	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DOING, Key: "uuid"})
+
+	err := state.Event(transitionDoing, &asset.ComputeTask{})
+	assert.IsType(t, fsm.InvalidEventError{}, err)
+
+	state = newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DONE, Key: "uuid"})
+	err = state.Event(transitionCanceled, &asset.ComputeTask{})
+	assert.IsType(t, fsm.InvalidEventError{}, err)
+}
+
 func TestDispatchOnTransition(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dispatcher := new(MockDispatcher)

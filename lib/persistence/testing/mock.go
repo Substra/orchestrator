@@ -182,6 +182,12 @@ func (m *MockDBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, err
 	return args.Get(0).([]*asset.ComputeTask), args.Error(1)
 }
 
+// GetComputePlanTasks is a mock
+func (m *MockDBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
+	args := m.Called(key)
+	return args.Get(0).([]*asset.ComputeTask), args.Error(1)
+}
+
 // GetComputeTasks is a mock
 func (m *MockDBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 	args := m.Called(keys)
@@ -223,4 +229,24 @@ func (m *MockDBAL) GetTaskModels(key string) ([]*asset.Model, error) {
 func (m *MockDBAL) AddModel(model *asset.Model) error {
 	args := m.Called(model)
 	return args.Error(0)
+}
+
+func (m *MockDBAL) ComputePlanExists(key string) (bool, error) {
+	args := m.Called(key)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockDBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.ComputePlan), args.Error(1)
+}
+
+func (m *MockDBAL) AddComputePlan(plan *asset.ComputePlan) error {
+	args := m.Called(plan)
+	return args.Error(0)
+}
+
+func (m *MockDBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
+	args := m.Called(p)
+	return args.Get(0).([]*asset.ComputePlan), args.String(1), args.Error(2)
 }

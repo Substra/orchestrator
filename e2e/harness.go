@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/standalone"
 	"google.golang.org/grpc"
@@ -75,9 +76,10 @@ func (a *testApp) getDialer(context.Context, string) (net.Conn, error) {
 
 // AppClient is a client for the tested app
 type AppClient struct {
-	ctx  context.Context
-	conn *grpc.ClientConn
-	keys map[string]string
+	ctx   context.Context
+	conn  *grpc.ClientConn
+	keys  map[string]string
+	plans []*asset.ComputePlan
 }
 
 func newAppClient(mspid, channel string) (*AppClient, error) {

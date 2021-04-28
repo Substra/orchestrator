@@ -50,6 +50,7 @@ type ComputeTaskDependencyProvider interface {
 	PermissionServiceProvider
 	ObjectiveServiceProvider
 	NodeServiceProvider
+	ComputePlanServiceProvider
 }
 
 // ComputeTaskService is the compute task manipulation entry point
@@ -77,7 +78,13 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
 	}
 
-	// TODO: compute plan should exist
+	cp, err := s.GetComputePlanService().GetPlan(input.ComputePlanKey)
+	if err != nil {
+		return nil, err
+	}
+	if cp.Owner != owner {
+		return nil, fmt.Errorf("only plan owner can register a task: %w", errors.ErrPermissionDenied)
+	}
 
 	taskExist, err := s.GetComputeTaskDBAL().ComputeTaskExists(input.Key)
 	if err != nil {
