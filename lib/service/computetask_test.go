@@ -25,6 +25,7 @@ import (
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 var newTrainTask = &asset.NewComputeTask{
@@ -260,6 +261,280 @@ func TestRegisterFailedTask(t *testing.T) {
 	assert.True(t, errors.Is(err, orchestrationError.ErrIncompatibleTaskStatus))
 }
 
+func TestSetCompositeData(t *testing.T) {
+	taskInput := &asset.NewComputeTask{
+		AlgoKey: "algoUuid",
+	}
+	specificInput := &asset.NewCompositeTrainTaskData{
+		DataManagerKey: "dmUuid",
+		DataSampleKeys: []string{"ds1", "ds2", "ds3"},
+		TrunkPermissions: &asset.NewPermissions{
+			Public:        false,
+			AuthorizedIds: []string{"org1", "org2", "org3"},
+		},
+	}
+	task := &asset.ComputeTask{
+		Owner:    "org1",
+		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
+	}
+
+	dms := new(MockDataManagerService)
+	dss := new(MockDataSampleService)
+	ps := new(MockPermissionService)
+	as := new(MockAlgoService)
+	provider := new(MockServiceProvider)
+	provider.On("GetDataManagerService").Return(dms)
+	provider.On("GetDataSampleService").Return(dss)
+	provider.On("GetPermissionService").Return(ps)
+	provider.On("GetAlgoService").Return(as)
+
+	// getCheckedDataManager
+	dms.On("GetDataManager", "dmUuid").Once().Return(&asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}, nil)
+	ps.On("CanProcess", mock.Anything, "org1").Return(true)
+	dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+
+	dss.On("ContainsTestSample", specificInput.DataSampleKeys).Once().Return(false, nil)
+
+	// getCheckedAlgo
+	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_COMPOSITE}
+	as.On("GetAlgo", taskInput.AlgoKey).Once().Return(algo, nil)
+
+	// create perms for head
+	headPerms := &asset.Permissions{Process: &asset.Permission{Public: false, AuthorizedIds: []string{"dmOwner"}}}
+	ps.On("CreatePermissions", "dmOwner", (*asset.NewPermissions)(nil)).Once().Return(headPerms, nil)
+	// and trunk
+	trunkPerms := &asset.Permissions{
+		Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"dmOwner"}},
+		Download: &asset.Permission{Public: false, AuthorizedIds: []string{"org1", "dmOwner"}},
+	}
+	ps.On("CreatePermissions", "dmOwner", specificInput.TrunkPermissions).Once().Return(trunkPerms, nil)
+
+	service := NewComputeTaskService(provider)
+
+	err := service.setCompositeData(taskInput, specificInput, task)
+	assert.NoError(t, err)
+
+	assert.Equal(t, algo, task.Algo)
+	assert.Equal(t, "dmOwner", task.Worker)
+	assert.Equal(t, "dmUuid", task.Data.(*asset.ComputeTask_Composite).Composite.DataManagerKey)
+	assert.Equal(t, trunkPerms, task.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions)
+	assert.Equal(t, headPerms, task.Data.(*asset.ComputeTask_Composite).Composite.HeadPermissions)
+
+	dms.AssertExpectations(t)
+	dss.AssertExpectations(t)
+	ps.AssertExpectations(t)
+	as.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
+func TestSetAggregateData(t *testing.T) {
+	ns := new(MockNodeService)
+	as := new(MockAlgoService)
+	provider := new(MockServiceProvider)
+	provider.On("GetNodeService").Return(ns)
+	provider.On("GetAlgoService").Return(as)
+	// Use the real permission service
+	provider.On("GetPermissionService").Return(NewPermissionService(provider))
+
+	taskInput := &asset.NewComputeTask{
+		AlgoKey: "algoUuid",
+	}
+	specificInput := &asset.NewAggregateTrainTaskData{
+		Worker: "org3",
+	}
+	task := &asset.ComputeTask{
+		Owner:    "org1",
+		Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
+	}
+
+	parents := []*asset.ComputeTask{
+		{
+			Data: &asset.ComputeTask_Composite{
+				Composite: &asset.CompositeTrainTaskData{
+					TrunkPermissions: &asset.Permissions{
+						Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"org1", "org3"}},
+						Download: &asset.Permission{Public: false, AuthorizedIds: []string{"org1"}},
+					},
+					HeadPermissions: &asset.Permissions{
+						Process: &asset.Permission{Public: false, AuthorizedIds: []string{"org2"}},
+					},
+				},
+			},
+		},
+	}
+
+	// check node existence
+	ns.On("GetNode", "org3").Once().Return(&asset.Node{Id: "org3"}, nil)
+
+	// getCheckedAlgo
+	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_AGGREGATE, Permissions: &asset.Permissions{
+		Process: &asset.Permission{Public: true},
+	}}
+	as.On("GetAlgo", taskInput.AlgoKey).Once().Return(algo, nil)
+
+	service := NewComputeTaskService(provider)
+	err := service.setAggregateData(taskInput, specificInput, task, parents)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, algo, task.Algo)
+	assert.Equal(t, "org3", task.Worker)
+	assert.Equal(t, &asset.Permissions{
+		Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"org1", "org3"}},
+		Download: &asset.Permission{Public: false, AuthorizedIds: []string{"org1"}},
+	}, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions)
+
+	ns.AssertExpectations(t)
+	as.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
+func TestSetTestData(t *testing.T) {
+	t.Run("objective only", func(t *testing.T) {
+		specificInput := &asset.NewTestTaskData{
+			ObjectiveKey: "objUuid",
+		}
+		task := &asset.ComputeTask{
+			Owner:    "org1",
+			Category: asset.ComputeTaskCategory_TASK_TEST,
+		}
+
+		parents := []*asset.ComputeTask{
+			{
+				Algo:           &asset.Algo{Key: "algoKey"},
+				ComputePlanKey: "cpKey",
+				Rank:           2,
+			},
+		}
+
+		os := new(MockObjectiveService)
+		dms := new(MockDataManagerService)
+		provider := new(MockServiceProvider)
+		provider.On("GetObjectiveService").Return(os)
+		provider.On("GetDataManagerService").Return(dms)
+
+		service := NewComputeTaskService(provider)
+
+		os.On("GetObjective", "objUuid").Return(&asset.Objective{Key: "objUuid", DataManagerKey: "dmUuid"}, nil)
+
+		dms.On("GetDataManager", "dmUuid").Once().Return(&asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}, nil)
+
+		err := service.setTestData(specificInput, task, parents)
+		assert.NoError(t, err)
+
+		assert.Equal(t, parents[0].Algo, task.Algo)
+		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
+		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
+		assert.True(t, task.Data.(*asset.ComputeTask_Test).Test.Certified)
+
+		os.AssertExpectations(t)
+		dms.AssertExpectations(t)
+		provider.AssertExpectations(t)
+	})
+
+	t.Run("custom samples", func(t *testing.T) {
+		specificInput := &asset.NewTestTaskData{
+			ObjectiveKey:   "objUuid",
+			DataManagerKey: "cdmKey",
+			DataSampleKeys: []string{"sample1", "sample2"},
+		}
+		task := &asset.ComputeTask{
+			Owner:    "org1",
+			Category: asset.ComputeTaskCategory_TASK_TEST,
+		}
+
+		parents := []*asset.ComputeTask{
+			{
+				Algo:           &asset.Algo{Key: "algoKey"},
+				ComputePlanKey: "cpKey",
+				Rank:           2,
+			},
+		}
+
+		os := new(MockObjectiveService)
+		dms := new(MockDataManagerService)
+		dss := new(MockDataSampleService)
+		provider := new(MockServiceProvider)
+		provider.On("GetObjectiveService").Return(os)
+		provider.On("GetDataManagerService").Return(dms)
+		provider.On("GetDataSampleService").Return(dss)
+		// Use the real permission service
+		provider.On("GetPermissionService").Return(NewPermissionService(provider))
+
+		service := NewComputeTaskService(provider)
+
+		os.On("GetObjective", "objUuid").Return(&asset.Objective{Key: "objUuid", DataManagerKey: "dmUuid"}, nil)
+
+		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}}, nil)
+
+		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+
+		err := service.setTestData(specificInput, task, parents)
+		assert.NoError(t, err)
+
+		assert.Equal(t, parents[0].Algo, task.Algo)
+		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
+		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
+		assert.False(t, task.Data.(*asset.ComputeTask_Test).Test.Certified)
+
+		os.AssertExpectations(t)
+		provider.AssertExpectations(t)
+	})
+
+	t.Run("certified custom samples", func(t *testing.T) {
+		specificInput := &asset.NewTestTaskData{
+			ObjectiveKey:   "objUuid",
+			DataManagerKey: "cdmKey",
+			DataSampleKeys: []string{"sample1", "sample2"},
+		}
+		task := &asset.ComputeTask{
+			Owner:    "org1",
+			Category: asset.ComputeTaskCategory_TASK_TEST,
+		}
+
+		parents := []*asset.ComputeTask{
+			{
+				Algo:           &asset.Algo{Key: "algoKey"},
+				ComputePlanKey: "cpKey",
+				Rank:           2,
+			},
+		}
+
+		os := new(MockObjectiveService)
+		dms := new(MockDataManagerService)
+		dss := new(MockDataSampleService)
+		provider := new(MockServiceProvider)
+		provider.On("GetObjectiveService").Return(os)
+		provider.On("GetDataManagerService").Return(dms)
+		provider.On("GetDataSampleService").Return(dss)
+		// Use the real permission service
+		provider.On("GetPermissionService").Return(NewPermissionService(provider))
+
+		service := NewComputeTaskService(provider)
+
+		os.On("GetObjective", "objUuid").Return(&asset.Objective{
+			Key:            "objUuid",
+			DataManagerKey: "cdmKey",                       // Same as the specific input
+			DataSampleKeys: []string{"sample1", "sample2"}, // Same as the specific input
+		}, nil)
+
+		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}}, nil)
+
+		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+
+		err := service.setTestData(specificInput, task, parents)
+		assert.NoError(t, err)
+
+		assert.Equal(t, parents[0].Algo, task.Algo)
+		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
+		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
+		assert.True(t, task.Data.(*asset.ComputeTask_Test).Test.Certified)
+
+		os.AssertExpectations(t)
+		provider.AssertExpectations(t)
+	})
+}
+
 func TestIsAlgoCompatible(t *testing.T) {
 	cases := []struct {
 		t asset.ComputeTaskCategory
@@ -368,5 +643,79 @@ func TestIsParentCompatible(t *testing.T) {
 				assert.Equal(t, c.o, isParentCompatible(c.t, c.p))
 			},
 		)
+	}
+}
+
+func TestCheckCanProcessParent(t *testing.T) {
+	parents := []*asset.ComputeTask{
+		{
+			Data: &asset.ComputeTask_Train{
+				Train: &asset.TrainTaskData{
+					ModelPermissions: &asset.Permissions{
+						Process: &asset.Permission{Public: true},
+					},
+				},
+			},
+		},
+		{
+			Data: &asset.ComputeTask_Composite{
+				Composite: &asset.CompositeTrainTaskData{
+					TrunkPermissions: &asset.Permissions{
+						Process: &asset.Permission{Public: false, AuthorizedIds: []string{"orgTest", "org2"}},
+					},
+					HeadPermissions: &asset.Permissions{
+						Process: &asset.Permission{Public: false, AuthorizedIds: []string{"org2"}},
+					},
+				},
+			},
+		},
+		{
+			Data: &asset.ComputeTask_Aggregate{
+				Aggregate: &asset.AggregateTrainTaskData{
+					ModelPermissions: &asset.Permissions{
+						Process: &asset.Permission{Public: false, AuthorizedIds: []string{"orgTest", "org2"}},
+					},
+				},
+			},
+		},
+	}
+
+	cases := map[string]struct {
+		requester    string
+		taskCategory asset.ComputeTaskCategory
+		canProcess   bool
+	}{
+		"train task": {
+			"orgTest",
+			asset.ComputeTaskCategory_TASK_TRAIN,
+			true,
+		},
+		"test task": {
+			"orgTest",
+			asset.ComputeTaskCategory_TASK_TEST,
+			false, // cannot test head from parent composite
+		},
+		"aggregate task": {
+			"org2",
+			asset.ComputeTaskCategory_TASK_AGGREGATE,
+			true,
+		},
+	}
+	provider := new(MockServiceProvider)
+	// Use the real permission service
+	provider.On("GetPermissionService").Return(NewPermissionService(provider))
+	service := NewComputeTaskService(provider)
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			err := service.checkCanProcessParents(tc.requester, parents, tc.taskCategory)
+
+			if tc.canProcess {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.True(t, errors.Is(err, orchestrationError.ErrPermissionDenied))
+			}
+		})
 	}
 }

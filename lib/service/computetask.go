@@ -329,21 +329,18 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 
 // setTestData hydrates task specific TestTaskData from input
 func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
+	var certified bool
+	var dataManagerKey string
+	var dataSampleKeys []string
+	var datamanager *asset.DataManager
+
 	objective, err := s.GetObjectiveService().GetObjective(input.ObjectiveKey)
 	if err != nil {
 		return err
 	}
 
-	// Test is certified when using objective test data
-	certified := true
-	dataManagerKey := objective.DataManagerKey
-	dataSampleKeys := objective.DataSampleKeys
-	datamanager, err := s.GetDataManagerService().GetDataManager(objective.DataManagerKey)
-	if err != nil {
-		return fmt.Errorf("datamanager not found: %w", orchestrationErrors.ErrReferenceNotFound)
-	}
-
 	if input.DataManagerKey != "" {
+		// Using custom datamanger and samples
 		datamanager, err = s.getCheckedDataManager(input.DataManagerKey, input.DataSampleKeys, task.Owner)
 		if err != nil {
 			return err
@@ -353,6 +350,17 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 		dataSampleKeys = input.DataSampleKeys
 
 		certified = input.DataManagerKey == objective.DataManagerKey && utils.IsEqual(input.DataSampleKeys, objective.DataSampleKeys)
+	} else {
+		// Relying on objective datamanager and samples
+		datamanager, err = s.GetDataManagerService().GetDataManager(objective.DataManagerKey)
+		if err != nil {
+			return fmt.Errorf("datamanager not found: %w", orchestrationErrors.ErrReferenceNotFound)
+		}
+
+		// Test is certified when using objective test data
+		certified = true
+		dataManagerKey = objective.DataManagerKey
+		dataSampleKeys = objective.DataSampleKeys
 	}
 
 	taskData := &asset.TestTaskData{
