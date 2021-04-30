@@ -93,7 +93,6 @@ func (c *AppClient) registerTrainTask(t *testing.T) {
 		Key:            c.GetKey("task"),
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        c.GetKey("algo"),
-		Rank:           0,
 		ComputePlanKey: c.GetKey("cp"),
 		Data: &asset.NewComputeTask_Train{
 			Train: &asset.NewTrainTaskData{
@@ -114,7 +113,6 @@ func (c *AppClient) registerChildTask(t *testing.T) {
 		Key:            c.GetKey("anotherTask"),
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        c.GetKey("algo"),
-		Rank:           1,
 		ParentTaskKeys: []string{c.GetKey("task")},
 		ComputePlanKey: c.GetKey("cp"),
 		Data: &asset.NewComputeTask_Train{

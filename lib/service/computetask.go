@@ -98,7 +98,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 	if err != nil {
 		return nil, err
 	}
-	if !isParentCompatible(input.Category, parentTasks) {
+	if !isCompatibleWithParents(input.Category, parentTasks) {
 		return nil, fmt.Errorf("incompatible models from parent tasks: %w", orchestrationErrors.ErrInvalidAsset)
 	}
 
@@ -120,7 +120,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		ComputePlanKey: input.ComputePlanKey,
 		Metadata:       input.Metadata,
 		Status:         status,
-		Rank:           input.Rank,
+		Rank:           getRank(parentTasks),
 		ParentTaskKeys: input.ParentTaskKeys,
 	}
 
@@ -381,6 +381,8 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 	}
 	task.Algo = parentTasks[0].Algo
 	task.ComputePlanKey = parentTasks[0].ComputePlanKey
+	// In case of test tasks there is only one parent (see isCompatibleWithParents)
+	// and the test task should have the same rank
 	task.Rank = parentTasks[0].Rank
 
 	return nil
@@ -418,7 +420,7 @@ func (s *ComputeTaskService) checkCanProcessParents(requester string, parentTask
 }
 
 // Check task compatibility with parents tasks
-func isParentCompatible(category asset.ComputeTaskCategory, parents []*asset.ComputeTask) bool {
+func isCompatibleWithParents(category asset.ComputeTaskCategory, parents []*asset.ComputeTask) bool {
 	inputs := map[asset.ComputeTaskCategory]uint32{}
 
 	for _, p := range parents {
@@ -462,4 +464,22 @@ func isAlgoCompatible(taskCategory asset.ComputeTaskCategory, algoCategory asset
 		// should not happen, that means we probably don't known how to deal with task/algo couple
 		return false
 	}
+}
+
+// getRank determines the rank of a task from its parents.
+// A task with no parents has a rank of 0.
+// Otherwise its rank is set to max(parentRanks) + 1.
+func getRank(parentTasks []*asset.ComputeTask) int32 {
+	if len(parentTasks) == 0 {
+		return 0
+	}
+
+	var maxParentRank int32 = 0
+	for _, p := range parentTasks {
+		if p.Rank > maxParentRank {
+			maxParentRank = p.Rank
+		}
+	}
+
+	return maxParentRank + 1
 }

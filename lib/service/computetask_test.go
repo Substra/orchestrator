@@ -169,7 +169,6 @@ func TestRegisterTrainTask(t *testing.T) {
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
-		Rank:           newTrainTask.Rank,
 		Status:         asset.ComputeTaskStatus_STATUS_TODO,
 		ParentTaskKeys: newTrainTask.ParentTaskKeys,
 		Worker:         dataManager.Owner,
@@ -640,7 +639,7 @@ func TestIsParentCompatible(t *testing.T) {
 		t.Run(
 			fmt.Sprintf("%s: %t", c.n, c.o),
 			func(t *testing.T) {
-				assert.Equal(t, c.o, isParentCompatible(c.t, c.p))
+				assert.Equal(t, c.o, isCompatibleWithParents(c.t, c.p))
 			},
 		)
 	}
@@ -718,4 +717,16 @@ func TestCheckCanProcessParent(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetRank(t *testing.T) {
+	parents := []*asset.ComputeTask{
+		{Rank: 0},
+		{Rank: 1},
+		{Rank: 3},
+	}
+	assert.Equal(t, int32(4), getRank(parents))
+
+	noParents := []*asset.ComputeTask{}
+	assert.Equal(t, int32(0), getRank(noParents))
 }

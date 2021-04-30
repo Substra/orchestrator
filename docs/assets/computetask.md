@@ -19,7 +19,7 @@ Here is the expected cardinality for each task category:
 **Note**:
 - the asterisk denotes an exclusive link, ie a *Train* task can only have **one** parent at most
 - parenthesis denotes optional dependencies
-- no parents is a valid input
+- no parents may be a valid input
 
 | children ↓ / parent → | Train | Test | Aggregate | Composite |
 |-----------------------|-------|------|-----------|-----------|
@@ -27,6 +27,20 @@ Here is the expected cardinality for each task category:
 | Test                  | 1*    | 0    | 0         | 1*        |
 | Aggregate             | n     | 0    | n         | n         |
 | Composite             | 0     | 0    | (1)       | 1         |
+
+## Rank
+
+A task is executed as part of a compute plan.
+Inside the graph of tasks, each task has a rank depending on its depth in the graph.
+
+General rules are:
+- A task with no parents has a rank of `0`
+- A task with parents has a rank of `max(parentRanks) + 1`
+
+However, for **Test** compute tasks, the rank is set to the one of tested parent.
+eg: if a test has an aggregate parent with rank 2, the test will also have a rank 2.
+
+Since parents are set during task definition, the rank is an immutable property.
 
 ## State
 

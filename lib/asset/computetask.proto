@@ -69,7 +69,6 @@ message NewComputeTask {
   map<string, string> metadata = 5;
   // Keys of parent ComputeTasks
   repeated string parent_task_keys = 11;
-  int32 rank = 8;
   oneof data {
     NewTestTaskData test = 12;
     NewTrainTaskData train = 13;
