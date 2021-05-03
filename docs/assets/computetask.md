@@ -1,7 +1,8 @@
 # Compute Task
 
-A compute task is a generic structure representing a compute task in a compute plan.
+A compute task is a generic structure representing a compute task in a [compute plan](./computeplan.md).
 There are 4 different kind of tasks:
+
 - Train
 - Test
 - Aggregate
@@ -17,6 +18,7 @@ there are some restrictions on which parents are allowed for each task.
 Here is the expected cardinality for each task category:
 
 **Note**:
+
 - the asterisk denotes an exclusive link, ie a *Train* task can only have **one** parent at most
 - parenthesis denotes optional dependencies
 - no parents may be a valid input
@@ -30,10 +32,11 @@ Here is the expected cardinality for each task category:
 
 ## Rank
 
-A task is executed as part of a compute plan.
+A task is executed as part of a [compute plan](./computeplan.md).
 Inside the graph of tasks, each task has a rank depending on its depth in the graph.
 
 General rules are:
+
 - A task with no parents has a rank of `0`
 - A task with parents has a rank of `max(parentRanks) + 1`
 
@@ -41,6 +44,18 @@ However, for **Test** compute tasks, the rank is set to the one of tested parent
 eg: if a test has an aggregate parent with rank 2, the test will also have a rank 2.
 
 Since parents are set during task definition, the rank is an immutable property.
+
+## Status
+
+A task can have several status (see *States* below for available transitions):
+
+- WAITING: new task waiting for its parents to be DONE. In this state the task cannot be processed yet.
+- TODO: all dependencies are built (all parents DONE) so the task can be picked up by a worker and processed.
+- DOING: the task is being processed by a worker.
+- DONE: task has been successfully completed.
+- FAILED: task execution has failed.
+- CANCELED: task execution has been interrupted or stopped before completion.
+This may happen if a parent has failed: the task won't be processed; or if the user cancels the compute plan.
 
 ## State
 
@@ -73,5 +88,6 @@ Task actions should match the following restrictions:
 | FAILED              | n     | y      | n     |
 
 Basically:
+
 - only the owner can cancel a task
 - only the worker can act on a task processing (DOING/DONE/FAILED)
