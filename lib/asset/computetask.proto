@@ -118,7 +118,6 @@ message NewCompositeTrainTaskData {
 
 message AggregateTrainTaskData {
   Permissions model_permissions = 2;
-  string worker = 3;
 }
 
 message NewAggregateTrainTaskData {
