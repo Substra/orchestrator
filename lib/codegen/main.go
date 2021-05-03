@@ -18,14 +18,13 @@ package main
 
 import (
 	"flag"
-	"io"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"text/template"
 
-	"github.com/joncalhoun/pipe"
 	"github.com/yoheimuta/go-protoparser/v4"
 	"github.com/yoheimuta/go-protoparser/v4/parser"
 )
@@ -40,17 +39,26 @@ func main() {
 	assets := getAssets(*path)
 
 	t := template.Must(template.New("protoMarshal").Parse(protojsonImplementationTemplate))
-	rc, wc, _ := pipe.Commands(
-		exec.Command("gofmt"),
-	)
 
-	if err := t.Execute(wc, assets); err != nil {
+	cmd := exec.Command("gofmt")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
 		log.Fatal(err)
 	}
-	wc.Close()
-	if _, err := io.Copy(os.Stdout, rc); err != nil {
+
+	go func() {
+		defer stdin.Close()
+		if err := t.Execute(stdin, assets); err != nil {
+			log.Fatalf("execute err: %v", err)
+		}
+	}()
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Printf("%s\n", out)
 }
 
 // Extract asset names from lib/asset code
