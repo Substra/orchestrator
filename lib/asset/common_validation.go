@@ -37,13 +37,6 @@ func (p *Permissions) Validate() error {
 	)
 }
 
-// Validate makes sure the NewPermissions object is valid
-func (np *NewPermissions) Validate() error {
-	return validation.ValidateStruct(np,
-		validation.Field(&np.AuthorizedIds, validation.When(!np.Public, validation.Required)),
-	)
-}
-
 func validateMetadata(input interface{}) error {
 	metadata, ok := input.(map[string]string)
 	if !ok {

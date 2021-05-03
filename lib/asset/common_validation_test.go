@@ -48,13 +48,3 @@ func TestPermissionsValidation(t *testing.T) {
 	assert.Error(t, emptyPermissions.Validate(), "empty object is invalid")
 	assert.NoError(t, complete.Validate())
 }
-
-func TestNewPermissionsValidation(t *testing.T) {
-	emptyNewPerms := &NewPermissions{}
-	public := &NewPermissions{Public: true}
-	valid := &NewPermissions{Public: false, AuthorizedIds: []string{"org1"}}
-
-	assert.Error(t, emptyNewPerms.Validate())
-	assert.NoError(t, public.Validate())
-	assert.NoError(t, valid.Validate())
-}
