@@ -50,6 +50,10 @@ jobs:
         run: |
           cd /tmp
           go get -u github.com/go-bindata/go-bindata/...
+      - name: build orchestrator
+        run: make orchestrator
+      - name: build end2end tests
+        run: make ./bin/e2e-tests
       - name: wait for rabbitmq
         # We don't explicitely wait for postgres since it will almost certainly come up before rabbit
         run: |
@@ -57,9 +61,21 @@ jobs:
             sleep 2
           done
         timeout-minutes: 1
-      - name: end2end testing
-        run: make e2e-tests
+      - name: run e2e tests
+        run: |
+          ./bin/orchestrator > server.log 2>&1 &
+          ./bin/e2e-tests -server_addr localhost:9000
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
-          RABBITMQ_DSN: amqp://guest:guest@localhost:5672/
+          LOG_LEVEL: DEBUG
+          NO_COLOR: true
+          ORCHESTRATOR_TLS_ENABLED: false
+          ORCHESTRATOR_MODE: standalone
+          ORCHESTRATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
+          ORCHESTRATOR_AMQP_DSN: amqp://guest:guest@localhost:5672/
           ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
+      - name: Archive server log
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: server-log
+          path: server.log

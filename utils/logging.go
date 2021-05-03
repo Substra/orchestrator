@@ -25,6 +25,9 @@ import (
 func InitLogging() {
 	cLog := console.New(true)
 
+	_, noColor := os.LookupEnv("NO_COLOR")
+	cLog.SetDisplayColor(!noColor)
+
 	levels := getLevelsFromEnv()
 
 	log.AddHandler(cLog, levels...)

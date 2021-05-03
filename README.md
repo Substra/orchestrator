@@ -23,18 +23,17 @@ Make sure you have theses requirements fulfilled before trying to build the orch
 
 `make test`
 
-End to end testing requires some dependencies: a postgres database and a rabbitmq broker.
-Assuming you use minikube, e2e tests can be run with the following:
+End to end testing requires a running orchestrator.
+Assuming you have one up and ready on orchestrator.node-1.com port 443, here is how to launch the tests:
 
 ```bash
-docker run --name e2e-pg -e POSTGRES_PASSWORD=postgres -p5432:5432 -d postgres
-docker run --name e2e-rabbit -p5672:5672 -d rabbitmq
-export DATABASE_URL=postgresql://postgres:postgres@$(minikube ip):5432/postgres?sslmode=disable
-export RABBITMQ_DSN=amqp://guest:guest@$(minikube ip):5672/
-export ORCHESTRATOR_VERIFY_CLIENT_MSP_ID=false
-make e2e-tests
-docker stop e2e-pg e2e-rabbit
-docker rm e2e-pg e2e-rabbit
+make ./bin/e2e-tests
+./bin/e2e-tests -tls \
+    -cafile ./examples/tools/ca.crt \
+    -keyfile ./examples/tools/client-org-1.key \
+    -certfile ./examples/tools/client-org-1.crt \
+    -server_addr orchestrator.node-1.com:443 \
+    -server_host_override orchestrator.node-1.com
 ```
 
 ## Developping the orchestrator
