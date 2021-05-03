@@ -41,9 +41,9 @@ func TestAfterTransactionHook(t *testing.T) {
 func TestIsEvaluateTransaction(t *testing.T) {
 	evalFuncs := []string{"QueryNodes"}
 
-	assert.True(t, IsEvaluateTransaction("org.substra.node:QueryNodes", evalFuncs))
+	assert.True(t, IsEvaluateTransaction("orchestrator.node:QueryNodes", evalFuncs))
 	assert.True(t, IsEvaluateTransaction("QueryNodes", evalFuncs))
 
-	assert.False(t, IsEvaluateTransaction("org.substra.node:RegisterNodes", evalFuncs))
+	assert.False(t, IsEvaluateTransaction("orchestrator.node:RegisterNodes", evalFuncs))
 	assert.False(t, IsEvaluateTransaction("RegisterNodes", evalFuncs))
 }

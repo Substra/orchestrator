@@ -36,7 +36,7 @@ func (a *ComputePlanAdapter) RegisterPlan(ctx context.Context, in *asset.NewComp
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.computeplan:RegisterPlan"
+	method := "orchestrator.computeplan:RegisterPlan"
 
 	response := &asset.ComputePlan{}
 
@@ -50,7 +50,7 @@ func (a *ComputePlanAdapter) GetPlan(ctx context.Context, param *asset.GetComput
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.computeplan:GetPlan"
+	method := "orchestrator.computeplan:GetPlan"
 
 	response := &asset.ComputePlan{}
 
@@ -64,7 +64,7 @@ func (a *ComputePlanAdapter) QueryPlans(ctx context.Context, param *asset.QueryP
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.computeplan:QueryPlans"
+	method := "orchestrator.computeplan:QueryPlans"
 
 	response := &asset.QueryPlansResponse{}
 
@@ -78,7 +78,7 @@ func (a *ComputePlanAdapter) ApplyPlanAction(ctx context.Context, param *asset.A
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.computeplan:ApplyPlanAction"
+	method := "orchestrator.computeplan:ApplyPlanAction"
 
 	response := &asset.ApplyPlanActionResponse{}
 

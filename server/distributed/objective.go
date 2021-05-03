@@ -36,7 +36,7 @@ func (a *ObjectiveAdapter) RegisterObjective(ctx context.Context, in *asset.NewO
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.objective:RegisterObjective"
+	method := "orchestrator.objective:RegisterObjective"
 
 	response := &asset.Objective{}
 
@@ -51,7 +51,7 @@ func (a *ObjectiveAdapter) QueryObjective(ctx context.Context, query *asset.Obje
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.objective:QueryObjective"
+	method := "orchestrator.objective:QueryObjective"
 
 	response := &asset.Objective{}
 
@@ -66,7 +66,7 @@ func (a *ObjectiveAdapter) QueryObjectives(ctx context.Context, query *asset.Obj
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.objective:QueryObjectives"
+	method := "orchestrator.objective:QueryObjectives"
 
 	response := &asset.ObjectivesQueryResponse{}
 

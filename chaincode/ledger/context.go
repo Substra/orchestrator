@@ -115,7 +115,7 @@ func AfterTransactionHook(ctx TransactionContext, iface interface{}) error {
 // IsEvaluateTransaction returns true if the passed method name is one of the "evaluate transactions"
 // within the evaluateTransactions parameter. The parameter fnName can be either:
 // - a method name (eg; "QueryNodes")
-// - a full smart contract + method name (eg; "org.substra.node:QueryNodes")
+// - a full smart contract + method name (eg; "orchestrator.node:QueryNodes")
 func IsEvaluateTransaction(fnName string, evalFuncs []string) bool {
 	idx := strings.LastIndex(fnName, ":")
 	if idx != -1 {

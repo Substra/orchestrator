@@ -35,7 +35,7 @@ func (a *ModelAdapter) RegisterModel(ctx context.Context, newModel *asset.NewMod
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.model:RegisterModel"
+	method := "orchestrator.model:RegisterModel"
 
 	model := &asset.Model{}
 
@@ -49,7 +49,7 @@ func (a *ModelAdapter) GetComputeTaskModels(ctx context.Context, param *asset.Ge
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.model:GetComputeTaskModels"
+	method := "orchestrator.model:GetComputeTaskModels"
 
 	response := new(asset.GetComputeTaskModelsResponse)
 

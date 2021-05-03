@@ -36,7 +36,7 @@ func (a *AlgoAdapter) RegisterAlgo(ctx context.Context, in *asset.NewAlgo) (*ass
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.algo:RegisterAlgo"
+	method := "orchestrator.algo:RegisterAlgo"
 
 	response := &asset.Algo{}
 
@@ -51,7 +51,7 @@ func (a *AlgoAdapter) QueryAlgo(ctx context.Context, query *asset.AlgoQueryParam
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.algo:QueryAlgo"
+	method := "orchestrator.algo:QueryAlgo"
 
 	response := &asset.Algo{}
 
@@ -66,7 +66,7 @@ func (a *AlgoAdapter) QueryAlgos(ctx context.Context, query *asset.AlgosQueryPar
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.algo:QueryAlgos"
+	method := "orchestrator.algo:QueryAlgos"
 
 	response := &asset.AlgosQueryResponse{}
 

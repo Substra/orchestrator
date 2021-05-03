@@ -37,7 +37,7 @@ func (s *DatasetAdapter) QueryDataset(ctx context.Context, params *asset.Dataset
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.dataset:QueryDataset"
+	method := "orchestrator.dataset:QueryDataset"
 	response := &asset.Dataset{}
 
 	err = invocator.Call(method, params, response)

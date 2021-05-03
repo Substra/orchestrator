@@ -37,7 +37,7 @@ func TestRegisterObjective(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", "org.substra.objective:RegisterObjective", newObj, &asset.Objective{}).Return(nil)
+	invocator.On("Call", "orchestrator.objective:RegisterObjective", newObj, &asset.Objective{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -54,7 +54,7 @@ func TestQueryObjective(t *testing.T) {
 
 	param := &asset.ObjectiveQueryParam{Key: "uuid"}
 
-	invocator.On("Call", "org.substra.objective:QueryObjective", param, &asset.Objective{}).Return(nil)
+	invocator.On("Call", "orchestrator.objective:QueryObjective", param, &asset.Objective{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -71,7 +71,7 @@ func TestQueryObjectives(t *testing.T) {
 
 	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", "org.substra.objective:QueryObjectives", param, &asset.ObjectivesQueryResponse{}).Return(nil)
+	invocator.On("Call", "orchestrator.objective:QueryObjectives", param, &asset.ObjectivesQueryResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

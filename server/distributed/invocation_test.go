@@ -112,11 +112,11 @@ func TestParamWrapping(t *testing.T) {
 
 	// Here we use a submit where it should be an evaluate because evaluation is impossible to test due to limitations
 	// from fabric.
-	checker.On("IsEvaluateMethod", "org.substra.objective:QueryObjectives").Return(false)
-	contract.On("SubmitTransaction", "org.substra.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
+	checker.On("IsEvaluateMethod", "orchestrator.objective:QueryObjectives").Return(false)
+	contract.On("SubmitTransaction", "orchestrator.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
 
 	output := &asset.ObjectivesQueryResponse{}
-	err = invocator.Call("org.substra.objective:QueryObjectives", param, output)
+	err = invocator.Call("orchestrator.objective:QueryObjectives", param, output)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "test", output.NextPageToken, "response should be properly unwrapped")
@@ -144,10 +144,10 @@ func TestInvoke(t *testing.T) {
 	invocator := NewContractInvocator(contract, checker, []string{})
 	expectedInput := getEmptyExpectedInput(t)
 
-	checker.On("IsEvaluateMethod", "org.substra.some_contract:SomeMethod").Return(false)
-	contract.On("SubmitTransaction", "org.substra.some_contract:SomeMethod", expectedInput).Return([]byte{}, nil)
+	checker.On("IsEvaluateMethod", "orchestrator.some_contract:SomeMethod").Return(false)
+	contract.On("SubmitTransaction", "orchestrator.some_contract:SomeMethod", expectedInput).Return([]byte{}, nil)
 
-	err := invocator.Call("org.substra.some_contract:SomeMethod", nil, nil)
+	err := invocator.Call("orchestrator.some_contract:SomeMethod", nil, nil)
 	assert.NoError(t, err)
 }
 

@@ -36,7 +36,7 @@ func (a *NodeAdapter) RegisterNode(ctx context.Context, in *asset.NodeRegistrati
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.node:RegisterNode"
+	method := "orchestrator.node:RegisterNode"
 
 	node := &asset.Node{}
 
@@ -51,7 +51,7 @@ func (a *NodeAdapter) QueryNodes(ctx context.Context, in *asset.NodeQueryParam) 
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.node:QueryNodes"
+	method := "orchestrator.node:QueryNodes"
 
 	nodes := &asset.NodeQueryResponse{}
 

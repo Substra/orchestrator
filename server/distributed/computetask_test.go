@@ -35,7 +35,7 @@ func TestRegisterTask(t *testing.T) {
 
 	param := &asset.NewComputeTask{}
 
-	invocator.On("Call", "org.substra.computetask:RegisterTask", param, &asset.ComputeTask{}).Return(nil)
+	invocator.On("Call", "orchestrator.computetask:RegisterTask", param, &asset.ComputeTask{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -52,7 +52,7 @@ func TestQueryTasks(t *testing.T) {
 
 	param := &asset.QueryTasksParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", "org.substra.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
+	invocator.On("Call", "orchestrator.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

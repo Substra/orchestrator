@@ -101,7 +101,7 @@ Ideally in the *NewSmartContract*  method:
 ```go
 func NewSmartContract() *SmartContract {
     contract := &SmartContract{}
-    contract.Name = "org.substra.<asset>"
+    contract.Name = "orchestrator.<asset>"
     contract.TransactionContextHandler = ledger.NewContext()
     contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
     contract.AfterTransaction = ledger.AfterTransactionHook
@@ -145,7 +145,7 @@ func (a *AssetAdapter) DoSomething(ctx context.Context, input *assets.AssetDoSom
     }
     response := &assets.DoSomethingResponse
 
-    err = invocator.Call("org.substra.asset:DoSomething", input, response)
+    err = invocator.Call("orchestrator.asset:DoSomething", input, response)
 
     return response, err
 }

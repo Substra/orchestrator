@@ -36,7 +36,7 @@ func (a *ComputeTaskAdapter) RegisterTask(ctx context.Context, in *asset.NewComp
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.computetask:RegisterTask"
+	method := "orchestrator.computetask:RegisterTask"
 
 	response := &asset.ComputeTask{}
 
@@ -50,7 +50,7 @@ func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryT
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.computetask:QueryTasks"
+	method := "orchestrator.computetask:QueryTasks"
 
 	response := &asset.QueryTasksResponse{}
 
@@ -64,7 +64,7 @@ func (a *ComputeTaskAdapter) ApplyTaskAction(ctx context.Context, param *asset.A
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.computetask:ApplyTaskAction"
+	method := "orchestrator.computetask:ApplyTaskAction"
 
 	err = invocator.Call(method, param, nil)
 	if err != nil {
