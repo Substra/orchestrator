@@ -187,8 +187,14 @@ func (m *MockPermissionService) CanProcess(perms *asset.Permissions, requester s
 	return args.Bool(0)
 }
 
-// MergePermissions returns whatever is passed
-func (m *MockPermissionService) MergePermissions(x, y *asset.Permissions) *asset.Permissions {
+// MakeIntersection returns whatever is passed
+func (m *MockPermissionService) MakeIntersection(x, y *asset.Permissions) *asset.Permissions {
+	args := m.Called(x, y)
+	return args.Get(0).(*asset.Permissions)
+}
+
+// MakeUnion returns whatever is passed
+func (m *MockPermissionService) MakeUnion(x, y *asset.Permissions) *asset.Permissions {
 	args := m.Called(x, y)
 	return args.Get(0).(*asset.Permissions)
 }

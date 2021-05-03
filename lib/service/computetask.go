@@ -257,7 +257,7 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 		return err
 	}
 
-	perms, err := s.GetPermissionService().CreatePermissions(task.Owner, &asset.NewPermissions{Public: true})
+	perms, err := s.GetPermissionService().CreatePermissions(task.Owner, &asset.NewPermissions{Public: false})
 	if err != nil {
 		return err
 	}
@@ -274,7 +274,7 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 		default:
 			return fmt.Errorf("cannot process parent task %s: %w", p.Key, errors.ErrPermissionDenied)
 		}
-		perms = s.GetPermissionService().MergePermissions(permissions, perms)
+		perms = s.GetPermissionService().MakeUnion(permissions, perms)
 	}
 
 	taskData := &asset.AggregateTrainTaskData{
@@ -309,7 +309,7 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 		return err
 	}
 
-	permissions := s.GetPermissionService().MergePermissions(algo.Permissions, datamanager.Permissions)
+	permissions := s.GetPermissionService().MakeIntersection(algo.Permissions, datamanager.Permissions)
 
 	taskData := &asset.TrainTaskData{
 		DataManagerKey:   datamanager.Key,

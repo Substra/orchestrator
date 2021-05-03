@@ -160,7 +160,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		Process:  &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 	}
-	ps.On("MergePermissions", algo.Permissions, dataManager.Permissions).Return(modelPerms)
+	ps.On("MakeIntersection", algo.Permissions, dataManager.Permissions).Return(modelPerms)
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTrainTask.Key,
@@ -364,6 +364,8 @@ func TestSetAggregateData(t *testing.T) {
 
 	// check node existence
 	ns.On("GetNode", "org3").Once().Return(&asset.Node{Id: "org3"}, nil)
+	// used by permissions service
+	ns.On("GetNodes").Once().Return([]*asset.Node{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
 
 	// getCheckedAlgo
 	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_AGGREGATE, Permissions: &asset.Permissions{

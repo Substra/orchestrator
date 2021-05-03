@@ -25,7 +25,8 @@ import (
 type PermissionAPI interface {
 	CreatePermissions(owner string, newPerms *asset.NewPermissions) (*asset.Permissions, error)
 	CanProcess(perms *asset.Permissions, requester string) bool
-	MergePermissions(x, y *asset.Permissions) *asset.Permissions
+	MakeIntersection(x, y *asset.Permissions) *asset.Permissions
+	MakeUnion(x, y *asset.Permissions) *asset.Permissions
 }
 
 // PermissionServiceProvider defines an object able to provide a PermissionAPI instance.
@@ -106,26 +107,58 @@ func (s *PermissionService) CanProcess(perms *asset.Permissions, requester strin
 	return false
 }
 
-func (s *PermissionService) MergePermissions(x, y *asset.Permissions) *asset.Permissions {
+func (s *PermissionService) MakeIntersection(x, y *asset.Permissions) *asset.Permissions {
 	return &asset.Permissions{
-		Process:  mergePermission(x.Process, y.Process),
-		Download: mergePermission(x.Download, y.Download),
+		Process:  intersect(x.Process, y.Process),
+		Download: intersect(x.Download, y.Download),
 	}
 }
 
-func mergePermission(x, y *asset.Permission) *asset.Permission {
-	priv := &asset.Permission{}
-	priv.Public = x.Public && y.Public
+func (s *PermissionService) MakeUnion(x, y *asset.Permissions) *asset.Permissions {
+	return &asset.Permissions{
+		Process:  union(x.Process, y.Process),
+		Download: union(x.Download, y.Download),
+	}
+}
+
+func intersect(x, y *asset.Permission) *asset.Permission {
+	result := &asset.Permission{}
+	result.Public = x.Public && y.Public
 
 	switch {
 	case !x.Public && y.Public:
-		priv.AuthorizedIds = x.AuthorizedIds
+		result.AuthorizedIds = x.AuthorizedIds
 	case x.Public && !y.Public:
-		priv.AuthorizedIds = y.AuthorizedIds
+		result.AuthorizedIds = y.AuthorizedIds
 	default:
-		priv.AuthorizedIds = utils.Intersection(x.AuthorizedIds, y.AuthorizedIds)
+		result.AuthorizedIds = utils.Intersection(x.AuthorizedIds, y.AuthorizedIds)
 	}
-	return priv
+	return result
+}
+
+func union(x, y *asset.Permission) *asset.Permission {
+	result := &asset.Permission{}
+	result.Public = x.Public || y.Public
+
+	if !result.Public {
+		uniqueIds := make(map[string]struct{})
+
+		for _, id := range append(x.AuthorizedIds, y.AuthorizedIds...) {
+			uniqueIds[id] = struct{}{}
+		}
+
+		authorizedIds := make([]string, len(uniqueIds))
+
+		i := 0
+		for id := range uniqueIds {
+			authorizedIds[i] = id
+			i++
+		}
+
+		result.AuthorizedIds = authorizedIds
+	}
+
+	return result
 }
 
 // newPermission processes a NewPermission into a Permission.
