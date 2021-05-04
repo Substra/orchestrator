@@ -177,6 +177,43 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 	dispatcher.AssertExpectations(t)
 }
 
+func TestCascadeStatusDone(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	dispatcher := new(MockDispatcher)
+	provider := new(MockServiceProvider)
+
+	provider.On("GetComputeTaskDBAL").Return(dbal)
+	provider.On("GetEventQueue").Return(dispatcher)
+
+	// task is retrieved from persistence layer
+	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
+		Key:    "uuid",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Owner:  "owner",
+		Worker: "worker",
+	}, nil)
+	// Check for children to be updated
+	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
+		{Key: "child", Status: asset.ComputeTaskStatus_STATUS_WAITING},
+	}, nil)
+
+	// There should be two updates: 1 for the parent, 1 for the child
+	dispatcher.On("Enqueue", mock.Anything).Times(2).Return(nil)
+	// Updated task should be saved
+	updatedParent := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE, Owner: "owner", Worker: "worker"}
+	updatedChild := &asset.ComputeTask{Key: "child", Status: asset.ComputeTaskStatus_STATUS_TODO}
+	dbal.On("UpdateComputeTask", updatedParent).Return(nil)
+	dbal.On("UpdateComputeTask", updatedChild).Return(nil)
+
+	service := NewComputeTaskService(provider)
+
+	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DONE, "reason", "worker")
+	assert.NoError(t, err)
+
+	dbal.AssertExpectations(t)
+	dispatcher.AssertExpectations(t)
+}
+
 func TestUpdateAllowed(t *testing.T) {
 	task := &asset.ComputeTask{
 		Worker: "worker",

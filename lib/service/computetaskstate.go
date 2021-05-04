@@ -159,33 +159,39 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 
 // propagateDone propagates the DONE status of a parent to the task.
 // This will iterate over task parents and mark it as TODO if all parents are DONE.
-func (s *ComputeTaskService) propagateDone(parent, child *asset.ComputeTask) error {
+func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.ComputeTask) error {
+	logger := log.WithFields(
+		log.F("triggeringParent", triggeringParent.Key),
+		log.F("triggeringParentStatus", triggeringParent.Status),
+		log.F("child", child.Key),
+		log.F("childStatus", child.Status),
+	)
 	state := newState(s, child)
 	if !state.Can(transitionTodo) {
-		log.WithFields(
-			log.F("parent", parent.Key),
-			log.F("parentStatus", parent.Status),
-			log.F("child", child.Key),
-			log.F("childStatus", child.Status),
-		).Info("propagateDone: skipping child due to incompatible state")
+		logger.Info("propagateDone: skipping child due to incompatible state")
 		// this is expected as we might go over already failed children (from another parent)
 		return nil
 	}
 
 	// loop over parent, only change status if all parents are DONE
 	for _, parentKey := range child.ParentTaskKeys {
+		if parentKey == triggeringParent.Key {
+			// We already know this one is DONE
+			continue
+		}
 		parent, err := s.GetComputeTaskDBAL().GetComputeTask(parentKey)
 		if err != nil {
 			return err
 		}
 
 		if parent.Status != asset.ComputeTaskStatus_STATUS_DONE {
+			logger.WithField("parent", parent.Key).WithField("parentStatus", parent.Status).Debug("propagateDone: skipping child due to pending parent")
 			// At least one of the parents is not done, so no change for children
 			// but no error, this is expected.
 			return nil
 		}
 	}
-	err := s.applyTaskAction(child, transitionTodo, fmt.Sprintf("Last parent task %s done", parent.Key))
+	err := s.applyTaskAction(child, transitionTodo, fmt.Sprintf("Last parent task %s done", triggeringParent.Key))
 	if err != nil {
 		return err
 	}
