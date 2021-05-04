@@ -402,10 +402,10 @@ func TestSetAggregateData(t *testing.T) {
 
 	assert.Equal(t, algo, task.Algo)
 	assert.Equal(t, "org3", task.Worker)
-	assert.Equal(t, &asset.Permissions{
-		Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"org1", "org3"}},
-		Download: &asset.Permission{Public: false, AuthorizedIds: []string{"org1"}},
-	}, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions)
+	assert.False(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Process.Public)
+	assert.False(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Download.Public)
+	assert.ElementsMatch(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Process.AuthorizedIds, []string{"org1", "org3"})
+	assert.ElementsMatch(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Download.AuthorizedIds, []string{"org1"})
 
 	ns.AssertExpectations(t)
 	as.AssertExpectations(t)
