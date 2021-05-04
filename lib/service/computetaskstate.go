@@ -89,10 +89,10 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 		task.Status.String(),
 		taskStateEvents,
 		fsm.Callbacks{
-			"enter_state":                updater.onStateChange,
-			"enter_TASK_ACTION_CANCELED": updater.onCancel,
-			"enter_TASK_ACTION_FAILED":   updater.onCancel,
-			"enter_TASK_ACTION_DONE":     updater.onDone,
+			"enter_state":           updater.onStateChange,
+			"enter_STATUS_CANCELED": updater.onCancel,
+			"enter_STATUS_FAILED":   updater.onCancel,
+			"enter_STATUS_DONE":     updater.onDone,
 		},
 	)
 }
@@ -126,7 +126,7 @@ func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action str
 
 // onDone will iterate over task children to update their statuses
 func (s *ComputeTaskService) onDone(e *fsm.Event) {
-	if len(e.Args) != 1 {
+	if len(e.Args) != 2 {
 		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
 		return
 	}
@@ -146,7 +146,7 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 		log.F("taskKey", task.Key),
 		log.F("taskStatus", task.Status),
 		log.F("numChildren", len(children)),
-	).Debug("Updating children statuses")
+	).Debug("onDone: updating children statuses")
 
 	for _, child := range children {
 		err := s.propagateDone(task, child)
@@ -199,7 +199,7 @@ func (s *ComputeTaskService) onCancel(e *fsm.Event) {
 }
 
 func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition string) {
-	if len(e.Args) != 1 {
+	if len(e.Args) != 2 {
 		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
 		return
 	}

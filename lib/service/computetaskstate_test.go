@@ -156,19 +156,25 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 
 	// task is retrieved from persistence layer
 	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
+		Key:    "uuid",
 		Status: asset.ComputeTaskStatus_STATUS_WAITING,
 		Owner:  "owner",
 	}, nil)
+	// Check for children to be updated
+	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{}, nil)
 	// An update event should be enqueued
 	dispatcher.On("Enqueue", mock.Anything).Return(nil)
 	// Updated task should be saved
-	updatedTask := &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_CANCELED, Owner: "owner"}
+	updatedTask := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_CANCELED, Owner: "owner"}
 	dbal.On("UpdateComputeTask", updatedTask).Return(nil)
 
 	service := NewComputeTaskService(provider)
 
 	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_CANCELED, "", "owner")
 	assert.NoError(t, err)
+
+	dbal.AssertExpectations(t)
+	dispatcher.AssertExpectations(t)
 }
 
 func TestUpdateAllowed(t *testing.T) {
