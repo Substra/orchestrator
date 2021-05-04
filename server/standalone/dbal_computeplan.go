@@ -16,10 +16,13 @@ package standalone
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 // ComputePlanExists returns true if a ComputePlan with the given key already exists
@@ -55,6 +58,9 @@ group by cp.asset;
 	var done, total uint32 = 0, 0
 	err := row.Scan(plan, &total, &done)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("computeplan not found: %w", orchestrationErrors.ErrNotFound)
+		}
 		return nil, err
 	}
 

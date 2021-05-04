@@ -71,10 +71,35 @@ func (s *SmartContract) RegisterTask(ctx ledger.TransactionContext, wrapper *com
 	return wrapped, nil
 }
 
+// GetTask returns the task with given key
+func (s *SmartContract) GetTask(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetComputeTaskService()
+
+	params := new(asset.TaskQueryParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return nil, err
+	}
+
+	task, err := service.GetTask(params.GetKey())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to fetch computetask")
+		return nil, err
+	}
+
+	wrapped, err := communication.Wrap(task)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
+}
+
 func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetComputeTaskService()
 
-	param := new(asset.QueryTasksParam)
+	param := new(asset.TasksQueryParam)
 	err := wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
@@ -89,7 +114,7 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 		return nil, err
 	}
 
-	resp := &asset.QueryTasksResponse{
+	resp := &asset.TasksQueryResponse{
 		Tasks:         tasks,
 		NextPageToken: nextPage,
 	}
@@ -128,5 +153,5 @@ func (s *SmartContract) ApplyTaskAction(ctx ledger.TransactionContext, wrapper *
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryTasks"}
+	return []string{"QueryTasks", "GetTask"}
 }

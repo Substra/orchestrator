@@ -50,9 +50,9 @@ func TestQueryTasks(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	param := &asset.QueryTasksParam{PageToken: "uuid", PageSize: 20}
+	param := &asset.TasksQueryParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", "orchestrator.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
+	invocator.On("Call", "orchestrator.computetask:QueryTasks", param, &asset.TasksQueryResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

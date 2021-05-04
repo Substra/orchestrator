@@ -68,15 +68,18 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 	return &ComputeTaskService{provider}
 }
 
-func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
-	return s.GetComputeTaskDBAL().GetComputeTask(key)
-}
-
 // GetTasks returns tasks matching filter
 func (s *ComputeTaskService) GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	log.WithField("pagination", p).WithField("filter", filter).Debug("Querying ComputeTasks")
 
 	return s.GetComputeTaskDBAL().QueryComputeTasks(p, filter)
+}
+
+// GetTask return a single task
+func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
+	log.WithField("key", key).Debug("Get ComputeTask")
+
+	return s.GetComputeTaskDBAL().GetComputeTask(key)
 }
 
 // RegisterTask creates a new ComputeTask
