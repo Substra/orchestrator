@@ -1,6 +1,6 @@
 # Compute Task
 
-A compute task is a generic structure representing a compute task in a [compute plan](./computeplan.md).
+A compute task is a generic structure representing a step in a [compute plan](./computeplan.md).
 There are 4 different kind of tasks:
 
 - Train
@@ -9,6 +9,9 @@ There are 4 different kind of tasks:
 - Composite
 
 While the `ComputeTask` structure holds common fields, type-specific fields are held by dedicated substructures.
+
+Train, Aggregate and Composite tasks can produce one or more [models](./model.md) as output.
+Those models will have different [permissions](./permissions.md), which will be determined on task creation.
 
 ## Compatibility
 
