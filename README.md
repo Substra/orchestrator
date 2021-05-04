@@ -32,8 +32,7 @@ make ./bin/e2e-tests
     -cafile ./examples/tools/ca.crt \
     -keyfile ./examples/tools/client-org-1.key \
     -certfile ./examples/tools/client-org-1.crt \
-    -server_addr orchestrator.node-1.com:443 \
-    -server_host_override orchestrator.node-1.com
+    -server_addr orchestrator.node-1.com:443
 ```
 
 ## Developping the orchestrator
