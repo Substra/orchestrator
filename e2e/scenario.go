@@ -27,7 +27,6 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.RegisterNode()
 	appClient.RegisterAlgo()
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
@@ -44,15 +43,11 @@ func testRegisterModel(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.RegisterNode()
 	appClient.RegisterAlgo()
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
 	appClient.RegisterComputePlan()
-	appClient.QueryComputePlans()
-	if len(appClient.Plans) != 1 {
-		log.Fatal("invalid number of compute plans")
-	}
+	appClient.AssertPlanInQueryPlans()
 	appClient.RegisterTrainTask()
 	appClient.StartTrainTask()
 	appClient.RegisterModel()

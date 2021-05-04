@@ -36,7 +36,6 @@ type TestClient struct {
 	modelService       asset.ModelServiceClient
 	computeTaskService asset.ComputeTaskServiceClient
 	computePlanService asset.ComputePlanServiceClient
-	Plans              []*asset.ComputePlan
 }
 
 func NewTestClient(conn *grpc.ClientConn, mspid, channel string) (*TestClient, error) {
@@ -203,11 +202,20 @@ func (c *TestClient) RegisterComputePlan() {
 	}
 }
 
-func (c *TestClient) QueryComputePlans() {
+func (c *TestClient) AssertPlanInQueryPlans() {
 	resp, err := c.computePlanService.QueryPlans(c.ctx, &asset.QueryPlansParam{})
 	if err != nil {
 		log.Fatalf("RegisterPlan failed: %v", err)
 	}
 
-	c.Plans = resp.Plans
+	planFound := false
+	for _, p := range resp.Plans {
+		if p.Key == c.GetKey("cp") {
+			planFound = true
+			break
+		}
+	}
+	if !planFound {
+		log.Fatal("invalid number of compute plans")
+	}
 }
