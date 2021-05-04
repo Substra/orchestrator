@@ -89,10 +89,10 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 		task.Status.String(),
 		taskStateEvents,
 		fsm.Callbacks{
-			"enter_state":           updater.onStateChange,
-			"enter_STATUS_CANCELED": updater.onCancel,
-			"enter_STATUS_FAILED":   updater.onCancel,
-			"enter_STATUS_DONE":     updater.onDone,
+			"enter_state":                updater.onStateChange,
+			"after_TASK_ACTION_CANCELED": updater.onCancel,
+			"after_TASK_ACTION_FAILED":   updater.onCancel,
+			"after_TASK_ACTION_DONE":     updater.onDone,
 		},
 	)
 }
