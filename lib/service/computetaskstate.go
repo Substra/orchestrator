@@ -67,12 +67,22 @@ type taskStateUpdater interface {
 	onStateChange(e *fsm.Event)
 	// Cascade Canceled status to children. Parent task is given as argument
 	// any error should be registered as e.Err
-	cascadeCancel(e *fsm.Event)
+	onCancel(e *fsm.Event)
 	// Recompute children status according to all its parents
 	// Task is received as argument
 	// any error should be registered as e.Err
-	updateChildrenStatus(e *fsm.Event)
+	onDone(e *fsm.Event)
 }
+
+// dumbStateUpdater implements taskStateUpdater but does nothing,
+// it can be used to evaluate a task state without risking to accidentaly update it
+type dumbStateUpdater struct{}
+
+func (d *dumbStateUpdater) onStateChange(e *fsm.Event) {}
+func (d *dumbStateUpdater) onCancel(e *fsm.Event)      {}
+func (d *dumbStateUpdater) onDone(e *fsm.Event)        {}
+
+var dumbUpdater dumbStateUpdater = dumbStateUpdater{}
 
 func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 	return fsm.NewFSM(
@@ -80,9 +90,9 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 		taskStateEvents,
 		fsm.Callbacks{
 			"enter_state":                updater.onStateChange,
-			"enter_TASK_ACTION_CANCELED": updater.cascadeCancel,
-			"enter_TASK_ACTION_FAILED":   updater.cascadeCancel,
-			"enter_TASK_ACTION_DONE":     updater.updateChildrenStatus,
+			"enter_TASK_ACTION_CANCELED": updater.onCancel,
+			"enter_TASK_ACTION_FAILED":   updater.onCancel,
+			"enter_TASK_ACTION_DONE":     updater.onDone,
 		},
 	)
 }
@@ -103,24 +113,19 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 		return fmt.Errorf("only task owner can update it: %w", errors.ErrPermissionDenied)
 	}
 
-	return s.applyTaskAction(key, transition, reason)
+	return s.applyTaskAction(task, transition, reason)
 }
 
 // applyTaskAction is the internal method allowing any transition (string).
 // This allows to use this method with internal only transitions (abort).
-func (s *ComputeTaskService) applyTaskAction(key string, action string, reason string) error {
-	log.WithField("taskKey", key).WithField("action", action).WithField("reason", reason).Debug("Applying task action")
-	task, err := s.GetComputeTaskDBAL().GetComputeTask(key)
-	if err != nil {
-		return err
-	}
-
+func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action string, reason string) error {
+	log.WithField("taskKey", task.Key).WithField("action", action).WithField("reason", reason).Debug("Applying task action")
 	state := newState(s, task)
 	return state.Event(action, task, reason)
 }
 
-// updateChildrenStatus will iterate over task children to update their statuses
-func (s *ComputeTaskService) updateChildrenStatus(e *fsm.Event) {
+// onDone will iterate over task children to update their statuses
+func (s *ComputeTaskService) onDone(e *fsm.Event) {
 	if len(e.Args) != 1 {
 		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
 		return
@@ -180,7 +185,7 @@ func (s *ComputeTaskService) propagateDone(parent, child *asset.ComputeTask) err
 			return nil
 		}
 	}
-	err := s.applyTaskAction(child.Key, transitionTodo, fmt.Sprintf("Last parent task %s done", parent.Key))
+	err := s.applyTaskAction(child, transitionTodo, fmt.Sprintf("Last parent task %s done", parent.Key))
 	if err != nil {
 		return err
 	}
@@ -188,8 +193,8 @@ func (s *ComputeTaskService) propagateDone(parent, child *asset.ComputeTask) err
 	return nil
 }
 
-// cascadeCancel iterate over children to propagate the cancellation
-func (s *ComputeTaskService) cascadeCancel(e *fsm.Event) {
+// onCancel iterate over children to propagate the cancellation
+func (s *ComputeTaskService) onCancel(e *fsm.Event) {
 	s.cascadeTransition(e, transitionCanceled)
 }
 
@@ -218,7 +223,7 @@ func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition string) 
 	).Debug("Cascading task transition")
 
 	for _, child := range children {
-		err := s.applyTaskAction(child.Key, transition, fmt.Sprintf("Cascading status from parent %s", task.Key))
+		err := s.applyTaskAction(child, transition, fmt.Sprintf("Cascading status from parent %s", task.Key))
 		if err != nil {
 			e.Err = err
 			return

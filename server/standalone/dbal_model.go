@@ -39,7 +39,7 @@ func (d *DBAL) ModelExists(key string) (bool, error) {
 	return count == 1, err
 }
 
-func (d *DBAL) GetTaskModels(key string) ([]*asset.Model, error) {
+func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 	rows, err := d.tx.Query(`select asset from "models" where asset->>'computeTaskKey' = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
@@ -61,6 +61,12 @@ func (d *DBAL) GetTaskModels(key string) ([]*asset.Model, error) {
 
 func (d *DBAL) AddModel(model *asset.Model) error {
 	stmt := `insert into "models" ("id", "asset", "channel") values ($1, $2, $3)`
+	_, err := d.tx.Exec(stmt, model.GetKey(), model, d.channel)
+	return err
+}
+
+func (d *DBAL) UpdateModel(model *asset.Model) error {
+	stmt := `update "models" set asset = $2 where id = $1 and channel = $3)`
 	_, err := d.tx.Exec(stmt, model.GetKey(), model, d.channel)
 	return err
 }

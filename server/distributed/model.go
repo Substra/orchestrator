@@ -44,12 +44,12 @@ func (a *ModelAdapter) RegisterModel(ctx context.Context, newModel *asset.NewMod
 	return model, err
 }
 
-func (a *ModelAdapter) GetComputeTaskModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
+func (a *ModelAdapter) GetComputeTaskOutputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.model:GetComputeTaskModels"
+	method := "orchestrator.model:GetComputeTaskOutputModels"
 
 	response := new(asset.GetComputeTaskModelsResponse)
 
@@ -59,4 +59,53 @@ func (a *ModelAdapter) GetComputeTaskModels(ctx context.Context, param *asset.Ge
 	}
 
 	return response, nil
+}
+
+func (a *ModelAdapter) GetComputeTaskInputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.model:GetComputeTaskInputModels"
+
+	response := new(asset.GetComputeTaskModelsResponse)
+
+	err = invocator.Call(method, param, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (a *ModelAdapter) CanDisableModel(ctx context.Context, param *asset.CanDisableModelParam) (*asset.CanDisableModelResponse, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.model:CanDisableModel"
+
+	response := new(asset.CanDisableModelResponse)
+
+	err = invocator.Call(method, param, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (a *ModelAdapter) DisableModel(ctx context.Context, param *asset.DisableModelParam) (*asset.DisableModelResponse, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.model:DisableModel"
+
+	err = invocator.Call(method, param, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.DisableModelResponse{}, nil
 }

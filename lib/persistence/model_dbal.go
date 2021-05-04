@@ -21,8 +21,9 @@ import (
 type ModelDBAL interface {
 	ModelExists(key string) (bool, error)
 	GetModel(key string) (*asset.Model, error)
-	GetTaskModels(key string) ([]*asset.Model, error)
+	GetComputeTaskOutputModels(key string) ([]*asset.Model, error)
 	AddModel(m *asset.Model) error
+	UpdateModel(m *asset.Model) error
 }
 
 type ModelDBALProvider interface {

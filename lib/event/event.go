@@ -24,6 +24,8 @@ const (
 	AssetCreated Kind = "asset_created"
 	// AssetUpdated is emitted when an existing asset is updated
 	AssetUpdated = "asset_updated"
+	// AssetDisabled is emitted when an asset is disabled (ie: not accessible anymore)
+	AssetDisabled = "asset_disabled"
 )
 
 // Event is an occurence of an orchestration event.

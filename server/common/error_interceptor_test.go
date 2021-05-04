@@ -38,6 +38,7 @@ func TestStatusConversion(t *testing.T) {
 		"badrequest":          {err: errors.ErrBadRequest, code: codes.FailedPrecondition},
 		"incompatible_status": {err: errors.ErrIncompatibleTaskStatus, code: codes.InvalidArgument},
 		"unimplemented":       {err: errors.ErrUnimplemented, code: codes.Unimplemented},
+		"unprocessable model": {err: errors.ErrCannotDisableModel, code: codes.InvalidArgument},
 	}
 
 	for name, tc := range cases {

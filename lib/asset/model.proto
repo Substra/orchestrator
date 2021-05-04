@@ -49,7 +49,24 @@ message GetComputeTaskModelsResponse {
   repeated Model models = 1;
 }
 
+message CanDisableModelParam {
+  string model_key = 1;
+}
+
+message CanDisableModelResponse {
+  bool can_disable = 1;
+}
+
+message DisableModelParam {
+  string model_key = 1;
+}
+
+message DisableModelResponse {}
+
 service ModelService {
   rpc RegisterModel(NewModel) returns (Model) {}
-  rpc GetComputeTaskModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {}
+  rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {}
+  rpc GetComputeTaskInputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {}
+  rpc CanDisableModel(CanDisableModelParam) returns (CanDisableModelResponse) {}
+  rpc DisableModel(DisableModelParam) returns (DisableModelResponse) {}
 }

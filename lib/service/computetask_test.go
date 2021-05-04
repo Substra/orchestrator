@@ -41,6 +41,28 @@ var newTrainTask = &asset.NewComputeTask{
 	},
 }
 
+func TestGetTask(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	provider := new(MockServiceProvider)
+
+	provider.On("GetComputeTaskDBAL").Return(dbal)
+
+	service := NewComputeTaskService(provider)
+
+	task := &asset.ComputeTask{
+		Key: "uuid",
+	}
+
+	dbal.On("GetComputeTask", "uuid").Once().Return(task, nil)
+
+	ret, err := service.GetTask("uuid")
+	assert.NoError(t, err)
+	assert.Equal(t, task, ret)
+
+	provider.AssertExpectations(t)
+	dbal.AssertExpectations(t)
+}
+
 func TestGetTasks(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
@@ -731,4 +753,158 @@ func TestGetRank(t *testing.T) {
 
 	noParents := []*asset.ComputeTask{}
 	assert.Equal(t, int32(0), getRank(noParents))
+}
+
+func TestCanDisableModels(t *testing.T) {
+	t.Run("not worker", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Worker: "woker",
+		}
+
+		dbal := new(persistenceHelper.MockDBAL)
+		provider := new(MockServiceProvider)
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+
+		service := NewComputeTaskService(provider)
+		_, err := service.canDisableModels("uuid", "notworker")
+		assert.Error(t, err)
+		assert.True(t, errors.Is(err, orchestrationError.ErrPermissionDenied))
+
+		dbal.AssertExpectations(t)
+	})
+	t.Run("non terminal task", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Worker: "worker",
+		}
+
+		dbal := new(persistenceHelper.MockDBAL)
+		provider := new(MockServiceProvider)
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+
+		service := NewComputeTaskService(provider)
+		can, err := service.canDisableModels("uuid", "worker")
+		assert.NoError(t, err)
+		assert.False(t, can)
+
+		dbal.AssertExpectations(t)
+	})
+	t.Run("compute plan cannot be disabled", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status:         asset.ComputeTaskStatus_STATUS_DONE,
+			ComputePlanKey: "cpKey",
+			Worker:         "worker",
+		}
+
+		dbal := new(persistenceHelper.MockDBAL)
+		provider := new(MockServiceProvider)
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+		cps := new(MockComputePlanService)
+		provider.On("GetComputePlanService").Return(cps)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+
+		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
+			DeleteIntermediaryModels: false,
+		}, nil)
+
+		service := NewComputeTaskService(provider)
+		can, err := service.canDisableModels("uuid", "worker")
+		assert.NoError(t, err)
+		assert.False(t, can)
+
+		dbal.AssertExpectations(t)
+		cps.AssertExpectations(t)
+	})
+	t.Run("task without children", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status:         asset.ComputeTaskStatus_STATUS_DONE,
+			ComputePlanKey: "cpKey",
+			Worker:         "worker",
+		}
+
+		dbal := new(persistenceHelper.MockDBAL)
+		provider := new(MockServiceProvider)
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+		cps := new(MockComputePlanService)
+		provider.On("GetComputePlanService").Return(cps)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
+			DeleteIntermediaryModels: true,
+		}, nil)
+		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{}, nil)
+
+		service := NewComputeTaskService(provider)
+		can, err := service.canDisableModels("uuid", "worker")
+		assert.NoError(t, err)
+		assert.False(t, can)
+
+		dbal.AssertExpectations(t)
+		cps.AssertExpectations(t)
+	})
+	t.Run("task with active children", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status:         asset.ComputeTaskStatus_STATUS_DONE,
+			ComputePlanKey: "cpKey",
+			Worker:         "worker",
+		}
+
+		dbal := new(persistenceHelper.MockDBAL)
+		provider := new(MockServiceProvider)
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+		cps := new(MockComputePlanService)
+		provider.On("GetComputePlanService").Return(cps)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
+			DeleteIntermediaryModels: true,
+		}, nil)
+		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
+			{Status: asset.ComputeTaskStatus_STATUS_DOING},
+		}, nil)
+
+		service := NewComputeTaskService(provider)
+		can, err := service.canDisableModels("uuid", "worker")
+		assert.NoError(t, err)
+		assert.False(t, can)
+
+		dbal.AssertExpectations(t)
+		cps.AssertExpectations(t)
+	})
+	t.Run("task can be disabled", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Key:            "uuid",
+			Status:         asset.ComputeTaskStatus_STATUS_DONE,
+			ComputePlanKey: "cpKey",
+			Worker:         "worker",
+		}
+
+		dbal := new(persistenceHelper.MockDBAL)
+		provider := new(MockServiceProvider)
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+		cps := new(MockComputePlanService)
+		provider.On("GetComputePlanService").Return(cps)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
+			DeleteIntermediaryModels: true,
+		}, nil)
+		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
+			{Status: asset.ComputeTaskStatus_STATUS_DONE},
+		}, nil)
+
+		service := NewComputeTaskService(provider)
+		can, err := service.canDisableModels("uuid", "worker")
+		assert.NoError(t, err)
+		assert.True(t, can)
+
+		dbal.AssertExpectations(t)
+		cps.AssertExpectations(t)
+	})
 }

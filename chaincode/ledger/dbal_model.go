@@ -46,13 +46,13 @@ func (db *DB) ModelExists(key string) (bool, error) {
 	return exists, nil
 }
 
-func (db *DB) GetTaskModels(key string) ([]*asset.Model, error) {
+func (db *DB) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 	elementKeys, err := db.getIndexKeys("model~taskKey~modelKey", []string{asset.ModelKind, key})
 	if err != nil {
 		return nil, err
 	}
 
-	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetTaskModels")
+	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetComputeTaskOutputModels")
 
 	models := []*asset.Model{}
 	for _, modelKey := range elementKeys {
@@ -85,6 +85,20 @@ func (db *DB) AddModel(model *asset.Model) error {
 	}
 
 	if err := db.createIndex("model~taskKey~modelKey", []string{asset.ModelKind, model.GetComputeTaskKey(), model.GetKey()}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *DB) UpdateModel(model *asset.Model) error {
+	bytes, err := json.Marshal(model)
+	if err != nil {
+		return err
+	}
+
+	err = db.putState(asset.ModelKind, model.GetKey(), bytes)
+	if err != nil {
 		return err
 	}
 

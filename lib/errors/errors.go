@@ -62,3 +62,6 @@ var ErrReferenceNotFound = errors.New("OE0103")
 
 // ErrIncompatibleTaskStatus occurs when a task cannot be processed due to its status
 var ErrIncompatibleTaskStatus = errors.New("OE0104")
+
+// ErrCannotDisableModel occurs when attempting to disable a model that is not eligible
+var ErrCannotDisableModel = errors.New("OE105")

@@ -31,8 +31,12 @@ import (
 type ComputeTaskAPI interface {
 	// RegisterTask creates a new ComputeTask
 	RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error)
+	GetTask(key string) (*asset.ComputeTask, error)
 	GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
+	// canDisableModels is internal only (exposed only to other services).
+	// it will return true if models produced by the task can be disabled
+	canDisableModels(key, requester string) (bool, error)
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance
@@ -51,6 +55,7 @@ type ComputeTaskDependencyProvider interface {
 	ObjectiveServiceProvider
 	NodeServiceProvider
 	ComputePlanServiceProvider
+	ModelServiceProvider
 }
 
 // ComputeTaskService is the compute task manipulation entry point
@@ -61,6 +66,10 @@ type ComputeTaskService struct {
 // NewComputeTaskService creates a new service
 func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskService {
 	return &ComputeTaskService{provider}
+}
+
+func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
+	return s.GetComputeTaskDBAL().GetComputeTask(key)
 }
 
 // GetTasks returns tasks matching filter
@@ -161,6 +170,57 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 	}
 
 	return task, nil
+}
+
+// Models produced by a task can only be disabled if all those conditions are met:
+// - the compute plan has the DeleteIntermediaryModel set
+// - task has children (ie: not at the tip of the compute plan)
+// - task is in a terminal state (done, failed, canceled)
+// - all children are in a terminal state
+func (s *ComputeTaskService) canDisableModels(key string, requester string) (bool, error) {
+	logger := log.WithField("taskKey", key)
+	task, err := s.GetTask(key)
+	if err != nil {
+		return false, err
+	}
+	if task.Worker != requester {
+		return false, fmt.Errorf("only the worker can disable a task outputs: %w", errors.ErrPermissionDenied)
+	}
+
+	state := newState(&dumbUpdater, task)
+	if len(state.AvailableTransitions()) > 0 {
+		logger.WithField("status", state.Current()).Debug("skip model disable: task not in final state")
+		return false, nil
+	}
+
+	plan, err := s.GetComputePlanService().GetPlan(task.ComputePlanKey)
+	if err != nil {
+		return false, err
+	}
+	if !plan.DeleteIntermediaryModels {
+		logger.WithField("computePlanKey", plan.Key).Debug("skip model disable: DeleteIntermediaryModels is false")
+		return false, nil
+	}
+
+	children, err := s.GetComputeTaskDBAL().GetComputeTaskChildren(key)
+	if err != nil {
+		return false, err
+	}
+
+	if len(children) == 0 {
+		logger.Debug("cannot disable model: taks has no children")
+		return false, nil
+	}
+
+	for _, child := range children {
+		state := newState(&dumbUpdater, child)
+		if len(state.AvailableTransitions()) > 0 {
+			logger.WithField("childKey", child.Key).Debug("cannot disable model: taks has active children")
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 // getCheckedAlgo returns the Algo identified by given key,

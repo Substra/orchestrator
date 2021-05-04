@@ -84,6 +84,8 @@ func fromMessage(msg string) error {
 		return status.Error(codes.InvalidArgument, msg)
 	case strings.Contains(msg, orchestrationErrors.ErrUnimplemented.Error()):
 		return status.Error(codes.Unimplemented, msg)
+	case strings.Contains(msg, orchestrationErrors.ErrCannotDisableModel.Error()):
+		return status.Error(codes.InvalidArgument, msg)
 	default:
 		return status.Error(codes.Unknown, msg)
 	}
@@ -110,6 +112,8 @@ func fromError(err error) error {
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, orchestrationErrors.ErrUnimplemented):
 		return status.Error(codes.Unimplemented, err.Error())
+	case errors.Is(err, orchestrationErrors.ErrCannotDisableModel):
+		return status.Error(codes.InvalidArgument, err.Error())
 	default:
 		return status.Error(codes.Unknown, err.Error())
 	}

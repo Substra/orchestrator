@@ -36,7 +36,7 @@ func getMockedService(ctx *testHelper.MockedContext) *service.MockModelService {
 	return mockService
 }
 
-func TestGetTaskModels(t *testing.T) {
+func TestGetTaskOutputModels(t *testing.T) {
 	contract := &SmartContract{}
 
 	param := &asset.GetComputeTaskModelsParam{
@@ -48,9 +48,33 @@ func TestGetTaskModels(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 
 	service := getMockedService(ctx)
-	service.On("GetTaskModels", "uuid").Return([]*asset.Model{{}, {}}, nil).Once()
+	service.On("GetComputeTaskOutputModels", "uuid").Return([]*asset.Model{{}, {}}, nil).Once()
 
-	wrapped, err := contract.GetComputeTaskModels(ctx, wrapper)
+	wrapped, err := contract.GetComputeTaskOutputModels(ctx, wrapper)
+	assert.NoError(t, err)
+
+	resp := new(asset.GetComputeTaskModelsResponse)
+	err = wrapped.Unwrap(resp)
+	assert.NoError(t, err)
+
+	assert.Len(t, resp.Models, 2)
+}
+
+func TestGetTaskInputModels(t *testing.T) {
+	contract := &SmartContract{}
+
+	param := &asset.GetComputeTaskModelsParam{
+		ComputeTaskKey: "uuid",
+	}
+	wrapper, err := communication.Wrap(param)
+	assert.NoError(t, err)
+
+	ctx := new(testHelper.MockedContext)
+
+	service := getMockedService(ctx)
+	service.On("GetComputeTaskInputModels", "uuid").Return([]*asset.Model{{}, {}}, nil).Once()
+
+	wrapped, err := contract.GetComputeTaskInputModels(ctx, wrapper)
 	assert.NoError(t, err)
 
 	resp := new(asset.GetComputeTaskModelsResponse)
@@ -87,5 +111,55 @@ func TestRegisterModel(t *testing.T) {
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
 	_, err = contract.RegisterModel(ctx, wrapper)
+	assert.NoError(t, err)
+}
+
+func TestCanDisableModel(t *testing.T) {
+	contract := &SmartContract{}
+
+	mspid := "org"
+
+	wrapper, err := communication.Wrap(&asset.CanDisableModelParam{ModelKey: "uuid"})
+	assert.NoError(t, err)
+
+	ctx := new(testHelper.MockedContext)
+
+	service := getMockedService(ctx)
+	service.On("CanDisableModel", "uuid", mspid).Return(true, nil).Once()
+
+	stub := new(testHelper.MockedStub)
+	ctx.On("GetStub").Return(stub).Once()
+
+	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
+
+	wrapped, err := contract.CanDisableModel(ctx, wrapper)
+	assert.NoError(t, err)
+
+	resp := new(asset.CanDisableModelResponse)
+	err = wrapped.Unwrap(resp)
+	assert.NoError(t, err)
+
+	assert.True(t, resp.CanDisable)
+}
+
+func TestDisableModel(t *testing.T) {
+	contract := &SmartContract{}
+
+	mspid := "org"
+
+	wrapper, err := communication.Wrap(&asset.CanDisableModelParam{ModelKey: "uuid"})
+	assert.NoError(t, err)
+
+	ctx := new(testHelper.MockedContext)
+
+	service := getMockedService(ctx)
+	service.On("DisableModel", "uuid", mspid).Return(nil).Once()
+
+	stub := new(testHelper.MockedStub)
+	ctx.On("GetStub").Return(stub).Once()
+
+	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
+
+	err = contract.DisableModel(ctx, wrapper)
 	assert.NoError(t, err)
 }

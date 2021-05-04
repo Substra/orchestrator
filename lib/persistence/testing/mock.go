@@ -221,7 +221,12 @@ func (m *MockDBAL) GetModel(key string) (*asset.Model, error) {
 	return args.Get(0).(*asset.Model), args.Error(1)
 }
 
-func (m *MockDBAL) GetTaskModels(key string) ([]*asset.Model, error) {
+func (m *MockDBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
+	args := m.Called(key)
+	return args.Get(0).([]*asset.Model), args.Error(1)
+}
+
+func (m *MockDBAL) GetComputeTaskInputModels(key string) ([]*asset.Model, error) {
 	args := m.Called(key)
 	return args.Get(0).([]*asset.Model), args.Error(1)
 }
@@ -249,4 +254,9 @@ func (m *MockDBAL) AddComputePlan(plan *asset.ComputePlan) error {
 func (m *MockDBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.ComputePlan), args.String(1), args.Error(2)
+}
+
+func (m *MockDBAL) UpdateModel(model *asset.Model) error {
+	args := m.Called(model)
+	return args.Error(0)
 }

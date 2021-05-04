@@ -33,11 +33,11 @@ func (m *mockStateUpdater) onStateChange(e *fsm.Event) {
 	m.Called(e)
 }
 
-func (m *mockStateUpdater) cascadeCancel(e *fsm.Event) {
+func (m *mockStateUpdater) onCancel(e *fsm.Event) {
 	m.Called(e)
 }
 
-func (m *mockStateUpdater) updateChildrenStatus(e *fsm.Event) {
+func (m *mockStateUpdater) onDone(e *fsm.Event) {
 	m.Called(e)
 }
 
@@ -88,12 +88,12 @@ func TestOnStateChange(t *testing.T) {
 	err := state.Event(asset.ComputeTaskAction_TASK_ACTION_DOING.String(), &asset.ComputeTask{})
 
 	assert.NoError(t, err)
+	updater.AssertExpectations(t)
 }
 
 // Make sure fsm returns expected errors
 func TestFailedStateChange(t *testing.T) {
 	updater := new(mockStateUpdater)
-	updater.On("onStateChange", mock.Anything).Once()
 
 	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DOING, Key: "uuid"})
 
@@ -103,6 +103,7 @@ func TestFailedStateChange(t *testing.T) {
 	state = newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DONE, Key: "uuid"})
 	err = state.Event(transitionCanceled, &asset.ComputeTask{})
 	assert.IsType(t, fsm.InvalidEventError{}, err)
+	updater.AssertExpectations(t)
 }
 
 func TestDispatchOnTransition(t *testing.T) {

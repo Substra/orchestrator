@@ -59,7 +59,7 @@ func InterceptMSPID(ctx context.Context, req interface{}, info *grpc.UnaryServer
 		}
 	}
 
-	newCtx := context.WithValue(ctx, ctxMSPIDKey, MSPID)
+	newCtx := context.WithValue(ctx, CtxMSPIDKey, MSPID)
 	return handler(newCtx, req)
 }
 
@@ -92,13 +92,13 @@ func VerifyClientMSPID(ctx context.Context, MSPID string) error {
 type ctxMSPIDMarker struct{}
 
 var (
-	ctxMSPIDKey = &ctxMSPIDMarker{}
+	CtxMSPIDKey = &ctxMSPIDMarker{}
 )
 
 // ExtractMSPID retrieves MSPID from request context
 // MSPID is expected to be set by InterceptMSPID
 func ExtractMSPID(ctx context.Context) (string, error) {
-	invocator, ok := ctx.Value(ctxMSPIDKey).(string)
+	invocator, ok := ctx.Value(CtxMSPIDKey).(string)
 	if !ok {
 		return "", errors.New("MSPID not found in context")
 	}

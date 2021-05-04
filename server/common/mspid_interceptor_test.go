@@ -34,7 +34,7 @@ func (t FakeTLSAuthInfo) AuthType() string {
 func TestExtractMSPID(t *testing.T) {
 	ctx := context.TODO()
 
-	ctxWithMSPID := context.WithValue(ctx, ctxMSPIDKey, "OrgMSP")
+	ctxWithMSPID := context.WithValue(ctx, CtxMSPIDKey, "OrgMSP")
 
 	extracted, err := ExtractMSPID(ctxWithMSPID)
 	assert.NoError(t, err, "extraction should not fail")

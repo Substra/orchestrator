@@ -32,7 +32,7 @@ An event will hold the following fields:
 
 - asset_created: occurs when a new asset has been registered
 - asset_updated: occurs when an existing asset has been modified
-- asset_cleaned: occurs when an asset has been cleaned by its owner and is not accessible anymore
+- asset_disabled: occurs when an asset has been disabled by its owner and is not accessible anymore
 
 ## Relevant metadata
 

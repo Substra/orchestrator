@@ -382,6 +382,11 @@ func (m *MockComputeTaskService) RegisterTask(task *asset.NewComputeTask, owner 
 	return args.Get(0).(*asset.ComputeTask), args.Error(1)
 }
 
+func (m *MockComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.ComputeTask), args.Error(1)
+}
+
 func (m *MockComputeTaskService) GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	args := m.Called(p, filter)
 	return args.Get(0).([]*asset.ComputeTask), args.String(1), args.Error(2)
@@ -390,6 +395,11 @@ func (m *MockComputeTaskService) GetTasks(p *common.Pagination, filter *asset.Ta
 func (m *MockComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error {
 	args := m.Called(key, action, reason, requester)
 	return args.Error(0)
+}
+
+func (m *MockComputeTaskService) canDisableModels(key, requester string) (bool, error) {
+	args := m.Called(key, requester)
+	return args.Bool(0), args.Error(1)
 }
 
 type MockModelService struct {
@@ -401,9 +411,24 @@ func (m *MockModelService) RegisterModel(newModel *asset.NewModel, requester str
 	return args.Get(0).(*asset.Model), args.Error(1)
 }
 
-func (m *MockModelService) GetTaskModels(key string) ([]*asset.Model, error) {
+func (m *MockModelService) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 	args := m.Called(key)
 	return args.Get(0).([]*asset.Model), args.Error(1)
+}
+
+func (m *MockModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, error) {
+	args := m.Called(key)
+	return args.Get(0).([]*asset.Model), args.Error(1)
+}
+
+func (m *MockModelService) DisableModel(key string, requester string) error {
+	args := m.Called(key, requester)
+	return args.Error(0)
+}
+
+func (m *MockModelService) CanDisableModel(key, requester string) (bool, error) {
+	args := m.Called(key, requester)
+	return args.Bool(0), args.Error(1)
 }
 
 type MockComputePlanService struct {

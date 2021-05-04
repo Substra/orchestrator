@@ -44,13 +44,13 @@ func (s *ModelServer) RegisterModel(ctx context.Context, newModel *asset.NewMode
 	return services.GetModelService().RegisterModel(newModel, mspid)
 }
 
-func (s *ModelServer) GetComputeTaskModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
+func (s *ModelServer) GetComputeTaskOutputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	models, err := services.GetModelService().GetTaskModels(param.ComputeTaskKey)
+	models, err := services.GetModelService().GetComputeTaskOutputModels(param.ComputeTaskKey)
 	if err != nil {
 		return nil, err
 	}
@@ -58,4 +58,58 @@ func (s *ModelServer) GetComputeTaskModels(ctx context.Context, param *asset.Get
 	return &asset.GetComputeTaskModelsResponse{
 		Models: models,
 	}, nil
+}
+
+func (s *ModelServer) GetComputeTaskInputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	models, err := services.GetModelService().GetComputeTaskInputModels(param.ComputeTaskKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.GetComputeTaskModelsResponse{
+		Models: models,
+	}, nil
+}
+
+func (s *ModelServer) CanDisableModel(ctx context.Context, param *asset.CanDisableModelParam) (*asset.CanDisableModelResponse, error) {
+	mspid, err := common.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	can, err := services.GetModelService().CanDisableModel(param.ModelKey, mspid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.CanDisableModelResponse{
+		CanDisable: can,
+	}, nil
+}
+
+func (s *ModelServer) DisableModel(ctx context.Context, param *asset.DisableModelParam) (*asset.DisableModelResponse, error) {
+	mspid, err := common.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = services.GetModelService().DisableModel(param.ModelKey, mspid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.DisableModelResponse{}, nil
 }

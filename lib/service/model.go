@@ -26,7 +26,11 @@ import (
 
 type ModelAPI interface {
 	RegisterModel(model *asset.NewModel, owner string) (*asset.Model, error)
-	GetTaskModels(key string) ([]*asset.Model, error)
+	GetComputeTaskOutputModels(key string) ([]*asset.Model, error)
+	GetComputeTaskInputModels(key string) ([]*asset.Model, error)
+	CanDisableModel(key, requester string) (bool, error)
+	// DisableModel removes a model address and emit a "disabled" event
+	DisableModel(key string, requester string) error
 }
 
 type ModelServiceProvider interface {
@@ -35,10 +39,11 @@ type ModelServiceProvider interface {
 
 type ModelDependencyProvider interface {
 	persistence.ModelDBALProvider
-	persistence.ComputeTaskDBALProvider
 	persistence.AlgoDBALProvider
 	persistence.DataManagerDBALProvider
 	PermissionServiceProvider
+	ComputeTaskServiceProvider
+	ComputePlanServiceProvider
 	event.QueueProvider
 }
 
@@ -50,8 +55,29 @@ func NewModelService(provider ModelDependencyProvider) *ModelService {
 	return &ModelService{provider}
 }
 
-func (s *ModelService) GetTaskModels(key string) ([]*asset.Model, error) {
-	return s.GetModelDBAL().GetTaskModels(key)
+func (s *ModelService) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
+	return s.GetModelDBAL().GetComputeTaskOutputModels(key)
+}
+
+// GetComputeTaskInputModels retrieves input models of a given task from its parents.
+func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, error) {
+	task, err := s.GetComputeTaskService().GetTask(key)
+	if err != nil {
+		return nil, err
+	}
+
+	inputs := []*asset.Model{}
+
+	for _, p := range task.ParentTaskKeys {
+		models, err := s.GetComputeTaskOutputModels(p)
+		if err != nil {
+			return nil, err
+		}
+
+		inputs = append(inputs, models...)
+	}
+
+	return inputs, nil
 }
 
 func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string) (*asset.Model, error) {
@@ -62,7 +88,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 		return nil, fmt.Errorf("%w: %s", errors.ErrInvalidAsset, err.Error())
 	}
 
-	task, err := s.GetComputeTaskDBAL().GetComputeTask(newModel.ComputeTaskKey)
+	task, err := s.GetComputeTaskService().GetTask(newModel.ComputeTaskKey)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +145,7 @@ func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester s
 	if newModel.Category != asset.ModelCategory_MODEL_SIMPLE {
 		return nil, fmt.Errorf("%w: cannot register non-simple model", errors.ErrBadRequest)
 	}
-	existingModels, err := s.GetModelDBAL().GetTaskModels(task.Key)
+	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(task.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +171,7 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 	if !(newModel.Category == asset.ModelCategory_MODEL_HEAD || newModel.Category == asset.ModelCategory_MODEL_TRUNK) {
 		return nil, fmt.Errorf("%w: cannot register non-composite model", errors.ErrBadRequest)
 	}
-	existingModels, err := s.GetModelDBAL().GetTaskModels(task.Key)
+	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(task.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -163,4 +189,55 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 	}
 
 	return model, nil
+}
+
+// CanDisableModel returns true if the model can be disabled
+func (s *ModelService) CanDisableModel(key string, requester string) (bool, error) {
+	model, err := s.GetModelDBAL().GetModel(key)
+	if err != nil {
+		return false, err
+	}
+
+	return s.canDisableModel(model, requester)
+}
+
+func (s *ModelService) canDisableModel(model *asset.Model, requester string) (bool, error) {
+	return s.GetComputeTaskService().canDisableModels(model.ComputeTaskKey, requester)
+}
+
+// DisableModel removes model's address and emit an "disabled" event
+func (s *ModelService) DisableModel(key string, requester string) error {
+	log.WithField("modelKey", key).Debug("disabling model")
+	model, err := s.GetModelDBAL().GetModel(key)
+	if err != nil {
+		return err
+	}
+
+	canClean, err := s.canDisableModel(model, requester)
+	if err != nil {
+		return err
+	}
+	if !canClean {
+		return fmt.Errorf("cannot disable a model in use: %w", errors.ErrCannotDisableModel)
+	}
+
+	model.Address = nil
+
+	err = s.GetModelDBAL().UpdateModel(model)
+	if err != nil {
+		return err
+	}
+
+	event := event.Event{
+		AssetKind: asset.ModelKind,
+		AssetID:   model.Key,
+		EventKind: event.AssetDisabled,
+	}
+
+	err = s.GetEventQueue().Enqueue(&event)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

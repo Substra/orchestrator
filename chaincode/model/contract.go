@@ -71,7 +71,7 @@ func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *co
 	return wrapped, nil
 }
 
-func (s *SmartContract) GetComputeTaskModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+func (s *SmartContract) GetComputeTaskOutputModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetModelService()
 
 	param := new(asset.GetComputeTaskModelsParam)
@@ -81,7 +81,7 @@ func (s *SmartContract) GetComputeTaskModels(ctx ledger.TransactionContext, wrap
 		return nil, err
 	}
 
-	models, err := service.GetTaskModels(param.ComputeTaskKey)
+	models, err := service.GetComputeTaskOutputModels(param.ComputeTaskKey)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to get models for compute task")
 		return nil, err
@@ -98,7 +98,88 @@ func (s *SmartContract) GetComputeTaskModels(ctx ledger.TransactionContext, wrap
 	return wrapped, nil
 }
 
+func (s *SmartContract) GetComputeTaskInputModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetModelService()
+
+	param := new(asset.GetComputeTaskModelsParam)
+	err := wrapper.Unwrap(param)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return nil, err
+	}
+
+	models, err := service.GetComputeTaskInputModels(param.ComputeTaskKey)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to get input models for compute task")
+		return nil, err
+	}
+	response := &asset.GetComputeTaskModelsResponse{
+		Models: models,
+	}
+
+	wrapped, err := communication.Wrap(response)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
+}
+
+func (s *SmartContract) CanDisableModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetModelService()
+
+	params := new(asset.CanDisableModelParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return nil, err
+	}
+
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
+		return nil, err
+	}
+
+	can, err := service.CanDisableModel(params.ModelKey, requester)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to check whether model can be disabled")
+		return nil, err
+	}
+	wrapped, err := communication.Wrap(&asset.CanDisableModelResponse{CanDisable: can})
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
+}
+
+func (s *SmartContract) DisableModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	service := ctx.GetProvider().GetModelService()
+
+	params := new(asset.DisableModelParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return err
+	}
+
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
+		return err
+	}
+
+	err = service.DisableModel(params.ModelKey, requester)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to check whether model can be disabled")
+		return err
+	}
+
+	return nil
+}
+
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"GetComputeTaskModels"}
+	return []string{"GetComputeTaskOutputModels", "GetComputeTaskInputModels", "CanDisableModel"}
 }
