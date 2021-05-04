@@ -97,4 +97,4 @@ and one queue per consumer.
 
 Consumers only have access to their own queue, which may receives events from multiple channels (according to the configuration).
 
-![](./schemas/rabbitmq-routing.png)
+![](./schemas/rabbit-routing.png)
