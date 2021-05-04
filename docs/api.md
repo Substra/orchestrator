@@ -12,12 +12,15 @@ When running in development mode, the orchestrator exposes a gRPC endpoint on po
 gRPC reflection is enabled, and protobuf definitions are in [lib/assets](../lib/assets) directory.
 
 **distributed mode**: requests **MUST** have the following 3 headers set:
+
 - mspid, example `MyOrg1MSP`
 - channel, example `mychannel`
 - chaincode, example `mycc`
 
 **standalone mode**: requests **MUST** have the following header set:
+
 - mspid, example `MyOrg1MSP`
+- channel, example `mychannel`
 
 ## Consuming chaincode API
 
