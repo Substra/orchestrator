@@ -7,5 +7,7 @@ linters:
     - importas
 
 linters-settings:
+  golint:
+    min-confidence: 0
   importas:
     "orcerrors": github.com/owkin/orchestrator/lib/errors

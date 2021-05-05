@@ -92,7 +92,7 @@ func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
 
 	for _, authorizedID := range IDs {
 		if !utils.StringInSlice(nodeIDs, authorizedID) {
-			return errors.New("Invalid permission input values")
+			return errors.New("invalid permission input values")
 		}
 	}
 

@@ -70,11 +70,11 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, errors.New("Could not extract metadata")
+		return nil, errors.New("could not extract metadata")
 	}
 
 	if len(md.Get(headerChaincode)) != 1 {
-		return nil, fmt.Errorf("Missing or invalid header '%s'", headerChaincode)
+		return nil, fmt.Errorf("missing or invalid header '%s'", headerChaincode)
 	}
 
 	chaincode := md.Get(headerChaincode)[0]
@@ -138,7 +138,7 @@ var (
 func ExtractInvocator(ctx context.Context) (Invocator, error) {
 	invocator, ok := ctx.Value(ctxInvocatorKey).(Invocator)
 	if !ok {
-		return nil, errors.New("Invocator not found in context")
+		return nil, errors.New("invocator not found in context")
 	}
 	return invocator, nil
 }

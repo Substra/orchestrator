@@ -126,7 +126,7 @@ func (s *DataSampleService) UpdateDataSample(d *asset.DataSampleUpdateParam, own
 		}
 
 		if datasample.GetOwner() != owner {
-			return fmt.Errorf("Requester does not own the datasample: %w", orcerrors.ErrPermissionDenied)
+			return fmt.Errorf("requester does not own the datasample: %w", orcerrors.ErrPermissionDenied)
 		}
 
 		datasample.DataManagerKeys = utils.Combine(datasample.GetDataManagerKeys(), d.GetDataManagerKeys())

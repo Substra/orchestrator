@@ -71,7 +71,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 
 	tx, err := pi.dbalProvider.GetTransactionalDBAL(channel)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to begin transaction: %w", err)
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	provider := service.NewProvider(tx, dispatcher)
@@ -83,19 +83,19 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return nil, fmt.Errorf("Failed to rollback transaction: %w", rollbackErr)
+			return nil, fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
 		}
 	} else {
 		commitErr := tx.Commit()
 		if commitErr != nil {
-			return nil, fmt.Errorf("Failed to commit transaction: %w", commitErr)
+			return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
 		}
 		dispatchErr := dispatcher.Dispatch()
 		if dispatchErr != nil {
 			log.WithError(dispatchErr).
 				WithField("events", dispatcher.GetEvents()).
-				Error("Failed to dispatch events after successful transaction commit")
-			return nil, fmt.Errorf("Failed to dispatch events: %w", dispatchErr)
+				Error("failed to dispatch events after successful transaction commit")
+			return nil, fmt.Errorf("failed to dispatch events: %w", dispatchErr)
 		}
 	}
 
@@ -106,7 +106,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 func ExtractProvider(ctx context.Context) (service.DependenciesProvider, error) {
 	provider, ok := ctx.Value(ctxProviderKey).(service.DependenciesProvider)
 	if !ok {
-		return nil, errors.New("Provider not found in context")
+		return nil, errors.New("provider not found in context")
 	}
 	return provider, nil
 }
