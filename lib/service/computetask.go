@@ -20,7 +20,6 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/errors"
 	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
@@ -95,7 +94,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, err
 	}
 	if cp.Owner != owner {
-		return nil, fmt.Errorf("only plan owner can register a task: %w", errors.ErrPermissionDenied)
+		return nil, fmt.Errorf("only plan owner can register a task: %w", orchestrationErrors.ErrPermissionDenied)
 	}
 
 	taskExist, err := s.GetComputeTaskDBAL().ComputeTaskExists(input.Key)
@@ -147,7 +146,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		err = s.setTrainData(input, input.Data.(*asset.NewComputeTask_Train).Train, task)
 	default:
 		// Should never happen, validated above
-		err = fmt.Errorf("unkwown task data: %T, %w", x, errors.ErrInvalidAsset)
+		err = fmt.Errorf("unkwown task data: %T, %w", x, orchestrationErrors.ErrInvalidAsset)
 	}
 	if err != nil {
 		return nil, err
@@ -187,7 +186,7 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 		return false, err
 	}
 	if task.Worker != requester {
-		return false, fmt.Errorf("only the worker can disable a task outputs: %w", errors.ErrPermissionDenied)
+		return false, fmt.Errorf("only the worker can disable a task outputs: %w", orchestrationErrors.ErrPermissionDenied)
 	}
 
 	state := newState(&dumbUpdater, task)
@@ -335,7 +334,7 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 		case *asset.ComputeTask_Train:
 			permissions = p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
 		default:
-			return fmt.Errorf("cannot process parent task %s: %w", p.Key, errors.ErrPermissionDenied)
+			return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
 		}
 		perms = s.GetPermissionService().MakeUnion(permissions, perms)
 	}
@@ -458,24 +457,24 @@ func (s *ComputeTaskService) checkCanProcessParents(requester string, parentTask
 		case *asset.ComputeTask_Composite:
 			trunkPerms := p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
 			if !s.GetPermissionService().CanProcess(trunkPerms, requester) {
-				return fmt.Errorf("cannot process parent task %s: %w", p.Key, errors.ErrPermissionDenied)
+				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
 			}
 			headPerms := p.Data.(*asset.ComputeTask_Composite).Composite.HeadPermissions
 			if (category == asset.ComputeTaskCategory_TASK_COMPOSITE || category == asset.ComputeTaskCategory_TASK_TEST) && !s.GetPermissionService().CanProcess(headPerms, requester) {
-				return fmt.Errorf("cannot process parent task %s: %w", p.Key, errors.ErrPermissionDenied)
+				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
 			}
 		case *asset.ComputeTask_Aggregate:
 			permissions := p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
 			if !s.GetPermissionService().CanProcess(permissions, requester) {
-				return fmt.Errorf("cannot process parent task %s: %w", p.Key, errors.ErrPermissionDenied)
+				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
 			}
 		case *asset.ComputeTask_Train:
 			permissions := p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
 			if !s.GetPermissionService().CanProcess(permissions, requester) {
-				return fmt.Errorf("cannot process parent task %s: %w", p.Key, errors.ErrPermissionDenied)
+				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
 			}
 		default:
-			return fmt.Errorf("cannot process parent task %s: %w", p.Key, errors.ErrPermissionDenied)
+			return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
 		}
 	}
 
