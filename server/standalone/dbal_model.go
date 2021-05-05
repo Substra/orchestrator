@@ -66,7 +66,7 @@ func (d *DBAL) AddModel(model *asset.Model) error {
 }
 
 func (d *DBAL) UpdateModel(model *asset.Model) error {
-	stmt := `update "models" set asset = $2 where id = $1 and channel = $3)`
+	stmt := `update "models" set asset = $2 where id = $1 and channel = $3`
 	_, err := d.tx.Exec(stmt, model.GetKey(), model, d.channel)
 	return err
 }

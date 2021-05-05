@@ -24,6 +24,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+const DefaultTaskRef = "task"
+
 // TestClient is a client for the tested app
 type TestClient struct {
 	ctx                context.Context
@@ -66,6 +68,40 @@ func (c *TestClient) GetKey(id string) string {
 	}
 
 	return k
+}
+
+type ComputePlanOptions struct {
+	DeleteIntermediaryModels bool
+}
+
+type RegisterTrainTaskOptions struct {
+	KeyRef         string
+	AlgoRef        string
+	ParentsRef     []string
+	PlanRef        string
+	DataManagerRef string
+	DataSampleRef  string
+}
+
+func DefaultRegisterTrainTaskOptions() *RegisterTrainTaskOptions {
+	return &RegisterTrainTaskOptions{
+		KeyRef:         DefaultTaskRef,
+		AlgoRef:        "algo",
+		ParentsRef:     []string{},
+		PlanRef:        "cp",
+		DataManagerRef: "dm",
+		DataSampleRef:  "ds",
+	}
+}
+
+func (o *RegisterTrainTaskOptions) WithKeyRef(ref string) *RegisterTrainTaskOptions {
+	o.KeyRef = ref
+	return o
+}
+
+func (o *RegisterTrainTaskOptions) WithParentsRef(p []string) *RegisterTrainTaskOptions {
+	o.ParentsRef = p
+	return o
 }
 
 func (c *TestClient) RegisterNode() {
@@ -129,16 +165,22 @@ func (c *TestClient) RegisterDataSample() {
 
 }
 
-func (c *TestClient) RegisterTrainTask() {
+func (c *TestClient) RegisterTrainTask(o *RegisterTrainTaskOptions) {
+	parentKeys := make([]string, len(o.ParentsRef))
+	for i, ref := range o.ParentsRef {
+		parentKeys[i] = c.GetKey(ref)
+	}
+
 	_, err := c.computeTaskService.RegisterTask(c.ctx, &asset.NewComputeTask{
-		Key:            c.GetKey("task"),
+		Key:            c.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
-		AlgoKey:        c.GetKey("algo"),
-		ComputePlanKey: c.GetKey("cp"),
+		AlgoKey:        c.GetKey(o.AlgoRef),
+		ParentTaskKeys: parentKeys,
+		ComputePlanKey: c.GetKey(o.PlanRef),
 		Data: &asset.NewComputeTask_Train{
 			Train: &asset.NewTrainTaskData{
-				DataManagerKey: c.GetKey("dm"),
-				DataSampleKeys: []string{c.GetKey("ds")},
+				DataManagerKey: c.GetKey(o.DataManagerRef),
+				DataSampleKeys: []string{c.GetKey(o.DataSampleRef)},
 			},
 		},
 	})
@@ -148,29 +190,9 @@ func (c *TestClient) RegisterTrainTask() {
 
 }
 
-func (c *TestClient) RegisterChildTask(keyRef string) {
-	_, err := c.computeTaskService.RegisterTask(c.ctx, &asset.NewComputeTask{
-		Key:            c.GetKey(keyRef),
-		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
-		AlgoKey:        c.GetKey("algo"),
-		ParentTaskKeys: []string{c.GetKey("task")},
-		ComputePlanKey: c.GetKey("cp"),
-		Data: &asset.NewComputeTask_Train{
-			Train: &asset.NewTrainTaskData{
-				DataManagerKey: c.GetKey("dm"),
-				DataSampleKeys: []string{c.GetKey("ds")},
-			},
-		},
-	})
-	if err != nil {
-		log.WithError(err).Fatal("RegisterComputeTask failed")
-	}
-
-}
-
-func (c *TestClient) StartTrainTask() {
+func (c *TestClient) StartTrainTask(keyRef string) {
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
-		ComputeTaskKey: c.GetKey("task"),
+		ComputeTaskKey: c.GetKey(keyRef),
 		Action:         asset.ComputeTaskAction_TASK_ACTION_DOING,
 	})
 	if err != nil {
@@ -178,9 +200,9 @@ func (c *TestClient) StartTrainTask() {
 	}
 }
 
-func (c *TestClient) DoneTrainTask() {
+func (c *TestClient) DoneTrainTask(keyRef string) {
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
-		ComputeTaskKey: c.GetKey("task"),
+		ComputeTaskKey: c.GetKey(keyRef),
 		Action:         asset.ComputeTaskAction_TASK_ACTION_DONE,
 	})
 	if err != nil {
@@ -188,9 +210,9 @@ func (c *TestClient) DoneTrainTask() {
 	}
 }
 
-func (c *TestClient) CancelTrainTask() {
+func (c *TestClient) CancelTrainTask(keyRef string) {
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
-		ComputeTaskKey: c.GetKey("task"),
+		ComputeTaskKey: c.GetKey(keyRef),
 		Action:         asset.ComputeTaskAction_TASK_ACTION_CANCELED,
 	})
 	if err != nil {
@@ -198,9 +220,9 @@ func (c *TestClient) CancelTrainTask() {
 	}
 }
 
-func (c *TestClient) FailTrainTask() {
+func (c *TestClient) FailTrainTask(keyRef string) {
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
-		ComputeTaskKey: c.GetKey("task"),
+		ComputeTaskKey: c.GetKey(keyRef),
 		Action:         asset.ComputeTaskAction_TASK_ACTION_FAILED,
 	})
 	if err != nil {
@@ -208,10 +230,10 @@ func (c *TestClient) FailTrainTask() {
 	}
 }
 
-func (c *TestClient) RegisterModel() {
+func (c *TestClient) RegisterModel(taskRef, modelRef string) {
 	_, err := c.modelService.RegisterModel(c.ctx, &asset.NewModel{
-		ComputeTaskKey: c.GetKey("task"),
-		Key:            c.GetKey("model"),
+		ComputeTaskKey: c.GetKey(taskRef),
+		Key:            c.GetKey(modelRef),
 		Category:       asset.ModelCategory_MODEL_SIMPLE,
 		Address: &asset.Addressable{
 			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
@@ -223,31 +245,53 @@ func (c *TestClient) RegisterModel() {
 	}
 }
 
-func (c *TestClient) RegisterComputePlan() {
-	_, err := c.computePlanService.RegisterPlan(c.ctx, &asset.NewComputePlan{
+func (c *TestClient) GetTaskOutputModels(taskRef string) []*asset.Model {
+	resp, err := c.modelService.GetComputeTaskOutputModels(c.ctx, &asset.GetComputeTaskModelsParam{ComputeTaskKey: c.GetKey(taskRef)})
+	if err != nil {
+		log.WithError(err).Fatal("GetComputeTaskOutputModels failed")
+	}
+
+	return resp.Models
+}
+
+func (c *TestClient) CanDisableModel(modelRef string) bool {
+	resp, err := c.modelService.CanDisableModel(c.ctx, &asset.CanDisableModelParam{ModelKey: c.GetKey(modelRef)})
+	if err != nil {
+		log.WithError(err).Fatal("CanDisableModel failed")
+	}
+
+	return resp.CanDisable
+}
+
+func (c *TestClient) DisableModel(modelRef string) {
+	_, err := c.modelService.DisableModel(c.ctx, &asset.DisableModelParam{ModelKey: c.GetKey(modelRef)})
+	if err != nil {
+		log.WithError(err).Fatal("CanDisableModel failed")
+	}
+}
+
+func (c *TestClient) RegisterComputePlan(opts *ComputePlanOptions) {
+	newCP := &asset.NewComputePlan{
 		Key: c.GetKey("cp"),
-	})
+	}
+
+	if opts != nil {
+		newCP.DeleteIntermediaryModels = opts.DeleteIntermediaryModels
+	}
+
+	_, err := c.computePlanService.RegisterPlan(c.ctx, newCP)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterPlan failed")
 	}
 }
 
-func (c *TestClient) AssertPlanInQueryPlans() {
-	resp, err := c.computePlanService.QueryPlans(c.ctx, &asset.QueryPlansParam{})
+func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
+	plan, err := c.computePlanService.GetPlan(c.ctx, &asset.GetComputePlanParam{Key: c.GetKey(keyRef)})
 	if err != nil {
 		log.WithError(err).Fatalf("QueryPlans failed")
 	}
 
-	planFound := false
-	for _, p := range resp.Plans {
-		if p.Key == c.GetKey("cp") {
-			planFound = true
-			break
-		}
-	}
-	if !planFound {
-		log.Fatal("invalid number of compute plans")
-	}
+	return plan
 }
 
 func (c TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
@@ -258,14 +302,3 @@ func (c TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
 
 	return task
 }
-
-// func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
-//	task, err := c.computeTaskService.GetTask(c.ctx, &asset.GetTaskParam{
-//		Key: c.GetKey(keyRef),
-//	})
-//	if err != nil {
-//		log.WithError(err).Fatal("failed to fetch task")
-//	}
-
-//	return task
-// }

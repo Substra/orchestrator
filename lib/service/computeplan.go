@@ -73,10 +73,11 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 	}
 
 	plan := &asset.ComputePlan{
-		Key:      input.Key,
-		Owner:    owner,
-		Tag:      input.Tag,
-		Metadata: input.Metadata,
+		Key:                      input.Key,
+		Owner:                    owner,
+		Tag:                      input.Tag,
+		Metadata:                 input.Metadata,
+		DeleteIntermediaryModels: input.DeleteIntermediaryModels,
 	}
 
 	err = s.GetComputePlanDBAL().AddComputePlan(plan)

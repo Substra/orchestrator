@@ -86,4 +86,5 @@ func main() {
 	testCascadeCancel(conn)
 	testCascadeTodo(conn)
 	testCascadeFailure(conn)
+	testDeleteIntermediary(conn)
 }
