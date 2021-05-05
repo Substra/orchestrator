@@ -103,10 +103,10 @@ func (d *DBAL) GetNodes() ([]*asset.Node, error) {
 
 // GetNode implements persistence.NodeDBAL
 func (d *DBAL) GetNode(id string) (*asset.Node, error) {
-	row := d.tx.QueryRow(`select "asset" from "nodes" where id=$1 and channel=$2`, id, d.channel)
+	row := d.tx.QueryRow(`select "id" from "nodes" where id=$1 and channel=$2`, id, d.channel)
 
 	node := new(asset.Node)
-	err := row.Scan(&node)
+	err := row.Scan(&node.Id)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
