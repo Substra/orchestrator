@@ -45,13 +45,13 @@ func (a *ComputeTaskAdapter) RegisterTask(ctx context.Context, in *asset.NewComp
 	return response, err
 }
 
-// QueryTask returns an algo from its key
+// QueryTask returns a task from its key
 func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.TaskQueryParam) (*asset.ComputeTask, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "org.substra.algo:GetTask"
+	method := "orchestrator.computetask:GetTask"
 
 	response := &asset.ComputeTask{}
 
