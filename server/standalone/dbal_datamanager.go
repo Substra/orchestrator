@@ -101,6 +101,9 @@ func (d *DBAL) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, comm
 			break
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
 
 	bookmark := ""
 	if count == int(p.Size) && rows.Next() {

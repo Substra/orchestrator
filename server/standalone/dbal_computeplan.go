@@ -115,6 +115,9 @@ order by cp.created_at asc limit $1 offset $2
 			break
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
 
 	bookmark := ""
 	if count == int(p.Size) && rows.Next() {

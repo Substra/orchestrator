@@ -94,6 +94,9 @@ func (d *DBAL) GetNodes() ([]*asset.Node, error) {
 
 		nodes = append(nodes, node)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return nodes, nil
 }
@@ -185,6 +188,9 @@ func (d *DBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.P
 			break
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
 
 	bookmark := ""
 	if count == int(p.Size) && rows.Next() {
@@ -269,6 +275,9 @@ func (d *DBAL) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Al
 		if count == int(p.Size) {
 			break
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
 	}
 
 	bookmark := ""

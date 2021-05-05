@@ -96,6 +96,9 @@ func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 
 		tasks = append(tasks, task)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return tasks, nil
 }
@@ -117,6 +120,9 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 		}
 		tasks = append(tasks, task)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return tasks, nil
 }
@@ -137,6 +143,9 @@ func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
 			return nil, err
 		}
 		tasks = append(tasks, task)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return tasks, nil
@@ -190,6 +199,9 @@ func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFi
 		if count == int(p.Size) {
 			break
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
 	}
 
 	bookmark := ""

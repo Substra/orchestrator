@@ -5,6 +5,7 @@ linters:
     - golint
     - gofmt
     - importas
+    - rowserrcheck
 
 linters-settings:
   golint:

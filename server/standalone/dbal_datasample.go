@@ -101,6 +101,9 @@ func (d *DBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common
 			break
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
 
 	bookmark := ""
 	if count == int(p.Size) && rows.Next() {
@@ -142,6 +145,9 @@ func (d *DBAL) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly b
 			return nil, err
 		}
 		datasampleKeys = append(datasampleKeys, datasampleKey)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return datasampleKeys, nil
