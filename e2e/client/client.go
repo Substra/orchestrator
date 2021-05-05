@@ -16,8 +16,8 @@ package client
 
 import (
 	"context"
-	"log"
 
+	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/owkin/orchestrator/lib/asset"
 	"google.golang.org/grpc"
@@ -71,7 +71,7 @@ func (c *TestClient) GetKey(id string) string {
 func (c *TestClient) RegisterNode() {
 	_, err := c.nodeService.RegisterNode(c.ctx, &asset.NodeRegistrationParam{})
 	if err != nil {
-		log.Fatalf("RegisterNode failed: %v", err)
+		log.WithError(err).Fatal("RegisterNode failed")
 	}
 }
 
@@ -91,7 +91,7 @@ func (c *TestClient) RegisterAlgo() {
 		NewPermissions: &asset.NewPermissions{Public: true},
 	})
 	if err != nil {
-		log.Fatalf("RegisterAlgo failed: %v", err)
+		log.WithError(err).Fatal("RegisterAlgo failed")
 	}
 
 }
@@ -112,7 +112,7 @@ func (c *TestClient) RegisterDataManager() {
 		Type: "test",
 	})
 	if err != nil {
-		log.Fatalf("RegisterDataManager failed: %v", err)
+		log.WithError(err).Fatal("RegisterDataManager failed")
 	}
 
 }
@@ -124,7 +124,7 @@ func (c *TestClient) RegisterDataSample() {
 		TestOnly:        false,
 	})
 	if err != nil {
-		log.Fatalf("RegisterDataSample failed: %v", err)
+		log.WithError(err).Fatal("RegisterDataSample failed")
 	}
 
 }
@@ -143,14 +143,14 @@ func (c *TestClient) RegisterTrainTask() {
 		},
 	})
 	if err != nil {
-		log.Fatalf("RegisterComputeTask failed: %v", err)
+		log.WithError(err).Fatal("RegisterComputeTask failed")
 	}
 
 }
 
-func (c *TestClient) RegisterChildTask() {
+func (c *TestClient) RegisterChildTask(keyRef string) {
 	_, err := c.computeTaskService.RegisterTask(c.ctx, &asset.NewComputeTask{
-		Key:            c.GetKey("anotherTask"),
+		Key:            c.GetKey(keyRef),
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        c.GetKey("algo"),
 		ParentTaskKeys: []string{c.GetKey("task")},
@@ -163,7 +163,7 @@ func (c *TestClient) RegisterChildTask() {
 		},
 	})
 	if err != nil {
-		log.Fatalf("RegisterComputeTask failed: %v", err)
+		log.WithError(err).Fatal("RegisterComputeTask failed")
 	}
 
 }
@@ -174,7 +174,37 @@ func (c *TestClient) StartTrainTask() {
 		Action:         asset.ComputeTaskAction_TASK_ACTION_DOING,
 	})
 	if err != nil {
-		log.Fatalf("starting task failed: %v", err)
+		log.WithError(err).Fatal("failed to mark task as DOING")
+	}
+}
+
+func (c *TestClient) DoneTrainTask() {
+	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
+		ComputeTaskKey: c.GetKey("task"),
+		Action:         asset.ComputeTaskAction_TASK_ACTION_DONE,
+	})
+	if err != nil {
+		log.WithError(err).Fatal("failed to mark task as DONE")
+	}
+}
+
+func (c *TestClient) CancelTrainTask() {
+	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
+		ComputeTaskKey: c.GetKey("task"),
+		Action:         asset.ComputeTaskAction_TASK_ACTION_CANCELED,
+	})
+	if err != nil {
+		log.WithError(err).Fatal("failed to mark task as CANCELED")
+	}
+}
+
+func (c *TestClient) FailTrainTask() {
+	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
+		ComputeTaskKey: c.GetKey("task"),
+		Action:         asset.ComputeTaskAction_TASK_ACTION_FAILED,
+	})
+	if err != nil {
+		log.WithError(err).Fatal("failed to mark task as FAILED")
 	}
 }
 
@@ -189,7 +219,7 @@ func (c *TestClient) RegisterModel() {
 		},
 	})
 	if err != nil {
-		log.Fatalf("RegisterModel failed: %v", err)
+		log.WithError(err).Fatal("RegisterModel failed")
 	}
 }
 
@@ -198,14 +228,14 @@ func (c *TestClient) RegisterComputePlan() {
 		Key: c.GetKey("cp"),
 	})
 	if err != nil {
-		log.Fatalf("RegisterPlan failed: %v", err)
+		log.WithError(err).Fatal("RegisterPlan failed")
 	}
 }
 
 func (c *TestClient) AssertPlanInQueryPlans() {
 	resp, err := c.computePlanService.QueryPlans(c.ctx, &asset.QueryPlansParam{})
 	if err != nil {
-		log.Fatalf("RegisterPlan failed: %v", err)
+		log.WithError(err).Fatalf("QueryPlans failed")
 	}
 
 	planFound := false
@@ -219,3 +249,23 @@ func (c *TestClient) AssertPlanInQueryPlans() {
 		log.Fatal("invalid number of compute plans")
 	}
 }
+
+func (c TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
+	task, err := c.computeTaskService.GetTask(c.ctx, &asset.TaskQueryParam{Key: c.GetKey(keyRef)})
+	if err != nil {
+		log.WithError(err).Fatalf("GetTask failed")
+	}
+
+	return task
+}
+
+// func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
+//	task, err := c.computeTaskService.GetTask(c.ctx, &asset.GetTaskParam{
+//		Key: c.GetKey(keyRef),
+//	})
+//	if err != nil {
+//		log.WithError(err).Fatal("failed to fetch task")
+//	}
+
+//	return task
+// }

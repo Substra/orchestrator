@@ -83,4 +83,7 @@ func main() {
 	log.Debug("Starting testing")
 	testTrainTaskLifecycle(conn)
 	testRegisterModel(conn)
+	testCascadeCancel(conn)
+	testCascadeTodo(conn)
+	testCascadeFailure(conn)
 }
