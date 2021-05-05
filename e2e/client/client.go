@@ -21,7 +21,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/owkin/orchestrator/lib/asset"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 const DefaultTaskRef = "task"
@@ -70,52 +72,23 @@ func (c *TestClient) GetKey(id string) string {
 	return k
 }
 
-type ComputePlanOptions struct {
-	DeleteIntermediaryModels bool
-}
-
-type RegisterTrainTaskOptions struct {
-	KeyRef         string
-	AlgoRef        string
-	ParentsRef     []string
-	PlanRef        string
-	DataManagerRef string
-	DataSampleRef  string
-}
-
-func DefaultRegisterTrainTaskOptions() *RegisterTrainTaskOptions {
-	return &RegisterTrainTaskOptions{
-		KeyRef:         DefaultTaskRef,
-		AlgoRef:        "algo",
-		ParentsRef:     []string{},
-		PlanRef:        "cp",
-		DataManagerRef: "dm",
-		DataSampleRef:  "ds",
-	}
-}
-
-func (o *RegisterTrainTaskOptions) WithKeyRef(ref string) *RegisterTrainTaskOptions {
-	o.KeyRef = ref
-	return o
-}
-
-func (o *RegisterTrainTaskOptions) WithParentsRef(p []string) *RegisterTrainTaskOptions {
-	o.ParentsRef = p
-	return o
-}
-
-func (c *TestClient) RegisterNode() {
+// EnsureNode attempts to register the node but won't fail on existing node
+func (c *TestClient) EnsureNode() {
 	_, err := c.nodeService.RegisterNode(c.ctx, &asset.NodeRegistrationParam{})
+	if status.Code(err) == codes.AlreadyExists {
+		// expected error
+		return
+	}
 	if err != nil {
 		log.WithError(err).Fatal("RegisterNode failed")
 	}
 }
 
-func (c *TestClient) RegisterAlgo() {
+func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 	_, err := c.algoService.RegisterAlgo(c.ctx, &asset.NewAlgo{
-		Key:      c.GetKey("algo"),
+		Key:      c.GetKey(o.KeyRef),
 		Name:     "Algo test",
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Category: o.Category,
 		Description: &asset.Addressable{
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/desc",
@@ -165,7 +138,7 @@ func (c *TestClient) RegisterDataSample() {
 
 }
 
-func (c *TestClient) RegisterTrainTask(o *RegisterTrainTaskOptions) {
+func (c *TestClient) RegisterTrainTask(o *TrainTaskOptions) {
 	parentKeys := make([]string, len(o.ParentsRef))
 	for i, ref := range o.ParentsRef {
 		parentKeys[i] = c.GetKey(ref)
@@ -186,6 +159,56 @@ func (c *TestClient) RegisterTrainTask(o *RegisterTrainTaskOptions) {
 	})
 	if err != nil {
 		log.WithError(err).Fatal("RegisterComputeTask failed")
+	}
+
+}
+
+func (c *TestClient) RegisterCompositeTask(o *CompositeTaskOptions) {
+	parentKeys := make([]string, len(o.ParentsRef))
+	for i, ref := range o.ParentsRef {
+		parentKeys[i] = c.GetKey(ref)
+	}
+
+	_, err := c.computeTaskService.RegisterTask(c.ctx, &asset.NewComputeTask{
+		Key:            c.GetKey(o.KeyRef),
+		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+		AlgoKey:        c.GetKey(o.AlgoRef),
+		ParentTaskKeys: parentKeys,
+		ComputePlanKey: c.GetKey(o.PlanRef),
+		Data: &asset.NewComputeTask_Composite{
+			Composite: &asset.NewCompositeTrainTaskData{
+				DataManagerKey:   c.GetKey(o.DataManagerRef),
+				DataSampleKeys:   []string{c.GetKey(o.DataSampleRef)},
+				TrunkPermissions: &asset.NewPermissions{Public: true},
+			},
+		},
+	})
+	if err != nil {
+		log.WithError(err).Fatal("RegisterCompositeTask failed")
+	}
+
+}
+
+func (c *TestClient) RegisterAggregateTask(o *AggregateTaskOptions) {
+	parentKeys := make([]string, len(o.ParentsRef))
+	for i, ref := range o.ParentsRef {
+		parentKeys[i] = c.GetKey(ref)
+	}
+
+	_, err := c.computeTaskService.RegisterTask(c.ctx, &asset.NewComputeTask{
+		Key:            c.GetKey(o.KeyRef),
+		Category:       asset.ComputeTaskCategory_TASK_AGGREGATE,
+		AlgoKey:        c.GetKey(o.AlgoRef),
+		ParentTaskKeys: parentKeys,
+		ComputePlanKey: c.GetKey(o.PlanRef),
+		Data: &asset.NewComputeTask_Aggregate{
+			Aggregate: &asset.NewAggregateTrainTaskData{
+				Worker: o.Worker,
+			},
+		},
+	})
+	if err != nil {
+		log.WithError(err).Fatal("RegisterAggregateTask failed")
 	}
 
 }

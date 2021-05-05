@@ -33,12 +33,12 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.RegisterAlgo()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
 	appClient.RegisterComputePlan(nil)
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions())
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(defaultParent))
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(defaultParent))
 	appClient.StartTrainTask(client.DefaultTaskRef)
 }
 
@@ -50,11 +50,11 @@ func testRegisterModel(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.RegisterAlgo()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
 	appClient.RegisterComputePlan(nil)
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	plan := appClient.GetComputePlan("cp")
 	if plan.TaskCount != 1 {
@@ -73,14 +73,14 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.RegisterAlgo()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
 	appClient.RegisterComputePlan(nil)
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+		appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
 	}
 
 	appClient.StartTrainTask(client.DefaultTaskRef)
@@ -102,14 +102,14 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.RegisterAlgo()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
 	appClient.RegisterComputePlan(nil)
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+		appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
 	}
 
 	appClient.StartTrainTask(client.DefaultTaskRef)
@@ -131,14 +131,14 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.RegisterAlgo()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
 	appClient.RegisterComputePlan(nil)
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+		appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
 	}
 
 	appClient.StartTrainTask(client.DefaultTaskRef)
@@ -161,14 +161,14 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.RegisterAlgo()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
 	appClient.RegisterComputePlan(&client.ComputePlanOptions{DeleteIntermediaryModels: true})
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions().WithKeyRef("child1").WithParentsRef(defaultParent))
-	appClient.RegisterTrainTask(client.DefaultRegisterTrainTaskOptions().WithKeyRef("child2").WithParentsRef([]string{"child1"}))
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithParentsRef(defaultParent))
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("child2").WithParentsRef([]string{"child1"}))
 
 	// First task done
 	appClient.StartTrainTask(client.DefaultTaskRef)
@@ -204,5 +204,84 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 	models = appClient.GetTaskOutputModels(client.DefaultTaskRef)
 	if models[0].Address != nil {
 		log.Fatal("model has not been disabled")
+	}
+}
+
+// This is the "canonical" example of FL with 2 nodes aggregating their trunks
+// This does not check multi-organization setup though!
+//
+//   ,========,                ,========,
+//   | ORG A  |                | ORG B  |
+//   *========*                *========*
+//
+//     ø     ø                  ø      ø
+//     |     |                  |      |
+//     hd    tr                 tr     hd
+//   -----------              -----------
+//  | Composite |            | Composite |      STEP 1
+//   -----------              -----------
+//     hd    tr                 tr     hd
+//     |      \   ,========,   /      |
+//     |       \  | ORG C  |  /       |
+//     |        \ *========* /        |
+//     |       ----------------       |
+//     |      |    Aggregate   |      |         STEP 2
+//     |       ----------------       |
+//     |              |               |
+//     |     ,_______/ \_______       |
+//     |     |                 |      |
+//     hd    tr                tr     hd
+//   -----------             -----------
+//  | Composite |           | Composite |       STEP 3
+//   -----------             -----------
+//     hd    tr                 tr     hd
+//            \                /
+//             \              /
+//              \            /
+//             ----------------
+//            |    Aggregate   |                STEP 4
+//             ----------------
+//
+//
+func testMultiStageComputePlan(conn *grpc.ClientConn) {
+	defer log.WithTrace().Info("test multi stage compute plan")
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.EnsureNode()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample()
+	appClient.RegisterComputePlan(nil)
+
+	// step 1
+	appClient.RegisterCompositeTask(
+		client.DefaultCompositeTaskOptions().WithKeyRef("compA1").WithAlgoRef("algoComp"),
+	)
+	appClient.RegisterCompositeTask(
+		client.DefaultCompositeTaskOptions().WithKeyRef("compB1").WithAlgoRef("algoComp"),
+	)
+	// step 2
+	appClient.RegisterAggregateTask(
+		client.DefaultAggregateTaskOptions().WithKeyRef("aggC2").WithParentsRef([]string{"compA1", "compB1"}).WithAlgoRef("algoAgg"),
+	)
+	// step 3
+	appClient.RegisterCompositeTask(
+		client.DefaultCompositeTaskOptions().WithKeyRef("compA3").WithParentsRef([]string{"compA1", "aggC2"}).WithAlgoRef("algoComp"),
+	)
+	appClient.RegisterCompositeTask(
+		client.DefaultCompositeTaskOptions().WithKeyRef("compB3").WithParentsRef([]string{"compB1", "aggC2"}).WithAlgoRef("algoComp"),
+	)
+	// step 4
+	appClient.RegisterAggregateTask(
+		client.DefaultAggregateTaskOptions().WithKeyRef("compC4").WithParentsRef([]string{"compA3", "compB3"}).WithAlgoRef("algoAgg"),
+	)
+
+	lastAggregate := appClient.GetComputeTask("compC4")
+	if lastAggregate.Rank != 3 {
+		log.WithField("rank", lastAggregate.Rank).Fatal("last aggegation task has not expected rank")
 	}
 }

@@ -90,4 +90,5 @@ func main() {
 	testCascadeTodo(conn)
 	testCascadeFailure(conn)
 	testDeleteIntermediary(conn)
+	testMultiStageComputePlan(conn)
 }
