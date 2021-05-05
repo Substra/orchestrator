@@ -24,7 +24,7 @@ import (
 	"github.com/hyperledger/fabric-protos-go/peer"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
-	orchestrationError "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -92,7 +92,7 @@ func TestAddExistingObjective(t *testing.T) {
 	stub.On("GetState", "objective:test").Return([]byte("{}"), nil).Once()
 
 	err := db.AddObjective(objective)
-	assert.True(t, errors.Is(err, orchestrationError.ErrConflict))
+	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
 }
 
 func TestValidateQueryContext(t *testing.T) {
@@ -103,12 +103,12 @@ func TestValidateQueryContext(t *testing.T) {
 	// no context: error
 	db = NewDB(context.Background(), mockStub)
 	err = db.validateQueryContext()
-	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
+	assert.True(t, errors.Is(err, orcerrors.ErrInternalError))
 
 	// context with isEval=false: error
 	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, false), mockStub)
 	err = db.validateQueryContext()
-	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
+	assert.True(t, errors.Is(err, orcerrors.ErrInternalError))
 
 	// context with isEval=true: ok
 	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), mockStub)
@@ -125,12 +125,12 @@ func TestCheckQueryContext(t *testing.T) {
 	// getQueryResult
 	db = NewDB(context.Background(), mockStub)
 	_, err = db.getQueryResult("some query")
-	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
+	assert.True(t, errors.Is(err, orcerrors.ErrInternalError))
 
 	// getQueryResultWithPagination
 	db = NewDB(context.Background(), mockStub)
 	_, _, err = db.getQueryResultWithPagination("some query", 0, "bookmark")
-	assert.True(t, errors.Is(err, orchestrationError.ErrInternalError))
+	assert.True(t, errors.Is(err, orcerrors.ErrInternalError))
 }
 
 func TestTransactionState(t *testing.T) {

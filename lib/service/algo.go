@@ -20,7 +20,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
@@ -60,7 +60,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 	log.WithField("owner", owner).WithField("newObj", a).Debug("Registering algo")
 	err := a.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
+		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
 	exists, err := s.GetAlgoDBAL().AlgoExists(a.Key)
@@ -68,7 +68,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		return nil, err
 	}
 	if exists {
-		return nil, fmt.Errorf("There is already an algo with this key: %w", orchestrationErrors.ErrConflict)
+		return nil, fmt.Errorf("there is already an algo with this key: %w", orcerrors.ErrConflict)
 	}
 
 	algo := &asset.Algo{

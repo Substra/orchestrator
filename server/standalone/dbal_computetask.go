@@ -23,7 +23,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 // AddComputeTask stores a new ComputeTask in DB
@@ -58,7 +58,7 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	err := row.Scan(task)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("computetask not found: %w", orchestrationErrors.ErrNotFound)
+			return nil, fmt.Errorf("computetask not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
 	}

@@ -19,7 +19,7 @@ import (
 	"errors"
 	"strings"
 
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -68,23 +68,23 @@ func InterceptDistributedErrors(ctx context.Context, req interface{}, info *grpc
 // fromMessage converts an error to a gRPC status by matching its error message
 func fromMessage(msg string) error {
 	switch true {
-	case strings.Contains(msg, orchestrationErrors.ErrInvalidAsset.Error()):
+	case strings.Contains(msg, orcerrors.ErrInvalidAsset.Error()):
 		return status.Error(codes.InvalidArgument, msg)
-	case strings.Contains(msg, orchestrationErrors.ErrConflict.Error()):
+	case strings.Contains(msg, orcerrors.ErrConflict.Error()):
 		return status.Error(codes.AlreadyExists, msg)
-	case strings.Contains(msg, orchestrationErrors.ErrPermissionDenied.Error()):
+	case strings.Contains(msg, orcerrors.ErrPermissionDenied.Error()):
 		return status.Error(codes.PermissionDenied, msg)
-	case strings.Contains(msg, orchestrationErrors.ErrReferenceNotFound.Error()):
+	case strings.Contains(msg, orcerrors.ErrReferenceNotFound.Error()):
 		return status.Error(codes.InvalidArgument, msg)
-	case strings.Contains(msg, orchestrationErrors.ErrNotFound.Error()):
+	case strings.Contains(msg, orcerrors.ErrNotFound.Error()):
 		return status.Error(codes.NotFound, msg)
-	case strings.Contains(msg, orchestrationErrors.ErrBadRequest.Error()):
+	case strings.Contains(msg, orcerrors.ErrBadRequest.Error()):
 		return status.Error(codes.FailedPrecondition, msg)
-	case strings.Contains(msg, orchestrationErrors.ErrIncompatibleTaskStatus.Error()):
+	case strings.Contains(msg, orcerrors.ErrIncompatibleTaskStatus.Error()):
 		return status.Error(codes.InvalidArgument, msg)
-	case strings.Contains(msg, orchestrationErrors.ErrUnimplemented.Error()):
+	case strings.Contains(msg, orcerrors.ErrUnimplemented.Error()):
 		return status.Error(codes.Unimplemented, msg)
-	case strings.Contains(msg, orchestrationErrors.ErrCannotDisableModel.Error()):
+	case strings.Contains(msg, orcerrors.ErrCannotDisableModel.Error()):
 		return status.Error(codes.InvalidArgument, msg)
 	default:
 		return status.Error(codes.Unknown, msg)
@@ -96,23 +96,23 @@ func fromError(err error) error {
 	switch true {
 	case err == nil:
 		return nil
-	case errors.Is(err, orchestrationErrors.ErrInvalidAsset):
+	case errors.Is(err, orcerrors.ErrInvalidAsset):
 		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, orchestrationErrors.ErrConflict):
+	case errors.Is(err, orcerrors.ErrConflict):
 		return status.Error(codes.AlreadyExists, err.Error())
-	case errors.Is(err, orchestrationErrors.ErrPermissionDenied):
+	case errors.Is(err, orcerrors.ErrPermissionDenied):
 		return status.Error(codes.PermissionDenied, err.Error())
-	case errors.Is(err, orchestrationErrors.ErrReferenceNotFound):
+	case errors.Is(err, orcerrors.ErrReferenceNotFound):
 		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, orchestrationErrors.ErrNotFound):
+	case errors.Is(err, orcerrors.ErrNotFound):
 		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, orchestrationErrors.ErrBadRequest):
+	case errors.Is(err, orcerrors.ErrBadRequest):
 		return status.Error(codes.FailedPrecondition, err.Error())
-	case errors.Is(err, orchestrationErrors.ErrIncompatibleTaskStatus):
+	case errors.Is(err, orcerrors.ErrIncompatibleTaskStatus):
 		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, orchestrationErrors.ErrUnimplemented):
+	case errors.Is(err, orcerrors.ErrUnimplemented):
 		return status.Error(codes.Unimplemented, err.Error())
-	case errors.Is(err, orchestrationErrors.ErrCannotDisableModel):
+	case errors.Is(err, orcerrors.ErrCannotDisableModel):
 		return status.Error(codes.InvalidArgument, err.Error())
 	default:
 		return status.Error(codes.Unknown, err.Error())

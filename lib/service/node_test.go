@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	orchestrationError "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
@@ -62,5 +62,5 @@ func TestRegisterExistingNode(t *testing.T) {
 
 	_, err := service.RegisterNode("uuid1")
 	assert.Error(t, err, "Registration should fail for existing node")
-	assert.True(t, errors.Is(err, orchestrationError.ErrConflict))
+	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
 }

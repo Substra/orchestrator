@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
@@ -69,7 +69,7 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orchestrationErrors.ErrBadRequest))
+	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
 
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
@@ -98,7 +98,7 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test") // "test" is not "owner" of the task
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orchestrationErrors.ErrPermissionDenied))
+	assert.True(t, errors.Is(err, orcerrors.ErrPermissionDenied))
 
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
@@ -196,7 +196,7 @@ func TestRegisterDuplicateModel(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orchestrationErrors.ErrBadRequest))
+	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
 
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
@@ -290,7 +290,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orchestrationErrors.ErrBadRequest))
+	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
 
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
@@ -330,7 +330,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orchestrationErrors.ErrBadRequest))
+	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
 
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)

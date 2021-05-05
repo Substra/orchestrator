@@ -4,3 +4,8 @@ linters:
   enable:
     - golint
     - gofmt
+    - importas
+
+linters-settings:
+  importas:
+    "orcerrors": github.com/owkin/orchestrator/lib/errors

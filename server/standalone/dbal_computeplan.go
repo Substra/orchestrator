@@ -22,7 +22,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 // ComputePlanExists returns true if a ComputePlan with the given key already exists
@@ -59,7 +59,7 @@ group by cp.asset;
 	err := row.Scan(plan, &total, &done)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("computeplan not found: %w", orchestrationErrors.ErrNotFound)
+			return nil, fmt.Errorf("computeplan not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
 	}

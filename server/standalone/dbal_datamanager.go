@@ -22,7 +22,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 // AddDataManager implements persistence.DataManagerDBAL
@@ -58,7 +58,7 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("datamanager not found: %w", orchestrationErrors.ErrNotFound)
+			return nil, fmt.Errorf("datamanager not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
 	}

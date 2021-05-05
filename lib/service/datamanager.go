@@ -20,7 +20,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
@@ -67,7 +67,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 	log.WithField("owner", owner).WithField("newDataManager", d).Debug("Registering DataManager")
 	err := d.Validate()
 	if err != nil {
-		return fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
+		return fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
 	exists, err := s.GetDataManagerDBAL().DataManagerExists(d.GetKey())
@@ -76,7 +76,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 		return err
 	}
 	if exists {
-		return fmt.Errorf("there is already a datamanager with this key: %w", orchestrationErrors.ErrConflict)
+		return fmt.Errorf("there is already a datamanager with this key: %w", orcerrors.ErrConflict)
 	}
 
 	// The objective key should be empty or referencing a valid objective
@@ -86,7 +86,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 			return err
 		}
 		if !ok {
-			return fmt.Errorf("the datamanager owner can't download the provided objective: %w", orchestrationErrors.ErrConflict)
+			return fmt.Errorf("the datamanager owner can't download the provided objective: %w", orcerrors.ErrConflict)
 		}
 	}
 
@@ -123,20 +123,20 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 	log.WithField("owner", requester).WithField("dataManagerUpdate", d).Debug("updating data manager")
 	err := d.Validate()
 	if err != nil {
-		return fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
+		return fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
 	datamanager, err := s.GetDataManagerDBAL().GetDataManager(d.GetKey())
 	if err != nil {
-		return fmt.Errorf("datamanager not found: %w", orchestrationErrors.ErrNotFound)
+		return fmt.Errorf("datamanager not found: %w", orcerrors.ErrNotFound)
 	}
 
 	if !s.GetPermissionService().CanProcess(datamanager.Permissions, requester) {
-		return fmt.Errorf("requester does not have the permissions to update the datamanager: %w", orchestrationErrors.ErrPermissionDenied)
+		return fmt.Errorf("requester does not have the permissions to update the datamanager: %w", orcerrors.ErrPermissionDenied)
 	}
 
 	if datamanager.GetObjectiveKey() != "" {
-		return fmt.Errorf("datamanager already has an objective: %w", orchestrationErrors.ErrBadRequest)
+		return fmt.Errorf("datamanager already has an objective: %w", orcerrors.ErrBadRequest)
 	}
 
 	// Validation of the asset existence is implicit because to check download permissions the ObjectiveService needs to query the
@@ -146,7 +146,7 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 		return err
 	}
 	if !ok {
-		return fmt.Errorf("the datamanager owner can't download the provided objective: %w", orchestrationErrors.ErrConflict)
+		return fmt.Errorf("the datamanager owner can't download the provided objective: %w", orcerrors.ErrConflict)
 	}
 
 	datamanager.ObjectiveKey = d.GetObjectiveKey()
@@ -181,7 +181,7 @@ func (s *DataManagerService) CheckOwner(keys []string, requester string) error {
 			return err
 		}
 		if !ok {
-			return fmt.Errorf("requester does not own the datamanager: %w datamanager: %s", orchestrationErrors.ErrPermissionDenied, dataManagerKey)
+			return fmt.Errorf("requester does not own the datamanager: %w datamanager: %s", orcerrors.ErrPermissionDenied, dataManagerKey)
 		}
 	}
 	return nil
@@ -191,7 +191,7 @@ func (s *DataManagerService) CheckOwner(keys []string, requester string) error {
 func (s *DataManagerService) isOwner(key string, requester string) (bool, error) {
 	dm, err := s.GetDataManagerDBAL().GetDataManager(key)
 	if err != nil {
-		return false, fmt.Errorf("provided datamanager not found: %w datamanager: %s", orchestrationErrors.ErrNotFound, key)
+		return false, fmt.Errorf("provided datamanager not found: %w datamanager: %s", orcerrors.ErrNotFound, key)
 	}
 
 	return dm.GetOwner() == requester, nil

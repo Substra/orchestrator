@@ -20,7 +20,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
@@ -86,7 +86,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 	log.WithField("task", input).WithField("owner", owner).Debug("Registering new compute task")
 	err := input.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
+		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
 	cp, err := s.GetComputePlanService().GetPlan(input.ComputePlanKey)
@@ -94,7 +94,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, err
 	}
 	if cp.Owner != owner {
-		return nil, fmt.Errorf("only plan owner can register a task: %w", orchestrationErrors.ErrPermissionDenied)
+		return nil, fmt.Errorf("only plan owner can register a task: %w", orcerrors.ErrPermissionDenied)
 	}
 
 	taskExist, err := s.GetComputeTaskDBAL().ComputeTaskExists(input.Key)
@@ -102,7 +102,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, err
 	}
 	if taskExist {
-		return nil, fmt.Errorf("task %s already exists: %w", input.Key, orchestrationErrors.ErrConflict)
+		return nil, fmt.Errorf("task %s already exists: %w", input.Key, orcerrors.ErrConflict)
 	}
 
 	parentTasks, err := s.GetComputeTaskDBAL().GetComputeTasks(input.ParentTaskKeys)
@@ -110,7 +110,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, err
 	}
 	if !isCompatibleWithParents(input.Category, parentTasks) {
-		return nil, fmt.Errorf("incompatible models from parent tasks: %w", orchestrationErrors.ErrInvalidAsset)
+		return nil, fmt.Errorf("incompatible models from parent tasks: %w", orcerrors.ErrInvalidAsset)
 	}
 
 	err = s.checkCanProcessParents(owner, parentTasks, input.Category)
@@ -121,7 +121,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 	status := getInitialStatusFromParents(parentTasks)
 
 	if status == asset.ComputeTaskStatus_STATUS_CANCELED || status == asset.ComputeTaskStatus_STATUS_FAILED {
-		return nil, fmt.Errorf("cannot create a task with status %s: %w", status, orchestrationErrors.ErrIncompatibleTaskStatus)
+		return nil, fmt.Errorf("cannot create a task with status %s: %w", status, orcerrors.ErrIncompatibleTaskStatus)
 	}
 
 	task := &asset.ComputeTask{
@@ -146,7 +146,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		err = s.setTrainData(input, input.Data.(*asset.NewComputeTask_Train).Train, task)
 	default:
 		// Should never happen, validated above
-		err = fmt.Errorf("unkwown task data: %T, %w", x, orchestrationErrors.ErrInvalidAsset)
+		err = fmt.Errorf("unkwown task data: %T, %w", x, orcerrors.ErrInvalidAsset)
 	}
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 		return false, err
 	}
 	if task.Worker != requester {
-		return false, fmt.Errorf("only the worker can disable a task outputs: %w", orchestrationErrors.ErrPermissionDenied)
+		return false, fmt.Errorf("only the worker can disable a task outputs: %w", orcerrors.ErrPermissionDenied)
 	}
 
 	state := newState(&dumbUpdater, task)
@@ -234,11 +234,11 @@ func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string, taskCa
 	}
 	canProcess := s.GetPermissionService().CanProcess(algo.Permissions, owner)
 	if !canProcess {
-		return nil, fmt.Errorf("not authorized to process algo %s: %w", algo.Key, orchestrationErrors.ErrPermissionDenied)
+		return nil, fmt.Errorf("not authorized to process algo %s: %w", algo.Key, orcerrors.ErrPermissionDenied)
 	}
 
 	if !isAlgoCompatible(taskCategory, algo.Category) {
-		return nil, fmt.Errorf("algo category is not compatible with task category: %w", orchestrationErrors.ErrInvalidAsset)
+		return nil, fmt.Errorf("algo category is not compatible with task category: %w", orcerrors.ErrInvalidAsset)
 	}
 
 	return algo, nil
@@ -249,11 +249,11 @@ func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string, taskCa
 func (s *ComputeTaskService) getCheckedDataManager(key string, dataSampleKeys []string, owner string) (*asset.DataManager, error) {
 	datamanager, err := s.GetDataManagerService().GetDataManager(key)
 	if err != nil {
-		return nil, fmt.Errorf("datamanager not found: %w", orchestrationErrors.ErrReferenceNotFound)
+		return nil, fmt.Errorf("datamanager not found: %w", orcerrors.ErrReferenceNotFound)
 	}
 	canProcess := s.GetPermissionService().CanProcess(datamanager.Permissions, owner)
 	if !canProcess {
-		return nil, fmt.Errorf("not authorized to process datamanager %s: %w", datamanager.Key, orchestrationErrors.ErrPermissionDenied)
+		return nil, fmt.Errorf("not authorized to process datamanager %s: %w", datamanager.Key, orcerrors.ErrPermissionDenied)
 	}
 	err = s.GetDataSampleService().CheckSameManager(key, dataSampleKeys)
 	if err != nil {
@@ -275,7 +275,7 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 		return err
 	}
 	if hasTest {
-		return fmt.Errorf("cannot create task with test data: %w", orchestrationErrors.ErrInvalidAsset)
+		return fmt.Errorf("cannot create task with test data: %w", orcerrors.ErrInvalidAsset)
 	}
 
 	algo, err := s.getCheckedAlgo(taskInput.AlgoKey, task.Owner, task.Category)
@@ -334,7 +334,7 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 		case *asset.ComputeTask_Train:
 			permissions = p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
 		default:
-			return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
+			return fmt.Errorf("cannot process parent task %s: %w", p.Key, orcerrors.ErrPermissionDenied)
 		}
 		perms = s.GetPermissionService().MakeUnion(permissions, perms)
 	}
@@ -363,7 +363,7 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 		return err
 	}
 	if hasTest {
-		return fmt.Errorf("cannot create task with test data: %w", orchestrationErrors.ErrInvalidAsset)
+		return fmt.Errorf("cannot create task with test data: %w", orcerrors.ErrInvalidAsset)
 	}
 
 	algo, err := s.getCheckedAlgo(taskInput.AlgoKey, task.Owner, task.Category)
@@ -416,7 +416,7 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 		// Relying on objective datamanager and samples
 		datamanager, err = s.GetDataManagerService().GetDataManager(objective.DataManagerKey)
 		if err != nil {
-			return fmt.Errorf("datamanager not found: %w", orchestrationErrors.ErrReferenceNotFound)
+			return fmt.Errorf("datamanager not found: %w", orcerrors.ErrReferenceNotFound)
 		}
 
 		// Test is certified when using objective test data
@@ -439,7 +439,7 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 
 	// Should not happen since it is validated by the NewTrain
 	if len(parentTasks) != 1 {
-		return fmt.Errorf("Invalid number of parents: %w", orchestrationErrors.ErrInvalidAsset)
+		return fmt.Errorf("invalid number of parents: %w", orcerrors.ErrInvalidAsset)
 	}
 	task.Algo = parentTasks[0].Algo
 	task.ComputePlanKey = parentTasks[0].ComputePlanKey
@@ -457,24 +457,24 @@ func (s *ComputeTaskService) checkCanProcessParents(requester string, parentTask
 		case *asset.ComputeTask_Composite:
 			trunkPerms := p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
 			if !s.GetPermissionService().CanProcess(trunkPerms, requester) {
-				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
+				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orcerrors.ErrPermissionDenied)
 			}
 			headPerms := p.Data.(*asset.ComputeTask_Composite).Composite.HeadPermissions
 			if (category == asset.ComputeTaskCategory_TASK_COMPOSITE || category == asset.ComputeTaskCategory_TASK_TEST) && !s.GetPermissionService().CanProcess(headPerms, requester) {
-				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
+				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orcerrors.ErrPermissionDenied)
 			}
 		case *asset.ComputeTask_Aggregate:
 			permissions := p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
 			if !s.GetPermissionService().CanProcess(permissions, requester) {
-				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
+				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orcerrors.ErrPermissionDenied)
 			}
 		case *asset.ComputeTask_Train:
 			permissions := p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
 			if !s.GetPermissionService().CanProcess(permissions, requester) {
-				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
+				return fmt.Errorf("cannot process parent task %s: %w", p.Key, orcerrors.ErrPermissionDenied)
 			}
 		default:
-			return fmt.Errorf("cannot process parent task %s: %w", p.Key, orchestrationErrors.ErrPermissionDenied)
+			return fmt.Errorf("cannot process parent task %s: %w", p.Key, orcerrors.ErrPermissionDenied)
 		}
 	}
 

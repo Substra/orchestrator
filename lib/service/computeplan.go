@@ -21,7 +21,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
@@ -61,7 +61,7 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 	log.WithField("plan", input).WithField("owner", owner).Debug("Registering new compute plan")
 	err := input.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
+		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
 	exist, err := s.GetComputePlanDBAL().ComputePlanExists(input.Key)
@@ -69,7 +69,7 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		return nil, err
 	}
 	if exist {
-		return nil, fmt.Errorf("plan %s already exists: %w", input.Key, orchestrationErrors.ErrConflict)
+		return nil, fmt.Errorf("plan %s already exists: %w", input.Key, orcerrors.ErrConflict)
 	}
 
 	plan := &asset.ComputePlan{
@@ -107,14 +107,14 @@ func (s *ComputePlanService) ApplyPlanAction(key string, action asset.ComputePla
 		return err
 	}
 	if requester != plan.Owner {
-		return fmt.Errorf("only plan owner can act on it: %w", orchestrationErrors.ErrPermissionDenied)
+		return fmt.Errorf("only plan owner can act on it: %w", orcerrors.ErrPermissionDenied)
 	}
 
 	switch action {
 	case asset.ComputePlanAction_PLAN_ACTION_CANCELED:
 		return s.cancelPlan(plan)
 	default:
-		return fmt.Errorf("plan action unimplemented: %w", orchestrationErrors.ErrUnimplemented)
+		return fmt.Errorf("plan action unimplemented: %w", orcerrors.ErrUnimplemented)
 	}
 }
 

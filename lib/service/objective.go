@@ -20,7 +20,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
@@ -65,7 +65,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 	log.WithField("owner", owner).WithField("newObj", o).Debug("Registering objective")
 	err := o.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orchestrationErrors.ErrInvalidAsset, err.Error())
+		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
 	objective := &asset.Objective{
@@ -88,7 +88,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 			return nil, err
 		}
 		if !testOnly {
-			return nil, fmt.Errorf("datasamples are not test only: %w", orchestrationErrors.ErrInvalidAsset)
+			return nil, fmt.Errorf("datasamples are not test only: %w", orcerrors.ErrInvalidAsset)
 		}
 
 		// Couple manager + samples is valid, let's associate them with the objective
@@ -125,7 +125,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		}
 		err = s.GetDataManagerService().UpdateDataManager(dataManagerUpdate, owner)
 		if err != nil {
-			return nil, fmt.Errorf("datamanager cannot be associated with the objective: %w", orchestrationErrors.ErrBadRequest)
+			return nil, fmt.Errorf("datamanager cannot be associated with the objective: %w", orcerrors.ErrBadRequest)
 		}
 	}
 

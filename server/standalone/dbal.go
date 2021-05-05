@@ -29,7 +29,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -107,7 +107,7 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("node not found: %w", orchestrationErrors.ErrNotFound)
+			return nil, fmt.Errorf("node not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (d *DBAL) GetObjective(key string) (*asset.Objective, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("objective not found: %w", orchestrationErrors.ErrNotFound)
+			return nil, fmt.Errorf("objective not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("algo not found: %w", orchestrationErrors.ErrNotFound)
+			return nil, fmt.Errorf("algo not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
 	}

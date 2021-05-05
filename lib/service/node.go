@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	orchestrationErrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
@@ -62,7 +62,7 @@ func (s *NodeService) RegisterNode(id string) (*asset.Node, error) {
 	}
 
 	if exists {
-		return nil, fmt.Errorf("node %s already exists: %w", node.GetId(), orchestrationErrors.ErrConflict)
+		return nil, fmt.Errorf("node %s already exists: %w", node.GetId(), orcerrors.ErrConflict)
 	}
 
 	err = s.GetNodeDBAL().AddNode(node)

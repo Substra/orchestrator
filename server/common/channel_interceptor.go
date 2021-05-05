@@ -37,11 +37,11 @@ func InterceptChannel(ctx context.Context, req interface{}, info *grpc.UnaryServ
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, errors.New("Could not extract metadata")
+		return nil, errors.New("could not extract metadata")
 	}
 
 	if len(md.Get(headerChannel)) != 1 {
-		return nil, fmt.Errorf("Missing or invalid header '%s'", headerChannel)
+		return nil, fmt.Errorf("missing or invalid header '%s'", headerChannel)
 	}
 
 	channel := md.Get(headerChannel)[0]

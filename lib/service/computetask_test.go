@@ -21,7 +21,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	orchestrationError "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
@@ -97,7 +97,7 @@ func TestRegisterTaskOnNonOwnedPlan(t *testing.T) {
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Owner: "nottest"}, nil)
 
 	_, err := service.RegisterTask(newTrainTask, "test")
-	assert.True(t, errors.Is(err, orchestrationError.ErrPermissionDenied))
+	assert.True(t, errors.Is(err, orcerrors.ErrPermissionDenied))
 }
 
 func TestRegisterTaskConflict(t *testing.T) {
@@ -114,7 +114,7 @@ func TestRegisterTaskConflict(t *testing.T) {
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(true, nil)
 
 	_, err := service.RegisterTask(newTrainTask, "test")
-	assert.True(t, errors.Is(err, orchestrationError.ErrConflict))
+	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
 }
 
 func TestRegisterTrainTask(t *testing.T) {
@@ -279,7 +279,7 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	_, err := service.RegisterTask(newTask, "testOwner")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orchestrationError.ErrIncompatibleTaskStatus))
+	assert.True(t, errors.Is(err, orcerrors.ErrIncompatibleTaskStatus))
 }
 
 func TestSetCompositeData(t *testing.T) {
@@ -737,7 +737,7 @@ func TestCheckCanProcessParent(t *testing.T) {
 				assert.NoError(t, err)
 			} else {
 				assert.Error(t, err)
-				assert.True(t, errors.Is(err, orchestrationError.ErrPermissionDenied))
+				assert.True(t, errors.Is(err, orcerrors.ErrPermissionDenied))
 			}
 		})
 	}
@@ -771,7 +771,7 @@ func TestCanDisableModels(t *testing.T) {
 		service := NewComputeTaskService(provider)
 		_, err := service.canDisableModels("uuid", "notworker")
 		assert.Error(t, err)
-		assert.True(t, errors.Is(err, orchestrationError.ErrPermissionDenied))
+		assert.True(t, errors.Is(err, orcerrors.ErrPermissionDenied))
 
 		dbal.AssertExpectations(t)
 	})
