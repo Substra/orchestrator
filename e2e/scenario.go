@@ -28,7 +28,7 @@ var defaultParent = []string{client.DefaultTaskRef}
 // Register a task and its dependencies, then start the task.
 func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 	defer log.WithTrace().Info("test train task lifecycle")
-	appClient, err := client.NewTestClient(conn, "MyOrg1MSP", "test-train-task-lifecycle")
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
@@ -45,7 +45,7 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 // register a task, start it, and register a model on it.
 func testRegisterModel(conn *grpc.ClientConn) {
 	defer log.WithTrace().Info("test register model")
-	appClient, err := client.NewTestClient(conn, "MyOrg1MSP", "test-register-model")
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
@@ -68,7 +68,7 @@ func testRegisterModel(conn *grpc.ClientConn) {
 // Register 10 children tasks and cancel their parent
 func testCascadeCancel(conn *grpc.ClientConn) {
 	defer log.WithTrace().Info("test cascade 10 tasks CANCELED")
-	appClient, err := client.NewTestClient(conn, "MyOrg1MSP", "test-cancel-tasks")
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
@@ -97,7 +97,7 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 // Register 10 tasks and set their parent as done
 func testCascadeTodo(conn *grpc.ClientConn) {
 	defer log.WithTrace().Info("test cascade 10 tasks TODO")
-	appClient, err := client.NewTestClient(conn, "MyOrg1MSP", "test-todo-tasks")
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
@@ -126,7 +126,7 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 // Register 10 tasks and set their parent as failed
 func testCascadeFailure(conn *grpc.ClientConn) {
 	defer log.WithTrace().Info("test cascade 10 tasks FAILED")
-	appClient, err := client.NewTestClient(conn, "MyOrg1MSP", "test-fail-tasks")
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
@@ -156,7 +156,7 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 // register 3 successive tasks, start and register models then check for model deletion
 func testDeleteIntermediary(conn *grpc.ClientConn) {
 	defer log.WithTrace().Info("test disabling intermediary models")
-	appClient, err := client.NewTestClient(conn, "MyOrg1MSP", "test-delete-intermediary")
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
 	}

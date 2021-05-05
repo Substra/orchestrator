@@ -35,6 +35,9 @@ var (
 	certFile   = flag.String("certfile", "", "The file containing the client cert file")
 	keyFile    = flag.String("keyfile", "", "The file containing the client cert key")
 	serverAddr = flag.String("server_addr", "localhost:9000", "The server address in the format of host:port")
+	mspid      = flag.String("mspid", "MyOrg1MSP", "MSP ID")
+	channel    = flag.String("channel", "mychannel", "Channel to use")
+	chaincode  = flag.String("chaincode", "mycc", "Chaincode to use (only relevant in distributed mode)")
 )
 
 func main() {

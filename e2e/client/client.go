@@ -40,9 +40,9 @@ type TestClient struct {
 	computePlanService asset.ComputePlanServiceClient
 }
 
-func NewTestClient(conn *grpc.ClientConn, mspid, channel string) (*TestClient, error) {
+func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*TestClient, error) {
 	ctx := context.Background()
-	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", mspid, "channel", channel)
+	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", mspid, "channel", channel, "chaincode", chaincode)
 
 	return &TestClient{
 		ctx:                ctx,
