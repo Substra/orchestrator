@@ -36,10 +36,10 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
-	appClient.RegisterComputePlan(nil)
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(defaultParent))
-	appClient.StartTrainTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTaskRef)
 }
 
 // register a task, start it, and register a model on it.
@@ -53,7 +53,7 @@ func testRegisterModel(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
-	appClient.RegisterComputePlan(nil)
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	plan := appClient.GetComputePlan("cp")
@@ -61,7 +61,7 @@ func testRegisterModel(conn *grpc.ClientConn) {
 		log.Fatal("compute plan has invalid task count")
 	}
 
-	appClient.StartTrainTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultTaskRef, "model")
 }
 
@@ -76,15 +76,15 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
-	appClient.RegisterComputePlan(nil)
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
 		appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
 	}
 
-	appClient.StartTrainTask(client.DefaultTaskRef)
-	appClient.CancelTrainTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.CancelTask(client.DefaultTaskRef)
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
@@ -105,15 +105,15 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
-	appClient.RegisterComputePlan(nil)
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
 		appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
 	}
 
-	appClient.StartTrainTask(client.DefaultTaskRef)
-	appClient.DoneTrainTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.DoneTask(client.DefaultTaskRef)
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
@@ -134,15 +134,15 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
-	appClient.RegisterComputePlan(nil)
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
 		appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
 	}
 
-	appClient.StartTrainTask(client.DefaultTaskRef)
-	appClient.FailTrainTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.FailTask(client.DefaultTaskRef)
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
@@ -164,24 +164,24 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
-	appClient.RegisterComputePlan(&client.ComputePlanOptions{DeleteIntermediaryModels: true})
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithDeleteIntermediaryModels(true))
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithParentsRef(defaultParent))
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("child2").WithParentsRef([]string{"child1"}))
 
 	// First task done
-	appClient.StartTrainTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultTaskRef, "model0")
-	appClient.DoneTrainTask(client.DefaultTaskRef)
+	appClient.DoneTask(client.DefaultTaskRef)
 	// second done
-	appClient.StartTrainTask("child1")
+	appClient.StartTask("child1")
 	appClient.RegisterModel("child1", "model1")
-	appClient.DoneTrainTask("child1")
+	appClient.DoneTask("child1")
 	// last task
-	appClient.StartTrainTask("child2")
+	appClient.StartTask("child2")
 	appClient.RegisterModel("child2", "model2")
-	appClient.DoneTrainTask("child2")
+	appClient.DoneTask("child2")
 
 	models := appClient.GetTaskOutputModels(client.DefaultTaskRef)
 	if len(models) != 1 {
@@ -255,7 +255,7 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample()
-	appClient.RegisterComputePlan(nil)
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
 	// step 1
 	appClient.RegisterCompositeTask(

@@ -213,7 +213,7 @@ func (c *TestClient) RegisterAggregateTask(o *AggregateTaskOptions) {
 
 }
 
-func (c *TestClient) StartTrainTask(keyRef string) {
+func (c *TestClient) StartTask(keyRef string) {
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
 		ComputeTaskKey: c.GetKey(keyRef),
 		Action:         asset.ComputeTaskAction_TASK_ACTION_DOING,
@@ -223,7 +223,7 @@ func (c *TestClient) StartTrainTask(keyRef string) {
 	}
 }
 
-func (c *TestClient) DoneTrainTask(keyRef string) {
+func (c *TestClient) DoneTask(keyRef string) {
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
 		ComputeTaskKey: c.GetKey(keyRef),
 		Action:         asset.ComputeTaskAction_TASK_ACTION_DONE,
@@ -233,7 +233,7 @@ func (c *TestClient) DoneTrainTask(keyRef string) {
 	}
 }
 
-func (c *TestClient) CancelTrainTask(keyRef string) {
+func (c *TestClient) CancelTask(keyRef string) {
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
 		ComputeTaskKey: c.GetKey(keyRef),
 		Action:         asset.ComputeTaskAction_TASK_ACTION_CANCELED,
@@ -243,7 +243,7 @@ func (c *TestClient) CancelTrainTask(keyRef string) {
 	}
 }
 
-func (c *TestClient) FailTrainTask(keyRef string) {
+func (c *TestClient) FailTask(keyRef string) {
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
 		ComputeTaskKey: c.GetKey(keyRef),
 		Action:         asset.ComputeTaskAction_TASK_ACTION_FAILED,
@@ -293,16 +293,11 @@ func (c *TestClient) DisableModel(modelRef string) {
 	}
 }
 
-func (c *TestClient) RegisterComputePlan(opts *ComputePlanOptions) {
-	newCP := &asset.NewComputePlan{
-		Key: c.GetKey("cp"),
-	}
-
-	if opts != nil {
-		newCP.DeleteIntermediaryModels = opts.DeleteIntermediaryModels
-	}
-
-	_, err := c.computePlanService.RegisterPlan(c.ctx, newCP)
+func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) {
+	_, err := c.computePlanService.RegisterPlan(c.ctx, &asset.NewComputePlan{
+		Key:                      c.GetKey(o.KeyRef),
+		DeleteIntermediaryModels: o.DeleteIntermediaryModels,
+	})
 	if err != nil {
 		log.WithError(err).Fatal("RegisterPlan failed")
 	}

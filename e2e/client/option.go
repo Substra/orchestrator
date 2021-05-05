@@ -17,6 +17,7 @@ package client
 import "github.com/owkin/orchestrator/lib/asset"
 
 type ComputePlanOptions struct {
+	KeyRef                   string
 	DeleteIntermediaryModels bool
 }
 
@@ -147,5 +148,22 @@ func (o *AlgoOptions) WithKeyRef(ref string) *AlgoOptions {
 
 func (o *AlgoOptions) WithCategory(category asset.AlgoCategory) *AlgoOptions {
 	o.Category = category
+	return o
+}
+
+func DefaultComputePlanOptions() *ComputePlanOptions {
+	return &ComputePlanOptions{
+		KeyRef:                   "cp",
+		DeleteIntermediaryModels: false,
+	}
+}
+
+func (o *ComputePlanOptions) WithKeyRef(ref string) *ComputePlanOptions {
+	o.KeyRef = ref
+	return o
+}
+
+func (o *ComputePlanOptions) WithDeleteIntermediaryModels(flag bool) *ComputePlanOptions {
+	o.DeleteIntermediaryModels = flag
 	return o
 }
