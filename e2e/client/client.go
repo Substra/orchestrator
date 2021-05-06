@@ -76,6 +76,7 @@ func (c *TestClient) GetKey(id string) string {
 func (c *TestClient) EnsureNode() {
 	_, err := c.nodeService.RegisterNode(c.ctx, &asset.NodeRegistrationParam{})
 	if status.Code(err) == codes.AlreadyExists {
+		log.Debug("node already exists")
 		// expected error
 		return
 	}
@@ -85,7 +86,7 @@ func (c *TestClient) EnsureNode() {
 }
 
 func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
-	_, err := c.algoService.RegisterAlgo(c.ctx, &asset.NewAlgo{
+	newAlgo := &asset.NewAlgo{
 		Key:      c.GetKey(o.KeyRef),
 		Name:     "Algo test",
 		Category: o.Category,
@@ -98,7 +99,9 @@ func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 			StorageAddress: "http://somewhere.local/algo",
 		},
 		NewPermissions: &asset.NewPermissions{Public: true},
-	})
+	}
+	log.WithField("algo", newAlgo).Debug("registering algo")
+	_, err := c.algoService.RegisterAlgo(c.ctx, newAlgo)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterAlgo failed")
 	}
@@ -106,7 +109,7 @@ func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 }
 
 func (c *TestClient) RegisterDataManager() {
-	_, err := c.dataManagerService.RegisterDataManager(c.ctx, &asset.NewDataManager{
+	newDm := &asset.NewDataManager{
 		Key:            c.GetKey("dm"),
 		Name:           "Test datamanager",
 		NewPermissions: &asset.NewPermissions{Public: true},
@@ -119,7 +122,9 @@ func (c *TestClient) RegisterDataManager() {
 			StorageAddress: "http://somewhere.local/opener",
 		},
 		Type: "test",
-	})
+	}
+	log.WithField("datamanager", newDm).Debug("registering datamanager")
+	_, err := c.dataManagerService.RegisterDataManager(c.ctx, newDm)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterDataManager failed")
 	}
@@ -127,11 +132,13 @@ func (c *TestClient) RegisterDataManager() {
 }
 
 func (c *TestClient) RegisterDataSample() {
-	_, err := c.dataSampleService.RegisterDataSample(c.ctx, &asset.NewDataSample{
+	newDs := &asset.NewDataSample{
 		Keys:            []string{c.GetKey("ds")},
 		DataManagerKeys: []string{c.GetKey("dm")},
 		TestOnly:        false,
-	})
+	}
+	log.WithField("datasample", newDs).Debug("registering datasample")
+	_, err := c.dataSampleService.RegisterDataSample(c.ctx, newDs)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterDataSample failed")
 	}
@@ -143,8 +150,7 @@ func (c *TestClient) RegisterTrainTask(o *TrainTaskOptions) {
 	for i, ref := range o.ParentsRef {
 		parentKeys[i] = c.GetKey(ref)
 	}
-
-	_, err := c.computeTaskService.RegisterTask(c.ctx, &asset.NewComputeTask{
+	newTask := &asset.NewComputeTask{
 		Key:            c.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        c.GetKey(o.AlgoRef),
@@ -156,7 +162,9 @@ func (c *TestClient) RegisterTrainTask(o *TrainTaskOptions) {
 				DataSampleKeys: []string{c.GetKey(o.DataSampleRef)},
 			},
 		},
-	})
+	}
+	log.WithField("task", newTask).Debug("registering train task")
+	_, err := c.computeTaskService.RegisterTask(c.ctx, newTask)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterComputeTask failed")
 	}
@@ -168,8 +176,7 @@ func (c *TestClient) RegisterCompositeTask(o *CompositeTaskOptions) {
 	for i, ref := range o.ParentsRef {
 		parentKeys[i] = c.GetKey(ref)
 	}
-
-	_, err := c.computeTaskService.RegisterTask(c.ctx, &asset.NewComputeTask{
+	newTask := &asset.NewComputeTask{
 		Key:            c.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		AlgoKey:        c.GetKey(o.AlgoRef),
@@ -182,7 +189,10 @@ func (c *TestClient) RegisterCompositeTask(o *CompositeTaskOptions) {
 				TrunkPermissions: &asset.NewPermissions{Public: true},
 			},
 		},
-	})
+	}
+
+	log.WithField("task", newTask).Debug("registering composite task")
+	_, err := c.computeTaskService.RegisterTask(c.ctx, newTask)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterCompositeTask failed")
 	}
@@ -194,8 +204,7 @@ func (c *TestClient) RegisterAggregateTask(o *AggregateTaskOptions) {
 	for i, ref := range o.ParentsRef {
 		parentKeys[i] = c.GetKey(ref)
 	}
-
-	_, err := c.computeTaskService.RegisterTask(c.ctx, &asset.NewComputeTask{
+	newTask := &asset.NewComputeTask{
 		Key:            c.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_AGGREGATE,
 		AlgoKey:        c.GetKey(o.AlgoRef),
@@ -206,7 +215,10 @@ func (c *TestClient) RegisterAggregateTask(o *AggregateTaskOptions) {
 				Worker: o.Worker,
 			},
 		},
-	})
+	}
+
+	log.WithField("task", newTask).Debug("registering aggregate task")
+	_, err := c.computeTaskService.RegisterTask(c.ctx, newTask)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterAggregateTask failed")
 	}
@@ -214,55 +226,45 @@ func (c *TestClient) RegisterAggregateTask(o *AggregateTaskOptions) {
 }
 
 func (c *TestClient) StartTask(keyRef string) {
-	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
-		ComputeTaskKey: c.GetKey(keyRef),
-		Action:         asset.ComputeTaskAction_TASK_ACTION_DOING,
-	})
-	if err != nil {
-		log.WithError(err).Fatal("failed to mark task as DOING")
-	}
+	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_DOING)
 }
 
 func (c *TestClient) DoneTask(keyRef string) {
-	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
-		ComputeTaskKey: c.GetKey(keyRef),
-		Action:         asset.ComputeTaskAction_TASK_ACTION_DONE,
-	})
-	if err != nil {
-		log.WithError(err).Fatal("failed to mark task as DONE")
-	}
+	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_DONE)
 }
 
 func (c *TestClient) CancelTask(keyRef string) {
-	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
-		ComputeTaskKey: c.GetKey(keyRef),
-		Action:         asset.ComputeTaskAction_TASK_ACTION_CANCELED,
-	})
-	if err != nil {
-		log.WithError(err).Fatal("failed to mark task as CANCELED")
-	}
+	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_CANCELED)
 }
 
 func (c *TestClient) FailTask(keyRef string) {
+	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_FAILED)
+}
+
+func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskAction) {
+	taskKey := c.GetKey(keyRef)
+	log.WithField("taskKey", taskKey).WithField("action", action).Debug("applying task action")
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
-		ComputeTaskKey: c.GetKey(keyRef),
-		Action:         asset.ComputeTaskAction_TASK_ACTION_FAILED,
+		ComputeTaskKey: taskKey,
+		Action:         action,
 	})
 	if err != nil {
 		log.WithError(err).Fatal("failed to mark task as FAILED")
 	}
 }
 
-func (c *TestClient) RegisterModel(taskRef, modelRef string) {
-	_, err := c.modelService.RegisterModel(c.ctx, &asset.NewModel{
-		ComputeTaskKey: c.GetKey(taskRef),
-		Key:            c.GetKey(modelRef),
-		Category:       asset.ModelCategory_MODEL_SIMPLE,
+func (c *TestClient) RegisterModel(o *ModelOptions) {
+	newModel := &asset.NewModel{
+		ComputeTaskKey: c.GetKey(o.TaskRef),
+		Key:            c.GetKey(o.KeyRef),
+		Category:       o.Category,
 		Address: &asset.Addressable{
 			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
 			StorageAddress: "http://somewhere.online/model",
 		},
-	})
+	}
+	log.WithField("model", newModel).Debug("registering model")
+	_, err := c.modelService.RegisterModel(c.ctx, newModel)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterModel failed")
 	}
@@ -287,17 +289,21 @@ func (c *TestClient) CanDisableModel(modelRef string) bool {
 }
 
 func (c *TestClient) DisableModel(modelRef string) {
-	_, err := c.modelService.DisableModel(c.ctx, &asset.DisableModelParam{ModelKey: c.GetKey(modelRef)})
+	modelKey := c.GetKey(modelRef)
+	log.WithField("modelKey", modelKey).Debug("disabling model")
+	_, err := c.modelService.DisableModel(c.ctx, &asset.DisableModelParam{ModelKey: modelKey})
 	if err != nil {
-		log.WithError(err).Fatal("CanDisableModel failed")
+		log.WithError(err).Fatal("DisableModel failed")
 	}
 }
 
 func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) {
-	_, err := c.computePlanService.RegisterPlan(c.ctx, &asset.NewComputePlan{
+	newCp := &asset.NewComputePlan{
 		Key:                      c.GetKey(o.KeyRef),
 		DeleteIntermediaryModels: o.DeleteIntermediaryModels,
-	})
+	}
+	log.WithField("plan", newCp).Debug("registering compute plan")
+	_, err := c.computePlanService.RegisterPlan(c.ctx, newCp)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterPlan failed")
 	}

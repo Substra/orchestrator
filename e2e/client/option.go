@@ -52,6 +52,12 @@ type AggregateTaskOptions struct {
 	Worker     string
 }
 
+type ModelOptions struct {
+	KeyRef   string
+	TaskRef  string
+	Category asset.ModelCategory
+}
+
 func DefaultTrainTaskOptions() *TrainTaskOptions {
 	return &TrainTaskOptions{
 		KeyRef:         DefaultTaskRef,
@@ -165,5 +171,28 @@ func (o *ComputePlanOptions) WithKeyRef(ref string) *ComputePlanOptions {
 
 func (o *ComputePlanOptions) WithDeleteIntermediaryModels(flag bool) *ComputePlanOptions {
 	o.DeleteIntermediaryModels = flag
+	return o
+}
+
+func DefaultModelOptions() *ModelOptions {
+	return &ModelOptions{
+		KeyRef:   "model",
+		TaskRef:  DefaultTaskRef,
+		Category: asset.ModelCategory_MODEL_SIMPLE,
+	}
+}
+
+func (o *ModelOptions) WithKeyRef(ref string) *ModelOptions {
+	o.KeyRef = ref
+	return o
+}
+
+func (o *ModelOptions) WithTaskRef(ref string) *ModelOptions {
+	o.TaskRef = ref
+	return o
+}
+
+func (o *ModelOptions) WithCategory(category asset.ModelCategory) *ModelOptions {
+	o.Category = category
 	return o
 }

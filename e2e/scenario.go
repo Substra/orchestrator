@@ -27,7 +27,9 @@ var defaultParent = []string{client.DefaultTaskRef}
 
 // Register a task and its dependencies, then start the task.
 func testTrainTaskLifecycle(conn *grpc.ClientConn) {
+	log.Debug("testTrainTaskLifecycle")
 	defer log.WithTrace().Info("test train task lifecycle")
+
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -44,7 +46,9 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 
 // register a task, start it, and register a model on it.
 func testRegisterModel(conn *grpc.ClientConn) {
+	log.Debug("testRegisterModel")
 	defer log.WithTrace().Info("test register model")
+
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -62,12 +66,14 @@ func testRegisterModel(conn *grpc.ClientConn) {
 	}
 
 	appClient.StartTask(client.DefaultTaskRef)
-	appClient.RegisterModel(client.DefaultTaskRef, "model")
+	appClient.RegisterModel(client.DefaultModelOptions())
 }
 
 // Register 10 children tasks and cancel their parent
 func testCascadeCancel(conn *grpc.ClientConn) {
+	log.Debug("testCascadeCancel")
 	defer log.WithTrace().Info("test cascade 10 tasks CANCELED")
+
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -96,7 +102,9 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 
 // Register 10 tasks and set their parent as done
 func testCascadeTodo(conn *grpc.ClientConn) {
+	log.Debug("testCascadeTodo")
 	defer log.WithTrace().Info("test cascade 10 tasks TODO")
+
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -125,7 +133,9 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 
 // Register 10 tasks and set their parent as failed
 func testCascadeFailure(conn *grpc.ClientConn) {
+	log.Debug("testCascadeFailure")
 	defer log.WithTrace().Info("test cascade 10 tasks FAILED")
+
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -155,7 +165,9 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 
 // register 3 successive tasks, start and register models then check for model deletion
 func testDeleteIntermediary(conn *grpc.ClientConn) {
+	log.Debug("testDeleteIntermediary")
 	defer log.WithTrace().Info("test disabling intermediary models")
+
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -172,15 +184,15 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 
 	// First task done
 	appClient.StartTask(client.DefaultTaskRef)
-	appClient.RegisterModel(client.DefaultTaskRef, "model0")
+	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model0"))
 	appClient.DoneTask(client.DefaultTaskRef)
 	// second done
 	appClient.StartTask("child1")
-	appClient.RegisterModel("child1", "model1")
+	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model1").WithTaskRef("child1"))
 	appClient.DoneTask("child1")
 	// last task
 	appClient.StartTask("child2")
-	appClient.RegisterModel("child2", "model2")
+	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model2").WithTaskRef("child2"))
 	appClient.DoneTask("child2")
 
 	models := appClient.GetTaskOutputModels(client.DefaultTaskRef)
@@ -244,7 +256,9 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 //
 //
 func testMultiStageComputePlan(conn *grpc.ClientConn) {
+	log.Debug("testMultiStageComputePlan")
 	defer log.WithTrace().Info("test multi stage compute plan")
+
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -277,11 +291,45 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	)
 	// step 4
 	appClient.RegisterAggregateTask(
-		client.DefaultAggregateTaskOptions().WithKeyRef("compC4").WithParentsRef([]string{"compA3", "compB3"}).WithAlgoRef("algoAgg"),
+		client.DefaultAggregateTaskOptions().WithKeyRef("aggC4").WithParentsRef([]string{"compA3", "compB3"}).WithAlgoRef("algoAgg"),
 	)
 
-	lastAggregate := appClient.GetComputeTask("compC4")
+	lastAggregate := appClient.GetComputeTask("aggC4")
 	if lastAggregate.Rank != 3 {
 		log.WithField("rank", lastAggregate.Rank).Fatal("last aggegation task has not expected rank")
 	}
+
+	// Start step 1
+	appClient.StartTask("compA1")
+	appClient.StartTask("compB1")
+
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA1").WithKeyRef("modelA1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA1").WithKeyRef("modelA1T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+
+	appClient.DoneTask("compA1")
+	appClient.DoneTask("compB1")
+
+	// Start step 2
+	appClient.StartTask("aggC2")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC2").WithKeyRef("modelC2").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("aggC2")
+
+	// Start step 3
+	appClient.StartTask("compA3")
+	appClient.StartTask("compB3")
+
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA3").WithKeyRef("modelA3H").WithCategory(asset.ModelCategory_MODEL_HEAD))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA3").WithKeyRef("modelA3T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3H").WithCategory(asset.ModelCategory_MODEL_HEAD))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+
+	appClient.DoneTask("compA3")
+	appClient.DoneTask("compB3")
+
+	// Start step 4
+	appClient.StartTask("aggC4")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("aggC4")
 }

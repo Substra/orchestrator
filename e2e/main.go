@@ -30,21 +30,31 @@ import (
 )
 
 var (
-	tlsEnabled = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	caFile     = flag.String("cafile", "", "The file containing the CA root cert file")
-	certFile   = flag.String("certfile", "", "The file containing the client cert file")
-	keyFile    = flag.String("keyfile", "", "The file containing the client cert key")
-	serverAddr = flag.String("server_addr", "localhost:9000", "The server address in the format of host:port")
-	mspid      = flag.String("mspid", "MyOrg1MSP", "MSP ID")
-	channel    = flag.String("channel", "mychannel", "Channel to use")
-	chaincode  = flag.String("chaincode", "mycc", "Chaincode to use (only relevant in distributed mode)")
+	debugEnabled = flag.Bool("debug", false, "Debug mode (very verbose)")
+	tlsEnabled   = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	caFile       = flag.String("cafile", "", "The file containing the CA root cert file")
+	certFile     = flag.String("certfile", "", "The file containing the client cert file")
+	keyFile      = flag.String("keyfile", "", "The file containing the client cert key")
+	serverAddr   = flag.String("server_addr", "localhost:9000", "The server address in the format of host:port")
+	mspid        = flag.String("mspid", "MyOrg1MSP", "MSP ID")
+	channel      = flag.String("channel", "mychannel", "Channel to use")
+	chaincode    = flag.String("chaincode", "mycc", "Chaincode to use (only relevant in distributed mode)")
 )
 
 func main() {
-	cLog := console.New(true)
-	log.AddHandler(cLog, log.AllLevels...)
-
 	flag.Parse()
+
+	cLog := console.New(true)
+	levels := make([]log.Level, 0)
+	for _, lvl := range log.AllLevels {
+		if !*debugEnabled && lvl == log.DebugLevel {
+			continue
+		}
+
+		levels = append(levels, lvl)
+	}
+	log.AddHandler(cLog, levels...)
+
 	var opts []grpc.DialOption
 	if *tlsEnabled {
 		b, err := ioutil.ReadFile(*caFile)
@@ -73,7 +83,7 @@ func main() {
 
 	opts = append(opts, grpc.WithBlock())
 
-	log.WithField("server_addr", *serverAddr).Debug("connecting to server")
+	log.WithField("server_addr", *serverAddr).Info("connecting to server")
 
 	dialCtx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
