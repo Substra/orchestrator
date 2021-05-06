@@ -43,7 +43,7 @@ func NewSmartContract() *SmartContract {
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryNodes"}
+	return []string{"GetAllNodes"}
 }
 
 // RegisterNode creates a new node in world state
@@ -69,17 +69,17 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*communicat
 	return wrapped, nil
 }
 
-// QueryNodes retrieves all known nodes
-func (s *SmartContract) QueryNodes(ctx ledger.TransactionContext) (*communication.Wrapper, error) {
+// GetAllNodes retrieves all known nodes
+func (s *SmartContract) GetAllNodes(ctx ledger.TransactionContext) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetNodeService()
 
-	nodes, err := service.GetNodes()
+	nodes, err := service.GetAllNodes()
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query nodes")
 		return nil, err
 	}
 
-	resp := &asset.NodeQueryResponse{
+	resp := &asset.GetAllNodesResponse{
 		Nodes: nodes,
 	}
 

@@ -55,8 +55,8 @@ func (s *DataSampleServer) RegisterDataSample(ctx context.Context, datasample *a
 	return &asset.NewDataSampleResponse{}, nil
 }
 
-// UpdateDataSample will update the datamanagers existing DataSamples
-func (s *DataSampleServer) UpdateDataSample(ctx context.Context, datasample *asset.DataSampleUpdateParam) (*asset.DataSampleUpdateResponse, error) {
+// UpdateDataSamples will update the datamanagers existing DataSamples
+func (s *DataSampleServer) UpdateDataSamples(ctx context.Context, datasample *asset.UpdateDataSamplesParam) (*asset.UpdateDataSamplesResponse, error) {
 	log.WithField("datasample", datasample).Debug("Update DataSample")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -68,27 +68,27 @@ func (s *DataSampleServer) UpdateDataSample(ctx context.Context, datasample *ass
 		return nil, err
 	}
 
-	err = services.GetDataSampleService().UpdateDataSample(datasample, mspid)
+	err = services.GetDataSampleService().UpdateDataSamples(datasample, mspid)
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.DataSampleUpdateResponse{}, nil
+	return &asset.UpdateDataSamplesResponse{}, nil
 }
 
 // QueryDataSamples returns a paginated list of all known datasamples
-func (s *DataSampleServer) QueryDataSamples(ctx context.Context, params *asset.DataSamplesQueryParam) (*asset.DataSamplesQueryResponse, error) {
+func (s *DataSampleServer) QueryDataSamples(ctx context.Context, params *asset.QueryDataSamplesParam) (*asset.QueryDataSamplesResponse, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	datasamples, paginationToken, err := services.GetDataSampleService().GetDataSamples(libCommon.NewPagination(params.PageToken, params.PageSize))
+	datasamples, paginationToken, err := services.GetDataSampleService().QueryDataSamples(libCommon.NewPagination(params.PageToken, params.PageSize))
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.DataSamplesQueryResponse{
+	return &asset.QueryDataSamplesResponse{
 		DataSamples:   datasamples,
 		NextPageToken: paginationToken,
 	}, nil

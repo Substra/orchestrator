@@ -84,16 +84,16 @@ func TestQueryObjectives(t *testing.T) {
 
 	ctx := new(testHelper.MockedContext)
 	service := getMockedService(ctx)
-	service.On("GetObjectives", &common.Pagination{Token: "", Size: 20}).Return(objectives, "", nil).Once()
+	service.On("QueryObjectives", &common.Pagination{Token: "", Size: 20}).Return(objectives, "", nil).Once()
 
-	param := &asset.ObjectivesQueryParam{PageToken: "", PageSize: 20}
+	param := &asset.QueryObjectivesParam{PageToken: "", PageSize: 20}
 	wrapper, err := communication.Wrap(param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.QueryObjectives(ctx, wrapper)
 	assert.NoError(t, err, "query should not fail")
 
-	resp := new(asset.ObjectivesQueryResponse)
+	resp := new(asset.QueryObjectivesResponse)
 	err = wrapped.Unwrap(resp)
 	assert.NoError(t, err)
 	assert.Len(t, resp.Objectives, len(objectives), "query should return all objectives")
@@ -103,7 +103,7 @@ func TestEvaluateTransactions(t *testing.T) {
 	contract := &SmartContract{}
 
 	queries := []string{
-		"QueryObjective",
+		"GetObjective",
 		"QueryObjectives",
 		"QueryLeaderboard",
 	}

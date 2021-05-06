@@ -79,7 +79,7 @@ func (s *PermissionService) CreatePermissions(owner string, newPerms *asset.NewP
 // validateAuthorizedIds checks that given IDs are valid nodes in the network.
 // Returns nil if all IDs are valid, an Error otherwise
 func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
-	nodes, err := s.GetNodeService().GetNodes()
+	nodes, err := s.GetNodeService().GetAllNodes()
 	if err != nil {
 		return err
 	}

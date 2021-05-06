@@ -357,8 +357,8 @@ func (db *DB) AddNode(node *asset.Node) error {
 	return db.putState(asset.NodeKind, node.GetId(), nodeBytes)
 }
 
-// GetNodes returns all known Nodes
-func (db *DB) GetNodes() ([]*asset.Node, error) {
+// GetAllNodes returns all known Nodes
+func (db *DB) GetAllNodes() ([]*asset.Node, error) {
 	b, err := db.getAll(asset.NodeKind)
 	if err != nil {
 		return nil, err
@@ -440,14 +440,14 @@ func (db *DB) GetObjective(key string) (*asset.Objective, error) {
 	return &o, err
 }
 
-// GetObjectives retrieves all objectives
-func (db *DB) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
+// QueryObjectives retrieves all objectives
+func (db *DB) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("objective~owner~key", []string{asset.ObjectiveKind}, p.Size, p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	db.logger.WithField("keys", elementsKeys).Debug("GetObjectives")
+	db.logger.WithField("keys", elementsKeys).Debug("QueryObjectives")
 
 	var objectives []*asset.Objective
 	for _, key := range elementsKeys {
@@ -505,8 +505,8 @@ func (db *DB) GetAlgo(key string) (*asset.Algo, error) {
 	return &a, err
 }
 
-// GetAlgos retrieves all algos
-func (db *DB) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+// QueryAlgos retrieves all algos
+func (db *DB) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
 	logger := db.logger.WithFields(
 		log.F("pagination", p),
 		log.F("algo_category", c.String()),

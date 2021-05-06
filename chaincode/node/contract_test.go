@@ -60,7 +60,7 @@ func TestRegistration(t *testing.T) {
 	assert.Equal(t, node, o)
 }
 
-func TestQueryNodes(t *testing.T) {
+func TestGetAllNodes(t *testing.T) {
 	contract := &SmartContract{}
 
 	nodes := []*asset.Node{
@@ -71,11 +71,11 @@ func TestQueryNodes(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 
 	service := getMockedService(ctx)
-	service.On("GetNodes").Return(nodes, nil).Once()
+	service.On("GetAllNodes").Return(nodes, nil).Once()
 
-	wrapped, err := contract.QueryNodes(ctx)
+	wrapped, err := contract.GetAllNodes(ctx)
 	assert.NoError(t, err, "querying nodes should not fail")
-	queryResult := new(asset.NodeQueryResponse)
+	queryResult := new(asset.GetAllNodesResponse)
 	err = wrapped.Unwrap(queryResult)
 	assert.NoError(t, err)
 	assert.Len(t, queryResult.Nodes, len(nodes), "query should return all nodes")

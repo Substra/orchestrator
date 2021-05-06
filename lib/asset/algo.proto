@@ -52,16 +52,16 @@ message NewAlgo {
   map<string, string> metadata = 7;
 }
 
-message AlgoQueryParam {
+message GetAlgoParam {
   string key = 1;
 }
 
-message AlgosQueryResponse {
+message QueryAlgosResponse {
   repeated Algo Algos = 1;
   string next_page_token = 2;
 }
 
-message AlgosQueryParam {
+message QueryAlgosParam {
   AlgoCategory category = 1;
   string page_token = 2;
   uint32 page_size = 3;
@@ -69,6 +69,6 @@ message AlgosQueryParam {
 
 service AlgoService {
   rpc RegisterAlgo(NewAlgo) returns (Algo) {}
-  rpc QueryAlgo(AlgoQueryParam) returns (Algo) {}
-  rpc QueryAlgos(AlgosQueryParam) returns (AlgosQueryResponse) {}
+  rpc GetAlgo(GetAlgoParam) returns (Algo) {}
+  rpc QueryAlgos(QueryAlgosParam) returns (QueryAlgosResponse) {}
 }

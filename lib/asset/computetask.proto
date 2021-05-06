@@ -130,18 +130,18 @@ message TaskQueryFilter {
   ComputeTaskCategory category = 3;
 }
 
-message TasksQueryParam {
+message QueryTasksParam {
   string page_token = 1;
   uint32 page_size = 2;
   TaskQueryFilter filter = 3;
 }
 
-message TasksQueryResponse {
+message QueryTasksResponse {
   repeated ComputeTask tasks = 1;
   string next_page_token = 2;
 }
 
-message TaskQueryParam {
+message GetTaskParam {
   string key = 1;
 }
 
@@ -163,7 +163,7 @@ message ApplyTaskActionResponse {}
 
 service ComputeTaskService {
   rpc RegisterTask(NewComputeTask) returns (ComputeTask) {}
-  rpc QueryTasks(TasksQueryParam) returns (TasksQueryResponse) {}
-  rpc GetTask(TaskQueryParam) returns (ComputeTask) {}
+  rpc QueryTasks(QueryTasksParam) returns (QueryTasksResponse) {}
+  rpc GetTask(GetTaskParam) returns (ComputeTask) {}
   rpc ApplyTaskAction(ApplyTaskActionParam) returns (ApplyTaskActionResponse) {}
 }

@@ -48,16 +48,16 @@ message NewObjective {
   map<string, string> metadata = 9;
 }
 
-message ObjectiveQueryParam {
+message GetObjectiveParam {
   string key = 1;
 }
 
-message ObjectivesQueryResponse {
+message QueryObjectivesResponse {
   repeated Objective objectives = 1;
   string next_page_token = 2;
 }
 
-message ObjectivesQueryParam {
+message QueryObjectivesParam {
   string page_token = 1;
   uint32 page_size = 2;
 }
@@ -84,7 +84,7 @@ message Leaderboard {
 
 service ObjectiveService {
   rpc RegisterObjective(NewObjective) returns (Objective) {}
-  rpc QueryObjective(ObjectiveQueryParam) returns (Objective) {}
-  rpc QueryObjectives(ObjectivesQueryParam) returns (ObjectivesQueryResponse) {}
+  rpc GetObjective(GetObjectiveParam) returns (Objective) {}
+  rpc QueryObjectives(QueryObjectivesParam) returns (QueryObjectivesResponse) {}
   rpc GetLeaderboard(LeaderboardQueryParam) returns (Leaderboard) {}
 }

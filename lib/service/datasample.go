@@ -30,8 +30,8 @@ import (
 // DataSampleAPI defines the methods to act on DataSamples
 type DataSampleAPI interface {
 	RegisterDataSample(datasample *asset.NewDataSample, owner string) error
-	UpdateDataSample(datasample *asset.DataSampleUpdateParam, owner string) error
-	GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
+	UpdateDataSamples(datasample *asset.UpdateDataSamplesParam, owner string) error
+	QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
 	CheckSameManager(managerKey string, sampleKeys []string) error
 	IsTestOnly(sampleKeys []string) (bool, error)
 	ContainsTestSample(sampleKeys []string) (bool, error)
@@ -106,8 +106,8 @@ func (s *DataSampleService) RegisterDataSample(d *asset.NewDataSample, owner str
 	return nil
 }
 
-// UpdateDataSample update or add one or multiple datasamples
-func (s *DataSampleService) UpdateDataSample(d *asset.DataSampleUpdateParam, owner string) error {
+// UpdateDataSamples update or add one or multiple datasamples
+func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, owner string) error {
 	log.WithField("owner", owner).WithField("dataSampleUpdate", d).Debug("Updating data sample")
 	err := d.Validate()
 	if err != nil {
@@ -149,9 +149,9 @@ func (s *DataSampleService) UpdateDataSample(d *asset.DataSampleUpdateParam, own
 	return nil
 }
 
-// GetDataSamples returns all stored datasamples
-func (s *DataSampleService) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
-	return s.GetDataSampleDBAL().GetDataSamples(p)
+// QueryDataSamples returns all stored datasamples
+func (s *DataSampleService) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+	return s.GetDataSampleDBAL().QueryDataSamples(p)
 }
 
 // CheckSameManager validates that samples all have in common the given manager.

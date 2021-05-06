@@ -31,6 +31,8 @@ Converting from the existing chaincode is mostly a 3 steps process:
 This validation should be implemented in `lib/asset/<asset>_validation.go`, there are several existing examples.
 Validation is done with [ozzo-validation](https://github.com/go-ozzo/ozzo-validation) library.
 
+**Naming**: to have a consistent API, make sure to follow the [naming conventions](./naming.md).
+
 ### 2. Database Abstraction Layer
 
 Once the asset defined, you can define its <abbr title="database abstraction layer">DBAL</abbr> in `lib/persistence` module.

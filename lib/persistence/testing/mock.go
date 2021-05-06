@@ -38,8 +38,8 @@ func (m *MockDBAL) NodeExists(id string) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
-// GetNodes is a mock
-func (m *MockDBAL) GetNodes() ([]*asset.Node, error) {
+// GetAllNodes is a mock
+func (m *MockDBAL) GetAllNodes() ([]*asset.Node, error) {
 	args := m.Called()
 	return args.Get(0).([]*asset.Node), args.Error(1)
 }
@@ -62,8 +62,8 @@ func (m *MockDBAL) GetObjective(key string) (*asset.Objective, error) {
 	return args.Get(0).(*asset.Objective), args.Error(1)
 }
 
-// GetObjectives is a mock
-func (m *MockDBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
+// QueryObjectives is a mock
+func (m *MockDBAL) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }
@@ -92,8 +92,8 @@ func (m *MockDBAL) GetDataSample(key string) (*asset.DataSample, error) {
 	return args.Get(0).(*asset.DataSample), args.Error(1)
 }
 
-// GetDataSamples is a mock
-func (m *MockDBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+// QueryDataSamples is a mock
+func (m *MockDBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.DataSample), args.Get(1).(common.PaginationToken), args.Error(2)
 }
@@ -116,8 +116,8 @@ func (m *MockDBAL) GetAlgo(key string) (*asset.Algo, error) {
 	return args.Get(0).(*asset.Algo), args.Error(1)
 }
 
-// GetAlgos is a mock
-func (m *MockDBAL) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+// QueryAlgos is a mock
+func (m *MockDBAL) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
 	args := m.Called(c, p)
 	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
 }
@@ -146,8 +146,8 @@ func (m *MockDBAL) GetDataManager(key string) (*asset.DataManager, error) {
 	return args.Get(0).(*asset.DataManager), args.Error(1)
 }
 
-// GetDataManagers is a mock
-func (m *MockDBAL) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
+// QueryDataManagers is a mock
+func (m *MockDBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.DataManager), args.Get(1).(common.PaginationToken), args.Error(2)
 }

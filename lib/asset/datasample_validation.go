@@ -31,7 +31,7 @@ func (o *NewDataSample) Validate() error {
 
 // Validate returns an error if the updated datasample is not valid:
 // missing required data, incompatible values, etc.
-func (o *DataSampleUpdateParam) Validate() error {
+func (o *UpdateDataSamplesParam) Validate() error {
 	return validation.ValidateStruct(o,
 		validation.Field(&o.Keys, validation.Required, validation.Each(is.UUID)),
 		validation.Field(&o.DataManagerKeys, validation.Each(is.UUID)),

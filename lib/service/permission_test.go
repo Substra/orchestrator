@@ -39,7 +39,7 @@ func TestValidateAuthorizedIDs(t *testing.T) {
 		{Id: "org1"},
 		{Id: "org2"},
 	}
-	mockNodeService.On("GetNodes").Return(nodes, nil)
+	mockNodeService.On("GetAllNodes").Return(nodes, nil)
 
 	assert.Error(t, service.validateAuthorizedIDs([]string{"orgA"}), "orgA is not a valid node")
 	assert.NoError(t, service.validateAuthorizedIDs([]string{"org1"}), "org1 is a valid node")

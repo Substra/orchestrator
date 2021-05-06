@@ -49,8 +49,8 @@ func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *asset.NewObj
 	return services.GetObjectiveService().RegisterObjective(o, mspid)
 }
 
-// QueryObjective fetches an objective by its key
-func (s *ObjectiveServer) QueryObjective(ctx context.Context, params *asset.ObjectiveQueryParam) (*asset.Objective, error) {
+// GetObjective fetches an objective by its key
+func (s *ObjectiveServer) GetObjective(ctx context.Context, params *asset.GetObjectiveParam) (*asset.Objective, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -59,18 +59,18 @@ func (s *ObjectiveServer) QueryObjective(ctx context.Context, params *asset.Obje
 }
 
 // QueryObjectives returns a paginated list of all known objectives
-func (s *ObjectiveServer) QueryObjectives(ctx context.Context, params *asset.ObjectivesQueryParam) (*asset.ObjectivesQueryResponse, error) {
+func (s *ObjectiveServer) QueryObjectives(ctx context.Context, params *asset.QueryObjectivesParam) (*asset.QueryObjectivesResponse, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	objectives, paginationToken, err := services.GetObjectiveService().GetObjectives(libCommon.NewPagination(params.PageToken, params.PageSize))
+	objectives, paginationToken, err := services.GetObjectiveService().QueryObjectives(libCommon.NewPagination(params.PageToken, params.PageSize))
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.ObjectivesQueryResponse{
+	return &asset.QueryObjectivesResponse{
 		Objectives:    objectives,
 		NextPageToken: paginationToken,
 	}, nil

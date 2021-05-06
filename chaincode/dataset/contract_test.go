@@ -24,7 +24,7 @@ func TestEvaluateTransactions(t *testing.T) {
 	contract := NewSmartContract()
 
 	queries := []string{
-		"QueryDataset",
+		"GetDataset",
 	}
 
 	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")

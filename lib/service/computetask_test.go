@@ -387,7 +387,7 @@ func TestSetAggregateData(t *testing.T) {
 	// check node existence
 	ns.On("GetNode", "org3").Once().Return(&asset.Node{Id: "org3"}, nil)
 	// used by permissions service
-	ns.On("GetNodes").Once().Return([]*asset.Node{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
+	ns.On("GetAllNodes").Once().Return([]*asset.Node{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
 
 	// getCheckedAlgo
 	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_AGGREGATE, Permissions: &asset.Permissions{

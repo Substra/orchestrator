@@ -75,8 +75,8 @@ func (s *DataManagerServer) UpdateDataManager(ctx context.Context, d *asset.Data
 	return &asset.DataManagerUpdateResponse{}, nil
 }
 
-// QueryDataManager fetches a datamanager by its key
-func (s *DataManagerServer) QueryDataManager(ctx context.Context, params *asset.DataManagerQueryParam) (*asset.DataManager, error) {
+// GetDataManager fetches a datamanager by its key
+func (s *DataManagerServer) GetDataManager(ctx context.Context, params *asset.GetDataManagerParam) (*asset.DataManager, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -85,18 +85,18 @@ func (s *DataManagerServer) QueryDataManager(ctx context.Context, params *asset.
 }
 
 // QueryDataManagers returns a paginated list of all known datamanagers
-func (s *DataManagerServer) QueryDataManagers(ctx context.Context, params *asset.DataManagersQueryParam) (*asset.DataManagersQueryResponse, error) {
+func (s *DataManagerServer) QueryDataManagers(ctx context.Context, params *asset.QueryDataManagersParam) (*asset.QueryDataManagersResponse, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	datamanagers, paginationToken, err := services.GetDataManagerService().GetDataManagers(libCommon.NewPagination(params.PageToken, params.PageSize))
+	datamanagers, paginationToken, err := services.GetDataManagerService().QueryDataManagers(libCommon.NewPagination(params.PageToken, params.PageSize))
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.DataManagersQueryResponse{
+	return &asset.QueryDataManagersResponse{
 		DataManagers:  datamanagers,
 		NextPageToken: paginationToken,
 	}, nil

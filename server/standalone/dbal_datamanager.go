@@ -66,8 +66,8 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 	return datamanager, nil
 }
 
-// GetDataManagers implements persistence.DataManagerDBAL
-func (d *DBAL) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
+// QueryDataManagers implements persistence.DataManagerDBAL
+func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
 	var rows *sql.Rows
 	var err error
 

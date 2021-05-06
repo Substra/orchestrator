@@ -36,7 +36,7 @@ func TestGetOffset(t *testing.T) {
 	assert.Equal(t, 12, valueOffset, "valued token should be parserd as int")
 }
 
-func TestGetObjectives(t *testing.T) {
+func TestQueryObjectives(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -56,7 +56,7 @@ func TestGetObjectives(t *testing.T) {
 
 	dbal := &DBAL{tx, testChannel}
 
-	res, bookmark, err := dbal.GetObjectives(common.NewPagination("", 12))
+	res, bookmark, err := dbal.QueryObjectives(common.NewPagination("", 12))
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 	assert.Equal(t, "", bookmark, "last page should be reached")
@@ -66,7 +66,7 @@ func TestGetObjectives(t *testing.T) {
 	}
 }
 
-func TestGetPaginatedObjectives(t *testing.T) {
+func TestPaginatedQueryObjectives(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -86,7 +86,7 @@ func TestGetPaginatedObjectives(t *testing.T) {
 
 	dbal := &DBAL{tx, testChannel}
 
-	res, bookmark, err := dbal.GetObjectives(common.NewPagination("", 1))
+	res, bookmark, err := dbal.QueryObjectives(common.NewPagination("", 1))
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "1", bookmark, "There should be another page")
@@ -96,7 +96,7 @@ func TestGetPaginatedObjectives(t *testing.T) {
 	}
 }
 
-func TestGetAlgos(t *testing.T) {
+func TestQueryAlgos(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -116,7 +116,7 @@ func TestGetAlgos(t *testing.T) {
 
 	dbal := &DBAL{tx, testChannel}
 
-	res, bookmark, err := dbal.GetAlgos(asset.AlgoCategory_ALGO_COMPOSITE, common.NewPagination("", 12))
+	res, bookmark, err := dbal.QueryAlgos(asset.AlgoCategory_ALGO_COMPOSITE, common.NewPagination("", 12))
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 	assert.Equal(t, "", bookmark, "last page should be reached")
@@ -126,7 +126,7 @@ func TestGetAlgos(t *testing.T) {
 	}
 }
 
-func TestGetPaginatedAlgos(t *testing.T) {
+func TestPaginatedQueryAlgos(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -146,7 +146,7 @@ func TestGetPaginatedAlgos(t *testing.T) {
 
 	dbal := &DBAL{tx, testChannel}
 
-	res, bookmark, err := dbal.GetAlgos(asset.AlgoCategory_ALGO_COMPOSITE, common.NewPagination("", 1))
+	res, bookmark, err := dbal.QueryAlgos(asset.AlgoCategory_ALGO_COMPOSITE, common.NewPagination("", 1))
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "1", bookmark, "There should be another page")

@@ -26,7 +26,7 @@ import (
 // NodeAPI defines the methods to act on Nodes
 type NodeAPI interface {
 	RegisterNode(id string) (*asset.Node, error)
-	GetNodes() ([]*asset.Node, error)
+	GetAllNodes() ([]*asset.Node, error)
 	GetNode(id string) (*asset.Node, error)
 }
 
@@ -77,9 +77,9 @@ func (s *NodeService) RegisterNode(id string) (*asset.Node, error) {
 	return node, nil
 }
 
-// GetNodes list all known nodes
-func (s *NodeService) GetNodes() ([]*asset.Node, error) {
-	return s.GetNodeDBAL().GetNodes()
+// GetAllNodes list all known nodes
+func (s *NodeService) GetAllNodes() ([]*asset.Node, error) {
+	return s.GetNodeDBAL().GetAllNodes()
 }
 
 // GetNode returns a Node by its ID

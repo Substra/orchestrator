@@ -152,7 +152,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 		TestOnly:        false,
 	}
 
-	updatedDataSample := &asset.DataSampleUpdateParam{
+	updatedDataSample := &asset.UpdateDataSamplesParam{
 		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
 		DataManagerKeys: []string{"4da124eb-4da3-45e2-bc61-1924be259032"},
 	}
@@ -175,7 +175,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 
-	err := service.UpdateDataSample(updatedDataSample, "owner")
+	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
 	assert.NoError(t, err, "Update of single valid assets should not fail")
 
@@ -206,7 +206,7 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 		TestOnly:        false,
 	}
 
-	updatedDataSample := &asset.DataSampleUpdateParam{
+	updatedDataSample := &asset.UpdateDataSamplesParam{
 		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "0b4b4466-9a81-4084-9bab-80939b78addd"},
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
 	}
@@ -233,7 +233,7 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 
 	dispatcher.On("Enqueue", mock.AnythingOfType("*event.Event")).Times(2).Return(nil)
 
-	err := service.UpdateDataSample(updatedDataSample, "owner")
+	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
 	assert.NoError(t, err, "Update of single valid assets should not fail")
 
@@ -248,7 +248,7 @@ func TestUpdateSingleNewDataSample(t *testing.T) {
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
 
-	updatedDataSample := &asset.DataSampleUpdateParam{
+	updatedDataSample := &asset.UpdateDataSamplesParam{
 		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
 	}
@@ -256,14 +256,14 @@ func TestUpdateSingleNewDataSample(t *testing.T) {
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
 	dbal.On("GetDataSample", updatedDataSample.GetKeys()[0]).Return(&asset.DataSample{}, errors.New("sql Error")).Once()
 
-	err := service.UpdateDataSample(updatedDataSample, "owner")
+	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
 	assert.Error(t, err, "Update of single unknown asset should fail")
 
 	dbal.AssertExpectations(t)
 }
 
-func TestGetDataSamples(t *testing.T) {
+func TestQueryDataSamples(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
@@ -280,9 +280,9 @@ func TestGetDataSamples(t *testing.T) {
 
 	pagination := common.NewPagination("", 10)
 
-	dbal.On("GetDataSamples", pagination).Return([]*asset.DataSample{&ds1, &ds2}, "nextPage", nil).Once()
+	dbal.On("QueryDataSamples", pagination).Return([]*asset.DataSample{&ds1, &ds2}, "nextPage", nil).Once()
 
-	r, token, err := service.GetDataSamples(pagination)
+	r, token, err := service.QueryDataSamples(pagination)
 
 	require.Nil(t, err)
 

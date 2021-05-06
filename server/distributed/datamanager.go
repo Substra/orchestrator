@@ -57,13 +57,13 @@ func (s *DataManagerAdapter) UpdateDataManager(ctx context.Context, d *asset.Dat
 	return &asset.DataManagerUpdateResponse{}, err
 }
 
-// QueryDataManager fetches a datamanager by its key
-func (s *DataManagerAdapter) QueryDataManager(ctx context.Context, params *asset.DataManagerQueryParam) (*asset.DataManager, error) {
+// GetDataManager fetches a datamanager by its key
+func (s *DataManagerAdapter) GetDataManager(ctx context.Context, params *asset.GetDataManagerParam) (*asset.DataManager, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.datamanager:QueryDataManager"
+	method := "orchestrator.datamanager:GetDataManager"
 	response := &asset.DataManager{}
 
 	err = invocator.Call(method, params, response)
@@ -72,13 +72,13 @@ func (s *DataManagerAdapter) QueryDataManager(ctx context.Context, params *asset
 }
 
 // QueryDataManagers returns a paginated list of all known datamanagers
-func (s *DataManagerAdapter) QueryDataManagers(ctx context.Context, params *asset.DataManagersQueryParam) (*asset.DataManagersQueryResponse, error) {
+func (s *DataManagerAdapter) QueryDataManagers(ctx context.Context, params *asset.QueryDataManagersParam) (*asset.QueryDataManagersResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
 	method := "orchestrator.datamanager:QueryDataManagers"
-	response := &asset.DataManagersQueryResponse{}
+	response := &asset.QueryDataManagersResponse{}
 
 	err = invocator.Call(method, params, response)
 

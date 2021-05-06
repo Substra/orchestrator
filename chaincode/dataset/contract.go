@@ -43,14 +43,14 @@ func NewSmartContract() *SmartContract {
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryDataset"}
+	return []string{"GetDataset"}
 }
 
-// QueryDataset returns the Dataset with given key
-func (s *SmartContract) QueryDataset(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// GetDataset returns the Dataset with given key
+func (s *SmartContract) GetDataset(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetDatasetService()
 
-	params := new(asset.DatasetQueryParam)
+	params := new(asset.GetDatasetParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")

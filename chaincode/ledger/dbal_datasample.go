@@ -118,14 +118,14 @@ func (db *DB) GetDataSample(key string) (*asset.DataSample, error) {
 	return &o, err
 }
 
-// GetDataSamples implements persistence.DataSampleDBAL
-func (db *DB) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+// QueryDataSamples implements persistence.DataSampleDBAL
+func (db *DB) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
 	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("dataSample~owner~key", []string{asset.DataSampleKind}, p.Size, p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	db.logger.WithField("keys", elementsKeys).Debug("GetDataSamples")
+	db.logger.WithField("keys", elementsKeys).Debug("QueryDataSamples")
 
 	var datasamples []*asset.DataSample
 	for _, key := range elementsKeys {
@@ -139,7 +139,7 @@ func (db *DB) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.
 	return datasamples, bookmark, nil
 }
 
-// GetDataSamples implements persistence.DataSampleDBAL
+// QueryDataSamples implements persistence.DataSampleDBAL
 func (db *DB) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bool) ([]string, error) {
 	dataSampleKeys, err := db.getIndexKeys("dataSample~dataManager~testOnly~key", []string{asset.DataSampleKind, dataManagerKey, strconv.FormatBool(testOnly)})
 	if err != nil {

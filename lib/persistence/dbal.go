@@ -29,8 +29,8 @@ type NodeDBAL interface {
 	AddNode(node *asset.Node) error
 	// NodeExists returns whether a node with the given ID is already in store
 	NodeExists(id string) (bool, error)
-	// GetNodes returns all known nodes
-	GetNodes() ([]*asset.Node, error)
+	// GetAllNodes returns all known nodes
+	GetAllNodes() ([]*asset.Node, error)
 	// GetNode returns a Node by its ID
 	GetNode(id string) (*asset.Node, error)
 }
@@ -39,7 +39,7 @@ type NodeDBAL interface {
 type ObjectiveDBAL interface {
 	AddObjective(obj *asset.Objective) error
 	GetObjective(key string) (*asset.Objective, error)
-	GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
+	QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
 	ObjectiveExists(key string) (bool, error)
 }
 
@@ -48,7 +48,7 @@ type DataSampleDBAL interface {
 	AddDataSample(dataSample *asset.DataSample) error
 	UpdateDataSample(dataSample *asset.DataSample) error
 	GetDataSample(key string) (*asset.DataSample, error)
-	GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
+	QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
 	DataSampleExists(key string) (bool, error)
 }
 
@@ -56,7 +56,7 @@ type DataSampleDBAL interface {
 type AlgoDBAL interface {
 	AddAlgo(obj *asset.Algo) error
 	GetAlgo(key string) (*asset.Algo, error)
-	GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
+	QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
 	AlgoExists(key string) (bool, error)
 }
 
@@ -65,7 +65,7 @@ type DataManagerDBAL interface {
 	AddDataManager(datamanager *asset.DataManager) error
 	UpdateDataManager(datamanager *asset.DataManager) error
 	GetDataManager(key string) (*asset.DataManager, error)
-	GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
+	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	DataManagerExists(key string) (bool, error)
 }
 

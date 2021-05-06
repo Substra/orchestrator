@@ -152,8 +152,8 @@ type MockNodeService struct {
 	mock.Mock
 }
 
-// GetNodes returns whatever value is passed
-func (m *MockNodeService) GetNodes() ([]*asset.Node, error) {
+// GetAllNodes returns whatever value is passed
+func (m *MockNodeService) GetAllNodes() ([]*asset.Node, error) {
 	args := m.Called()
 	return args.Get(0).([]*asset.Node), args.Error(1)
 }
@@ -216,8 +216,8 @@ func (m *MockObjectiveService) GetObjective(key string) (*asset.Objective, error
 	return args.Get(0).(*asset.Objective), args.Error(1)
 }
 
-// GetObjectives returns whatever value is passed
-func (m *MockObjectiveService) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
+// QueryObjectives returns whatever value is passed
+func (m *MockObjectiveService) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }
@@ -245,14 +245,14 @@ func (m *MockDataSampleService) RegisterDataSample(datasample *asset.NewDataSamp
 	return args.Error(0)
 }
 
-// UpdateDataSample returns whatever value is passed
-func (m *MockDataSampleService) UpdateDataSample(datasample *asset.DataSampleUpdateParam, owner string) error {
+// UpdateDataSamples returns whatever value is passed
+func (m *MockDataSampleService) UpdateDataSamples(datasample *asset.UpdateDataSamplesParam, owner string) error {
 	args := m.Called(datasample, owner)
 	return args.Error(0)
 }
 
-// GetDataSamples returns whatever value is passed
-func (m *MockDataSampleService) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+// QueryDataSamples returns whatever value is passed
+func (m *MockDataSampleService) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.DataSample), args.Get(1).(common.PaginationToken), args.Error(2)
 }
@@ -292,8 +292,8 @@ func (m *MockAlgoService) GetAlgo(key string) (*asset.Algo, error) {
 	return args.Get(0).(*asset.Algo), args.Error(1)
 }
 
-// GetAlgos returns whatever value is passed
-func (m *MockAlgoService) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+// QueryAlgos returns whatever value is passed
+func (m *MockAlgoService) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
 	args := m.Called(c, p)
 	return args.Get(0).([]*asset.Algo), args.Get(1).(common.PaginationToken), args.Error(2)
 }
@@ -321,8 +321,8 @@ func (m *MockDataManagerService) GetDataManager(key string) (*asset.DataManager,
 	return args.Get(0).(*asset.DataManager), args.Error(1)
 }
 
-// GetDataManagers returns whatever value is passed
-func (m *MockDataManagerService) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
+// QueryDataManagers returns whatever value is passed
+func (m *MockDataManagerService) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.DataManager), args.Get(1).(common.PaginationToken), args.Error(2)
 }

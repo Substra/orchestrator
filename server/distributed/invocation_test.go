@@ -92,7 +92,7 @@ func TestParamWrapping(t *testing.T) {
 	invocator := NewContractInvocator(contract, checker, []string{})
 
 	// Invocation param is a protoreflect.ProtoMessage
-	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
+	param := &asset.QueryObjectivesParam{PageToken: "uuid", PageSize: 20}
 	wrapper, err := communication.Wrap(param)
 	assert.NoError(t, err)
 
@@ -103,7 +103,7 @@ func TestParamWrapping(t *testing.T) {
 	expectedInput := []string{string(serializedInput)}
 
 	// Response is also a wrapper
-	response := &asset.ObjectivesQueryResponse{Objectives: []*asset.Objective{}, NextPageToken: "test"}
+	response := &asset.QueryObjectivesResponse{Objectives: []*asset.Objective{}, NextPageToken: "test"}
 	wrappedResponse, err := communication.Wrap(response)
 	assert.NoError(t, err)
 	// Then serialized to match contractapi
@@ -115,7 +115,7 @@ func TestParamWrapping(t *testing.T) {
 	checker.On("IsEvaluateMethod", "orchestrator.objective:QueryObjectives").Return(false)
 	contract.On("SubmitTransaction", "orchestrator.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
 
-	output := &asset.ObjectivesQueryResponse{}
+	output := &asset.QueryObjectivesResponse{}
 	err = invocator.Call("orchestrator.objective:QueryObjectives", param, output)
 	assert.NoError(t, err)
 

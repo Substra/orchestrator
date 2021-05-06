@@ -50,8 +50,8 @@ func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset
 	return services.GetAlgoService().RegisterAlgo(a, mspid)
 }
 
-// QueryAlgo fetches an algo by its key
-func (s *AlgoServer) QueryAlgo(ctx context.Context, params *asset.AlgoQueryParam) (*asset.Algo, error) {
+// GetAlgo fetches an algo by its key
+func (s *AlgoServer) GetAlgo(ctx context.Context, params *asset.GetAlgoParam) (*asset.Algo, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -60,18 +60,18 @@ func (s *AlgoServer) QueryAlgo(ctx context.Context, params *asset.AlgoQueryParam
 }
 
 // QueryAlgos returns a paginated list of all known algos
-func (s *AlgoServer) QueryAlgos(ctx context.Context, params *asset.AlgosQueryParam) (*asset.AlgosQueryResponse, error) {
+func (s *AlgoServer) QueryAlgos(ctx context.Context, params *asset.QueryAlgosParam) (*asset.QueryAlgosResponse, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	algos, paginationToken, err := services.GetAlgoService().GetAlgos(params.Category, libCommon.NewPagination(params.PageToken, params.PageSize))
+	algos, paginationToken, err := services.GetAlgoService().QueryAlgos(params.Category, libCommon.NewPagination(params.PageToken, params.PageSize))
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.AlgosQueryResponse{
+	return &asset.QueryAlgosResponse{
 		Algos:         algos,
 		NextPageToken: paginationToken,
 	}, nil

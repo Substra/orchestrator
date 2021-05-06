@@ -45,13 +45,13 @@ func (a *AlgoAdapter) RegisterAlgo(ctx context.Context, in *asset.NewAlgo) (*ass
 	return response, err
 }
 
-// QueryAlgo returns an algo from its key
-func (a *AlgoAdapter) QueryAlgo(ctx context.Context, query *asset.AlgoQueryParam) (*asset.Algo, error) {
+// GetAlgo returns an algo from its key
+func (a *AlgoAdapter) GetAlgo(ctx context.Context, query *asset.GetAlgoParam) (*asset.Algo, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.algo:QueryAlgo"
+	method := "orchestrator.algo:GetAlgo"
 
 	response := &asset.Algo{}
 
@@ -61,14 +61,14 @@ func (a *AlgoAdapter) QueryAlgo(ctx context.Context, query *asset.AlgoQueryParam
 }
 
 // QueryAlgos returns all known algos
-func (a *AlgoAdapter) QueryAlgos(ctx context.Context, query *asset.AlgosQueryParam) (*asset.AlgosQueryResponse, error) {
+func (a *AlgoAdapter) QueryAlgos(ctx context.Context, query *asset.QueryAlgosParam) (*asset.QueryAlgosResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
 	method := "orchestrator.algo:QueryAlgos"
 
-	response := &asset.AlgosQueryResponse{}
+	response := &asset.QueryAlgosResponse{}
 
 	err = invocator.Call(method, query, response)
 

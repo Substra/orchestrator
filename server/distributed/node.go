@@ -31,7 +31,7 @@ func NewNodeAdapter() *NodeAdapter {
 }
 
 // RegisterNode will add a new node to the network
-func (a *NodeAdapter) RegisterNode(ctx context.Context, in *asset.NodeRegistrationParam) (*asset.Node, error) {
+func (a *NodeAdapter) RegisterNode(ctx context.Context, in *asset.RegisterNodeParam) (*asset.Node, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
@@ -45,15 +45,15 @@ func (a *NodeAdapter) RegisterNode(ctx context.Context, in *asset.NodeRegistrati
 	return node, err
 }
 
-// QueryNodes will return all known nodes
-func (a *NodeAdapter) QueryNodes(ctx context.Context, in *asset.NodeQueryParam) (*asset.NodeQueryResponse, error) {
+// GetAllNodes will return all known nodes
+func (a *NodeAdapter) GetAllNodes(ctx context.Context, in *asset.GetAllNodesParam) (*asset.GetAllNodesResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.node:QueryNodes"
+	method := "orchestrator.node:GetAllNodes"
 
-	nodes := &asset.NodeQueryResponse{}
+	nodes := &asset.GetAllNodesResponse{}
 
 	err = invocator.Call(method, in, nodes)
 

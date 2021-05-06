@@ -73,11 +73,11 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 	return response, nil
 }
 
-// QueryAlgo returns the algo with given key
-func (s *SmartContract) QueryAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// GetAlgo returns the algo with given key
+func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetAlgoService()
 
-	params := new(asset.AlgoQueryParam)
+	params := new(asset.GetAlgoParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
@@ -102,20 +102,20 @@ func (s *SmartContract) QueryAlgo(ctx ledger.TransactionContext, wrapper *commun
 func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetAlgoService()
 
-	params := new(asset.AlgosQueryParam)
+	params := new(asset.QueryAlgosParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
-	algos, nextPage, err := service.GetAlgos(params.Category, &common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
+	algos, nextPage, err := service.QueryAlgos(params.Category, &common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query algos")
 		return nil, err
 	}
 
-	resp := &asset.AlgosQueryResponse{
+	resp := &asset.QueryAlgosResponse{
 		Algos:         algos,
 		NextPageToken: nextPage,
 	}
@@ -130,5 +130,5 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryAlgo", "QueryAlgos"}
+	return []string{"GetAlgo", "QueryAlgos"}
 }

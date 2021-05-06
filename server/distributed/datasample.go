@@ -43,27 +43,27 @@ func (a *DataSampleAdapter) RegisterDataSample(ctx context.Context, param *asset
 	return &asset.NewDataSampleResponse{}, err
 }
 
-// UpdateDataSample will update a DataSample from the state
-func (a *DataSampleAdapter) UpdateDataSample(ctx context.Context, param *asset.DataSampleUpdateParam) (*asset.DataSampleUpdateResponse, error) {
+// UpdateDataSamples will update a DataSample from the state
+func (a *DataSampleAdapter) UpdateDataSamples(ctx context.Context, param *asset.UpdateDataSamplesParam) (*asset.UpdateDataSamplesResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.datasample:UpdateDataSample"
+	method := "orchestrator.datasample:UpdateDataSamples"
 
 	err = invocator.Call(method, param, nil)
 
-	return &asset.DataSampleUpdateResponse{}, err
+	return &asset.UpdateDataSamplesResponse{}, err
 }
 
 // QueryDataSamples returns all DataSamples
-func (a *DataSampleAdapter) QueryDataSamples(ctx context.Context, param *asset.DataSamplesQueryParam) (*asset.DataSamplesQueryResponse, error) {
+func (a *DataSampleAdapter) QueryDataSamples(ctx context.Context, param *asset.QueryDataSamplesParam) (*asset.QueryDataSamplesResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
 	method := "orchestrator.datasample:QueryDataSamples"
-	response := &asset.DataSamplesQueryResponse{}
+	response := &asset.QueryDataSamplesResponse{}
 
 	err = invocator.Call(method, param, response)
 

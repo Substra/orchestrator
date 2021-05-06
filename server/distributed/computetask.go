@@ -46,7 +46,7 @@ func (a *ComputeTaskAdapter) RegisterTask(ctx context.Context, in *asset.NewComp
 }
 
 // QueryTask returns a task from its key
-func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.TaskQueryParam) (*asset.ComputeTask, error) {
+func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.GetTaskParam) (*asset.ComputeTask, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
@@ -60,14 +60,14 @@ func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.TaskQuery
 	return response, err
 }
 
-func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.TasksQueryParam) (*asset.TasksQueryResponse, error) {
+func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryTasksParam) (*asset.QueryTasksResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
 	method := "orchestrator.computetask:QueryTasks"
 
-	response := &asset.TasksQueryResponse{}
+	response := &asset.QueryTasksResponse{}
 
 	err = invocator.Call(method, param, response)
 

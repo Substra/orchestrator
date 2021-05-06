@@ -74,8 +74,8 @@ func (d *DBAL) NodeExists(key string) (bool, error) {
 	return count == 1, err
 }
 
-// GetNodes implements persistence.NodeDBAL
-func (d *DBAL) GetNodes() ([]*asset.Node, error) {
+// GetAllNodes implements persistence.NodeDBAL
+func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
 	rows, err := d.tx.Query(`select "id" from "nodes" where channel=$1`, d.channel)
 	if err != nil {
 		return nil, err
@@ -153,8 +153,8 @@ func (d *DBAL) ObjectiveExists(key string) (bool, error) {
 	return count == 1, err
 }
 
-// GetObjectives implements persistence.ObjectiveDBAL
-func (d *DBAL) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
+// QueryObjectives implements persistence.ObjectiveDBAL
+func (d *DBAL) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	var rows *sql.Rows
 	var err error
 
@@ -225,8 +225,8 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 	return algo, nil
 }
 
-// GetAlgos implements persistence.AlgoDBAL
-func (d *DBAL) GetAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
+// QueryAlgos implements persistence.AlgoDBAL
+func (d *DBAL) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
 	var rows *sql.Rows
 	var err error
 

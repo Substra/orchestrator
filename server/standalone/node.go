@@ -31,7 +31,7 @@ func NewNodeServer() *NodeServer {
 }
 
 // RegisterNode will add a new node to the network
-func (s *NodeServer) RegisterNode(ctx context.Context, in *asset.NodeRegistrationParam) (*asset.Node, error) {
+func (s *NodeServer) RegisterNode(ctx context.Context, in *asset.RegisterNodeParam) (*asset.Node, error) {
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -48,15 +48,15 @@ func (s *NodeServer) RegisterNode(ctx context.Context, in *asset.NodeRegistratio
 	return node, nil
 }
 
-// QueryNodes will return all known nodes
-func (s *NodeServer) QueryNodes(ctx context.Context, in *asset.NodeQueryParam) (*asset.NodeQueryResponse, error) {
+// GetAllNodes will return all known nodes
+func (s *NodeServer) GetAllNodes(ctx context.Context, in *asset.GetAllNodesParam) (*asset.GetAllNodesResponse, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
-	nodes, err := services.GetNodeService().GetNodes()
+	nodes, err := services.GetNodeService().GetAllNodes()
 
-	return &asset.NodeQueryResponse{
+	return &asset.GetAllNodesResponse{
 		Nodes: nodes,
 	}, err
 }

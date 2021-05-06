@@ -111,7 +111,7 @@ func TestGetAlgo(t *testing.T) {
 	assert.Equal(t, o.Name, algo.Name)
 }
 
-func TestGetAlgos(t *testing.T) {
+func TestQueryAlgos(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
 	provider.On("GetAlgoDBAL").Return(dbal)
@@ -130,9 +130,9 @@ func TestGetAlgos(t *testing.T) {
 
 	pagination := common.NewPagination("", 12)
 
-	dbal.On("GetAlgos", asset.AlgoCategory_ALGO_SIMPLE, pagination).Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
+	dbal.On("QueryAlgos", asset.AlgoCategory_ALGO_SIMPLE, pagination).Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
 
-	r, token, err := service.GetAlgos(asset.AlgoCategory_ALGO_SIMPLE, pagination)
+	r, token, err := service.QueryAlgos(asset.AlgoCategory_ALGO_SIMPLE, pagination)
 	require.Nil(t, err)
 
 	assert.Len(t, r, 2)

@@ -48,10 +48,10 @@ func TestRegisterDataSample(t *testing.T) {
 	assert.NoError(t, err, "Registration should pass")
 }
 
-func TestUpdateDataSample(t *testing.T) {
+func TestUpdateDataSamples(t *testing.T) {
 	adapter := NewDataSampleAdapter()
 
-	updatedDS := &asset.DataSampleUpdateParam{
+	updatedDS := &asset.UpdateDataSamplesParam{
 		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 	}
@@ -59,11 +59,11 @@ func TestUpdateDataSample(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", "orchestrator.datasample:UpdateDataSample", updatedDS, nil).Return(nil)
+	invocator.On("Call", "orchestrator.datasample:UpdateDataSamples", updatedDS, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
-	_, err := adapter.UpdateDataSample(ctx, updatedDS)
+	_, err := adapter.UpdateDataSamples(ctx, updatedDS)
 	assert.NoError(t, err, "Update should pass")
 }
 
@@ -73,8 +73,8 @@ func TestQueryDataSamples(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	queryParam := &asset.DataSamplesQueryParam{PageToken: "", PageSize: 10}
-	invocator.On("Call", "orchestrator.datasample:QueryDataSamples", queryParam, &asset.DataSamplesQueryResponse{}).Return(nil)
+	queryParam := &asset.QueryDataSamplesParam{PageToken: "", PageSize: 10}
+	invocator.On("Call", "orchestrator.datasample:QueryDataSamples", queryParam, &asset.QueryDataSamplesResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

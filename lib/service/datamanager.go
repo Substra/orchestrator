@@ -30,7 +30,7 @@ type DataManagerAPI interface {
 	RegisterDataManager(datamanager *asset.NewDataManager, owner string) error
 	UpdateDataManager(datamanager *asset.DataManagerUpdateParam, requester string) error
 	GetDataManager(key string) (*asset.DataManager, error)
-	GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
+	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	CheckOwner(keys []string, requester string) error
 }
 
@@ -168,9 +168,9 @@ func (s *DataManagerService) GetDataManager(key string) (*asset.DataManager, err
 	return s.GetDataManagerDBAL().GetDataManager(key)
 }
 
-// GetDataManagers returns all stored DataManagers
-func (s *DataManagerService) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
-	return s.GetDataManagerDBAL().GetDataManagers(p)
+// QueryDataManagers returns all stored DataManagers
+func (s *DataManagerService) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
+	return s.GetDataManagerDBAL().QueryDataManagers(p)
 }
 
 // CheckOwner validates that the DataManagerKeys are owned by the requester and return an error if that's not the case.

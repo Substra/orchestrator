@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetDataManagers(t *testing.T) {
+func TestQueryDataManagers(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -43,7 +43,7 @@ func TestGetDataManagers(t *testing.T) {
 
 	dbal := &DBAL{tx, testChannel}
 
-	res, bookmark, err := dbal.GetDataManagers(common.NewPagination("", 12))
+	res, bookmark, err := dbal.QueryDataManagers(common.NewPagination("", 12))
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 	assert.Equal(t, "", bookmark, "last page should be reached")
@@ -53,7 +53,7 @@ func TestGetDataManagers(t *testing.T) {
 	}
 }
 
-func TestGetPaginatedDataManagers(t *testing.T) {
+func TestPaginatedQueryDataManagers(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -73,7 +73,7 @@ func TestGetPaginatedDataManagers(t *testing.T) {
 
 	dbal := &DBAL{tx, testChannel}
 
-	res, bookmark, err := dbal.GetDataManagers(common.NewPagination("", 1))
+	res, bookmark, err := dbal.QueryDataManagers(common.NewPagination("", 1))
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "1", bookmark, "There should be another page")

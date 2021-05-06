@@ -460,7 +460,7 @@ func TestGetDataManager(t *testing.T) {
 	dbal.AssertExpectations(t)
 }
 
-func TestGetDataManagers(t *testing.T) {
+func TestQueryDataManagers(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
 	provider.On("GetDataManagerDBAL").Return(dbal)
@@ -477,9 +477,9 @@ func TestGetDataManagers(t *testing.T) {
 
 	pagination := common.NewPagination("", 12)
 
-	dbal.On("GetDataManagers", pagination).Return([]*asset.DataManager{&dm1, &dm2}, "nextPage", nil).Once()
+	dbal.On("QueryDataManagers", pagination).Return([]*asset.DataManager{&dm1, &dm2}, "nextPage", nil).Once()
 
-	r, token, err := service.GetDataManagers(pagination)
+	r, token, err := service.QueryDataManagers(pagination)
 	require.Nil(t, err)
 
 	assert.Len(t, r, 2)

@@ -102,14 +102,14 @@ func (db *DB) GetDataManager(key string) (*asset.DataManager, error) {
 	return &d, err
 }
 
-// GetDataManagers implements persistence.DataManagerDBAL
-func (db *DB) GetDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
+// QueryDataManagers implements persistence.DataManagerDBAL
+func (db *DB) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
 	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("dataManager~owner~key", []string{"dataManager"}, p.Size, p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	db.logger.WithField("keys", elementsKeys).Debug("GetDataManagers")
+	db.logger.WithField("keys", elementsKeys).Debug("QueryDataManagers")
 
 	var datamanagers []*asset.DataManager
 	for _, key := range elementsKeys {

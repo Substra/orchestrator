@@ -75,11 +75,11 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper
 	return wrapped, nil
 }
 
-// QueryObjective returns the objective with given key
-func (s *SmartContract) QueryObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// GetObjective returns the objective with given key
+func (s *SmartContract) GetObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetObjectiveService()
 
-	params := new(asset.ObjectiveQueryParam)
+	params := new(asset.GetObjectiveParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
@@ -103,20 +103,20 @@ func (s *SmartContract) QueryObjective(ctx ledger.TransactionContext, wrapper *c
 func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetObjectiveService()
 
-	params := new(asset.ObjectivesQueryParam)
+	params := new(asset.QueryObjectivesParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
-	objectives, nextPage, err := service.GetObjectives(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
+	objectives, nextPage, err := service.QueryObjectives(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query objectives")
 		return nil, err
 	}
 
-	resp := &asset.ObjectivesQueryResponse{
+	resp := &asset.QueryObjectivesResponse{
 		Objectives:    objectives,
 		NextPageToken: nextPage,
 	}
@@ -135,5 +135,5 @@ func (s *SmartContract) QueryLeaderboard(ctx ledger.TransactionContext, key stri
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryObjective", "QueryObjectives", "QueryLeaderboard"}
+	return []string{"GetObjective", "QueryObjectives", "QueryLeaderboard"}
 }

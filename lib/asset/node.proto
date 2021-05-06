@@ -23,14 +23,14 @@ message Node {
     string id = 1;
 }
 
-message NodeQueryResponse {
+message GetAllNodesResponse {
     repeated Node nodes = 1;
 }
 
-message NodeRegistrationParam {}
-message NodeQueryParam {}
+message RegisterNodeParam {}
+message GetAllNodesParam {}
 
 service NodeService {
-    rpc RegisterNode(NodeRegistrationParam) returns (Node) {}
-    rpc QueryNodes(NodeQueryParam) returns (NodeQueryResponse) {}
+    rpc RegisterNode(RegisterNodeParam) returns (Node) {}
+    rpc GetAllNodes(GetAllNodesParam) returns (GetAllNodesResponse) {}
 }

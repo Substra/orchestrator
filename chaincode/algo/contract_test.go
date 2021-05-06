@@ -85,15 +85,15 @@ func TestQueryAlgos(t *testing.T) {
 
 	ctx := new(testHelper.MockedContext)
 	service := getMockedService(ctx)
-	service.On("GetAlgos", asset.AlgoCategory_ALGO_SIMPLE, &common.Pagination{Token: "", Size: 20}).Return(algos, "", nil).Once()
+	service.On("QueryAlgos", asset.AlgoCategory_ALGO_SIMPLE, &common.Pagination{Token: "", Size: 20}).Return(algos, "", nil).Once()
 
-	param := &asset.AlgosQueryParam{Category: asset.AlgoCategory_ALGO_SIMPLE, PageToken: "", PageSize: 20}
+	param := &asset.QueryAlgosParam{Category: asset.AlgoCategory_ALGO_SIMPLE, PageToken: "", PageSize: 20}
 	wrapper, err := communication.Wrap(param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.QueryAlgos(ctx, wrapper)
 	assert.NoError(t, err, "query should not fail")
-	resp := new(asset.AlgosQueryResponse)
+	resp := new(asset.QueryAlgosResponse)
 	err = wrapped.Unwrap(resp)
 	assert.NoError(t, err)
 	assert.Len(t, resp.Algos, len(algos), "query should return all algos")
@@ -103,7 +103,7 @@ func TestEvaluateTransactions(t *testing.T) {
 	contract := &SmartContract{}
 
 	queries := []string{
-		"QueryAlgo",
+		"GetAlgo",
 		"QueryAlgos",
 	}
 

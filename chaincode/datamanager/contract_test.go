@@ -28,7 +28,7 @@ import (
 func TestEvaluateTransactions(t *testing.T) {
 	contract := &SmartContract{}
 
-	query := []string{"QueryDataManager", "QueryDataManagers"}
+	query := []string{"GetDataManager", "QueryDataManagers"}
 
 	assert.Equal(t, query, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
 }
@@ -55,15 +55,15 @@ func TestQueryDataManagers(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 
 	service := getMockedService(ctx)
-	service.On("GetDataManagers", &common.Pagination{Token: "", Size: 10}).Return(datamanagers, "", nil).Once()
+	service.On("QueryDataManagers", &common.Pagination{Token: "", Size: 10}).Return(datamanagers, "", nil).Once()
 
-	param := &asset.DataManagersQueryParam{PageToken: "", PageSize: 10}
+	param := &asset.QueryDataManagersParam{PageToken: "", PageSize: 10}
 	wrapper, err := communication.Wrap(param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.QueryDataManagers(ctx, wrapper)
 	assert.NoError(t, err, "Query should not fail")
-	resp := new(asset.DataManagersQueryResponse)
+	resp := new(asset.QueryDataManagersResponse)
 	err = wrapped.Unwrap(resp)
 	assert.NoError(t, err)
 	assert.Len(t, resp.DataManagers, len(datamanagers), "Query should return all datasamples")

@@ -30,8 +30,8 @@ func NewDatasetServer() *DatasetServer {
 	return &DatasetServer{}
 }
 
-// QueryDataset fetches a dataset by its key
-func (s *DatasetServer) QueryDataset(ctx context.Context, params *asset.DatasetQueryParam) (*asset.Dataset, error) {
+// GetDataset fetches a dataset by its key
+func (s *DatasetServer) GetDataset(ctx context.Context, params *asset.GetDatasetParam) (*asset.Dataset, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

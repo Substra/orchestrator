@@ -94,11 +94,11 @@ func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, wrapper
 	return nil
 }
 
-// QueryDataManager returns the DataManager with given key
-func (s *SmartContract) QueryDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// GetDataManager returns the DataManager with given key
+func (s *SmartContract) GetDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetDataManagerService()
 
-	params := new(asset.DataManagerQueryParam)
+	params := new(asset.GetDataManagerParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
@@ -122,20 +122,20 @@ func (s *SmartContract) QueryDataManager(ctx ledger.TransactionContext, wrapper 
 func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetDataManagerService()
 
-	params := new(asset.DataManagersQueryParam)
+	params := new(asset.QueryDataManagersParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
-	datamanagers, nextPage, err := service.GetDataManagers(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
+	datamanagers, nextPage, err := service.QueryDataManagers(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query datamanagers")
 		return nil, err
 	}
 
-	resp := &asset.DataManagersQueryResponse{
+	resp := &asset.QueryDataManagersResponse{
 		DataManagers:  datamanagers,
 		NextPageToken: nextPage,
 	}
@@ -149,5 +149,5 @@ func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryDataManager", "QueryDataManagers"}
+	return []string{"GetDataManager", "QueryDataManagers"}
 }

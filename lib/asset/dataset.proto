@@ -27,10 +27,10 @@ message Dataset {
   repeated string test_data_sample_keys = 3;
 }
 
-message DatasetQueryParam {
+message GetDatasetParam {
     string key = 1;
 }
 
 service DatasetService {
-    rpc QueryDataset(DatasetQueryParam) returns (Dataset) {}
+    rpc GetDataset(GetDatasetParam) returns (Dataset) {}
 }

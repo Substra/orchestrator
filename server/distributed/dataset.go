@@ -31,13 +31,13 @@ func NewDatasetAdapter() *DatasetAdapter {
 	return &DatasetAdapter{}
 }
 
-// QueryDataset fetches a dataset by its key
-func (s *DatasetAdapter) QueryDataset(ctx context.Context, params *asset.DatasetQueryParam) (*asset.Dataset, error) {
+// GetDataset fetches a dataset by its key
+func (s *DatasetAdapter) GetDataset(ctx context.Context, params *asset.GetDatasetParam) (*asset.Dataset, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.dataset:QueryDataset"
+	method := "orchestrator.dataset:GetDataset"
 	response := &asset.Dataset{}
 
 	err = invocator.Call(method, params, response)

@@ -51,7 +51,7 @@ func (s *ComputeTaskServer) RegisterTask(ctx context.Context, in *asset.NewCompu
 	return task, nil
 }
 
-func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.TasksQueryParam) (*asset.TasksQueryResponse, error) {
+func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasksParam) (*asset.QueryTasksResponse, error) {
 	provider, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -71,13 +71,13 @@ func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.TasksQuery
 		return nil, err
 	}
 
-	return &asset.TasksQueryResponse{
+	return &asset.QueryTasksResponse{
 		Tasks:         tasks,
 		NextPageToken: paginationToken,
 	}, nil
 }
 
-func (s *ComputeTaskServer) GetTask(ctx context.Context, in *asset.TaskQueryParam) (*asset.ComputeTask, error) {
+func (s *ComputeTaskServer) GetTask(ctx context.Context, in *asset.GetTaskParam) (*asset.ComputeTask, error) {
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

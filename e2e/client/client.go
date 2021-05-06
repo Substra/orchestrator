@@ -74,7 +74,7 @@ func (c *TestClient) GetKey(id string) string {
 
 // EnsureNode attempts to register the node but won't fail on existing node
 func (c *TestClient) EnsureNode() {
-	_, err := c.nodeService.RegisterNode(c.ctx, &asset.NodeRegistrationParam{})
+	_, err := c.nodeService.RegisterNode(c.ctx, &asset.RegisterNodeParam{})
 	if status.Code(err) == codes.AlreadyExists {
 		log.Debug("node already exists")
 		// expected error
@@ -319,7 +319,7 @@ func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
 }
 
 func (c TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
-	task, err := c.computeTaskService.GetTask(c.ctx, &asset.TaskQueryParam{Key: c.GetKey(keyRef)})
+	task, err := c.computeTaskService.GetTask(c.ctx, &asset.GetTaskParam{Key: c.GetKey(keyRef)})
 	if err != nil {
 		log.WithError(err).Fatalf("GetTask failed")
 	}

@@ -45,13 +45,13 @@ func (a *ObjectiveAdapter) RegisterObjective(ctx context.Context, in *asset.NewO
 	return response, err
 }
 
-// QueryObjective returns an objective from its key
-func (a *ObjectiveAdapter) QueryObjective(ctx context.Context, query *asset.ObjectiveQueryParam) (*asset.Objective, error) {
+// GetObjective returns an objective from its key
+func (a *ObjectiveAdapter) GetObjective(ctx context.Context, query *asset.GetObjectiveParam) (*asset.Objective, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.objective:QueryObjective"
+	method := "orchestrator.objective:GetObjective"
 
 	response := &asset.Objective{}
 
@@ -61,14 +61,14 @@ func (a *ObjectiveAdapter) QueryObjective(ctx context.Context, query *asset.Obje
 }
 
 // QueryObjectives returns all known objectives
-func (a *ObjectiveAdapter) QueryObjectives(ctx context.Context, query *asset.ObjectivesQueryParam) (*asset.ObjectivesQueryResponse, error) {
+func (a *ObjectiveAdapter) QueryObjectives(ctx context.Context, query *asset.QueryObjectivesParam) (*asset.QueryObjectivesResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
 	method := "orchestrator.objective:QueryObjectives"
 
-	response := &asset.ObjectivesQueryResponse{}
+	response := &asset.QueryObjectivesResponse{}
 
 	err = invocator.Call(method, query, response)
 

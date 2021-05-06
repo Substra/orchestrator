@@ -52,16 +52,16 @@ message DataManagerUpdateParam {
 
 message DataManagerUpdateResponse {}
 
-message DataManagerQueryParam {
+message GetDataManagerParam {
     string key = 1;
 }
 
-message DataManagersQueryParam {
+message QueryDataManagersParam {
     string page_token = 1;
     uint32 page_size = 2;
 }
 
-message DataManagersQueryResponse {
+message QueryDataManagersResponse {
     repeated DataManager data_managers = 1;
     string next_page_token = 2;
 }
@@ -69,6 +69,6 @@ message DataManagersQueryResponse {
 service DataManagerService {
     rpc RegisterDataManager(NewDataManager) returns (NewDataManagerResponse) {}
     rpc UpdateDataManager(DataManagerUpdateParam) returns (DataManagerUpdateResponse) {}
-    rpc QueryDataManager(DataManagerQueryParam) returns (DataManager) {}
-    rpc QueryDataManagers(DataManagersQueryParam) returns (DataManagersQueryResponse) {}
+    rpc GetDataManager(GetDataManagerParam) returns (DataManager) {}
+    rpc QueryDataManagers(QueryDataManagersParam) returns (QueryDataManagersResponse) {}
 }

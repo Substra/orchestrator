@@ -66,8 +66,8 @@ func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
 	return datasample, nil
 }
 
-// GetDataSamples implements persistence.DataSample
-func (d *DBAL) GetDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+// QueryDataSamples implements persistence.DataSample
+func (d *DBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
 	var rows *sql.Rows
 	var err error
 

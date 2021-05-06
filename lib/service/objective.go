@@ -30,7 +30,7 @@ import (
 type ObjectiveAPI interface {
 	RegisterObjective(objective *asset.NewObjective, owner string) (*asset.Objective, error)
 	GetObjective(string) (*asset.Objective, error)
-	GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
+	QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
 	ObjectiveExists(key string) (bool, error)
 	CanDownload(key string, requester string) (bool, error)
 }
@@ -137,9 +137,9 @@ func (s *ObjectiveService) GetObjective(key string) (*asset.Objective, error) {
 	return s.GetObjectiveDBAL().GetObjective(key)
 }
 
-// GetObjectives returns all stored objectives
-func (s *ObjectiveService) GetObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
-	return s.GetObjectiveDBAL().GetObjectives(p)
+// QueryObjectives returns all stored objectives
+func (s *ObjectiveService) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
+	return s.GetObjectiveDBAL().QueryObjectives(p)
 }
 
 // ObjectiveExists checks if an objective with the provided key exists in the persistence layer

@@ -68,12 +68,12 @@ func (s *SmartContract) RegisterDataSample(ctx ledger.TransactionContext, wrappe
 	return nil
 }
 
-// UpdateDataSample updates a data sample in world state
+// UpdateDataSamples updates a data sample in world state
 // If the key does not exist, it will throw an error
-func (s *SmartContract) UpdateDataSample(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+func (s *SmartContract) UpdateDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	service := ctx.GetProvider().GetDataSampleService()
 
-	params := new(asset.DataSampleUpdateParam)
+	params := new(asset.UpdateDataSamplesParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
@@ -86,7 +86,7 @@ func (s *SmartContract) UpdateDataSample(ctx ledger.TransactionContext, wrapper 
 		return err
 	}
 
-	err = service.UpdateDataSample(params, owner)
+	err = service.UpdateDataSamples(params, owner)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to update datasample")
 		return err
@@ -98,20 +98,20 @@ func (s *SmartContract) UpdateDataSample(ctx ledger.TransactionContext, wrapper 
 func (s *SmartContract) QueryDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetDataSampleService()
 
-	params := new(asset.DataSamplesQueryParam)
+	params := new(asset.QueryDataSamplesParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
-	datasamples, paginationToken, err := service.GetDataSamples(&common.Pagination{Token: params.PageToken, Size: params.GetPageSize()})
+	datasamples, paginationToken, err := service.QueryDataSamples(&common.Pagination{Token: params.PageToken, Size: params.GetPageSize()})
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query datasamples")
 		return nil, err
 	}
 
-	resp := &asset.DataSamplesQueryResponse{
+	resp := &asset.QueryDataSamplesResponse{
 		DataSamples:   datasamples,
 		NextPageToken: paginationToken,
 	}

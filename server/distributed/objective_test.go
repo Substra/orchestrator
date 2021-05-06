@@ -46,19 +46,19 @@ func TestRegisterObjective(t *testing.T) {
 	assert.NoError(t, err, "Registration should pass")
 }
 
-func TestQueryObjective(t *testing.T) {
+func TestGetObjective(t *testing.T) {
 	adapter := NewObjectiveAdapter()
 
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	param := &asset.ObjectiveQueryParam{Key: "uuid"}
+	param := &asset.GetObjectiveParam{Key: "uuid"}
 
-	invocator.On("Call", "orchestrator.objective:QueryObjective", param, &asset.Objective{}).Return(nil)
+	invocator.On("Call", "orchestrator.objective:GetObjective", param, &asset.Objective{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
-	_, err := adapter.QueryObjective(ctx, param)
+	_, err := adapter.GetObjective(ctx, param)
 
 	assert.NoError(t, err, "Query should pass")
 }
@@ -69,9 +69,9 @@ func TestQueryObjectives(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	param := &asset.ObjectivesQueryParam{PageToken: "uuid", PageSize: 20}
+	param := &asset.QueryObjectivesParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", "orchestrator.objective:QueryObjectives", param, &asset.ObjectivesQueryResponse{}).Return(nil)
+	invocator.On("Call", "orchestrator.objective:QueryObjectives", param, &asset.QueryObjectivesResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

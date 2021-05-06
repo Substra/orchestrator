@@ -46,19 +46,19 @@ func TestRegisterAlgo(t *testing.T) {
 	assert.NoError(t, err, "Registration should pass")
 }
 
-func TestQueryAlgo(t *testing.T) {
+func TestGetAlgo(t *testing.T) {
 	adapter := NewAlgoAdapter()
 
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	param := &asset.AlgoQueryParam{Key: "uuid"}
+	param := &asset.GetAlgoParam{Key: "uuid"}
 
-	invocator.On("Call", "orchestrator.algo:QueryAlgo", param, &asset.Algo{}).Return(nil)
+	invocator.On("Call", "orchestrator.algo:GetAlgo", param, &asset.Algo{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
-	_, err := adapter.QueryAlgo(ctx, param)
+	_, err := adapter.GetAlgo(ctx, param)
 
 	assert.NoError(t, err, "Query should pass")
 }
@@ -69,9 +69,9 @@ func TestQueryAlgos(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	param := &asset.AlgosQueryParam{PageToken: "uuid", PageSize: 20}
+	param := &asset.QueryAlgosParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", "orchestrator.algo:QueryAlgos", param, &asset.AlgosQueryResponse{}).Return(nil)
+	invocator.On("Call", "orchestrator.algo:QueryAlgos", param, &asset.QueryAlgosResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

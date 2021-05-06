@@ -35,25 +35,25 @@ message NewDataSample {
 
 message NewDataSampleResponse {}
 
-message DataSampleUpdateParam {
+message UpdateDataSamplesParam {
     repeated string keys = 1;
     repeated string data_manager_keys = 2;
 }
 
-message DataSampleUpdateResponse {}
+message UpdateDataSamplesResponse {}
 
-message DataSamplesQueryParam {
+message QueryDataSamplesParam {
     string page_token = 1;
     uint32 page_size = 2;
 }
 
-message DataSamplesQueryResponse {
+message QueryDataSamplesResponse {
     repeated DataSample data_samples = 1;
     string next_page_token = 2;
 }
 
 service DataSampleService {
     rpc RegisterDataSample(NewDataSample) returns (NewDataSampleResponse) {}
-    rpc UpdateDataSample(DataSampleUpdateParam) returns (DataSampleUpdateResponse) {}
-    rpc QueryDataSamples(DataSamplesQueryParam) returns (DataSamplesQueryResponse) {}
+    rpc UpdateDataSamples(UpdateDataSamplesParam) returns (UpdateDataSamplesResponse) {}
+    rpc QueryDataSamples(QueryDataSamplesParam) returns (QueryDataSamplesResponse) {}
 }

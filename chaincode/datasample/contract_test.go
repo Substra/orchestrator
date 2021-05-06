@@ -65,7 +65,7 @@ func TestUpdate(t *testing.T) {
 	contract := &SmartContract{}
 
 	mspid := "org"
-	updateDataSample := &asset.DataSampleUpdateParam{
+	updateDataSample := &asset.UpdateDataSamplesParam{
 		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		DataManagerKeys: []string{"0b4b4466-9a81-4084-9bab-80939b78addd", "5067eb48-b29e-4a2d-81a0-82033a7d2ef8"},
 	}
@@ -75,13 +75,13 @@ func TestUpdate(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 
 	service := getMockedService(ctx)
-	service.On("UpdateDataSample", updateDataSample, mspid).Return(nil).Once()
+	service.On("UpdateDataSamples", updateDataSample, mspid).Return(nil).Once()
 
 	stub := new(testHelper.MockedStub)
 	ctx.On("GetStub").Return(stub).Once()
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	err = contract.UpdateDataSample(ctx, wrapper)
+	err = contract.UpdateDataSamples(ctx, wrapper)
 	assert.NoError(t, err, "Smart contract execution should not fail")
 }
 
@@ -96,15 +96,15 @@ func TestQueryDataSamples(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 
 	service := getMockedService(ctx)
-	service.On("GetDataSamples", &common.Pagination{Token: "", Size: 10}).Return(datasamples, "", nil).Once()
+	service.On("QueryDataSamples", &common.Pagination{Token: "", Size: 10}).Return(datasamples, "", nil).Once()
 
-	param := &asset.DataSamplesQueryParam{PageToken: "", PageSize: 10}
+	param := &asset.QueryDataSamplesParam{PageToken: "", PageSize: 10}
 	wrapper, err := communication.Wrap(param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.QueryDataSamples(ctx, wrapper)
 	assert.NoError(t, err, "Query should not fail")
-	resp := new(asset.DataSamplesQueryResponse)
+	resp := new(asset.QueryDataSamplesResponse)
 	err = wrapped.Unwrap(resp)
 	assert.NoError(t, err)
 	assert.Len(t, resp.DataSamples, len(datasamples), "Query should return all datasamples")
