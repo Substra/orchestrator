@@ -159,7 +159,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 
 	event := event.Event{
 		AssetKind: asset.ComputeTaskKind,
-		AssetID:   task.Key,
+		AssetKey:  task.Key,
 		EventKind: event.AssetCreated,
 		Metadata: map[string]string{
 			"status": task.Status.String(),

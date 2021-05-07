@@ -131,7 +131,7 @@ func TestDispatchOnTransition(t *testing.T) {
 	dbal.On("UpdateComputeTask", expectedTask).Once().Return(nil)
 
 	expectedEvent := &event.Event{
-		AssetID:   "uuid",
+		AssetKey:  "uuid",
 		AssetKind: asset.ComputeTaskKind,
 		EventKind: event.AssetUpdated,
 		Metadata: map[string]string{

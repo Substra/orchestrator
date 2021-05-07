@@ -61,7 +61,7 @@ func TestRegisterObjective(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.ObjectiveKind,
-		AssetID:   objective.Key,
+		AssetKey:  objective.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 
@@ -228,7 +228,7 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.ObjectiveKind,
-		AssetID:   objective.Key,
+		AssetKey:  objective.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 

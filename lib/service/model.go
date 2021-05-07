@@ -125,7 +125,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 
 	event := &event.Event{
 		AssetKind: asset.ModelKind,
-		AssetID:   model.Key,
+		AssetKey:  model.Key,
 		EventKind: event.AssetCreated,
 	}
 
@@ -230,7 +230,7 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 
 	event := event.Event{
 		AssetKind: asset.ModelKind,
-		AssetID:   model.Key,
+		AssetKey:  model.Key,
 		EventKind: event.AssetDisabled,
 	}
 

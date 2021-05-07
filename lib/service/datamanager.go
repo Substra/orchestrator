@@ -108,7 +108,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 
 	err = s.GetEventQueue().Enqueue(&event.Event{
 		EventKind: event.AssetCreated,
-		AssetID:   d.Key,
+		AssetKey:  d.Key,
 		AssetKind: asset.DataManagerKind,
 	})
 	if err != nil {
@@ -153,7 +153,7 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 
 	err = s.GetEventQueue().Enqueue(&event.Event{
 		EventKind: event.AssetUpdated,
-		AssetID:   d.Key,
+		AssetKey:  d.Key,
 		AssetKind: asset.DataManagerKind,
 	})
 	if err != nil {

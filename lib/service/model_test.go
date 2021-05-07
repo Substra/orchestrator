@@ -147,7 +147,7 @@ func TestRegisterSimpleModel(t *testing.T) {
 
 	event := &event.Event{
 		AssetKind: asset.ModelKind,
-		AssetID:   model.Key,
+		AssetKey:  model.Key,
 		EventKind: event.AssetCreated,
 	}
 	dispatcher.On("Enqueue", event).Once().Return(nil)
@@ -248,7 +248,7 @@ func TestRegisterHeadModel(t *testing.T) {
 
 	event := &event.Event{
 		AssetKind: asset.ModelKind,
-		AssetID:   model.Key,
+		AssetKey:  model.Key,
 		EventKind: event.AssetCreated,
 	}
 	dispatcher.On("Enqueue", event).Once().Return(nil)
@@ -414,7 +414,7 @@ func TestDisableModel(t *testing.T) {
 
 	dispatcher.On("Enqueue", &event.Event{
 		AssetKind: asset.ModelKind,
-		AssetID:   "modelUuid",
+		AssetKey:  "modelUuid",
 		EventKind: event.AssetDisabled,
 	}).Return(nil)
 

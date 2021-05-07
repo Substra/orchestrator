@@ -56,7 +56,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.DataSampleKind,
-		AssetID:   storedDataSample.Key,
+		AssetKey:  storedDataSample.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 
@@ -171,7 +171,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetUpdated,
 		AssetKind: asset.DataSampleKind,
-		AssetID:   storedDataSample.Key,
+		AssetKey:  storedDataSample.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 

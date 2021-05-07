@@ -32,7 +32,7 @@ const (
 // It is triggered during orchestration and allows a consumer to react to the orchestration process.
 type Event struct {
 	AssetKind asset.Kind `json:"asset_kind"`
-	AssetID   string     `json:"asset_id"`
+	AssetKey  string     `json:"asset_key"`
 	EventKind Kind       `json:"event_kind"`
 	Channel   string     `json:"channel"`
 	// Metadata can hold asset specific data

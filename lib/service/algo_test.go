@@ -60,7 +60,7 @@ func TestRegisterAlgo(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.AlgoKind,
-		AssetID:   algo.Key,
+		AssetKey:  algo.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 

@@ -82,7 +82,7 @@ func TestRegisterDataManager(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.DataManagerKind,
-		AssetID:   storedDataManager.Key,
+		AssetKey:  storedDataManager.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 
@@ -146,7 +146,7 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.DataManagerKind,
-		AssetID:   storedDataManager.Key,
+		AssetKey:  storedDataManager.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 
@@ -260,7 +260,7 @@ func TestUpdateDataManager(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetUpdated,
 		AssetKind: asset.DataManagerKind,
-		AssetID:   updatedDataManager.Key,
+		AssetKey:  updatedDataManager.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 
@@ -332,7 +332,7 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 	e := &event.Event{
 		EventKind: event.AssetUpdated,
 		AssetKind: asset.DataManagerKind,
-		AssetID:   updatedDataManager.Key,
+		AssetKey:  updatedDataManager.Key,
 	}
 	dispatcher.On("Enqueue", e).Return(nil)
 

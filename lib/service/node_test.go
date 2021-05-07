@@ -33,7 +33,7 @@ func TestRegisterNode(t *testing.T) {
 	provider.On("GetNodeDBAL").Return(dbal)
 	provider.On("GetEventQueue").Return(dispatcher)
 
-	e := &event.Event{EventKind: event.AssetCreated, AssetKind: asset.NodeKind, AssetID: "uuid1"}
+	e := &event.Event{EventKind: event.AssetCreated, AssetKind: asset.NodeKind, AssetKey: "uuid1"}
 	dispatcher.On("Enqueue", e).Return(nil)
 
 	expected := asset.Node{

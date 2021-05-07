@@ -208,7 +208,7 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	expectedEvent := &event.Event{
 		AssetKind: asset.ComputeTaskKind,
-		AssetID:   newTrainTask.Key,
+		AssetKey:  newTrainTask.Key,
 		EventKind: event.AssetCreated,
 		Metadata: map[string]string{
 			"status": storedTask.Status.String(),

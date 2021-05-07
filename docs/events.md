@@ -12,7 +12,7 @@ All events will come serialized as JSON.
 An event will hold the following fields:
 
 - asset_kind: flag the kind of asset which triggered this event, see below for possible values;
-- asset_id: the key (UUID) of the relevant asset;
+- asset_key: the key (UUID) of the relevant asset;
 - event_kind: kind of event (see below);
 - channel: the channel for which the event has been dispatched;
 - metadata: a map of keys (string) to values (string);

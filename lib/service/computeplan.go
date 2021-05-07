@@ -87,7 +87,7 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 
 	event := event.Event{
 		AssetKind: asset.ComputePlanKind,
-		AssetID:   plan.Key,
+		AssetKey:  plan.Key,
 		EventKind: event.AssetCreated,
 		Metadata: map[string]string{
 			"creator": plan.Owner,
