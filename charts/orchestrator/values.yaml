@@ -147,5 +147,5 @@ rabbitmqOperator:
     repository: owkin/rabbitmq-operator
     pullPolicy: IfNotPresent
   credentials:
-    Org1MSP: password1
-    Org2MSP: password2
+    MyOrg1MSP: password1
+    MyOrg2MSP: password2
