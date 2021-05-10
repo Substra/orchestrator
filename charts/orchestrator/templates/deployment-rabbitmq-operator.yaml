@@ -60,14 +60,21 @@ spec:
 
               ## Remove extra users
               rabbitmqadmin list users | awk -F"|" '{if (NR>=4) {gsub(/ /,""); print $2}}' | head -n -1 > /tmp/users
-              for u in $(cat /tmp/users); do
-                if ! grep -q $u  ~/wanted_users; then
-                  echo "Removing unwanted user $u"
-                  rabbitmqadmin delete user name=$u
-                  echo "Removing unwanted queue $u"
-                  rabbitmqadmin delete queue name=$u
+              while IFS= read -r user; do
+                if ! grep -q "$user"  ~/wanted_users; then
+                  echo "Removing unwanted user $user"
+                  rabbitmqadmin delete user name="$user"
                 fi
-              done
+              done < /tmp/users
+
+              ## Remove extra queues
+              rabbitmqadmin list queues | awk -F"|" '{if (NR>=4) {gsub(/ /,""); print $2}}' | head -n -1 > /tmp/queues
+              while IFS= read -r queue; do
+                if ! grep -q "$queue"  ~/wanted_users; then
+                  echo "Removing unwanted queue $queue"
+                  rabbitmqadmin delete queue name="$queue"
+                fi
+              done < /tmp/queues
 
               ## Create users
               rabbitmqadmin list users > /tmp/users
@@ -92,19 +99,46 @@ spec:
               done
               {{- end }}
 
-              ## Create exchanges
+              ## Create queues
+              rabbitmqadmin list queues | awk -F"|" '{if (NR>=4) {gsub(/ /,""); print $2}}' | head -n -1 > /tmp/queues
+              {{- range $user, $_ := .Values.rabbitmqOperator.credentials }}
+              until grep -q "{{$user}}" /tmp/queues; do
+                echo "creating queue {{$user}}"
+                rabbitmqadmin declare queue name={{$user}}
+                rabbitmqadmin list queues | awk -F"|" '{if (NR>=4) {gsub(/ /,""); print $2}}' | head -n -1 > /tmp/queues
+              done
+              {{- end }}
+
+              ## Create channel exchanges
               rabbitmqadmin list exchanges > /tmp/exchanges
               {{- range $channel := .Values.channels }}
               until grep -q "{{$channel.name}}" /tmp/exchanges; do
                 echo "creating exchange for channel {{$channel.name}}"
                 rabbitmqadmin declare exchange name={{$channel.name}} type=fanout
-                rabbitmqadmin declare binding source=orchestrator destination={{$channel.name}} destination_type=exchange routing_key={{$channel.name}}
-                {{- range $channel.organizations }}
-                echo "binding from {{$channel.name}} exchange to {{.}} queue"
-                rabbitmqadmin declare binding source={{$channel.name}} destination={{.}}
-                {{- end}}
                 rabbitmqadmin list exchanges > /tmp/exchanges
               done
+              {{- end }}
+
+              ## Bind channel exchanges
+              rabbitmqadmin list bindings > /tmp/bindings
+              {{- range $channel := .Values.channels }}
+              until grep "orchestrator" /tmp/bindings | grep -q "{{$channel.name}}"; do
+                echo "binding {{$channel.name}} to orchestrator exchange"
+                rabbitmqadmin declare binding source=orchestrator destination={{$channel.name}} destination_type=exchange routing_key={{$channel.name}}
+                rabbitmqadmin list bindings > /tmp/bindings
+              done
+              {{- end }}
+
+              ## Create bind org queues to channel exchanges
+              rabbitmqadmin list bindings > /tmp/bindings
+              {{- range $channel := .Values.channels }}
+              {{- range $channel.organizations }}
+              until grep "{{$channel.name}}" /tmp/bindings | grep -q "{{.}}"; do
+                echo "binding from {{$channel.name}} exchange to {{.}} queue"
+                rabbitmqadmin declare binding source={{$channel.name}} destination={{.}}
+                rabbitmqadmin list bindings > /tmp/bindings
+              done
+              {{- end}}
               {{- end }}
 
               sleep 30
