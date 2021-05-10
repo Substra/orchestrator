@@ -26,7 +26,7 @@ type AppServer struct {
 	db   *Database
 }
 
-func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOption) (*AppServer, error) {
+func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOption, config *common.OrchestratorConfiguration) (*AppServer, error) {
 	pgDB, err := InitDatabase(dbURL)
 	if err != nil {
 		return nil, err
@@ -34,6 +34,7 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 
 	session := common.NewSession("orchestrator", rabbitDSN)
 
+	channelInterceptor := common.NewChannelInterceptor(config)
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
 	providerInterceptor := NewProviderInterceptor(pgDB, session)
 	concurrencyLimiter := new(ConcurrencyLimiter)
@@ -43,7 +44,7 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 		common.InterceptStandaloneErrors,
 		concurrencyLimiter.Intercept,
 		common.InterceptMSPID,
-		common.InterceptChannel,
+		channelInterceptor.InterceptChannel,
 		providerInterceptor.Intercept,
 	)
 

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "orchestrator.server.fullname" . }}-config
+  labels:
+    {{- include "orchestrator.server.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    channels:
+      {{- range $.Values.channels }}
+      {{ .name }}:
+        {{- range .organizations }}
+        - {{.}}
+        {{- end }}
+      {{- end}}

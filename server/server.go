@@ -32,12 +32,12 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func getDistributedServer(tlsOption []grpc.ServerOption) common.Runnable {
+func getDistributedServer(tlsOption []grpc.ServerOption, config *common.OrchestratorConfiguration) common.Runnable {
 	networkConfig := common.MustGetEnv("NETWORK_CONFIG")
 	certificate := common.MustGetEnv("FABRIC_CERT")
 	key := common.MustGetEnv("FABRIC_KEY")
 
-	server, err := distributed.GetServer(networkConfig, certificate, key, tlsOption)
+	server, err := distributed.GetServer(networkConfig, certificate, key, tlsOption, config)
 	if err != nil {
 		log.WithError(err).Fatal("failed to create standalone server")
 	}
@@ -45,11 +45,11 @@ func getDistributedServer(tlsOption []grpc.ServerOption) common.Runnable {
 	return server
 }
 
-func getStandaloneServer(tlsOptions []grpc.ServerOption) common.Runnable {
+func getStandaloneServer(tlsOptions []grpc.ServerOption, config *common.OrchestratorConfiguration) common.Runnable {
 	dbURL := common.MustGetEnv("DATABASE_URL")
 	rabbitDSN := common.MustGetEnv("AMQP_DSN")
 
-	server, err := standalone.GetServer(dbURL, rabbitDSN, tlsOptions)
+	server, err := standalone.GetServer(dbURL, rabbitDSN, tlsOptions, config)
 	if err != nil {
 		log.WithError(err).Fatal("failed to create standalone server")
 	}
@@ -82,11 +82,13 @@ func main() {
 		serverOptions = append(serverOptions, tlsOptions)
 	}
 
+	orchestrationConfig := common.NewConfig(common.MustGetEnv("CHANNEL_CONFIG"))
+
 	var app common.Runnable
 	if standaloneMode {
-		app = getStandaloneServer(serverOptions)
+		app = getStandaloneServer(serverOptions, orchestrationConfig)
 	} else {
-		app = getDistributedServer(serverOptions)
+		app = getDistributedServer(serverOptions, orchestrationConfig)
 	}
 	defer app.Stop()
 

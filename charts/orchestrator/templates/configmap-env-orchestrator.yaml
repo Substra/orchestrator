@@ -9,6 +9,7 @@ data:
   ORCHESTRATOR_MODE: {{ .Values.orchestrator.mode }}
   ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled $.Values.orchestrator.verifyClientMSPID }}"
   ORCHESTRATOR_AMQP_DSN: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
+  ORCHESTRATOR_CHANNEL_CONFIG: /var/orchestrator/config.yaml
 
   # Standalone settings
   {{- if .Values.postgresql.enabled }}

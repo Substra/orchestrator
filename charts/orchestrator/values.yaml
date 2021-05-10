@@ -127,11 +127,11 @@ orchestrator:
 
 channels:
   - name: mychannel
-    organizations: [ Org1MSP, Org2MSP ]
+    organizations: [ MyOrg1MSP, MyOrg2MSP ]
     fabric: # relevant only in distributed mode
       chaincodes: [ mycc ]
   - name: yourchannel
-    organizations: [ Org1MSP, Org2MSP ]
+    organizations: [ MyOrg1MSP, MyOrg2MSP ]
     fabric:
       chaincodes: [ yourcc ]
 

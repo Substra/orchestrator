@@ -26,13 +26,40 @@ import (
 
 const headerChannel = "channel"
 
+// ChannelInterceptor intercepts gRPC requests and makes the channel from headers available to request context.
+// It will return an error if a caller attempts to call the orchestrator for a channel it is not part of.
+type ChannelInterceptor struct {
+	orgChannels map[string][]string
+}
+
+// Creates a ChannelInterceptor which will enforce organization & channel consistency.
+// ChannelInterceptor MUST come after the mspid interceptor.
+func NewChannelInterceptor(config *OrchestratorConfiguration) *ChannelInterceptor {
+	orgChannels := make(map[string][]string)
+
+	for channel, orgs := range config.Channels {
+		for _, org := range orgs {
+			orgChannels[org] = append(orgChannels[org], channel)
+		}
+	}
+
+	return &ChannelInterceptor{
+		orgChannels: orgChannels,
+	}
+}
+
 // InterceptChannel is a gRPC interceptor and will make the channel from headers available to request context.
-func InterceptChannel(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (i *ChannelInterceptor) InterceptChannel(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
 	for _, m := range ignoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return handler(ctx, req)
 		}
+	}
+
+	org, err := ExtractMSPID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract organization: %w", err)
 	}
 
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -46,8 +73,27 @@ func InterceptChannel(ctx context.Context, req interface{}, info *grpc.UnaryServ
 
 	channel := md.Get(headerChannel)[0]
 
+	if err := i.checkOrgBelongsToChannel(org, channel); err != nil {
+		return nil, err
+	}
+
 	newCtx := WithChannel(ctx, channel)
 	return handler(newCtx, req)
+}
+
+func (i *ChannelInterceptor) checkOrgBelongsToChannel(org, channel string) error {
+	channels, ok := i.orgChannels[org]
+	if !ok {
+		return fmt.Errorf("organization \"%s\" is unknown", org)
+	}
+
+	for _, c := range channels {
+		if channel == c {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("organization \"%s\" has not access to channel \"%s\"", org, channel)
 }
 
 type ctxChannelMarker struct{}

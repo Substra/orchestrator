@@ -26,7 +26,7 @@ type AppServer struct {
 	grpc *grpc.Server
 }
 
-func GetServer(networkConfig string, certificate string, key string, additionalOptions []grpc.ServerOption) (*AppServer, error) {
+func GetServer(networkConfig string, certificate string, key string, additionalOptions []grpc.ServerOption, orcConf *common.OrchestratorConfiguration) (*AppServer, error) {
 	wallet := wallet.New(certificate, key)
 	config := config.FromFile(networkConfig)
 
@@ -36,11 +36,13 @@ func GetServer(networkConfig string, certificate string, key string, additionalO
 
 	}
 
+	channelInterceptor := common.NewChannelInterceptor(orcConf)
+
 	interceptor := grpc.ChainUnaryInterceptor(
 		common.LogRequest,
 		common.InterceptDistributedErrors,
 		common.InterceptMSPID,
-		common.InterceptChannel,
+		channelInterceptor.InterceptChannel,
 		chaincodeInterceptor.Intercept,
 	)
 

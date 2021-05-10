@@ -61,6 +61,18 @@ jobs:
             sleep 2
           done
         timeout-minutes: 1
+      - name: setup channel configuration
+        run: |
+          cat << EOF > ${{runner.temp}}/config.yaml
+          ---
+          channels:
+            mychannel:
+              - MyOrg1MSP
+              - MyOrg2MSP
+            yourchannel:
+              - MyOrg1MSP
+              - MyOrg2MSP
+          EOF
       - name: run e2e tests
         run: |
           ./bin/orchestrator > server.log 2>&1 &
@@ -73,6 +85,7 @@ jobs:
           ORCHESTRATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
           ORCHESTRATOR_AMQP_DSN: amqp://guest:guest@localhost:5672/
           ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
+          ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
       - name: Archive server log
         if: always()
         uses: actions/upload-artifact@v2
