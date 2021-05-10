@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
@@ -31,6 +32,8 @@ type ModelAPI interface {
 	CanDisableModel(key, requester string) (bool, error)
 	// DisableModel removes a model address and emit a "disabled" event
 	DisableModel(key string, requester string) error
+	GetModel(key string) (*asset.Model, error)
+	QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error)
 }
 
 type ModelServiceProvider interface {
@@ -57,6 +60,15 @@ func NewModelService(provider ModelDependencyProvider) *ModelService {
 
 func (s *ModelService) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 	return s.GetModelDBAL().GetComputeTaskOutputModels(key)
+}
+
+func (s *ModelService) GetModel(key string) (*asset.Model, error) {
+	log.WithField("key", key).Debug("Get model")
+	return s.GetModelDBAL().GetModel(key)
+}
+
+func (s *ModelService) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
+	return s.GetModelDBAL().QueryModels(c, p)
 }
 
 // GetComputeTaskInputModels retrieves input models of a given task from its parents.
@@ -149,11 +161,23 @@ func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester s
 		return nil, fmt.Errorf("%w: task already has a model: %s", errors.ErrBadRequest, existingModels[0].Key)
 	}
 
+	var permissions *asset.Permissions
+
+	switch task.Category {
+	case asset.ComputeTaskCategory_TASK_TRAIN:
+		permissions = task.GetTrain().ModelPermissions
+	case asset.ComputeTaskCategory_TASK_AGGREGATE:
+		permissions = task.GetAggregate().ModelPermissions
+	default:
+		return nil, fmt.Errorf("%w: cannot set model permissions for \"%s\" task", errors.ErrBadRequest, task.Category.String())
+	}
+
 	model := &asset.Model{
 		Key:            newModel.Key,
 		Category:       newModel.Category,
 		ComputeTaskKey: task.Key,
 		Address:        newModel.Address,
+		Permissions:    permissions,
 	}
 
 	return model, nil
@@ -177,11 +201,23 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 		}
 	}
 
+	var permissions *asset.Permissions
+
+	switch newModel.Category {
+	case asset.ModelCategory_MODEL_HEAD:
+		permissions = task.GetComposite().HeadPermissions
+	case asset.ModelCategory_MODEL_TRUNK:
+		permissions = task.GetComposite().TrunkPermissions
+	default:
+		return nil, fmt.Errorf("%w: cannot set permissions for \"%s\" model", errors.ErrBadRequest, newModel.Category.String())
+	}
+
 	model := &asset.Model{
 		Key:            newModel.Key,
 		Category:       newModel.Category,
 		ComputeTaskKey: task.Key,
 		Address:        newModel.Address,
+		Permissions:    permissions,
 	}
 
 	return model, nil

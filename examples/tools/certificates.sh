@@ -20,7 +20,7 @@ nodes='[
 # Call this function to generate a new CA cert/key pair instead.
 function generate_cacert {
     openssl genrsa -out ca.key 2048
-    openssl req -new -x509 -days 365 -key ca.key -subj "/C=FR/ST=Loire-Atlantique/L=Nantes/O=Orchestrator Root CA/CN=Orchestrator Root CA" -out ca.crt
+    openssl req -new -x509 -days 365 -sha256 -key ca.key -subj "/C=FR/ST=Loire-Atlantique/L=Nantes/O=Orchestrator Root CA/CN=Orchestrator Root CA" -out ca.crt
 }
 
 function generate_new_k8s_cacert {
@@ -37,7 +37,7 @@ function generate_target_cert {
     local domain="$3"
     openssl req -newkey rsa:2048 -nodes -keyout tls.key -subj "/C=FR/ST=Loire-Atlantique/L=Nantes/O=${organization}/CN=orchestrator.${domain}" -out cert.csr
     openssl x509 -req \
-    -days 365 -in cert.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out tls.crt \
+    -days 365 -sha256 -in cert.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out tls.crt \
     -extfile <(printf "subjectAltName=DNS:orchestrator.${domain},DNS:owkin-orchestrator-${namespace}-server.${namespace}.svc.cluster.local,DNS:owkin-orchestrator-${namespace}-rabbitmq.${namespace}.svc.cluster.local")
     rm cert.csr ca.srl
 }

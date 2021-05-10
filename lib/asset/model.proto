@@ -32,6 +32,7 @@ message Model {
   ModelCategory category = 2;
   string compute_task_key = 3;
   Addressable address = 4;
+  Permissions permissions = 5;
 }
 
 message NewModel {
@@ -61,10 +62,27 @@ message DisableModelParam {
   string model_key = 1;
 }
 
+message GetModelParam {
+  string key = 1;
+}
+
+message QueryModelsParam {
+  ModelCategory category = 1;
+  string page_token = 2;
+  uint32 page_size = 3;
+}
+
+message QueryModelsResponse {
+  repeated Model models = 1;
+  string next_page_token = 2;
+}
+
 message DisableModelResponse {}
 
 service ModelService {
   rpc RegisterModel(NewModel) returns (Model) {}
+  rpc GetModel(GetModelParam) returns (Model) {}
+  rpc QueryModels(QueryModelsParam) returns (QueryModelsResponse) {}
   rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {}
   rpc GetComputeTaskInputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {}
   rpc CanDisableModel(CanDisableModelParam) returns (CanDisableModelResponse) {}

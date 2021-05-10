@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
 )
 
@@ -42,6 +43,32 @@ func (s *ModelServer) RegisterModel(ctx context.Context, newModel *asset.NewMode
 	}
 
 	return services.GetModelService().RegisterModel(newModel, mspid)
+}
+
+func (s *ModelServer) GetModel(ctx context.Context, in *asset.GetModelParam) (*asset.Model, error) {
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return services.GetModelService().GetModel(in.Key)
+}
+
+// QueryModels returns a paginated list of all known models
+func (s *ModelServer) QueryModels(ctx context.Context, params *asset.QueryModelsParam) (*asset.QueryModelsResponse, error) {
+	services, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	models, paginationToken, err := services.GetModelService().QueryModels(params.Category, libCommon.NewPagination(params.PageToken, params.PageSize))
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.QueryModelsResponse{
+		Models:        models,
+		NextPageToken: paginationToken,
+	}, nil
 }
 
 func (s *ModelServer) GetComputeTaskOutputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {

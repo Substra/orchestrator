@@ -20,6 +20,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 )
 
 // SmartContract manages Models
@@ -64,6 +65,60 @@ func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *co
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(obj)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
+}
+
+func (s *SmartContract) GetModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetModelService()
+
+	params := new(asset.GetModelParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap params")
+		return nil, err
+	}
+
+	model, err := service.GetModel(params.GetKey())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to fetch model")
+		return nil, err
+	}
+
+	wrapped, err := communication.Wrap(model)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
+}
+
+// QueryModels returns the models
+func (s *SmartContract) QueryModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetModelService()
+
+	params := new(asset.QueryModelsParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return nil, err
+	}
+
+	models, nextPage, err := service.QueryModels(params.Category, common.NewPagination(params.GetPageToken(), params.GetPageSize()))
+	if err != nil {
+		s.logger.WithError(err).Error("failed to query models")
+		return nil, err
+	}
+
+	resp := &asset.QueryModelsResponse{
+		Models:        models,
+		NextPageToken: nextPage,
+	}
+
+	wrapped, err := communication.Wrap(resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -181,5 +236,5 @@ func (s *SmartContract) DisableModel(ctx ledger.TransactionContext, wrapper *com
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"GetComputeTaskOutputModels", "GetComputeTaskInputModels", "CanDisableModel"}
+	return []string{"GetComputeTaskOutputModels", "GetComputeTaskInputModels", "CanDisableModel", "GetModel", "QueryModels"}
 }

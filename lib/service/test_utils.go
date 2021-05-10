@@ -406,6 +406,16 @@ type MockModelService struct {
 	mock.Mock
 }
 
+func (m *MockModelService) GetModel(key string) (*asset.Model, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.Model), args.Error(1)
+}
+
+func (m *MockModelService) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
+	args := m.Called(c, p)
+	return args.Get(0).([]*asset.Model), args.Get(1).(common.PaginationToken), args.Error(2)
+}
+
 func (m *MockModelService) RegisterModel(newModel *asset.NewModel, requester string) (*asset.Model, error) {
 	args := m.Called(newModel, requester)
 	return args.Get(0).(*asset.Model), args.Error(1)

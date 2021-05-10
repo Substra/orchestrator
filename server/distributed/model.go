@@ -44,6 +44,35 @@ func (a *ModelAdapter) RegisterModel(ctx context.Context, newModel *asset.NewMod
 	return model, err
 }
 
+func (a *ModelAdapter) GetModel(ctx context.Context, param *asset.GetModelParam) (*asset.Model, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.model:GetModel"
+
+	response := &asset.Model{}
+
+	err = invocator.Call(method, param, response)
+
+	return response, err
+}
+
+// QueryModels returns all known models
+func (a *ModelAdapter) QueryModels(ctx context.Context, query *asset.QueryModelsParam) (*asset.QueryModelsResponse, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.model:QueryModels"
+
+	response := &asset.QueryModelsResponse{}
+
+	err = invocator.Call(method, query, response)
+
+	return response, err
+}
+
 func (a *ModelAdapter) GetComputeTaskOutputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {

@@ -6,3 +6,4 @@ CREATE TABLE models (
 );
 
 CREATE INDEX ix_model_task ON models USING HASH ((asset->>'computeTaskKey'));
+CREATE INDEX ix_model_category ON models USING HASH ((asset->>'category'));

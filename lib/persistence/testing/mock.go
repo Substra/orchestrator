@@ -260,3 +260,8 @@ func (m *MockDBAL) UpdateModel(model *asset.Model) error {
 	args := m.Called(model)
 	return args.Error(0)
 }
+
+func (m *MockDBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
+	args := m.Called(c, p)
+	return args.Get(0).([]*asset.Model), args.Get(1).(common.PaginationToken), args.Error(2)
+}

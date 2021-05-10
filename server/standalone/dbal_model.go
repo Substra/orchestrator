@@ -15,7 +15,12 @@
 package standalone
 
 import (
+	"database/sql"
+	"strconv"
+
+	"github.com/Masterminds/squirrel"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 )
 
 func (d *DBAL) GetModel(key string) (*asset.Model, error) {
@@ -28,6 +33,69 @@ func (d *DBAL) GetModel(key string) (*asset.Model, error) {
 	}
 
 	return model, nil
+}
+
+func (d *DBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
+	var rows *sql.Rows
+	var err error
+
+	offset, err := getOffset(p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+
+	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	builder := pgDialect.Select("asset").
+		From("models").
+		Where(squirrel.Eq{"channel": d.channel}).
+		OrderByClause("created_at ASC").
+		Offset(uint64(offset)).
+		Limit(uint64(p.Size + 1))
+
+	if c != asset.ModelCategory_MODEL_UNKNOWN {
+		builder = builder.Where(squirrel.Eq{"asset->>'category'": c.String()})
+	}
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, "", err
+	}
+
+	rows, err = d.tx.Query(query, args...)
+	if err != nil {
+		return nil, "", err
+	}
+	defer rows.Close()
+
+	var models []*asset.Model
+	var count int
+
+	for rows.Next() {
+		model := new(asset.Model)
+
+		err = rows.Scan(&model)
+		if err != nil {
+			return nil, "", err
+		}
+
+		models = append(models, model)
+		count++
+
+		if count == int(p.Size) {
+			break
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, "", err
+	}
+
+	bookmark := ""
+	if count == int(p.Size) && rows.Next() {
+		// there is more to fetch
+		bookmark = strconv.Itoa(offset + count)
+	}
+
+	return models, bookmark, nil
 }
 
 func (d *DBAL) ModelExists(key string) (bool, error) {
@@ -54,6 +122,10 @@ func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 			return nil, err
 		}
 		models = append(models, model)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return models, nil

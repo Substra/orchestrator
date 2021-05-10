@@ -19,12 +19,14 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
 	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetComputeTasksOutputModels(t *testing.T) {
@@ -46,6 +48,28 @@ func TestGetComputeTasksOutputModels(t *testing.T) {
 
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
+}
+
+func TestGetModel(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	provider := new(MockServiceProvider)
+
+	provider.On("GetModelDBAL").Return(dbal)
+
+	service := NewModelService(provider)
+
+	model := &asset.Model{
+		Key: "uuid",
+	}
+
+	dbal.On("GetModel", "uuid").Once().Return(model, nil)
+
+	ret, err := service.GetModel("uuid")
+	assert.NoError(t, err)
+	assert.Equal(t, model, ret)
+
+	provider.AssertExpectations(t)
+	dbal.AssertExpectations(t)
 }
 
 func TestRegisterOnNonDoingTask(t *testing.T) {
@@ -122,6 +146,20 @@ func TestRegisterSimpleModel(t *testing.T) {
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
 			Category: asset.ComputeTaskCategory_TASK_TRAIN,
 			Worker:   "test",
+			Data: &asset.ComputeTask_Train{
+				Train: &asset.TrainTaskData{
+					ModelPermissions: &asset.Permissions{
+						Process: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+						Download: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+					},
+				},
+			},
 		},
 		nil,
 	)
@@ -144,6 +182,16 @@ func TestRegisterSimpleModel(t *testing.T) {
 		Category:       model.Category,
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address:        model.Address,
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+			Download: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+		},
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 
@@ -221,6 +269,30 @@ func TestRegisterHeadModel(t *testing.T) {
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
 			Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
 			Worker:   "test",
+			Data: &asset.ComputeTask_Composite{
+				Composite: &asset.CompositeTrainTaskData{
+					HeadPermissions: &asset.Permissions{
+						Process: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+						Download: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+					},
+					TrunkPermissions: &asset.Permissions{
+						Process: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+						Download: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+					},
+				},
+			},
 		},
 		nil,
 	)
@@ -245,6 +317,16 @@ func TestRegisterHeadModel(t *testing.T) {
 		Category:       model.Category,
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address:        model.Address,
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+			Download: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+		},
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 
@@ -428,4 +510,31 @@ func TestDisableModel(t *testing.T) {
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	dispatcher.AssertExpectations(t)
+}
+
+func TestQueryModels(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	provider := new(MockServiceProvider)
+	provider.On("GetModelDBAL").Return(dbal)
+	service := NewModelService(provider)
+
+	model1 := asset.Model{
+		Key:      "model1",
+		Category: asset.ModelCategory_MODEL_SIMPLE,
+	}
+	model2 := asset.Model{
+		Key:      "model2",
+		Category: asset.ModelCategory_MODEL_SIMPLE,
+	}
+
+	pagination := common.NewPagination("", 12)
+
+	dbal.On("QueryModels", asset.ModelCategory_MODEL_SIMPLE, pagination).Return([]*asset.Model{&model1, &model2}, "nextPage", nil).Once()
+
+	r, token, err := service.QueryModels(asset.ModelCategory_MODEL_SIMPLE, pagination)
+	require.Nil(t, err)
+
+	assert.Len(t, r, 2)
+	assert.Equal(t, r[0].Key, model1.Key)
+	assert.Equal(t, "nextPage", token, "next page token should be returned")
 }
