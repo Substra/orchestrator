@@ -23,6 +23,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
+	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -214,7 +215,7 @@ func TestRegisterTrainTask(t *testing.T) {
 			"status": storedTask.Status.String(),
 		},
 	}
-	dispatcher.On("Enqueue", expectedEvent).Once().Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(expectedEvent))).Once().Return(nil)
 
 	_, err := service.RegisterTask(newTrainTask, "testOwner")
 	assert.NoError(t, err)

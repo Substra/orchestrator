@@ -85,15 +85,10 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		return nil, err
 	}
 
-	event := event.Event{
-		AssetKind: asset.ComputePlanKind,
-		AssetKey:  plan.Key,
-		EventKind: event.AssetCreated,
-		Metadata: map[string]string{
-			"creator": plan.Owner,
-		},
-	}
-	err = s.GetEventQueue().Enqueue(&event)
+	event := event.NewEvent(event.AssetCreated, plan.Key, asset.ComputePlanKind).
+		WithMetadata(map[string]string{"creator": plan.Owner})
+
+	err = s.GetEventQueue().Enqueue(event)
 	if err != nil {
 		return nil, err
 	}

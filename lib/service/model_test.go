@@ -21,8 +21,10 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
+	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestGetComputeTasksOutputModels(t *testing.T) {
@@ -150,7 +152,7 @@ func TestRegisterSimpleModel(t *testing.T) {
 		AssetKey:  model.Key,
 		EventKind: event.AssetCreated,
 	}
-	dispatcher.On("Enqueue", event).Once().Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(event))).Once().Return(nil)
 
 	_, err := service.RegisterModel(model, "test")
 	assert.NoError(t, err)
@@ -251,7 +253,7 @@ func TestRegisterHeadModel(t *testing.T) {
 		AssetKey:  model.Key,
 		EventKind: event.AssetCreated,
 	}
-	dispatcher.On("Enqueue", event).Once().Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(event))).Once().Return(nil)
 
 	_, err := service.RegisterModel(model, "test")
 	assert.NoError(t, err)
@@ -412,11 +414,12 @@ func TestDisableModel(t *testing.T) {
 
 	dbal.On("UpdateModel", &asset.Model{Key: "modelUuid", ComputeTaskKey: "taskKey"}).Return(nil)
 
-	dispatcher.On("Enqueue", &event.Event{
+	event := &event.Event{
 		AssetKind: asset.ModelKind,
 		AssetKey:  "modelUuid",
 		EventKind: event.AssetDisabled,
-	}).Return(nil)
+	}
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(event))).Once().Return(nil)
 
 	err := service.DisableModel("modelUuid", "requester")
 	assert.NoError(t, err)

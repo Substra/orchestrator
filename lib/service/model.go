@@ -123,11 +123,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 		return nil, err
 	}
 
-	event := &event.Event{
-		AssetKind: asset.ModelKind,
-		AssetKey:  model.Key,
-		EventKind: event.AssetCreated,
-	}
+	event := event.NewEvent(event.AssetCreated, model.Key, asset.ModelKind)
 
 	err = s.GetEventQueue().Enqueue(event)
 	if err != nil {
@@ -228,13 +224,8 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 		return err
 	}
 
-	event := event.Event{
-		AssetKind: asset.ModelKind,
-		AssetKey:  model.Key,
-		EventKind: event.AssetDisabled,
-	}
-
-	err = s.GetEventQueue().Enqueue(&event)
+	event := event.NewEvent(event.AssetDisabled, model.Key, asset.ModelKind)
+	err = s.GetEventQueue().Enqueue(event)
 	if err != nil {
 		return err
 	}

@@ -21,8 +21,10 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/event"
+	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -79,12 +81,13 @@ func TestRegisterDataManager(t *testing.T) {
 	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(true, nil).Once()
+
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.DataManagerKind,
 		AssetKey:  storedDataManager.Key,
 	}
-	dispatcher.On("Enqueue", e).Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
 
 	err := service.RegisterDataManager(newDataManager, "owner")
 
@@ -143,12 +146,13 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
 	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()
+
 	e := &event.Event{
 		EventKind: event.AssetCreated,
 		AssetKind: asset.DataManagerKind,
 		AssetKey:  storedDataManager.Key,
 	}
-	dispatcher.On("Enqueue", e).Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
 
 	err := service.RegisterDataManager(newDataManager, "owner")
 
@@ -262,7 +266,7 @@ func TestUpdateDataManager(t *testing.T) {
 		AssetKind: asset.DataManagerKind,
 		AssetKey:  updatedDataManager.Key,
 	}
-	dispatcher.On("Enqueue", e).Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "owner")
 
@@ -334,7 +338,7 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 		AssetKind: asset.DataManagerKind,
 		AssetKey:  updatedDataManager.Key,
 	}
-	dispatcher.On("Enqueue", e).Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "other_owner")
 

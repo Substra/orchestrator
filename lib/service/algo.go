@@ -86,11 +86,8 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		return nil, err
 	}
 
-	err = s.GetEventQueue().Enqueue(&event.Event{
-		EventKind: event.AssetCreated,
-		AssetKey:  a.Key,
-		AssetKind: asset.AlgoKind,
-	})
+	event := event.NewEvent(event.AssetCreated, a.Key, asset.AlgoKind)
+	err = s.GetEventQueue().Enqueue(event)
 	if err != nil {
 		return nil, err
 	}

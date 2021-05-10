@@ -273,17 +273,12 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 		return
 	}
 
-	event := event.Event{
-		AssetKind: asset.ComputeTaskKind,
-		AssetKey:  task.Key,
-		EventKind: event.AssetUpdated,
-		Metadata: map[string]string{
+	event := event.NewEvent(event.AssetUpdated, task.Key, asset.ComputeTaskKind).
+		WithMetadata(map[string]string{
 			"status": task.Status.String(),
 			"reason": reason,
-		},
-	}
-
-	err = s.GetEventQueue().Enqueue(&event)
+		})
+	err = s.GetEventQueue().Enqueue(event)
 	if err != nil {
 		e.Err = err
 		return

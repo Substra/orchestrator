@@ -69,7 +69,9 @@ func (s *NodeService) RegisterNode(id string) (*asset.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = s.GetEventQueue().Enqueue(&event.Event{EventKind: event.AssetCreated, AssetKey: id, AssetKind: asset.NodeKind})
+
+	event := event.NewEvent(event.AssetCreated, id, asset.NodeKind)
+	err = s.GetEventQueue().Enqueue(event)
 	if err != nil {
 		return nil, err
 	}

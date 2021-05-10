@@ -20,6 +20,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/event"
+	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -139,8 +140,7 @@ func TestDispatchOnTransition(t *testing.T) {
 			"reason": "User action",
 		},
 	}
-
-	dispatcher.On("Enqueue", expectedEvent).Once().Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(expectedEvent))).Once().Return(nil)
 
 	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DOING, "", "worker")
 	assert.NoError(t, err)

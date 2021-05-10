@@ -88,11 +88,8 @@ func (s *DataSampleService) RegisterDataSample(d *asset.NewDataSample, owner str
 			Owner:           owner,
 		}
 
-		err = s.GetEventQueue().Enqueue(&event.Event{
-			EventKind: event.AssetCreated,
-			AssetKey:  dataSampleKey,
-			AssetKind: asset.DataSampleKind,
-		})
+		event := event.NewEvent(event.AssetCreated, dataSampleKey, asset.DataSampleKind)
+		err = s.GetEventQueue().Enqueue(event)
 		if err != nil {
 			return err
 		}
@@ -131,11 +128,8 @@ func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, o
 
 		datasample.DataManagerKeys = utils.Combine(datasample.GetDataManagerKeys(), d.GetDataManagerKeys())
 
-		err = s.GetEventQueue().Enqueue(&event.Event{
-			EventKind: event.AssetUpdated,
-			AssetKey:  dataSampleKey,
-			AssetKind: asset.DataSampleKind,
-		})
+		event := event.NewEvent(event.AssetUpdated, dataSampleKey, asset.DataSampleKind)
+		err = s.GetEventQueue().Enqueue(event)
 		if err != nil {
 			return err
 		}

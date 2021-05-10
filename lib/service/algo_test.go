@@ -20,8 +20,10 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/event"
+	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -62,7 +64,7 @@ func TestRegisterAlgo(t *testing.T) {
 		AssetKind: asset.AlgoKind,
 		AssetKey:  algo.Key,
 	}
-	dispatcher.On("Enqueue", e).Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Return(nil)
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 

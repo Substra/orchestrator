@@ -102,11 +102,8 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		return nil, err
 	}
 
-	err = s.GetEventQueue().Enqueue(&event.Event{
-		EventKind: event.AssetCreated,
-		AssetKey:  o.Key,
-		AssetKind: asset.ObjectiveKind,
-	})
+	event := event.NewEvent(event.AssetCreated, o.Key, asset.ObjectiveKind)
+	err = s.GetEventQueue().Enqueue(event)
 	if err != nil {
 		return nil, err
 	}

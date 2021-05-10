@@ -21,6 +21,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/event"
+	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -58,13 +59,14 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		AssetKind: asset.DataSampleKind,
 		AssetKey:  storedDataSample.Key,
 	}
-	dispatcher.On("Enqueue", e).Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
 
 	err := service.RegisterDataSample(datasample, "owner")
 
 	assert.NoError(t, err, "Registration of valid datasample should not fail")
 
 	dbal.AssertExpectations(t)
+	dispatcher.AssertExpectations(t)
 }
 
 func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
@@ -173,13 +175,14 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 		AssetKind: asset.DataSampleKind,
 		AssetKey:  storedDataSample.Key,
 	}
-	dispatcher.On("Enqueue", e).Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
 
 	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
 	assert.NoError(t, err, "Update of single valid assets should not fail")
 
 	dbal.AssertExpectations(t)
+	dispatcher.AssertExpectations(t)
 }
 
 func TestUpdateMultipleExistingDataSample(t *testing.T) {

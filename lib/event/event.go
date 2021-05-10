@@ -14,7 +14,10 @@
 
 package event
 
-import "github.com/owkin/orchestrator/lib/asset"
+import (
+	"github.com/google/uuid"
+	"github.com/owkin/orchestrator/lib/asset"
+)
 
 // Kind represent the kind of orchestration events
 type Kind string
@@ -31,10 +34,27 @@ const (
 // Event is an occurence of an orchestration event.
 // It is triggered during orchestration and allows a consumer to react to the orchestration process.
 type Event struct {
+	ID        string     `json:"id"`
 	AssetKind asset.Kind `json:"asset_kind"`
 	AssetKey  string     `json:"asset_key"`
 	EventKind Kind       `json:"event_kind"`
 	Channel   string     `json:"channel"`
 	// Metadata can hold asset specific data
 	Metadata map[string]string `json:"metadata"`
+}
+
+// NewEvent creates a new orchestration event related to given asset.
+func NewEvent(eventKind Kind, assetKey string, assetKind asset.Kind) *Event {
+	return &Event{
+		ID:        uuid.NewString(),
+		AssetKind: assetKind,
+		AssetKey:  assetKey,
+		EventKind: eventKind,
+	}
+}
+
+// WithMetadata embeds given metadata in the event.
+func (e *Event) WithMetadata(meta map[string]string) *Event {
+	e.Metadata = meta
+	return e
 }

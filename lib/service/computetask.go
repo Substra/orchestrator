@@ -157,16 +157,10 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, err
 	}
 
-	event := event.Event{
-		AssetKind: asset.ComputeTaskKind,
-		AssetKey:  task.Key,
-		EventKind: event.AssetCreated,
-		Metadata: map[string]string{
-			"status": task.Status.String(),
-		},
-	}
+	event := event.NewEvent(event.AssetCreated, task.Key, asset.ComputeTaskKind).
+		WithMetadata(map[string]string{"status": task.Status.String()})
 
-	err = s.GetEventQueue().Enqueue(&event)
+	err = s.GetEventQueue().Enqueue(event)
 	if err != nil {
 		return nil, err
 	}

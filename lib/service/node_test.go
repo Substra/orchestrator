@@ -21,8 +21,10 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/event"
+	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestRegisterNode(t *testing.T) {
@@ -34,7 +36,7 @@ func TestRegisterNode(t *testing.T) {
 	provider.On("GetEventQueue").Return(dispatcher)
 
 	e := &event.Event{EventKind: event.AssetCreated, AssetKind: asset.NodeKind, AssetKey: "uuid1"}
-	dispatcher.On("Enqueue", e).Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
 
 	expected := asset.Node{
 		Id: "uuid1",

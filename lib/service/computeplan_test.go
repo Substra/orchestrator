@@ -20,8 +20,10 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/event"
+	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestGetPlan(t *testing.T) {
@@ -72,7 +74,7 @@ func TestRegisterPlan(t *testing.T) {
 			"creator": "org1",
 		},
 	}
-	dispatcher.On("Enqueue", expectedEvent).Once().Return(nil)
+	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(expectedEvent))).Once().Return(nil)
 
 	plan, err := service.RegisterPlan(newPlan, "org1")
 	assert.NoError(t, err)
