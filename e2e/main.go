@@ -39,7 +39,21 @@ var (
 	mspid        = flag.String("mspid", "MyOrg1MSP", "MSP ID")
 	channel      = flag.String("channel", "mychannel", "Channel to use")
 	chaincode    = flag.String("chaincode", "mycc", "Chaincode to use (only relevant in distributed mode)")
+	testFilter   = flag.String("name", "", "Filter test by name")
 )
+
+type scenario = func(*grpc.ClientConn)
+
+var testScenarios = map[string]scenario{
+	"TrainTaskLifecycle":    testTrainTaskLifecycle,
+	"RegisterModel":         testRegisterModel,
+	"CascadeCancel":         testCascadeCancel,
+	"CascadeTodo":           testCascadeTodo,
+	"CascadeFailure":        testCascadeFailure,
+	"DeleteIntermediary":    testDeleteIntermediary,
+	"MultiStageComputePlan": testMultiStageComputePlan,
+	"QueryTasks":            testQueryTasks,
+}
 
 func main() {
 	flag.Parse()
@@ -94,12 +108,12 @@ func main() {
 	defer conn.Close()
 
 	log.Debug("Starting testing")
-	testTrainTaskLifecycle(conn)
-	testRegisterModel(conn)
-	testCascadeCancel(conn)
-	testCascadeTodo(conn)
-	testCascadeFailure(conn)
-	testDeleteIntermediary(conn)
-	testMultiStageComputePlan(conn)
-	testQueryTasks(conn)
+
+	for name, sc := range testScenarios {
+		if *testFilter != "" && *testFilter != name {
+			// skip non matching test
+			continue
+		}
+		sc(conn)
+	}
 }
