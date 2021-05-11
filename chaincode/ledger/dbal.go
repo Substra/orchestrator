@@ -222,6 +222,7 @@ func (db *DB) validateQueryContext() error {
 
 func (db *DB) getQueryResult(query string) (shim.StateQueryIteratorInterface, error) {
 	if err := db.validateQueryContext(); err != nil {
+		log.WithField("query", query).WithError(err).Error("invalid context")
 		return nil, err
 	}
 
@@ -230,6 +231,7 @@ func (db *DB) getQueryResult(query string) (shim.StateQueryIteratorInterface, er
 
 func (db *DB) getQueryResultWithPagination(query string, pageSize int32, bookmark string) (shim.StateQueryIteratorInterface, *pb.QueryResponseMetadata, error) {
 	if err := db.validateQueryContext(); err != nil {
+		log.WithField("query", query).WithError(err).Error("invalid context")
 		return nil, nil, err
 	}
 
