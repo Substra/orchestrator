@@ -114,7 +114,7 @@ func mockIndexCount(stub *testHelper.MockedStub, status asset.ComputeTaskStatus,
 	// should be unique for each status, but has no real impact on the test
 	compKey := fmt.Sprintf("compkey+%s", status.String())
 
-	stub.On("GetStateByPartialCompositeKey", IndexPlanTaskStatus, []string{
+	stub.On("GetStateByPartialCompositeKey", indexPlanTaskStatus, []string{
 		asset.ComputePlanKind, "uuid", status.String(),
 	}).Return(getIterator(count, compKey), nil)
 

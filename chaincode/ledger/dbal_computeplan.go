@@ -122,7 +122,7 @@ func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatu
 		return asset.ComputePlanStatus_PLAN_STATUS_DONE, nil
 	}
 
-	failedTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_FAILED.String()})
+	failedTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_FAILED.String()})
 	if err != nil {
 		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
 	}
@@ -130,7 +130,7 @@ func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatu
 		return asset.ComputePlanStatus_PLAN_STATUS_FAILED, nil
 	}
 
-	canceledTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_CANCELED.String()})
+	canceledTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_CANCELED.String()})
 	if err != nil {
 		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
 	}
@@ -138,7 +138,7 @@ func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatu
 		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED, nil
 	}
 
-	waitingTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_WAITING.String()})
+	waitingTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_WAITING.String()})
 	if err != nil {
 		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
 	}
@@ -147,7 +147,7 @@ func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatu
 	}
 
 	if len(waitingTasks) < total && done == 0 {
-		doingTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DOING.String()})
+		doingTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DOING.String()})
 		if err != nil {
 			return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
 		}
