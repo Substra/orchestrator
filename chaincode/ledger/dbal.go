@@ -30,6 +30,8 @@ import (
 	"github.com/owkin/orchestrator/utils"
 )
 
+const allNodesIndex = "nodes~id"
+
 // DB is the distributed ledger persistence layer implementing persistence.DBAL
 // This backend does not allow to read the current writes, they will only be commited after a successful response.
 type DB struct {
@@ -164,37 +166,6 @@ func (db *DB) hasKey(resource string, key string) (bool, error) {
 	k := getFullKey(resource, key)
 	buff, err := db.ccStub.GetState(k)
 	return buff != nil, err
-}
-
-// getAll fetch all data for a given resource kind
-func (db *DB) getAll(resource string) (result [][]byte, err error) {
-	logger := db.logger.WithFields(
-		log.F("resource", resource),
-	)
-	logger.Debug("get all")
-
-	queryString := fmt.Sprintf(`{"selector":{"doc_type":"%s"}}`, resource)
-
-	resultsIterator, err := db.getQueryResult(queryString)
-	if err != nil {
-		return nil, err
-	}
-	defer resultsIterator.Close()
-
-	for resultsIterator.HasNext() {
-		queryResult, err := resultsIterator.Next()
-		if err != nil {
-			return nil, err
-		}
-		var storedAsset storedAsset
-		err = json.Unmarshal(queryResult.Value, &storedAsset)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, storedAsset.Asset)
-	}
-
-	return result, nil
 }
 
 // validateQueryContext returns an error unless it is called in the context of an "Evaluate" transaction.
@@ -356,25 +327,34 @@ func (db *DB) AddNode(node *asset.Node) error {
 	if err != nil {
 		return err
 	}
-	return db.putState(asset.NodeKind, node.GetId(), nodeBytes)
+	err = db.putState(asset.NodeKind, node.GetId(), nodeBytes)
+	if err != nil {
+		return err
+	}
+
+	if err = db.createIndex(allNodesIndex, []string{asset.NodeKind, node.Id}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetAllNodes returns all known Nodes
 func (db *DB) GetAllNodes() ([]*asset.Node, error) {
-	b, err := db.getAll(asset.NodeKind)
+	elementKeys, err := db.getIndexKeys(allNodesIndex, []string{asset.NodeKind})
 	if err != nil {
 		return nil, err
 	}
 
-	var nodes []*asset.Node
+	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetAllNodes")
 
-	for _, nodeBytes := range b {
-		n := asset.Node{}
-		err = json.Unmarshal(nodeBytes, &n)
+	nodes := []*asset.Node{}
+	for _, id := range elementKeys {
+		node, err := db.GetNode(id)
 		if err != nil {
 			return nil, err
 		}
-		nodes = append(nodes, &n)
+		nodes = append(nodes, node)
 	}
 
 	return nodes, nil

@@ -74,13 +74,13 @@ func (db *DB) GetComputePlan(key string) (*asset.ComputePlan, error) {
 		return nil, err
 	}
 
-	allTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key})
+	allTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key})
 	if err != nil {
 		return nil, err
 	}
 	plan.TaskCount = uint32(len(allTasks))
 
-	doneTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DONE.String()})
+	doneTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DONE.String()})
 	if err != nil {
 		return nil, err
 	}

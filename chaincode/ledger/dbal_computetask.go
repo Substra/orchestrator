@@ -26,7 +26,7 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 )
 
-const IndexPlanTaskStatus = "computePlan~computePlanKey~status~task"
+const indexPlanTaskStatus = "computePlan~computePlanKey~status~task"
 
 // AddComputeTask stores a new ComputeTask in DB
 func (db *DB) AddComputeTask(t *asset.ComputeTask) error {
@@ -61,7 +61,7 @@ func (db *DB) AddComputeTask(t *asset.ComputeTask) error {
 		if err := db.createIndex("computePlan~computePlanKey~worker~rank~key", []string{asset.ComputePlanKind, t.ComputePlanKey, t.Worker, strconv.Itoa(int(t.Rank)), t.Key}); err != nil {
 			return err
 		}
-		if err := db.createIndex(IndexPlanTaskStatus, []string{asset.ComputePlanKind, t.ComputePlanKey, t.Status.String(), t.Key}); err != nil {
+		if err := db.createIndex(indexPlanTaskStatus, []string{asset.ComputePlanKind, t.ComputePlanKey, t.Status.String(), t.Key}); err != nil {
 			return err
 		}
 		if err := db.createIndex("algo~computeplankey~key", []string{asset.AlgoKind, t.ComputePlanKey, t.Algo.Key}); err != nil {
@@ -128,7 +128,7 @@ func (db *DB) UpdateComputeTask(task *asset.ComputeTask) error {
 		}
 
 		err = db.updateIndex(
-			IndexPlanTaskStatus,
+			indexPlanTaskStatus,
 			[]string{asset.ComputePlanKind, prevTask.ComputePlanKey, prevTask.Status.String(), prevTask.Key},
 			[]string{asset.ComputePlanKind, task.ComputePlanKey, task.Status.String(), task.Key},
 		)
@@ -210,7 +210,7 @@ func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 
 // GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 func (db *DB) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
-	elementKeys, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key})
+	elementKeys, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key})
 	if err != nil {
 		return nil, err
 	}
