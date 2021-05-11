@@ -15,9 +15,10 @@
 package service
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
 )
 
@@ -92,7 +93,7 @@ func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
 
 	for _, authorizedID := range IDs {
 		if !utils.StringInSlice(nodeIDs, authorizedID) {
-			return errors.New("invalid permission input values")
+			return fmt.Errorf("%w: invalid permission input values", orcerrors.ErrBadRequest)
 		}
 	}
 
