@@ -61,7 +61,7 @@ type ModelOptions struct {
 func DefaultTrainTaskOptions() *TrainTaskOptions {
 	return &TrainTaskOptions{
 		KeyRef:         DefaultTaskRef,
-		AlgoRef:        "algo",
+		AlgoRef:        DefaultAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: "dm",
@@ -87,7 +87,7 @@ func (o *TrainTaskOptions) WithAlgoRef(ref string) *TrainTaskOptions {
 func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 	return &CompositeTaskOptions{
 		KeyRef:         DefaultTaskRef,
-		AlgoRef:        "algo",
+		AlgoRef:        DefaultAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: "dm",
@@ -113,7 +113,7 @@ func (o *CompositeTaskOptions) WithAlgoRef(ref string) *CompositeTaskOptions {
 func DefaultAggregateTaskOptions() *AggregateTaskOptions {
 	return &AggregateTaskOptions{
 		KeyRef:     DefaultTaskRef,
-		AlgoRef:    "algo",
+		AlgoRef:    DefaultAlgoRef,
 		ParentsRef: []string{},
 		PlanRef:    DefaultPlanRef,
 		Worker:     "MyOrg1MSP",
@@ -142,7 +142,7 @@ func (o *AggregateTaskOptions) WithAlgoRef(ref string) *AggregateTaskOptions {
 
 func DefaultAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
-		KeyRef:   "algo",
+		KeyRef:   DefaultAlgoRef,
 		Category: asset.AlgoCategory_ALGO_SIMPLE,
 	}
 }

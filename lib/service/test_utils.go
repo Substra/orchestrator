@@ -387,7 +387,7 @@ func (m *MockComputeTaskService) GetTask(key string) (*asset.ComputeTask, error)
 	return args.Get(0).(*asset.ComputeTask), args.Error(1)
 }
 
-func (m *MockComputeTaskService) GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
+func (m *MockComputeTaskService) QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	args := m.Called(p, filter)
 	return args.Get(0).([]*asset.ComputeTask), args.String(1), args.Error(2)
 }

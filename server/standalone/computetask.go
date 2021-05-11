@@ -58,15 +58,8 @@ func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasks
 	}
 
 	pagination := libCommon.NewPagination(in.PageToken, in.PageSize)
-	filter := &asset.TaskQueryFilter{}
 
-	if f := in.Filter; f != nil {
-		filter.Worker = f.Worker
-		filter.Status = f.Status
-		filter.Category = f.Category
-	}
-
-	tasks, paginationToken, err := provider.GetComputeTaskService().GetTasks(pagination, filter)
+	tasks, paginationToken, err := provider.GetComputeTaskService().QueryTasks(pagination, in.Filter)
 	if err != nil {
 		return nil, err
 	}

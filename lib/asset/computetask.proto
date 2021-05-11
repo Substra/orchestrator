@@ -128,6 +128,8 @@ message TaskQueryFilter {
   string worker = 1;
   ComputeTaskStatus status = 2;
   ComputeTaskCategory category = 3;
+  string compute_plan_key = 4;
+  string algo_key = 5;
 }
 
 message QueryTasksParam {

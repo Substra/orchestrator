@@ -31,7 +31,7 @@ type ComputeTaskAPI interface {
 	// RegisterTask creates a new ComputeTask
 	RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error)
 	GetTask(key string) (*asset.ComputeTask, error)
-	GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
+	QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
 	// canDisableModels is internal only (exposed only to other services).
 	// it will return true if models produced by the task can be disabled
@@ -67,8 +67,8 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 	return &ComputeTaskService{provider}
 }
 
-// GetTasks returns tasks matching filter
-func (s *ComputeTaskService) GetTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
+// QueryTasks returns tasks matching filter
+func (s *ComputeTaskService) QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	log.WithField("pagination", p).WithField("filter", filter).Debug("Querying ComputeTasks")
 
 	return s.GetComputeTaskDBAL().QueryComputeTasks(p, filter)

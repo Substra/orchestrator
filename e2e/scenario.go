@@ -347,3 +347,25 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 	appClient.DoneTask("aggC4")
 }
+
+func testQueryTasks(conn *grpc.ClientConn) {
+	log.Debug("testQueryTasks")
+	defer log.WithTrace().Info("test query tasks")
+
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample()
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
+
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKey(client.DefaultAlgoRef)}, "", 10)
+
+	if len(resp.Tasks) != 1 {
+		log.WithField("num_tasks", len(resp.Tasks)).Fatal("unexpected task result")
+	}
+}

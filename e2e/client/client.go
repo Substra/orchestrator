@@ -28,6 +28,7 @@ import (
 
 const DefaultTaskRef = "task"
 const DefaultPlanRef = "cp"
+const DefaultAlgoRef = "algo"
 
 // TestClient is a client for the tested app
 type TestClient struct {
@@ -319,11 +320,20 @@ func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
 	return plan
 }
 
-func (c TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
+func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
 	task, err := c.computeTaskService.GetTask(c.ctx, &asset.GetTaskParam{Key: c.GetKey(keyRef)})
 	if err != nil {
 		log.WithError(err).Fatalf("GetTask failed")
 	}
 
 	return task
+}
+
+func (c *TestClient) QueryTasks(filter *asset.TaskQueryFilter, pageToken string, pageSize int) *asset.QueryTasksResponse {
+	resp, err := c.computeTaskService.QueryTasks(c.ctx, &asset.QueryTasksParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
+	if err != nil {
+		log.WithError(err).Fatalf("GetTask failed")
+	}
+
+	return resp
 }

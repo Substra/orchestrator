@@ -64,7 +64,7 @@ func TestGetTask(t *testing.T) {
 	dbal.AssertExpectations(t)
 }
 
-func TestGetTasks(t *testing.T) {
+func TestQueryTasks(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
 
@@ -81,7 +81,7 @@ func TestGetTasks(t *testing.T) {
 
 	dbal.On("QueryComputeTasks", pagination, filter).Once().Return(returnedTasks, "", nil)
 
-	tasks, _, err := service.GetTasks(pagination, filter)
+	tasks, _, err := service.QueryTasks(pagination, filter)
 	assert.NoError(t, err)
 
 	assert.Len(t, tasks, 2)

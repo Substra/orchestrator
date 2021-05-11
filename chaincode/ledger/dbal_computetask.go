@@ -251,6 +251,12 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 	if filter.Worker != "" {
 		assetFilter["worker"] = filter.Worker
 	}
+	if filter.ComputePlanKey != "" {
+		assetFilter["compute_plan_key"] = filter.ComputePlanKey
+	}
+	if filter.AlgoKey != "" {
+		assetFilter["algo"] = json.RawMessage(fmt.Sprintf(`{"key": "%s"}`, filter.AlgoKey))
+	}
 
 	if len(assetFilter) > 0 {
 		selector.Asset = assetFilter

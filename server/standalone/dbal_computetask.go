@@ -228,6 +228,12 @@ func filterToQuery(filter *asset.TaskQueryFilter, builder squirrel.SelectBuilder
 	if filter.Category != 0 {
 		builder = builder.Where(squirrel.Eq{"asset->>'category'": filter.Category.String()})
 	}
+	if filter.ComputePlanKey != "" {
+		builder = builder.Where(squirrel.Eq{"asset->>'computePlanKey'": filter.ComputePlanKey})
+	}
+	if filter.AlgoKey != "" {
+		builder = builder.Where(squirrel.Eq{"asset->'algo'->>'key'": filter.AlgoKey})
+	}
 
 	return builder
 }

@@ -108,7 +108,7 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 
 	pagination := common.NewPagination(param.PageToken, param.PageSize)
 
-	tasks, nextPage, err := service.GetTasks(pagination, param.Filter)
+	tasks, nextPage, err := service.QueryTasks(pagination, param.Filter)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query tasks")
 		return nil, err
