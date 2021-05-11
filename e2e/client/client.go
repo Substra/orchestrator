@@ -27,6 +27,7 @@ import (
 )
 
 const DefaultTaskRef = "task"
+const DefaultPlanRef = "cp"
 
 // TestClient is a client for the tested app
 type TestClient struct {
@@ -312,7 +313,7 @@ func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) {
 func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
 	plan, err := c.computePlanService.GetPlan(c.ctx, &asset.GetComputePlanParam{Key: c.GetKey(keyRef)})
 	if err != nil {
-		log.WithError(err).Fatalf("QueryPlans failed")
+		log.WithError(err).Fatalf("GetPlan failed")
 	}
 
 	return plan

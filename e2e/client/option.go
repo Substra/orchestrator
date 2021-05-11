@@ -63,7 +63,7 @@ func DefaultTrainTaskOptions() *TrainTaskOptions {
 		KeyRef:         DefaultTaskRef,
 		AlgoRef:        "algo",
 		ParentsRef:     []string{},
-		PlanRef:        "cp",
+		PlanRef:        DefaultPlanRef,
 		DataManagerRef: "dm",
 		DataSampleRef:  "ds",
 	}
@@ -89,7 +89,7 @@ func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 		KeyRef:         DefaultTaskRef,
 		AlgoRef:        "algo",
 		ParentsRef:     []string{},
-		PlanRef:        "cp",
+		PlanRef:        DefaultPlanRef,
 		DataManagerRef: "dm",
 		DataSampleRef:  "ds",
 	}
@@ -115,7 +115,7 @@ func DefaultAggregateTaskOptions() *AggregateTaskOptions {
 		KeyRef:     DefaultTaskRef,
 		AlgoRef:    "algo",
 		ParentsRef: []string{},
-		PlanRef:    "cp",
+		PlanRef:    DefaultPlanRef,
 		Worker:     "MyOrg1MSP",
 	}
 }
@@ -159,7 +159,7 @@ func (o *AlgoOptions) WithCategory(category asset.AlgoCategory) *AlgoOptions {
 
 func DefaultComputePlanOptions() *ComputePlanOptions {
 	return &ComputePlanOptions{
-		KeyRef:                   "cp",
+		KeyRef:                   DefaultPlanRef,
 		DeleteIntermediaryModels: false,
 	}
 }

@@ -45,9 +45,13 @@ func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 // GetComputePlan returns a ComputePlan by its key
 func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	query := `
-select cp.asset, count(t.id), count(done.id) from "compute_plans" as cp
+select cp.asset, count(t.id), count(done.id), count(doing.id), count(waiting.id), count(failed.id), count(canceled.id) from "compute_plans" as cp
 left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
 left join "compute_tasks" as done on (done.asset->>'computePlanKey')::uuid = cp.id and done.channel = cp.channel and done.asset->>'status' = 'STATUS_DONE'
+left join "compute_tasks" as doing on (doing.asset->>'computePlanKey')::uuid = cp.id and doing.channel = cp.channel and doing.asset->>'status' = 'STATUS_DOING'
+left join "compute_tasks" as waiting on (waiting.asset->>'computePlanKey')::uuid = cp.id and waiting.channel = cp.channel and waiting.asset->>'status' = 'STATUS_WAITING'
+left join "compute_tasks" as failed on (failed.asset->>'computePlanKey')::uuid = cp.id and failed.channel = cp.channel and failed.asset->>'status' = 'STATUS_FAILED'
+left join "compute_tasks" as canceled on (canceled.asset->>'computePlanKey')::uuid = cp.id and canceled.channel = cp.channel and canceled.asset->>'status' = 'STATUS_CANCELED'
 where cp.id=$1 and cp.channel=$2
 group by cp.asset;
 `
@@ -55,8 +59,8 @@ group by cp.asset;
 	row := d.tx.QueryRow(query, key, d.channel)
 
 	plan := new(asset.ComputePlan)
-	var done, total uint32 = 0, 0
-	err := row.Scan(plan, &total, &done)
+	var total, done, doing, waiting, failed, canceled uint32
+	err := row.Scan(plan, &total, &done, &doing, &waiting, &failed, &canceled)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("computeplan not found: %w", orcerrors.ErrNotFound)
@@ -66,6 +70,7 @@ group by cp.asset;
 
 	plan.DoneCount = done
 	plan.TaskCount = total
+	plan.Status = getPlanStatus(total, done, doing, waiting, failed, canceled)
 
 	return plan, nil
 }
@@ -79,9 +84,13 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, co
 	}
 
 	query := `
-select cp.asset, count(t.id), count(done.id) from "compute_plans" as cp
+select cp.asset, count(t.id), count(done.id), count(doing.id), count(waiting.id), count(failed.id), count(canceled.id) from "compute_plans" as cp
 left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
 left join "compute_tasks" as done on (done.asset->>'computePlanKey')::uuid = cp.id and done.channel = cp.channel and done.asset->>'status' = 'STATUS_DONE'
+left join "compute_tasks" as doing on (doing.asset->>'computePlanKey')::uuid = cp.id and doing.channel = cp.channel and doing.asset->>'status' = 'STATUS_DOING'
+left join "compute_tasks" as waiting on (waiting.asset->>'computePlanKey')::uuid = cp.id and waiting.channel = cp.channel and waiting.asset->>'status' = 'STATUS_WAITING'
+left join "compute_tasks" as failed on (failed.asset->>'computePlanKey')::uuid = cp.id and failed.channel = cp.channel and failed.asset->>'status' = 'STATUS_FAILED'
+left join "compute_tasks" as canceled on (canceled.asset->>'computePlanKey')::uuid = cp.id and canceled.channel = cp.channel and canceled.asset->>'status' = 'STATUS_CANCELED'
 where cp.channel=$3
 group by cp.asset, cp.created_at
 order by cp.created_at asc limit $1 offset $2
@@ -98,15 +107,16 @@ order by cp.created_at asc limit $1 offset $2
 
 	for rows.Next() {
 		plan := new(asset.ComputePlan)
-		var done, total uint32 = 0, 0
+		var total, done, doing, waiting, failed, canceled uint32
 
-		err = rows.Scan(plan, &total, &done)
+		err = rows.Scan(plan, &total, &done, &doing, &waiting, &failed, &canceled)
 		if err != nil {
 			return nil, "", err
 		}
 
 		plan.DoneCount = done
 		plan.TaskCount = total
+		plan.Status = getPlanStatus(total, done, doing, waiting, failed, canceled)
 
 		plans = append(plans, plan)
 		count++
@@ -126,4 +136,22 @@ order by cp.created_at asc limit $1 offset $2
 	}
 
 	return plans, bookmark, nil
+}
+
+// getPlanStatus determines ComputePlan status from its task counts
+func getPlanStatus(total, done, doing, waiting, failed, canceled uint32) asset.ComputePlanStatus {
+	switch true {
+	case failed > 0:
+		return asset.ComputePlanStatus_PLAN_STATUS_FAILED
+	case canceled > 0:
+		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED
+	case total == done:
+		return asset.ComputePlanStatus_PLAN_STATUS_DONE
+	case total == waiting:
+		return asset.ComputePlanStatus_PLAN_STATUS_WAITING
+	case waiting < total && done == 0 && doing == 0:
+		return asset.ComputePlanStatus_PLAN_STATUS_TODO
+	default:
+		return asset.ComputePlanStatus_PLAN_STATUS_DOING
+	}
 }

@@ -98,6 +98,11 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 			log.Fatal("child task should be CANCELED")
 		}
 	}
+
+	plan := appClient.GetComputePlan(client.DefaultPlanRef)
+	if plan.Status != asset.ComputePlanStatus_PLAN_STATUS_CANCELED {
+		log.WithField("status", plan.Status).Fatal("compute plan has not the CANCELED status")
+	}
 }
 
 // Register 10 tasks and set their parent as done
@@ -128,6 +133,11 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 		if task.Status != asset.ComputeTaskStatus_STATUS_TODO {
 			log.Fatal("child task should be TODO")
 		}
+	}
+
+	plan := appClient.GetComputePlan(client.DefaultPlanRef)
+	if plan.Status != asset.ComputePlanStatus_PLAN_STATUS_DONE {
+		log.WithField("status", plan.Status).Fatal("compute plan has not the DONE status")
 	}
 }
 
@@ -161,6 +171,10 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 		}
 	}
 
+	plan := appClient.GetComputePlan(client.DefaultPlanRef)
+	if plan.Status != asset.ComputePlanStatus_PLAN_STATUS_FAILED {
+		log.WithField("status", plan.Status).Fatal("compute plan has not the FAILED status")
+	}
 }
 
 // register 3 successive tasks, start and register models then check for model deletion

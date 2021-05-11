@@ -86,6 +86,11 @@ func (db *DB) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	}
 	plan.DoneCount = uint32(len(doneTasks))
 
+	plan.Status, err = db.getPlanStatus(key, len(allTasks), len(doneTasks))
+	if err != nil {
+		return nil, err
+	}
+
 	return plan, nil
 }
 
@@ -108,4 +113,50 @@ func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, com
 	}
 
 	return plans, bookmark, nil
+}
+
+// getPlanStatus returns the plan status from its tasks.
+// It attempts to limit the amount of read operation.
+func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatus, error) {
+	if done == total {
+		return asset.ComputePlanStatus_PLAN_STATUS_DONE, nil
+	}
+
+	failedTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_FAILED.String()})
+	if err != nil {
+		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
+	}
+	if len(failedTasks) > 0 {
+		return asset.ComputePlanStatus_PLAN_STATUS_FAILED, nil
+	}
+
+	canceledTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_CANCELED.String()})
+	if err != nil {
+		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
+	}
+	if len(canceledTasks) > 0 {
+		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED, nil
+	}
+
+	waitingTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_WAITING.String()})
+	if err != nil {
+		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
+	}
+	if len(waitingTasks) == total {
+		return asset.ComputePlanStatus_PLAN_STATUS_WAITING, nil
+	}
+
+	if len(waitingTasks) < total && done == 0 {
+		doingTasks, err := db.getIndexKeys(IndexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DOING.String()})
+		if err != nil {
+			return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
+		}
+		// len(waitingTasks) and done == 0 are redundant with upper condition but make the condition more readable.
+		// see asset documentation for inference rules.
+		if len(waitingTasks) < total && len(doingTasks) == 0 && done == 0 {
+			return asset.ComputePlanStatus_PLAN_STATUS_TODO, nil
+		}
+	}
+
+	return asset.ComputePlanStatus_PLAN_STATUS_DOING, nil
 }
