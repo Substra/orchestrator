@@ -27,9 +27,6 @@ var defaultParent = []string{client.DefaultTaskRef}
 
 // Register a task and its dependencies, then start the task.
 func testTrainTaskLifecycle(conn *grpc.ClientConn) {
-	log.Debug("testTrainTaskLifecycle")
-	defer log.WithTrace().Info("test train task lifecycle")
-
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -46,9 +43,6 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 
 // register a task, start it, and register a model on it.
 func testRegisterModel(conn *grpc.ClientConn) {
-	log.Debug("testRegisterModel")
-	defer log.WithTrace().Info("test register model")
-
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -71,9 +65,6 @@ func testRegisterModel(conn *grpc.ClientConn) {
 
 // Register 10 children tasks and cancel their parent
 func testCascadeCancel(conn *grpc.ClientConn) {
-	log.Debug("testCascadeCancel")
-	defer log.WithTrace().Info("test cascade 10 tasks CANCELED")
-
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -107,9 +98,6 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 
 // Register 10 tasks and set their parent as done
 func testCascadeTodo(conn *grpc.ClientConn) {
-	log.Debug("testCascadeTodo")
-	defer log.WithTrace().Info("test cascade 10 tasks TODO")
-
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -136,16 +124,13 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	if plan.Status != asset.ComputePlanStatus_PLAN_STATUS_DONE {
-		log.WithField("status", plan.Status).Fatal("compute plan has not the DONE status")
+	if plan.Status != asset.ComputePlanStatus_PLAN_STATUS_DOING {
+		log.WithField("status", plan.Status).Fatal("compute plan has not the DOING status")
 	}
 }
 
 // Register 10 tasks and set their parent as failed
 func testCascadeFailure(conn *grpc.ClientConn) {
-	log.Debug("testCascadeFailure")
-	defer log.WithTrace().Info("test cascade 10 tasks FAILED")
-
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -179,9 +164,6 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 
 // register 3 successive tasks, start and register models then check for model deletion
 func testDeleteIntermediary(conn *grpc.ClientConn) {
-	log.Debug("testDeleteIntermediary")
-	defer log.WithTrace().Info("test disabling intermediary models")
-
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -270,9 +252,6 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 //
 //
 func testMultiStageComputePlan(conn *grpc.ClientConn) {
-	log.Debug("testMultiStageComputePlan")
-	defer log.WithTrace().Info("test multi stage compute plan")
-
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -349,9 +328,6 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 }
 
 func testQueryTasks(conn *grpc.ClientConn) {
-	log.Debug("testQueryTasks")
-	defer log.WithTrace().Info("test query tasks")
-
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")

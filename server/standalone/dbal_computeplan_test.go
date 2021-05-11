@@ -35,7 +35,7 @@ func TestGetComputeTasks(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"asset", "total", "done", "todo", "waiting", "failed", "canceled"}).
 		AddRow([]byte("{}"), 11, 2, 3, 6, 0, 0)
 
-	mock.ExpectQuery(`select cp\.asset, count\(t\.id\), count\(done\.id\)`).
+	mock.ExpectQuery(`select cp\.asset, count\(t\.id\), count\(t\.id\) filter \(where t.asset->>'status' = 'STATUS_DONE'\)`).
 		WithArgs("uuid", testChannel).
 		WillReturnRows(rows)
 

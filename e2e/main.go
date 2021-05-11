@@ -114,6 +114,12 @@ func main() {
 			// skip non matching test
 			continue
 		}
-		sc(conn)
+		logger := log.WithField("name", name)
+		logger.Debug("starting scenario")
+		func() {
+			defer logger.WithTrace().Info("test succeeded")
+			sc(conn)
+		}()
+
 	}
 }

@@ -45,15 +45,17 @@ func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 // GetComputePlan returns a ComputePlan by its key
 func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	query := `
-select cp.asset, count(t.id), count(done.id), count(doing.id), count(waiting.id), count(failed.id), count(canceled.id) from "compute_plans" as cp
+select cp.asset,
+count(t.id),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_DONE'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_DOING'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_WAITING'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_FAILED'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED')
+from "compute_plans" as cp
 left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
-left join "compute_tasks" as done on (done.asset->>'computePlanKey')::uuid = cp.id and done.channel = cp.channel and done.asset->>'status' = 'STATUS_DONE'
-left join "compute_tasks" as doing on (doing.asset->>'computePlanKey')::uuid = cp.id and doing.channel = cp.channel and doing.asset->>'status' = 'STATUS_DOING'
-left join "compute_tasks" as waiting on (waiting.asset->>'computePlanKey')::uuid = cp.id and waiting.channel = cp.channel and waiting.asset->>'status' = 'STATUS_WAITING'
-left join "compute_tasks" as failed on (failed.asset->>'computePlanKey')::uuid = cp.id and failed.channel = cp.channel and failed.asset->>'status' = 'STATUS_FAILED'
-left join "compute_tasks" as canceled on (canceled.asset->>'computePlanKey')::uuid = cp.id and canceled.channel = cp.channel and canceled.asset->>'status' = 'STATUS_CANCELED'
 where cp.id=$1 and cp.channel=$2
-group by cp.asset;
+group by cp.asset
 `
 
 	row := d.tx.QueryRow(query, key, d.channel)
@@ -84,13 +86,15 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, co
 	}
 
 	query := `
-select cp.asset, count(t.id), count(done.id), count(doing.id), count(waiting.id), count(failed.id), count(canceled.id) from "compute_plans" as cp
+select cp.asset,
+count(t.id),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_DONE'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_DOING'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_WAITING'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_FAILED'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED')
+from "compute_plans" as cp
 left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
-left join "compute_tasks" as done on (done.asset->>'computePlanKey')::uuid = cp.id and done.channel = cp.channel and done.asset->>'status' = 'STATUS_DONE'
-left join "compute_tasks" as doing on (doing.asset->>'computePlanKey')::uuid = cp.id and doing.channel = cp.channel and doing.asset->>'status' = 'STATUS_DOING'
-left join "compute_tasks" as waiting on (waiting.asset->>'computePlanKey')::uuid = cp.id and waiting.channel = cp.channel and waiting.asset->>'status' = 'STATUS_WAITING'
-left join "compute_tasks" as failed on (failed.asset->>'computePlanKey')::uuid = cp.id and failed.channel = cp.channel and failed.asset->>'status' = 'STATUS_FAILED'
-left join "compute_tasks" as canceled on (canceled.asset->>'computePlanKey')::uuid = cp.id and canceled.channel = cp.channel and canceled.asset->>'status' = 'STATUS_CANCELED'
 where cp.channel=$3
 group by cp.asset, cp.created_at
 order by cp.created_at asc limit $1 offset $2
