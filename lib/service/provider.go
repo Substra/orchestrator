@@ -32,6 +32,7 @@ type DependenciesProvider interface {
 	ComputeTaskServiceProvider
 	ModelServiceProvider
 	ComputePlanServiceProvider
+	PerformanceServiceProvider
 }
 
 // Provider is the central part of the dependency injection pattern.
@@ -52,6 +53,7 @@ type Provider struct {
 	computeTask ComputeTaskAPI
 	model       ModelAPI
 	computePlan ComputePlanAPI
+	performance PerformanceAPI
 }
 
 // NewProvider return an instance of Provider based on given persistence layer.
@@ -101,6 +103,11 @@ func (sc *Provider) GetModelDBAL() persistence.ModelDBAL {
 
 // GetComputePlanDBAL returns the database abstraction layer for Tasks
 func (sc *Provider) GetComputePlanDBAL() persistence.ComputePlanDBAL {
+	return sc.dbal
+}
+
+// GetPerformanceDBAL returns the database abstraction layer for Tasks
+func (sc *Provider) GetPerformanceDBAL() persistence.PerformanceDBAL {
 	return sc.dbal
 }
 
@@ -197,4 +204,13 @@ func (sc *Provider) GetComputePlanService() ComputePlanAPI {
 		sc.computePlan = NewComputePlanService(sc)
 	}
 	return sc.computePlan
+}
+
+// GetPerformanceService returns a PerformanceAPI instance.
+// The service will be instanciated if needed.
+func (sc *Provider) GetPerformanceService() PerformanceAPI {
+	if sc.performance == nil {
+		sc.performance = NewPerformanceService(sc)
+	}
+	return sc.performance
 }

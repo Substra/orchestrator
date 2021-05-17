@@ -115,4 +115,5 @@ type DBAL interface {
 	ComputeTaskDBAL
 	ModelDBAL
 	ComputePlanDBAL
+	PerformanceDBAL
 }

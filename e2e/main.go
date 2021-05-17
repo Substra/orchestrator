@@ -53,6 +53,7 @@ var testScenarios = map[string]scenario{
 	"DeleteIntermediary":    testDeleteIntermediary,
 	"MultiStageComputePlan": testMultiStageComputePlan,
 	"QueryTasks":            testQueryTasks,
+	"RegisterPerformance":   testRegisterPerformance,
 }
 
 func main() {

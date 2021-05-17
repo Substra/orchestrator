@@ -81,6 +81,12 @@ func (m *MockServiceProvider) GetModelDBAL() persistence.ModelDBAL {
 	return args.Get(0).(persistence.ModelDBAL)
 }
 
+// GetPerformanceDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetPerformanceDBAL() persistence.PerformanceDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.PerformanceDBAL)
+}
+
 // GetEventQueue returns whatever value is passed
 func (m *MockServiceProvider) GetEventQueue() event.Queue {
 	args := m.Called()
@@ -145,6 +151,12 @@ func (m *MockServiceProvider) GetModelService() ModelAPI {
 func (m *MockServiceProvider) GetComputePlanService() ComputePlanAPI {
 	args := m.Called()
 	return args.Get(0).(ComputePlanAPI)
+}
+
+// GetPerformanceService return whatever value is passed
+func (m *MockServiceProvider) GetPerformanceService() PerformanceAPI {
+	args := m.Called()
+	return args.Get(0).(PerformanceAPI)
 }
 
 // MockNodeService is a mock implementing NodeAPI
@@ -463,4 +475,18 @@ func (m *MockComputePlanService) GetPlans(p *common.Pagination) ([]*asset.Comput
 func (m *MockComputePlanService) ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error {
 	args := m.Called(key, action, requester)
 	return args.Error(0)
+}
+
+type MockPerformanceService struct {
+	mock.Mock
+}
+
+func (m *MockPerformanceService) RegisterPerformance(perf *asset.NewPerformance, requester string) (*asset.Performance, error) {
+	args := m.Called(perf, requester)
+	return args.Get(0).(*asset.Performance), args.Error(1)
+}
+
+func (m *MockPerformanceService) GetComputeTaskPerformance(key string) (*asset.Performance, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.Performance), args.Error(1)
 }

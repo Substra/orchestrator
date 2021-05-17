@@ -34,4 +34,6 @@ var (
 	ComputePlanKind = "computeplan"
 	// ModelKind is the type of Model assets
 	ModelKind = "model"
+	// PerformanceKind is the type of Performance assets
+	PerformanceKind = "performance"
 )

@@ -495,7 +495,7 @@ func (db *DB) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.A
 	)
 	logger.Debug("get algos")
 
-	selector := couchTaskQuery{
+	selector := couchAssetQuery{
 		DocType: asset.AlgoKind,
 	}
 

@@ -265,3 +265,13 @@ func (m *MockDBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*
 	args := m.Called(c, p)
 	return args.Get(0).([]*asset.Model), args.Get(1).(common.PaginationToken), args.Error(2)
 }
+
+func (m *MockDBAL) AddPerformance(perf *asset.Performance) error {
+	args := m.Called(perf)
+	return args.Error(0)
+}
+
+func (m *MockDBAL) GetComputeTaskPerformance(key string) (*asset.Performance, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.Performance), args.Error(1)
+}

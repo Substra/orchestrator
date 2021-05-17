@@ -236,7 +236,7 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 	)
 	logger.Debug("query compute task")
 
-	selector := couchTaskQuery{
+	selector := couchAssetQuery{
 		DocType: asset.ComputeTaskKind,
 	}
 
@@ -301,7 +301,7 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 	return tasks, bookmark.Bookmark, nil
 }
 
-type couchTaskQuery struct {
+type couchAssetQuery struct {
 	DocType string                 `json:"doc_type"`
 	Asset   map[string]interface{} `json:"asset,omitempty"`
 }

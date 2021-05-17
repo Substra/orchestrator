@@ -29,6 +29,7 @@ import (
 const DefaultTaskRef = "task"
 const DefaultPlanRef = "cp"
 const DefaultAlgoRef = "algo"
+const DefaultObjectiveRef = "objective"
 
 // TestClient is a client for the tested app
 type TestClient struct {
@@ -42,6 +43,7 @@ type TestClient struct {
 	modelService       asset.ModelServiceClient
 	computeTaskService asset.ComputeTaskServiceClient
 	computePlanService asset.ComputePlanServiceClient
+	performanceService asset.PerformanceServiceClient
 }
 
 func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*TestClient, error) {
@@ -59,6 +61,7 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 		modelService:       asset.NewModelServiceClient(conn),
 		computeTaskService: asset.NewComputeTaskServiceClient(conn),
 		computePlanService: asset.NewComputePlanServiceClient(conn),
+		performanceService: asset.NewPerformanceServiceClient(conn),
 	}, nil
 }
 
@@ -133,16 +136,66 @@ func (c *TestClient) RegisterDataManager() {
 
 }
 
-func (c *TestClient) RegisterDataSample() {
+func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
 	newDs := &asset.NewDataSample{
-		Keys:            []string{c.GetKey("ds")},
+		Keys:            []string{c.GetKey(o.KeyRef)},
 		DataManagerKeys: []string{c.GetKey("dm")},
-		TestOnly:        false,
+		TestOnly:        o.TestOnly,
 	}
 	log.WithField("datasample", newDs).Debug("registering datasample")
 	_, err := c.dataSampleService.RegisterDataSample(c.ctx, newDs)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterDataSample failed")
+	}
+
+}
+
+func (c *TestClient) RegisterObjective(o *ObjectiveOptions) {
+	newObj := &asset.NewObjective{
+		Key:            c.GetKey(o.KeyRef),
+		Name:           "test objective",
+		DataManagerKey: c.GetKey(o.DataManagerRef),
+		DataSampleKeys: []string{c.GetKey(o.DataSampleRef)},
+		Description: &asset.Addressable{
+			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
+			StorageAddress: "http://somewhere.local/desc",
+		},
+		MetricsName: "test metrics",
+		Metrics: &asset.Addressable{
+			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
+			StorageAddress: "http://somewhere.local/metrics",
+		},
+		NewPermissions: &asset.NewPermissions{Public: true},
+	}
+
+	log.WithField("objective", newObj).Debug("registering objective")
+	_, err := c.objectiveService.RegisterObjective(c.ctx, newObj)
+	if err != nil {
+		log.WithError(err).Fatal("RegisterObjective failed")
+	}
+}
+
+func (c *TestClient) RegisterTestTask(o *TestTaskOptions) {
+	parentKeys := make([]string, len(o.ParentsRef))
+	for i, ref := range o.ParentsRef {
+		parentKeys[i] = c.GetKey(ref)
+	}
+	newTask := &asset.NewComputeTask{
+		Key:            c.GetKey(o.KeyRef),
+		Category:       asset.ComputeTaskCategory_TASK_TEST,
+		AlgoKey:        c.GetKey(o.AlgoRef),
+		ParentTaskKeys: parentKeys,
+		ComputePlanKey: c.GetKey(o.PlanRef),
+		Data: &asset.NewComputeTask_Test{
+			Test: &asset.NewTestTaskData{
+				ObjectiveKey: c.GetKey(o.ObjectiveRef),
+			},
+		},
+	}
+	log.WithField("task", newTask).Debug("registering test task")
+	_, err := c.computeTaskService.RegisterTask(c.ctx, newTask)
+	if err != nil {
+		log.WithError(err).Fatal("RegisterTestTask failed")
 	}
 
 }
@@ -332,8 +385,31 @@ func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
 func (c *TestClient) QueryTasks(filter *asset.TaskQueryFilter, pageToken string, pageSize int) *asset.QueryTasksResponse {
 	resp, err := c.computeTaskService.QueryTasks(c.ctx, &asset.QueryTasksParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
-		log.WithError(err).Fatalf("GetTask failed")
+		log.WithError(err).Fatalf("QueryTasks failed")
 	}
 
 	return resp
+}
+
+func (c *TestClient) RegisterPerformance(o *PerformanceOptions) {
+	newPerf := &asset.NewPerformance{
+		ComputeTaskKey:   c.GetKey(o.KeyRef),
+		PerformanceValue: o.PerformanceValue,
+	}
+
+	log.WithField("performance", newPerf).Debug("registering performance")
+	_, err := c.performanceService.RegisterPerformance(c.ctx, newPerf)
+	if err != nil {
+		log.WithError(err).Fatal("RegisterPerformance failed")
+	}
+}
+
+func (c *TestClient) GetTaskPerformance(taskRef string) *asset.Performance {
+	param := &asset.GetComputeTaskPerformanceParam{ComputeTaskKey: c.GetKey(taskRef)}
+	perf, err := c.performanceService.GetComputeTaskPerformance(c.ctx, param)
+	if err != nil {
+		log.WithError(err).Fatalf("GetTaskPerformance failed")
+	}
+
+	return perf
 }

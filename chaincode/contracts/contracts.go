@@ -25,6 +25,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/model"
 	"github.com/owkin/orchestrator/chaincode/node"
 	"github.com/owkin/orchestrator/chaincode/objective"
+	"github.com/owkin/orchestrator/chaincode/performance"
 )
 
 var AllContracts []contractapi.ContractInterface = []contractapi.ContractInterface{
@@ -37,4 +38,5 @@ var AllContracts []contractapi.ContractInterface = []contractapi.ContractInterfa
 	computetask.NewSmartContract(),
 	model.NewSmartContract(),
 	computeplan.NewSmartContract(),
+	performance.NewSmartContract(),
 }

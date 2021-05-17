@@ -100,7 +100,7 @@ func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset
 	)
 	logger.Debug("get models")
 
-	selector := couchTaskQuery{
+	selector := couchAssetQuery{
 		DocType: asset.ModelKind,
 	}
 

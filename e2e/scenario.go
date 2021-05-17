@@ -34,7 +34,7 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
-	appClient.RegisterDataSample()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(defaultParent))
@@ -50,7 +50,7 @@ func testRegisterModel(conn *grpc.ClientConn) {
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
-	appClient.RegisterDataSample()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
@@ -72,7 +72,7 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
-	appClient.RegisterDataSample()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
@@ -105,7 +105,7 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
-	appClient.RegisterDataSample()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
@@ -138,7 +138,7 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
-	appClient.RegisterDataSample()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
@@ -171,7 +171,7 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
-	appClient.RegisterDataSample()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithDeleteIntermediaryModels(true))
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
@@ -261,7 +261,7 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
 	appClient.RegisterDataManager()
-	appClient.RegisterDataSample()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
 	// step 1
@@ -335,7 +335,7 @@ func testQueryTasks(conn *grpc.ClientConn) {
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager()
-	appClient.RegisterDataSample()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
@@ -344,4 +344,30 @@ func testQueryTasks(conn *grpc.ClientConn) {
 	if len(resp.Tasks) != 1 {
 		log.WithField("num_tasks", len(resp.Tasks)).Fatal("unexpected task result")
 	}
+}
+
+// register a test task, start it, and register its performance.
+func testRegisterPerformance(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
+	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("testds"))
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	// Parent train task is necessary
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.DoneTask(client.DefaultTaskRef)
+	// to create a test task
+	appClient.RegisterTestTask(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent))
+	appClient.StartTask("testTask")
+	appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask"))
+	appClient.DoneTask("testTask")
+
+	appClient.GetTaskPerformance("testTask")
 }

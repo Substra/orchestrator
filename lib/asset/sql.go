@@ -140,3 +140,20 @@ func (cp *ComputePlan) Scan(value interface{}) error {
 
 	return protojson.Unmarshal(b, cp)
 }
+
+// Value implements the driver.Valuer interface.
+// Simply returns the JSON-encoded representation of the Performance.
+func (p *Performance) Value() (driver.Value, error) {
+	return protojson.Marshal(p)
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes JSON into the Performance.
+func (p *Performance) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot scan performance: %w", errors.ErrByteArray)
+	}
+
+	return protojson.Unmarshal(b, p)
+}

@@ -26,6 +26,25 @@ type AlgoOptions struct {
 	Category asset.AlgoCategory
 }
 
+type DataSampleOptions struct {
+	KeyRef   string
+	TestOnly bool
+}
+
+type ObjectiveOptions struct {
+	KeyRef         string
+	DataManagerRef string
+	DataSampleRef  string
+}
+
+type TestTaskOptions struct {
+	KeyRef       string
+	AlgoRef      string
+	ParentsRef   []string
+	PlanRef      string
+	ObjectiveRef string
+}
+
 type TrainTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
@@ -56,6 +75,59 @@ type ModelOptions struct {
 	KeyRef   string
 	TaskRef  string
 	Category asset.ModelCategory
+}
+
+type PerformanceOptions struct {
+	KeyRef           string
+	PerformanceValue float32
+}
+
+func DefaultObjectiveOptions() *ObjectiveOptions {
+	return &ObjectiveOptions{
+		KeyRef:         DefaultObjectiveRef,
+		DataManagerRef: "dm",
+		DataSampleRef:  "ds",
+	}
+}
+
+func (o *ObjectiveOptions) WithKeyRef(ref string) *ObjectiveOptions {
+	o.KeyRef = ref
+	return o
+}
+
+func (o *ObjectiveOptions) WithDataSampleRef(ref string) *ObjectiveOptions {
+	o.DataSampleRef = ref
+	return o
+}
+
+func DefaultTestTaskOptions() *TestTaskOptions {
+	return &TestTaskOptions{
+		KeyRef:       DefaultTaskRef,
+		AlgoRef:      DefaultAlgoRef,
+		ParentsRef:   []string{},
+		PlanRef:      DefaultPlanRef,
+		ObjectiveRef: DefaultObjectiveRef,
+	}
+}
+
+func (o *TestTaskOptions) WithKeyRef(ref string) *TestTaskOptions {
+	o.KeyRef = ref
+	return o
+}
+
+func (o *TestTaskOptions) WithAlgoRef(ref string) *TestTaskOptions {
+	o.AlgoRef = ref
+	return o
+}
+
+func (o *TestTaskOptions) WithObjectiveRef(ref string) *TestTaskOptions {
+	o.ObjectiveRef = ref
+	return o
+}
+
+func (o *TestTaskOptions) WithParentsRef(p []string) *TestTaskOptions {
+	o.ParentsRef = p
+	return o
 }
 
 func DefaultTrainTaskOptions() *TrainTaskOptions {
@@ -194,5 +266,33 @@ func (o *ModelOptions) WithTaskRef(ref string) *ModelOptions {
 
 func (o *ModelOptions) WithCategory(category asset.ModelCategory) *ModelOptions {
 	o.Category = category
+	return o
+}
+
+func DefaultPerformanceOptions() *PerformanceOptions {
+	return &PerformanceOptions{
+		KeyRef: DefaultTaskRef,
+	}
+}
+
+func (o *PerformanceOptions) WithTaskRef(ref string) *PerformanceOptions {
+	o.KeyRef = ref
+	return o
+}
+
+func DefaultDataSampleOptions() *DataSampleOptions {
+	return &DataSampleOptions{
+		KeyRef:   "ds",
+		TestOnly: false,
+	}
+}
+
+func (o *DataSampleOptions) WithKeyRef(ref string) *DataSampleOptions {
+	o.KeyRef = ref
+	return o
+}
+
+func (o *DataSampleOptions) WithTestOnly(flag bool) *DataSampleOptions {
+	o.TestOnly = flag
 	return o
 }
