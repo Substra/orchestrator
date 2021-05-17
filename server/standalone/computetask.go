@@ -15,10 +15,11 @@
 package standalone
 
 import (
+	"context"
+
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
-	"golang.org/x/net/context"
 )
 
 // ComputeTaskServer is the gRPC server exposing ComputeTask actions

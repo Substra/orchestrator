@@ -15,8 +15,9 @@
 package distributed
 
 import (
+	"context"
+
 	"github.com/owkin/orchestrator/lib/asset"
-	"golang.org/x/net/context"
 )
 
 // ObjectiveAdapter is a grpc server exposing the same node interface,

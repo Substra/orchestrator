@@ -15,8 +15,9 @@
 package distributed
 
 import (
+	"context"
+
 	"github.com/owkin/orchestrator/lib/asset"
-	"golang.org/x/net/context"
 )
 
 // DataSampleAdapter is a grpc server exposing the same datasample interface,

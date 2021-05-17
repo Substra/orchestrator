@@ -15,9 +15,10 @@
 package standalone
 
 import (
+	"context"
+
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
-	"golang.org/x/net/context"
 )
 
 // NodeServer is the gRPC server exposing node actions
