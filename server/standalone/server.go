@@ -37,12 +37,10 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 	channelInterceptor := common.NewChannelInterceptor(config)
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
 	providerInterceptor := NewProviderInterceptor(pgDB, session)
-	concurrencyLimiter := new(ConcurrencyLimiter)
 
 	interceptor := grpc.ChainUnaryInterceptor(
 		common.LogRequest,
 		common.InterceptStandaloneErrors,
-		concurrencyLimiter.Intercept,
 		common.InterceptMSPID,
 		channelInterceptor.InterceptChannel,
 		providerInterceptor.Intercept,
