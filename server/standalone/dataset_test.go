@@ -22,6 +22,6 @@ import (
 )
 
 func TestDatasetServerImplementServer(t *testing.T) {
-	server := NewDatasetServer()
+	server := NewDatasetServer(new(ImmediateRequestScheduler))
 	assert.Implementsf(t, (*asset.DatasetServiceServer)(nil), server, "DatasetServer should implements DatasetServiceServer")
 }

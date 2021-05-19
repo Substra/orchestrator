@@ -27,15 +27,19 @@ import (
 // AlgoServer is the gRPC facade to Algo manipulation
 type AlgoServer struct {
 	asset.UnimplementedAlgoServiceServer
+	scheduler RequestScheduler
 }
 
 // NewAlgoServer creates a grpc server
-func NewAlgoServer() *AlgoServer {
-	return &AlgoServer{}
+func NewAlgoServer(scheduler RequestScheduler) *AlgoServer {
+	return &AlgoServer{scheduler: scheduler}
 }
 
 // RegisterAlgo will persiste a new algo
 func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset.Algo, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	log.WithField("algo", a).Debug("Register Algo")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -52,6 +56,9 @@ func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset
 
 // GetAlgo fetches an algo by its key
 func (s *AlgoServer) GetAlgo(ctx context.Context, params *asset.GetAlgoParam) (*asset.Algo, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -61,6 +68,9 @@ func (s *AlgoServer) GetAlgo(ctx context.Context, params *asset.GetAlgoParam) (*
 
 // QueryAlgos returns a paginated list of all known algos
 func (s *AlgoServer) QueryAlgos(ctx context.Context, params *asset.QueryAlgosParam) (*asset.QueryAlgosResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

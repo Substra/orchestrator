@@ -22,6 +22,6 @@ import (
 )
 
 func TestAlgoServerImplementServer(t *testing.T) {
-	server := NewAlgoServer()
+	server := NewAlgoServer(new(ImmediateRequestScheduler))
 	assert.Implementsf(t, (*asset.AlgoServiceServer)(nil), server, "AlgoServer should implements AlgoServiceServer")
 }

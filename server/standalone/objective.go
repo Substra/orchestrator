@@ -26,15 +26,19 @@ import (
 // ObjectiveServer is the gRPC facade to Objective manipulation
 type ObjectiveServer struct {
 	asset.UnimplementedObjectiveServiceServer
+	scheduler RequestScheduler
 }
 
 // NewObjectiveServer creates a grpc server
-func NewObjectiveServer() *ObjectiveServer {
-	return &ObjectiveServer{}
+func NewObjectiveServer(scheduler RequestScheduler) *ObjectiveServer {
+	return &ObjectiveServer{scheduler: scheduler}
 }
 
 // RegisterObjective will persiste a new objective
 func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *asset.NewObjective) (*asset.Objective, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	log.WithField("objective", o).Debug("register objective")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -51,6 +55,9 @@ func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *asset.NewObj
 
 // GetObjective fetches an objective by its key
 func (s *ObjectiveServer) GetObjective(ctx context.Context, params *asset.GetObjectiveParam) (*asset.Objective, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -60,6 +67,9 @@ func (s *ObjectiveServer) GetObjective(ctx context.Context, params *asset.GetObj
 
 // QueryObjectives returns a paginated list of all known objectives
 func (s *ObjectiveServer) QueryObjectives(ctx context.Context, params *asset.QueryObjectivesParam) (*asset.QueryObjectivesResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

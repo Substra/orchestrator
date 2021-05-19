@@ -23,15 +23,19 @@ import (
 // DatasetServer is the gRPC facade to Dataset manipulation
 type DatasetServer struct {
 	asset.UnimplementedDatasetServiceServer
+	scheduler RequestScheduler
 }
 
 // NewDatasetServer creates a gRPC server
-func NewDatasetServer() *DatasetServer {
-	return &DatasetServer{}
+func NewDatasetServer(scheduler RequestScheduler) *DatasetServer {
+	return &DatasetServer{scheduler: scheduler}
 }
 
 // GetDataset fetches a dataset by its key
 func (s *DatasetServer) GetDataset(ctx context.Context, params *asset.GetDatasetParam) (*asset.Dataset, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

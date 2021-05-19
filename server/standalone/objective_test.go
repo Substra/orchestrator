@@ -22,6 +22,6 @@ import (
 )
 
 func TestObjectiveServerImplementServer(t *testing.T) {
-	server := NewObjectiveServer()
+	server := NewObjectiveServer(new(ImmediateRequestScheduler))
 	assert.Implementsf(t, (*asset.ObjectiveServiceServer)(nil), server, "ObjectiveServer should implements ObjectiveServiceServer")
 }

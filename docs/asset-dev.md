@@ -84,6 +84,10 @@ There are also helpers defined in `github.com/owkin/orchestrator/lib/persistence
 
 Define a gRPC server in `server/standalone/<asset>.go`, it should implement `assets.AssetServiceServer` (interface generated from the protobuf).
 
+The first thing to do in a standalone handler is to wait for an execution token.
+A scheduler makes sure no more than one handler at a time is processing a request.
+This is critical to maintain consistency of the data.
+
 This server will be able to get an *service.DependenciesProvider* from the context using `ExtractProvider` function.
 This is the dependency injection store, from which you can retrieve your dependencies (Database, other service, event queue, etc).
 

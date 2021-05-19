@@ -34,7 +34,7 @@ func getContext() (context.Context, *service.MockServiceProvider) {
 }
 
 func TestModelServiceServer(t *testing.T) {
-	server := NewModelServer()
+	server := NewModelServer(new(ImmediateRequestScheduler))
 	assert.Implements(t, (*asset.ModelServiceServer)(nil), server)
 }
 
@@ -42,7 +42,7 @@ func TestRegisterModel(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := new(ModelServer)
+	server := NewModelServer(new(ImmediateRequestScheduler))
 
 	newModel := &asset.NewModel{Key: "uuid"}
 
@@ -60,7 +60,7 @@ func TestGetComputeTaskOutputModels(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := new(ModelServer)
+	server := NewModelServer(new(ImmediateRequestScheduler))
 
 	p.On("GetModelService").Return(ms)
 	ms.On("GetComputeTaskOutputModels", "uuid").Once().Return([]*asset.Model{{Key: "m1"}, {Key: "m2"}}, nil)
@@ -78,7 +78,7 @@ func TestGetComputeTaskInputModels(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := new(ModelServer)
+	server := NewModelServer(new(ImmediateRequestScheduler))
 
 	p.On("GetModelService").Return(ms)
 	ms.On("GetComputeTaskInputModels", "uuid").Once().Return([]*asset.Model{{Key: "m1"}, {Key: "m2"}}, nil)
@@ -96,7 +96,7 @@ func TestCanDisableModel(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := new(ModelServer)
+	server := NewModelServer(new(ImmediateRequestScheduler))
 
 	p.On("GetModelService").Return(ms)
 	ms.On("CanDisableModel", "uuid", "requester").Once().Return(true, nil)
@@ -113,7 +113,7 @@ func TestDisableModel(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := new(ModelServer)
+	server := NewModelServer(new(ImmediateRequestScheduler))
 
 	p.On("GetModelService").Return(ms)
 	ms.On("DisableModel", "uuid", "requester").Once().Return(nil)

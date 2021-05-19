@@ -24,14 +24,18 @@ import (
 // EventServer is the gRPC facade to Model manipulation
 type EventServer struct {
 	asset.UnimplementedEventServiceServer
+	scheduler RequestScheduler
 }
 
 // NewEventServer creates a grpc server
-func NewEventServer() *EventServer {
-	return &EventServer{}
+func NewEventServer(scheduler RequestScheduler) *EventServer {
+	return &EventServer{scheduler: scheduler}
 }
 
 func (s *EventServer) QueryEvents(ctx context.Context, params *asset.QueryEventsParam) (*asset.QueryEventsResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

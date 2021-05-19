@@ -24,13 +24,17 @@ import (
 
 type ComputePlanServer struct {
 	asset.UnimplementedComputePlanServiceServer
+	scheduler RequestScheduler
 }
 
-func NewComputePlanServer() *ComputePlanServer {
-	return &ComputePlanServer{}
+func NewComputePlanServer(scheduler RequestScheduler) *ComputePlanServer {
+	return &ComputePlanServer{scheduler: scheduler}
 }
 
 func (s *ComputePlanServer) RegisterPlan(ctx context.Context, in *asset.NewComputePlan) (*asset.ComputePlan, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	owner, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -50,6 +54,9 @@ func (s *ComputePlanServer) RegisterPlan(ctx context.Context, in *asset.NewCompu
 }
 
 func (s *ComputePlanServer) GetPlan(ctx context.Context, param *asset.GetComputePlanParam) (*asset.ComputePlan, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	provider, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -65,6 +72,9 @@ func (s *ComputePlanServer) GetPlan(ctx context.Context, param *asset.GetCompute
 }
 
 func (s *ComputePlanServer) QueryPlans(ctx context.Context, param *asset.QueryPlansParam) (*asset.QueryPlansResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	provider, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -82,6 +92,9 @@ func (s *ComputePlanServer) QueryPlans(ctx context.Context, param *asset.QueryPl
 }
 
 func (s *ComputePlanServer) ApplyPlanAction(ctx context.Context, param *asset.ApplyPlanActionParam) (*asset.ApplyPlanActionResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	requester, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err

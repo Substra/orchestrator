@@ -23,6 +23,6 @@ import (
 
 // TestNodeServerImplementServer makes sure chaincode-baked and standalone orchestration are in sync
 func TestNodeServerImplementServer(t *testing.T) {
-	server := NewNodeServer()
+	server := NewNodeServer(new(ImmediateRequestScheduler))
 	assert.Implementsf(t, (*asset.NodeServiceServer)(nil), server, "NodeServer should implements NodeServiceServer")
 }

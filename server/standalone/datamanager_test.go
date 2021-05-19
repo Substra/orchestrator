@@ -22,6 +22,6 @@ import (
 )
 
 func TestDataManagerServerImplementServer(t *testing.T) {
-	server := NewDataManagerServer()
+	server := NewDataManagerServer(new(ImmediateRequestScheduler))
 	assert.Implementsf(t, (*asset.DataManagerServiceServer)(nil), server, "DataManagerServer should implements DataManagerServiceServer")
 }

@@ -25,15 +25,19 @@ import (
 // ComputeTaskServer is the gRPC server exposing ComputeTask actions
 type ComputeTaskServer struct {
 	asset.UnimplementedComputeTaskServiceServer
+	scheduler RequestScheduler
 }
 
 // NewComputeTaskServer creates a Server
-func NewComputeTaskServer() *ComputeTaskServer {
-	return &ComputeTaskServer{}
+func NewComputeTaskServer(scheduler RequestScheduler) *ComputeTaskServer {
+	return &ComputeTaskServer{scheduler: scheduler}
 }
 
 // RegisterTask will add a new ComputeTask to the network
 func (s *ComputeTaskServer) RegisterTask(ctx context.Context, in *asset.NewComputeTask) (*asset.ComputeTask, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	owner, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -73,6 +77,9 @@ func (s *ComputeTaskServer) RegisterTasks(ctx context.Context, input *asset.Regi
 }
 
 func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasksParam) (*asset.QueryTasksResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	provider, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -92,6 +99,9 @@ func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasks
 }
 
 func (s *ComputeTaskServer) GetTask(ctx context.Context, in *asset.GetTaskParam) (*asset.ComputeTask, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -100,6 +110,9 @@ func (s *ComputeTaskServer) GetTask(ctx context.Context, in *asset.GetTaskParam)
 }
 
 func (s *ComputeTaskServer) ApplyTaskAction(ctx context.Context, param *asset.ApplyTaskActionParam) (*asset.ApplyTaskActionResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	requester, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err

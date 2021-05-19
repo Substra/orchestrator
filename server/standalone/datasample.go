@@ -27,15 +27,19 @@ import (
 // DataSampleServer is the gRPC facade to DataSample manipulation
 type DataSampleServer struct {
 	asset.UnimplementedDataSampleServiceServer
+	scheduler RequestScheduler
 }
 
 // NewDataSampleServer creates a gRPC server
-func NewDataSampleServer() *DataSampleServer {
-	return &DataSampleServer{}
+func NewDataSampleServer(scheduler RequestScheduler) *DataSampleServer {
+	return &DataSampleServer{scheduler: scheduler}
 }
 
 // RegisterDataSample will persist new DataSamples
 func (s *DataSampleServer) RegisterDataSample(ctx context.Context, datasample *asset.NewDataSample) (*asset.NewDataSampleResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	log.WithField("datasample", datasample).Debug("Register DataSample")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -57,6 +61,9 @@ func (s *DataSampleServer) RegisterDataSample(ctx context.Context, datasample *a
 
 // UpdateDataSamples will update the datamanagers existing DataSamples
 func (s *DataSampleServer) UpdateDataSamples(ctx context.Context, datasample *asset.UpdateDataSamplesParam) (*asset.UpdateDataSamplesResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	log.WithField("datasample", datasample).Debug("Update DataSample")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -78,6 +85,9 @@ func (s *DataSampleServer) UpdateDataSamples(ctx context.Context, datasample *as
 
 // QueryDataSamples returns a paginated list of all known datasamples
 func (s *DataSampleServer) QueryDataSamples(ctx context.Context, params *asset.QueryDataSamplesParam) (*asset.QueryDataSamplesResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

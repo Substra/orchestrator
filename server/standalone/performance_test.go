@@ -23,7 +23,7 @@ import (
 )
 
 func TestPerformanceServiceServer(t *testing.T) {
-	server := NewPerformanceServer()
+	server := NewPerformanceServer(new(ImmediateRequestScheduler))
 	assert.Implements(t, (*asset.PerformanceServiceServer)(nil), server)
 }
 
@@ -31,7 +31,7 @@ func TestRegisterPerformance(t *testing.T) {
 	ctx, p := getContext()
 	ps := new(service.MockPerformanceService)
 
-	server := new(PerformanceServer)
+	server := NewPerformanceServer(new(ImmediateRequestScheduler))
 
 	newPerf := &asset.NewPerformance{ComputeTaskKey: "uuid", PerformanceValue: 3.14}
 
@@ -49,7 +49,7 @@ func TestGetPerformance(t *testing.T) {
 	ctx, p := getContext()
 	ps := new(service.MockPerformanceService)
 
-	server := new(PerformanceServer)
+	server := NewPerformanceServer(new(ImmediateRequestScheduler))
 
 	perf := &asset.Performance{ComputeTaskKey: "uuid", PerformanceValue: 3.14}
 

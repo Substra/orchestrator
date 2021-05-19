@@ -24,15 +24,19 @@ import (
 // NodeServer is the gRPC server exposing node actions
 type NodeServer struct {
 	asset.UnimplementedNodeServiceServer
+	scheduler RequestScheduler
 }
 
 // NewNodeServer creates a Server
-func NewNodeServer() *NodeServer {
-	return &NodeServer{}
+func NewNodeServer(scheduler RequestScheduler) *NodeServer {
+	return &NodeServer{scheduler: scheduler}
 }
 
 // RegisterNode will add a new node to the network
 func (s *NodeServer) RegisterNode(ctx context.Context, in *asset.RegisterNodeParam) (*asset.Node, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -51,6 +55,9 @@ func (s *NodeServer) RegisterNode(ctx context.Context, in *asset.RegisterNodePar
 
 // GetAllNodes will return all known nodes
 func (s *NodeServer) GetAllNodes(ctx context.Context, in *asset.GetAllNodesParam) (*asset.GetAllNodesResponse, error) {
+	execToken := <-s.scheduler.AcquireExecutionToken()
+	defer execToken.Release()
+
 	services, err := ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

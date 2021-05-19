@@ -22,6 +22,6 @@ import (
 )
 
 func TestComputeTaskServerImplementServer(t *testing.T) {
-	server := NewComputeTaskServer()
+	server := NewComputeTaskServer(new(ImmediateRequestScheduler))
 	assert.Implements(t, (*asset.ComputeTaskServiceServer)(nil), server)
 }
