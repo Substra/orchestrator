@@ -157,3 +157,19 @@ func (p *Performance) Scan(value interface{}) error {
 
 	return protojson.Unmarshal(b, p)
 }
+
+// Simply returns the JSON-encoded representation of the Event.
+func (e *Event) Value() (driver.Value, error) {
+	return protojson.Marshal(e)
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes JSON into the Event.
+func (e *Event) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot scan event: %w", errors.ErrByteArray)
+	}
+
+	return protojson.Unmarshal(b, e)
+}

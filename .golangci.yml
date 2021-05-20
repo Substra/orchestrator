@@ -12,4 +12,3 @@ linters-settings:
     min-confidence: 0
   importas:
     "orcerrors": github.com/owkin/orchestrator/lib/errors
-    "eventtesting": github.com/owkin/orchestrator/lib/event/testing

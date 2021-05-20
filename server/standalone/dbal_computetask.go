@@ -193,7 +193,7 @@ func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFi
 		Offset(uint64(offset)).
 		Limit(uint64(p.Size + 1))
 
-	builder = filterToQuery(filter, builder)
+	builder = taskFilterToQuery(filter, builder)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
@@ -237,8 +237,8 @@ func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFi
 	return tasks, bookmark, nil
 }
 
-// filterToQuery convert as filter into query string and param list
-func filterToQuery(filter *asset.TaskQueryFilter, builder squirrel.SelectBuilder) squirrel.SelectBuilder {
+// taskFilterToQuery convert as filter into query string and param list
+func taskFilterToQuery(filter *asset.TaskQueryFilter, builder squirrel.SelectBuilder) squirrel.SelectBuilder {
 	if filter == nil {
 		return builder
 	}

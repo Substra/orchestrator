@@ -87,6 +87,12 @@ func (m *MockServiceProvider) GetPerformanceDBAL() persistence.PerformanceDBAL {
 	return args.Get(0).(persistence.PerformanceDBAL)
 }
 
+// GetEventDBAL returns whatever value is passed
+func (m *MockServiceProvider) GetEventDBAL() persistence.EventDBAL {
+	args := m.Called()
+	return args.Get(0).(persistence.EventDBAL)
+}
+
 // GetEventQueue returns whatever value is passed
 func (m *MockServiceProvider) GetEventQueue() event.Queue {
 	args := m.Called()
@@ -157,6 +163,12 @@ func (m *MockServiceProvider) GetComputePlanService() ComputePlanAPI {
 func (m *MockServiceProvider) GetPerformanceService() PerformanceAPI {
 	args := m.Called()
 	return args.Get(0).(PerformanceAPI)
+}
+
+// GetEventService return whatever value is passed
+func (m *MockServiceProvider) GetEventService() EventAPI {
+	args := m.Called()
+	return args.Get(0).(EventAPI)
 }
 
 // MockNodeService is a mock implementing NodeAPI
@@ -362,15 +374,15 @@ type MockDispatcher struct {
 }
 
 // Enqueue returns whatever value is passed
-func (m *MockDispatcher) Enqueue(event *event.Event) error {
+func (m *MockDispatcher) Enqueue(event *asset.Event) error {
 	args := m.Called(event)
 	return args.Error(0)
 }
 
 // GetEvents returns whatever value is passed
-func (m *MockDispatcher) GetEvents() []*event.Event {
+func (m *MockDispatcher) GetEvents() []*asset.Event {
 	args := m.Called()
-	return args.Get(0).([]*event.Event)
+	return args.Get(0).([]*asset.Event)
 }
 
 // Len returns whatever value is passed
@@ -494,4 +506,18 @@ func (m *MockPerformanceService) RegisterPerformance(perf *asset.NewPerformance,
 func (m *MockPerformanceService) GetComputeTaskPerformance(key string) (*asset.Performance, error) {
 	args := m.Called(key)
 	return args.Get(0).(*asset.Performance), args.Error(1)
+}
+
+type MockEventService struct {
+	mock.Mock
+}
+
+func (m *MockEventService) RegisterEvent(e *asset.Event) error {
+	args := m.Called(e)
+	return args.Error(0)
+}
+
+func (m *MockEventService) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error) {
+	args := m.Called(p, filter)
+	return args.Get(0).([]*asset.Event), args.String(1), args.Error(2)
 }

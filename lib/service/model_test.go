@@ -21,11 +21,8 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -133,11 +130,11 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 func TestRegisterSimpleModel(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	cts := new(MockComputeTaskService)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 	service := NewModelService(provider)
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(
@@ -195,12 +192,12 @@ func TestRegisterSimpleModel(t *testing.T) {
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 
-	event := &event.Event{
-		AssetKind: asset.ModelKind,
+	event := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  model.Key,
-		EventKind: event.AssetCreated,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(event))).Once().Return(nil)
+	es.On("RegisterEvent", event).Once().Return(nil)
 
 	_, err := service.RegisterModel(model, "test")
 	assert.NoError(t, err)
@@ -208,7 +205,7 @@ func TestRegisterSimpleModel(t *testing.T) {
 	dbal.AssertExpectations(t)
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
-	dispatcher.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestRegisterDuplicateModel(t *testing.T) {
@@ -256,11 +253,11 @@ func TestRegisterDuplicateModel(t *testing.T) {
 func TestRegisterHeadModel(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	cts := new(MockComputeTaskService)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 	service := NewModelService(provider)
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(
@@ -330,12 +327,12 @@ func TestRegisterHeadModel(t *testing.T) {
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 
-	event := &event.Event{
-		AssetKind: asset.ModelKind,
+	event := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  model.Key,
-		EventKind: event.AssetCreated,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(event))).Once().Return(nil)
+	es.On("RegisterEvent", event).Once().Return(nil)
 
 	_, err := service.RegisterModel(model, "test")
 	assert.NoError(t, err)
@@ -343,7 +340,7 @@ func TestRegisterHeadModel(t *testing.T) {
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
-	dispatcher.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestRegisterWrongModelType(t *testing.T) {
@@ -479,11 +476,11 @@ func TestCanDisableModel(t *testing.T) {
 func TestDisableModel(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	cts := new(MockComputeTaskService)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetComputeTaskService").Return(cts)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 	service := NewModelService(provider)
 
 	cts.On("canDisableModels", "taskKey", "requester").Return(true, nil)
@@ -496,12 +493,12 @@ func TestDisableModel(t *testing.T) {
 
 	dbal.On("UpdateModel", &asset.Model{Key: "modelUuid", ComputeTaskKey: "taskKey"}).Return(nil)
 
-	event := &event.Event{
-		AssetKind: asset.ModelKind,
+	event := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  "modelUuid",
-		EventKind: event.AssetDisabled,
+		EventKind: asset.EventKind_EVENT_ASSET_DISABLED,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(event))).Once().Return(nil)
+	es.On("RegisterEvent", event).Once().Return(nil)
 
 	err := service.DisableModel("modelUuid", "requester")
 	assert.NoError(t, err)
@@ -509,7 +506,7 @@ func TestDisableModel(t *testing.T) {
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
-	dispatcher.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestQueryModels(t *testing.T) {

@@ -21,7 +21,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -44,7 +43,7 @@ type DataManagerDependencyProvider interface {
 	persistence.DataManagerDBALProvider
 	ObjectiveServiceProvider
 	PermissionServiceProvider
-	event.QueueProvider
+	EventServiceProvider
 }
 
 // DataManagerService is the DataManager manipulation entry point
@@ -106,8 +105,12 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 		return err
 	}
 
-	event := event.NewEvent(event.AssetCreated, d.Key, asset.DataManagerKind)
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  d.Key,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return err
 	}
@@ -148,8 +151,12 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 
 	datamanager.ObjectiveKey = d.GetObjectiveKey()
 
-	event := event.NewEvent(event.AssetUpdated, d.Key, asset.DataManagerKind)
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKey:  d.Key,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return err
 	}

@@ -20,7 +20,6 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -36,7 +35,7 @@ type PerformanceServiceProvider interface {
 type PerformanceDependencyProvider interface {
 	persistence.PerformanceDBALProvider
 	ComputeTaskServiceProvider
-	event.QueueProvider
+	EventServiceProvider
 }
 
 type PerformanceService struct {
@@ -83,8 +82,12 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, err
 	}
 
-	event := event.NewEvent(event.AssetCreated, perf.ComputeTaskKey, asset.PerformanceKind)
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  perf.ComputeTaskKey,
+		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return nil, err
 	}

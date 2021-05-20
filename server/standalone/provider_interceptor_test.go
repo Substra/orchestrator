@@ -19,7 +19,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/event"
+	"github.com/owkin/orchestrator/lib/asset"
 	persistenceTesting "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
@@ -28,15 +28,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
-
-type mockedPublisher struct {
-	mock.Mock
-}
-
-func (m *mockedPublisher) Publish(routingKey string, data []byte) error {
-	args := m.Called(routingKey, data)
-	return args.Error(0)
-}
 
 type mockedTransactionDBAL struct {
 	persistenceTesting.MockDBAL
@@ -77,7 +68,7 @@ func TestExtractProvider(t *testing.T) {
 }
 
 func TestInjectProvider(t *testing.T) {
-	publisher := new(mockedPublisher)
+	publisher := new(common.MockPublisher)
 
 	db := new(mockedTransactionDBAL)
 	db.On("Commit").Once().Return(nil)
@@ -100,7 +91,7 @@ func TestInjectProvider(t *testing.T) {
 }
 
 func TestOnSuccess(t *testing.T) {
-	publisher := new(mockedPublisher)
+	publisher := new(common.MockPublisher)
 	db := new(mockedTransactionDBAL)
 	dbProvider := &mockTransactionalDBALProvider{db}
 
@@ -116,7 +107,7 @@ func TestOnSuccess(t *testing.T) {
 		provider, err := ExtractProvider(ctx)
 		require.NoError(t, err)
 
-		err = provider.GetEventQueue().Enqueue(&event.Event{})
+		err = provider.GetEventQueue().Enqueue(&asset.Event{})
 		require.NoError(t, err)
 
 		return "test", nil
@@ -128,7 +119,7 @@ func TestOnSuccess(t *testing.T) {
 }
 
 func TestOnError(t *testing.T) {
-	publisher := new(mockedPublisher)
+	publisher := new(common.MockPublisher)
 	db := new(mockedTransactionDBAL)
 	dbProvider := &mockTransactionalDBALProvider{db}
 
@@ -143,7 +134,7 @@ func TestOnError(t *testing.T) {
 		provider, err := ExtractProvider(ctx)
 		require.NoError(t, err)
 
-		err = provider.GetEventQueue().Enqueue(&event.Event{})
+		err = provider.GetEventQueue().Enqueue(&asset.Event{})
 		require.NoError(t, err)
 
 		return nil, errors.New("test error")

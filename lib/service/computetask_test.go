@@ -22,8 +22,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -120,7 +118,7 @@ func TestRegisterTaskConflict(t *testing.T) {
 
 func TestRegisterTrainTask(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 
 	cps := new(MockComputePlanService)
@@ -129,7 +127,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	ps := new(MockPermissionService)
 	as := new(MockAlgoService)
 
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetDataSampleService").Return(dss)
@@ -207,25 +205,26 @@ func TestRegisterTrainTask(t *testing.T) {
 	// finally store the created task
 	dbal.On("AddComputeTask", storedTask).Once().Return(nil)
 
-	expectedEvent := &event.Event{
-		AssetKind: asset.ComputeTaskKind,
+	expectedEvent := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 		AssetKey:  newTrainTask.Key,
-		EventKind: event.AssetCreated,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Metadata: map[string]string{
 			"status": storedTask.Status.String(),
 		},
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(expectedEvent))).Once().Return(nil)
+	es.On("RegisterEvent", expectedEvent).Once().Return(nil)
 
 	_, err := service.RegisterTask(newTrainTask, "testOwner")
 	assert.NoError(t, err)
+
+	es.AssertExpectations(t)
 }
 
 func TestRegisterFailedTask(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
 
-	dispatcher := new(MockDispatcher)
 	dms := new(MockDataManagerService)
 	dss := new(MockDataSampleService)
 	ps := new(MockPermissionService)
@@ -246,7 +245,6 @@ func TestRegisterFailedTask(t *testing.T) {
 		},
 	}
 
-	provider.On("GetEventQueue").Return(dispatcher)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetDataSampleService").Return(dss)

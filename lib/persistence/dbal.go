@@ -116,4 +116,5 @@ type DBAL interface {
 	ModelDBAL
 	ComputePlanDBAL
 	PerformanceDBAL
+	EventDBAL
 }

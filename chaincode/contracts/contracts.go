@@ -22,6 +22,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/datamanager"
 	"github.com/owkin/orchestrator/chaincode/datasample"
 	"github.com/owkin/orchestrator/chaincode/dataset"
+	"github.com/owkin/orchestrator/chaincode/event"
 	"github.com/owkin/orchestrator/chaincode/model"
 	"github.com/owkin/orchestrator/chaincode/node"
 	"github.com/owkin/orchestrator/chaincode/objective"
@@ -39,4 +40,5 @@ var AllContracts []contractapi.ContractInterface = []contractapi.ContractInterfa
 	model.NewSmartContract(),
 	computeplan.NewSmartContract(),
 	performance.NewSmartContract(),
+	event.NewSmartContract(),
 }

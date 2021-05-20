@@ -18,6 +18,19 @@ package orchestrator;
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
+enum AssetKind {
+  ASSET_UNKNOWN = 0;
+  ASSET_NODE = 1;
+  ASSET_OBJECTIVE = 2;
+  ASSET_DATA_SAMPLE = 3;
+  ASSET_DATA_MANAGER = 4;
+  ASSET_ALGO = 5;
+  ASSET_COMPUTE_TASK = 6;
+  ASSET_COMPUTE_PLAN = 7;
+  ASSET_MODEL = 8;
+  ASSET_PERFORMANCE = 9;
+}
+
 enum SortOrder {
     ASCENDING = 0;
     DESCENDING = 1;

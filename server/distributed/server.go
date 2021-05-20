@@ -61,6 +61,7 @@ func GetServer(networkConfig string, certificate string, key string, additionalO
 	asset.RegisterModelServiceServer(server, NewModelAdapter())
 	asset.RegisterComputePlanServiceServer(server, NewComputePlanAdapter())
 	asset.RegisterPerformanceServiceServer(server, NewPerformanceAdapter())
+	asset.RegisterEventServiceServer(server, NewEventAdapter())
 
 	return &AppServer{server}, nil
 }

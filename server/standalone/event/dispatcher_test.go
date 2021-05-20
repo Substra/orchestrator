@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -39,12 +38,12 @@ func TestEventChannel(t *testing.T) {
 	amqp := &MockAMQPChannel{}
 	dispatcher := NewAMQPDispatcher(amqp, "testChannel")
 
-	e := &event.Event{AssetKind: asset.NodeKind, AssetKey: "test", EventKind: event.AssetCreated}
+	e := &asset.Event{AssetKind: asset.AssetKind_ASSET_NODE, AssetKey: "test", EventKind: asset.EventKind_EVENT_ASSET_CREATED}
 	err := dispatcher.Enqueue(e)
 	require.NoError(t, err)
 
 	// Channel should be set on dispatch
-	eventWithChannel := &event.Event{AssetKind: asset.NodeKind, AssetKey: "test", EventKind: event.AssetCreated, Channel: "testChannel"}
+	eventWithChannel := &asset.Event{AssetKind: asset.AssetKind_ASSET_NODE, AssetKey: "test", EventKind: asset.EventKind_EVENT_ASSET_CREATED, Channel: "testChannel"}
 
 	data, err := json.Marshal(eventWithChannel)
 	require.NoError(t, err)

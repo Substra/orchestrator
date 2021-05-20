@@ -22,7 +22,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -43,7 +42,7 @@ type ComputePlanServiceProvider interface {
 type ComputePlanDependencyProvider interface {
 	persistence.ComputePlanDBALProvider
 	persistence.ComputeTaskDBALProvider
-	event.QueueProvider
+	EventServiceProvider
 	ComputeTaskServiceProvider
 }
 
@@ -85,10 +84,13 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		return nil, err
 	}
 
-	event := event.NewEvent(event.AssetCreated, plan.Key, asset.ComputePlanKind).
-		WithMetadata(map[string]string{"creator": plan.Owner})
-
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  plan.Key,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
+		Metadata:  map[string]string{"creator": plan.Owner},
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return nil, err
 	}

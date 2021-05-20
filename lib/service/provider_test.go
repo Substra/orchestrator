@@ -34,6 +34,7 @@ func TestServiceProviderInit(t *testing.T) {
 	assert.Implements(t, (*AlgoServiceProvider)(nil), provider, "service provider should provide AlgoService")
 	assert.Implements(t, (*ComputeTaskServiceProvider)(nil), provider)
 	assert.Implements(t, (*ComputePlanServiceProvider)(nil), provider)
+	assert.Implements(t, (*EventServiceProvider)(nil), provider)
 }
 
 func TestLazyInstanciation(t *testing.T) {

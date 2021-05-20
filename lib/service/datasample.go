@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/utils"
 
 	"github.com/go-playground/log/v7"
@@ -46,7 +45,7 @@ type DataSampleServiceProvider interface {
 type DataSampleDependencyProvider interface {
 	persistence.DataSampleDBALProvider
 	DataManagerServiceProvider
-	event.QueueProvider
+	EventServiceProvider
 }
 
 // DataSampleService is the data samples manipulation entry point
@@ -88,8 +87,12 @@ func (s *DataSampleService) RegisterDataSample(d *asset.NewDataSample, owner str
 			Owner:           owner,
 		}
 
-		event := event.NewEvent(event.AssetCreated, dataSampleKey, asset.DataSampleKind)
-		err = s.GetEventQueue().Enqueue(event)
+		event := &asset.Event{
+			EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+			AssetKey:  dataSampleKey,
+			AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
+		}
+		err = s.GetEventService().RegisterEvent(event)
 		if err != nil {
 			return err
 		}
@@ -128,8 +131,12 @@ func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, o
 
 		datasample.DataManagerKeys = utils.Combine(datasample.GetDataManagerKeys(), d.GetDataManagerKeys())
 
-		event := event.NewEvent(event.AssetUpdated, dataSampleKey, asset.DataSampleKind)
-		err = s.GetEventQueue().Enqueue(event)
+		event := &asset.Event{
+			EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+			AssetKey:  dataSampleKey,
+			AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
+		}
+		err = s.GetEventService().RegisterEvent(event)
 		if err != nil {
 			return err
 		}

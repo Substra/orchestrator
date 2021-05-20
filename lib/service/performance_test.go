@@ -18,21 +18,18 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestRegisterPerformance(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	cts := new(MockComputeTaskService)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetPerformanceDBAL").Return(dbal)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 	service := NewPerformanceService(provider)
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(&asset.ComputeTask{
@@ -53,12 +50,12 @@ func TestRegisterPerformance(t *testing.T) {
 
 	dbal.On("AddPerformance", stored).Once().Return(nil)
 
-	event := &event.Event{
-		AssetKind: asset.PerformanceKind,
+	event := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,
 		AssetKey:  perf.ComputeTaskKey,
-		EventKind: event.AssetCreated,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(event))).Once().Return(nil)
+	es.On("RegisterEvent", event).Once().Return(nil)
 
 	_, err := service.RegisterPerformance(perf, "test")
 	assert.NoError(t, err)

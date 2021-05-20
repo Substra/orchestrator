@@ -21,7 +21,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
 )
@@ -43,7 +42,7 @@ type ObjectiveServiceProvider interface {
 // ObjectiveDependencyProvider defines what the ObjectiveService needs to perform its duty
 type ObjectiveDependencyProvider interface {
 	persistence.ObjectiveDBALProvider
-	event.QueueProvider
+	EventServiceProvider
 	PermissionServiceProvider
 	DataSampleServiceProvider
 	DataManagerServiceProvider
@@ -102,8 +101,12 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		return nil, err
 	}
 
-	event := event.NewEvent(event.AssetCreated, o.Key, asset.ObjectiveKind)
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  o.Key,
+		AssetKind: asset.AssetKind_ASSET_OBJECTIVE,
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return nil, err
 	}

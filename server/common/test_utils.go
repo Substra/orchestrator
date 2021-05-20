@@ -14,26 +14,13 @@
 
 package common
 
-import "github.com/owkin/orchestrator/lib/asset"
+import "github.com/stretchr/testify/mock"
 
-// MemoryQueue keeps events in memory
-type MemoryQueue struct {
-	events []*asset.Event
+type MockPublisher struct {
+	mock.Mock
 }
 
-// Enqueue adds an event to the queue
-func (q *MemoryQueue) Enqueue(event *asset.Event) error {
-	q.events = append(q.events, event)
-
-	return nil
-}
-
-// GetEvents returns queued events
-func (q *MemoryQueue) GetEvents() []*asset.Event {
-	return q.events
-}
-
-// Len returns the length of the queue
-func (q *MemoryQueue) Len() int {
-	return len(q.events)
+func (m *MockPublisher) Publish(routingKey string, data []byte) error {
+	args := m.Called(routingKey, data)
+	return args.Error(0)
 }

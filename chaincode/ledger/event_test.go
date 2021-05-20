@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/event"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -29,9 +29,9 @@ func TestEventDispatcher(t *testing.T) {
 
 	dispatcher := newEventDispatcher(stub)
 
-	err := dispatcher.Enqueue(&event.Event{})
+	err := dispatcher.Enqueue(&asset.Event{})
 	assert.NoError(t, err)
-	err = dispatcher.Enqueue(&event.Event{})
+	err = dispatcher.Enqueue(&asset.Event{})
 	assert.NoError(t, err)
 
 	err = dispatcher.Dispatch()

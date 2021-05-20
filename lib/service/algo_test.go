@@ -19,24 +19,20 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterAlgo(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	mps := new(MockPermissionService)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetAlgoDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
-
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	service := NewAlgoService(provider)
 
@@ -59,12 +55,12 @@ func TestRegisterAlgo(t *testing.T) {
 		NewPermissions: newPerms,
 	}
 
-	e := &event.Event{
-		EventKind: event.AssetCreated,
-		AssetKind: asset.AlgoKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_ALGO,
 		AssetKey:  algo.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Return(nil)
+	es.On("RegisterEvent", e).Return(nil)
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 

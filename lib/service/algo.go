@@ -21,7 +21,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -40,7 +39,7 @@ type AlgoServiceProvider interface {
 // AlgoDependencyProvider defines what the AlgoService needs to perform its duty
 type AlgoDependencyProvider interface {
 	persistence.AlgoDBALProvider
-	event.QueueProvider
+	EventServiceProvider
 	PermissionServiceProvider
 }
 
@@ -86,8 +85,12 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		return nil, err
 	}
 
-	event := event.NewEvent(event.AssetCreated, a.Key, asset.AlgoKind)
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  a.Key,
+		AssetKind: asset.AssetKind_ASSET_ALGO,
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return nil, err
 	}

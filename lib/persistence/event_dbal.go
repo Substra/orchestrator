@@ -12,28 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package persistence
 
-import "github.com/owkin/orchestrator/lib/asset"
+import (
+	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
+)
 
-// MemoryQueue keeps events in memory
-type MemoryQueue struct {
-	events []*asset.Event
+type EventDBAL interface {
+	AddEvent(e *asset.Event) error
+	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error)
 }
 
-// Enqueue adds an event to the queue
-func (q *MemoryQueue) Enqueue(event *asset.Event) error {
-	q.events = append(q.events, event)
-
-	return nil
-}
-
-// GetEvents returns queued events
-func (q *MemoryQueue) GetEvents() []*asset.Event {
-	return q.events
-}
-
-// Len returns the length of the queue
-func (q *MemoryQueue) Len() int {
-	return len(q.events)
+type EventDBALProvider interface {
+	GetEventDBAL() EventDBAL
 }

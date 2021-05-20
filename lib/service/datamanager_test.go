@@ -20,11 +20,8 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,12 +30,12 @@ func TestRegisterDataManager(t *testing.T) {
 	mps := new(MockPermissionService)
 	obj := new(MockObjectiveService)
 	provider := new(MockServiceProvider)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	service := NewDataManagerService(provider)
 
@@ -82,29 +79,30 @@ func TestRegisterDataManager(t *testing.T) {
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(true, nil).Once()
 
-	e := &event.Event{
-		EventKind: event.AssetCreated,
-		AssetKind: asset.DataManagerKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  storedDataManager.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	err := service.RegisterDataManager(newDataManager, "owner")
 
 	assert.NoError(t, err, "Registration of valid datamanager should not fail")
 	dbal.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	mps := new(MockPermissionService)
 	provider := new(MockServiceProvider)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	service := NewDataManagerService(provider)
 
@@ -147,17 +145,18 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()
 
-	e := &event.Event{
-		EventKind: event.AssetCreated,
-		AssetKind: asset.DataManagerKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  storedDataManager.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	err := service.RegisterDataManager(newDataManager, "owner")
 
 	assert.NoError(t, err, "Registration of valid datamanager should not fail")
 	dbal.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestRegisterDataManagerUnknownObjective(t *testing.T) {
@@ -208,12 +207,12 @@ func TestUpdateDataManager(t *testing.T) {
 	mps := new(MockPermissionService)
 	obj := new(MockObjectiveService)
 	provider := new(MockServiceProvider)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	service := NewDataManagerService(provider)
 
@@ -261,18 +260,19 @@ func TestUpdateDataManager(t *testing.T) {
 	dbal.On("UpdateDataManager", updatedDataManager).Return(nil).Once()
 	mps.On("CanProcess", perms, "owner").Return(true)
 
-	e := &event.Event{
-		EventKind: event.AssetUpdated,
-		AssetKind: asset.DataManagerKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  updatedDataManager.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "owner")
 
 	assert.NoError(t, err, "Update should not fail")
 	dbal.AssertExpectations(t)
 	obj.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestUpdateDataManagerOtherOwner(t *testing.T) {
@@ -280,12 +280,12 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 	mps := new(MockPermissionService)
 	provider := new(MockServiceProvider)
 	obj := new(MockObjectiveService)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	service := NewDataManagerService(provider)
 
@@ -333,18 +333,19 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 	dbal.On("UpdateDataManager", updatedDataManager).Return(nil).Once()
 	mps.On("CanProcess", perms, "other_owner").Return(true)
 
-	e := &event.Event{
-		EventKind: event.AssetUpdated,
-		AssetKind: asset.DataManagerKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  updatedDataManager.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "other_owner")
 
 	assert.NoError(t, err, "Update should not fail")
 	dbal.AssertExpectations(t)
 	obj.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestUpdateDataManagerObjectiveKeyAlreadySet(t *testing.T) {

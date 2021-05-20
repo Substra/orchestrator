@@ -21,7 +21,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
 )
@@ -47,7 +46,7 @@ type ComputeTaskServiceProvider interface {
 // ComputeTaskDependencyProvider defines what the ComputeTaskService needs to perform its duty
 type ComputeTaskDependencyProvider interface {
 	persistence.ComputeTaskDBALProvider
-	event.QueueProvider
+	EventServiceProvider
 	AlgoServiceProvider
 	DataManagerServiceProvider
 	DataSampleServiceProvider
@@ -252,10 +251,13 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, err
 	}
 
-	event := event.NewEvent(event.AssetCreated, task.Key, asset.ComputeTaskKind).
-		WithMetadata(map[string]string{"status": task.Status.String()})
-
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		AssetKey:  task.Key,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+		Metadata:  map[string]string{"status": task.Status.String()},
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return nil, err
 	}

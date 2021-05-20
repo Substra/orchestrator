@@ -21,7 +21,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -47,7 +46,7 @@ type ModelDependencyProvider interface {
 	PermissionServiceProvider
 	ComputeTaskServiceProvider
 	ComputePlanServiceProvider
-	event.QueueProvider
+	EventServiceProvider
 }
 
 type ModelService struct {
@@ -143,9 +142,12 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 		return nil, err
 	}
 
-	event := event.NewEvent(event.AssetCreated, model.Key, asset.ModelKind)
-
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  model.Key,
+		AssetKind: asset.AssetKind_ASSET_MODEL,
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return nil, err
 	}
@@ -268,8 +270,12 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 		return err
 	}
 
-	event := event.NewEvent(event.AssetDisabled, model.Key, asset.ModelKind)
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_DISABLED,
+		AssetKey:  model.Key,
+		AssetKind: asset.AssetKind_ASSET_MODEL,
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return err
 	}

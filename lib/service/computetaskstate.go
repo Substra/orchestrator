@@ -21,7 +21,6 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 )
 
 var transitionTodo = "todo"
@@ -273,12 +272,16 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 		return
 	}
 
-	event := event.NewEvent(event.AssetUpdated, task.Key, asset.ComputeTaskKind).
-		WithMetadata(map[string]string{
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKey:  task.Key,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+		Metadata: map[string]string{
 			"status": task.Status.String(),
 			"reason": reason,
-		})
-	err = s.GetEventQueue().Enqueue(event)
+		},
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		e.Err = err
 		return

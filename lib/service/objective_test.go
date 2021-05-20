@@ -20,24 +20,21 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterObjective(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	mps := new(MockPermissionService)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	service := NewObjectiveService(provider)
 
@@ -60,12 +57,12 @@ func TestRegisterObjective(t *testing.T) {
 		NewPermissions: newPerms,
 	}
 
-	e := &event.Event{
-		EventKind: event.AssetCreated,
-		AssetKind: asset.ObjectiveKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_OBJECTIVE,
 		AssetKey:  objective.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 
@@ -189,15 +186,14 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 	mps := new(MockPermissionService)
 	mds := new(MockDataSampleService)
 	mdm := new(MockDataManagerService)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 	provider.On("GetDataSampleService").Return(mds)
 	provider.On("GetDataManagerService").Return(mdm)
-
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	service := NewObjectiveService(provider)
 
@@ -227,12 +223,12 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 		ObjectiveKey: objective.Key,
 	}
 
-	e := &event.Event{
-		EventKind: event.AssetCreated,
-		AssetKind: asset.ObjectiveKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_OBJECTIVE,
 		AssetKey:  objective.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	mds.On("CheckSameManager", objective.DataManagerKey, objective.DataSampleKeys).Return(nil).Once()
 	mds.On("IsTestOnly", objective.DataSampleKeys).Return(true, nil).Once()

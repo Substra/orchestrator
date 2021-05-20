@@ -19,11 +19,8 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestGetPlan(t *testing.T) {
@@ -47,10 +44,10 @@ func TestGetPlan(t *testing.T) {
 
 func TestRegisterPlan(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 	provider.On("GetComputePlanDBAL").Return(dbal)
 
 	service := NewComputePlanService(provider)
@@ -66,21 +63,21 @@ func TestRegisterPlan(t *testing.T) {
 	dbal.On("AddComputePlan", expected).Once().Return(nil)
 	dbal.On("ComputePlanExists", "b9b3ecda-0a90-41da-a2e3-945eeafb06d8").Once().Return(false, nil)
 
-	expectedEvent := &event.Event{
-		AssetKind: asset.ComputePlanKind,
+	expectedEvent := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
 		AssetKey:  newPlan.Key,
-		EventKind: event.AssetCreated,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Metadata: map[string]string{
 			"creator": "org1",
 		},
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(expectedEvent))).Once().Return(nil)
+	es.On("RegisterEvent", expectedEvent).Once().Return(nil)
 
 	plan, err := service.RegisterPlan(newPlan, "org1")
 	assert.NoError(t, err)
 	assert.Equal(t, expected, plan)
 
-	dispatcher.AssertExpectations(t)
+	es.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 }
 

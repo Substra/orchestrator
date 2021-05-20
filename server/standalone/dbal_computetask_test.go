@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFilterToQuery(t *testing.T) {
+func TestTaskFilterToQuery(t *testing.T) {
 	cases := map[string]struct {
 		filter        *asset.TaskQueryFilter
 		queryContains string
@@ -42,7 +42,7 @@ func TestFilterToQuery(t *testing.T) {
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			builder := pgDialect.Select("asset").From("compute_tasks")
-			builder = filterToQuery(c.filter, builder)
+			builder = taskFilterToQuery(c.filter, builder)
 			query, params, err := builder.ToSql()
 			assert.NoError(t, err)
 			assert.Contains(t, query, c.queryContains)

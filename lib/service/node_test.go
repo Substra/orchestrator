@@ -20,23 +20,24 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestRegisterNode(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 
 	provider.On("GetNodeDBAL").Return(dbal)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
-	e := &event.Event{EventKind: event.AssetCreated, AssetKind: asset.NodeKind, AssetKey: "uuid1"}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_NODE,
+		AssetKey:  "uuid1",
+	}
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	expected := asset.Node{
 		Id: "uuid1",

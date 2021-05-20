@@ -19,8 +19,6 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -109,11 +107,11 @@ func TestFailedStateChange(t *testing.T) {
 
 func TestDispatchOnTransition(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	service := NewComputeTaskService(provider)
 
@@ -131,28 +129,30 @@ func TestDispatchOnTransition(t *testing.T) {
 	}
 	dbal.On("UpdateComputeTask", expectedTask).Once().Return(nil)
 
-	expectedEvent := &event.Event{
+	expectedEvent := &asset.Event{
 		AssetKey:  "uuid",
-		AssetKind: asset.ComputeTaskKind,
-		EventKind: event.AssetUpdated,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 		Metadata: map[string]string{
 			"status": expectedTask.Status.String(),
 			"reason": "User action",
 		},
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(expectedEvent))).Once().Return(nil)
+	es.On("RegisterEvent", expectedEvent).Once().Return(nil)
 
 	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DOING, "", "worker")
 	assert.NoError(t, err)
+
+	es.AssertExpectations(t)
 }
 
 func TestUpdateTaskStateCanceled(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	// task is retrieved from persistence layer
 	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
@@ -163,7 +163,7 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 	// Check for children to be updated
 	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{}, nil)
 	// An update event should be enqueued
-	dispatcher.On("Enqueue", mock.Anything).Return(nil)
+	es.On("RegisterEvent", mock.Anything).Return(nil)
 	// Updated task should be saved
 	updatedTask := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_CANCELED, Owner: "owner"}
 	dbal.On("UpdateComputeTask", updatedTask).Return(nil)
@@ -174,16 +174,16 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
-	dispatcher.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestCascadeStatusDone(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
-	dispatcher := new(MockDispatcher)
+	es := new(MockEventService)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventService").Return(es)
 
 	// task is retrieved from persistence layer
 	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
@@ -198,7 +198,7 @@ func TestCascadeStatusDone(t *testing.T) {
 	}, nil)
 
 	// There should be two updates: 1 for the parent, 1 for the child
-	dispatcher.On("Enqueue", mock.Anything).Times(2).Return(nil)
+	es.On("RegisterEvent", mock.Anything).Times(2).Return(nil)
 	// Updated task should be saved
 	updatedParent := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE, Owner: "owner", Worker: "worker"}
 	updatedChild := &asset.ComputeTask{Key: "child", Status: asset.ComputeTaskStatus_STATUS_TODO}
@@ -211,7 +211,7 @@ func TestCascadeStatusDone(t *testing.T) {
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
-	dispatcher.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestUpdateAllowed(t *testing.T) {

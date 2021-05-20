@@ -19,7 +19,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/owkin/orchestrator/lib/event"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 )
 
@@ -42,7 +42,7 @@ func NewForwarder(channel string, publisher common.AMQPPublisher) *Forwarder {
 func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 	payload := ccEvent.Payload
 
-	events := []event.Event{}
+	events := []*asset.Event{}
 	err := json.Unmarshal(payload, &events)
 
 	if err != nil {

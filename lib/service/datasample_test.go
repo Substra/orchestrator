@@ -20,8 +20,6 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/event"
-	eventtesting "github.com/owkin/orchestrator/lib/event/testing"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -32,8 +30,8 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
-	dispatcher := new(MockDispatcher)
-	provider.On("GetEventQueue").Return(dispatcher)
+	es := new(MockEventService)
+	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -54,19 +52,19 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	dbal.On("AddDataSample", storedDataSample).Return(nil).Once()
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
 
-	e := &event.Event{
-		EventKind: event.AssetCreated,
-		AssetKind: asset.DataSampleKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
 		AssetKey:  storedDataSample.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	err := service.RegisterDataSample(datasample, "owner")
 
 	assert.NoError(t, err, "Registration of valid datasample should not fail")
 
 	dbal.AssertExpectations(t)
-	dispatcher.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
@@ -96,8 +94,8 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
-	dispatcher := new(MockDispatcher)
-	provider.On("GetEventQueue").Return(dispatcher)
+	es := new(MockEventService)
+	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -128,21 +126,22 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	dbal.On("AddDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("AddDataSample", storedDataSample2).Return(nil).Once()
 
-	dispatcher.On("Enqueue", mock.AnythingOfType("*event.Event")).Times(2).Return(nil)
+	es.On("RegisterEvent", mock.AnythingOfType("*asset.Event")).Times(2).Return(nil)
 
 	err := service.RegisterDataSample(datasamples, "owner")
 
 	assert.NoError(t, err, "Registration of multiple valid assets should not fail")
 
 	dbal.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestUpdateSingleExistingDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
-	dispatcher := new(MockDispatcher)
-	provider.On("GetEventQueue").Return(dispatcher)
+	es := new(MockEventService)
+	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -170,27 +169,27 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 	dbal.On("UpdateDataSample", storedDataSample).Return(nil).Once()
 	dm.On("CheckOwner", []string{"4da124eb-4da3-45e2-bc61-1924be259032"}, "owner").Return(nil).Once()
 
-	e := &event.Event{
-		EventKind: event.AssetUpdated,
-		AssetKind: asset.DataSampleKind,
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
 		AssetKey:  storedDataSample.Key,
 	}
-	dispatcher.On("Enqueue", mock.MatchedBy(eventtesting.EventMatcher(e))).Once().Return(nil)
+	es.On("RegisterEvent", e).Once().Return(nil)
 
 	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
 	assert.NoError(t, err, "Update of single valid assets should not fail")
 
 	dbal.AssertExpectations(t)
-	dispatcher.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestUpdateMultipleExistingDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.MockDBAL)
 	dm := new(MockDataManagerService)
 	provider := new(MockServiceProvider)
-	dispatcher := new(MockDispatcher)
-	provider.On("GetEventQueue").Return(dispatcher)
+	es := new(MockEventService)
+	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -234,13 +233,14 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 	dbal.On("UpdateDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample2).Return(nil).Once()
 
-	dispatcher.On("Enqueue", mock.AnythingOfType("*event.Event")).Times(2).Return(nil)
+	es.On("RegisterEvent", mock.AnythingOfType("*asset.Event")).Times(2).Return(nil)
 
 	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
 	assert.NoError(t, err, "Update of single valid assets should not fail")
 
 	dbal.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestUpdateSingleNewDataSample(t *testing.T) {

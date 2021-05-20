@@ -280,3 +280,13 @@ func (m *MockDBAL) GetComputeTaskPerformance(key string) (*asset.Performance, er
 	args := m.Called(key)
 	return args.Get(0).(*asset.Performance), args.Error(1)
 }
+
+func (m *MockDBAL) AddEvent(e *asset.Event) error {
+	args := m.Called(e)
+	return args.Error(0)
+}
+
+func (m *MockDBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error) {
+	args := m.Called(p, filter)
+	return args.Get(0).([]*asset.Event), args.String(1), args.Error(2)
+}

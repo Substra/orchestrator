@@ -19,7 +19,6 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
@@ -38,7 +37,7 @@ type NodeServiceProvider interface {
 // NodeDependencyProvider defines what the NodeService needs to perform its duty
 type NodeDependencyProvider interface {
 	persistence.NodeDBALProvider
-	event.QueueProvider
+	EventServiceProvider
 }
 
 // NodeService is the node manipulation entry point
@@ -70,8 +69,12 @@ func (s *NodeService) RegisterNode(id string) (*asset.Node, error) {
 		return nil, err
 	}
 
-	event := event.NewEvent(event.AssetCreated, id, asset.NodeKind)
-	err = s.GetEventQueue().Enqueue(event)
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  id,
+		AssetKind: asset.AssetKind_ASSET_NODE,
+	}
+	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return nil, err
 	}
