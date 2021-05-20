@@ -16,8 +16,8 @@ syntax = "proto3";
 
 package orchestrator;
 
-import "common.proto";
 import "algo.proto";
+import "common.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
@@ -124,6 +124,14 @@ message NewAggregateTrainTaskData {
   string worker = 2;
 }
 
+message RegisterTasksParam {
+  repeated NewComputeTask tasks = 1;
+}
+
+message RegisterTasksResponse {
+  repeated ComputeTask tasks = 1;
+}
+
 message TaskQueryFilter {
   string worker = 1;
   ComputeTaskStatus status = 2;
@@ -161,10 +169,12 @@ message ApplyTaskActionParam {
   string log = 3;
 }
 
-message ApplyTaskActionResponse {}
+message ApplyTaskActionResponse {
+}
 
 service ComputeTaskService {
   rpc RegisterTask(NewComputeTask) returns (ComputeTask) {}
+  rpc RegisterTasks(RegisterTasksParam) returns (RegisterTasksResponse) {}
   rpc QueryTasks(QueryTasksParam) returns (QueryTasksResponse) {}
   rpc GetTask(GetTaskParam) returns (ComputeTask) {}
   rpc ApplyTaskAction(ApplyTaskActionParam) returns (ApplyTaskActionResponse) {}

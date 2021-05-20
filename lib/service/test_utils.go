@@ -394,6 +394,11 @@ func (m *MockComputeTaskService) RegisterTask(task *asset.NewComputeTask, owner 
 	return args.Get(0).(*asset.ComputeTask), args.Error(1)
 }
 
+func (m *MockComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error) {
+	args := m.Called(tasks, owner)
+	return args.Get(0).([]*asset.ComputeTask), args.Error(1)
+}
+
 func (m *MockComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
 	args := m.Called(key)
 	return args.Get(0).(*asset.ComputeTask), args.Error(1)

@@ -45,6 +45,20 @@ func (a *ComputeTaskAdapter) RegisterTask(ctx context.Context, in *asset.NewComp
 	return response, err
 }
 
+func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
+	Invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.computetask:RegisterTasks"
+
+	response := &asset.RegisterTasksResponse{}
+
+	err = Invocator.Call(method, input, response)
+
+	return response, err
+}
+
 // QueryTask returns a task from its key
 func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.GetTaskParam) (*asset.ComputeTask, error) {
 	invocator, err := ExtractInvocator(ctx)

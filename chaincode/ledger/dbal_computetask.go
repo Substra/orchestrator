@@ -208,9 +208,19 @@ func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 	return tasks, nil
 }
 
+// GetComputePlanTasksKeys returns the list of task keys from the provided compute plan
+func (db *DB) GetComputePlanTasksKeys(key string) ([]string, error) {
+	keys, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key})
+	if err != nil {
+		return nil, err
+	}
+
+	return keys, nil
+}
+
 // GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 func (db *DB) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
-	elementKeys, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key})
+	elementKeys, err := db.GetComputePlanTasksKeys(key)
 	if err != nil {
 		return nil, err
 	}

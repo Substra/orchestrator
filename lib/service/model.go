@@ -86,7 +86,15 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 			return nil, err
 		}
 
-		inputs = append(inputs, models...)
+		if task.Category == asset.ComputeTaskCategory_TASK_AGGREGATE {
+			for _, model := range models {
+				if model.Category != asset.ModelCategory_MODEL_HEAD {
+					inputs = append(inputs, model)
+				}
+			}
+		} else {
+			inputs = append(inputs, models...)
+		}
 	}
 
 	return inputs, nil

@@ -127,6 +127,30 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 	return tasks, nil
 }
 
+// GetComputePlanTasksKeys returns the list of task keys from the provided compute plan
+func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
+	rows, err := d.tx.Query(`select id from "compute_tasks" where asset->>'computePlanKey' = $1 and channel=$2`, key, d.channel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	keys := []string{}
+	for rows.Next() {
+		var key string
+		err := rows.Scan(&key)
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, key)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return keys, nil
+}
+
 // GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
 	rows, err := d.tx.Query(`select asset from "compute_tasks" where asset->>'computePlanKey' = $1 and channel=$2`, key, d.channel)

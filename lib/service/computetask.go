@@ -30,6 +30,7 @@ import (
 type ComputeTaskAPI interface {
 	// RegisterTask creates a new ComputeTask
 	RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error)
+	RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error)
 	GetTask(key string) (*asset.ComputeTask, error)
 	QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
@@ -81,6 +82,100 @@ func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
 	return s.GetComputeTaskDBAL().GetComputeTask(key)
 }
 
+// RegisterTasks creates multiple compute tasks
+func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error) {
+	cpKey := tasks[0].GetComputePlanKey()
+	for _, t := range tasks {
+		if t.ComputePlanKey != cpKey {
+			return nil, fmt.Errorf("%w all tasks should live in the same compute plan", orcerrors.ErrBadRequest)
+		}
+	}
+
+	existingKeys, err := s.GetComputeTaskDBAL().GetComputePlanTasksKeys(cpKey)
+	if err != nil {
+		return nil, err
+	}
+	sortedTasks, err := sortTasks(tasks, existingKeys)
+	if err != nil {
+		return nil, err
+	}
+
+	registeredTasks := []*asset.ComputeTask{}
+
+	for _, task := range sortedTasks {
+		asset, err := s.RegisterTask(task, owner)
+		if err != nil {
+			return nil, err
+		}
+		registeredTasks = append(registeredTasks, asset)
+	}
+
+	return registeredTasks, nil
+}
+
+// sortTasks is a function to sort a list of tasks in a valid order for their registration.
+// It performs a topological sort of the tasks such that for every dependency from task A to B
+// A comes before B in the resulting list of tasks.
+// A topological ordering is possible only if the graph is a DAG and has no cycles. This function will
+// raise an error if there is a cycle in the list of tasks.
+// This sorting function is based on Kahn's algorithm.
+func sortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*asset.NewComputeTask, error) {
+	sortedTasks := make([]*asset.NewComputeTask, len(newTasks))
+	unsortedTasks := make([]*asset.NewComputeTask, len(newTasks))
+	copy(unsortedTasks, newTasks)
+
+	unsortedParentsCount := make(map[string]int, len(unsortedTasks))
+	tasksWitoutUnsortedDependency := []*asset.NewComputeTask{}
+
+	for i := 0; i < len(unsortedTasks); i++ {
+		unsortedParentsCount[unsortedTasks[i].Key] = 0
+		// We count the number of parents that are not already registered in the persistence layer
+		for _, parent := range unsortedTasks[i].GetParentTaskKeys() {
+			if !utils.StringInSlice(existingTasks, parent) {
+				unsortedParentsCount[unsortedTasks[i].Key]++
+			}
+		}
+
+		if unsortedParentsCount[unsortedTasks[i].Key] == 0 {
+			tasksWitoutUnsortedDependency = append(tasksWitoutUnsortedDependency, unsortedTasks[i])
+			unsortedTasks = append(unsortedTasks[:i], unsortedTasks[i+1:]...)
+			i-- // We go back one index as we removed the element at position i
+		}
+	}
+
+	sortedTasksCount := 0
+	for len(tasksWitoutUnsortedDependency) > 0 {
+		currentTask := tasksWitoutUnsortedDependency[0]
+		tasksWitoutUnsortedDependency = tasksWitoutUnsortedDependency[1:]
+
+		sortedTasks[sortedTasksCount] = currentTask
+		sortedTasksCount++
+
+		for i := 0; i < len(unsortedTasks); i++ {
+			for _, key := range unsortedTasks[i].ParentTaskKeys {
+				if key == currentTask.Key {
+					unsortedParentsCount[unsortedTasks[i].Key]--
+					if unsortedParentsCount[unsortedTasks[i].Key] == 0 {
+						// As it has no remaining dependency the task is ready to be added to the sorted list.
+						// We remove the task from the unsorted list to make our slice length decrease over time
+						// and avoid going through all the tasks that are already sorted an have no remaining dependencies.
+						tasksWitoutUnsortedDependency = append(tasksWitoutUnsortedDependency, unsortedTasks[i])
+						unsortedTasks = append(unsortedTasks[:i], unsortedTasks[i+1:]...)
+						i-- // We go back one index as we removed the element at position i
+					}
+				}
+			}
+		}
+	}
+
+	if len(unsortedTasks) > 0 {
+		log.WithField("unsorted_tasks", len(unsortedTasks)).Debug("Failed to sort tasks, cyclic dependency in compute plan graph or unknown parent")
+		return nil, fmt.Errorf("cyclic dependency in compute plan graph or unknown task parent: %w, unsorted_tasks_count: %d", orcerrors.ErrInvalidAsset, len(unsortedTasks))
+	}
+
+	return sortedTasks, nil
+}
+
 // RegisterTask creates a new ComputeTask
 func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner string) (*asset.ComputeTask, error) {
 	log.WithField("task", input).WithField("owner", owner).Debug("Registering new compute task")
@@ -113,11 +208,6 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		return nil, fmt.Errorf("incompatible models from parent tasks: %w", orcerrors.ErrInvalidAsset)
 	}
 
-	err = s.checkCanProcessParents(owner, parentTasks, input.Category)
-	if err != nil {
-		return nil, err
-	}
-
 	status := getInitialStatusFromParents(parentTasks)
 
 	if status == asset.ComputeTaskStatus_STATUS_CANCELED || status == asset.ComputeTaskStatus_STATUS_FAILED {
@@ -148,6 +238,11 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 		// Should never happen, validated above
 		err = fmt.Errorf("unkwown task data: %T, %w", x, orcerrors.ErrInvalidAsset)
 	}
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.checkCanProcessParents(task.Worker, parentTasks, input.Category)
 	if err != nil {
 		return nil, err
 	}

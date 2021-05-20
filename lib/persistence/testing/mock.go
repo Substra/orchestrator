@@ -194,6 +194,11 @@ func (m *MockDBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) 
 	return args.Get(0).([]*asset.ComputeTask), args.Error(1)
 }
 
+func (m *MockDBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
+	args := m.Called(key)
+	return args.Get(0).([]string), args.Error(1)
+}
+
 // AddComputeTask is a mock
 func (m *MockDBAL) AddComputeTask(t *asset.ComputeTask) error {
 	args := m.Called(t)

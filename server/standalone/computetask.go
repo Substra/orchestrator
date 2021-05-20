@@ -52,6 +52,26 @@ func (s *ComputeTaskServer) RegisterTask(ctx context.Context, in *asset.NewCompu
 	return task, nil
 }
 
+func (s *ComputeTaskServer) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
+	owner, err := common.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	provider, err := ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tasks, err := provider.GetComputeTaskService().RegisterTasks(input.GetTasks(), owner)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.RegisterTasksResponse{
+		Tasks: tasks,
+	}, nil
+}
+
 func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasksParam) (*asset.QueryTasksResponse, error) {
 	provider, err := ExtractProvider(ctx)
 	if err != nil {

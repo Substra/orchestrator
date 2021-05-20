@@ -29,6 +29,7 @@ type ComputeTaskDBAL interface {
 	GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error)
 	// GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 	GetComputePlanTasks(key string) ([]*asset.ComputeTask, error)
+	GetComputePlanTasksKeys(key string) ([]string, error)
 }
 
 type ComputeTaskDBALProvider interface {

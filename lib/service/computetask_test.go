@@ -670,6 +670,155 @@ func TestIsParentCompatible(t *testing.T) {
 	}
 }
 
+func createNode(parent string, key string) *asset.NewComputeTask {
+	if parent != "" {
+		return &asset.NewComputeTask{
+			Key:            key,
+			ParentTaskKeys: []string{parent},
+		}
+	}
+
+	return &asset.NewComputeTask{
+		Key:            key,
+		ParentTaskKeys: []string{},
+	}
+}
+
+func TestSortTasks(t *testing.T) {
+	//     +-->Leaf1
+	//     |
+	//     |
+	// Root|                  +->Leaf5
+	//     |        +-->Node3-+
+	//     |        |
+	//     +-->Node2|
+	//              |
+	//              +-->Leaf4
+
+	root := &asset.NewComputeTask{
+		Key:            "root",
+		ParentTaskKeys: []string{},
+	}
+
+	leaf1 := createNode(root.Key, "leaf1")
+	node2 := createNode(root.Key, "node2")
+	node3 := createNode(node2.Key, "node3")
+	leaf4 := createNode(node2.Key, "leaf4")
+	leaf5 := createNode(node3.Key, "leaf5")
+
+	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
+	existingKeys := []string{}
+
+	result, err := sortTasks(nodes, existingKeys)
+
+	assert.NoError(t, err)
+	assert.Equal(t, len(nodes), len(result))
+	assert.ElementsMatch(t, nodes, result)
+	assert.Equal(t, root, result[0])
+}
+
+func TestSortTasksWithCircularDependency(t *testing.T) {
+	//     +-->Leaf1
+	//     |
+	//     |
+	// Root|                  +->Leaf5
+	//     |        +-->Node3-+
+	//     |        |
+	//     +-->Node2|
+	//           ^  |
+	//           |  +-->Leaf4-+
+	//           |            |
+	//           +------------+
+
+	root := &asset.NewComputeTask{
+		Key:            "root",
+		ParentTaskKeys: []string{},
+	}
+
+	leaf1 := createNode(root.Key, "leaf1")
+	node2 := createNode(root.Key, "node2")
+	node3 := createNode(node2.Key, "node3")
+	leaf4 := createNode(node2.Key, "leaf4")
+	leaf5 := createNode(node3.Key, "leaf5")
+
+	node2.ParentTaskKeys = []string{root.Key, leaf4.Key}
+
+	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
+	existingKeys := []string{}
+
+	_, err := sortTasks(nodes, existingKeys)
+
+	assert.Error(t, err)
+}
+
+func TestSortDependencyWithExistingTasks(t *testing.T) {
+	//        Existing2-----+-->Leaf1
+	//                      |
+	//                      |
+	// Existing1------->Root|                  +->Leaf5
+	//                      |        +-->Node3-+
+	//                      |        |
+	//                      +-->Node2|
+	//                               |
+	//                               +-->Leaf4
+
+	existing1 := "exist1"
+	existing2 := "exist2"
+
+	root := &asset.NewComputeTask{
+		Key:            "root",
+		ParentTaskKeys: []string{existing1},
+	}
+
+	leaf1 := createNode(root.Key, "leaf1")
+	node2 := createNode(root.Key, "node2")
+	node3 := createNode(node2.Key, "node3")
+	leaf4 := createNode(node2.Key, "leaf4")
+	leaf5 := createNode(node3.Key, "leaf5")
+
+	leaf1.ParentTaskKeys = []string{existing2, root.Key}
+
+	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
+	existingKeys := []string{existing1, existing2}
+
+	result, err := sortTasks(nodes, existingKeys)
+
+	assert.NoError(t, err)
+	assert.Equal(t, len(nodes), len(result))
+	assert.ElementsMatch(t, nodes, result)
+	assert.Equal(t, root, result[0])
+}
+
+func TestSortTasksUnknownRef(t *testing.T) {
+	//         +-->Leaf1
+	//         |
+	//         |
+	// ?-->Root|                  +->Leaf5
+	//         |        +-->Node3-+
+	//         |        |
+	//         +-->Node2|
+	//                  |
+	//                  +-->Leaf4
+
+	root := &asset.NewComputeTask{
+		Key:            "root",
+		ParentTaskKeys: []string{"unknown"},
+	}
+
+	leaf1 := createNode(root.Key, "leaf1")
+	node2 := createNode(root.Key, "node2")
+	node3 := createNode(node2.Key, "node3")
+	leaf4 := createNode(node2.Key, "leaf4")
+	leaf5 := createNode(node3.Key, "leaf5")
+
+	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
+	existingKeys := []string{}
+
+	_, err := sortTasks(nodes, existingKeys)
+
+	assert.Error(t, err)
+}
+
 func TestCheckCanProcessParent(t *testing.T) {
 	parents := []*asset.ComputeTask{
 		{
