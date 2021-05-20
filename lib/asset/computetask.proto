@@ -158,9 +158,8 @@ message GetTaskParam {
 enum ComputeTaskAction {
   TASK_ACTION_UNKNOWN = 0;
   TASK_ACTION_DOING = 1;
-  TASK_ACTION_DONE = 2;
-  TASK_ACTION_CANCELED = 3;
-  TASK_ACTION_FAILED = 4;
+  TASK_ACTION_CANCELED = 2;
+  TASK_ACTION_FAILED = 3;
 }
 
 message ApplyTaskActionParam {

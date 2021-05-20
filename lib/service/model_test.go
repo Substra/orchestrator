@@ -137,29 +137,28 @@ func TestRegisterSimpleModel(t *testing.T) {
 	provider.On("GetEventService").Return(es)
 	service := NewModelService(provider)
 
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(
-		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_TRAIN,
-			Worker:   "test",
-			Data: &asset.ComputeTask_Train{
-				Train: &asset.TrainTaskData{
-					ModelPermissions: &asset.Permissions{
-						Process: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
-						Download: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
+	task := &asset.ComputeTask{
+		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status:   asset.ComputeTaskStatus_STATUS_DOING,
+		Category: asset.ComputeTaskCategory_TASK_TRAIN,
+		Worker:   "test",
+		Data: &asset.ComputeTask_Train{
+			Train: &asset.TrainTaskData{
+				ModelPermissions: &asset.Permissions{
+					Process: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+					Download: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
 					},
 				},
 			},
 		},
-		nil,
-	)
+	}
+
+	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
 
 	// No models registered
 	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
@@ -198,6 +197,9 @@ func TestRegisterSimpleModel(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
 	es.On("RegisterEvent", event).Once().Return(nil)
+
+	// Model registration will initiate a task transition to done
+	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
 
 	_, err := service.RegisterModel(model, "test")
 	assert.NoError(t, err)
@@ -243,7 +245,7 @@ func TestRegisterDuplicateModel(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
+	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
 
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
@@ -260,39 +262,37 @@ func TestRegisterHeadModel(t *testing.T) {
 	provider.On("GetEventService").Return(es)
 	service := NewModelService(provider)
 
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(
-		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
-			Worker:   "test",
-			Data: &asset.ComputeTask_Composite{
-				Composite: &asset.CompositeTrainTaskData{
-					HeadPermissions: &asset.Permissions{
-						Process: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
-						Download: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
+	task := &asset.ComputeTask{
+		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status:   asset.ComputeTaskStatus_STATUS_DOING,
+		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
+		Worker:   "test",
+		Data: &asset.ComputeTask_Composite{
+			Composite: &asset.CompositeTrainTaskData{
+				HeadPermissions: &asset.Permissions{
+					Process: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
 					},
-					TrunkPermissions: &asset.Permissions{
-						Process: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
-						Download: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
+					Download: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+				},
+				TrunkPermissions: &asset.Permissions{
+					Process: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+					Download: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
 					},
 				},
 			},
 		},
-		nil,
-	)
+	}
+	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
 
 	// Trunk already known
 	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{
@@ -334,6 +334,9 @@ func TestRegisterHeadModel(t *testing.T) {
 	}
 	es.On("RegisterEvent", event).Once().Return(nil)
 
+	// Model registration will initiate a task transition to done
+	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
+
 	_, err := service.RegisterModel(model, "test")
 	assert.NoError(t, err)
 
@@ -344,9 +347,11 @@ func TestRegisterHeadModel(t *testing.T) {
 }
 
 func TestRegisterWrongModelType(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
 	cts := new(MockComputeTaskService)
 	provider := new(MockServiceProvider)
 	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetModelDBAL").Return(dbal)
 	service := NewModelService(provider)
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(
@@ -359,6 +364,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 		nil,
 	)
 
+	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
 		Category:       asset.ModelCategory_MODEL_SIMPLE, // cannot register a SIMPLE model on composite task
@@ -373,6 +379,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
 
+	dbal.AssertExpectations(t)
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
@@ -411,7 +418,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
+	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
 
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
@@ -534,4 +541,98 @@ func TestQueryModels(t *testing.T) {
 	assert.Len(t, r, 2)
 	assert.Equal(t, r[0].Key, model1.Key)
 	assert.Equal(t, "nextPage", token, "next page token should be returned")
+}
+
+func TestAreAllOutputsRegistered(t *testing.T) {
+	cases := map[string]struct {
+		task    *asset.ComputeTask
+		models  []*asset.Model
+		outcome bool
+	}{
+		"train without model": {
+			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_TRAIN},
+			models:  []*asset.Model{},
+			outcome: false,
+		},
+		"unhandled task category": {
+			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_TEST},
+			models:  []*asset.Model{},
+			outcome: false,
+		},
+		"train with model": {
+			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_TRAIN},
+			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}},
+			outcome: true,
+		},
+		"aggregate with model": {
+			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_AGGREGATE},
+			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}},
+			outcome: true,
+		},
+		"composite with head": {
+			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_COMPOSITE},
+			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}},
+			outcome: false,
+		},
+		"composite with trunk": {
+			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_COMPOSITE},
+			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_TRUNK}},
+			outcome: false,
+		},
+		"composite with head & trunk": {
+			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_COMPOSITE},
+			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_TRUNK}, {Category: asset.ModelCategory_MODEL_HEAD}},
+			outcome: true,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.outcome, areAllOutputsRegistered(tc.task, tc.models))
+		})
+	}
+}
+
+func TestCheckDuplicateModel(t *testing.T) {
+	cases := map[string]struct {
+		models      []*asset.Model
+		model       *asset.NewModel
+		shouldError bool
+	}{
+		"no models": {
+			[]*asset.Model{},
+			&asset.NewModel{Category: asset.ModelCategory_MODEL_SIMPLE},
+			false,
+		},
+		"simple": {
+			[]*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}},
+			&asset.NewModel{Category: asset.ModelCategory_MODEL_SIMPLE},
+			true,
+		},
+		"head": {
+			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}},
+			&asset.NewModel{Category: asset.ModelCategory_MODEL_HEAD},
+			true,
+		},
+		"head and trunk": {
+			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}},
+			&asset.NewModel{Category: asset.ModelCategory_MODEL_TRUNK},
+			false,
+		},
+		"complete composite": {
+			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}, {Category: asset.ModelCategory_MODEL_TRUNK}},
+			&asset.NewModel{Category: asset.ModelCategory_MODEL_TRUNK},
+			true,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			if tc.shouldError {
+				assert.Error(t, checkDuplicateModel(tc.models, tc.model))
+			} else {
+				assert.NoError(t, checkDuplicateModel(tc.models, tc.model))
+			}
+		})
+	}
 }

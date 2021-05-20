@@ -84,7 +84,7 @@ func TestOnStateChange(t *testing.T) {
 
 	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_TODO, Key: "uuid"})
 
-	err := state.Event(asset.ComputeTaskAction_TASK_ACTION_DOING.String(), &asset.ComputeTask{})
+	err := state.Event(string(transitionDoing), &asset.ComputeTask{})
 
 	assert.NoError(t, err)
 	updater.AssertExpectations(t)
@@ -96,11 +96,11 @@ func TestFailedStateChange(t *testing.T) {
 
 	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DOING, Key: "uuid"})
 
-	err := state.Event(transitionDoing, &asset.ComputeTask{})
+	err := state.Event(string(transitionDoing), &asset.ComputeTask{})
 	assert.IsType(t, fsm.InvalidEventError{}, err)
 
 	state = newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DONE, Key: "uuid"})
-	err = state.Event(transitionCanceled, &asset.ComputeTask{})
+	err = state.Event(string(transitionCanceled), &asset.ComputeTask{})
 	assert.IsType(t, fsm.InvalidEventError{}, err)
 	updater.AssertExpectations(t)
 }
@@ -185,13 +185,12 @@ func TestCascadeStatusDone(t *testing.T) {
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 
-	// task is retrieved from persistence layer
-	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
+	task := &asset.ComputeTask{
 		Key:    "uuid",
 		Status: asset.ComputeTaskStatus_STATUS_DOING,
 		Owner:  "owner",
 		Worker: "worker",
-	}, nil)
+	}
 	// Check for children to be updated
 	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
 		{Key: "child", Status: asset.ComputeTaskStatus_STATUS_WAITING},
@@ -207,7 +206,7 @@ func TestCascadeStatusDone(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DONE, "reason", "worker")
+	err := service.applyTaskAction(task, transitionDone, "reason")
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
@@ -248,11 +247,6 @@ func TestUpdateAllowed(t *testing.T) {
 			requester: "owner",
 			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
 			outcome:   false,
-		},
-		"worker done": {
-			requester: "worker",
-			action:    asset.ComputeTaskAction_TASK_ACTION_DONE,
-			outcome:   true,
 		},
 	}
 

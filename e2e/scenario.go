@@ -114,7 +114,7 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 	}
 
 	appClient.StartTask(client.DefaultTaskRef)
-	appClient.DoneTask(client.DefaultTaskRef)
+	appClient.RegisterModel(client.DefaultModelOptions())
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
@@ -181,15 +181,12 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 	// First task done
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model0"))
-	appClient.DoneTask(client.DefaultTaskRef)
 	// second done
 	appClient.StartTask("child1")
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model1").WithTaskRef("child1"))
-	appClient.DoneTask("child1")
 	// last task
 	appClient.StartTask("child2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model2").WithTaskRef("child2"))
-	appClient.DoneTask("child2")
 
 	models := appClient.GetTaskOutputModels(client.DefaultTaskRef)
 	if len(models) != 1 {
@@ -301,13 +298,9 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
 
-	appClient.DoneTask("compA1")
-	appClient.DoneTask("compB1")
-
 	// Start step 2
 	appClient.StartTask("aggC2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC2").WithKeyRef("modelC2").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
-	appClient.DoneTask("aggC2")
 
 	// Start step 3
 	appClient.StartTask("compA3")
@@ -318,13 +311,9 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
 
-	appClient.DoneTask("compA3")
-	appClient.DoneTask("compB3")
-
 	// Start step 4
 	appClient.StartTask("aggC4")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
-	appClient.DoneTask("aggC4")
 }
 
 func testQueryTasks(conn *grpc.ClientConn) {
@@ -362,12 +351,16 @@ func testRegisterPerformance(conn *grpc.ClientConn) {
 	// Parent train task is necessary
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 	appClient.StartTask(client.DefaultTaskRef)
-	appClient.DoneTask(client.DefaultTaskRef)
+	appClient.RegisterModel(client.DefaultModelOptions())
 	// to create a test task
 	appClient.RegisterTestTask(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent))
 	appClient.StartTask("testTask")
 	appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask"))
-	appClient.DoneTask("testTask")
 
 	appClient.GetTaskPerformance("testTask")
+
+	task := appClient.GetComputeTask("testTask")
+	if task.Status != asset.ComputeTaskStatus_STATUS_DONE {
+		log.Fatal("test task should be DONE")
+	}
 }

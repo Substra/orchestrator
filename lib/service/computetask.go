@@ -36,6 +36,8 @@ type ComputeTaskAPI interface {
 	// canDisableModels is internal only (exposed only to other services).
 	// it will return true if models produced by the task can be disabled
 	canDisableModels(key, requester string) (bool, error)
+	// applyTaskAction is internal only, it will trigger a task status update.
+	applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance

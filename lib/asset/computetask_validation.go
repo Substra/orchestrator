@@ -87,7 +87,6 @@ func (p *ApplyTaskActionParam) Validate() error {
 		validation.Field(&p.ComputeTaskKey, validation.Required, is.UUID),
 		validation.Field(&p.Action, validation.Required, validation.In(
 			ComputeTaskAction_TASK_ACTION_DOING,
-			ComputeTaskAction_TASK_ACTION_DONE,
 			ComputeTaskAction_TASK_ACTION_FAILED,
 			ComputeTaskAction_TASK_ACTION_CANCELED,
 		)),

@@ -23,36 +23,40 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 )
 
-var transitionTodo = "todo"
-var transitionCanceled = asset.ComputeTaskAction_TASK_ACTION_CANCELED.String()
-var transitionFailed = asset.ComputeTaskAction_TASK_ACTION_FAILED.String()
-var transitionDoing = asset.ComputeTaskAction_TASK_ACTION_DOING.String()
-var transitionDone = asset.ComputeTaskAction_TASK_ACTION_DONE.String()
+type taskTransition string
+
+const (
+	transitionTodo     taskTransition = "transitionTodo"
+	transitionDone     taskTransition = "transitionDone"
+	transitionCanceled taskTransition = "transitionCanceled"
+	transitionFailed   taskTransition = "transitionFailed"
+	transitionDoing    taskTransition = "transitionDoing"
+)
 
 // taskStateEvents is the definition of the state machine representing task states
 var taskStateEvents = fsm.Events{
 	{
-		Name: transitionCanceled,
+		Name: string(transitionCanceled),
 		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String(), asset.ComputeTaskStatus_STATUS_WAITING.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_CANCELED.String(),
 	},
 	{
-		Name: transitionTodo,
+		Name: string(transitionTodo),
 		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_TODO.String(),
 	},
 	{
-		Name: transitionDoing,
+		Name: string(transitionDoing),
 		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_DOING.String(),
 	},
 	{
-		Name: transitionDone,
+		Name: string(transitionDone),
 		Src:  []string{asset.ComputeTaskStatus_STATUS_DOING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_DONE.String(),
 	},
 	{
-		Name: transitionFailed,
+		Name: string(transitionFailed),
 		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String(), asset.ComputeTaskStatus_STATUS_WAITING.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_FAILED.String(),
 	},
@@ -88,10 +92,10 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 		task.Status.String(),
 		taskStateEvents,
 		fsm.Callbacks{
-			"enter_state":                updater.onStateChange,
-			"after_TASK_ACTION_CANCELED": updater.onCancel,
-			"after_TASK_ACTION_FAILED":   updater.onCancel,
-			"after_TASK_ACTION_DONE":     updater.onDone,
+			"enter_state":              updater.onStateChange,
+			"after_transitionCanceled": updater.onCancel,
+			"after_transitionFailed":   updater.onCancel,
+			"after_transitionDone":     updater.onDone,
 		},
 	)
 }
@@ -99,7 +103,18 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 // ApplyTaskAction apply an asset.ComputeTaskAction to the task.
 // Depending on the current state and action, this may update children tasks
 func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error {
-	transition := action.String()
+	var transition taskTransition
+	switch action {
+	case asset.ComputeTaskAction_TASK_ACTION_CANCELED:
+		transition = transitionCanceled
+	case asset.ComputeTaskAction_TASK_ACTION_DOING:
+		transition = transitionDoing
+	case asset.ComputeTaskAction_TASK_ACTION_FAILED:
+		transition = transitionFailed
+	default:
+		return fmt.Errorf("%w unsupported action", errors.ErrBadRequest)
+	}
+
 	if reason == "" {
 		reason = "User action"
 	}
@@ -117,10 +132,10 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 
 // applyTaskAction is the internal method allowing any transition (string).
 // This allows to use this method with internal only transitions (abort).
-func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action string, reason string) error {
+func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
 	log.WithField("taskKey", task.Key).WithField("action", action).WithField("reason", reason).Debug("Applying task action")
 	state := newState(s, task)
-	return state.Event(action, task, reason)
+	return state.Event(string(action), task, reason)
 }
 
 // onDone will iterate over task children to update their statuses
@@ -166,7 +181,7 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 		log.F("childStatus", child.Status),
 	)
 	state := newState(s, child)
-	if !state.Can(transitionTodo) {
+	if !state.Can(string(transitionTodo)) {
 		logger.Info("propagateDone: skipping child due to incompatible state")
 		// this is expected as we might go over already failed children (from another parent)
 		return nil
@@ -203,7 +218,7 @@ func (s *ComputeTaskService) onCancel(e *fsm.Event) {
 	s.cascadeTransition(e, transitionCanceled)
 }
 
-func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition string) {
+func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition taskTransition) {
 	if len(e.Args) != 2 {
 		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
 		return
@@ -325,7 +340,7 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 	switch action {
 	case asset.ComputeTaskAction_TASK_ACTION_CANCELED:
 		return requester == task.Owner
-	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_DONE, asset.ComputeTaskAction_TASK_ACTION_FAILED:
+	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_FAILED:
 		return requester == task.Worker
 	default:
 		return false

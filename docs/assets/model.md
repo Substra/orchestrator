@@ -8,7 +8,10 @@ A model inherit its permissions from its parent task.
 ## Registration
 
 A model can only be registered on a task with `DOING` status.
-It should be the last step before marking the task as `DONE`.
+
+Registering the last expected output model on a task will also trigger its transition to `DONE` status.
+
+Only the task's worker can register models.
 
 ## Compatibility
 

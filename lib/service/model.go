@@ -120,6 +120,14 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 		return nil, fmt.Errorf("%w: cannot register model for taks with status \"%s\"", errors.ErrBadRequest, task.Status.String())
 	}
 
+	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(task.Key)
+	if err != nil {
+		return nil, err
+	}
+	if err = checkDuplicateModel(existingModels, newModel); err != nil {
+		return nil, err
+	}
+
 	var model *asset.Model
 
 	switch task.Category {
@@ -152,6 +160,15 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 		return nil, err
 	}
 
+	existingModels = append(existingModels, model)
+	if areAllOutputsRegistered(task, existingModels) {
+		reason := fmt.Sprintf("Last model %s registered by %s", model.Key, requester)
+		err = s.GetComputeTaskService().applyTaskAction(task, transitionDone, reason)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return model, nil
 }
 
@@ -162,13 +179,6 @@ func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester s
 	}
 	if newModel.Category != asset.ModelCategory_MODEL_SIMPLE {
 		return nil, fmt.Errorf("%w: cannot register non-simple model", errors.ErrBadRequest)
-	}
-	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(task.Key)
-	if err != nil {
-		return nil, err
-	}
-	if len(existingModels) > 0 {
-		return nil, fmt.Errorf("%w: task already has a model: %s", errors.ErrBadRequest, existingModels[0].Key)
 	}
 
 	var permissions *asset.Permissions
@@ -200,15 +210,6 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 	}
 	if !(newModel.Category == asset.ModelCategory_MODEL_HEAD || newModel.Category == asset.ModelCategory_MODEL_TRUNK) {
 		return nil, fmt.Errorf("%w: cannot register non-composite model", errors.ErrBadRequest)
-	}
-	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(task.Key)
-	if err != nil {
-		return nil, err
-	}
-	for _, m := range existingModels {
-		if m.Category == newModel.Category {
-			return nil, fmt.Errorf("%w: task already has a \"%s\" model: %s", errors.ErrBadRequest, newModel.Category.String(), m.Key)
-		}
 	}
 
 	var permissions *asset.Permissions
@@ -280,5 +281,56 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 		return err
 	}
 
+	return nil
+}
+
+type modelCount struct {
+	simple uint
+	head   uint
+	trunk  uint
+}
+
+func countModels(models []*asset.Model) modelCount {
+	count := modelCount{}
+
+	for _, m := range models {
+		switch m.Category {
+		case asset.ModelCategory_MODEL_SIMPLE:
+			count.simple++
+		case asset.ModelCategory_MODEL_HEAD:
+			count.head++
+		case asset.ModelCategory_MODEL_TRUNK:
+			count.trunk++
+		}
+	}
+
+	return count
+}
+
+// areAllOutputsRegistered is based on the cardinality of existingModels to return whether all
+// expected outputs are registered or not.
+func areAllOutputsRegistered(task *asset.ComputeTask, existingModels []*asset.Model) bool {
+	// TOOD: unit test
+	count := countModels(existingModels)
+
+	switch task.Category {
+	case asset.ComputeTaskCategory_TASK_AGGREGATE, asset.ComputeTaskCategory_TASK_TRAIN:
+		return count.simple == 1
+	case asset.ComputeTaskCategory_TASK_COMPOSITE:
+		return count.head == 1 && count.trunk == 1
+	default:
+		log.WithField("taskKey", task.Key).WithField("category", task.Category).Warn("unexpected output model check")
+		return false
+	}
+}
+
+// checkDuplicateModel returns an error if a model of the same category already exist
+func checkDuplicateModel(existingModels []*asset.Model, model *asset.NewModel) error {
+	// TODO: unit test
+	for _, m := range existingModels {
+		if m.Category == model.Category {
+			return fmt.Errorf("%w: task already has a %s model", errors.ErrConflict, model.Category.String())
+		}
+	}
 	return nil
 }

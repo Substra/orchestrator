@@ -32,11 +32,12 @@ func TestRegisterPerformance(t *testing.T) {
 	provider.On("GetEventService").Return(es)
 	service := NewPerformanceService(provider)
 
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(&asset.ComputeTask{
+	task := &asset.ComputeTask{
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Worker:   "test",
 		Category: asset.ComputeTaskCategory_TASK_TEST,
-	}, nil)
+	}
+	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 
 	perf := &asset.NewPerformance{
 		ComputeTaskKey:   "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -56,6 +57,9 @@ func TestRegisterPerformance(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
 	es.On("RegisterEvent", event).Once().Return(nil)
+
+	// Performance registration will initiate a task transition to done
+	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
 
 	_, err := service.RegisterPerformance(perf, "test")
 	assert.NoError(t, err)

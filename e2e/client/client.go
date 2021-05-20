@@ -284,10 +284,6 @@ func (c *TestClient) StartTask(keyRef string) {
 	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_DOING)
 }
 
-func (c *TestClient) DoneTask(keyRef string) {
-	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_DONE)
-}
-
 func (c *TestClient) CancelTask(keyRef string) {
 	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_CANCELED)
 }

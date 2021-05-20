@@ -431,6 +431,11 @@ func (m *MockComputeTaskService) canDisableModels(key, requester string) (bool, 
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
+	args := m.Called(task, action, reason)
+	return args.Error(0)
+}
+
 type MockModelService struct {
 	mock.Mock
 }
