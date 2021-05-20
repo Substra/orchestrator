@@ -20,6 +20,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestRegisterPerformance(t *testing.T) {

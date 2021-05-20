@@ -23,6 +23,7 @@ import (
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
