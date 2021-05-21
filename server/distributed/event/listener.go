@@ -35,6 +35,7 @@ type Listener struct {
 	events       <-chan *fab.CCEvent
 	done         chan bool
 	onEvent      Handler
+	channel      string
 }
 
 // NewListener instanciate a Listener listening events on the configured blockchain.
@@ -80,6 +81,7 @@ func NewListener(
 		events:       eventStream,
 		done:         make(chan bool),
 		onEvent:      onEvent,
+		channel:      channel,
 	}, nil
 }
 
@@ -96,6 +98,7 @@ func (l *Listener) Listen() {
 		select {
 		case event := <-l.events:
 			log.WithFields(
+				log.F("channel", l.channel),
 				log.F("ccId", event.ChaincodeID),
 				log.F("eventName", event.EventName),
 				log.F("blockNumber", event.BlockNumber),

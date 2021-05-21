@@ -53,6 +53,7 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 
 	for _, event := range events {
 		logger := log.WithField("event", event)
+		event.Channel = f.channel
 
 		data, err := json.Marshal(event)
 		if err != nil {
