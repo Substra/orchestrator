@@ -189,6 +189,7 @@ func TestRegisterSimpleModel(t *testing.T) {
 				AuthorizedIds: []string{},
 			},
 		},
+		Owner: "test",
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 
@@ -325,6 +326,7 @@ func TestRegisterHeadModel(t *testing.T) {
 				AuthorizedIds: []string{},
 			},
 		},
+		Owner: "test",
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 

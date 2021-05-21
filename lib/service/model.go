@@ -145,6 +145,8 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 		return nil, fmt.Errorf("unhandled model category")
 	}
 
+	model.Owner = requester
+
 	err = s.GetModelDBAL().AddModel(model)
 	if err != nil {
 		return nil, err

@@ -33,6 +33,7 @@ message Model {
   string compute_task_key = 3;
   Addressable address = 4;
   Permissions permissions = 5;
+  string owner = 6;
 }
 
 message NewModel {
