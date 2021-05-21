@@ -17,18 +17,22 @@ package standalone
 import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/standalone/concurrency"
+	"github.com/owkin/orchestrator/server/standalone/dbal"
+	"github.com/owkin/orchestrator/server/standalone/handlers"
+	"github.com/owkin/orchestrator/server/standalone/interceptors"
 	"google.golang.org/grpc"
 )
 
 type AppServer struct {
 	grpc    *grpc.Server
 	amqp    *common.Session
-	db      *Database
-	limiter *ConcurrencyLimiter
+	db      *dbal.Database
+	limiter *concurrency.Limiter
 }
 
 func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOption, config *common.OrchestratorConfiguration) (*AppServer, error) {
-	pgDB, err := InitDatabase(dbURL)
+	pgDB, err := dbal.InitDatabase(dbURL)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +41,7 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 
 	channelInterceptor := common.NewChannelInterceptor(config)
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
-	providerInterceptor := NewProviderInterceptor(pgDB, session)
+	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session)
 
 	interceptor := grpc.ChainUnaryInterceptor(
 		common.LogRequest,
@@ -51,20 +55,20 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 
 	server := grpc.NewServer(serverOptions...)
 
-	limiter := NewConcurrencyLimiter()
+	limiter := concurrency.NewLimiter()
 
 	// Register application services
-	asset.RegisterNodeServiceServer(server, NewNodeServer(limiter))
-	asset.RegisterObjectiveServiceServer(server, NewObjectiveServer(limiter))
-	asset.RegisterDataSampleServiceServer(server, NewDataSampleServer(limiter))
-	asset.RegisterAlgoServiceServer(server, NewAlgoServer(limiter))
-	asset.RegisterDataManagerServiceServer(server, NewDataManagerServer(limiter))
-	asset.RegisterDatasetServiceServer(server, NewDatasetServer(limiter))
-	asset.RegisterComputeTaskServiceServer(server, NewComputeTaskServer(limiter))
-	asset.RegisterModelServiceServer(server, NewModelServer(limiter))
-	asset.RegisterComputePlanServiceServer(server, NewComputePlanServer(limiter))
-	asset.RegisterPerformanceServiceServer(server, NewPerformanceServer(limiter))
-	asset.RegisterEventServiceServer(server, NewEventServer(limiter))
+	asset.RegisterNodeServiceServer(server, handlers.NewNodeServer(limiter))
+	asset.RegisterObjectiveServiceServer(server, handlers.NewObjectiveServer(limiter))
+	asset.RegisterDataSampleServiceServer(server, handlers.NewDataSampleServer(limiter))
+	asset.RegisterAlgoServiceServer(server, handlers.NewAlgoServer(limiter))
+	asset.RegisterDataManagerServiceServer(server, handlers.NewDataManagerServer(limiter))
+	asset.RegisterDatasetServiceServer(server, handlers.NewDatasetServer(limiter))
+	asset.RegisterComputeTaskServiceServer(server, handlers.NewComputeTaskServer(limiter))
+	asset.RegisterModelServiceServer(server, handlers.NewModelServer(limiter))
+	asset.RegisterComputePlanServiceServer(server, handlers.NewComputePlanServer(limiter))
+	asset.RegisterPerformanceServiceServer(server, handlers.NewPerformanceServer(limiter))
+	asset.RegisterEventServiceServer(server, handlers.NewEventServer(limiter))
 
 	return &AppServer{
 		grpc:    server,
