@@ -95,7 +95,13 @@ func (l *Listener) Listen() {
 	for {
 		select {
 		case event := <-l.events:
-			log.WithField("event", event).Debug("event received")
+			log.WithFields(
+				log.F("ccId", event.ChaincodeID),
+				log.F("eventName", event.EventName),
+				log.F("blockNumber", event.BlockNumber),
+				log.F("source", event.SourceURL),
+				log.F("txID", event.TxID),
+			).Debug("event received")
 			l.onEvent(event)
 		case <-l.done:
 			log.Debug("Stop listening")
