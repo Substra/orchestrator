@@ -269,7 +269,7 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 
 // Models produced by a task can only be disabled if all those conditions are met:
 // - the compute plan has the DeleteIntermediaryModel set
-// - task has children (ie: not at the tip of the compute plan)
+// - task has train children, ie: not at the tip of the compute plan (test children are ignored)
 // - task is in a terminal state (done, failed, canceled)
 // - all children are in a terminal state
 func (s *ComputeTaskService) canDisableModels(key string, requester string) (bool, error) {
@@ -302,17 +302,22 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 		return false, err
 	}
 
-	if len(children) == 0 {
-		logger.Debug("cannot disable model: taks has no children")
-		return false, nil
-	}
+	trainChildren := 0
 
 	for _, child := range children {
+		if child.Category != asset.ComputeTaskCategory_TASK_TEST {
+			trainChildren++
+		}
 		state := newState(&dumbUpdater, child)
 		if len(state.AvailableTransitions()) > 0 {
 			logger.WithField("childKey", child.Key).Debug("cannot disable model: taks has active children")
 			return false, nil
 		}
+	}
+
+	if trainChildren == 0 {
+		logger.Debug("cannot disable model: task has no children")
+		return false, nil
 	}
 
 	return true, nil
