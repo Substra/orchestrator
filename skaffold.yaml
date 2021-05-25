@@ -63,7 +63,13 @@ profiles:
       imageStrategy:
         helm: {}
       valuesFiles: [ examples/values/orchestrator-org-2-distributed.yaml ]
+      skipBuildDependencies: true # deps already built by other release (org-1)
   - op: add
     path: "/deploy/kubectl/manifests/-"
     value:
       examples/secrets/secret-tls-org-2-server-pair.yaml
+- name: nodeps
+  patches:
+    - op: add
+      path: /deploy/helm/releases/0/skipBuildDependencies
+      value: true
