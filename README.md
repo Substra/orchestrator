@@ -66,7 +66,8 @@ In distributed mode, the orchestrator only requires a matching chaincode:
 So you need to build the chaincode image (from this repo) to be used in `hlf-k8s` in your k8s cluster
 
 ```bash
-# In minikube context do not forget to set your docker-env like this: `eval $(minikube -p minikube docker-env)
+# If you use minikube, run `eval $(minikube -p minikube docker-env)` before the `docker build` command
+# If you use kind, run `kind load docker-image my-chaincode:1.0.0` after the `docker build` command
 docker build -f docker/chaincode/Dockerfile -t my-chaincode:1.0.0 .
 ```
 
