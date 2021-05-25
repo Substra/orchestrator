@@ -54,6 +54,7 @@ var testScenarios = map[string]scenario{
 	"MultiStageComputePlan": testMultiStageComputePlan,
 	"QueryTasks":            testQueryTasks,
 	"RegisterPerformance":   testRegisterPerformance,
+	"CompositeParentChild":  testCompositeParentChild,
 }
 
 func main() {

@@ -66,7 +66,7 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	return task, nil
 }
 
-// GetComputeTasks returns all compute tasks identified by the provided IDs.
+// GetComputeTasks returns the list of unique compute tasks identified by the provided keys.
 // It should not be used where pagination is expected!
 func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

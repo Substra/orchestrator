@@ -24,6 +24,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/utils"
 )
 
 const indexPlanTaskStatus = "computePlan~computePlanKey~status~task"
@@ -149,9 +150,10 @@ func (db *DB) ComputeTaskExists(key string) (bool, error) {
 	return exists, nil
 }
 
-// GetComputeTasks returns all compute tasks identified by the provided keys.
+// GetComputeTasks returns the list of unique compute tasks identified by the provided keys.
 // It should not be used where pagination is expected!
 func (db *DB) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
+	keys = utils.UniqueString(keys)
 	tasks := make([]*asset.ComputeTask, 0, len(keys))
 
 	for _, key := range keys {
