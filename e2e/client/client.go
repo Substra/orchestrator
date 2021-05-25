@@ -300,7 +300,7 @@ func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskActi
 		Action:         action,
 	})
 	if err != nil {
-		log.WithError(err).Fatal("failed to mark task as FAILED")
+		log.WithError(err).Fatalf("failed to mark task as %v", action)
 	}
 }
 
