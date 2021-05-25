@@ -83,6 +83,7 @@ fabric:
     host: network-org-1-peer-1-hlf-peer.org-1
     port: 7051
   waitForEventTimeoutSeconds: 45
+  logLevel: INFO
   strategy:
     invoke: ALL
     query: SELF

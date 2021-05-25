@@ -32,6 +32,9 @@ data:
           cert:
             path: /var/hyperledger/tls/server/pair/tls.crt
 
+      logging:
+        level: {{ .Values.fabric.logLevel }}
+
     channels:
       {{- range $channel := .Values.fabric.channels }}
       {{ $channel }}:
