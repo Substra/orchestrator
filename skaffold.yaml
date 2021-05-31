@@ -74,6 +74,7 @@ profiles:
   - op: add
     path: "/deploy/kubectl/manifests/-"
     value:
+      examples/secrets/secret-tls-org-2-cacert.yaml
       examples/secrets/secret-tls-org-2-server-pair.yaml
 - name: nodeps
   patches:
