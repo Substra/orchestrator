@@ -28,16 +28,9 @@ deploy:
     manifests:
       - examples/secrets/secret-tls-org-1-cacert.yaml
       - examples/secrets/secret-tls-org-1-server-pair.yaml
+      - examples/secrets/secret-tls-org-2-cacert.yaml
 
 profiles:
-# when deploying with connect backend org-1 and org-2 add the CA for org-2
-- name: standalone-connect-bck
-  patches:
-  - op: add
-    path: "/deploy/kubectl/manifests/-"
-    value:
-      examples/secrets/secret-tls-org-2-cacert.yaml
-
 - name: distributed
   patches:
   - op: add
@@ -62,7 +55,6 @@ profiles:
       name: owkin-orchestrator-org-2
       chartPath: charts/orchestrator
       namespace: org-2
-      createNamespace: true
       artifactOverrides:
         orchestrator.image: owkin/orchestrator
         forwarder.image: owkin/forwarder
@@ -74,7 +66,6 @@ profiles:
   - op: add
     path: "/deploy/kubectl/manifests/-"
     value:
-      examples/secrets/secret-tls-org-2-cacert.yaml
       examples/secrets/secret-tls-org-2-server-pair.yaml
 - name: nodeps
   patches:

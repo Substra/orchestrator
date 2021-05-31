@@ -60,12 +60,6 @@ grpcurl -insecure orchestrator.node-1.com:443 list
 
 You can also deploy [connect-backend](https://github.com/owkin/connect-backend/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev` or `skaffold run`
 
-and then run the orchestrator with:
-```bash
-skaffold dev -p standalone-connect-bck
-skaffold run -p standalone-connect-bck
-```
-
 ### Distributed mode
 
 In distributed mode, the orchestrator only requires a matching chaincode:
