@@ -42,12 +42,12 @@ func NewSmartContract() *SmartContract {
 	return contract
 }
 
-// RegisterDataSample creates a new data sample in world state
+// RegisterDataSamples register new data samples in world state
 // If the key exists, it will throw an error
-func (s *SmartContract) RegisterDataSample(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+func (s *SmartContract) RegisterDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	service := ctx.GetProvider().GetDataSampleService()
 
-	params := new(asset.NewDataSample)
+	params := new(asset.RegisterDataSamplesParam)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
@@ -60,9 +60,9 @@ func (s *SmartContract) RegisterDataSample(ctx ledger.TransactionContext, wrappe
 		return err
 	}
 
-	err = service.RegisterDataSample(params, owner)
+	err = service.RegisterDataSamples(params.Samples, owner)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to register datasample")
+		s.logger.WithError(err).Error("failed to register datasamples")
 		return err
 	}
 	return nil

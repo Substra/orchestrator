@@ -264,8 +264,8 @@ type MockDataSampleService struct {
 }
 
 // RegisterDataSample returns whatever value is passed
-func (m *MockDataSampleService) RegisterDataSample(datasample *asset.NewDataSample, owner string) error {
-	args := m.Called(datasample, owner)
+func (m *MockDataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, owner string) error {
+	args := m.Called(samples, owner)
 	return args.Error(0)
 }
 

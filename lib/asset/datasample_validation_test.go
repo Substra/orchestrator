@@ -34,25 +34,35 @@ func TestNewDataSampleValidate(t *testing.T) {
 	cases := map[string]datasampleTestCase{
 		"empty": {&NewDataSample{}, false},
 		"invalidDataSampleKey": {&NewDataSample{
-			Keys:            []string{"not36chars", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
+			Key:             "not36chars",
 			DataManagerKeys: []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
 			TestOnly:        false,
+			Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		}, false},
 		"invalidDataManagerKey": {&NewDataSample{
-			Keys:            []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
+			Key:             "834f47c3-2d95-4ccd-a718-7143b64e61c0",
 			DataManagerKeys: []string{"not36chars", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
 			TestOnly:        false,
+			Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		}, false},
 		"valid": {&NewDataSample{
-			Keys:            []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
+			Key:             "834f47c3-2d95-4ccd-a718-7143b64e61c0",
 			DataManagerKeys: []string{"3dd165f8-8822-481a-8bf9-23bf135152cf", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
 			TestOnly:        false,
+			Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		}, true},
 		"validTestOnly": {&NewDataSample{
-			Keys:            []string{"834f47c3-2d95-4ccd-a718-7143b64e61c0", "c6cc913d-83a9-4a8e-a258-2901e1d5ebbc"},
+			Key:             "834f47c3-2d95-4ccd-a718-7143b64e61c0",
 			DataManagerKeys: []string{"3dd165f8-8822-481a-8bf9-23bf135152cf", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
 			TestOnly:        true,
+			Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		}, true},
+		"invalidChecksum": {&NewDataSample{
+			Key:             "834f47c3-2d95-4ccd-a718-7143b64e61c0",
+			DataManagerKeys: []string{"3dd165f8-8822-481a-8bf9-23bf135152cf", "1d417d76-a2e1-46e7-aae5-9c7c165575fc"},
+			TestOnly:        false,
+			Checksum:        "j2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		}, false},
 	}
 
 	for name, tc := range cases {

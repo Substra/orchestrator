@@ -39,11 +39,11 @@ func NewDataSampleServer(scheduler concurrency.RequestScheduler) *DataSampleServ
 }
 
 // RegisterDataSample will persist new DataSamples
-func (s *DataSampleServer) RegisterDataSample(ctx context.Context, datasample *asset.NewDataSample) (*asset.NewDataSampleResponse, error) {
+func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
 	execToken := <-s.scheduler.AcquireExecutionToken()
 	defer execToken.Release()
 
-	log.WithField("datasample", datasample).Debug("Register DataSample")
+	log.WithField("nbSamples", len(input.Samples)).Debug("Register DataSamples")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
@@ -54,12 +54,12 @@ func (s *DataSampleServer) RegisterDataSample(ctx context.Context, datasample *a
 		return nil, err
 	}
 
-	err = services.GetDataSampleService().RegisterDataSample(datasample, mspid)
+	err = services.GetDataSampleService().RegisterDataSamples(input.Samples, mspid)
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.NewDataSampleResponse{}, nil
+	return &asset.RegisterDataSamplesResponse{}, nil
 }
 
 // UpdateDataSamples will update the datamanagers existing DataSamples

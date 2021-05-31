@@ -28,7 +28,7 @@ import (
 
 // DataSampleAPI defines the methods to act on DataSamples
 type DataSampleAPI interface {
-	RegisterDataSample(datasample *asset.NewDataSample, owner string) error
+	RegisterDataSamples(datasamples []*asset.NewDataSample, owner string) error
 	UpdateDataSamples(datasample *asset.UpdateDataSamplesParam, owner string) error
 	QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
 	CheckSameManager(managerKey string, sampleKeys []string) error
@@ -59,48 +59,60 @@ func NewDataSampleService(provider DataSampleDependencyProvider) *DataSampleServ
 	return &DataSampleService{provider}
 }
 
-// RegisterDataSample persist one or multiple datasamples
-func (s *DataSampleService) RegisterDataSample(d *asset.NewDataSample, owner string) error {
-	log.WithField("owner", owner).WithField("newDataSample", d).Debug("Registering data sample")
-	err := d.Validate()
+func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, owner string) error {
+	log.WithField("owner", owner).WithField("nbSamples", len(samples)).Debug("Registering data samples")
+
+	for _, sample := range samples {
+		err := s.registerDataSample(sample, owner)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// registerDataSample persist one datasamples
+func (s *DataSampleService) registerDataSample(sample *asset.NewDataSample, owner string) error {
+	log.WithField("owner", owner).WithField("newDataSample", sample).Debug("Registering data sample")
+	err := sample.Validate()
 	if err != nil {
 		return fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
-	err = s.GetDataManagerService().CheckOwner(d.GetDataManagerKeys(), owner)
+	err = s.GetDataManagerService().CheckOwner(sample.GetDataManagerKeys(), owner)
 	if err != nil {
 		return err
 	}
 
-	for _, dataSampleKey := range d.GetKeys() {
-		exists, err := s.GetDataSampleDBAL().DataSampleExists(dataSampleKey)
-		if err != nil {
-			return err
-		}
-		if exists {
-			return fmt.Errorf("datasample whith the same key already exist: %w key: %s", orcerrors.ErrConflict, dataSampleKey)
-		}
-		datasample := &asset.DataSample{
-			Key:             dataSampleKey,
-			DataManagerKeys: d.GetDataManagerKeys(),
-			TestOnly:        d.GetTestOnly(),
-			Owner:           owner,
-		}
+	exists, err := s.GetDataSampleDBAL().DataSampleExists(sample.Key)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("datasample whith the same key already exist: %w key: %s", orcerrors.ErrConflict, sample.Key)
+	}
+	datasample := &asset.DataSample{
+		Key:             sample.Key,
+		DataManagerKeys: sample.GetDataManagerKeys(),
+		TestOnly:        sample.GetTestOnly(),
+		Owner:           owner,
+		Checksum:        sample.Checksum,
+	}
 
-		event := &asset.Event{
-			EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-			AssetKey:  dataSampleKey,
-			AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
-		}
-		err = s.GetEventService().RegisterEvent(event)
-		if err != nil {
-			return err
-		}
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  sample.Key,
+		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
+	}
+	err = s.GetEventService().RegisterEvent(event)
+	if err != nil {
+		return err
+	}
 
-		err = s.GetDataSampleDBAL().AddDataSample(datasample)
-		if err != nil {
-			return err
-		}
+	err = s.GetDataSampleDBAL().AddDataSample(datasample)
+	if err != nil {
+		return err
 	}
 
 	return nil

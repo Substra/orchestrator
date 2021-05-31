@@ -37,9 +37,10 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	service := NewDataSampleService(provider)
 
 	datasample := &asset.NewDataSample{
-		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
+		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		TestOnly:        false,
+		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 
 	storedDataSample := &asset.DataSample{
@@ -47,6 +48,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
 		TestOnly:        false,
+		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
 	dbal.On("AddDataSample", storedDataSample).Return(nil).Once()
@@ -59,7 +61,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	}
 	es.On("RegisterEvent", e).Once().Return(nil)
 
-	err := service.RegisterDataSample(datasample, "owner")
+	err := service.registerDataSample(datasample, "owner")
 
 	assert.NoError(t, err, "Registration of valid datasample should not fail")
 
@@ -76,14 +78,15 @@ func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
 	service := NewDataSampleService(provider)
 
 	datasample := &asset.NewDataSample{
-		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
+		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		TestOnly:        false,
+		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(errors.New("unknown datamanager")).Once()
 
-	err := service.RegisterDataSample(datasample, "owner")
+	err := service.registerDataSample(datasample, "owner")
 
 	assert.Error(t, err, "Registration of datasample with invalid datamanager key should fail")
 
@@ -100,10 +103,19 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
 
-	datasamples := &asset.NewDataSample{
-		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "0b4b4466-9a81-4084-9bab-80939b78addd"},
-		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-		TestOnly:        false,
+	datasamples := []*asset.NewDataSample{
+		{
+			Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+			DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+			TestOnly:        false,
+			Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		},
+		{
+			Key:             "0b4b4466-9a81-4084-9bab-80939b78addd",
+			DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+			TestOnly:        false,
+			Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		},
 	}
 
 	storedDataSample1 := &asset.DataSample{
@@ -111,6 +123,7 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
 		TestOnly:        false,
+		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 
 	storedDataSample2 := &asset.DataSample{
@@ -118,9 +131,10 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
 		TestOnly:        false,
+		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 
-	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
+	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Times(2)
 	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
 	dbal.On("DataSampleExists", "0b4b4466-9a81-4084-9bab-80939b78addd").Return(false, nil).Once()
 	dbal.On("AddDataSample", storedDataSample1).Return(nil).Once()
@@ -128,7 +142,7 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 
 	es.On("RegisterEvent", mock.AnythingOfType("*asset.Event")).Times(2).Return(nil)
 
-	err := service.RegisterDataSample(datasamples, "owner")
+	err := service.RegisterDataSamples(datasamples, "owner")
 
 	assert.NoError(t, err, "Registration of multiple valid assets should not fail")
 

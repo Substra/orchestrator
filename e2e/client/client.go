@@ -138,16 +138,19 @@ func (c *TestClient) RegisterDataManager() {
 
 func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
 	newDs := &asset.NewDataSample{
-		Keys:            []string{c.GetKey(o.KeyRef)},
+		Key:             c.GetKey(o.KeyRef),
 		DataManagerKeys: []string{c.GetKey("dm")},
 		TestOnly:        o.TestOnly,
+		Checksum:        "7e87a07aeb05e0e66918ce1c93155acf54649eec453060b75caf494bc0bc0b9c",
 	}
 	log.WithField("datasample", newDs).Debug("registering datasample")
-	_, err := c.dataSampleService.RegisterDataSample(c.ctx, newDs)
+	input := &asset.RegisterDataSamplesParam{
+		Samples: []*asset.NewDataSample{newDs},
+	}
+	_, err := c.dataSampleService.RegisterDataSamples(c.ctx, input)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterDataSample failed")
 	}
-
 }
 
 func (c *TestClient) RegisterObjective(o *ObjectiveOptions) {

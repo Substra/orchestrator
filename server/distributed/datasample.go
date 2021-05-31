@@ -32,16 +32,16 @@ func NewDataSampleAdapter() *DataSampleAdapter {
 }
 
 // RegisterDataSample will add a new DataSample to the state
-func (a *DataSampleAdapter) RegisterDataSample(ctx context.Context, param *asset.NewDataSample) (*asset.NewDataSampleResponse, error) {
+func (a *DataSampleAdapter) RegisterDataSamples(ctx context.Context, param *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.datasample:RegisterDataSample"
+	method := "orchestrator.datasample:RegisterDataSamples"
 
 	err = invocator.Call(method, param, nil)
 
-	return &asset.NewDataSampleResponse{}, err
+	return &asset.RegisterDataSamplesResponse{}, err
 }
 
 // UpdateDataSamples will update a DataSample from the state

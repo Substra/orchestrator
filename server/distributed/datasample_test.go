@@ -30,20 +30,24 @@ func TestDataSampleAdapterImplementServer(t *testing.T) {
 func TestRegisterDataSample(t *testing.T) {
 	adapter := NewDataSampleAdapter()
 
-	newDS := &asset.NewDataSample{
-		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
-		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-		TestOnly:        false,
+	param := &asset.RegisterDataSamplesParam{
+		Samples: []*asset.NewDataSample{
+			{
+				Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+				DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+				TestOnly:        false,
+			},
+		},
 	}
 
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", "orchestrator.datasample:RegisterDataSample", newDS, nil).Return(nil)
+	invocator.On("Call", "orchestrator.datasample:RegisterDataSamples", param, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
-	_, err := adapter.RegisterDataSample(ctx, newDS)
+	_, err := adapter.RegisterDataSamples(ctx, param)
 
 	assert.NoError(t, err, "Registration should pass")
 }
