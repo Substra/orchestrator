@@ -22,26 +22,21 @@ import (
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
 
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 // DataManagerServer is the gRPC facade to DataManager manipulation
 type DataManagerServer struct {
 	asset.UnimplementedDataManagerServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
 // NewDataManagerServer creates a gRPC server
-func NewDataManagerServer(scheduler concurrency.RequestScheduler) *DataManagerServer {
-	return &DataManagerServer{scheduler: scheduler}
+func NewDataManagerServer() *DataManagerServer {
+	return &DataManagerServer{}
 }
 
 // RegisterDataManager will persist new DataManagers
 func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.NewDataManagerResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	log.WithField("datamanager", d).Debug("Register DataManager")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -63,9 +58,6 @@ func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.Ne
 
 // UpdateDataManager will update the objective of an existing DataManager
 func (s *DataManagerServer) UpdateDataManager(ctx context.Context, d *asset.DataManagerUpdateParam) (*asset.DataManagerUpdateResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	log.WithField("datamanager", d).Debug("Update UpdateDataManager")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -87,9 +79,6 @@ func (s *DataManagerServer) UpdateDataManager(ctx context.Context, d *asset.Data
 
 // GetDataManager fetches a datamanager by its key
 func (s *DataManagerServer) GetDataManager(ctx context.Context, params *asset.GetDataManagerParam) (*asset.DataManager, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -99,9 +88,6 @@ func (s *DataManagerServer) GetDataManager(ctx context.Context, params *asset.Ge
 
 // QueryDataManagers returns a paginated list of all known datamanagers
 func (s *DataManagerServer) QueryDataManagers(ctx context.Context, params *asset.QueryDataManagersParam) (*asset.QueryDataManagersResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

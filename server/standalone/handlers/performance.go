@@ -20,25 +20,20 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 // PerformanceServer is the gRPC facade to Performance manipulation
 type PerformanceServer struct {
 	asset.UnimplementedPerformanceServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
 // NewPerformanceServer creates a grpc server
-func NewPerformanceServer(scheduler concurrency.RequestScheduler) *PerformanceServer {
-	return &PerformanceServer{scheduler: scheduler}
+func NewPerformanceServer() *PerformanceServer {
+	return &PerformanceServer{}
 }
 
 func (s *PerformanceServer) RegisterPerformance(ctx context.Context, newPerf *asset.NewPerformance) (*asset.Performance, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -52,9 +47,6 @@ func (s *PerformanceServer) RegisterPerformance(ctx context.Context, newPerf *as
 }
 
 func (s *PerformanceServer) GetComputeTaskPerformance(ctx context.Context, param *asset.GetComputeTaskPerformanceParam) (*asset.Performance, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

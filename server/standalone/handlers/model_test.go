@@ -21,7 +21,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 
 	"github.com/stretchr/testify/assert"
@@ -37,7 +36,7 @@ func getContext() (context.Context, *service.MockServiceProvider) {
 }
 
 func TestModelServiceServer(t *testing.T) {
-	server := NewModelServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewModelServer()
 	assert.Implements(t, (*asset.ModelServiceServer)(nil), server)
 }
 
@@ -45,7 +44,7 @@ func TestRegisterModel(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := NewModelServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewModelServer()
 
 	newModel := &asset.NewModel{Key: "uuid"}
 
@@ -63,7 +62,7 @@ func TestGetComputeTaskOutputModels(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := NewModelServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewModelServer()
 
 	p.On("GetModelService").Return(ms)
 	ms.On("GetComputeTaskOutputModels", "uuid").Once().Return([]*asset.Model{{Key: "m1"}, {Key: "m2"}}, nil)
@@ -81,7 +80,7 @@ func TestGetComputeTaskInputModels(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := NewModelServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewModelServer()
 
 	p.On("GetModelService").Return(ms)
 	ms.On("GetComputeTaskInputModels", "uuid").Once().Return([]*asset.Model{{Key: "m1"}, {Key: "m2"}}, nil)
@@ -99,7 +98,7 @@ func TestCanDisableModel(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := NewModelServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewModelServer()
 
 	p.On("GetModelService").Return(ms)
 	ms.On("CanDisableModel", "uuid", "requester").Once().Return(true, nil)
@@ -116,7 +115,7 @@ func TestDisableModel(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelService)
 
-	server := NewModelServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewModelServer()
 
 	p.On("GetModelService").Return(ms)
 	ms.On("DisableModel", "uuid", "requester").Once().Return(nil)

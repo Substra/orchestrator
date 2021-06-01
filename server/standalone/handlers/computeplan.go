@@ -21,23 +21,18 @@ import (
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
 
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 type ComputePlanServer struct {
 	asset.UnimplementedComputePlanServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
-func NewComputePlanServer(scheduler concurrency.RequestScheduler) *ComputePlanServer {
-	return &ComputePlanServer{scheduler: scheduler}
+func NewComputePlanServer() *ComputePlanServer {
+	return &ComputePlanServer{}
 }
 
 func (s *ComputePlanServer) RegisterPlan(ctx context.Context, in *asset.NewComputePlan) (*asset.ComputePlan, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	owner, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -57,9 +52,6 @@ func (s *ComputePlanServer) RegisterPlan(ctx context.Context, in *asset.NewCompu
 }
 
 func (s *ComputePlanServer) GetPlan(ctx context.Context, param *asset.GetComputePlanParam) (*asset.ComputePlan, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	provider, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -75,9 +67,6 @@ func (s *ComputePlanServer) GetPlan(ctx context.Context, param *asset.GetCompute
 }
 
 func (s *ComputePlanServer) QueryPlans(ctx context.Context, param *asset.QueryPlansParam) (*asset.QueryPlansResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	provider, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -95,9 +84,6 @@ func (s *ComputePlanServer) QueryPlans(ctx context.Context, param *asset.QueryPl
 }
 
 func (s *ComputePlanServer) ApplyPlanAction(ctx context.Context, param *asset.ApplyPlanActionParam) (*asset.ApplyPlanActionResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	requester, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err

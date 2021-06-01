@@ -18,11 +18,10 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDatasetServerImplementServer(t *testing.T) {
-	server := NewDatasetServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewDatasetServer()
 	assert.Implementsf(t, (*asset.DatasetServiceServer)(nil), server, "DatasetServer should implements DatasetServiceServer")
 }

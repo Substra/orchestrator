@@ -23,6 +23,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
 // SmartContract manages objectives
@@ -135,5 +136,5 @@ func (s *SmartContract) QueryLeaderboard(ctx ledger.TransactionContext, key stri
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"GetObjective", "QueryObjectives", "QueryLeaderboard"}
+	return commonserv.ReadOnlyMethods["Objective"]
 }

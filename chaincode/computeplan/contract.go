@@ -21,6 +21,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
 // SmartContract manages ComputeTask
@@ -148,5 +149,5 @@ func (s *SmartContract) ApplyPlanAction(ctx ledger.TransactionContext, wrapper *
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"GetPlan", "QueryPlans"}
+	return commonserv.ReadOnlyMethods["ComputePlan"]
 }

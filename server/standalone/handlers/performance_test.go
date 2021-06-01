@@ -19,12 +19,11 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPerformanceServiceServer(t *testing.T) {
-	server := NewPerformanceServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewPerformanceServer()
 	assert.Implements(t, (*asset.PerformanceServiceServer)(nil), server)
 }
 
@@ -32,7 +31,7 @@ func TestRegisterPerformance(t *testing.T) {
 	ctx, p := getContext()
 	ps := new(service.MockPerformanceService)
 
-	server := NewPerformanceServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewPerformanceServer()
 
 	newPerf := &asset.NewPerformance{ComputeTaskKey: "uuid", PerformanceValue: 3.14}
 
@@ -50,7 +49,7 @@ func TestGetPerformance(t *testing.T) {
 	ctx, p := getContext()
 	ps := new(service.MockPerformanceService)
 
-	server := NewPerformanceServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewPerformanceServer()
 
 	perf := &asset.Performance{ComputeTaskKey: "uuid", PerformanceValue: 3.14}
 

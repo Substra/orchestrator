@@ -22,7 +22,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/contracts"
+	"github.com/owkin/orchestrator/server/common"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -46,12 +46,12 @@ type Invocator interface {
 // ContractInvocator implements the Invocator interface.
 type ContractInvocator struct {
 	contract      GatewayContract
-	checker       contracts.TransactionChecker
+	checker       common.TransactionChecker
 	evaluatePeers []string
 }
 
 // NewContractInvocator creates an Invocator based on given smart contract.
-func NewContractInvocator(c GatewayContract, checker contracts.TransactionChecker, evaluatePeers []string) *ContractInvocator {
+func NewContractInvocator(c GatewayContract, checker common.TransactionChecker, evaluatePeers []string) *ContractInvocator {
 	return &ContractInvocator{contract: c, checker: checker, evaluatePeers: evaluatePeers}
 }
 
