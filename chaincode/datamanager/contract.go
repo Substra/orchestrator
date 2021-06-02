@@ -44,28 +44,31 @@ func NewSmartContract() *SmartContract {
 
 // RegisterDataManager creates a new data Manager in world state
 // If the key exists, it will throw an error
-func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetDataManagerService()
 
 	params := new(asset.NewDataManager)
 	err := wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
-		return err
+		return nil, err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
 		s.logger.WithError(err).Error("failed to extract tx creator")
-		return err
+		return nil, err
 	}
 
-	err = service.RegisterDataManager(params, owner)
+	dm, err := service.RegisterDataManager(params, owner)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to register datamanager")
-		return err
+		return nil, err
 	}
-	return nil
+
+	response, err := communication.Wrap(dm)
+
+	return response, nil
 }
 
 // UpdateDataManager updates a data manager in world state

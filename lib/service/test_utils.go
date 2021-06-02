@@ -328,9 +328,9 @@ type MockDataManagerService struct {
 }
 
 // RegisterDataManager returns whatever value is passed
-func (m *MockDataManagerService) RegisterDataManager(datamanager *asset.NewDataManager, owner string) error {
+func (m *MockDataManagerService) RegisterDataManager(datamanager *asset.NewDataManager, owner string) (*asset.DataManager, error) {
 	args := m.Called(datamanager, owner)
-	return args.Error(0)
+	return args.Get(0).(*asset.DataManager), args.Error(1)
 }
 
 // UpdateDataManager returns whatever value is passed

@@ -86,9 +86,10 @@ func TestRegisterDataManager(t *testing.T) {
 	}
 	es.On("RegisterEvent", e).Once().Return(nil)
 
-	err := service.RegisterDataManager(newDataManager, "owner")
+	dm, err := service.RegisterDataManager(newDataManager, "owner")
 
 	assert.NoError(t, err, "Registration of valid datamanager should not fail")
+	assert.NotNil(t, dm, "Registratrion should return a datamanager asset")
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
 }
@@ -152,9 +153,10 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	}
 	es.On("RegisterEvent", e).Once().Return(nil)
 
-	err := service.RegisterDataManager(newDataManager, "owner")
+	dm, err := service.RegisterDataManager(newDataManager, "owner")
 
 	assert.NoError(t, err, "Registration of valid datamanager should not fail")
+	assert.NotNil(t, dm, "Registration should return a data manager")
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
 }
@@ -196,7 +198,7 @@ func TestRegisterDataManagerUnknownObjective(t *testing.T) {
 	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	obj.On("CanDownload", "da9b3341-0539-44cb-835d-0baeb5644151", "owner").Return(false, errors.New("not found")).Once()
 
-	err := service.RegisterDataManager(newDataManager, "owner")
+	_, err := service.RegisterDataManager(newDataManager, "owner")
 
 	assert.Error(t, err, "Registration of an invalid datamanager should fail")
 	obj.AssertExpectations(t)
