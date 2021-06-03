@@ -116,7 +116,12 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 	}
 
 	err = s.GetDataManagerDBAL().AddDataManager(datamanager)
-	return datamanager, err
+
+	if err != nil {
+		return nil, err
+	}
+
+	return datamanager, nil
 }
 
 // UpdateDataManager updates a DataManager to link an objective

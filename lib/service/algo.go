@@ -91,12 +91,18 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		AssetKind: asset.AssetKind_ASSET_ALGO,
 	}
 	err = s.GetEventService().RegisterEvent(event)
+
 	if err != nil {
 		return nil, err
 	}
 
 	err = s.GetAlgoDBAL().AddAlgo(algo)
-	return algo, err
+
+	if err != nil {
+		return nil, err
+	}
+
+	return algo, nil
 }
 
 // GetAlgo retrieves an algo by its key

@@ -129,7 +129,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		}
 	}
 
-	return objective, err
+	return objective, nil
 }
 
 // GetObjective retrieves an objective by its key
