@@ -27,10 +27,6 @@ type Provider interface {
 	GetAllContracts() []contractapi.ContractInterface
 }
 
-type TransactionChecker interface {
-	IsEvaluateMethod(method string) bool
-}
-
 type ContractCollection struct {
 	allEvaluateTransactions []string
 }

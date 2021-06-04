@@ -19,25 +19,20 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 // EventServer is the gRPC facade to Model manipulation
 type EventServer struct {
 	asset.UnimplementedEventServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
 // NewEventServer creates a grpc server
-func NewEventServer(scheduler concurrency.RequestScheduler) *EventServer {
-	return &EventServer{scheduler: scheduler}
+func NewEventServer() *EventServer {
+	return &EventServer{}
 }
 
 func (s *EventServer) QueryEvents(ctx context.Context, params *asset.QueryEventsParam) (*asset.QueryEventsResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

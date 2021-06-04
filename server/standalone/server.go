@@ -17,7 +17,6 @@ package standalone
 import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/handlers"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
@@ -25,10 +24,9 @@ import (
 )
 
 type AppServer struct {
-	grpc    *grpc.Server
-	amqp    *common.Session
-	db      *dbal.Database
-	limiter *concurrency.Limiter
+	grpc *grpc.Server
+	amqp *common.Session
+	db   *dbal.Database
 }
 
 func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOption, config *common.OrchestratorConfiguration) (*AppServer, error) {
@@ -55,26 +53,23 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 
 	server := grpc.NewServer(serverOptions...)
 
-	limiter := concurrency.NewLimiter()
-
 	// Register application services
-	asset.RegisterNodeServiceServer(server, handlers.NewNodeServer(limiter))
-	asset.RegisterObjectiveServiceServer(server, handlers.NewObjectiveServer(limiter))
-	asset.RegisterDataSampleServiceServer(server, handlers.NewDataSampleServer(limiter))
-	asset.RegisterAlgoServiceServer(server, handlers.NewAlgoServer(limiter))
-	asset.RegisterDataManagerServiceServer(server, handlers.NewDataManagerServer(limiter))
-	asset.RegisterDatasetServiceServer(server, handlers.NewDatasetServer(limiter))
-	asset.RegisterComputeTaskServiceServer(server, handlers.NewComputeTaskServer(limiter))
-	asset.RegisterModelServiceServer(server, handlers.NewModelServer(limiter))
-	asset.RegisterComputePlanServiceServer(server, handlers.NewComputePlanServer(limiter))
-	asset.RegisterPerformanceServiceServer(server, handlers.NewPerformanceServer(limiter))
-	asset.RegisterEventServiceServer(server, handlers.NewEventServer(limiter))
+	asset.RegisterNodeServiceServer(server, handlers.NewNodeServer())
+	asset.RegisterObjectiveServiceServer(server, handlers.NewObjectiveServer())
+	asset.RegisterDataSampleServiceServer(server, handlers.NewDataSampleServer())
+	asset.RegisterAlgoServiceServer(server, handlers.NewAlgoServer())
+	asset.RegisterDataManagerServiceServer(server, handlers.NewDataManagerServer())
+	asset.RegisterDatasetServiceServer(server, handlers.NewDatasetServer())
+	asset.RegisterComputeTaskServiceServer(server, handlers.NewComputeTaskServer())
+	asset.RegisterModelServiceServer(server, handlers.NewModelServer())
+	asset.RegisterComputePlanServiceServer(server, handlers.NewComputePlanServer())
+	asset.RegisterPerformanceServiceServer(server, handlers.NewPerformanceServer())
+	asset.RegisterEventServiceServer(server, handlers.NewEventServer())
 
 	return &AppServer{
-		grpc:    server,
-		amqp:    session,
-		db:      pgDB,
-		limiter: limiter,
+		grpc: server,
+		amqp: session,
+		db:   pgDB,
 	}, nil
 }
 
@@ -86,5 +81,4 @@ func (a *AppServer) Stop() {
 	a.grpc.Stop()
 	a.db.Close()
 	a.amqp.Close()
-	a.limiter.Stop()
 }

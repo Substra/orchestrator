@@ -15,6 +15,8 @@ require (
 	github.com/hyperledger/fabric-contract-api-go v1.1.2-0.20210104111150-d852efd3f6af
 	github.com/hyperledger/fabric-protos-go v0.0.0-20200917184523-71c4060efc42
 	github.com/hyperledger/fabric-sdk-go v1.0.0-rc1
+	github.com/jackc/pgconn v1.8.1
+	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451 // indirect
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/looplab/fsm v0.2.0
 	github.com/onsi/ginkgo v1.14.2 // indirect
@@ -22,7 +24,6 @@ require (
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.6.1
 	github.com/yoheimuta/go-protoparser/v4 v4.3.0
-	golang.org/x/net v0.0.0-20201216054612-986b41b23924
 	golang.org/x/sys v0.0.0-20201221093633-bc327ba9c2f0 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect

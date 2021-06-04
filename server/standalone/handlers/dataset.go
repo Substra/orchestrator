@@ -18,26 +18,21 @@ import (
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 // DatasetServer is the gRPC facade to Dataset manipulation
 type DatasetServer struct {
 	asset.UnimplementedDatasetServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
 // NewDatasetServer creates a gRPC server
-func NewDatasetServer(scheduler concurrency.RequestScheduler) *DatasetServer {
-	return &DatasetServer{scheduler: scheduler}
+func NewDatasetServer() *DatasetServer {
+	return &DatasetServer{}
 }
 
 // GetDataset fetches a dataset by its key
 func (s *DatasetServer) GetDataset(ctx context.Context, params *asset.GetDatasetParam) (*asset.Dataset, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

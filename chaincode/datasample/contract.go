@@ -21,6 +21,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
 // SmartContract manages datasamples
@@ -125,5 +126,5 @@ func (s *SmartContract) QueryDataSamples(ctx ledger.TransactionContext, wrapper 
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"QueryDataSamples"}
+	return commonserv.ReadOnlyMethods["DataSample"]
 }

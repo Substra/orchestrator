@@ -20,6 +20,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
+	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
 // SmartContract manages datasets
@@ -43,7 +44,7 @@ func NewSmartContract() *SmartContract {
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{"GetDataset"}
+	return commonserv.ReadOnlyMethods["Dataset"]
 }
 
 // GetDataset returns the Dataset with given key

@@ -16,6 +16,7 @@ package client
 
 import (
 	"context"
+	"sync"
 
 	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
@@ -31,10 +32,40 @@ const DefaultPlanRef = "cp"
 const DefaultAlgoRef = "algo"
 const DefaultObjectiveRef = "objective"
 
+// KeyStore is the component holding matching between key references and their UUID.
+type KeyStore struct {
+	keys map[string]string
+	lock *sync.RWMutex
+}
+
+func NewKeyStore() *KeyStore {
+	return &KeyStore{
+		keys: make(map[string]string),
+		lock: new(sync.RWMutex),
+	}
+}
+
+// GetKey will create a UUID or return the previously generated one.
+// This is useful when building relationships between entities.
+func (ks *KeyStore) GetKey(id string) string {
+	ks.lock.RLock()
+	k, ok := ks.keys[id]
+	ks.lock.RUnlock()
+
+	if !ok {
+		k = uuid.New().String()
+		ks.lock.Lock()
+		ks.keys[id] = k
+		ks.lock.Unlock()
+	}
+
+	return k
+}
+
 // TestClient is a client for the tested app
 type TestClient struct {
 	ctx                context.Context
-	keys               map[string]string
+	ks                 *KeyStore
 	nodeService        asset.NodeServiceClient
 	objectiveService   asset.ObjectiveServiceClient
 	algoService        asset.AlgoServiceClient
@@ -52,7 +83,7 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 
 	return &TestClient{
 		ctx:                ctx,
-		keys:               make(map[string]string),
+		ks:                 NewKeyStore(),
 		nodeService:        asset.NewNodeServiceClient(conn),
 		algoService:        asset.NewAlgoServiceClient(conn),
 		objectiveService:   asset.NewObjectiveServiceClient(conn),
@@ -65,16 +96,13 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 	}, nil
 }
 
-// GetKey will create a UUID or return the previously generated one.
-// This is useful when building relationships between entities.
-func (c *TestClient) GetKey(id string) string {
-	k, ok := c.keys[id]
-	if !ok {
-		k = uuid.New().String()
-		c.keys[id] = k
-	}
+func (c *TestClient) WithKeyStore(ks *KeyStore) *TestClient {
+	c.ks = ks
+	return c
+}
 
-	return k
+func (c *TestClient) GetKeyStore() *KeyStore {
+	return c.ks
 }
 
 // EnsureNode attempts to register the node but won't fail on existing node
@@ -92,7 +120,7 @@ func (c *TestClient) EnsureNode() {
 
 func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 	newAlgo := &asset.NewAlgo{
-		Key:      c.GetKey(o.KeyRef),
+		Key:      c.ks.GetKey(o.KeyRef),
 		Name:     "Algo test",
 		Category: o.Category,
 		Description: &asset.Addressable{
@@ -115,7 +143,7 @@ func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 
 func (c *TestClient) RegisterDataManager() {
 	newDm := &asset.NewDataManager{
-		Key:            c.GetKey("dm"),
+		Key:            c.ks.GetKey("dm"),
 		Name:           "Test datamanager",
 		NewPermissions: &asset.NewPermissions{Public: true},
 		Description: &asset.Addressable{
@@ -138,8 +166,8 @@ func (c *TestClient) RegisterDataManager() {
 
 func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
 	newDs := &asset.NewDataSample{
-		Key:             c.GetKey(o.KeyRef),
-		DataManagerKeys: []string{c.GetKey("dm")},
+		Key:             c.ks.GetKey(o.KeyRef),
+		DataManagerKeys: []string{c.ks.GetKey("dm")},
 		TestOnly:        o.TestOnly,
 		Checksum:        "7e87a07aeb05e0e66918ce1c93155acf54649eec453060b75caf494bc0bc0b9c",
 	}
@@ -155,10 +183,10 @@ func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
 
 func (c *TestClient) RegisterObjective(o *ObjectiveOptions) {
 	newObj := &asset.NewObjective{
-		Key:            c.GetKey(o.KeyRef),
+		Key:            c.ks.GetKey(o.KeyRef),
 		Name:           "test objective",
-		DataManagerKey: c.GetKey(o.DataManagerRef),
-		DataSampleKeys: []string{c.GetKey(o.DataSampleRef)},
+		DataManagerKey: c.ks.GetKey(o.DataManagerRef),
+		DataSampleKeys: []string{c.ks.GetKey(o.DataSampleRef)},
 		Description: &asset.Addressable{
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/desc",
@@ -181,17 +209,17 @@ func (c *TestClient) RegisterObjective(o *ObjectiveOptions) {
 func (c *TestClient) RegisterTestTask(o *TestTaskOptions) {
 	parentKeys := make([]string, len(o.ParentsRef))
 	for i, ref := range o.ParentsRef {
-		parentKeys[i] = c.GetKey(ref)
+		parentKeys[i] = c.ks.GetKey(ref)
 	}
 	newTask := &asset.NewComputeTask{
-		Key:            c.GetKey(o.KeyRef),
+		Key:            c.ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_TEST,
-		AlgoKey:        c.GetKey(o.AlgoRef),
+		AlgoKey:        c.ks.GetKey(o.AlgoRef),
 		ParentTaskKeys: parentKeys,
-		ComputePlanKey: c.GetKey(o.PlanRef),
+		ComputePlanKey: c.ks.GetKey(o.PlanRef),
 		Data: &asset.NewComputeTask_Test{
 			Test: &asset.NewTestTaskData{
-				ObjectiveKey: c.GetKey(o.ObjectiveRef),
+				ObjectiveKey: c.ks.GetKey(o.ObjectiveRef),
 			},
 		},
 	}
@@ -206,18 +234,18 @@ func (c *TestClient) RegisterTestTask(o *TestTaskOptions) {
 func (c *TestClient) RegisterTrainTask(o *TrainTaskOptions) {
 	parentKeys := make([]string, len(o.ParentsRef))
 	for i, ref := range o.ParentsRef {
-		parentKeys[i] = c.GetKey(ref)
+		parentKeys[i] = c.ks.GetKey(ref)
 	}
 	newTask := &asset.NewComputeTask{
-		Key:            c.GetKey(o.KeyRef),
+		Key:            c.ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
-		AlgoKey:        c.GetKey(o.AlgoRef),
+		AlgoKey:        c.ks.GetKey(o.AlgoRef),
 		ParentTaskKeys: parentKeys,
-		ComputePlanKey: c.GetKey(o.PlanRef),
+		ComputePlanKey: c.ks.GetKey(o.PlanRef),
 		Data: &asset.NewComputeTask_Train{
 			Train: &asset.NewTrainTaskData{
-				DataManagerKey: c.GetKey(o.DataManagerRef),
-				DataSampleKeys: []string{c.GetKey(o.DataSampleRef)},
+				DataManagerKey: c.ks.GetKey(o.DataManagerRef),
+				DataSampleKeys: []string{c.ks.GetKey(o.DataSampleRef)},
 			},
 		},
 	}
@@ -232,18 +260,18 @@ func (c *TestClient) RegisterTrainTask(o *TrainTaskOptions) {
 func (c *TestClient) RegisterCompositeTask(o *CompositeTaskOptions) {
 	parentKeys := make([]string, len(o.ParentsRef))
 	for i, ref := range o.ParentsRef {
-		parentKeys[i] = c.GetKey(ref)
+		parentKeys[i] = c.ks.GetKey(ref)
 	}
 	newTask := &asset.NewComputeTask{
-		Key:            c.GetKey(o.KeyRef),
+		Key:            c.ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
-		AlgoKey:        c.GetKey(o.AlgoRef),
+		AlgoKey:        c.ks.GetKey(o.AlgoRef),
 		ParentTaskKeys: parentKeys,
-		ComputePlanKey: c.GetKey(o.PlanRef),
+		ComputePlanKey: c.ks.GetKey(o.PlanRef),
 		Data: &asset.NewComputeTask_Composite{
 			Composite: &asset.NewCompositeTrainTaskData{
-				DataManagerKey:   c.GetKey(o.DataManagerRef),
-				DataSampleKeys:   []string{c.GetKey(o.DataSampleRef)},
+				DataManagerKey:   c.ks.GetKey(o.DataManagerRef),
+				DataSampleKeys:   []string{c.ks.GetKey(o.DataSampleRef)},
 				TrunkPermissions: &asset.NewPermissions{Public: true},
 			},
 		},
@@ -260,14 +288,14 @@ func (c *TestClient) RegisterCompositeTask(o *CompositeTaskOptions) {
 func (c *TestClient) RegisterAggregateTask(o *AggregateTaskOptions) {
 	parentKeys := make([]string, len(o.ParentsRef))
 	for i, ref := range o.ParentsRef {
-		parentKeys[i] = c.GetKey(ref)
+		parentKeys[i] = c.ks.GetKey(ref)
 	}
 	newTask := &asset.NewComputeTask{
-		Key:            c.GetKey(o.KeyRef),
+		Key:            c.ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_AGGREGATE,
-		AlgoKey:        c.GetKey(o.AlgoRef),
+		AlgoKey:        c.ks.GetKey(o.AlgoRef),
 		ParentTaskKeys: parentKeys,
-		ComputePlanKey: c.GetKey(o.PlanRef),
+		ComputePlanKey: c.ks.GetKey(o.PlanRef),
 		Data: &asset.NewComputeTask_Aggregate{
 			Aggregate: &asset.NewAggregateTrainTaskData{
 				Worker: o.Worker,
@@ -296,7 +324,7 @@ func (c *TestClient) FailTask(keyRef string) {
 }
 
 func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskAction) {
-	taskKey := c.GetKey(keyRef)
+	taskKey := c.ks.GetKey(keyRef)
 	log.WithField("taskKey", taskKey).WithField("action", action).Debug("applying task action")
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
 		ComputeTaskKey: taskKey,
@@ -309,8 +337,8 @@ func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskActi
 
 func (c *TestClient) RegisterModel(o *ModelOptions) {
 	newModel := &asset.NewModel{
-		ComputeTaskKey: c.GetKey(o.TaskRef),
-		Key:            c.GetKey(o.KeyRef),
+		ComputeTaskKey: c.ks.GetKey(o.TaskRef),
+		Key:            c.ks.GetKey(o.KeyRef),
 		Category:       o.Category,
 		Address: &asset.Addressable{
 			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
@@ -325,7 +353,7 @@ func (c *TestClient) RegisterModel(o *ModelOptions) {
 }
 
 func (c *TestClient) GetTaskOutputModels(taskRef string) []*asset.Model {
-	resp, err := c.modelService.GetComputeTaskOutputModels(c.ctx, &asset.GetComputeTaskModelsParam{ComputeTaskKey: c.GetKey(taskRef)})
+	resp, err := c.modelService.GetComputeTaskOutputModels(c.ctx, &asset.GetComputeTaskModelsParam{ComputeTaskKey: c.ks.GetKey(taskRef)})
 	if err != nil {
 		log.WithError(err).Fatal("GetComputeTaskOutputModels failed")
 	}
@@ -334,7 +362,7 @@ func (c *TestClient) GetTaskOutputModels(taskRef string) []*asset.Model {
 }
 
 func (c *TestClient) CanDisableModel(modelRef string) bool {
-	resp, err := c.modelService.CanDisableModel(c.ctx, &asset.CanDisableModelParam{ModelKey: c.GetKey(modelRef)})
+	resp, err := c.modelService.CanDisableModel(c.ctx, &asset.CanDisableModelParam{ModelKey: c.ks.GetKey(modelRef)})
 	if err != nil {
 		log.WithError(err).Fatal("CanDisableModel failed")
 	}
@@ -343,7 +371,7 @@ func (c *TestClient) CanDisableModel(modelRef string) bool {
 }
 
 func (c *TestClient) DisableModel(modelRef string) {
-	modelKey := c.GetKey(modelRef)
+	modelKey := c.ks.GetKey(modelRef)
 	log.WithField("modelKey", modelKey).Debug("disabling model")
 	_, err := c.modelService.DisableModel(c.ctx, &asset.DisableModelParam{ModelKey: modelKey})
 	if err != nil {
@@ -353,7 +381,7 @@ func (c *TestClient) DisableModel(modelRef string) {
 
 func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) {
 	newCp := &asset.NewComputePlan{
-		Key:                      c.GetKey(o.KeyRef),
+		Key:                      c.ks.GetKey(o.KeyRef),
 		DeleteIntermediaryModels: o.DeleteIntermediaryModels,
 	}
 	log.WithField("plan", newCp).Debug("registering compute plan")
@@ -364,7 +392,7 @@ func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) {
 }
 
 func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
-	plan, err := c.computePlanService.GetPlan(c.ctx, &asset.GetComputePlanParam{Key: c.GetKey(keyRef)})
+	plan, err := c.computePlanService.GetPlan(c.ctx, &asset.GetComputePlanParam{Key: c.ks.GetKey(keyRef)})
 	if err != nil {
 		log.WithError(err).Fatalf("GetPlan failed")
 	}
@@ -373,7 +401,7 @@ func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
 }
 
 func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
-	task, err := c.computeTaskService.GetTask(c.ctx, &asset.GetTaskParam{Key: c.GetKey(keyRef)})
+	task, err := c.computeTaskService.GetTask(c.ctx, &asset.GetTaskParam{Key: c.ks.GetKey(keyRef)})
 	if err != nil {
 		log.WithError(err).Fatalf("GetTask failed")
 	}
@@ -392,7 +420,7 @@ func (c *TestClient) QueryTasks(filter *asset.TaskQueryFilter, pageToken string,
 
 func (c *TestClient) RegisterPerformance(o *PerformanceOptions) {
 	newPerf := &asset.NewPerformance{
-		ComputeTaskKey:   c.GetKey(o.KeyRef),
+		ComputeTaskKey:   c.ks.GetKey(o.KeyRef),
 		PerformanceValue: o.PerformanceValue,
 	}
 
@@ -404,7 +432,7 @@ func (c *TestClient) RegisterPerformance(o *PerformanceOptions) {
 }
 
 func (c *TestClient) GetTaskPerformance(taskRef string) *asset.Performance {
-	param := &asset.GetComputeTaskPerformanceParam{ComputeTaskKey: c.GetKey(taskRef)}
+	param := &asset.GetComputeTaskPerformanceParam{ComputeTaskKey: c.ks.GetKey(taskRef)}
 	perf, err := c.performanceService.GetComputeTaskPerformance(c.ctx, param)
 	if err != nil {
 		log.WithError(err).Fatalf("GetTaskPerformance failed")

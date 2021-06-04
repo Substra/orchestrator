@@ -21,26 +21,21 @@ import (
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
 
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 // ComputeTaskServer is the gRPC server exposing ComputeTask actions
 type ComputeTaskServer struct {
 	asset.UnimplementedComputeTaskServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
 // NewComputeTaskServer creates a Server
-func NewComputeTaskServer(scheduler concurrency.RequestScheduler) *ComputeTaskServer {
-	return &ComputeTaskServer{scheduler: scheduler}
+func NewComputeTaskServer() *ComputeTaskServer {
+	return &ComputeTaskServer{}
 }
 
 // RegisterTask will add a new ComputeTask to the network
 func (s *ComputeTaskServer) RegisterTask(ctx context.Context, in *asset.NewComputeTask) (*asset.ComputeTask, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	owner, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -60,9 +55,6 @@ func (s *ComputeTaskServer) RegisterTask(ctx context.Context, in *asset.NewCompu
 }
 
 func (s *ComputeTaskServer) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	owner, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -81,9 +73,6 @@ func (s *ComputeTaskServer) RegisterTasks(ctx context.Context, input *asset.Regi
 }
 
 func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasksParam) (*asset.QueryTasksResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	provider, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -103,9 +92,6 @@ func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasks
 }
 
 func (s *ComputeTaskServer) GetTask(ctx context.Context, in *asset.GetTaskParam) (*asset.ComputeTask, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -114,9 +100,6 @@ func (s *ComputeTaskServer) GetTask(ctx context.Context, in *asset.GetTaskParam)
 }
 
 func (s *ComputeTaskServer) ApplyTaskAction(ctx context.Context, param *asset.ApplyTaskActionParam) (*asset.ApplyTaskActionResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	requester, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err

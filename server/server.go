@@ -19,7 +19,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/server/common"
@@ -31,6 +34,9 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
+
+const httpPort = "8484"
+const grpcPort = "9000"
 
 func getDistributedServer(tlsOption []grpc.ServerOption, config *common.OrchestratorConfiguration) common.Runnable {
 	networkConfig := common.MustGetEnv("NETWORK_CONFIG")
@@ -99,13 +105,21 @@ func main() {
 	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(app.GetGrpcServer(), healthcheck)
 
-	listen, err := net.Listen("tcp", ":9000")
+	// Expose profiling endpoint
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf(":%s", httpPort), nil)
+		if err != nil {
+			log.WithError(err).WithField("port", httpPort).Error("failed to serve HTTP endpoints")
+		}
+	}()
+
+	listen, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
 	if err != nil {
-		log.WithError(err).Fatal("failed to listen on port 9000")
+		log.WithError(err).WithField("port", grpcPort).Fatal("failed to listen")
 	}
 
-	log.WithField("address", listen.Addr().String()).Info("Server listening")
+	log.WithField("address", listen.Addr().String()).Info("gRPC server listening")
 	if err := app.GetGrpcServer().Serve(listen); err != nil {
-		log.WithError(err).Fatal("failed to server grpc server on port 9000")
+		log.WithError(err).WithField("port", grpcPort).Fatal("failed to serve gRPC endpoints")
 	}
 }
