@@ -18,11 +18,10 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestObjectiveServerImplementServer(t *testing.T) {
-	server := NewObjectiveServer(new(concurrency.ImmediateRequestScheduler))
+	server := NewObjectiveServer()
 	assert.Implementsf(t, (*asset.ObjectiveServiceServer)(nil), server, "ObjectiveServer should implements ObjectiveServiceServer")
 }

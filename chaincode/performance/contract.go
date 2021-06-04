@@ -21,6 +21,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
+	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
 // SmartContract manages Models
@@ -44,7 +45,7 @@ func NewSmartContract() *SmartContract {
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return []string{}
+	return commonserv.ReadOnlyMethods["Performance"]
 }
 
 func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {

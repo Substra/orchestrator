@@ -1,0 +1,34 @@
+---
+name: Publish image on GCR
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        docker-image: [server, chaincode, forwarder, rabbitmq-operator]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up gcloud Cloud SDK environment
+      uses: google-github-actions/setup-gcloud@v0.2.1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Configure docker for GCP
+      run: gcloud auth configure-docker
+
+    - name: Build docker images
+      run: |
+        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/orchestrator-${{matrix.docker-image}}:${GITHUB_REF#refs/*/} -f ./docker/${{matrix.docker-image}}/Dockerfile .
+
+    - name: Push to Google Container Registry
+      run: |
+        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/orchestrator-${{matrix.docker-image}}:${GITHUB_REF#refs/*/}

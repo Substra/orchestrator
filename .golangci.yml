@@ -12,3 +12,4 @@ linters-settings:
     min-confidence: 0
   importas:
     "orcerrors": github.com/owkin/orchestrator/lib/errors
+    "commonserv": github.com/owkin/orchestrator/server/common

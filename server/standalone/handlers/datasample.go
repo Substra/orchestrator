@@ -23,26 +23,21 @@ import (
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
 
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 // DataSampleServer is the gRPC facade to DataSample manipulation
 type DataSampleServer struct {
 	asset.UnimplementedDataSampleServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
 // NewDataSampleServer creates a gRPC server
-func NewDataSampleServer(scheduler concurrency.RequestScheduler) *DataSampleServer {
-	return &DataSampleServer{scheduler: scheduler}
+func NewDataSampleServer() *DataSampleServer {
+	return &DataSampleServer{}
 }
 
 // RegisterDataSample will persist new DataSamples
 func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	log.WithField("nbSamples", len(input.Samples)).Debug("Register DataSamples")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -64,9 +59,6 @@ func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset
 
 // UpdateDataSamples will update the datamanagers existing DataSamples
 func (s *DataSampleServer) UpdateDataSamples(ctx context.Context, datasample *asset.UpdateDataSamplesParam) (*asset.UpdateDataSamplesResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	log.WithField("datasample", datasample).Debug("Update DataSample")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -88,9 +80,6 @@ func (s *DataSampleServer) UpdateDataSamples(ctx context.Context, datasample *as
 
 // QueryDataSamples returns a paginated list of all known datasamples
 func (s *DataSampleServer) QueryDataSamples(ctx context.Context, params *asset.QueryDataSamplesParam) (*asset.QueryDataSamplesResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

@@ -14,6 +14,7 @@ data:
   # Standalone settings
   {{- if .Values.postgresql.enabled }}
   ORCHESTRATOR_DATABASE_URL: postgresql://{{ .Values.postgresql.postgresqlUsername}}:{{ .Values.postgresql.postgresqlPassword}}@{{ .Release.Name }}-postgresql.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}/{{ .Values.postgresql.postgresqlDatabase}}?sslmode=disable
+  ORCHESTRATOR_TX_RETRY_BUDGET: "{{ .Values.orchestrator.txRetryBudget }}"
   {{- end }}
 
   # Distributed settings

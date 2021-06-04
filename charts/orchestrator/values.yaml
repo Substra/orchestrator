@@ -118,6 +118,7 @@ orchestrator:
   mode: standalone # the orchestrator can run in either "standalone" or "distributed" mode
   chaincode: mycc
   verifyClientMSPID: true
+  txRetryBudget: 500ms
 
   tls:
     enabled: false

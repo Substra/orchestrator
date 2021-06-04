@@ -20,26 +20,21 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 // NodeServer is the gRPC server exposing node actions
 type NodeServer struct {
 	asset.UnimplementedNodeServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
 // NewNodeServer creates a Server
-func NewNodeServer(scheduler concurrency.RequestScheduler) *NodeServer {
-	return &NodeServer{scheduler: scheduler}
+func NewNodeServer() *NodeServer {
+	return &NodeServer{}
 }
 
 // RegisterNode will add a new node to the network
 func (s *NodeServer) RegisterNode(ctx context.Context, in *asset.RegisterNodeParam) (*asset.Node, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -58,9 +53,6 @@ func (s *NodeServer) RegisterNode(ctx context.Context, in *asset.RegisterNodePar
 
 // GetAllNodes will return all known nodes
 func (s *NodeServer) GetAllNodes(ctx context.Context, in *asset.GetAllNodesParam) (*asset.GetAllNodesResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err

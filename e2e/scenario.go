@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/e2e/client"
@@ -328,7 +329,7 @@ func testQueryTasks(conn *grpc.ClientConn) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
 
-	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKey(client.DefaultAlgoRef)}, "", 10)
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", 10)
 
 	if len(resp.Tasks) != 1 {
 		log.WithField("num_tasks", len(resp.Tasks)).Fatal("unexpected task result")
@@ -391,4 +392,42 @@ func testCompositeParentChild(conn *grpc.ClientConn) {
 	appClient.StartTask("comp2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+}
+
+func testConcurrency(conn *grpc.ClientConn) {
+	client1, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create client1")
+	}
+	client2, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create client2")
+	}
+	// Share the same key store for both clients
+	client2.WithKeyStore(client1.GetKeyStore())
+
+	client1.EnsureNode()
+	client1.RegisterAlgo(client.DefaultAlgoOptions())
+	client1.RegisterDataManager()
+	client1.RegisterDataSample(client.DefaultDataSampleOptions())
+	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	client1.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("parent1"))
+	client2.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef("parent2"))
+
+	wg := new(sync.WaitGroup)
+
+	for i := 0; i < 5; i++ {
+		wg.Add(2)
+		go func(i int) {
+			client1.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task1%d", i)).WithParentsRef([]string{"parent1"}))
+			wg.Done()
+		}(i)
+		go func(i int) {
+			client2.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task2%d", i)).WithParentsRef([]string{"parent2"}))
+			wg.Done()
+		}(i)
+	}
+
+	wg.Wait()
 }

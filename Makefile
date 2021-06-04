@@ -75,7 +75,7 @@ clean: clean-protos clean-migrations-binpack
 
 .PHONY: test
 test: codegen
-	go test -cover ./... -short -timeout 30s
+	go test -race -cover ./... -short -timeout 30s
 
 .PHONY: clean-protos
 clean-protos:

@@ -15,9 +15,11 @@
 package dbal
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 
+	"github.com/go-playground/log/v7"
 	"github.com/golang-migrate/migrate/v4"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
 	"github.com/owkin/orchestrator/server/standalone/migration"
@@ -25,7 +27,7 @@ import (
 
 // TransactionalDBALProvider describe an object able to return a TransactionalDBAL
 type TransactionalDBALProvider interface {
-	GetTransactionalDBAL(string) (TransactionDBAL, error)
+	GetTransactionalDBAL(ctx context.Context, channel string, readOnly bool) (TransactionDBAL, error)
 }
 
 // Database is a thin wrapper around sql.DB.
@@ -80,9 +82,16 @@ func (d *Database) Close() {
 	d.pool.Close()
 }
 
-// GetTransactionalDBAL returns a new transactional DBAL
-func (d *Database) GetTransactionalDBAL(channel string) (TransactionDBAL, error) {
-	tx, err := d.pool.Begin()
+// GetTransactionalDBAL returns a new transactional DBAL.
+// The transaction is configured with SERIALIZABLE isolation level to protect against potential
+// inconsistencies with concurrent requests.
+func (d *Database) GetTransactionalDBAL(ctx context.Context, channel string, readOnly bool) (TransactionDBAL, error) {
+	log.WithField("ReadOnly", readOnly).WithField("channel", channel).Debug("new DB transaction")
+	txOpts := &sql.TxOptions{
+		Isolation: sql.LevelSerializable, // This level of isolation is the guarantee to always return consistent data
+		ReadOnly:  readOnly,
+	}
+	tx, err := d.pool.BeginTx(ctx, txOpts)
 	if err != nil {
 		return nil, err
 	}

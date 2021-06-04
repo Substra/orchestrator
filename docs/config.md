@@ -6,22 +6,23 @@ Unless specified, all settings are mandatory.
 
 ## Server settings
 
-| Env Var                               | mode                    | type                           | usage                                                                                                |
-|---------------------------------------|-------------------------|--------------------------------|------------------------------------------------------------------------------------------------------|
-| `ORCHESTRATOR_MODE`                   | standalone, distributed | enum: `standalone`/`chaincode` | specify in which mode to run the orchestrator (defaults to `standalone`)                             |
-| `ORCHESTRATOR_TLS_ENABLED`            | standalone, distributed | bool: `true`/`false`           | whether to add TLS on transport                                                                      |
-| `ORCHESTRATOR_TLS_CERT_PATH`          | standalone, distributed | string (path)                  | path of the certificate to use                                                                       |
-| `ORCHESTRATOR_TLS_KEY_PATH`           | standalone, distributed | string (path)                  | path of the key to use                                                                               |
-| `ORCHESTRATOR_MTLS_ENABLED`           | standalone, distributed | bool: `true`/`false`           | whether to enable mutual TLS                                                                         |
-| `ORCHESTRATOR_TLS_SERVER_CA_CERT`     | standalone, distributed | string (path)                  | path of the CA certificate to use                                                                    |
-| `ORCHESTRATOR_TLS_CLIENT_CA_CERT_DIR` | standalone, distributed | string (path)                  | directory containing CA certificates of the client                                                   |
-| `ORCHESTRATOR_NETWORK_CONFIG`         | distributed             | string (path)                  | path of the hyperledger fabric's network configuration                                               |
-| `ORCHESTRATOR_FABRIC_CERT`            | distributed             | string (path)                  | path of the certificate to present to fabric's peer                                                  |
-| `ORCHESTRATOR_FABRIC_KEY`             | distributed             | string (path)                  | path of the key corresponding to fabric's certificate                                                |
-| `ORCHESTRATOR_DATABASE_URL`           | standalone              | string                         | [postgresql connection string](http://www.postgresql.cn/docs/13/libpq-connect.html#LIBPQ-CONNSTRING) |
-| `ORCHESTRATOR_AMQP_DSN`               | standalone              | string                         | [rabbitmq connection string](https://www.rabbitmq.com/uri-spec.html)                                 |
-| `ORCHESTRATOR_VERIFY_CLIENT_MSP_ID`   | standalone, distributed | bool: `true`/`false`           | whether to check that client certificate matches the MSPID header                                    |
-| `ORCHESTRATOR_CHANNEL_CONFIG`         | standalone, distributed | string (path)                  | where to find the [application configuration](#orchestration-configuration)                          |
+| Env Var                               | mode                    | type                                                               | usage                                                                                                                      |
+|---------------------------------------|-------------------------|--------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| `ORCHESTRATOR_MODE`                   | standalone, distributed | enum: `standalone`/`chaincode`                                     | specify in which mode to run the orchestrator (defaults to `standalone`)                                                   |
+| `ORCHESTRATOR_TLS_ENABLED`            | standalone, distributed | bool: `true`/`false`                                               | whether to add TLS on transport                                                                                            |
+| `ORCHESTRATOR_TLS_CERT_PATH`          | standalone, distributed | string (path)                                                      | path of the certificate to use                                                                                             |
+| `ORCHESTRATOR_TLS_KEY_PATH`           | standalone, distributed | string (path)                                                      | path of the key to use                                                                                                     |
+| `ORCHESTRATOR_MTLS_ENABLED`           | standalone, distributed | bool: `true`/`false`                                               | whether to enable mutual TLS                                                                                               |
+| `ORCHESTRATOR_TLS_SERVER_CA_CERT`     | standalone, distributed | string (path)                                                      | path of the CA certificate to use                                                                                          |
+| `ORCHESTRATOR_TLS_CLIENT_CA_CERT_DIR` | standalone, distributed | string (path)                                                      | directory containing CA certificates of the client                                                                         |
+| `ORCHESTRATOR_NETWORK_CONFIG`         | distributed             | string (path)                                                      | path of the hyperledger fabric's network configuration                                                                     |
+| `ORCHESTRATOR_FABRIC_CERT`            | distributed             | string (path)                                                      | path of the certificate to present to fabric's peer                                                                        |
+| `ORCHESTRATOR_FABRIC_KEY`             | distributed             | string (path)                                                      | path of the key corresponding to fabric's certificate                                                                      |
+| `ORCHESTRATOR_DATABASE_URL`           | standalone              | string                                                             | [postgresql connection string](http://www.postgresql.cn/docs/13/libpq-connect.html#LIBPQ-CONNSTRING)                       |
+| `ORCHESTRATOR_TX_RETRY_BUDGET`        | standalone              | duration ([go format](https://golang.org/pkg/time/#ParseDuration)) | duration during which the transaction can be retried in case of unserializable read/write dependencies (defaults to 500ms) |
+| `ORCHESTRATOR_AMQP_DSN`               | standalone              | string                                                             | [rabbitmq connection string](https://www.rabbitmq.com/uri-spec.html)                                                       |
+| `ORCHESTRATOR_VERIFY_CLIENT_MSP_ID`   | standalone, distributed | bool: `true`/`false`                                               | whether to check that client certificate matches the MSPID header                                                          |
+| `ORCHESTRATOR_CHANNEL_CONFIG`         | standalone, distributed | string (path)                                                      | where to find the [application configuration](#orchestration-configuration)                                                |
 
 ## Forwarder settings
 

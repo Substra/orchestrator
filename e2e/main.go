@@ -55,6 +55,7 @@ var testScenarios = map[string]scenario{
 	"QueryTasks":            testQueryTasks,
 	"RegisterPerformance":   testRegisterPerformance,
 	"CompositeParentChild":  testCompositeParentChild,
+	"Concurrency":           testConcurrency,
 }
 
 func main() {

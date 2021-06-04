@@ -21,25 +21,20 @@ import (
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
 
-	"github.com/owkin/orchestrator/server/standalone/concurrency"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
 // ModelServer is the gRPC facade to Model manipulation
 type ModelServer struct {
 	asset.UnimplementedModelServiceServer
-	scheduler concurrency.RequestScheduler
 }
 
 // NewModelServer creates a grpc server
-func NewModelServer(scheduler concurrency.RequestScheduler) *ModelServer {
-	return &ModelServer{scheduler: scheduler}
+func NewModelServer() *ModelServer {
+	return &ModelServer{}
 }
 
 func (s *ModelServer) RegisterModel(ctx context.Context, newModel *asset.NewModel) (*asset.Model, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -53,9 +48,6 @@ func (s *ModelServer) RegisterModel(ctx context.Context, newModel *asset.NewMode
 }
 
 func (s *ModelServer) GetModel(ctx context.Context, in *asset.GetModelParam) (*asset.Model, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -65,9 +57,6 @@ func (s *ModelServer) GetModel(ctx context.Context, in *asset.GetModelParam) (*a
 
 // QueryModels returns a paginated list of all known models
 func (s *ModelServer) QueryModels(ctx context.Context, params *asset.QueryModelsParam) (*asset.QueryModelsResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -85,9 +74,6 @@ func (s *ModelServer) QueryModels(ctx context.Context, params *asset.QueryModels
 }
 
 func (s *ModelServer) GetComputeTaskOutputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -104,9 +90,6 @@ func (s *ModelServer) GetComputeTaskOutputModels(ctx context.Context, param *ass
 }
 
 func (s *ModelServer) GetComputeTaskInputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -123,9 +106,6 @@ func (s *ModelServer) GetComputeTaskInputModels(ctx context.Context, param *asse
 }
 
 func (s *ModelServer) CanDisableModel(ctx context.Context, param *asset.CanDisableModelParam) (*asset.CanDisableModelResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
@@ -146,9 +126,6 @@ func (s *ModelServer) CanDisableModel(ctx context.Context, param *asset.CanDisab
 }
 
 func (s *ModelServer) DisableModel(ctx context.Context, param *asset.DisableModelParam) (*asset.DisableModelResponse, error) {
-	execToken := <-s.scheduler.AcquireExecutionToken()
-	defer execToken.Release()
-
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err

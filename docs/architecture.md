@@ -107,8 +107,5 @@ If two concurrent proposals update the same resource, the first to go through wi
 That makes the second proposal invalid since the state has changed.
 In this case, the fabric peer will issue a new proposal based on the right state.
 
-This mechanism does not existing in standalone mode, yet the orchestrator may receive concurrent requests.
-To offer the same level of consistency, one solution is to artificially contrain requests to be processed one after another.
-This is what is implemented by the concurrency limiter in standalone mode.
-gRPC handlers will only process the request once issued an execution token
-and a global scheduler makes sure that there is no more than one processing handlers at a time.
+The same level of consistency is provided in standalone mode by leveraging [postgresql's isolation level](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-SERIALIZABLE).
+By enforcing serializable transaction, we make sure we don't rely on inconsistent data.

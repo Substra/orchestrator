@@ -19,6 +19,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/jackc/pgconn"
 	"github.com/owkin/orchestrator/lib/asset"
 	persistenceTesting "github.com/owkin/orchestrator/lib/persistence/testing"
 	"github.com/owkin/orchestrator/lib/service"
@@ -48,7 +49,7 @@ type mockTransactionalDBALProvider struct {
 	m *mockedTransactionDBAL
 }
 
-func (p *mockTransactionalDBALProvider) GetTransactionalDBAL(_ string) (dbal.TransactionDBAL, error) {
+func (p *mockTransactionalDBALProvider) GetTransactionalDBAL(_ context.Context, _ string, _ bool) (dbal.TransactionDBAL, error) {
 	return p.m, nil
 }
 
@@ -89,6 +90,9 @@ func TestInjectProvider(t *testing.T) {
 	ctx := common.WithChannel(context.TODO(), "testChannel")
 	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
+
+	db.AssertExpectations(t)
+	publisher.AssertExpectations(t)
 }
 
 func TestOnSuccess(t *testing.T) {
@@ -117,6 +121,9 @@ func TestOnSuccess(t *testing.T) {
 	ctx := common.WithChannel(context.TODO(), "testChannel")
 	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
+
+	db.AssertExpectations(t)
+	publisher.AssertExpectations(t)
 }
 
 func TestOnError(t *testing.T) {
@@ -145,4 +152,45 @@ func TestOnError(t *testing.T) {
 	res, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.Nil(t, res)
 	assert.Error(t, err)
+
+	db.AssertExpectations(t)
+	publisher.AssertExpectations(t)
+}
+
+func TestRetryOnUnserializableTransaction(t *testing.T) {
+	publisher := new(common.MockPublisher)
+	db := new(mockedTransactionDBAL)
+	dbProvider := &mockTransactionalDBALProvider{db}
+
+	db.On("Rollback").Once().Return(nil)
+	db.On("Commit").Once().Return(nil)
+	publisher.On("Publish", "testChannel", mock.Anything).Once().Return(nil)
+
+	interceptor := NewProviderInterceptor(dbProvider, publisher)
+
+	unaryInfo := &grpc.UnaryServerInfo{
+		FullMethod: "TestService.UnaryMethod",
+	}
+	failed := false
+	unaryHandler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		provider, err := ExtractProvider(ctx)
+		require.NoError(t, err)
+
+		err = provider.GetEventQueue().Enqueue(&asset.Event{})
+		require.NoError(t, err)
+
+		if !failed {
+			failed = true
+			return nil, &pgconn.PgError{Code: "40001"}
+		}
+
+		return nil, nil
+	}
+
+	ctx := common.WithChannel(context.TODO(), "testChannel")
+	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
+	assert.NoError(t, err)
+
+	db.AssertExpectations(t)
+	publisher.AssertExpectations(t)
 }
