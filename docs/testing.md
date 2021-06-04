@@ -29,6 +29,9 @@ This way, we can easily test the orchestrator in both standalone and distributed
 
 The `e2e-tests` binary offers also a `--debug` flag to detail every step, beware: this is **very** verbose.
 
+There is also a way to filter tests by name (`--name MyTest`) or tag (`--tag task`).
+You can always rely on `e2e-tests --help` to have an overview of available options.
+
 ### Adding an e2e test
 
 You are more than welcome to write e2e tests!

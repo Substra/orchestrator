@@ -17,6 +17,7 @@ package main
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/e2e/client"
@@ -25,6 +26,66 @@ import (
 )
 
 var defaultParent = []string{client.DefaultTaskRef}
+
+type scenario struct {
+	exec func(*grpc.ClientConn)
+	tags []string
+}
+
+var testScenarios = map[string]scenario{
+	"TrainTaskLifecycle": {
+		testTrainTaskLifecycle,
+		[]string{"short", "task"},
+	},
+	"RegisterModel": {
+		testRegisterModel,
+		[]string{"short", "model"},
+	},
+	"CascadeCancel": {
+		testCascadeCancel,
+		[]string{"short", "task"},
+	},
+	"CascadeTodo": {
+		testCascadeTodo,
+		[]string{"short", "task"},
+	},
+	"CascadeFailure": {
+		testCascadeFailure,
+		[]string{"short", "task"},
+	},
+	"DeleteIntermediary": {
+		testDeleteIntermediary,
+		[]string{"short", "model"},
+	},
+	"MultiStageComputePlan": {
+		testMultiStageComputePlan,
+		[]string{"short", "plan"},
+	},
+	"QueryTasks": {
+		testQueryTasks,
+		[]string{"short", "task", "query"},
+	},
+	"RegisterPerformance": {
+		testRegisterPerformance,
+		[]string{"short", "perf"},
+	},
+	"CompositeParentChild": {
+		testCompositeParentChild,
+		[]string{"short", "plan"},
+	},
+	"Concurrency": {
+		testConcurrency,
+		[]string{"short", "concurrency"},
+	},
+	"LargeComputePlan": {
+		testLargeComputePlan,
+		[]string{"long", "plan"},
+	},
+	"BatchLargeComputePlan": {
+		testBatchLargeComputePlan,
+		[]string{"long", "plan"},
+	},
+}
 
 // Register a task and its dependencies, then start the task.
 func testTrainTaskLifecycle(conn *grpc.ClientConn) {
@@ -430,4 +491,74 @@ func testConcurrency(conn *grpc.ClientConn) {
 	}
 
 	wg.Wait()
+}
+
+func testLargeComputePlan(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	nbTasks := 10000
+	nbQuery := 5000 // 10k exceed max response size
+
+	appClient.EnsureNode()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
+
+	start := time.Now()
+	for i := 0; i < nbTasks; i++ {
+		appClient.RegisterTrainTask(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+	}
+	log.WithField("registrationDuration", time.Since(start)).WithField("nbTasks", nbTasks).Info("registration done")
+
+	start = time.Now()
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", nbQuery)
+	log.WithField("queryDuration", time.Since(start)).WithField("nbTasks", nbQuery).Info("query done")
+
+	if len(resp.Tasks) != nbQuery {
+		log.WithField("nbTasks", len(resp.Tasks)).Fatal("unexpected task count")
+	}
+}
+
+func testBatchLargeComputePlan(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	nbTasks := 10000
+	batchSize := 1000
+	nbQuery := 5000 // 10k exceed max response size
+
+	appClient.EnsureNode()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTrainTask(client.DefaultTrainTaskOptions())
+
+	start := time.Now()
+	for i := 0; i < nbTasks; {
+		batchStart := time.Now()
+		newTasks := make([]*client.TrainTaskOptions, 0, batchSize)
+		for c := 0; c < batchSize && i < nbTasks; c++ {
+			i++
+			newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+		}
+		appClient.RegisterBatchTrainTasks(newTasks)
+		log.WithField("batchDuration", time.Since(batchStart)).WithField("nbTasks", i).Info("batch done")
+	}
+	log.WithField("registrationDuration", time.Since(start)).WithField("nbTasks", nbTasks).Info("registration done")
+
+	start = time.Now()
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", nbQuery)
+	log.WithField("queryDuration", time.Since(start)).WithField("nbTasks", nbQuery).Info("query done")
+
+	if len(resp.Tasks) != nbQuery {
+		log.WithField("nbTasks", len(resp.Tasks)).Fatal("unexpected task count")
+	}
 }

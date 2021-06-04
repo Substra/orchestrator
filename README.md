@@ -35,6 +35,8 @@ make ./bin/e2e-tests
     -server_addr orchestrator.node-1.com:443
 ```
 
+Refer to `./bin/e2e-tests --help` for more options.
+
 ## Developping the orchestrator
 
 An overview of the code structure is [available in the docs directory](./docs/architecture.md) and there is also a [documentation of the assets](./docs/assets/README.md).

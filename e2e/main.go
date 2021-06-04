@@ -21,13 +21,32 @@ import (
 	"crypto/x509"
 	"flag"
 	"io/ioutil"
+	"os"
+	"strings"
+	"text/tabwriter"
 	"time"
+
+	"fmt"
 
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/console"
+	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+type tagList struct {
+	list []string
+}
+
+func (l *tagList) String() string {
+	return strings.Join(l.list, "-")
+}
+
+func (l *tagList) Set(value string) error {
+	l.list = append(l.list, value)
+	return nil
+}
 
 var (
 	debugEnabled = flag.Bool("debug", false, "Debug mode (very verbose)")
@@ -39,27 +58,19 @@ var (
 	mspid        = flag.String("mspid", "MyOrg1MSP", "MSP ID")
 	channel      = flag.String("channel", "mychannel", "Channel to use")
 	chaincode    = flag.String("chaincode", "mycc", "Chaincode to use (only relevant in distributed mode)")
-	testFilter   = flag.String("name", "", "Filter test by name")
+	list         = flag.Bool("list", false, "List available tests and their tags")
+	nameFilter   = flag.String("name", "", "Filter test by name")
+	tagFilter    = tagList{list: []string{}}
 )
 
-type scenario = func(*grpc.ClientConn)
-
-var testScenarios = map[string]scenario{
-	"TrainTaskLifecycle":    testTrainTaskLifecycle,
-	"RegisterModel":         testRegisterModel,
-	"CascadeCancel":         testCascadeCancel,
-	"CascadeTodo":           testCascadeTodo,
-	"CascadeFailure":        testCascadeFailure,
-	"DeleteIntermediary":    testDeleteIntermediary,
-	"MultiStageComputePlan": testMultiStageComputePlan,
-	"QueryTasks":            testQueryTasks,
-	"RegisterPerformance":   testRegisterPerformance,
-	"CompositeParentChild":  testCompositeParentChild,
-	"Concurrency":           testConcurrency,
-}
-
 func main() {
+	flag.Var(&tagFilter, "tag", "Filter test by tags")
 	flag.Parse()
+
+	if *list {
+		listTests()
+		return
+	}
 
 	cLog := console.New(true)
 	levels := make([]log.Level, 0)
@@ -112,17 +123,42 @@ func main() {
 
 	log.Debug("Starting testing")
 
+	if len(tagFilter.list) == 0 && *nameFilter == "" {
+		tagFilter.list = append(tagFilter.list, "short")
+	}
+
+scenario:
 	for name, sc := range testScenarios {
-		if *testFilter != "" && *testFilter != name {
+		if *nameFilter != "" && *nameFilter != name {
 			// skip non matching test
 			continue
 		}
+		for _, tag := range tagFilter.list {
+			if utils.StringInSlice(sc.tags, tag) {
+				break
+			}
+			// No match
+			continue scenario
+		}
+
 		logger := log.WithField("name", name)
 		logger.Debug("starting scenario")
 		func() {
 			defer logger.WithTrace().Info("test succeeded")
-			sc(conn)
+			sc.exec(conn)
 		}()
 
 	}
+}
+
+// listTests will output the list of available scenario and their associated tags.
+func listTests() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 8, ' ', tabwriter.TabIndent)
+	fmt.Fprintln(w, "name\ttags")
+	fmt.Fprintln(w, "----\t----")
+
+	for name, sc := range testScenarios {
+		fmt.Fprintf(w, "%s\t%s\n", name, sc.tags)
+	}
+	w.Flush()
 }

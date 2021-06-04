@@ -228,7 +228,35 @@ func (c *TestClient) RegisterTestTask(o *TestTaskOptions) {
 	if err != nil {
 		log.WithError(err).Fatal("RegisterTestTask failed")
 	}
+}
 
+func (c *TestClient) RegisterBatchTrainTasks(optList []*TrainTaskOptions) {
+	newTasks := make([]*asset.NewComputeTask, len(optList))
+	for i, o := range optList {
+		parentKeys := make([]string, len(o.ParentsRef))
+		for i, ref := range o.ParentsRef {
+			parentKeys[i] = c.ks.GetKey(ref)
+		}
+		newTasks[i] = &asset.NewComputeTask{
+			Key:            c.ks.GetKey(o.KeyRef),
+			Category:       asset.ComputeTaskCategory_TASK_TRAIN,
+			AlgoKey:        c.ks.GetKey(o.AlgoRef),
+			ParentTaskKeys: parentKeys,
+			ComputePlanKey: c.ks.GetKey(o.PlanRef),
+			Data: &asset.NewComputeTask_Train{
+				Train: &asset.NewTrainTaskData{
+					DataManagerKey: c.ks.GetKey(o.DataManagerRef),
+					DataSampleKeys: []string{c.ks.GetKey(o.DataSampleRef)},
+				},
+			},
+		}
+	}
+
+	log.WithField("nbTasks", len(newTasks)).Debug("registering batch of train task")
+	_, err := c.computeTaskService.RegisterTasks(c.ctx, &asset.RegisterTasksParam{Tasks: newTasks})
+	if err != nil {
+		log.WithError(err).Fatal("RegisterBatchTestTasks failed")
+	}
 }
 
 func (c *TestClient) RegisterTrainTask(o *TrainTaskOptions) {
