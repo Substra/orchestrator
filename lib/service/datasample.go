@@ -181,7 +181,7 @@ func (s *DataSampleService) CheckSameManager(managerKey string, sampleKeys []str
 	return nil
 }
 
-// IsOnlyUsage returns if givens samples are for sanctuarized test data
+// IsTestOnly returns if givens samples are for sanctuarized test data
 func (s *DataSampleService) IsTestOnly(sampleKeys []string) (bool, error) {
 	testOnly := true
 	for _, sampleKey := range sampleKeys {

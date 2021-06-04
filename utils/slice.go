@@ -35,7 +35,7 @@ func Combine(list1 []string, list2 []string) []string {
 	return append(list1, Filter(list2, list1)...)
 }
 
-// Returns the content of list 1 not present in list 2.
+// Filter returns the content of list 1 not present in list 2.
 // list1 - list1 U list2
 func Filter(list1 []string, list2 []string) []string {
 	var output []string
@@ -78,6 +78,7 @@ func Intersection(a, b []string) []string {
 	return res
 }
 
+// UniqueString returns a slice without duplicates.
 func UniqueString(arr []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}

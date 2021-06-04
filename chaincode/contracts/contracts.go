@@ -29,6 +29,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/performance"
 )
 
+// AllContracts is the list referencing all smartcontracts supported by the chaincode
 var AllContracts []contractapi.ContractInterface = []contractapi.ContractInterface{
 	node.NewSmartContract(),
 	objective.NewSmartContract(),

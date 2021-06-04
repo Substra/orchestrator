@@ -139,7 +139,7 @@ func (db *DB) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, commo
 	return datasamples, bookmark, nil
 }
 
-// QueryDataSamples implements persistence.DataSampleDBAL
+// GetDataSamplesKeysByDataManager implements persistence.DataSampleDBAL
 func (db *DB) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bool) ([]string, error) {
 	dataSampleKeys, err := db.getIndexKeys("dataSample~dataManager~testOnly~key", []string{asset.DataSampleKind, dataManagerKey, strconv.FormatBool(testOnly)})
 	if err != nil {

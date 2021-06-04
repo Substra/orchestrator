@@ -31,6 +31,7 @@ func NewComputeTaskAdapter() *ComputeTaskAdapter {
 	return &ComputeTaskAdapter{}
 }
 
+// RegisterTask performs validation and add a new task to a compute plan
 func (a *ComputeTaskAdapter) RegisterTask(ctx context.Context, in *asset.NewComputeTask) (*asset.ComputeTask, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
@@ -45,6 +46,7 @@ func (a *ComputeTaskAdapter) RegisterTask(ctx context.Context, in *asset.NewComp
 	return response, err
 }
 
+// RegisterTasks processes a batch of new tasks to add them to a compute plan
 func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
 	Invocator, err := ExtractInvocator(ctx)
 	if err != nil {
@@ -59,7 +61,7 @@ func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.Reg
 	return response, err
 }
 
-// QueryTask returns a task from its key
+// GetTask returns a task from its key
 func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.GetTaskParam) (*asset.ComputeTask, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
@@ -74,6 +76,7 @@ func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.GetTaskPa
 	return response, err
 }
 
+// QueryTasks returns tasks matching the selection criteria
 func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryTasksParam) (*asset.QueryTasksResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
@@ -88,6 +91,7 @@ func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryT
 	return response, err
 }
 
+// ApplyTaskAction updates a task status
 func (a *ComputeTaskAdapter) ApplyTaskAction(ctx context.Context, param *asset.ApplyTaskActionParam) (*asset.ApplyTaskActionResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {

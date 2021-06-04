@@ -31,7 +31,7 @@ func NewDataSampleAdapter() *DataSampleAdapter {
 	return &DataSampleAdapter{}
 }
 
-// RegisterDataSample will add a new DataSample to the state
+// RegisterDataSamples will add a new DataSample to the state
 func (a *DataSampleAdapter) RegisterDataSamples(ctx context.Context, param *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {

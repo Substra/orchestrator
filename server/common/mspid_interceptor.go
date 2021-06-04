@@ -92,6 +92,8 @@ func VerifyClientMSPID(ctx context.Context, MSPID string) error {
 type ctxMSPIDMarker struct{}
 
 var (
+	// CtxMSPIDKey is the identifier of the MSPID in context.
+	// Prefer the convenient ExtractMSPID method to retrieve the MSPID from context.
 	CtxMSPIDKey = &ctxMSPIDMarker{}
 )
 

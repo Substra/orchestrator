@@ -32,7 +32,7 @@ type ChannelInterceptor struct {
 	orgChannels map[string][]string
 }
 
-// Creates a ChannelInterceptor which will enforce organization & channel consistency.
+// NewChannelInterceptor creates a ChannelInterceptor which will enforce organization & channel consistency.
 // ChannelInterceptor MUST come after the mspid interceptor.
 func NewChannelInterceptor(config *OrchestratorConfiguration) *ChannelInterceptor {
 	orgChannels := make(map[string][]string)

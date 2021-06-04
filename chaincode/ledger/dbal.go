@@ -216,10 +216,7 @@ func (db *DB) createIndex(index string, attributes []string) error {
 		return err
 	}
 	value := []byte{0x00}
-	if err = db.ccStub.PutState(compositeKey, value); err != nil {
-		return err
-	}
-	return nil
+	return db.ccStub.PutState(compositeKey, value)
 }
 
 func (db *DB) deleteIndex(index string, attributes []string) error {
@@ -332,11 +329,7 @@ func (db *DB) AddNode(node *asset.Node) error {
 		return err
 	}
 
-	if err = db.createIndex(allNodesIndex, []string{asset.NodeKind, node.Id}); err != nil {
-		return err
-	}
-
-	return nil
+	return db.createIndex(allNodesIndex, []string{asset.NodeKind, node.Id})
 }
 
 // GetAllNodes returns all known Nodes
@@ -397,11 +390,7 @@ func (db *DB) AddObjective(obj *asset.Objective) error {
 		return err
 	}
 
-	if err = db.createIndex("objective~owner~key", []string{asset.ObjectiveKind, obj.Owner, obj.Key}); err != nil {
-		return err
-	}
-
-	return nil
+	return db.createIndex("objective~owner~key", []string{asset.ObjectiveKind, obj.Owner, obj.Key})
 }
 
 // ObjectiveExists implements persistence.ObjectiveDBAL
@@ -467,11 +456,7 @@ func (db *DB) AddAlgo(algo *asset.Algo) error {
 		return err
 	}
 
-	if err = db.createIndex("algo~category~key", []string{"algo", algo.Category.String(), algo.Key}); err != nil {
-		return err
-	}
-
-	return nil
+	return db.createIndex("algo~category~key", []string{"algo", algo.Category.String(), algo.Key})
 }
 
 // GetAlgo retrieves an algo by its key

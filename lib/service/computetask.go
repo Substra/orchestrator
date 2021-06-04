@@ -631,7 +631,7 @@ func getRank(parentTasks []*asset.ComputeTask) int32 {
 		return 0
 	}
 
-	var maxParentRank int32 = 0
+	maxParentRank := int32(0)
 	for _, p := range parentTasks {
 		if p.Rank > maxParentRank {
 			maxParentRank = p.Rank

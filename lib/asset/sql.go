@@ -158,7 +158,7 @@ func (p *Performance) Scan(value interface{}) error {
 	return protojson.Unmarshal(b, p)
 }
 
-// Simply returns the JSON-encoded representation of the Event.
+// Value simply returns the JSON-encoded representation of the Event.
 func (e *Event) Value() (driver.Value, error) {
 	return protojson.Marshal(e)
 }

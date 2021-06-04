@@ -86,11 +86,7 @@ func (db *DB) AddModel(model *asset.Model) error {
 		return err
 	}
 
-	if err := db.createIndex("model~taskKey~modelKey", []string{asset.ModelKind, model.GetComputeTaskKey(), model.GetKey()}); err != nil {
-		return err
-	}
-
-	return nil
+	return db.createIndex("model~taskKey~modelKey", []string{asset.ModelKind, model.GetComputeTaskKey(), model.GetKey()})
 }
 
 func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {

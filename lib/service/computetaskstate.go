@@ -85,7 +85,7 @@ func (d *dumbStateUpdater) onStateChange(e *fsm.Event) {}
 func (d *dumbStateUpdater) onCancel(e *fsm.Event)      {}
 func (d *dumbStateUpdater) onDone(e *fsm.Event)        {}
 
-var dumbUpdater dumbStateUpdater = dumbStateUpdater{}
+var dumbUpdater = dumbStateUpdater{}
 
 func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 	return fsm.NewFSM(

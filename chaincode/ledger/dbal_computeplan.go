@@ -43,11 +43,7 @@ func (db *DB) AddComputePlan(cp *asset.ComputePlan) error {
 		return err
 	}
 
-	if err = db.createIndex("computePlan~owner~key", []string{asset.ComputePlanKind, cp.Owner, cp.Key}); err != nil {
-		return err
-	}
-
-	return nil
+	return db.createIndex("computePlan~owner~key", []string{asset.ComputePlanKind, cp.Owner, cp.Key})
 }
 
 // ComputePlanExists returns true if a plan with the given key exists

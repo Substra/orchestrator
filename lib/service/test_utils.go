@@ -75,7 +75,7 @@ func (m *MockServiceProvider) GetComputePlanDBAL() persistence.ComputePlanDBAL {
 	return args.Get(0).(persistence.ComputePlanDBAL)
 }
 
-// GetComputeTaskDBAL returns whatever value is passed
+// GetModelDBAL returns whatever value is passed
 func (m *MockServiceProvider) GetModelDBAL() persistence.ModelDBAL {
 	args := m.Called()
 	return args.Get(0).(persistence.ModelDBAL)
@@ -263,7 +263,7 @@ type MockDataSampleService struct {
 	mock.Mock
 }
 
-// RegisterDataSample returns whatever value is passed
+// RegisterDataSamples returns whatever value is passed
 func (m *MockDataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, owner string) error {
 	args := m.Called(samples, owner)
 	return args.Error(0)

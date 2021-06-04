@@ -36,7 +36,7 @@ func NewDataSampleServer() *DataSampleServer {
 	return &DataSampleServer{}
 }
 
-// RegisterDataSample will persist new DataSamples
+// RegisterDataSamples will persist new DataSamples
 func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
 	log.WithField("nbSamples", len(input.Samples)).Debug("Register DataSamples")
 

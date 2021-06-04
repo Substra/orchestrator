@@ -2,14 +2,12 @@ run:
   timeout: 2m
 linters:
   enable:
-    - golint
+    - revive
     - gofmt
     - importas
     - rowserrcheck
 
 linters-settings:
-  golint:
-    min-confidence: 0
   importas:
     "orcerrors": github.com/owkin/orchestrator/lib/errors
     "commonserv": github.com/owkin/orchestrator/server/common
