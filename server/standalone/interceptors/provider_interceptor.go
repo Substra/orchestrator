@@ -143,13 +143,16 @@ func (pi *ProviderInterceptor) handleIsolated(ctx context.Context, req interface
 		if commitErr != nil {
 			return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
 		}
-		dispatchErr := dispatcher.Dispatch()
-		if dispatchErr != nil {
-			log.WithError(dispatchErr).
-				WithField("events", dispatcher.GetEvents()).
-				Error("failed to dispatch events after successful transaction commit")
-			return nil, fmt.Errorf("failed to dispatch events: %w", dispatchErr)
-		}
+		go func() {
+			dispatchErr := dispatcher.Dispatch()
+			if dispatchErr != nil {
+				// simply log since we cannot rollback the DB transaction anyway
+				log.WithError(dispatchErr).
+					WithField("events", dispatcher.GetEvents()).
+					Error("failed to dispatch events after successful transaction commit")
+			}
+		}()
+
 	}
 
 	return res, err

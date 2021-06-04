@@ -17,6 +17,7 @@ package interceptors
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/jackc/pgconn"
@@ -101,7 +102,13 @@ func TestOnSuccess(t *testing.T) {
 	dbProvider := &mockTransactionalDBALProvider{db}
 
 	db.On("Commit").Once().Return(nil)
-	publisher.On("Publish", "testChannel", mock.Anything).Once().Return(nil)
+
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+
+	publisher.On("Publish", "testChannel", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+		wg.Done()
+	})
 
 	interceptor := NewProviderInterceptor(dbProvider, publisher)
 
@@ -121,6 +128,9 @@ func TestOnSuccess(t *testing.T) {
 	ctx := common.WithChannel(context.TODO(), "testChannel")
 	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
+
+	// wait for async event dispatch
+	wg.Wait()
 
 	db.AssertExpectations(t)
 	publisher.AssertExpectations(t)
@@ -164,7 +174,13 @@ func TestRetryOnUnserializableTransaction(t *testing.T) {
 
 	db.On("Rollback").Once().Return(nil)
 	db.On("Commit").Once().Return(nil)
-	publisher.On("Publish", "testChannel", mock.Anything).Once().Return(nil)
+
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+
+	publisher.On("Publish", "testChannel", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+		wg.Done()
+	})
 
 	interceptor := NewProviderInterceptor(dbProvider, publisher)
 
@@ -190,6 +206,9 @@ func TestRetryOnUnserializableTransaction(t *testing.T) {
 	ctx := common.WithChannel(context.TODO(), "testChannel")
 	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
+
+	// wait for async event dispatch
+	wg.Wait()
 
 	db.AssertExpectations(t)
 	publisher.AssertExpectations(t)
