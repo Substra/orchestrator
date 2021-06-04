@@ -29,7 +29,7 @@ import (
 type ComputeTaskAPI interface {
 	// RegisterTask creates a new ComputeTask
 	RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error)
-	RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error)
+	RegisterTasks(tasks []*asset.NewComputeTask, owner string) error
 	GetTask(key string) (*asset.ComputeTask, error)
 	QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
@@ -84,34 +84,31 @@ func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
 }
 
 // RegisterTasks creates multiple compute tasks
-func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error) {
+func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) error {
 	cpKey := tasks[0].GetComputePlanKey()
 	for _, t := range tasks {
 		if t.ComputePlanKey != cpKey {
-			return nil, fmt.Errorf("%w all tasks should live in the same compute plan", orcerrors.ErrBadRequest)
+			return fmt.Errorf("%w all tasks should live in the same compute plan", orcerrors.ErrBadRequest)
 		}
 	}
 
 	existingKeys, err := s.GetComputeTaskDBAL().GetComputePlanTasksKeys(cpKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	sortedTasks, err := sortTasks(tasks, existingKeys)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	registeredTasks := []*asset.ComputeTask{}
 
 	for _, task := range sortedTasks {
-		asset, err := s.RegisterTask(task, owner)
+		_, err := s.RegisterTask(task, owner)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		registeredTasks = append(registeredTasks, asset)
 	}
 
-	return registeredTasks, nil
+	return nil
 }
 
 // sortTasks is a function to sort a list of tasks in a valid order for their registration.

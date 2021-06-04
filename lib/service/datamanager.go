@@ -26,7 +26,7 @@ import (
 
 // DataManagerAPI defines the methods to act on DataManagers
 type DataManagerAPI interface {
-	RegisterDataManager(datamanager *asset.NewDataManager, owner string) error
+	RegisterDataManager(datamanager *asset.NewDataManager, owner string) (*asset.DataManager, error)
 	UpdateDataManager(datamanager *asset.DataManagerUpdateParam, requester string) error
 	GetDataManager(key string) (*asset.DataManager, error)
 	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
@@ -62,30 +62,30 @@ type DataManagerPermissions struct {
 }
 
 // RegisterDataManager persists a DataManager
-func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner string) error {
+func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner string) (*asset.DataManager, error) {
 	log.WithField("owner", owner).WithField("newDataManager", d).Debug("Registering DataManager")
 	err := d.Validate()
 	if err != nil {
-		return fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
+		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
 	exists, err := s.GetDataManagerDBAL().DataManagerExists(d.GetKey())
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if exists {
-		return fmt.Errorf("there is already a datamanager with this key: %w", orcerrors.ErrConflict)
+		return nil, fmt.Errorf("there is already a datamanager with this key: %w", orcerrors.ErrConflict)
 	}
 
 	// The objective key should be empty or referencing a valid objective
 	if d.GetObjectiveKey() != "" {
 		ok, err := s.GetObjectiveService().CanDownload(d.GetObjectiveKey(), owner)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if !ok {
-			return fmt.Errorf("the datamanager owner can't download the provided objective: %w", orcerrors.ErrConflict)
+			return nil, fmt.Errorf("the datamanager owner can't download the provided objective: %w", orcerrors.ErrConflict)
 		}
 	}
 
@@ -102,7 +102,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 
 	datamanager.Permissions, err = s.GetPermissionService().CreatePermissions(owner, d.NewPermissions)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	event := &asset.Event{
@@ -112,10 +112,16 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 	}
 	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return s.GetDataManagerDBAL().AddDataManager(datamanager)
+	err = s.GetDataManagerDBAL().AddDataManager(datamanager)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return datamanager, nil
 }
 
 // UpdateDataManager updates a DataManager to link an objective

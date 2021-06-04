@@ -88,19 +88,22 @@ func TestRegistration(t *testing.T) {
 		Opener:         addressable,
 		Type:           "test",
 	}
+
 	wrapper, err := communication.Wrap(newObj)
 	assert.NoError(t, err)
+
+	dm := &asset.DataManager{}
 
 	ctx := new(testHelper.MockedContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterDataManager", newObj, mspid).Return(nil).Once()
+	service.On("RegisterDataManager", newObj, mspid).Return(dm, nil).Once()
 
 	stub := new(testHelper.MockedStub)
 	ctx.On("GetStub").Return(stub).Once()
 
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	err = contract.RegisterDataManager(ctx, wrapper)
+	_, err = contract.RegisterDataManager(ctx, wrapper)
 	assert.NoError(t, err)
 }

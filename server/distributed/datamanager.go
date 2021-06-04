@@ -32,16 +32,18 @@ func NewDataManagerAdapter() *DataManagerAdapter {
 }
 
 // RegisterDataManager will persist new DataManagers
-func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.NewDataManagerResponse, error) {
+func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.DataManager, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
 	method := "orchestrator.datamanager:RegisterDataManager"
 
+	response := &asset.DataManager{}
+
 	err = invocator.Call(method, d, nil)
 
-	return &asset.NewDataManagerResponse{}, err
+	return response, err
 }
 
 // UpdateDataManager will update the objective of an existing DataManager

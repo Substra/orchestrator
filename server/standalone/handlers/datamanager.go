@@ -36,7 +36,7 @@ func NewDataManagerServer() *DataManagerServer {
 }
 
 // RegisterDataManager will persist new DataManagers
-func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.NewDataManagerResponse, error) {
+func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.DataManager, error) {
 	log.WithField("datamanager", d).Debug("Register DataManager")
 
 	mspid, err := common.ExtractMSPID(ctx)
@@ -48,12 +48,12 @@ func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.Ne
 		return nil, err
 	}
 
-	err = services.GetDataManagerService().RegisterDataManager(d, mspid)
+	dm, err := services.GetDataManagerService().RegisterDataManager(d, mspid)
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.NewDataManagerResponse{}, nil
+	return dm, nil
 }
 
 // UpdateDataManager will update the objective of an existing DataManager

@@ -43,8 +43,6 @@ message NewDataManager {
     string type = 8;
 }
 
-message NewDataManagerResponse {}
-
 message DataManagerUpdateParam {
     string key = 1;
     string objective_key = 2;
@@ -67,7 +65,7 @@ message QueryDataManagersResponse {
 }
 
 service DataManagerService {
-    rpc RegisterDataManager(NewDataManager) returns (NewDataManagerResponse) {}
+    rpc RegisterDataManager(NewDataManager) returns (DataManager) {}
     rpc UpdateDataManager(DataManagerUpdateParam) returns (DataManagerUpdateResponse) {}
     rpc GetDataManager(GetDataManagerParam) returns (DataManager) {}
     rpc QueryDataManagers(QueryDataManagersParam) returns (QueryDataManagersResponse) {}

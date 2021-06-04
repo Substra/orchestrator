@@ -328,9 +328,9 @@ type MockDataManagerService struct {
 }
 
 // RegisterDataManager returns whatever value is passed
-func (m *MockDataManagerService) RegisterDataManager(datamanager *asset.NewDataManager, owner string) error {
+func (m *MockDataManagerService) RegisterDataManager(datamanager *asset.NewDataManager, owner string) (*asset.DataManager, error) {
 	args := m.Called(datamanager, owner)
-	return args.Error(0)
+	return args.Get(0).(*asset.DataManager), args.Error(1)
 }
 
 // UpdateDataManager returns whatever value is passed
@@ -406,9 +406,9 @@ func (m *MockComputeTaskService) RegisterTask(task *asset.NewComputeTask, owner 
 	return args.Get(0).(*asset.ComputeTask), args.Error(1)
 }
 
-func (m *MockComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error) {
+func (m *MockComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) error {
 	args := m.Called(tasks, owner)
-	return args.Get(0).([]*asset.ComputeTask), args.Error(1)
+	return args.Error(0)
 }
 
 func (m *MockComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
