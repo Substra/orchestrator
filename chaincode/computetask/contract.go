@@ -89,7 +89,7 @@ func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *co
 
 	err = service.RegisterTasks(newTasks.GetTasks(), owner)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to register computetasks")
+		s.logger.WithError(err).Error("failed to register tasks")
 		return nil, err
 	}
 
@@ -100,7 +100,7 @@ func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *co
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
 	}
-	return wrapped, err
+	return wrapped, nil
 }
 
 // GetTask returns the task with given key

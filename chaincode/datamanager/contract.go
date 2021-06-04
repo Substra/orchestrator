@@ -68,6 +68,11 @@ func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapp
 
 	response, err := communication.Wrap(dm)
 
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+
 	return response, nil
 }
 
