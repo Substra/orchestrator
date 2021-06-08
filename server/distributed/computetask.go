@@ -56,7 +56,7 @@ func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.Reg
 
 	response := &asset.RegisterTasksResponse{}
 
-	err = Invocator.Call(method, input, response)
+	err = Invocator.Call(method, input, nil)
 
 	return response, err
 }

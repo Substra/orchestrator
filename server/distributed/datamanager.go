@@ -41,7 +41,7 @@ func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.N
 
 	response := &asset.DataManager{}
 
-	err = invocator.Call(method, d, nil)
+	err = invocator.Call(method, d, response)
 
 	return response, err
 }
