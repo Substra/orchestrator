@@ -1,2 +1,0 @@
-DROP INDEX IF EXISTS ix_event_asset;
-DROP TABLE IF EXISTS events;
