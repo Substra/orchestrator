@@ -206,31 +206,34 @@ func (c *TestClient) RegisterObjective(o *ObjectiveOptions) {
 	}
 }
 
-func (c *TestClient) RegisterTestTask(o *TestTaskOptions) {
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = c.ks.GetKey(ref)
-	}
-	newTask := &asset.NewComputeTask{
-		Key:            c.ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_TEST,
-		AlgoKey:        c.ks.GetKey(o.AlgoRef),
-		ParentTaskKeys: parentKeys,
-		ComputePlanKey: c.ks.GetKey(o.PlanRef),
-		Data: &asset.NewComputeTask_Test{
-			Test: &asset.NewTestTaskData{
-				ObjectiveKey: c.ks.GetKey(o.ObjectiveRef),
+func (c *TestClient) RegisterTestTasks(optList ...*TestTaskOptions) {
+	newTasks := make([]*asset.NewComputeTask, len(optList))
+	for i, o := range optList {
+		parentKeys := make([]string, len(o.ParentsRef))
+		for i, ref := range o.ParentsRef {
+			parentKeys[i] = c.ks.GetKey(ref)
+		}
+		newTasks[i] = &asset.NewComputeTask{
+			Key:            c.ks.GetKey(o.KeyRef),
+			Category:       asset.ComputeTaskCategory_TASK_TEST,
+			AlgoKey:        c.ks.GetKey(o.AlgoRef),
+			ParentTaskKeys: parentKeys,
+			ComputePlanKey: c.ks.GetKey(o.PlanRef),
+			Data: &asset.NewComputeTask_Test{
+				Test: &asset.NewTestTaskData{
+					ObjectiveKey: c.ks.GetKey(o.ObjectiveRef),
+				},
 			},
-		},
+		}
 	}
-	log.WithField("task", newTask).Debug("registering test task")
-	_, err := c.computeTaskService.RegisterTask(c.ctx, newTask)
+	log.WithField("nbTasks", len(newTasks)).Debug("registering test task")
+	_, err := c.computeTaskService.RegisterTasks(c.ctx, &asset.RegisterTasksParam{Tasks: newTasks})
 	if err != nil {
-		log.WithError(err).Fatal("RegisterTestTask failed")
+		log.WithError(err).Fatal("RegisterTestTasks failed")
 	}
 }
 
-func (c *TestClient) RegisterBatchTrainTasks(optList []*TrainTaskOptions) {
+func (c *TestClient) RegisterTrainTasks(optList ...*TrainTaskOptions) {
 	newTasks := make([]*asset.NewComputeTask, len(optList))
 	for i, o := range optList {
 		parentKeys := make([]string, len(o.ParentsRef))
@@ -259,84 +262,62 @@ func (c *TestClient) RegisterBatchTrainTasks(optList []*TrainTaskOptions) {
 	}
 }
 
-func (c *TestClient) RegisterTrainTask(o *TrainTaskOptions) {
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = c.ks.GetKey(ref)
-	}
-	newTask := &asset.NewComputeTask{
-		Key:            c.ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
-		AlgoKey:        c.ks.GetKey(o.AlgoRef),
-		ParentTaskKeys: parentKeys,
-		ComputePlanKey: c.ks.GetKey(o.PlanRef),
-		Data: &asset.NewComputeTask_Train{
-			Train: &asset.NewTrainTaskData{
-				DataManagerKey: c.ks.GetKey(o.DataManagerRef),
-				DataSampleKeys: []string{c.ks.GetKey(o.DataSampleRef)},
+func (c *TestClient) RegisterCompositeTasks(optList ...*CompositeTaskOptions) {
+	newTasks := make([]*asset.NewComputeTask, len(optList))
+	for i, o := range optList {
+		parentKeys := make([]string, len(o.ParentsRef))
+		for i, ref := range o.ParentsRef {
+			parentKeys[i] = c.ks.GetKey(ref)
+		}
+		newTasks[i] = &asset.NewComputeTask{
+			Key:            c.ks.GetKey(o.KeyRef),
+			Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+			AlgoKey:        c.ks.GetKey(o.AlgoRef),
+			ParentTaskKeys: parentKeys,
+			ComputePlanKey: c.ks.GetKey(o.PlanRef),
+			Data: &asset.NewComputeTask_Composite{
+				Composite: &asset.NewCompositeTrainTaskData{
+					DataManagerKey:   c.ks.GetKey(o.DataManagerRef),
+					DataSampleKeys:   []string{c.ks.GetKey(o.DataSampleRef)},
+					TrunkPermissions: &asset.NewPermissions{Public: true},
+				},
 			},
-		},
-	}
-	log.WithField("task", newTask).Debug("registering train task")
-	_, err := c.computeTaskService.RegisterTask(c.ctx, newTask)
-	if err != nil {
-		log.WithError(err).Fatal("RegisterComputeTask failed")
+		}
 	}
 
-}
-
-func (c *TestClient) RegisterCompositeTask(o *CompositeTaskOptions) {
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = c.ks.GetKey(ref)
-	}
-	newTask := &asset.NewComputeTask{
-		Key:            c.ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
-		AlgoKey:        c.ks.GetKey(o.AlgoRef),
-		ParentTaskKeys: parentKeys,
-		ComputePlanKey: c.ks.GetKey(o.PlanRef),
-		Data: &asset.NewComputeTask_Composite{
-			Composite: &asset.NewCompositeTrainTaskData{
-				DataManagerKey:   c.ks.GetKey(o.DataManagerRef),
-				DataSampleKeys:   []string{c.ks.GetKey(o.DataSampleRef)},
-				TrunkPermissions: &asset.NewPermissions{Public: true},
-			},
-		},
-	}
-
-	log.WithField("task", newTask).Debug("registering composite task")
-	_, err := c.computeTaskService.RegisterTask(c.ctx, newTask)
+	log.WithField("nbTasks", len(newTasks)).Debug("registering composite task")
+	_, err := c.computeTaskService.RegisterTasks(c.ctx, &asset.RegisterTasksParam{Tasks: newTasks})
 	if err != nil {
 		log.WithError(err).Fatal("RegisterCompositeTask failed")
 	}
-
 }
 
-func (c *TestClient) RegisterAggregateTask(o *AggregateTaskOptions) {
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = c.ks.GetKey(ref)
-	}
-	newTask := &asset.NewComputeTask{
-		Key:            c.ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_AGGREGATE,
-		AlgoKey:        c.ks.GetKey(o.AlgoRef),
-		ParentTaskKeys: parentKeys,
-		ComputePlanKey: c.ks.GetKey(o.PlanRef),
-		Data: &asset.NewComputeTask_Aggregate{
-			Aggregate: &asset.NewAggregateTrainTaskData{
-				Worker: o.Worker,
+func (c *TestClient) RegisterAggregateTasks(optList ...*AggregateTaskOptions) {
+	newTasks := make([]*asset.NewComputeTask, len(optList))
+	for i, o := range optList {
+		parentKeys := make([]string, len(o.ParentsRef))
+		for i, ref := range o.ParentsRef {
+			parentKeys[i] = c.ks.GetKey(ref)
+		}
+		newTasks[i] = &asset.NewComputeTask{
+			Key:            c.ks.GetKey(o.KeyRef),
+			Category:       asset.ComputeTaskCategory_TASK_AGGREGATE,
+			AlgoKey:        c.ks.GetKey(o.AlgoRef),
+			ParentTaskKeys: parentKeys,
+			ComputePlanKey: c.ks.GetKey(o.PlanRef),
+			Data: &asset.NewComputeTask_Aggregate{
+				Aggregate: &asset.NewAggregateTrainTaskData{
+					Worker: o.Worker,
+				},
 			},
-		},
+		}
 	}
 
-	log.WithField("task", newTask).Debug("registering aggregate task")
-	_, err := c.computeTaskService.RegisterTask(c.ctx, newTask)
+	log.WithField("nbTasks", len(newTasks)).Debug("registering aggregate task")
+	_, err := c.computeTaskService.RegisterTasks(c.ctx, &asset.RegisterTasksParam{Tasks: newTasks})
 	if err != nil {
 		log.WithError(err).Fatal("RegisterAggregateTask failed")
 	}
-
 }
 
 func (c *TestClient) StartTask(keyRef string) {

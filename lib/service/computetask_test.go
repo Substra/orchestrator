@@ -87,15 +87,18 @@ func TestQueryTasks(t *testing.T) {
 
 func TestRegisterTaskOnNonOwnedPlan(t *testing.T) {
 	cps := new(MockComputePlanService)
+	dbal := new(persistenceHelper.MockDBAL)
 	provider := new(MockServiceProvider)
 
 	provider.On("GetComputePlanService").Once().Return(cps)
+	provider.On("GetComputeTaskDBAL").Return(dbal)
 
 	service := NewComputeTaskService(provider)
 
+	dbal.On("GetComputePlanTasksKeys", newTrainTask.ComputePlanKey).Once().Return([]string{}, nil)
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Owner: "nottest"}, nil)
 
-	_, err := service.RegisterTask(newTrainTask, "test")
+	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
 	assert.True(t, errors.Is(err, orcerrors.ErrPermissionDenied))
 }
 
@@ -109,10 +112,11 @@ func TestRegisterTaskConflict(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
+	dbal.On("GetComputePlanTasksKeys", newTrainTask.ComputePlanKey).Once().Return([]string{}, nil)
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Owner: "test"}, nil)
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(true, nil)
 
-	_, err := service.RegisterTask(newTrainTask, "test")
+	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
 	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
 }
 
@@ -202,6 +206,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		},
 	}
 
+	dbal.On("GetComputePlanTasksKeys", newTrainTask.ComputePlanKey).Once().Return([]string{}, nil)
 	// finally store the created task
 	dbal.On("AddComputeTasks", []*asset.ComputeTask{storedTask}).Once().Return(nil)
 
@@ -215,7 +220,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	}
 	es.On("RegisterEvents", []*asset.Event{expectedEvent}).Once().Return(nil)
 
-	_, err := service.RegisterTask(newTrainTask, "testOwner")
+	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "testOwner")
 	assert.NoError(t, err)
 
 	es.AssertExpectations(t)
@@ -256,6 +261,7 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	// Checking compute plan
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Owner: "testOwner"}, nil)
+	dbal.On("GetComputePlanTasksKeys", newTrainTask.ComputePlanKey).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 	// Checking existing task
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(false, nil)
 
@@ -276,7 +282,7 @@ func TestRegisterFailedTask(t *testing.T) {
 	// Checking parent permissions
 	ps.On("CanProcess", parentPerms, "testOwner").Once().Return(true)
 
-	_, err := service.RegisterTask(newTask, "testOwner")
+	err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, orcerrors.ErrIncompatibleTaskStatus))
 }

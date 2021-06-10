@@ -172,7 +172,6 @@ message ApplyTaskActionResponse {
 }
 
 service ComputeTaskService {
-  rpc RegisterTask(NewComputeTask) returns (ComputeTask) {}
   rpc RegisterTasks(RegisterTasksParam) returns (RegisterTasksResponse) {}
   rpc QueryTasks(QueryTasksParam) returns (QueryTasksResponse) {}
   rpc GetTask(GetTaskParam) returns (ComputeTask) {}

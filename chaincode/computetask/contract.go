@@ -43,35 +43,6 @@ func NewSmartContract() *SmartContract {
 	return contract
 }
 
-func (s *SmartContract) RegisterTask(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	service := ctx.GetProvider().GetComputeTaskService()
-
-	newTask := new(asset.NewComputeTask)
-	err := wrapper.Unwrap(newTask)
-	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
-		return nil, err
-	}
-
-	owner, err := ledger.GetTxCreator(ctx.GetStub())
-	if err != nil {
-		s.logger.WithError(err).Error("failed to extract tx creator")
-		return nil, err
-	}
-
-	t, err := service.RegisterTask(newTask, owner)
-	if err != nil {
-		s.logger.WithError(err).Error("failed to register task")
-		return nil, err
-	}
-	wrapped, err := communication.Wrap(t)
-	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
-		return nil, err
-	}
-	return wrapped, nil
-}
-
 func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	service := ctx.GetProvider().GetComputeTaskService()
 

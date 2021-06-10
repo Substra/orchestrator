@@ -27,19 +27,19 @@ func TestComputeTaskAdapterImplementServer(t *testing.T) {
 	assert.Implements(t, (*asset.ComputeTaskServiceServer)(nil), adapter)
 }
 
-func TestRegisterTask(t *testing.T) {
+func TestRegisterTasks(t *testing.T) {
 	adapter := NewComputeTaskAdapter()
 
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	param := &asset.NewComputeTask{}
+	param := &asset.RegisterTasksParam{}
 
-	invocator.On("Call", "orchestrator.computetask:RegisterTask", param, &asset.ComputeTask{}).Return(nil)
+	invocator.On("Call", "orchestrator.computetask:RegisterTasks", param, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
-	_, err := adapter.RegisterTask(ctx, param)
+	_, err := adapter.RegisterTasks(ctx, param)
 
 	assert.NoError(t, err, "Query should pass")
 }

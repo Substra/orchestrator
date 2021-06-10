@@ -27,8 +27,6 @@ import (
 
 // ComputeTaskAPI defines the methods to act on ComputeTasks
 type ComputeTaskAPI interface {
-	// RegisterTask creates a new ComputeTask
-	RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error)
 	RegisterTasks(tasks []*asset.NewComputeTask, owner string) error
 	GetTask(key string) (*asset.ComputeTask, error)
 	QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
@@ -198,33 +196,6 @@ func sortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*ass
 	}
 
 	return sortedTasks, nil
-}
-
-// RegisterTask creates a new ComputeTask
-func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner string) (*asset.ComputeTask, error) {
-	log.WithField("task", input).WithField("owner", owner).Debug("Registering new compute task")
-	task, err := s.createTask(input, owner)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.GetComputeTaskDBAL().AddComputeTasks(task)
-	if err != nil {
-		return nil, err
-	}
-
-	event := &asset.Event{
-		AssetKey:  task.Key,
-		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
-		Metadata:  map[string]string{"status": task.Status.String()},
-	}
-	err = s.GetEventService().RegisterEvents(event)
-	if err != nil {
-		return nil, err
-	}
-
-	return task, nil
 }
 
 // createTask converts a NewComputeTask into a ComputeTask.

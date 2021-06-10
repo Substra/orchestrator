@@ -40,10 +40,10 @@ func TestRegistration(t *testing.T) {
 	contract := &SmartContract{}
 
 	org := "TestOrg"
-	input := &asset.NewComputeTask{}
+	tasks := []*asset.NewComputeTask{{}, {}}
+	input := &asset.RegisterTasksParam{Tasks: tasks}
 	wrapper, err := communication.Wrap(input)
 	assert.NoError(t, err)
-	output := &asset.ComputeTask{Key: "test"}
 	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
@@ -52,14 +52,10 @@ func TestRegistration(t *testing.T) {
 	ctx := new(testHelper.MockedContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterTask", input, org).Return(output, nil).Once()
+	service.On("RegisterTasks", tasks, org).Return(nil).Once()
 
 	ctx.On("GetStub").Return(stub).Once()
 
-	resp, err := contract.RegisterTask(ctx, wrapper)
+	_, err = contract.RegisterTasks(ctx, wrapper)
 	assert.NoError(t, err, "task registration should not fail")
-	task := new(asset.ComputeTask)
-	err = resp.Unwrap(task)
-	assert.NoError(t, err)
-	assert.Equal(t, task, output)
 }

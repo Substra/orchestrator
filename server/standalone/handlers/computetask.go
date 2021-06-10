@@ -34,26 +34,6 @@ func NewComputeTaskServer() *ComputeTaskServer {
 	return &ComputeTaskServer{}
 }
 
-// RegisterTask will add a new ComputeTask to the network
-func (s *ComputeTaskServer) RegisterTask(ctx context.Context, in *asset.NewComputeTask) (*asset.ComputeTask, error) {
-	owner, err := common.ExtractMSPID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	provider, err := interceptors.ExtractProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	task, err := provider.GetComputeTaskService().RegisterTask(in, owner)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return task, nil
-}
-
 func (s *ComputeTaskServer) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
 	owner, err := common.ExtractMSPID(ctx)
 	if err != nil {

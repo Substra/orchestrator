@@ -401,11 +401,6 @@ type MockComputeTaskService struct {
 	mock.Mock
 }
 
-func (m *MockComputeTaskService) RegisterTask(task *asset.NewComputeTask, owner string) (*asset.ComputeTask, error) {
-	args := m.Called(task, owner)
-	return args.Get(0).(*asset.ComputeTask), args.Error(1)
-}
-
 func (m *MockComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) error {
 	args := m.Called(tasks, owner)
 	return args.Error(0)

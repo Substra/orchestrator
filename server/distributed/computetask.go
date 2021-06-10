@@ -31,21 +31,6 @@ func NewComputeTaskAdapter() *ComputeTaskAdapter {
 	return &ComputeTaskAdapter{}
 }
 
-// RegisterTask performs validation and add a new task to a compute plan
-func (a *ComputeTaskAdapter) RegisterTask(ctx context.Context, in *asset.NewComputeTask) (*asset.ComputeTask, error) {
-	invocator, err := ExtractInvocator(ctx)
-	if err != nil {
-		return nil, err
-	}
-	method := "orchestrator.computetask:RegisterTask"
-
-	response := &asset.ComputeTask{}
-
-	err = invocator.Call(method, in, response)
-
-	return response, err
-}
-
 // RegisterTasks processes a batch of new tasks to add them to a compute plan
 func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
 	Invocator, err := ExtractInvocator(ctx)
