@@ -60,11 +60,18 @@ type ComputeTaskDependencyProvider interface {
 // ComputeTaskService is the compute task manipulation entry point
 type ComputeTaskService struct {
 	ComputeTaskDependencyProvider
+	// Keep a local cache of algos and plans to be used in batch import
+	algoStore map[string]*asset.Algo
+	planStore map[string]*asset.ComputePlan
 }
 
 // NewComputeTaskService creates a new service
 func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskService {
-	return &ComputeTaskService{provider}
+	return &ComputeTaskService{
+		ComputeTaskDependencyProvider: provider,
+		algoStore:                     make(map[string]*asset.Algo),
+		planStore:                     make(map[string]*asset.ComputePlan, 1),
+	}
 }
 
 // QueryTasks returns tasks matching filter
@@ -206,10 +213,15 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
 	}
 
-	cp, err := s.GetComputePlanService().GetPlan(input.ComputePlanKey)
-	if err != nil {
-		return nil, err
+	if _, ok := s.planStore[input.ComputePlanKey]; !ok {
+		cp, err := s.GetComputePlanService().GetPlan(input.ComputePlanKey)
+		if err != nil {
+			return nil, err
+		}
+		s.planStore[input.ComputePlanKey] = cp
 	}
+	cp := s.planStore[input.ComputePlanKey]
+
 	if cp.Owner != owner {
 		return nil, fmt.Errorf("only plan owner can register a task: %w", orcerrors.ErrPermissionDenied)
 	}
@@ -331,10 +343,15 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 // getCheckedAlgo returns the Algo identified by given key,
 // it will return an error if the algorithm is not processable by the owner or not compatible with the task.
 func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string, taskCategory asset.ComputeTaskCategory) (*asset.Algo, error) {
-	algo, err := s.GetAlgoService().GetAlgo(algoKey)
-	if err != nil {
-		return nil, err
+	if _, ok := s.algoStore[algoKey]; !ok {
+		algo, err := s.GetAlgoService().GetAlgo(algoKey)
+		if err != nil {
+			return nil, err
+		}
+		s.algoStore[algoKey] = algo
 	}
+	algo := s.algoStore[algoKey]
+
 	canProcess := s.GetPermissionService().CanProcess(algo.Permissions, owner)
 	if !canProcess {
 		return nil, fmt.Errorf("not authorized to process algo %s: %w", algo.Key, orcerrors.ErrPermissionDenied)
