@@ -106,7 +106,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		AssetKey:  o.Key,
 		AssetKind: asset.AssetKind_ASSET_OBJECTIVE,
 	}
-	err = s.GetEventService().RegisterEvent(event)
+	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
 		return nil, err
 	}

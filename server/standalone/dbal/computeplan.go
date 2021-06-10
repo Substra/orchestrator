@@ -15,11 +15,12 @@
 package dbal
 
 import (
-	"database/sql"
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -27,7 +28,7 @@ import (
 
 // ComputePlanExists returns true if a ComputePlan with the given key already exists
 func (d *DBAL) ComputePlanExists(key string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "compute_plans" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select count(id) from "compute_plans" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -38,7 +39,7 @@ func (d *DBAL) ComputePlanExists(key string) (bool, error) {
 // AddComputePlan stores a new ComputePlan in DB
 func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 	stmt := `insert into "compute_plans" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(stmt, plan.GetKey(), plan, d.channel)
+	_, err := d.tx.Exec(context.Background(), stmt, plan.GetKey(), plan, d.channel)
 	return err
 }
 
@@ -58,13 +59,13 @@ where cp.id=$1 and cp.channel=$2
 group by cp.asset
 `
 
-	row := d.tx.QueryRow(query, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), query, key, d.channel)
 
 	plan := new(asset.ComputePlan)
 	var total, done, doing, waiting, failed, canceled uint32
 	err := row.Scan(plan, &total, &done, &doing, &waiting, &failed, &canceled)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("computeplan not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
@@ -78,7 +79,7 @@ group by cp.asset
 }
 
 func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
-	var rows *sql.Rows
+	var rows pgx.Rows
 	var err error
 	offset, err := getOffset(p.Token)
 	if err != nil {
@@ -100,7 +101,7 @@ group by cp.asset, cp.created_at
 order by cp.created_at asc limit $1 offset $2
 `
 
-	rows, err = d.tx.Query(query, p.Size+1, offset, d.channel)
+	rows, err = d.tx.Query(context.Background(), query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}

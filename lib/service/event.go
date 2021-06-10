@@ -23,8 +23,8 @@ import (
 )
 
 type EventAPI interface {
-	// Emit will enqueue the orchestration event for dispatch.
-	RegisterEvent(*asset.Event) error
+	// RegisterEvents allow to register multiple events at once.
+	RegisterEvents(...*asset.Event) error
 	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error)
 }
 
@@ -45,15 +45,22 @@ func NewEventService(provider EventDependencyProvider) *EventService {
 	return &EventService{provider}
 }
 
-// RegisterEvent assigns an ID to the event, persists it and passes it to the dispatcher.
-func (s *EventService) RegisterEvent(e *asset.Event) error {
-	e.Id = uuid.NewString()
-	err := s.GetEventDBAL().AddEvent(e)
+// RegisterEvents assigns an ID to each event and persist them.
+func (s *EventService) RegisterEvents(events ...*asset.Event) error {
+	for _, e := range events {
+		e.Id = uuid.NewString()
+		err := s.GetEventQueue().Enqueue(e)
+		if err != nil {
+			return err
+		}
+	}
+
+	err := s.GetEventDBAL().AddEvents(events...)
 	if err != nil {
 		return err
 	}
 
-	return s.GetEventQueue().Enqueue(e)
+	return nil
 }
 
 func (s *EventService) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error) {

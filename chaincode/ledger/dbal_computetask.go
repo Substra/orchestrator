@@ -29,8 +29,8 @@ import (
 
 const indexPlanTaskStatus = "computePlan~computePlanKey~status~task"
 
-// AddComputeTask stores a new ComputeTask in DB
-func (db *DB) AddComputeTask(t *asset.ComputeTask) error {
+// addComputeTask stores a new ComputeTask in DB
+func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 	exists, err := db.hasKey(asset.ComputeTaskKind, t.GetKey())
 	if err != nil {
 		return err
@@ -83,6 +83,17 @@ func (db *DB) AddComputeTask(t *asset.ComputeTask) error {
 			if err = db.createIndex("computeTask~category~parentTask~certified~key", []string{asset.ComputeTaskKind, t.Category.String(), parentTask, strconv.FormatBool(testData.Test.Certified), t.Key}); err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+func (db *DB) AddComputeTasks(tasks ...*asset.ComputeTask) error {
+	for _, task := range tasks {
+		err := db.addComputeTask(task)
+		if err != nil {
+			return err
 		}
 	}
 

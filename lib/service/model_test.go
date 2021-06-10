@@ -198,7 +198,7 @@ func TestRegisterSimpleModel(t *testing.T) {
 		AssetKey:  model.Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
-	es.On("RegisterEvent", event).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{event}).Once().Return(nil)
 
 	// Model registration will initiate a task transition to done
 	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
@@ -335,7 +335,7 @@ func TestRegisterHeadModel(t *testing.T) {
 		AssetKey:  model.Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
-	es.On("RegisterEvent", event).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{event}).Once().Return(nil)
 
 	// Model registration will initiate a task transition to done
 	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
@@ -508,7 +508,7 @@ func TestDisableModel(t *testing.T) {
 		AssetKey:  "modelUuid",
 		EventKind: asset.EventKind_EVENT_ASSET_DISABLED,
 	}
-	es.On("RegisterEvent", event).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{event}).Once().Return(nil)
 
 	err := service.DisableModel("modelUuid", "requester")
 	assert.NoError(t, err)

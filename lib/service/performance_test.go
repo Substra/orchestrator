@@ -57,7 +57,7 @@ func TestRegisterPerformance(t *testing.T) {
 		AssetKey:  perf.ComputeTaskKey,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
-	es.On("RegisterEvent", event).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{event}).Once().Return(nil)
 
 	// Performance registration will initiate a task transition to done
 	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)

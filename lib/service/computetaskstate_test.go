@@ -138,7 +138,7 @@ func TestDispatchOnTransition(t *testing.T) {
 			"reason": "User action",
 		},
 	}
-	es.On("RegisterEvent", expectedEvent).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{expectedEvent}).Once().Return(nil)
 
 	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DOING, "", "worker")
 	assert.NoError(t, err)
@@ -163,7 +163,7 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 	// Check for children to be updated
 	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{}, nil)
 	// An update event should be enqueued
-	es.On("RegisterEvent", mock.Anything).Return(nil)
+	es.On("RegisterEvents", mock.Anything).Return(nil)
 	// Updated task should be saved
 	updatedTask := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_CANCELED, Owner: "owner"}
 	dbal.On("UpdateComputeTask", updatedTask).Return(nil)
@@ -197,7 +197,7 @@ func TestCascadeStatusDone(t *testing.T) {
 	}, nil)
 
 	// There should be two updates: 1 for the parent, 1 for the child
-	es.On("RegisterEvent", mock.Anything).Times(2).Return(nil)
+	es.On("RegisterEvents", mock.Anything).Times(2).Return(nil)
 	// Updated task should be saved
 	updatedParent := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE, Owner: "owner", Worker: "worker"}
 	updatedChild := &asset.ComputeTask{Key: "child", Status: asset.ComputeTaskStatus_STATUS_TODO}

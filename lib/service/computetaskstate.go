@@ -296,7 +296,7 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 			"reason": reason,
 		},
 	}
-	err = s.GetEventService().RegisterEvent(event)
+	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
 		e.Err = err
 		return

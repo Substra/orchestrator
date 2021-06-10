@@ -90,7 +90,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		AssetKey:  a.Key,
 		AssetKind: asset.AssetKind_ASSET_ALGO,
 	}
-	err = s.GetEventService().RegisterEvent(event)
+	err = s.GetEventService().RegisterEvents(event)
 
 	if err != nil {
 		return nil, err

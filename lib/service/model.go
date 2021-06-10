@@ -157,7 +157,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 		AssetKey:  model.Key,
 		AssetKind: asset.AssetKind_ASSET_MODEL,
 	}
-	err = s.GetEventService().RegisterEvent(event)
+	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 		AssetKey:  model.Key,
 		AssetKind: asset.AssetKind_ASSET_MODEL,
 	}
-	err = s.GetEventService().RegisterEvent(event)
+	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
 		return err
 	}

@@ -45,7 +45,7 @@ type ObjectiveDBAL interface {
 
 // DataSampleDBAL is the database abstraction layer for DataSamples
 type DataSampleDBAL interface {
-	AddDataSample(dataSample *asset.DataSample) error
+	AddDataSamples(dataSample ...*asset.DataSample) error
 	UpdateDataSample(dataSample *asset.DataSample) error
 	GetDataSample(key string) (*asset.DataSample, error)
 	QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)

@@ -203,7 +203,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	}
 
 	// finally store the created task
-	dbal.On("AddComputeTask", storedTask).Once().Return(nil)
+	dbal.On("AddComputeTasks", []*asset.ComputeTask{storedTask}).Once().Return(nil)
 
 	expectedEvent := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
@@ -213,7 +213,7 @@ func TestRegisterTrainTask(t *testing.T) {
 			"status": storedTask.Status.String(),
 		},
 	}
-	es.On("RegisterEvent", expectedEvent).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{expectedEvent}).Once().Return(nil)
 
 	_, err := service.RegisterTask(newTrainTask, "testOwner")
 	assert.NoError(t, err)
@@ -1084,4 +1084,13 @@ func TestCanDisableModels(t *testing.T) {
 		dbal.AssertExpectations(t)
 		cps.AssertExpectations(t)
 	})
+}
+
+func TestRegisterTasksEmptyList(t *testing.T) {
+	provider := new(MockServiceProvider)
+
+	service := NewComputeTaskService(provider)
+
+	err := service.RegisterTasks([]*asset.NewComputeTask{}, "test")
+	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
 }

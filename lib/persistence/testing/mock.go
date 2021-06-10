@@ -74,9 +74,9 @@ func (m *MockDBAL) ObjectiveExists(key string) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
-// AddDataSample is a mock
-func (m *MockDBAL) AddDataSample(dataSample *asset.DataSample) error {
-	args := m.Called(dataSample)
+// AddDataSamples is a mock
+func (m *MockDBAL) AddDataSamples(samples ...*asset.DataSample) error {
+	args := m.Called(samples)
 	return args.Error(0)
 }
 
@@ -199,8 +199,8 @@ func (m *MockDBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 	return args.Get(0).([]string), args.Error(1)
 }
 
-// AddComputeTask is a mock
-func (m *MockDBAL) AddComputeTask(t *asset.ComputeTask) error {
+// AddComputeTasks is a mock
+func (m *MockDBAL) AddComputeTasks(t ...*asset.ComputeTask) error {
 	args := m.Called(t)
 	return args.Error(0)
 }
@@ -281,7 +281,7 @@ func (m *MockDBAL) GetComputeTaskPerformance(key string) (*asset.Performance, er
 	return args.Get(0).(*asset.Performance), args.Error(1)
 }
 
-func (m *MockDBAL) AddEvent(e *asset.Event) error {
+func (m *MockDBAL) AddEvents(e ...*asset.Event) error {
 	args := m.Called(e)
 	return args.Error(0)
 }

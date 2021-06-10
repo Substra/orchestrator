@@ -74,7 +74,7 @@ func (s *NodeService) RegisterNode(id string) (*asset.Node, error) {
 		AssetKey:  id,
 		AssetKind: asset.AssetKind_ASSET_NODE,
 	}
-	err = s.GetEventService().RegisterEvent(event)
+	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
 		return nil, err
 	}

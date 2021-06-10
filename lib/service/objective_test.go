@@ -62,7 +62,7 @@ func TestRegisterObjective(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_OBJECTIVE,
 		AssetKey:  objective.Key,
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 
@@ -228,7 +228,7 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_OBJECTIVE,
 		AssetKey:  objective.Key,
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
 	mds.On("CheckSameManager", objective.DataManagerKey, objective.DataSampleKeys).Return(nil).Once()
 	mds.On("IsTestOnly", objective.DataSampleKeys).Return(true, nil).Once()

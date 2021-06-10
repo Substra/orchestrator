@@ -15,7 +15,7 @@
 package dbal
 
 import (
-	"database/sql"
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -26,7 +26,7 @@ import (
 	"github.com/Masterminds/squirrel"
 
 	// Database driver
-	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -43,30 +43,30 @@ type TransactionDBAL interface {
 
 // DBAL is the Database Abstraction Layer around asset storage
 type DBAL struct {
-	tx      *sql.Tx
+	tx      pgx.Tx
 	channel string
 }
 
 // Commit the changes to the underlying storage backend
 func (d *DBAL) Commit() error {
-	return d.tx.Commit()
+	return d.tx.Commit(context.Background())
 }
 
 // Rollback the changes so that the storage is left untouched
 func (d *DBAL) Rollback() error {
-	return d.tx.Rollback()
+	return d.tx.Rollback(context.Background())
 }
 
 // AddNode implements persistence.NodeDBAL
 func (d *DBAL) AddNode(node *asset.Node) error {
 	stmt := `insert into "nodes" ("id", "channel") values ($1, $2)`
-	_, err := d.tx.Exec(stmt, node.GetId(), d.channel)
+	_, err := d.tx.Exec(context.Background(), stmt, node.GetId(), d.channel)
 	return err
 }
 
 // NodeExists implements persistence.NodeDBAL
 func (d *DBAL) NodeExists(key string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "nodes" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select count(id) from "nodes" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -76,7 +76,7 @@ func (d *DBAL) NodeExists(key string) (bool, error) {
 
 // GetAllNodes implements persistence.NodeDBAL
 func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
-	rows, err := d.tx.Query(`select "id" from "nodes" where channel=$1`, d.channel)
+	rows, err := d.tx.Query(context.Background(), `select "id" from "nodes" where channel=$1`, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -103,13 +103,13 @@ func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
 
 // GetNode implements persistence.NodeDBAL
 func (d *DBAL) GetNode(id string) (*asset.Node, error) {
-	row := d.tx.QueryRow(`select "id" from "nodes" where id=$1 and channel=$2`, id, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select "id" from "nodes" where id=$1 and channel=$2`, id, d.channel)
 
 	node := new(asset.Node)
 	err := row.Scan(&node.Id)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("node not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
@@ -121,20 +121,20 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 // AddObjective implements persistence.ObjectiveDBAL
 func (d *DBAL) AddObjective(obj *asset.Objective) error {
 	stmt := `insert into "objectives" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(stmt, obj.GetKey(), obj, d.channel)
+	_, err := d.tx.Exec(context.Background(), stmt, obj.GetKey(), obj, d.channel)
 
 	return err
 }
 
 // GetObjective implements persistence.ObjectiveDBAL
 func (d *DBAL) GetObjective(key string) (*asset.Objective, error) {
-	row := d.tx.QueryRow(`select "asset" from "objectives" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select "asset" from "objectives" where id=$1 and channel=$2`, key, d.channel)
 
 	objective := new(asset.Objective)
 	err := row.Scan(&objective)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("objective not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
@@ -145,7 +145,7 @@ func (d *DBAL) GetObjective(key string) (*asset.Objective, error) {
 
 // ObjectiveExists implements persistence.ObjectiveDBAL
 func (d *DBAL) ObjectiveExists(key string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "objectives" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select count(id) from "objectives" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -155,7 +155,7 @@ func (d *DBAL) ObjectiveExists(key string) (bool, error) {
 
 // QueryObjectives implements persistence.ObjectiveDBAL
 func (d *DBAL) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
-	var rows *sql.Rows
+	var rows pgx.Rows
 	var err error
 
 	offset, err := getOffset(p.Token)
@@ -164,7 +164,7 @@ func (d *DBAL) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common
 	}
 
 	query := `select "asset" from "objectives" where channel=$3 order by created_at asc limit $1 offset $2`
-	rows, err = d.tx.Query(query, p.Size+1, offset, d.channel)
+	rows, err = d.tx.Query(context.Background(), query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}
@@ -204,19 +204,19 @@ func (d *DBAL) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common
 // AddAlgo implements persistence.AlgoDBAL
 func (d *DBAL) AddAlgo(algo *asset.Algo) error {
 	stmt := `insert into "algos" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(stmt, algo.GetKey(), algo, d.channel)
+	_, err := d.tx.Exec(context.Background(), stmt, algo.GetKey(), algo, d.channel)
 	return err
 }
 
 // GetAlgo implements persistence.AlgoDBAL
 func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
-	row := d.tx.QueryRow(`select "asset" from "algos" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select "asset" from "algos" where id=$1 and channel=$2`, key, d.channel)
 
 	algo := new(asset.Algo)
 	err := row.Scan(&algo)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("algo not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
@@ -227,7 +227,7 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 
 // QueryAlgos implements persistence.AlgoDBAL
 func (d *DBAL) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
-	var rows *sql.Rows
+	var rows pgx.Rows
 	var err error
 
 	offset, err := getOffset(p.Token)
@@ -252,7 +252,7 @@ func (d *DBAL) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.
 		return nil, "", err
 	}
 
-	rows, err = d.tx.Query(query, args...)
+	rows, err = d.tx.Query(context.Background(), query, args...)
 	if err != nil {
 		return nil, "", err
 	}
@@ -291,7 +291,7 @@ func (d *DBAL) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.
 
 // AlgoExists implements persistence.ObjectiveDBAL
 func (d *DBAL) AlgoExists(key string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "algos" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select count(id) from "algos" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)

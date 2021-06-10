@@ -60,7 +60,7 @@ func TestRegisterAlgo(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_ALGO,
 		AssetKey:  algo.Key,
 	}
-	es.On("RegisterEvent", e).Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Return(nil)
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 

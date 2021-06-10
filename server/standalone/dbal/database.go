@@ -16,12 +16,13 @@ package dbal
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
 	"github.com/go-playground/log/v7"
 	"github.com/golang-migrate/migrate/v4"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/owkin/orchestrator/server/standalone/migration"
 )
 
@@ -33,13 +34,13 @@ type TransactionalDBALProvider interface {
 // Database is a thin wrapper around sql.DB.
 // It handles the orchestrator specifics, such as migrations and DBAL creation.
 type Database struct {
-	pool *sql.DB
+	pool *pgxpool.Pool
 }
 
 // InitDatabase opens a database connexion from given url.
 // It make sure the database has a usable schema by running migrations if there are any.
 func InitDatabase(databaseURL string) (*Database, error) {
-	db, err := sql.Open("pgx", databaseURL)
+	pool, err := pgxpool.Connect(context.Background(), databaseURL)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +50,7 @@ func InitDatabase(databaseURL string) (*Database, error) {
 		return nil, err
 	}
 
-	return &Database{pool: db}, nil
+	return &Database{pool}, nil
 }
 
 func executeMigrations(databaseURL string) error {
@@ -87,9 +88,11 @@ func (d *Database) Close() {
 // inconsistencies with concurrent requests.
 func (d *Database) GetTransactionalDBAL(ctx context.Context, channel string, readOnly bool) (TransactionDBAL, error) {
 	log.WithField("ReadOnly", readOnly).WithField("channel", channel).Debug("new DB transaction")
-	txOpts := &sql.TxOptions{
-		Isolation: sql.LevelSerializable, // This level of isolation is the guarantee to always return consistent data
-		ReadOnly:  readOnly,
+	txOpts := pgx.TxOptions{
+		IsoLevel: pgx.Serializable, // This level of isolation is the guarantee to always return consistent data
+	}
+	if readOnly {
+		txOpts.AccessMode = pgx.ReadOnly
 	}
 	tx, err := d.pool.BeginTx(ctx, txOpts)
 	if err != nil {

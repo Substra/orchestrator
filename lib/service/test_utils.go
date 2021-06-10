@@ -517,7 +517,7 @@ type MockEventService struct {
 	mock.Mock
 }
 
-func (m *MockEventService) RegisterEvent(e *asset.Event) error {
+func (m *MockEventService) RegisterEvents(e ...*asset.Event) error {
 	args := m.Called(e)
 	return args.Error(0)
 }

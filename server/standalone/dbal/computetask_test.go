@@ -15,12 +15,16 @@
 package dbal
 
 import (
+	"context"
+	"errors"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,23 +56,23 @@ func TestTaskFilterToQuery(t *testing.T) {
 }
 
 func TestGetTasks(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.ComputeTask{}).
+		AddRow(&asset.ComputeTask{})
 
 	keys := []string{"uuid1", "uuid2"}
 
 	mock.ExpectQuery(`SELECT asset FROM compute_tasks`).WithArgs(testChannel, "uuid1", "uuid2").WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}
@@ -82,22 +86,49 @@ func TestGetTasks(t *testing.T) {
 	}
 }
 
-func TestQueryComputeTasks(t *testing.T) {
-	db, mock, err := sqlmock.New()
+func TestGetNoTask(t *testing.T) {
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
+	mock.ExpectQuery(`select asset from "compute_tasks"`).
+		WithArgs("uuid", testChannel).
+		WillReturnError(pgx.ErrNoRows)
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{tx, testChannel}
+
+	_, err = dbal.GetComputeTask("uuid")
+	assert.Error(t, err)
+	assert.True(t, errors.Is(err, orcerrors.ErrNotFound))
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestQueryComputeTasks(t *testing.T) {
+	mock, err := pgxmock.NewConn()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.ComputeTask{}).
+		AddRow(&asset.ComputeTask{})
 
 	mock.ExpectQuery(`SELECT asset FROM compute_tasks`).WithArgs(testChannel, "testWorker", asset.ComputeTaskStatus_STATUS_DONE.String()).WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}

@@ -71,7 +71,7 @@ func TestRegisterPlan(t *testing.T) {
 			"creator": "org1",
 		},
 	}
-	es.On("RegisterEvent", expectedEvent).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{expectedEvent}).Once().Return(nil)
 
 	plan, err := service.RegisterPlan(newPlan, "org1")
 	assert.NoError(t, err)

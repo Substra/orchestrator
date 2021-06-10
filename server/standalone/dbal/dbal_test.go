@@ -15,11 +15,12 @@
 package dbal
 
 import (
+	"context"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,21 +38,21 @@ func TestGetOffset(t *testing.T) {
 }
 
 func TestQueryObjectives(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.Objective{}).
+		AddRow(&asset.Objective{})
 
-	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(13, 0, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(uint32(13), 0, testChannel).WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}
@@ -67,21 +68,21 @@ func TestQueryObjectives(t *testing.T) {
 }
 
 func TestPaginatedQueryObjectives(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.Objective{}).
+		AddRow(&asset.Objective{})
 
-	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(2, 0, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(uint32(2), 0, testChannel).WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}
@@ -97,21 +98,21 @@ func TestPaginatedQueryObjectives(t *testing.T) {
 }
 
 func TestQueryAlgos(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.Algo{}).
+		AddRow(&asset.Algo{})
 
 	mock.ExpectQuery(`SELECT asset FROM algos`).WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}
@@ -127,21 +128,21 @@ func TestQueryAlgos(t *testing.T) {
 }
 
 func TestPaginatedQueryAlgos(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.Algo{}).
+		AddRow(&asset.Algo{})
 
 	mock.ExpectQuery(`SELECT asset FROM algos`).WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}
@@ -157,19 +158,17 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 }
 
 func TestGetAlgoFail(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"})
-
 	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`select "asset" from "algos" where id=`).WithArgs(uid, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "algos" where id=`).WithArgs(uid, testChannel)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{

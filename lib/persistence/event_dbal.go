@@ -20,7 +20,7 @@ import (
 )
 
 type EventDBAL interface {
-	AddEvent(e *asset.Event) error
+	AddEvents(events ...*asset.Event) error
 	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error)
 }
 

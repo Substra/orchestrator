@@ -15,31 +15,32 @@
 package dbal
 
 import (
+	"context"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetComputeTasks(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset", "total", "done", "todo", "waiting", "failed", "canceled"}).
-		AddRow([]byte("{}"), 11, 2, 3, 6, 0, 0)
+	rows := pgxmock.NewRows([]string{"asset", "total", "done", "todo", "waiting", "failed", "canceled"}).
+		AddRow(asset.ComputePlan{}, uint32(11), uint32(2), uint32(3), uint32(6), uint32(0), uint32(0))
 
 	mock.ExpectQuery(`select cp\.asset, count\(t\.id\), count\(t\.id\) filter \(where t.asset->>'status' = 'STATUS_DONE'\)`).
 		WithArgs("uuid", testChannel).
 		WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}

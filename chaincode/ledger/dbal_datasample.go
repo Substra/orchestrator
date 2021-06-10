@@ -30,8 +30,18 @@ func (db *DB) DataSampleExists(key string) (bool, error) {
 	return db.hasKey(asset.DataSampleKind, key)
 }
 
-// AddDataSample implements persistence.DataSampleDBAL
-func (db *DB) AddDataSample(dataSample *asset.DataSample) error {
+func (db *DB) AddDataSamples(samples ...*asset.DataSample) error {
+	for _, sample := range samples {
+		err := db.addDataSample(sample)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (db *DB) addDataSample(dataSample *asset.DataSample) error {
 	exists, err := db.hasKey(asset.DataSampleKind, dataSample.GetKey())
 	if err != nil {
 		return err

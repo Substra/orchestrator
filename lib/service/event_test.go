@@ -37,13 +37,13 @@ func TestEnqueue(t *testing.T) {
 		AssetKey:  "uuid",
 	}
 
-	dbal.On("AddEvent", event).Once().Return(nil)
+	dbal.On("AddEvents", []*asset.Event{event}).Once().Return(nil)
 	dispatcher.On("Enqueue", event).Once().Return(nil)
 
-	err := service.RegisterEvent(event)
+	err := service.RegisterEvents(event)
 	assert.NoError(t, err)
 
-	assert.NotEqual(t, "", event.Id, "RegisterEvent should assign an ID to the event")
+	assert.NotEqual(t, "", event.Id, "RegisterEvents should assign an ID to the event")
 
 	provider.AssertExpectations(t)
 	dispatcher.AssertExpectations(t)

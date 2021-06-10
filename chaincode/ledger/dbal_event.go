@@ -26,7 +26,7 @@ import (
 
 const eventResource = "event"
 
-func (db *DB) AddEvent(event *asset.Event) error {
+func (db *DB) addSingleEvent(event *asset.Event) error {
 	exists, err := db.hasKey(eventResource, event.Id)
 	if err != nil {
 		return err
@@ -45,6 +45,17 @@ func (db *DB) AddEvent(event *asset.Event) error {
 	}
 
 	return db.putState(eventResource, event.Id, bytes)
+}
+
+func (db *DB) AddEvents(events ...*asset.Event) error {
+	for _, e := range events {
+		err := db.addSingleEvent(e)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error) {

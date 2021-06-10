@@ -51,7 +51,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
-	dbal.On("AddDataSample", storedDataSample).Return(nil).Once()
+	dbal.On("AddDataSamples", []*asset.DataSample{storedDataSample}).Return(nil).Once()
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
 
 	e := &asset.Event{
@@ -59,9 +59,9 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
 		AssetKey:  storedDataSample.Key,
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
-	err := service.registerDataSample(datasample, "owner")
+	err := service.RegisterDataSamples([]*asset.NewDataSample{datasample}, "owner")
 
 	assert.NoError(t, err, "Registration of valid datasample should not fail")
 
@@ -86,7 +86,7 @@ func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
 
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(errors.New("unknown datamanager")).Once()
 
-	err := service.registerDataSample(datasample, "owner")
+	err := service.RegisterDataSamples([]*asset.NewDataSample{datasample}, "owner")
 
 	assert.Error(t, err, "Registration of datasample with invalid datamanager key should fail")
 
@@ -137,10 +137,9 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Times(2)
 	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
 	dbal.On("DataSampleExists", "0b4b4466-9a81-4084-9bab-80939b78addd").Return(false, nil).Once()
-	dbal.On("AddDataSample", storedDataSample1).Return(nil).Once()
-	dbal.On("AddDataSample", storedDataSample2).Return(nil).Once()
+	dbal.On("AddDataSamples", []*asset.DataSample{storedDataSample1, storedDataSample2}).Return(nil).Once()
 
-	es.On("RegisterEvent", mock.AnythingOfType("*asset.Event")).Times(2).Return(nil)
+	es.On("RegisterEvents", mock.AnythingOfType("[]*asset.Event")).Once().Return(nil)
 
 	err := service.RegisterDataSamples(datasamples, "owner")
 
@@ -188,7 +187,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
 		AssetKey:  storedDataSample.Key,
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
 	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
@@ -247,7 +246,7 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 	dbal.On("UpdateDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample2).Return(nil).Once()
 
-	es.On("RegisterEvent", mock.AnythingOfType("*asset.Event")).Times(2).Return(nil)
+	es.On("RegisterEvents", mock.AnythingOfType("[]*asset.Event")).Times(2).Return(nil)
 
 	err := service.UpdateDataSamples(updatedDataSample, "owner")
 

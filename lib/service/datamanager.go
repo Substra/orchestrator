@@ -110,7 +110,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 		AssetKey:  d.Key,
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 	}
-	err = s.GetEventService().RegisterEvent(event)
+	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 		AssetKey:  d.Key,
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 	}
-	err = s.GetEventService().RegisterEvent(event)
+	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
 		return err
 	}

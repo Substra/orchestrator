@@ -85,6 +85,10 @@ func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
 
 // RegisterTasks creates multiple compute tasks
 func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) error {
+	log.WithField("numTasks", len(tasks)).WithField("owner", owner).Debug("Registering new compute tasks")
+	if len(tasks) == 0 {
+		return fmt.Errorf("%w no task to register", orcerrors.ErrBadRequest)
+	}
 	cpKey := tasks[0].GetComputePlanKey()
 	for _, t := range tasks {
 		if t.ComputePlanKey != cpKey {
@@ -101,11 +105,33 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 		return err
 	}
 
-	for _, task := range sortedTasks {
-		_, err := s.RegisterTask(task, owner)
+	registeredTasks := []*asset.ComputeTask{}
+	events := []*asset.Event{}
+
+	for _, newTask := range sortedTasks {
+		task, err := s.createTask(newTask, owner)
 		if err != nil {
 			return err
 		}
+		registeredTasks = append(registeredTasks, task)
+
+		event := &asset.Event{
+			AssetKey:  task.Key,
+			EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+			AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+			Metadata:  map[string]string{"status": task.Status.String()},
+		}
+		events = append(events, event)
+
+	}
+
+	err = s.GetComputeTaskDBAL().AddComputeTasks(registeredTasks...)
+	if err != nil {
+		return err
+	}
+	err = s.GetEventService().RegisterEvents(events...)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -177,6 +203,33 @@ func sortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*ass
 // RegisterTask creates a new ComputeTask
 func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner string) (*asset.ComputeTask, error) {
 	log.WithField("task", input).WithField("owner", owner).Debug("Registering new compute task")
+	task, err := s.createTask(input, owner)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.GetComputeTaskDBAL().AddComputeTasks(task)
+	if err != nil {
+		return nil, err
+	}
+
+	event := &asset.Event{
+		AssetKey:  task.Key,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+		Metadata:  map[string]string{"status": task.Status.String()},
+	}
+	err = s.GetEventService().RegisterEvents(event)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
+}
+
+// createTask converts a NewComputeTask into a ComputeTask.
+// It does not persist nor dispatch events.
+func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner string) (*asset.ComputeTask, error) {
 	err := input.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
@@ -241,22 +294,6 @@ func (s *ComputeTaskService) RegisterTask(input *asset.NewComputeTask, owner str
 	}
 
 	err = s.checkCanProcessParents(task.Worker, parentTasks, input.Category)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.GetComputeTaskDBAL().AddComputeTask(task)
-	if err != nil {
-		return nil, err
-	}
-
-	event := &asset.Event{
-		AssetKey:  task.Key,
-		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
-		Metadata:  map[string]string{"status": task.Status.String()},
-	}
-	err = s.GetEventService().RegisterEvent(event)
 	if err != nil {
 		return nil, err
 	}

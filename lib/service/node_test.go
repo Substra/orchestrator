@@ -37,7 +37,7 @@ func TestRegisterNode(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_NODE,
 		AssetKey:  "uuid1",
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
 	expected := asset.Node{
 		Id: "uuid1",

@@ -15,30 +15,32 @@
 package dbal
 
 import (
+	"context"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestQueryDataManagers(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.DataManager{}).
+		AddRow(&asset.DataManager{})
 
-	mock.ExpectQuery(`select "asset" from "datamanagers"`).WithArgs(13, 0, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "datamanagers"`).WithArgs(uint32(13), 0, testChannel).WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}
@@ -54,21 +56,21 @@ func TestQueryDataManagers(t *testing.T) {
 }
 
 func TestPaginatedQueryDataManagers(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.DataManager{}).
+		AddRow(&asset.DataManager{})
 
-	mock.ExpectQuery(`select "asset" from "datamanagers"`).WithArgs(2, 0, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "datamanagers"`).WithArgs(uint32(2), 0, testChannel).WillReturnRows(rows)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{tx, testChannel}

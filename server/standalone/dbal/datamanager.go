@@ -15,11 +15,12 @@
 package dbal
 
 import (
-	"database/sql"
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -28,20 +29,20 @@ import (
 // AddDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) AddDataManager(datamanager *asset.DataManager) error {
 	stmt := `insert into "datamanagers" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(stmt, datamanager.GetKey(), datamanager, d.channel)
+	_, err := d.tx.Exec(context.Background(), stmt, datamanager.GetKey(), datamanager, d.channel)
 	return err
 }
 
 // UpdateDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) UpdateDataManager(datamanager *asset.DataManager) error {
 	stmt := `update "datamanagers" set asset=$3 where id=$1 and channel=$2`
-	_, err := d.tx.Exec(stmt, datamanager.GetKey(), d.channel, datamanager)
+	_, err := d.tx.Exec(context.Background(), stmt, datamanager.GetKey(), d.channel, datamanager)
 	return err
 }
 
 // DataManagerExists implements persistence.DataManagerDBAL
 func (d *DBAL) DataManagerExists(key string) (bool, error) {
-	row := d.tx.QueryRow(`select count(id) from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select count(id) from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -51,13 +52,13 @@ func (d *DBAL) DataManagerExists(key string) (bool, error) {
 
 // GetDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
-	row := d.tx.QueryRow(`select "asset" from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(context.Background(), `select "asset" from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
 
 	datamanager := new(asset.DataManager)
 	err := row.Scan(&datamanager)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("datamanager not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
@@ -68,7 +69,7 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 
 // QueryDataManagers implements persistence.DataManagerDBAL
 func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
-	var rows *sql.Rows
+	var rows pgx.Rows
 	var err error
 
 	offset, err := getOffset(p.Token)
@@ -77,7 +78,7 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 	}
 
 	query := `select "asset" from "datamanagers" where channel=$3 order by created_at asc limit $1 offset $2`
-	rows, err = d.tx.Query(query, p.Size+1, offset, d.channel)
+	rows, err = d.tx.Query(context.Background(), query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}

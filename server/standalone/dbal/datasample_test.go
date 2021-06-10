@@ -15,27 +15,26 @@
 package dbal
 
 import (
+	"context"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetDataSampleFail(t *testing.T) {
-	db, mock, err := sqlmock.New()
+	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 
-	defer db.Close()
+	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := sqlmock.NewRows([]string{"asset"})
-
 	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`select "asset" from "datasamples" where id=`).WithArgs(uid, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "datasamples" where id=`).WithArgs(uid, testChannel)
 
-	tx, err := db.Begin()
+	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{

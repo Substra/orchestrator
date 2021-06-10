@@ -84,7 +84,7 @@ func TestRegisterDataManager(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  storedDataManager.Key,
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
 	dm, err := service.RegisterDataManager(newDataManager, "owner")
 
@@ -151,7 +151,7 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  storedDataManager.Key,
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
 	dm, err := service.RegisterDataManager(newDataManager, "owner")
 
@@ -267,7 +267,7 @@ func TestUpdateDataManager(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  updatedDataManager.Key,
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "owner")
 
@@ -340,7 +340,7 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  updatedDataManager.Key,
 	}
-	es.On("RegisterEvent", e).Once().Return(nil)
+	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "other_owner")
 
