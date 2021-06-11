@@ -198,7 +198,9 @@ func sortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*ass
 	}
 
 	if len(unsortedTasks) > 0 {
-		log.WithField("unsorted_tasks", len(unsortedTasks)).Debug("Failed to sort tasks, cyclic dependency in compute plan graph or unknown parent")
+		log.WithField("unsortedTasks", len(unsortedTasks)).
+			WithField("existingTasks", len(existingTasks)).
+			Debug("Failed to sort tasks, cyclic dependency in compute plan graph or unknown parent")
 		return nil, fmt.Errorf("cyclic dependency in compute plan graph or unknown task parent: %w, unsorted_tasks_count: %d", orcerrors.ErrInvalidAsset, len(unsortedTasks))
 	}
 
@@ -608,6 +610,8 @@ func isCompatibleWithParents(category asset.ComputeTaskCategory, parents []*asse
 	for _, p := range parents {
 		inputs[p.Category]++
 	}
+
+	log.WithField("category", category).WithField("parents", inputs).Debug("checking parent compatibility")
 
 	noTest := inputs[asset.ComputeTaskCategory_TASK_TEST] == 0
 	noTrain := inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0
