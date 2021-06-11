@@ -5,3 +5,4 @@ skaffold.yaml
 /charts
 /examples
 /docs
+/lib/asset/*.pb.go
