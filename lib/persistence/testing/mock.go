@@ -170,6 +170,11 @@ func (m *MockDBAL) ComputeTaskExists(key string) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockDBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
+	args := m.Called(keys)
+	return args.Get(0).([]string), args.Error(1)
+}
+
 // GetComputeTask is a mock
 func (m *MockDBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	args := m.Called(key)

@@ -27,6 +27,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -92,6 +93,42 @@ func (d *DBAL) ComputeTaskExists(key string) (bool, error) {
 	err := row.Scan(&count)
 
 	return count == 1, err
+}
+
+// GetExistingComputeTaskKeys returns the keys of tasks already in storage among those given as input.
+func (d *DBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
+	existingKeys := []string{}
+
+	uniqueKeys := utils.UniqueString(keys)
+	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+
+	query, args, err := pgDialect.Select("id").
+		From("compute_tasks").
+		Where(squirrel.Eq{"channel": d.channel, "id": uniqueKeys}).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := d.tx.Query(context.Background(), query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var key string
+		err = rows.Scan(&key)
+		if err != nil {
+			return nil, err
+		}
+
+		existingKeys = append(existingKeys, key)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return existingKeys, nil
 }
 
 // GetComputeTask returns a single task by its key

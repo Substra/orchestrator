@@ -94,14 +94,8 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	if len(tasks) == 0 {
 		return fmt.Errorf("%w no task to register", orcerrors.ErrBadRequest)
 	}
-	cpKey := tasks[0].GetComputePlanKey()
-	for _, t := range tasks {
-		if t.ComputePlanKey != cpKey {
-			return fmt.Errorf("%w all tasks should live in the same compute plan", orcerrors.ErrBadRequest)
-		}
-	}
 
-	existingKeys, err := s.GetComputeTaskDBAL().GetComputePlanTasksKeys(cpKey)
+	existingKeys, err := s.getExistingKeys(tasks)
 	if err != nil {
 		return err
 	}
@@ -615,6 +609,22 @@ func (s *ComputeTaskService) getRegisteredTasks(keys ...string) ([]*asset.Comput
 	}
 
 	return result, nil
+}
+
+// getExistingKeys returns the list of tasks already persisted.
+func (s *ComputeTaskService) getExistingKeys(tasks []*asset.NewComputeTask) ([]string, error) {
+	parents := []string{}
+
+	for _, task := range tasks {
+		parents = append(parents, task.ParentTaskKeys...)
+	}
+
+	existingKeys, err := s.GetComputeTaskDBAL().GetExistingComputeTaskKeys(parents)
+	if err != nil {
+		return nil, err
+	}
+
+	return existingKeys, nil
 }
 
 // Check task compatibility with parents tasks

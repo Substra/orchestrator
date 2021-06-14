@@ -161,6 +161,23 @@ func (db *DB) ComputeTaskExists(key string) (bool, error) {
 	return exists, nil
 }
 
+func (db *DB) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
+	uniqueKeys := utils.UniqueString(keys)
+	existingKeys := []string{}
+
+	for _, key := range uniqueKeys {
+		exist, err := db.ComputeTaskExists(key)
+		if err != nil {
+			return nil, err
+		}
+		if exist {
+			existingKeys = append(existingKeys, key)
+		}
+	}
+
+	return existingKeys, nil
+}
+
 // GetComputeTasks returns the list of unique compute tasks identified by the provided keys.
 // It should not be used where pagination is expected!
 func (db *DB) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {

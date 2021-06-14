@@ -21,6 +21,9 @@ import (
 
 type ComputeTaskDBAL interface {
 	ComputeTaskExists(key string) (bool, error)
+	// GetExistingKeys returns a slice with inputs keys existing in storage.
+	// The implementer should deal with duplicate keys.
+	GetExistingComputeTaskKeys(keys []string) ([]string, error)
 	GetComputeTask(key string) (*asset.ComputeTask, error)
 	GetComputeTasks(keys []string) ([]*asset.ComputeTask, error)
 	AddComputeTasks(task ...*asset.ComputeTask) error

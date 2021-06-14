@@ -93,7 +93,7 @@ func TestRegisterTaskConflict(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	dbal.On("GetComputePlanTasksKeys", newTrainTask.ComputePlanKey).Once().Return([]string{}, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(true, nil)
 
 	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
@@ -124,6 +124,7 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	// Checking existing task
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(false, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 
 	dataManagerKey := newTrainTask.Data.(*asset.NewComputeTask_Train).Train.DataManagerKey
 	dataSampleKeys := newTrainTask.Data.(*asset.NewComputeTask_Train).Train.DataSampleKeys
@@ -183,7 +184,6 @@ func TestRegisterTrainTask(t *testing.T) {
 		},
 	}
 
-	dbal.On("GetComputePlanTasksKeys", newTrainTask.ComputePlanKey).Once().Return([]string{}, nil)
 	// finally store the created task
 	dbal.On("AddComputeTasks", []*asset.ComputeTask{storedTask}).Once().Return(nil)
 
@@ -227,9 +227,9 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	dbal.On("GetComputePlanTasksKeys", newTrainTask.ComputePlanKey).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
+	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 	// Checking existing task
-	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(false, nil)
+	dbal.On("ComputeTaskExists", newTask.Key).Once().Return(false, nil)
 
 	parentPerms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 	parentTask := &asset.ComputeTask{
