@@ -62,7 +62,6 @@ type ComputeTaskService struct {
 	ComputeTaskDependencyProvider
 	// Keep a local cache of algos and plans to be used in batch import
 	algoStore map[string]*asset.Algo
-	planStore map[string]*asset.ComputePlan
 	taskStore map[string]*asset.ComputeTask
 }
 
@@ -71,7 +70,6 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 	return &ComputeTaskService{
 		ComputeTaskDependencyProvider: provider,
 		algoStore:                     make(map[string]*asset.Algo),
-		planStore:                     make(map[string]*asset.ComputePlan, 1),
 		taskStore:                     make(map[string]*asset.ComputeTask),
 	}
 }
@@ -215,19 +213,6 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	err := input.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
-	}
-
-	if _, ok := s.planStore[input.ComputePlanKey]; !ok {
-		cp, err := s.GetComputePlanService().GetPlan(input.ComputePlanKey)
-		if err != nil {
-			return nil, err
-		}
-		s.planStore[input.ComputePlanKey] = cp
-	}
-	cp := s.planStore[input.ComputePlanKey]
-
-	if cp.Owner != owner {
-		return nil, fmt.Errorf("only plan owner can register a task: %w", orcerrors.ErrPermissionDenied)
 	}
 
 	taskExist, err := s.GetComputeTaskDBAL().ComputeTaskExists(input.Key)
