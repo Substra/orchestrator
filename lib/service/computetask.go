@@ -63,6 +63,7 @@ type ComputeTaskService struct {
 	// Keep a local cache of algos and plans to be used in batch import
 	algoStore map[string]*asset.Algo
 	planStore map[string]*asset.ComputePlan
+	taskStore map[string]*asset.ComputeTask
 }
 
 // NewComputeTaskService creates a new service
@@ -71,6 +72,7 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 		ComputeTaskDependencyProvider: provider,
 		algoStore:                     make(map[string]*asset.Algo),
 		planStore:                     make(map[string]*asset.ComputePlan, 1),
+		taskStore:                     make(map[string]*asset.ComputeTask),
 	}
 }
 
@@ -236,7 +238,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, fmt.Errorf("task %s already exists: %w", input.Key, orcerrors.ErrConflict)
 	}
 
-	parentTasks, err := s.GetComputeTaskDBAL().GetComputeTasks(input.ParentTaskKeys)
+	parentTasks, err := s.getRegisteredTasks(input.ParentTaskKeys...)
 	if err != nil {
 		return nil, err
 	}
@@ -282,6 +284,8 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	if err != nil {
 		return nil, err
 	}
+
+	s.taskStore[task.Key] = task
 
 	return task, nil
 }
@@ -601,6 +605,31 @@ func (s *ComputeTaskService) checkCanProcessParents(requester string, parentTask
 	}
 
 	return nil
+}
+
+// getRegisteredTask will return the task from the current batch or the database if not found.
+func (s *ComputeTaskService) getRegisteredTasks(keys ...string) ([]*asset.ComputeTask, error) {
+	result := []*asset.ComputeTask{}
+	notInStore := []string{}
+
+	for _, k := range keys {
+		if task, ok := s.taskStore[k]; ok {
+			result = append(result, task)
+		} else {
+			notInStore = append(notInStore, k)
+		}
+	}
+
+	if len(notInStore) > 0 {
+		prevTasks, err := s.GetComputeTaskDBAL().GetComputeTasks(notInStore)
+
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, prevTasks...)
+	}
+
+	return result, nil
 }
 
 // Check task compatibility with parents tasks

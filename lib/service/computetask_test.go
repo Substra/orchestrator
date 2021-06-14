@@ -145,8 +145,6 @@ func TestRegisterTrainTask(t *testing.T) {
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Owner: "testOwner"}, nil)
 	// Checking existing task
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(false, nil)
-	// checking parent compatibility (no parents here)
-	dbal.On("GetComputeTasks", []string(nil)).Once().Return([]*asset.ComputeTask{}, nil)
 
 	dataManagerKey := newTrainTask.Data.(*asset.NewComputeTask_Train).Train.DataManagerKey
 	dataSampleKeys := newTrainTask.Data.(*asset.NewComputeTask_Train).Train.DataSampleKeys
@@ -223,6 +221,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "testOwner")
 	assert.NoError(t, err)
 
+	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
 }
 
@@ -285,6 +284,8 @@ func TestRegisterFailedTask(t *testing.T) {
 	err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, orcerrors.ErrIncompatibleTaskStatus))
+
+	dbal.AssertExpectations(t)
 }
 
 func TestSetCompositeData(t *testing.T) {
@@ -1099,4 +1100,27 @@ func TestRegisterTasksEmptyList(t *testing.T) {
 
 	err := service.RegisterTasks([]*asset.NewComputeTask{}, "test")
 	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
+}
+
+func TestGetRegisteredTask(t *testing.T) {
+	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.MockDBAL)
+	provider.On("GetComputeTaskDBAL").Return(dbal)
+
+	service := NewComputeTaskService(provider)
+
+	// simulate a task in store
+	service.taskStore["uuid1"] = &asset.ComputeTask{Key: "uuid1"}
+	// Then, there should be only one task to retrieve from DB
+	dbal.On("GetComputeTasks", []string{"uuid2"}).Once().Return(
+		[]*asset.ComputeTask{{Key: "uuid2"}},
+		nil,
+	)
+
+	tasks, err := service.getRegisteredTasks("uuid1", "uuid2")
+	assert.NoError(t, err)
+
+	assert.Len(t, tasks, 2)
+
+	dbal.AssertExpectations(t)
 }
