@@ -1,0 +1,52 @@
+name: Helm
+
+on:
+  push:
+    branches:
+      - "master"
+    paths:
+      - "charts/**"
+  pull_request:
+    branches:
+      - "master"
+    paths:
+      - "charts/**"
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: azure/setup-helm@v1
+        with:
+          version: "v3.5.0"
+        id: install
+      - name: Build dependencies
+        run: helm dep build charts/orchestrator
+      - name: Lint Chart
+        run: helm lint charts/orchestrator
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - uses: azure/setup-helm@v1
+        with:
+          version: "v3.5.0"
+        id: install
+      - name: Install tools
+        run: |
+          sudo snap install yq
+          helm plugin install https://github.com/chartmuseum/helm-push
+      - name: Package chart
+        env:
+          HARBOR_AUTH_TOKEN: ${{ secrets.HARBOR_AUTH_TOKEN }}
+          HARBOR_AUTH_USER: "robot$connect-orchestrator+connect-orchestrator-pusher"
+        run: |
+          helm dep build charts/orchestrator
+          helm package charts/orchestrator
+          helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-orchestrator
+          helm push orchestrator-$(yq eval .version charts/orchestrator/Chart.yaml).tgz owkin-priv
