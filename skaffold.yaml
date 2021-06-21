@@ -55,6 +55,7 @@ profiles:
       name: owkin-orchestrator-org-2
       chartPath: charts/orchestrator
       namespace: org-2
+      createNamespace: true
       artifactOverrides:
         orchestrator.image: owkin/orchestrator
         forwarder.image: owkin/forwarder
