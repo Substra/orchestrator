@@ -35,13 +35,13 @@ func getTLSOptions() grpc.ServerOption {
 	tlsCertFile := common.MustGetEnv("TLS_CERT_PATH")
 	tlsKeyFile := common.MustGetEnv("TLS_KEY_PATH")
 
+	log.WithField("cert", tlsCertFile).WithField("key", tlsKeyFile).Info("Loading TLS certificates")
+
 	// Load server's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to load server TLS certificate")
 	}
-
-	log.WithField("cert", tlsCertFile).WithField("key", tlsKeyFile).Info("Loaded TLS certificates")
 
 	// Create the credentials and return it
 	config := &tls.Config{

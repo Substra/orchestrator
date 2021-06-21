@@ -81,6 +81,7 @@ func main() {
 
 		levels = append(levels, lvl)
 	}
+
 	log.AddHandler(cLog, levels...)
 
 	var opts []grpc.DialOption

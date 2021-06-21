@@ -306,7 +306,7 @@ func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) {
 func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
 	plan, err := c.computePlanService.GetPlan(c.ctx, &asset.GetComputePlanParam{Key: c.ks.GetKey(keyRef)})
 	if err != nil {
-		log.WithError(err).Fatalf("GetPlan failed")
+		log.WithError(err).Fatal("GetPlan failed")
 	}
 
 	return plan
@@ -315,7 +315,7 @@ func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
 func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
 	task, err := c.computeTaskService.GetTask(c.ctx, &asset.GetTaskParam{Key: c.ks.GetKey(keyRef)})
 	if err != nil {
-		log.WithError(err).Fatalf("GetTask failed")
+		log.WithError(err).Fatal("GetTask failed")
 	}
 
 	return task
@@ -324,7 +324,7 @@ func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
 func (c *TestClient) QueryTasks(filter *asset.TaskQueryFilter, pageToken string, pageSize int) *asset.QueryTasksResponse {
 	resp, err := c.computeTaskService.QueryTasks(c.ctx, &asset.QueryTasksParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
-		log.WithError(err).Fatalf("QueryTasks failed")
+		log.WithError(err).Fatal("QueryTasks failed")
 	}
 
 	return resp
@@ -347,8 +347,18 @@ func (c *TestClient) GetTaskPerformance(taskRef string) *asset.Performance {
 	param := &asset.GetComputeTaskPerformanceParam{ComputeTaskKey: c.ks.GetKey(taskRef)}
 	perf, err := c.performanceService.GetComputeTaskPerformance(c.ctx, param)
 	if err != nil {
-		log.WithError(err).Fatalf("GetTaskPerformance failed")
+		log.WithError(err).Fatal("GetTaskPerformance failed")
 	}
 
 	return perf
+}
+
+func (c *TestClient) GetLeaderboard(key string) *asset.Leaderboard {
+	param := &asset.LeaderboardQueryParam{ObjectiveKey: c.ks.GetKey(key), SortOrder: asset.SortOrder_ASCENDING}
+	log.WithField("objective key", c.ks.GetKey(key)).Debug("GetLeaderboard")
+	resp, err := c.objectiveService.GetLeaderboard(c.ctx, param)
+	if err != nil {
+		log.WithError(err).Fatal("Query Leaderboard failed")
+	}
+	return resp
 }

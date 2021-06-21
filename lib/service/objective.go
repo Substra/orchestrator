@@ -16,6 +16,7 @@ package service
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -30,6 +31,7 @@ type ObjectiveAPI interface {
 	RegisterObjective(objective *asset.NewObjective, owner string) (*asset.Objective, error)
 	GetObjective(string) (*asset.Objective, error)
 	QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
+	GetLeaderboard(params *asset.LeaderboardQueryParam) (*asset.Leaderboard, error)
 	ObjectiveExists(key string) (bool, error)
 	CanDownload(key string, requester string) (bool, error)
 }
@@ -140,6 +142,24 @@ func (s *ObjectiveService) GetObjective(key string) (*asset.Objective, error) {
 // QueryObjectives returns all stored objectives
 func (s *ObjectiveService) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
 	return s.GetObjectiveDBAL().QueryObjectives(p)
+}
+
+// GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
+func (s *ObjectiveService) GetLeaderboard(params *asset.LeaderboardQueryParam) (*asset.Leaderboard, error) {
+	lb, err := s.GetObjectiveDBAL().GetLeaderboard(params.GetObjectiveKey())
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot retrieve leaderboard for objective: %w", orcerrors.ErrNotFound)
+	}
+
+	sort.SliceStable(lb.BoardItems, func(i, j int) bool {
+		if params.GetSortOrder() == asset.SortOrder_ASCENDING {
+			return lb.BoardItems[i].Perf <= lb.BoardItems[j].Perf
+		}
+		return lb.BoardItems[i].Perf > lb.BoardItems[j].Perf
+	})
+
+	return lb, nil
 }
 
 // ObjectiveExists checks if an objective with the provided key exists in the persistence layer

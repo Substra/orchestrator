@@ -77,6 +77,10 @@ var testScenarios = map[string]scenario{
 		testConcurrency,
 		[]string{"short", "concurrency"},
 	},
+	"ObjectiveLeaderboard": {
+		testLeaderBoard,
+		[]string{"short", "objective"},
+	},
 	"LargeComputePlan": {
 		testLargeComputePlan,
 		[]string{"long", "plan"},
@@ -495,6 +499,38 @@ func testConcurrency(conn *grpc.ClientConn) {
 	}
 
 	wg.Wait()
+}
+
+func testLeaderBoard(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
+	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("testds"))
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	// Parent train task is necessary
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.RegisterModel(client.DefaultModelOptions())
+	// to create a test task
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent))
+	appClient.StartTask("testTask")
+	appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask2").WithParentsRef(defaultParent))
+	appClient.StartTask("testTask2")
+	appClient.RegisterPerformance(&client.PerformanceOptions{
+		KeyRef:           "testTask2",
+		PerformanceValue: 0.8,
+	})
+	resp := appClient.GetLeaderboard(client.DefaultObjectiveRef)
+
+	if len(resp.BoardItems) != 2 {
+		log.WithField("numItems", len(resp.BoardItems)).Fatal("Query Leaderboard should return 2 Board Items")
+	}
 }
 
 func testLargeComputePlan(conn *grpc.ClientConn) {

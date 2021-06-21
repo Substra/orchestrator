@@ -252,6 +252,12 @@ func (m *MockObjectiveService) ObjectiveExists(key string) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
+// GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
+func (m *MockObjectiveService) GetLeaderboard(params *asset.LeaderboardQueryParam) (*asset.Leaderboard, error) {
+	args := m.Called(params)
+	return args.Get(0).(*asset.Leaderboard), args.Error(1)
+}
+
 // CanDownload returns whatever value is passed
 func (m *MockObjectiveService) CanDownload(key string, requester string) (bool, error) {
 	args := m.Called(key, requester)

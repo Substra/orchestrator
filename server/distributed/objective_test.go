@@ -79,3 +79,20 @@ func TestQueryObjectives(t *testing.T) {
 
 	assert.NoError(t, err, "Query should pass")
 }
+
+func TestGetLeaderboard(t *testing.T) {
+	adapter := NewObjectiveAdapter()
+
+	newCtx := context.TODO()
+	invocator := &mockedInvocator{}
+
+	param := &asset.LeaderboardQueryParam{ObjectiveKey: "uuid", SortOrder: 0}
+
+	invocator.On("Call", "orchestrator.objective:GetLeaderboard", param, &asset.Leaderboard{}).Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.GetLeaderboard(ctx, param)
+
+	assert.NoError(t, err, "Query should pass")
+}

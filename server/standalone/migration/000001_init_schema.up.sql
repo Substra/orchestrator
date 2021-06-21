@@ -41,6 +41,7 @@ CREATE INDEX ix_compute_tasks_status ON compute_tasks USING HASH ((asset->>'stat
 CREATE INDEX ix_compute_tasks_category ON compute_tasks USING HASH ((asset->>'category'));
 CREATE INDEX ix_compute_tasks_compute_plan_key ON compute_tasks USING HASH ((asset->>'computePlanKey'));
 CREATE INDEX ix_compute_tasks_worker ON compute_tasks USING HASH ((asset->>'worker'));
+CREATE INDEX ix_compute_tasks_test_objective_key ON compute_tasks USING HASH ((asset->'test'->>'objectiveKey'));
 CREATE TABLE models (
     id UUID PRIMARY KEY,
     channel varchar(100) NOT NULL,
@@ -62,6 +63,7 @@ CREATE TABLE performances (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     asset JSONB NOT NULL
 );
+CREATE INDEX ix_performances_compute_task_key ON performances USING HASH ((asset->>'computeTaskKey'));
 CREATE TABLE events (
     id UUID PRIMARY KEY,
     asset_key varchar(100) NOT NULL,

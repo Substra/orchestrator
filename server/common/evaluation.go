@@ -23,7 +23,7 @@ import (
 // ReadOnlyMethods maps for each service the "read only" methods.
 // This mapping is also used in chaincode mode to determine Evaluate transactions
 var ReadOnlyMethods = map[string][]string{
-	"Objective":   {"GetObjective", "QueryObjectives", "QueryLeaderboard"},
+	"Objective":   {"GetObjective", "QueryObjectives", "GetLeaderboard"},
 	"Node":        {"GetAllNodes"},
 	"Algo":        {"GetAlgo", "QueryAlgos"},
 	"Event":       {"QueryEvents"},

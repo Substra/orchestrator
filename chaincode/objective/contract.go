@@ -15,8 +15,6 @@
 package objective
 
 import (
-	"errors"
-
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/communication"
@@ -129,9 +127,32 @@ func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *
 	return wrapped, nil
 }
 
-// QueryLeaderboard returns for an objective all its certified testtuples with a done status
-func (s *SmartContract) QueryLeaderboard(ctx ledger.TransactionContext, key string, sortOrder asset.SortOrder) (*asset.Leaderboard, error) {
-	return nil, errors.New("unimplemented")
+// GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
+func (s *SmartContract) GetLeaderboard(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	service := ctx.GetProvider().GetObjectiveService()
+
+	params := new(asset.LeaderboardQueryParam)
+	err := wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return nil, err
+	}
+
+	leaderboard, err := service.GetLeaderboard(params)
+
+	if err != nil {
+		s.logger.WithError(err).Error("failed to query leaderboard")
+		return nil, err
+	}
+
+	resp, err := communication.Wrap(leaderboard)
+
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+
+	return resp, nil
 }
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit

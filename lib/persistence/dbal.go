@@ -41,6 +41,7 @@ type ObjectiveDBAL interface {
 	GetObjective(key string) (*asset.Objective, error)
 	QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
 	ObjectiveExists(key string) (bool, error)
+	GetLeaderboard(key string) (*asset.Leaderboard, error)
 }
 
 // DataSampleDBAL is the database abstraction layer for DataSamples

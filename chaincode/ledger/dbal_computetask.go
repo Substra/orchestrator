@@ -75,10 +75,6 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 		if !ok {
 			return fmt.Errorf("compute task data does not match task category: %w", errors.ErrInvalidAsset)
 		}
-
-		if err := db.createIndex("computeTask~category~objective~certified~key", []string{asset.ComputeTaskKind, t.Category.String(), testData.Test.ObjectiveKey, strconv.FormatBool(testData.Test.Certified), t.Key}); err != nil {
-			return err
-		}
 		for _, parentTask := range t.ParentTaskKeys {
 			if err = db.createIndex("computeTask~category~parentTask~certified~key", []string{asset.ComputeTaskKind, t.Category.String(), parentTask, strconv.FormatBool(testData.Test.Certified), t.Key}); err != nil {
 				return err

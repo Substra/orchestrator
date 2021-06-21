@@ -68,6 +68,12 @@ func (m *MockDBAL) QueryObjectives(p *common.Pagination) ([]*asset.Objective, co
 	return args.Get(0).([]*asset.Objective), args.Get(1).(common.PaginationToken), args.Error(2)
 }
 
+// GetLeaderboard is a mock
+func (m *MockDBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
+	args := m.Called(key)
+	return args.Get(0).(*asset.Leaderboard), args.Error(1)
+}
+
 // ObjectiveExists is a mock
 func (m *MockDBAL) ObjectiveExists(key string) (bool, error) {
 	args := m.Called(key)

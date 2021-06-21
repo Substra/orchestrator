@@ -67,19 +67,16 @@ message LeaderboardQueryParam {
   SortOrder sort_order = 2;
 }
 
-// This will probably live somewhere else once we implement test tuple assets
-message BoardTuple {
-  string algo = 1;
-  string creator = 2;
-  string key = 3;
-  string traintuple_key = 4;
+message BoardItem {
+  string algo_name = 1;
+  string objective_key = 3;
+  string compute_task_key = 4;
   float perf = 5;
-  string tag = 6;
 }
 
 message Leaderboard {
   Objective objective = 1;
-  repeated BoardTuple test_tuples = 2;
+  repeated BoardItem board_items = 2;
 }
 
 service ObjectiveService {

@@ -351,7 +351,8 @@ func (o *ModelOptions) WithCategory(category asset.ModelCategory) *ModelOptions 
 
 func DefaultPerformanceOptions() *PerformanceOptions {
 	return &PerformanceOptions{
-		KeyRef: DefaultTaskRef,
+		KeyRef:           DefaultTaskRef,
+		PerformanceValue: 0.5,
 	}
 }
 

@@ -301,3 +301,44 @@ func TestRejectInvalidDatamanager(t *testing.T) {
 
 	assert.Error(t, err, "Registration should fail")
 }
+
+func TestGetLeaderBoard(t *testing.T) {
+	dbal := new(persistenceHelper.MockDBAL)
+	obs := new(MockObjectiveService)
+	provider := new(MockServiceProvider)
+
+	provider.On("GetObjectiveDBAL").Return(dbal)
+	provider.On("GetObjectiveService").Return(obs)
+
+	service := NewObjectiveService(provider)
+
+	objective := &asset.Objective{
+		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Name:           "Test objective",
+		DataManagerKey: "34a251cc-23f0-456f-95f3-0952524f718b",
+		DataSampleKeys: []string{"6c34f9da-5575-44f6-8f02-d911d3898f77"},
+	}
+
+	BoardItem := &asset.BoardItem{
+		AlgoName:       "algo1",
+		ObjectiveKey:   "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Perf:           0.36492,
+	}
+
+	leaderboard := &asset.Leaderboard{
+		Objective:  objective,
+		BoardItems: []*asset.BoardItem{BoardItem},
+	}
+
+	dbal.On("GetLeaderboard", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(leaderboard, nil).Once()
+
+	o, err := service.GetLeaderboard(&asset.LeaderboardQueryParam{
+		ObjectiveKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		SortOrder:    asset.SortOrder_ASCENDING,
+	})
+
+	assert.Equal(t, o.BoardItems, []*asset.BoardItem{BoardItem})
+	dbal.AssertExpectations(t)
+	require.Nil(t, err)
+}

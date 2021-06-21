@@ -105,7 +105,7 @@ func TestEvaluateTransactions(t *testing.T) {
 	queries := []string{
 		"GetObjective",
 		"QueryObjectives",
-		"QueryLeaderboard",
+		"GetLeaderboard",
 	}
 
 	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")

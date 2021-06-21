@@ -77,3 +77,12 @@ func (s *ObjectiveServer) QueryObjectives(ctx context.Context, params *asset.Que
 		NextPageToken: paginationToken,
 	}, nil
 }
+
+// GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
+func (s *ObjectiveServer) GetLeaderboard(ctx context.Context, query *asset.LeaderboardQueryParam) (*asset.Leaderboard, error) {
+	services, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return services.GetObjectiveService().GetLeaderboard(query)
+}

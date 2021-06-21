@@ -75,3 +75,18 @@ func (a *ObjectiveAdapter) QueryObjectives(ctx context.Context, query *asset.Que
 
 	return response, err
 }
+
+// GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
+func (a *ObjectiveAdapter) GetLeaderboard(ctx context.Context, query *asset.LeaderboardQueryParam) (*asset.Leaderboard, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.objective:GetLeaderboard"
+
+	response := &asset.Leaderboard{}
+
+	err = invocator.Call(method, query, response)
+
+	return response, err
+}
