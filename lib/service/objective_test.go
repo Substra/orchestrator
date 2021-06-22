@@ -319,8 +319,28 @@ func TestGetLeaderBoard(t *testing.T) {
 		DataSampleKeys: []string{"6c34f9da-5575-44f6-8f02-d911d3898f77"},
 	}
 
+	description := &asset.Addressable{
+		StorageAddress: "ftp://127.0.0.1/test",
+		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+	}
+	algorithm := &asset.Addressable{
+		StorageAddress: "ftp://127.0.0.1/test",
+		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+	}
+	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
+
+	algo := &asset.Algo{
+		Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Name:        "Test algo",
+		Category:    asset.AlgoCategory_ALGO_SIMPLE,
+		Algorithm:   algorithm,
+		Description: description,
+		Permissions: perms,
+		Owner:       "owner",
+	}
+
 	BoardItem := &asset.BoardItem{
-		AlgoName:       "algo1",
+		Algo:           algo,
 		ObjectiveKey:   "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Perf:           0.36492,

@@ -153,7 +153,7 @@ func (db *DB) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 		}
 
 		boardItem := asset.BoardItem{
-			AlgoName:       task.Algo.Name,
+			Algo:           task.Algo,
 			ObjectiveKey:   key,
 			ComputeTaskKey: task.Key,
 			Perf:           perf.PerformanceValue,

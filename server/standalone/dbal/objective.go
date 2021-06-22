@@ -124,7 +124,7 @@ func (d *DBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 
 	var boardItems []*asset.BoardItem
 
-	query := `select c.asset->'algo'->>'name' as algo_name, 
+	query := `select c.asset->'algo' as algo, 
 	c.asset->'test'->>'objectiveKey'  as objective_key, 
 	c.asset->>'key' as compute_task_key, 
 	cast(p.asset->>'performanceValue' as double precision) as perf from "compute_tasks" c
@@ -145,7 +145,7 @@ func (d *DBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 	for rows.Next() {
 		boardItem := new(asset.BoardItem)
 
-		err = rows.Scan(&boardItem.AlgoName, &boardItem.ObjectiveKey, &boardItem.ComputeTaskKey, &boardItem.Perf)
+		err = rows.Scan(&boardItem.Algo, &boardItem.ObjectiveKey, &boardItem.ComputeTaskKey, &boardItem.Perf)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, fmt.Errorf("%w: No board item found", orcerrors.ErrNotFound)
