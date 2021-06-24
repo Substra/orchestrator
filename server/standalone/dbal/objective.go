@@ -2,11 +2,11 @@ package dbal
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -28,7 +28,7 @@ func (d *DBAL) GetObjective(key string) (*asset.Objective, error) {
 	err := row.Scan(&objective)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("objective not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
@@ -98,7 +98,7 @@ func (d *DBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 	objective, err := d.GetObjective(key)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("objective not found: %w", orcerrors.ErrNotFound)
 		}
 		return nil, err
@@ -110,14 +110,14 @@ func (d *DBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 
 	var boardItems []*asset.BoardItem
 
-	query := `select c.asset->'algo' as algo, 
-	c.asset->'test'->>'objectiveKey'  as objective_key, 
-	c.asset->>'key' as compute_task_key, 
+	query := `select c.asset->'algo' as algo,
+	c.asset->'test'->>'objectiveKey'  as objective_key,
+	c.asset->>'key' as compute_task_key,
 	cast(p.asset->>'performanceValue' as double precision) as perf from "compute_tasks" c
 	inner join performances p on p.asset->>'computeTaskKey' = c.asset->>'key'
-	where c.asset->>'category' = 'TASK_TEST' 
-	and c.asset->>'status' = 'STATUS_DONE' 
-	and c.asset->'test'->>'certified' = 'true' 
+	where c.asset->>'category' = 'TASK_TEST'
+	and c.asset->>'status' = 'STATUS_DONE'
+	and c.asset->'test'->>'certified' = 'true'
 	and c.asset->'test'->>'objectiveKey' = $1`
 
 	rows, err := d.tx.Query(context.Background(), query, key)
@@ -133,7 +133,7 @@ func (d *DBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 
 		err = rows.Scan(&boardItem.Algo, &boardItem.ObjectiveKey, &boardItem.ComputeTaskKey, &boardItem.Perf)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, fmt.Errorf("%w: No board item found", orcerrors.ErrNotFound)
 			}
 			return nil, fmt.Errorf("failed to scan BoardItem: %w", err)
