@@ -340,7 +340,7 @@ func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string, taskCa
 func (s *ComputeTaskService) getCheckedDataManager(key string, dataSampleKeys []string, owner string) (*asset.DataManager, error) {
 	datamanager, err := s.GetDataManagerService().GetDataManager(key)
 	if err != nil {
-		return nil, fmt.Errorf("datamanager not found: %w", orcerrors.ErrReferenceNotFound)
+		return nil, fmt.Errorf("datamanager not found: %w: %s", orcerrors.ErrReferenceNotFound, err.Error())
 	}
 	canProcess := s.GetPermissionService().CanProcess(datamanager.Permissions, owner)
 	if !canProcess {
@@ -507,7 +507,7 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 		// Relying on objective datamanager and samples
 		datamanager, err = s.GetDataManagerService().GetDataManager(objective.DataManagerKey)
 		if err != nil {
-			return fmt.Errorf("datamanager not found: %w", orcerrors.ErrReferenceNotFound)
+			return fmt.Errorf("datamanager not found: %w: %s", orcerrors.ErrReferenceNotFound, err.Error())
 		}
 
 		// Test is certified when using objective test data

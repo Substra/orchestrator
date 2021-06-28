@@ -113,7 +113,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		}
 		err = s.GetDataManagerService().UpdateDataManager(dataManagerUpdate, owner)
 		if err != nil {
-			return nil, fmt.Errorf("datamanager cannot be associated with the objective: %w", orcerrors.ErrBadRequest)
+			return nil, fmt.Errorf("datamanager cannot be associated with the objective: %w: %s", orcerrors.ErrBadRequest, err.Error())
 		}
 	}
 
@@ -135,7 +135,7 @@ func (s *ObjectiveService) GetLeaderboard(params *asset.LeaderboardQueryParam) (
 	lb, err := s.GetObjectiveDBAL().GetLeaderboard(params.GetObjectiveKey())
 
 	if err != nil {
-		return nil, fmt.Errorf("cannot retrieve leaderboard for objective: %w", orcerrors.ErrNotFound)
+		return nil, fmt.Errorf("cannot retrieve leaderboard for objective: %w %s", orcerrors.ErrNotFound, err.Error())
 	}
 
 	sort.SliceStable(lb.BoardItems, func(i, j int) bool {

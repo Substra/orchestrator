@@ -126,7 +126,7 @@ func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, o
 	for _, dataSampleKey := range d.GetKeys() {
 		datasample, err := s.GetDataSampleDBAL().GetDataSample(dataSampleKey)
 		if err != nil {
-			return fmt.Errorf("datasample not found: %w key: %s ", orcerrors.ErrNotFound, dataSampleKey)
+			return fmt.Errorf("datasample not found: %w key: %s", orcerrors.ErrNotFound, dataSampleKey)
 		}
 
 		if datasample.GetOwner() != owner {

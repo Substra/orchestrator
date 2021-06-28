@@ -120,7 +120,7 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 
 	datamanager, err := s.GetDataManagerDBAL().GetDataManager(d.GetKey())
 	if err != nil {
-		return fmt.Errorf("datamanager not found: %w", orcerrors.ErrNotFound)
+		return fmt.Errorf("datamanager not found: %w: %s", orcerrors.ErrNotFound, err.Error())
 	}
 
 	if !s.GetPermissionService().CanProcess(datamanager.Permissions, requester) {
