@@ -59,6 +59,12 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) 
 	if filter.AssetKey != "" {
 		assetFilter["assetKey"] = filter.AssetKey
 	}
+	if filter.AssetKind != asset.AssetKind_ASSET_UNKNOWN {
+		assetFilter["assetKind"] = filter.AssetKind.String()
+	}
+	if filter.EventKind != asset.EventKind_EVENT_UNKNOWN {
+		assetFilter["eventKind"] = filter.EventKind.String()
+	}
 	if len(assetFilter) > 0 {
 		selector.Asset = assetFilter
 	}
