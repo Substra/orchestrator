@@ -21,8 +21,8 @@ message Event {
   AssetKind asset_kind = 3;
   EventKind event_kind = 4;
   string channel = 5;
-  map<string, string> metadata = 6;
-  uint64 timestamp = 7;
+  uint64 timestamp = 6;
+  map<string, string> metadata = 18;
 }
 
 message QueryEventsParam {

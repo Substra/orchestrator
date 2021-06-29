@@ -22,8 +22,8 @@ message Algo {
   Addressable description = 4;
   Addressable algorithm = 5;
   Permissions permissions = 6;
-  map<string, string> metadata = 7;
-  string owner = 8;
+  string owner = 7;
+  map<string, string> metadata = 16;
 }
 
 // NewAlgo is used to register an Algo.
@@ -35,7 +35,7 @@ message NewAlgo {
   Addressable description = 4;
   Addressable algorithm = 5;
   NewPermissions new_permissions = 6;
-  map<string, string> metadata = 7;
+  map<string, string> metadata = 17;
 }
 
 message GetAlgoParam {

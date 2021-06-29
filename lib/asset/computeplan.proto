@@ -16,20 +16,20 @@ enum ComputePlanStatus {
 
 message ComputePlan {
   string key = 1;
-  string tag = 2;
-  string owner = 3;
-  map<string, string> metadata = 4;
-  uint32 done_count = 5; // Dynamic data, not persisted and set on query
-  uint32 task_count = 6; // Dynamic data, not persisted and set on query
-  ComputePlanStatus status = 8; // Dynamic data, not persisted and set on query
-  bool delete_intermediary_models = 7;
+  string owner = 2;
+  uint32 done_count = 3; // Dynamic data, not persisted and set on query
+  uint32 task_count = 4; // Dynamic data, not persisted and set on query
+  ComputePlanStatus status = 5; // Dynamic data, not persisted and set on query
+  bool delete_intermediary_models = 6;
+  string tag = 16;
+  map<string, string> metadata = 17;
 }
 
 message NewComputePlan {
   string key = 1;
-  string tag = 2;
-  map<string, string> metadata = 3;
-  bool delete_intermediary_models = 4;
+  string tag = 16;
+  map<string, string> metadata = 17;
+  bool delete_intermediary_models = 18;
 }
 
 message GetComputePlanParam {

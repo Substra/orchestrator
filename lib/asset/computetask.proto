@@ -33,18 +33,18 @@ message ComputeTask {
   Algo algo = 3;
   string owner = 4;
   string compute_plan_key = 5;
-  map<string, string> metadata = 6;
-  int32 rank = 8;
-  ComputeTaskStatus status = 9; // mutable
   // Keys of parent ComputeTasks
-  repeated string parent_task_keys = 11;
-  string worker = 16;
+  repeated string parent_task_keys = 6;
+  int32 rank = 7;
+  ComputeTaskStatus status = 8; // mutable
+  string worker = 9;
   oneof data {
     TestTaskData test = 12;
     TrainTaskData train = 13;
     CompositeTrainTaskData composite = 14;
     AggregateTrainTaskData aggregate = 15;
   }
+  map<string, string> metadata = 16;
 }
 
 message NewComputeTask {
@@ -52,15 +52,15 @@ message NewComputeTask {
   ComputeTaskCategory category = 2;
   string algo_key = 3;
   string compute_plan_key = 4;
-  map<string, string> metadata = 5;
   // Keys of parent ComputeTasks
-  repeated string parent_task_keys = 11;
+  repeated string parent_task_keys = 5;
   oneof data {
     NewTestTaskData test = 12;
     NewTrainTaskData train = 13;
     NewCompositeTrainTaskData composite = 14;
     NewAggregateTrainTaskData aggregate = 15;
   }
+  map<string, string> metadata = 16;
 }
 
 message TrainTaskData {

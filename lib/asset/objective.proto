@@ -11,14 +11,14 @@ option go_package = "github.com/owkin/orchestrator/lib/asset";
 message Objective {
   string key = 1;
   string name = 2;
-  string data_manager_key = 3;
-  repeated string data_sample_keys = 4;
-  Addressable description = 5;
-  string metrics_name = 6;
-  Addressable metrics = 7;
-  Permissions permissions = 8;
-  map<string, string> metadata = 9;
-  string owner = 10;
+  Addressable description = 3;
+  string metrics_name = 4;
+  Addressable metrics = 5;
+  Permissions permissions = 6;
+  string owner = 7;
+  string data_manager_key = 16;
+  repeated string data_sample_keys = 17;
+  map<string, string> metadata = 18;
 }
 
 // NewObjective is used to register an Objective.
@@ -26,13 +26,13 @@ message Objective {
 message NewObjective {
   string key = 1;
   string name = 2;
-  string data_manager_key = 3;
-  repeated string data_sample_keys = 4;
-  Addressable description = 5;
-  string metrics_name = 6;
-  Addressable metrics = 7;
-  NewPermissions new_permissions = 8;
-  map<string, string> metadata = 9;
+  Addressable description = 3;
+  string metrics_name = 4;
+  Addressable metrics = 5;
+  NewPermissions new_permissions = 6;
+  string data_manager_key = 16;
+  repeated string data_sample_keys = 17;
+  map<string, string> metadata = 18;
 }
 
 message GetObjectiveParam {

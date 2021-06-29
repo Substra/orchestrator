@@ -14,8 +14,8 @@ message DataManager {
     string objective_key = 5; // mutable
     Addressable description = 6;
     Addressable opener = 7;
-    map <string, string> metadata = 8;
-    string type = 9;
+    string type = 8;
+    map <string, string> metadata = 16;
 }
 
 message NewDataManager {
@@ -25,8 +25,8 @@ message NewDataManager {
     string objective_key = 4;
     Addressable description = 5;
     Addressable opener = 6;
-    map <string, string> metadata = 7;
-    string type = 8;
+    string type = 7;
+    map <string, string> metadata = 16;
 }
 
 message DataManagerUpdateParam {
