@@ -66,10 +66,15 @@ postgresql:
   postgresqlPassword: postgres
 
 rabbitmq:
+  image:
+    pullPolicy: IfNotPresent
+  enabled: true
   auth:
     erlangCookie: rabbitmqErlangCookie
     tls:
       enabled: false
+  service:
+    port: 5672
 
 fabric:
   organization: MyOrg1

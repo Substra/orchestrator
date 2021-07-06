@@ -3,7 +3,7 @@ name: orchestrator
 description: substra orchestration
 
 type: application
-version: 0.1.0
+version: 0.1.1
 appVersion: 0.0.1
 
 dependencies:
@@ -14,3 +14,4 @@ dependencies:
   - name: rabbitmq
     repository: https://charts.bitnami.com/bitnami
     version: 8.9.1
+    condition: rabbitmq.enabled

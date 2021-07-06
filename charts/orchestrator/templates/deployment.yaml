@@ -29,11 +29,11 @@ spec:
       {{- if .Values.postgresql.enabled }}
       - name: wait-postgresql
         image: jwilder/dockerize
-        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}']
+        command: ['dockerize', '-wait', 'tcp://{{ template "postgresql.serviceName" . }}.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}']
       {{- end}}
       - name: wait-rabbitmq
         image: jwilder/dockerize
-        command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ .Release.Name }}-rabbitmq.{{ .Release.Namespace }}:{{- if $.Values.rabbitmq.auth.tls.enabled -}}{{.Values.rabbitmq.service.tlsPort}}{{- else -}}{{.Values.rabbitmq.service.port}}{{- end -}}']
+        command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{- if $.Values.rabbitmq.auth.tls.enabled -}}{{.Values.rabbitmq.service.tlsPort}}{{- else -}}{{.Values.rabbitmq.service.port}}{{- end -}}']
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
