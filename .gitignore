@@ -6,3 +6,4 @@
 lib/asset/json.go
 lib/asset/*.pb.go
 server/standalone/migration/bindata.go
+
