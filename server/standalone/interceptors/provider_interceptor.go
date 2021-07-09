@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -18,22 +17,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Time budget to retry a conflicting transaction
-var txRetryBudget = time.Duration(500) * time.Millisecond
-
-func init() {
-	rawValue, ok := os.LookupEnv("ORCHESTRATOR_TX_RETRY_BUDGET")
-	if ok {
-		duration, err := time.ParseDuration(rawValue)
-		if err == nil {
-			txRetryBudget = duration
-		}
-	}
-}
-
 // gRPC methods for which we won't inject a service provider
 var ignoredMethods = [...]string{
 	"grpc.health",
+}
+
+type ProviderInterceptorConfiguration struct {
+	TxRetryBudget time.Duration
 }
 
 // ProviderInterceptor intercepts gRPC requests and assign a request-scoped orchestration.Provider
@@ -42,6 +32,7 @@ type ProviderInterceptor struct {
 	amqp         common.AMQPPublisher
 	dbalProvider dbal.TransactionalDBALProvider
 	txChecker    common.TransactionChecker
+	config       ProviderInterceptorConfiguration
 }
 
 type ctxProviderInterceptorMarker struct{}
@@ -49,11 +40,12 @@ type ctxProviderInterceptorMarker struct{}
 var ctxProviderKey = &ctxProviderInterceptorMarker{}
 
 // NewProviderInterceptor returns an instance of ProviderInterceptor
-func NewProviderInterceptor(dbalProvider dbal.TransactionalDBALProvider, amqp common.AMQPPublisher) *ProviderInterceptor {
+func NewProviderInterceptor(dbalProvider dbal.TransactionalDBALProvider, amqp common.AMQPPublisher, config ProviderInterceptorConfiguration) *ProviderInterceptor {
 	return &ProviderInterceptor{
 		amqp:         amqp,
 		dbalProvider: dbalProvider,
 		txChecker:    new(common.GrpcMethodChecker),
+		config:       config,
 	}
 }
 
@@ -80,7 +72,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 			return res, nil
 		}
 
-		if shouldRetry(start, err) {
+		if pi.shouldRetry(start, err) {
 			log.WithField("method", info.FullMethod).Info("retrying conflicting transaction")
 			continue
 		}
@@ -89,8 +81,8 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 }
 
 // shouldRetry returns true if the retry budget is not exhausted and the error is a transaction serialization failure.
-func shouldRetry(start time.Time, err error) bool {
-	retryBudgetExhausted := time.Since(start) > txRetryBudget
+func (pi *ProviderInterceptor) shouldRetry(start time.Time, err error) bool {
+	retryBudgetExhausted := time.Since(start) > pi.config.TxRetryBudget
 	var pgErr *pgconn.PgError
 
 	return errors.As(err, &pgErr) && pgErr.Code == pgerrcode.SerializationFailure && !retryBudgetExhausted

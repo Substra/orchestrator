@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgconn"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -17,6 +18,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
+
+var piConfig = ProviderInterceptorConfiguration{
+	TxRetryBudget: 500 * time.Millisecond,
+}
 
 type mockedTransactionDBAL struct {
 	persistenceTesting.MockDBAL
@@ -63,7 +68,7 @@ func TestInjectProvider(t *testing.T) {
 	db.On("Commit").Once().Return(nil)
 	dbProvider := &mockTransactionalDBALProvider{db}
 
-	interceptor := NewProviderInterceptor(dbProvider, publisher)
+	interceptor := NewProviderInterceptor(dbProvider, publisher, piConfig)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -96,7 +101,7 @@ func TestOnSuccess(t *testing.T) {
 		wg.Done()
 	})
 
-	interceptor := NewProviderInterceptor(dbProvider, publisher)
+	interceptor := NewProviderInterceptor(dbProvider, publisher, piConfig)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -129,7 +134,7 @@ func TestOnError(t *testing.T) {
 
 	db.On("Rollback").Once().Return(nil)
 
-	interceptor := NewProviderInterceptor(dbProvider, publisher)
+	interceptor := NewProviderInterceptor(dbProvider, publisher, piConfig)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -168,7 +173,7 @@ func TestRetryOnUnserializableTransaction(t *testing.T) {
 		wg.Done()
 	})
 
-	interceptor := NewProviderInterceptor(dbProvider, publisher)
+	interceptor := NewProviderInterceptor(dbProvider, publisher, piConfig)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",

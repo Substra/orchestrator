@@ -86,6 +86,7 @@ jobs:
           ORCHESTRATOR_AMQP_DSN: amqp://guest:guest@localhost:5672/
           ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
           ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
+          ORCHESTRATOR_TX_RETRY_BUDGET: 500ms
       - name: Archive server log
         if: always()
         uses: actions/upload-artifact@v2

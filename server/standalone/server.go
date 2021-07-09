@@ -1,6 +1,9 @@
 package standalone
 
 import (
+	"time"
+
+	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
@@ -24,8 +27,12 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 	session := common.NewSession("orchestrator", rabbitDSN)
 
 	channelInterceptor := common.NewChannelInterceptor(config)
+
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
-	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session)
+	piConfig := interceptors.ProviderInterceptorConfiguration{
+		TxRetryBudget: mustParseDuration(common.MustGetEnv("TX_RETRY_BUDGET")),
+	}
+	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session, piConfig)
 
 	interceptor := grpc.ChainUnaryInterceptor(
 		common.LogRequest,
@@ -67,4 +74,12 @@ func (a *AppServer) Stop() {
 	a.grpc.Stop()
 	a.db.Close()
 	a.amqp.Close()
+}
+
+func mustParseDuration(duration string) time.Duration {
+	res, err := time.ParseDuration(duration)
+	if err != nil {
+		log.WithField("duration", duration).Fatal("Cannot parse duration")
+	}
+	return res
 }
