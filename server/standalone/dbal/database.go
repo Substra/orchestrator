@@ -23,10 +23,31 @@ type Database struct {
 	pool *pgxpool.Pool
 }
 
+type SQLLogger struct{}
+
+func (*SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
+	log.
+		WithField("msg", msg).
+		WithField("level", level).
+		// Other available fields (omitted to keep logs readable):
+		// - data["args"]: the query arguments (truncated if too long)
+		// - data["time"]: the query execution time
+		// - data["err"]: the SQL error text, if any
+		// - data["rowCount"]: number of rows returned, for SELECT statements
+		// - data["pid"]
+		WithField("sql", data["sql"]).
+		Debug("SQL")
+}
+
 // InitDatabase opens a database connexion from given url.
 // It make sure the database has a usable schema by running migrations if there are any.
 func InitDatabase(databaseURL string) (*Database, error) {
-	pool, err := pgxpool.Connect(context.Background(), databaseURL)
+	config, err := pgxpool.ParseConfig(databaseURL)
+	if err != nil {
+		return nil, err
+	}
+	config.ConnConfig.Logger = &SQLLogger{}
+	pool, err := pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {
 		return nil, err
 	}
