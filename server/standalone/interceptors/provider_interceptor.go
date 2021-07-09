@@ -63,17 +63,24 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		}
 	}
 
+	attempt := 1
 	start := time.Now()
 
 	for {
+		attemptStart := time.Now()
 		res, err := pi.handleIsolated(ctx, req, info, handler)
+		attemptDuration := time.Since(attemptStart)
 
 		if err == nil {
 			return res, nil
 		}
 
 		if pi.shouldRetry(start, err) {
-			log.WithField("method", info.FullMethod).Info("retrying conflicting transaction")
+			log.
+				WithField("method", info.FullMethod).
+				WithField("previous attempt duration", attemptDuration).
+				WithField("next attempt number", attempt).
+				Info("retrying conflicting transaction")
 			continue
 		}
 		return nil, err
