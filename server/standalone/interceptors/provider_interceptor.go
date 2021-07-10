@@ -76,6 +76,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		}
 
 		if pi.shouldRetry(start, err) {
+			attempt++
 			log.
 				WithField("method", info.FullMethod).
 				WithField("previous attempt duration", attemptDuration).
