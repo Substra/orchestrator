@@ -7,12 +7,12 @@ cd $(pwd)/tools/
 
 if [ ! -d protodot ]; then
     # install protodot
-    git clone git@github.com:seamia/protodot.git
+    git clone --depth 1 git@github.com:seamia/protodot.git
     cd protodot
 
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # linux
-        apt-install graphviz
+        sudo apt-get install graphviz -y
         sed -i 's@"${HOME}/protodot/generated"@"${PROTO_DOC_PATH}"@g' config.json
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         # Mac OSX
@@ -23,14 +23,11 @@ if [ ! -d protodot ]; then
 fi
 
 #find modified protofiles
-find $PROTO_SRC_PATH -name "*.proto" -mtime -1 | while read fname; do
+find $PROTO_SRC_PATH -name "*.proto" | while read fname; do
     protodot -src $fname
     
     # remove intermediary dot file
-    find $PROTO_DOC_PATH -name "*.dot" -print0 \
-        | xargs -0 ls -1 -t \
-        | head -1 \
-        | xargs rm
+    find $PROTO_DOC_PATH -name "*.dot" -exec rm {} \;
 
     # set friendly filname name for svg output
     find $PROTO_DOC_PATH -name "*.dot.svg" -print0 \
