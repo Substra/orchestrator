@@ -33,3 +33,14 @@ ingress:
   - host: orchestrator.node-1.com
     paths:
       - "/"
+
+channels:
+  - name: mychannel
+    organizations: [ MyOrg1MSP, MyOrg2MSP ]
+  - name: yourchannel
+    organizations: [ MyOrg1MSP, MyOrg2MSP ]
+
+rabbitmqOperator:
+  credentials:
+    MyOrg1MSP: password1
+    MyOrg2MSP: password2

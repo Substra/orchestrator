@@ -39,3 +39,17 @@ ingress:
   - host: orchestrator.node-1.com
     paths:
       - "/"
+
+channels:
+  - name: mychannel
+    organizations: [ MyOrg1MSP ] # single org required here
+    fabric:
+      chaincodes: [ mycc ]
+  - name: yourchannel
+    organizations: [ MyOrg1MSP ]
+    fabric:
+      chaincodes: [ yourcc ]
+
+rabbitmqOperator:
+  credentials:
+    MyOrg1MSP: password1

@@ -132,15 +132,15 @@ orchestrator:
       secrets:
         clientCACerts: {}
 
-channels:
-  - name: mychannel
-    organizations: [ MyOrg1MSP, MyOrg2MSP ]
-    fabric: # relevant only in distributed mode
-      chaincodes: [ mycc ]
-  - name: yourchannel
-    organizations: [ MyOrg1MSP, MyOrg2MSP ]
-    fabric:
-      chaincodes: [ yourcc ]
+# channels:
+#   - name: mychannel
+#     organizations: [ MyOrg1MSP, MyOrg2MSP ]
+#     fabric: # relevant only in distributed mode
+#       chaincodes: [ mycc ]
+#   - name: yourchannel
+#     organizations: [ MyOrg1MSP, MyOrg2MSP ]
+#     fabric:
+#       chaincodes: [ yourcc ]
 
 forwarder:
   image:
@@ -153,6 +153,5 @@ rabbitmqOperator:
   image:
     repository: owkin/rabbitmq-operator
     pullPolicy: IfNotPresent
-  credentials:
-    MyOrg1MSP: password1
-    MyOrg2MSP: password2
+  # credentials:
+  #   MyOrg1MSP: password1
