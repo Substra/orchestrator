@@ -7,6 +7,7 @@ import (
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/server/common"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // EventName is the name used by the orchestration chaincode to register its events on the ledger.
@@ -38,7 +39,17 @@ func (ed *eventDispatcher) Dispatch() error {
 		return nil
 	}
 
-	payload, err := json.Marshal(ed.Queue.GetEvents())
+	events := make([]json.RawMessage, 0)
+	for _, event := range ed.Queue.GetEvents() {
+		b, err := protojson.Marshal(event)
+		if err != nil {
+			return err
+		}
+
+		events = append(events, b)
+	}
+
+	payload, err := json.Marshal(events)
 	if err != nil {
 		return err
 	}
