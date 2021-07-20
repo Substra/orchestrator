@@ -233,7 +233,7 @@ func (session *Session) UnsafePush(routingKey string, data []byte) error {
 		false,        // Mandatory
 		false,        // Immediate
 		amqp.Publishing{
-			ContentType: "text/plain", // TODO: choose a proper format
+			ContentType: "application/json",
 			Body:        data,
 		},
 	)
