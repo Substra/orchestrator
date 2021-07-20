@@ -25,7 +25,7 @@ chaincode: $(CHAINCODE_BIN)
 orchestrator: $(ORCHESTRATOR_BIN)
 
 .PHONY: forwarder
-orchestrator: $(FORWARDER_BIN)
+forwarder: $(FORWARDER_BIN)
 
 .PHONY: codegen
 codegen: $(pbgo) $(migrations_binpack) $(lib_generated)
@@ -43,7 +43,7 @@ $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 $(LIBCODEGEN_BIN): $(PROJECT_ROOT)/lib/codegen/main.go
 	go build -o $(LIBCODEGEN_BIN) $(PROJECT_ROOT)/lib/codegen
 
-$(FORWARDER_BIN): ${go_src} $(OUTPUT_DIR) $(pbgo)
+$(FORWARDER_BIN): ${go_src} $(OUTPUT_DIR) $(pbgo) $(lib_generated)
 	go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/server/distributed/forwarder
 
 $(E2E_BIN): $(go_src) $(OUTPUT_DIR) $(pbgo)
@@ -67,7 +67,7 @@ $(lib_generated): $(LIBCODEGEN_BIN) $(pbgo)
 	$(LIBCODEGEN_BIN) -path $(protos) > $(lib_generated)
 
 .PHONY: proto-docgen
-proto-docgen: 
+proto-docgen:
 	./tools/generate_proto_svg.sh
 
 .PHONY: proto-gen
@@ -77,7 +77,7 @@ proto-gen: $(pbgo)
 proto-codegen: proto-gen proto-docgen
 
 .PHONY: clean
-clean: clean-protos clean-migrations-binpack
+clean: clean-protos clean-migrations-binpack clean-generated
 	rm -rf $(OUTPUT_DIR)
 
 .PHONY: test
@@ -86,8 +86,12 @@ test: codegen
 
 .PHONY: clean-protos
 clean-protos:
-	rm $(wildcard $(protos)/*.pb.go)
+	-rm $(wildcard $(protos)/*.pb.go)
 
 .PHONY: clean-migrations-binpack
 clean-migrations-binpack:
-	rm $(migrations_binpack)
+	-rm  $(migrations_binpack)
+
+.PHONY: clean-generated
+clean-generated:
+	-rm $(lib_generated)

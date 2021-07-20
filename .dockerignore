@@ -6,3 +6,4 @@ skaffold.yaml
 /examples
 /docs
 /lib/asset/*.pb.go
+/lib/asset/json.go
