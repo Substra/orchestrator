@@ -58,7 +58,7 @@ func (s *ComputePlanServer) QueryPlans(ctx context.Context, param *asset.QueryPl
 		return nil, err
 	}
 
-	plans, nextPage, err := provider.GetComputePlanService().GetPlans(libCommon.NewPagination(param.PageToken, param.PageSize))
+	plans, nextPage, err := provider.GetComputePlanService().QueryPlans(libCommon.NewPagination(param.PageToken, param.PageSize))
 	if err != nil {
 		return nil, err
 	}

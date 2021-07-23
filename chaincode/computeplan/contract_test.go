@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/communication"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 )
@@ -71,4 +72,39 @@ func TestApplyAction(t *testing.T) {
 
 	err = contract.ApplyPlanAction(ctx, wrapper)
 	assert.NoError(t, err, "plan action application should not fail")
+}
+
+func TestQueryComputePlans(t *testing.T) {
+	contract := &SmartContract{}
+
+	computePlans := []*asset.ComputePlan{
+		{Tag: "test"},
+		{Tag: "test2"},
+	}
+
+	ctx := new(testHelper.MockedContext)
+	service := getMockedService(ctx)
+	service.On("QueryPlans", &common.Pagination{Token: "", Size: 20}).Return(computePlans, "", nil).Once()
+
+	param := &asset.QueryPlansParam{PageToken: "", PageSize: 20}
+	wrapper, err := communication.Wrap(param)
+	assert.NoError(t, err)
+
+	wrapped, err := contract.QueryPlans(ctx, wrapper)
+	assert.NoError(t, err, "query should not fail")
+	resp := new(asset.QueryPlansResponse)
+	err = wrapped.Unwrap(resp)
+	assert.NoError(t, err)
+	assert.Len(t, resp.Plans, len(computePlans), "query should return all compute plans")
+}
+
+func TestEvaluateTransactions(t *testing.T) {
+	contract := &SmartContract{}
+
+	queries := []string{
+		"GetPlan",
+		"QueryPlans",
+	}
+
+	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
 }

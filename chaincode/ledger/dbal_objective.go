@@ -24,12 +24,8 @@ func (db *DB) AddObjective(obj *asset.Objective) error {
 	if err != nil {
 		return err
 	}
-	err = db.putState(asset.ObjectiveKind, obj.GetKey(), objBytes)
-	if err != nil {
-		return err
-	}
 
-	return db.createIndex("objective~owner~key", []string{asset.ObjectiveKind, obj.Owner, obj.Key})
+	return db.putState(asset.ObjectiveKind, obj.GetKey(), objBytes)
 }
 
 // ObjectiveExists implements persistence.ObjectiveDBAL
@@ -52,23 +48,46 @@ func (db *DB) GetObjective(key string) (*asset.Objective, error) {
 
 // QueryObjectives retrieves all objectives
 func (db *DB) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error) {
-	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("objective~owner~key", []string{asset.ObjectiveKind}, p.Size, p.Token)
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.ObjectiveKind,
+		},
+	}
+
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err
 	}
+	queryString := string(b)
 
-	db.logger.WithField("keys", elementsKeys).Debug("QueryObjectives")
+	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resultsIterator.Close()
 
-	var objectives []*asset.Objective
-	for _, key := range elementsKeys {
-		objective, err := db.GetObjective(key)
+	objectives := make([]*asset.Objective, 0)
+
+	for resultsIterator.HasNext() {
+		queryResult, err := resultsIterator.Next()
 		if err != nil {
-			return objectives, bookmark, err
+			return nil, "", err
 		}
+		var storedAsset storedAsset
+		err = json.Unmarshal(queryResult.Value, &storedAsset)
+		if err != nil {
+			return nil, "", err
+		}
+		objective := &asset.Objective{}
+		err = json.Unmarshal(storedAsset.Asset, objective)
+		if err != nil {
+			return nil, "", err
+		}
+
 		objectives = append(objectives, objective)
 	}
 
-	return objectives, bookmark, nil
+	return objectives, bookmark.Bookmark, nil
 }
 
 // GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
@@ -81,24 +100,25 @@ func (db *DB) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 	lb := asset.Leaderboard{}
 	lb.Objective = o
 
-	selector := couchAssetQuery{
-		DocType: asset.ComputeTaskKind,
-		Asset: map[string]interface{}{
-			"status":   "STATUS_DONE",
-			"category": "TASK_TEST",
-			"test": map[string]interface{}{
-				"certified":     true,
-				"objective_key": key,
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.ComputeTaskKind,
+			Asset: map[string]interface{}{
+				"status":   "STATUS_DONE",
+				"category": "TASK_TEST",
+				"test": map[string]interface{}{
+					"certified":     true,
+					"objective_key": key,
+				},
 			},
 		},
 	}
 
-	b, err := json.Marshal(selector)
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, err
 	}
-
-	queryString := fmt.Sprintf(`{"selector":%s}}`, string(b))
+	queryString := string(b)
 	log.WithField("couchQuery", queryString).Debug("mango query board items")
 
 	if err != nil {

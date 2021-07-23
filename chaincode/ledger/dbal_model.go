@@ -35,7 +35,7 @@ func (db *DB) ModelExists(key string) (bool, error) {
 }
 
 func (db *DB) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
-	elementKeys, err := db.getIndexKeys("model~taskKey~modelKey", []string{asset.ModelKind, key})
+	elementKeys, err := db.getIndexKeys(modelTaskKeyIndex, []string{asset.ModelKind, key})
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (db *DB) AddModel(model *asset.Model) error {
 		return err
 	}
 
-	return db.createIndex("model~taskKey~modelKey", []string{asset.ModelKind, model.GetComputeTaskKey(), model.GetKey()})
+	return db.createIndex(modelTaskKeyIndex, []string{asset.ModelKind, model.GetComputeTaskKey(), model.GetKey()})
 }
 
 func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
@@ -82,8 +82,10 @@ func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset
 	)
 	logger.Debug("get models")
 
-	selector := couchAssetQuery{
-		DocType: asset.ModelKind,
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.ModelKind,
+		},
 	}
 
 	assetFilter := map[string]interface{}{}
@@ -91,15 +93,16 @@ func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset
 		assetFilter["category"] = c.String()
 	}
 	if len(assetFilter) > 0 {
-		selector.Asset = assetFilter
+		query.Selector.Asset = assetFilter
 	}
 
-	b, err := json.Marshal(selector)
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err
 	}
 
-	queryString := fmt.Sprintf(`{"selector":%s}`, string(b))
+	queryString := string(b)
+
 	log.WithField("couchQuery", queryString).Debug("mango query")
 
 	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)

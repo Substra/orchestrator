@@ -476,7 +476,7 @@ func (m *MockComputePlanService) GetPlan(key string) (*asset.ComputePlan, error)
 	return args.Get(0).(*asset.ComputePlan), args.Error(1)
 }
 
-func (m *MockComputePlanService) GetPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
+func (m *MockComputePlanService) QueryPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
 	args := m.Called(p)
 	return args.Get(0).([]*asset.ComputePlan), args.String(1), args.Error(2)
 }

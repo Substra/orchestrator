@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/go-playground/log/v7"
@@ -15,8 +14,6 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
 )
-
-const allNodesIndex = "nodes~id"
 
 // DB is the distributed ledger persistence layer implementing persistence.DBAL
 // This backend does not allow to read the current writes, they will only be commited after a successful response.
@@ -48,6 +45,17 @@ type storedAsset struct {
 	DocType string          `json:"doc_type"`
 	Asset   json.RawMessage `json:"asset"`
 }
+
+// storedKey wraps index results
+type storedKey struct {
+	Key string `json:"key"`
+}
+
+// dbal indexes
+const computePlanTaskStatusIndex = "computePlan~computePlanKey~status~task"
+const computeTaskParentIndex = "computeTask~parentTask~key"
+const modelTaskKeyIndex = "model~taskKey~modelKey"
+const allNodesIndex = "nodes~id"
 
 // getTransactionState returns a copy of an object that has been updated or created during the transaction
 func (db *DB) getTransactionState(key string) ([]byte, bool) {
@@ -178,8 +186,9 @@ func (db *DB) validateQueryContext() error {
 }
 
 func (db *DB) getQueryResult(query string) (shim.StateQueryIteratorInterface, error) {
+	logger := db.logger.WithField("query", query)
 	if err := db.validateQueryContext(); err != nil {
-		log.WithField("query", query).WithError(err).Error("invalid context")
+		logger.WithError(err).Error("invalid context")
 		return nil, err
 	}
 
@@ -187,8 +196,9 @@ func (db *DB) getQueryResult(query string) (shim.StateQueryIteratorInterface, er
 }
 
 func (db *DB) getQueryResultWithPagination(query string, pageSize int32, bookmark string) (shim.StateQueryIteratorInterface, *pb.QueryResponseMetadata, error) {
+	logger := db.logger.WithField("query", query)
 	if err := db.validateQueryContext(); err != nil {
-		log.WithField("query", query).WithError(err).Error("invalid context")
+		logger.WithError(err).Error("invalid context")
 		return nil, nil, err
 	}
 
@@ -241,67 +251,8 @@ func (db *DB) getIndexKeys(index string, attributes []string) ([]string, error) 
 	return keys, nil
 }
 
-// getIndexKeysWithPagination returns keys matching composite key values from the chaincode db.
-func (db *DB) getIndexKeysWithPagination(index string, attributes []string, pageSize uint32, bookmark common.PaginationToken) ([]string, common.PaginationToken, error) {
-	keys := []string{}
-	db.logger.WithFields(
-		log.F("index", index),
-		log.F("attributes", attributes),
-		log.F("bookmark", bookmark),
-		log.F("pageSize", pageSize),
-	).Debug("Get index keys")
-
-	bookmark = json2couch(bookmark)
-
-	iterator, metadata, err := db.ccStub.GetStateByPartialCompositeKeyWithPagination(index, attributes, int32(pageSize), bookmark)
-	if err != nil {
-		return nil, "", err
-	}
-	defer iterator.Close()
-	for iterator.HasNext() {
-		compositeKey, err := iterator.Next()
-		if err != nil {
-			return nil, "", err
-		}
-		_, keyParts, err := db.ccStub.SplitCompositeKey(compositeKey.Key)
-		if err != nil {
-			return nil, "", err
-		}
-		keys = append(keys, keyParts[len(keyParts)-1])
-	}
-
-	var nextPageToken string
-	if metadata != nil {
-		nextPageToken = couch2json(metadata.Bookmark)
-	}
-
-	return keys, nextPageToken, nil
-}
-
 func getFullKey(resource string, key string) string {
 	return resource + ":" + key
-}
-
-// couch2json sanitizes input from CouchDB format to JSON-friendly format
-func couch2json(in string) (out string) {
-	if in == "" {
-		return
-	}
-	out = strings.Replace(in, "\x00", "/", -1)
-	out = strings.Replace(out, "\\u0000", "#", -1)
-	out = strings.Replace(out, "\U0010ffff", "END", -1)
-	return
-}
-
-// json2couch sanitizes input from JSON-friendly format to CouchDB format
-func json2couch(in string) (out string) {
-	if in == "" {
-		return
-	}
-	out = strings.Replace(in, "/", "\x00", -1)
-	out = strings.Replace(out, "#", "\\u0000", -1)
-	out = strings.Replace(out, "END", "\U0010ffff", -1)
-	return
 }
 
 // AddNode stores a new Node
@@ -316,6 +267,7 @@ func (db *DB) AddNode(node *asset.Node) error {
 	}
 
 	return db.createIndex(allNodesIndex, []string{asset.NodeKind, node.Id})
+
 }
 
 // GetAllNodes returns all known Nodes
@@ -377,11 +329,7 @@ func (db *DB) AddAlgo(algo *asset.Algo) error {
 		return err
 	}
 
-	if err = db.createIndex("algo~owner~key", []string{asset.AlgoKind, algo.Owner, algo.Key}); err != nil {
-		return err
-	}
-
-	return db.createIndex("algo~category~key", []string{"algo", algo.Category.String(), algo.Key})
+	return nil
 }
 
 // GetAlgo retrieves an algo by its key
@@ -405,8 +353,10 @@ func (db *DB) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.A
 	)
 	logger.Debug("get algos")
 
-	selector := couchAssetQuery{
-		DocType: asset.AlgoKind,
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.AlgoKind,
+		},
 	}
 
 	assetFilter := map[string]interface{}{}
@@ -414,15 +364,16 @@ func (db *DB) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.A
 		assetFilter["category"] = c.String()
 	}
 	if len(assetFilter) > 0 {
-		selector.Asset = assetFilter
+		query.Selector.Asset = assetFilter
 	}
 
-	b, err := json.Marshal(selector)
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err
 	}
 
-	queryString := fmt.Sprintf(`{"selector":%s}}`, string(b))
+	queryString := string(b)
+
 	log.WithField("couchQuery", queryString).Debug("mango query")
 
 	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
@@ -458,4 +409,14 @@ func (db *DB) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.A
 // AlgoExists implements persistence.ObjectiveDBAL
 func (db *DB) AlgoExists(key string) (bool, error) {
 	return db.hasKey(asset.AlgoKind, key)
+}
+
+type couchAssetQuery struct {
+	DocType string                 `json:"doc_type"`
+	Asset   map[string]interface{} `json:"asset,omitempty"`
+}
+
+type richQuerySelector struct {
+	Selector couchAssetQuery `json:"selector"`
+	Fields   []string        `json:"fields,omitempty"`
 }

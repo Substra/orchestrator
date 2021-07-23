@@ -6,8 +6,9 @@ import (
 	"github.com/owkin/orchestrator/utils"
 )
 
-// ReadOnlyMethods maps for each service the "read only" methods.
-// This mapping is also used in chaincode mode to determine Evaluate transactions
+// ReadOnlyMethods maps for service "read only" methods.
+// This mapping is used in chaincode mode to determine Evaluate transactions
+// and in Standalone mode to set transactions as "read only"
 var ReadOnlyMethods = map[string][]string{
 	"Objective":   {"GetObjective", "QueryObjectives", "GetLeaderboard"},
 	"Node":        {"GetAllNodes"},
@@ -30,9 +31,15 @@ type TransactionChecker interface {
 
 type GrpcMethodChecker struct{}
 
-// IsEvaluateMethod returns true when the grpc method name given as input is read only.
-// Input should be a grpc method name such as: "/orchestrator.ComputeTaskService/RegisterTask".
-// Any unknown method will be considered as non-evaluate (read-write).
+/*
+IsEvaluateMethod maps for each gRPC service its "read only" methods.
+Those are methods which should not have any side effect on the storage,
+ie: they should not write to the database or ledger.
+This mapping is used in distributed mode to flag non Evaluate transactions
+and prevent the use of non-safe storage primitives in non evaluate context.
+In Standalone mode it is used in a similar way to initiate read-only transactions
+when possible.
+*/
 func (c GrpcMethodChecker) IsEvaluateMethod(method string) bool {
 	re := regexp.MustCompile(`^/orchestrator\.(\w+)Service/(\w+)$`)
 	serviceMethod := re.FindStringSubmatch(method)

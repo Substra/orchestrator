@@ -24,12 +24,7 @@ func (db *DB) AddComputePlan(cp *asset.ComputePlan) error {
 		return err
 	}
 
-	err = db.putState(asset.ComputePlanKind, cp.GetKey(), bytes)
-	if err != nil {
-		return err
-	}
-
-	return db.createIndex("computePlan~owner~key", []string{asset.ComputePlanKind, cp.Owner, cp.Key})
+	return db.putState(asset.ComputePlanKind, cp.GetKey(), bytes)
 }
 
 // ComputePlanExists returns true if a plan with the given key exists
@@ -56,13 +51,13 @@ func (db *DB) GetComputePlan(key string) (*asset.ComputePlan, error) {
 		return nil, err
 	}
 
-	allTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key})
+	allTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key})
 	if err != nil {
 		return nil, err
 	}
 	plan.TaskCount = uint32(len(allTasks))
 
-	doneTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DONE.String()})
+	doneTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DONE.String()})
 	if err != nil {
 		return nil, err
 	}
@@ -78,23 +73,47 @@ func (db *DB) GetComputePlan(key string) (*asset.ComputePlan, error) {
 
 // QueryComputePlans retrieves all ComputePlans
 func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
-	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("computePlan~owner~key", []string{asset.ComputePlanKind}, p.Size, p.Token)
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.ComputePlanKind,
+		},
+	}
+
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err
 	}
 
-	db.logger.WithField("numItems", len(elementsKeys)).Debug("QueryComputePlans")
+	queryString := string(b)
 
-	var plans []*asset.ComputePlan
-	for _, key := range elementsKeys {
-		plan, err := db.GetComputePlan(key)
+	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resultsIterator.Close()
+
+	plans := make([]*asset.ComputePlan, 0)
+
+	for resultsIterator.HasNext() {
+		queryResult, err := resultsIterator.Next()
 		if err != nil {
-			return plans, bookmark, err
+			return nil, "", err
 		}
+		var storedAsset storedAsset
+		err = json.Unmarshal(queryResult.Value, &storedAsset)
+		if err != nil {
+			return nil, "", err
+		}
+		plan := &asset.ComputePlan{}
+		err = json.Unmarshal(storedAsset.Asset, plan)
+		if err != nil {
+			return nil, "", err
+		}
+
 		plans = append(plans, plan)
 	}
 
-	return plans, bookmark, nil
+	return plans, bookmark.Bookmark, nil
 }
 
 // getPlanStatus returns the plan status from its tasks.
@@ -104,7 +123,7 @@ func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatu
 		return asset.ComputePlanStatus_PLAN_STATUS_DONE, nil
 	}
 
-	failedTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_FAILED.String()})
+	failedTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_FAILED.String()})
 	if err != nil {
 		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
 	}
@@ -112,7 +131,7 @@ func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatu
 		return asset.ComputePlanStatus_PLAN_STATUS_FAILED, nil
 	}
 
-	canceledTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_CANCELED.String()})
+	canceledTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_CANCELED.String()})
 	if err != nil {
 		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
 	}
@@ -120,7 +139,7 @@ func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatu
 		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED, nil
 	}
 
-	waitingTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_WAITING.String()})
+	waitingTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_WAITING.String()})
 	if err != nil {
 		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
 	}
@@ -129,7 +148,7 @@ func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatu
 	}
 
 	if len(waitingTasks) < total && done == 0 {
-		doingTasks, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DOING.String()})
+		doingTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DOING.String()})
 		if err != nil {
 			return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
 		}

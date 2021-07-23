@@ -29,22 +29,6 @@ func (db *DB) AddDataManager(datamanager *asset.DataManager) error {
 		return err
 	}
 
-	// Create a composite key to DataManagers associated with an objective.
-	// It does not make sense to create a composite key if there is no objective set,
-	// which is why we do not set it if the objective key is empty.
-	if datamanager.GetObjectiveKey() != "" {
-		err = db.createIndex("dataManager~objective~key", []string{"dataManager", datamanager.GetObjectiveKey(), datamanager.GetKey()})
-		if err != nil {
-			return err
-		}
-	}
-
-	// Create a composite key to find DataManagers associated with an owner
-	err = db.createIndex("dataManager~owner~key", []string{"dataManager", datamanager.GetOwner(), datamanager.GetKey()})
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -56,13 +40,6 @@ func (db *DB) UpdateDataManager(datamanager *asset.DataManager) error {
 	}
 
 	err = db.putState(asset.DataManagerKind, datamanager.GetKey(), dataManagerBytes)
-	if err != nil {
-		return err
-	}
-
-	// Here it makes sense to create a composite key because the only thing we can update on the
-	// DataManager is the objective key and you can only update it if there is no current objective key set.
-	err = db.createIndex("dataManager~objective~key", []string{"dataManager", datamanager.GetObjectiveKey(), datamanager.GetKey()})
 	if err != nil {
 		return err
 	}
@@ -90,21 +67,45 @@ func (db *DB) GetDataManager(key string) (*asset.DataManager, error) {
 
 // QueryDataManagers implements persistence.DataManagerDBAL
 func (db *DB) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
-	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("dataManager~owner~key", []string{"dataManager"}, p.Size, p.Token)
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.DataManagerKind,
+		},
+	}
+
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err
 	}
 
-	db.logger.WithField("keys", elementsKeys).Debug("QueryDataManagers")
+	queryString := string(b)
 
-	var datamanagers []*asset.DataManager
-	for _, key := range elementsKeys {
-		datamanager, err := db.GetDataManager(key)
+	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resultsIterator.Close()
+
+	dms := make([]*asset.DataManager, 0)
+
+	for resultsIterator.HasNext() {
+		queryResult, err := resultsIterator.Next()
 		if err != nil {
-			return datamanagers, bookmark, err
+			return nil, "", err
 		}
-		datamanagers = append(datamanagers, datamanager)
+		var storedAsset storedAsset
+		err = json.Unmarshal(queryResult.Value, &storedAsset)
+		if err != nil {
+			return nil, "", err
+		}
+		dm := &asset.DataManager{}
+		err = json.Unmarshal(storedAsset.Asset, dm)
+		if err != nil {
+			return nil, "", err
+		}
+
+		dms = append(dms, dm)
 	}
 
-	return datamanagers, bookmark, nil
+	return dms, bookmark.Bookmark, nil
 }

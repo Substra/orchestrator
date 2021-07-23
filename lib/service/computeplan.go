@@ -15,7 +15,7 @@ import (
 type ComputePlanAPI interface {
 	RegisterPlan(plan *asset.NewComputePlan, owner string) (*asset.ComputePlan, error)
 	GetPlan(key string) (*asset.ComputePlan, error)
-	GetPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error)
+	QueryPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error)
 	ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error
 }
 
@@ -105,7 +105,7 @@ func (s *ComputePlanService) GetPlan(key string) (*asset.ComputePlan, error) {
 	return s.GetComputePlanDBAL().GetComputePlan(key)
 }
 
-func (s *ComputePlanService) GetPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
+func (s *ComputePlanService) QueryPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
 	return s.GetComputePlanDBAL().QueryComputePlans(p)
 }
 

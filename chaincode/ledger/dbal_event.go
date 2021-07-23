@@ -51,8 +51,10 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) 
 	)
 	logger.Debug("query events")
 
-	selector := couchAssetQuery{
-		DocType: eventResource,
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: eventResource,
+		},
 	}
 
 	assetFilter := map[string]interface{}{}
@@ -66,15 +68,16 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) 
 		assetFilter["eventKind"] = filter.EventKind.String()
 	}
 	if len(assetFilter) > 0 {
-		selector.Asset = assetFilter
+		query.Selector.Asset = assetFilter
 	}
 
-	b, err := json.Marshal(selector)
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err
 	}
 
-	queryString := fmt.Sprintf(`{"selector":%s}`, string(b))
+	queryString := string(b)
+
 	log.WithField("couchQuery", queryString).Debug("mango query")
 
 	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)

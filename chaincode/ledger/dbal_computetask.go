@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"strconv"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -12,8 +11,6 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
 )
-
-const indexPlanTaskStatus = "computePlan~computePlanKey~status~task"
 
 // addComputeTask stores a new ComputeTask in DB
 func (db *DB) addComputeTask(t *asset.ComputeTask) error {
@@ -35,39 +32,16 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 		return err
 	}
 
-	if err := db.createIndex("computeTask~category~worker~status~algo~key", []string{asset.ComputeTaskKind, t.Category.String(), t.Worker, t.Status.String(), t.Algo.Key, t.Key}); err != nil {
+	err = db.createIndex(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, t.ComputePlanKey, t.Status.String(), t.Key})
+	if err != nil {
 		return err
 	}
 	for _, parentTask := range t.ParentTaskKeys {
-		err = db.createIndex("computeTask~parentTask~key", []string{asset.ComputeTaskKind, parentTask, t.Key})
+		err = db.createIndex(computeTaskParentIndex, []string{asset.ComputeTaskKind, parentTask, t.Key})
 		if err != nil {
 			return err
 		}
 	}
-	if t.ComputePlanKey != "" {
-		if err := db.createIndex("computePlan~computePlanKey~worker~rank~key", []string{asset.ComputePlanKind, t.ComputePlanKey, t.Worker, strconv.Itoa(int(t.Rank)), t.Key}); err != nil {
-			return err
-		}
-		if err := db.createIndex(indexPlanTaskStatus, []string{asset.ComputePlanKind, t.ComputePlanKey, t.Status.String(), t.Key}); err != nil {
-			return err
-		}
-		if err := db.createIndex("algo~computeplankey~key", []string{asset.AlgoKind, t.ComputePlanKey, t.Algo.Key}); err != nil {
-			return err
-		}
-	}
-
-	if t.Category == asset.ComputeTaskCategory_TASK_TEST {
-		testData, ok := t.Data.(*asset.ComputeTask_Test)
-		if !ok {
-			return fmt.Errorf("compute task data does not match task category: %w", errors.ErrInvalidAsset)
-		}
-		for _, parentTask := range t.ParentTaskKeys {
-			if err = db.createIndex("computeTask~category~parentTask~certified~key", []string{asset.ComputeTaskKind, t.Category.String(), parentTask, strconv.FormatBool(testData.Test.Certified), t.Key}); err != nil {
-				return err
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -113,16 +87,7 @@ func (db *DB) UpdateComputeTask(task *asset.ComputeTask) error {
 	// Update status indexes
 	if prevTask.Status != task.Status {
 		err = db.updateIndex(
-			"computeTask~category~worker~status~algo~key",
-			[]string{asset.ComputeTaskKind, prevTask.Category.String(), prevTask.Worker, prevTask.Status.String()},
-			[]string{asset.ComputeTaskKind, task.Category.String(), task.Worker, task.Status.String()},
-		)
-		if err != nil {
-			return err
-		}
-
-		err = db.updateIndex(
-			indexPlanTaskStatus,
+			computePlanTaskStatusIndex,
 			[]string{asset.ComputePlanKind, prevTask.ComputePlanKey, prevTask.Status.String(), prevTask.Key},
 			[]string{asset.ComputePlanKind, task.ComputePlanKey, task.Status.String(), task.Key},
 		)
@@ -201,7 +166,7 @@ func (db *DB) GetComputeTask(key string) (*asset.ComputeTask, error) {
 
 // GetComputeTaskChildren returns the children of the task identified by the given key
 func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
-	elementKeys, err := db.getIndexKeys("computeTask~parentTask~key", []string{asset.ComputeTaskKind, key})
+	elementKeys, err := db.getIndexKeys(computeTaskParentIndex, []string{asset.ComputeTaskKind, key})
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +187,7 @@ func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 
 // GetComputePlanTasksKeys returns the list of task keys from the provided compute plan
 func (db *DB) GetComputePlanTasksKeys(key string) ([]string, error) {
-	keys, err := db.getIndexKeys(indexPlanTaskStatus, []string{asset.ComputePlanKind, key})
+	keys, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key})
 	if err != nil {
 		return nil, err
 	}
@@ -258,8 +223,10 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 	)
 	logger.Debug("query compute task")
 
-	selector := couchAssetQuery{
-		DocType: asset.ComputeTaskKind,
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.ComputeTaskKind,
+		},
 	}
 
 	assetFilter := map[string]interface{}{}
@@ -281,16 +248,16 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 	}
 
 	if len(assetFilter) > 0 {
-		selector.Asset = assetFilter
+		query.Selector.Asset = assetFilter
 	}
 
-	b, err := json.Marshal(selector)
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// query should be {"selector":{"doc_type":"computetask", "asset":{"status":2}}}
-	queryString := fmt.Sprintf(`{"selector":%s}}`, string(b))
+	queryString := string(b)
+
 	log.WithField("couchQuery", queryString).Debug("mango query")
 
 	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
@@ -319,11 +286,5 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 
 		tasks = append(tasks, task)
 	}
-
 	return tasks, bookmark.Bookmark, nil
-}
-
-type couchAssetQuery struct {
-	DocType string                 `json:"doc_type"`
-	Asset   map[string]interface{} `json:"asset,omitempty"`
 }

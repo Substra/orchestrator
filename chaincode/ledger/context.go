@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
@@ -73,14 +74,14 @@ var (
 )
 
 // GetBeforeTransactionHook handles pre-transaction logic:
-// - setting the "IsEvaluateTransaction" boolean field
+// - setting the "IsEvaluateTransaction" boolean field.
 // Smart contracts MUST use this function as their "BeforeTransaction" attribute
 func GetBeforeTransactionHook(contract contractapi.EvaluationContractInterface) func(TransactionContext) error {
-
 	return func(c TransactionContext) error {
-
 		// Determine is method being called is an "Evaluation" method (v.s. "Invoke" method)
 		fnName, _ := c.GetStub().GetFunctionAndParameters()
+		log.WithField("function", fnName).Debug("Checking if calling function is an eval function")
+
 		evalFuncs := contract.GetEvaluateTransactions()
 		isEval := IsEvaluateTransaction(fnName, evalFuncs)
 

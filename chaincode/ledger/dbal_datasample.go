@@ -3,12 +3,10 @@ package ledger
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/utils"
 )
 
 // DataSampleExists implements persistence.DataSampleDBAL
@@ -41,28 +39,7 @@ func (db *DB) addDataSample(dataSample *asset.DataSample) error {
 		return err
 	}
 
-	err = db.putState(asset.DataSampleKind, dataSample.GetKey(), dataSampleBytes)
-	if err != nil {
-		return err
-	}
-
-	if err = db.createIndex("dataSample~owner~key", []string{asset.DataSampleKind, dataSample.Owner, dataSample.Key}); err != nil {
-		return err
-	}
-
-	for _, dataManagerKey := range dataSample.GetDataManagerKeys() {
-		// create composite keys to find all dataSample associated with a dataManager
-		if err = db.createIndex("dataSample~dataManager~key", []string{asset.DataSampleKind, dataManagerKey, dataSample.GetKey()}); err != nil {
-			return err
-		}
-
-		// create composite keys to find all dataSample associated with a dataManager that are for test only or not
-		if err = db.createIndex("dataSample~dataManager~testOnly~key", []string{asset.DataSampleKind, dataManagerKey, strconv.FormatBool(dataSample.GetTestOnly()), dataSample.GetKey()}); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return db.putState(asset.DataSampleKind, dataSample.GetKey(), dataSampleBytes)
 }
 
 // UpdateDataSample implements persistence.DataSampleDBAL
@@ -72,32 +49,7 @@ func (db *DB) UpdateDataSample(dataSample *asset.DataSample) error {
 		return err
 	}
 
-	var currentDataSample *asset.DataSample
-	currentDataSample, err = db.GetDataSample(dataSample.GetKey())
-	if err != nil {
-		// TODO define a better error than the sql error
-		return err
-	}
-
-	newDataManagers := utils.Filter(dataSample.GetDataManagerKeys(), currentDataSample.GetDataManagerKeys())
-
-	// We add indexes for the potential new DataManagerKeys
-	for _, dataManagerKey := range newDataManagers {
-		if err = db.createIndex("dataSample~dataManager~key", []string{asset.DataSampleKind, dataManagerKey, dataSample.GetKey()}); err != nil {
-			return err
-		}
-
-		if err = db.createIndex("dataSample~dataManager~testOnly~key", []string{asset.DataSampleKind, dataManagerKey, strconv.FormatBool(dataSample.GetTestOnly()), dataSample.GetKey()}); err != nil {
-			return err
-		}
-	}
-
-	err = db.putState(asset.DataSampleKind, dataSample.GetKey(), dataSampleBytes)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return db.putState(asset.DataSampleKind, dataSample.GetKey(), dataSampleBytes)
 }
 
 // GetDataSample implements persistence.DataSampleDBAL
@@ -116,33 +68,94 @@ func (db *DB) GetDataSample(key string) (*asset.DataSample, error) {
 
 // QueryDataSamples implements persistence.DataSampleDBAL
 func (db *DB) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
-	elementsKeys, bookmark, err := db.getIndexKeysWithPagination("dataSample~owner~key", []string{asset.DataSampleKind}, p.Size, p.Token)
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.DataSampleKind,
+		},
+	}
+
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err
 	}
 
-	db.logger.WithField("keys", elementsKeys).Debug("QueryDataSamples")
+	queryString := string(b)
 
-	var datasamples []*asset.DataSample
-	for _, key := range elementsKeys {
-		datasample, err := db.GetDataSample(key)
+	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resultsIterator.Close()
+
+	datasamples := make([]*asset.DataSample, 0)
+
+	for resultsIterator.HasNext() {
+		queryResult, err := resultsIterator.Next()
 		if err != nil {
-			return datasamples, bookmark, err
+			return nil, "", err
 		}
-		datasamples = append(datasamples, datasample)
+		var storedAsset storedAsset
+		err = json.Unmarshal(queryResult.Value, &storedAsset)
+		if err != nil {
+			return nil, "", err
+		}
+		ds := &asset.DataSample{}
+		err = json.Unmarshal(storedAsset.Asset, ds)
+		if err != nil {
+			return nil, "", err
+		}
+
+		datasamples = append(datasamples, ds)
 	}
 
-	return datasamples, bookmark, nil
+	return datasamples, bookmark.Bookmark, nil
 }
 
 // GetDataSamplesKeysByDataManager implements persistence.DataSampleDBAL
 func (db *DB) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bool) ([]string, error) {
-	dataSampleKeys, err := db.getIndexKeys("dataSample~dataManager~testOnly~key", []string{asset.DataSampleKind, dataManagerKey, strconv.FormatBool(testOnly)})
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.DataSampleKind,
+			Asset: map[string]interface{}{
+				"data_manager_keys": map[string]interface{}{
+					"$elemMatch": map[string]interface{}{
+						"$eq": dataManagerKey,
+					},
+				},
+				"test_only": testOnly,
+			},
+		},
+		Fields: []string{"assets.keys"},
+	}
+
+	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, err
 	}
 
-	db.logger.WithField("keys", dataSampleKeys).Debug("GetDataSamplesKeysByDataManager")
+	queryString := string(b)
 
-	return dataSampleKeys, nil
+	resultsIterator, err := db.getQueryResult(queryString)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resultsIterator.Close()
+
+	keys := make([]string, 0)
+
+	for resultsIterator.HasNext() {
+		queryResult, err := resultsIterator.Next()
+		if err != nil {
+			return nil, err
+		}
+		var storedkey storedKey
+		err = json.Unmarshal(queryResult.Value, &storedkey)
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, storedkey.Key)
+	}
+
+	return keys, nil
 }
