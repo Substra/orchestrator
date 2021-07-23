@@ -127,10 +127,18 @@ orchestrator:
 
   tls:
     enabled: false
+# Here you should specify the secrets you want to use for your orchestrator certificates
+#
+#   secrets:
+#     pair: orchestrator-tls-server-pair
+#     cacert: orchestrator-tls-cacert
     mtls:
       enabled: false
       secrets:
         clientCACerts: {}
+# Here you should provide the orchestrator clients ca certs if you are using a private certificate authority
+# The key is the org name and the value the secret name
+#         orchestrator-ca: orchestrator-tls-cacert
 
 # channels:
 #   - name: mychannel
