@@ -5,16 +5,16 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterAlgo(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetAlgoDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
@@ -46,7 +46,7 @@ func TestRegisterAlgo(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_ALGO,
 		AssetKey:  algo.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Return(nil)
+	es.On("RegisterEvents", e).Return(nil)
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 
@@ -78,8 +78,8 @@ func TestRegisterAlgo(t *testing.T) {
 }
 
 func TestGetAlgo(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetAlgoDBAL").Return(dbal)
 	service := NewAlgoService(provider)
 
@@ -96,8 +96,8 @@ func TestGetAlgo(t *testing.T) {
 }
 
 func TestQueryAlgos(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetAlgoDBAL").Return(dbal)
 	service := NewAlgoService(provider)
 

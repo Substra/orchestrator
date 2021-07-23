@@ -4,14 +4,15 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	"github.com/owkin/orchestrator/lib/event"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEnqueue(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dispatcher := new(MockDispatcher)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	dispatcher := new(event.MockDispatcher)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetEventDBAL").Return(dbal)
 	provider.On("GetEventQueue").Return(dispatcher)
@@ -23,7 +24,7 @@ func TestEnqueue(t *testing.T) {
 		AssetKey:  "uuid",
 	}
 
-	dbal.On("AddEvents", []*asset.Event{event}).Once().Return(nil)
+	dbal.On("AddEvents", event).Once().Return(nil)
 	dispatcher.On("Enqueue", event).Once().Return(nil)
 
 	err := service.RegisterEvents(event)

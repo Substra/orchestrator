@@ -3,13 +3,14 @@ package service
 import (
 	"testing"
 
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	"github.com/owkin/orchestrator/lib/event"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestServiceProviderInit(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dispatcher := new(MockDispatcher)
+	dbal := new(persistenceHelper.DBAL)
+	dispatcher := new(event.MockDispatcher)
 	provider := NewProvider(dbal, dispatcher)
 
 	assert.Implements(t, (*NodeServiceProvider)(nil), provider, "service provider should provide NodeService")
@@ -24,8 +25,8 @@ func TestServiceProviderInit(t *testing.T) {
 }
 
 func TestLazyInstanciation(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dispatcher := new(MockDispatcher)
+	dbal := new(persistenceHelper.DBAL)
+	dispatcher := new(event.MockDispatcher)
 	provider := NewProvider(dbal, dispatcher)
 
 	assert.Nil(t, provider.node, "service should be instanciated when needed")

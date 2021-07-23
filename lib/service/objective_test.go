@@ -6,16 +6,16 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterObjective(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
@@ -48,7 +48,7 @@ func TestRegisterObjective(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_OBJECTIVE,
 		AssetKey:  objective.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 
@@ -79,8 +79,8 @@ func TestRegisterObjective(t *testing.T) {
 }
 
 func TestGetObjective(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	service := NewObjectiveService(provider)
 
@@ -97,8 +97,8 @@ func TestGetObjective(t *testing.T) {
 }
 
 func TestQueryObjectives(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	service := NewObjectiveService(provider)
 
@@ -124,8 +124,8 @@ func TestQueryObjectives(t *testing.T) {
 }
 
 func TestObjectiveExists(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	service := NewObjectiveService(provider)
 
@@ -138,8 +138,8 @@ func TestObjectiveExists(t *testing.T) {
 }
 
 func TestCanDownload(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	service := NewObjectiveService(provider)
 
@@ -168,12 +168,12 @@ func TestCanDownload(t *testing.T) {
 }
 
 func TestRegisterObjectiveWithDatamanager(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	mds := new(MockDataSampleService)
-	mdm := new(MockDataManagerService)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	mds := new(MockDataSampleAPI)
+	mdm := new(MockDataManagerAPI)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
@@ -214,7 +214,7 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_OBJECTIVE,
 		AssetKey:  objective.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	mds.On("CheckSameManager", objective.DataManagerKey, objective.DataSampleKeys).Return(nil).Once()
 	mds.On("IsTestOnly", objective.DataSampleKeys).Return(true, nil).Once()
@@ -251,9 +251,9 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 }
 
 func TestRejectInvalidDatamanager(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mds := new(MockDataSampleService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	mds := new(MockDataSampleAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetDataSampleService").Return(mds)
@@ -289,9 +289,9 @@ func TestRejectInvalidDatamanager(t *testing.T) {
 }
 
 func TestGetLeaderBoard(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	obs := new(MockObjectiveService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	obs := new(MockObjectiveAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetObjectiveService").Return(obs)

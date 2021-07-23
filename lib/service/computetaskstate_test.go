@@ -5,7 +5,7 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -92,9 +92,9 @@ func TestFailedStateChange(t *testing.T) {
 }
 
 func TestDispatchOnTransition(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -124,7 +124,7 @@ func TestDispatchOnTransition(t *testing.T) {
 			"reason": "User action",
 		},
 	}
-	es.On("RegisterEvents", []*asset.Event{expectedEvent}).Once().Return(nil)
+	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
 
 	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DOING, "", "worker")
 	assert.NoError(t, err)
@@ -133,9 +133,9 @@ func TestDispatchOnTransition(t *testing.T) {
 }
 
 func TestUpdateTaskStateCanceled(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -164,9 +164,9 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 }
 
 func TestCascadeStatusDone(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)

@@ -9,7 +9,7 @@ import (
 
 	"github.com/jackc/pgconn"
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceTesting "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceTesting "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
@@ -24,7 +24,7 @@ var piConfig = ProviderInterceptorConfiguration{
 }
 
 type mockedTransactionDBAL struct {
-	persistenceTesting.MockDBAL
+	persistenceTesting.DBAL
 }
 
 func (m *mockedTransactionDBAL) Commit() error {
@@ -48,7 +48,7 @@ func (p *mockTransactionalDBALProvider) GetTransactionalDBAL(_ context.Context, 
 func TestExtractProvider(t *testing.T) {
 	ctx := context.TODO()
 
-	p := &service.MockServiceProvider{}
+	p := &service.MockDependenciesProvider{}
 
 	ctxWithProvider := context.WithValue(ctx, ctxProviderKey, p)
 

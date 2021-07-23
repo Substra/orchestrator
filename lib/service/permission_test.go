@@ -16,8 +16,8 @@ func TestNewPermission(t *testing.T) {
 }
 
 func TestValidateAuthorizedIDs(t *testing.T) {
-	mockNodeService := new(MockNodeService)
-	provider := new(MockServiceProvider)
+	mockNodeService := new(MockNodeAPI)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetNodeService").Return(mockNodeService)
 	service := NewPermissionService(provider)
 
@@ -54,7 +54,7 @@ func TestCanProcess(t *testing.T) {
 		},
 	}
 
-	provider := new(MockServiceProvider)
+	provider := new(MockDependenciesProvider)
 	service := NewPermissionService(provider)
 
 	for name, tc := range cases {
@@ -114,7 +114,7 @@ func TestMakeIntersection(t *testing.T) {
 		},
 	}
 
-	provider := new(MockServiceProvider)
+	provider := new(MockDependenciesProvider)
 	service := NewPermissionService(provider)
 
 	for name, tc := range cases {
@@ -176,7 +176,7 @@ func TestMakeUnion(t *testing.T) {
 		},
 	}
 
-	provider := new(MockServiceProvider)
+	provider := new(MockDependenciesProvider)
 	service := NewPermissionService(provider)
 
 	for name, tc := range cases {

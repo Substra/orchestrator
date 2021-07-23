@@ -7,6 +7,10 @@ on:
       - master
       - main
   pull_request:
+
+env:
+  GO111MODULE: on
+
 jobs:
   golangci:
     name: lint
@@ -29,12 +33,13 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           go install google.golang.org/protobuf/cmd/protoc-gen-go
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
-      - name: Install go-bindata
+      - name: Install non-module tools
         run: |
           cd /tmp
           go get -u github.com/go-bindata/go-bindata/...
+          go get -u github.com/vektra/mockery/v2/.../
       - name: Build
-        run: make codegen
+        run: make codegen mocks
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:

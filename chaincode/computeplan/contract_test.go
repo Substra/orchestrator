@@ -12,10 +12,10 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *service.MockComputePlanService {
-	mockService := new(service.MockComputePlanService)
+func getMockedService(ctx *testHelper.MockedContext) *service.MockComputePlanAPI {
+	mockService := new(service.MockComputePlanAPI)
 
-	provider := new(service.MockServiceProvider)
+	provider := new(service.MockDependenciesProvider)
 	provider.On("GetComputePlanService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()

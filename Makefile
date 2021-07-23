@@ -31,7 +31,7 @@ forwarder: $(FORWARDER_BIN)
 codegen: $(pbgo) $(migrations_binpack) $(lib_generated)
 
 .PHONY: lint
-lint: codegen
+lint: codegen mocks
 	golangci-lint run
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
@@ -76,13 +76,25 @@ proto-gen: $(pbgo)
 .PHONY: proto-codegen
 proto-codegen: proto-gen proto-docgen
 
+.PHONY: mocks
+mocks:
+	mockery --dir $(PROJECT_ROOT)/lib/event --all --inpackage --quiet
+	mockery --dir $(PROJECT_ROOT)/lib/service --all --inpackage --quiet
+	mockery --dir $(PROJECT_ROOT)/lib/persistence --all --output $(PROJECT_ROOT)/lib/persistence/mocks --quiet
+
 .PHONY: clean
-clean: clean-protos clean-migrations-binpack clean-generated
+clean: clean-protos clean-migrations-binpack clean-generated clean-mocks
 	rm -rf $(OUTPUT_DIR)
 
 .PHONY: test
-test: codegen
+test: codegen mocks
 	go test -race -cover ./... -short -timeout 30s
+
+.PHONY: clean-mocks
+clean-mocks:
+	-rm $(PROJECT_ROOT)/lib/service/mock_*.go
+	-rm $(PROJECT_ROOT)/lib/event/mock_*.go
+	-rm -r $(PROJECT_ROOT)/lib/persistence/mocks
 
 .PHONY: clean-protos
 clean-protos:

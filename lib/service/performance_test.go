@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestRegisterPerformance(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	cts := new(MockComputeTaskService)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	cts := new(MockComputeTaskAPI)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetPerformanceDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -43,7 +43,7 @@ func TestRegisterPerformance(t *testing.T) {
 		AssetKey:  perf.ComputeTaskKey,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
-	es.On("RegisterEvents", []*asset.Event{event}).Once().Return(nil)
+	es.On("RegisterEvents", event).Once().Return(nil)
 
 	// Performance registration will initiate a task transition to done
 	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
@@ -56,8 +56,8 @@ func TestRegisterPerformance(t *testing.T) {
 }
 
 func TestRegisterPerformanceInvalidTask(t *testing.T) {
-	cts := new(MockComputeTaskService)
-	provider := new(MockServiceProvider)
+	cts := new(MockComputeTaskAPI)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetComputeTaskService").Return(cts)
 	service := NewPerformanceService(provider)
 

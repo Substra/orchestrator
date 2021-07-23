@@ -7,6 +7,7 @@ import (
 
 // DependenciesProvider describes a Provider exposing all orchestration services.
 type DependenciesProvider interface {
+	persistence.DBALProvider
 	event.QueueProvider
 	NodeServiceProvider
 	ObjectiveServiceProvider

@@ -19,10 +19,10 @@ func TestEvaluateTransactions(t *testing.T) {
 	assert.Equal(t, query, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
 }
 
-func getMockedService(ctx *testHelper.MockedContext) *service.MockDataManagerService {
-	mockService := new(service.MockDataManagerService)
+func getMockedService(ctx *testHelper.MockedContext) *service.MockDataManagerAPI {
+	mockService := new(service.MockDataManagerAPI)
 
-	provider := new(service.MockServiceProvider)
+	provider := new(service.MockDependenciesProvider)
 	provider.On("GetDataManagerService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()

@@ -14,6 +14,7 @@ Make sure you have theses requirements fulfilled before trying to build the orch
 - [go-bindata](https://github.com/go-bindata/go-bindata): v3.1.0
 - [golang-migrate](https://github.com/golang-migrate/migrate): optional, used to create migration files
 - [skaffold](https://skaffold.dev/): used to run the orchestrator locally
+- [mockery](https://github.com/vektra/mockery#installation): used to generate mocks
 
 #### Build
 

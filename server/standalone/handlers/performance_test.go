@@ -15,7 +15,7 @@ func TestPerformanceServiceServer(t *testing.T) {
 
 func TestRegisterPerformance(t *testing.T) {
 	ctx, p := getContext()
-	ps := new(service.MockPerformanceService)
+	ps := new(service.MockPerformanceAPI)
 
 	server := NewPerformanceServer()
 
@@ -33,7 +33,7 @@ func TestRegisterPerformance(t *testing.T) {
 
 func TestGetPerformance(t *testing.T) {
 	ctx, p := getContext()
-	ps := new(service.MockPerformanceService)
+	ps := new(service.MockPerformanceAPI)
 
 	server := NewPerformanceServer()
 

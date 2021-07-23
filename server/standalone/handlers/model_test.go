@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getContext() (context.Context, *service.MockServiceProvider) {
-	provider := new(service.MockServiceProvider)
+func getContext() (context.Context, *service.MockDependenciesProvider) {
+	provider := new(service.MockDependenciesProvider)
 	ctx := context.TODO()
 	ctxWithProvider := interceptors.WithProvider(ctx, provider)
 	ctxWithIdentity := context.WithValue(ctxWithProvider, common.CtxMSPIDKey, "requester")
@@ -28,7 +28,7 @@ func TestModelServiceServer(t *testing.T) {
 
 func TestRegisterModel(t *testing.T) {
 	ctx, p := getContext()
-	ms := new(service.MockModelService)
+	ms := new(service.MockModelAPI)
 
 	server := NewModelServer()
 
@@ -46,7 +46,7 @@ func TestRegisterModel(t *testing.T) {
 
 func TestGetComputeTaskOutputModels(t *testing.T) {
 	ctx, p := getContext()
-	ms := new(service.MockModelService)
+	ms := new(service.MockModelAPI)
 
 	server := NewModelServer()
 
@@ -64,7 +64,7 @@ func TestGetComputeTaskOutputModels(t *testing.T) {
 
 func TestGetComputeTaskInputModels(t *testing.T) {
 	ctx, p := getContext()
-	ms := new(service.MockModelService)
+	ms := new(service.MockModelAPI)
 
 	server := NewModelServer()
 
@@ -82,7 +82,7 @@ func TestGetComputeTaskInputModels(t *testing.T) {
 
 func TestCanDisableModel(t *testing.T) {
 	ctx, p := getContext()
-	ms := new(service.MockModelService)
+	ms := new(service.MockModelAPI)
 
 	server := NewModelServer()
 
@@ -99,7 +99,7 @@ func TestCanDisableModel(t *testing.T) {
 
 func TestDisableModel(t *testing.T) {
 	ctx, p := getContext()
-	ms := new(service.MockModelService)
+	ms := new(service.MockModelAPI)
 
 	server := NewModelServer()
 

@@ -5,5 +5,7 @@
 # Generated files
 lib/asset/json.go
 lib/asset/*.pb.go
+lib/service/mock_*.go
+lib/event/mock_*.go
+lib/persistence/mocks
 server/standalone/migration/bindata.go
-

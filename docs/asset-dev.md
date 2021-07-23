@@ -46,8 +46,7 @@ Examples of such implementations are available in `lib/asset/sql.go` file, it bo
 Now, implement the DBAL interface for both storage backends: postgres in `server/standalone` module and the ledger in `chaincode/ledger` module.
 You may have to create a new table for postgres, this can be done by adding a migration in `server/standalone/migration` module.
 
-You will also have to implement this new DBAL on the mocked persistence layer in `lib/persistence/testing` module.
-This should be pretty straightforward: add missing methods and pass the arguments to the underlying mock.
+Mocks are automatically generated when running `make test`.
 
 At this point tests should pass, meaning other assets are not impacted by your changes.
 
@@ -76,10 +75,8 @@ This *AssetAPI* interface is used by both the smartcontract and the grpc server.
 
 #### Unit testing
 
-There is a *MockServiceProvider* defined in `lib/service` module, it should be updated to implement *AssetServiceProvider*.
-You can also define a **MockAssetService** for future use by other tests (distributed and standalone gRPC service).
-
-There are also helpers defined in `github.com/owkin/orchestrator/lib/persistence/testing` to mock the persistence layer.
+There is a *MockDependenciesProvider* defined in `lib/service` module.
+There are also generated helpers in `github.com/owkin/orchestrator/lib/persistence/mocks` to mock the persistence layer.
 
 ### 4. Create the standalone gRPC server
 

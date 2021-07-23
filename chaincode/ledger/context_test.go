@@ -3,6 +3,7 @@ package ledger
 import (
 	"testing"
 
+	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,7 +16,7 @@ func TestGetProvider(t *testing.T) {
 func TestAfterTransactionHook(t *testing.T) {
 	ctx := NewContext()
 
-	dispatcher := new(service.MockDispatcher)
+	dispatcher := new(event.MockDispatcher)
 	ctx.dispatcher = dispatcher
 
 	dispatcher.On("Dispatch").Once().Return(nil)

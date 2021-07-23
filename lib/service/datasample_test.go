@@ -6,17 +6,17 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterSingleDataSample(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dm := new(MockDataManagerService)
-	provider := new(MockServiceProvider)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	dm := new(MockDataManagerAPI)
+	provider := new(MockDependenciesProvider)
+	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
@@ -37,7 +37,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
-	dbal.On("AddDataSamples", []*asset.DataSample{storedDataSample}).Return(nil).Once()
+	dbal.On("AddDataSamples", storedDataSample).Return(nil).Once()
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Once()
 
 	e := &asset.Event{
@@ -45,7 +45,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
 		AssetKey:  storedDataSample.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	err := service.RegisterDataSamples([]*asset.NewDataSample{datasample}, "owner")
 
@@ -56,9 +56,9 @@ func TestRegisterSingleDataSample(t *testing.T) {
 }
 
 func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dm := new(MockDataManagerService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	dm := new(MockDataManagerAPI)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -80,10 +80,10 @@ func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
 }
 
 func TestRegisterMultipleDataSamples(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dm := new(MockDataManagerService)
-	provider := new(MockServiceProvider)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	dm := new(MockDataManagerAPI)
+	provider := new(MockDependenciesProvider)
+	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
@@ -123,9 +123,9 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Times(2)
 	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
 	dbal.On("DataSampleExists", "0b4b4466-9a81-4084-9bab-80939b78addd").Return(false, nil).Once()
-	dbal.On("AddDataSamples", []*asset.DataSample{storedDataSample1, storedDataSample2}).Return(nil).Once()
+	dbal.On("AddDataSamples", storedDataSample1, storedDataSample2).Return(nil).Once()
 
-	es.On("RegisterEvents", mock.AnythingOfType("[]*asset.Event")).Once().Return(nil)
+	es.On("RegisterEvents", mock.AnythingOfType("*asset.Event"), mock.AnythingOfType("*asset.Event")).Once().Return(nil)
 
 	err := service.RegisterDataSamples(datasamples, "owner")
 
@@ -136,10 +136,10 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 }
 
 func TestUpdateSingleExistingDataSample(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dm := new(MockDataManagerService)
-	provider := new(MockServiceProvider)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	dm := new(MockDataManagerAPI)
+	provider := new(MockDependenciesProvider)
+	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
@@ -173,7 +173,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
 		AssetKey:  storedDataSample.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
@@ -184,10 +184,10 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 }
 
 func TestUpdateMultipleExistingDataSample(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dm := new(MockDataManagerService)
-	provider := new(MockServiceProvider)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	dm := new(MockDataManagerAPI)
+	provider := new(MockDependenciesProvider)
+	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
@@ -232,7 +232,7 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 	dbal.On("UpdateDataSample", storedDataSample1).Return(nil).Once()
 	dbal.On("UpdateDataSample", storedDataSample2).Return(nil).Once()
 
-	es.On("RegisterEvents", mock.AnythingOfType("[]*asset.Event")).Times(2).Return(nil)
+	es.On("RegisterEvents", mock.AnythingOfType("*asset.Event")).Times(2).Return(nil)
 
 	err := service.UpdateDataSamples(updatedDataSample, "owner")
 
@@ -243,9 +243,9 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 }
 
 func TestUpdateSingleNewDataSample(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	dm := new(MockDataManagerService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	dm := new(MockDataManagerAPI)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -266,8 +266,8 @@ func TestUpdateSingleNewDataSample(t *testing.T) {
 }
 
 func TestQueryDataSamples(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	service := NewDataSampleService(provider)
 
@@ -294,8 +294,8 @@ func TestQueryDataSamples(t *testing.T) {
 }
 
 func TestCheckSameManager(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	service := NewDataSampleService(provider)
 
@@ -324,8 +324,8 @@ func TestCheckSameManager(t *testing.T) {
 }
 
 func TestIsTestOnly(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	service := NewDataSampleService(provider)
 

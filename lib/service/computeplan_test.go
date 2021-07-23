@@ -5,13 +5,13 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetPlan(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetComputePlanDBAL").Return(dbal)
 
@@ -29,9 +29,9 @@ func TestGetPlan(t *testing.T) {
 }
 
 func TestRegisterPlan(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputePlanDBAL").Return(dbal)
@@ -57,7 +57,7 @@ func TestRegisterPlan(t *testing.T) {
 			"creator": "org1",
 		},
 	}
-	es.On("RegisterEvents", []*asset.Event{expectedEvent}).Once().Return(nil)
+	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
 
 	plan, err := service.RegisterPlan(newPlan, "org1")
 	assert.NoError(t, err)
@@ -68,9 +68,9 @@ func TestRegisterPlan(t *testing.T) {
 }
 
 func TestCancelPlan(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	cts := new(MockComputeTaskService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	cts := new(MockComputeTaskAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetComputeTaskService").Return(cts)

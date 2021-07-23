@@ -8,7 +8,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -27,8 +27,8 @@ var newTrainTask = &asset.NewComputeTask{
 }
 
 func TestGetTask(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 
@@ -49,8 +49,8 @@ func TestGetTask(t *testing.T) {
 }
 
 func TestQueryTasks(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 
@@ -72,8 +72,8 @@ func TestQueryTasks(t *testing.T) {
 }
 
 func TestRegisterTaskConflict(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 
@@ -90,14 +90,14 @@ func TestRegisterTaskConflict(t *testing.T) {
 }
 
 func TestRegisterTrainTask(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	es := new(MockEventService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
 
-	dms := new(MockDataManagerService)
-	dss := new(MockDataSampleService)
-	ps := new(MockPermissionService)
-	as := new(MockAlgoService)
+	dms := new(MockDataManagerAPI)
+	dss := new(MockDataSampleAPI)
+	ps := new(MockPermissionAPI)
+	as := new(MockAlgoAPI)
 
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
@@ -171,7 +171,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	}
 
 	// finally store the created task
-	dbal.On("AddComputeTasks", []*asset.ComputeTask{storedTask}).Once().Return(nil)
+	dbal.On("AddComputeTasks", storedTask).Once().Return(nil)
 
 	expectedEvent := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
@@ -181,7 +181,7 @@ func TestRegisterTrainTask(t *testing.T) {
 			"status": storedTask.Status.String(),
 		},
 	}
-	es.On("RegisterEvents", []*asset.Event{expectedEvent}).Once().Return(nil)
+	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
 
 	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "testOwner")
 	assert.NoError(t, err)
@@ -192,8 +192,8 @@ func TestRegisterTrainTask(t *testing.T) {
 }
 
 func TestRegisterFailedTask(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
@@ -256,11 +256,11 @@ func TestSetCompositeData(t *testing.T) {
 		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
 	}
 
-	dms := new(MockDataManagerService)
-	dss := new(MockDataSampleService)
-	ps := new(MockPermissionService)
-	as := new(MockAlgoService)
-	provider := new(MockServiceProvider)
+	dms := new(MockDataManagerAPI)
+	dss := new(MockDataSampleAPI)
+	ps := new(MockPermissionAPI)
+	as := new(MockAlgoAPI)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
@@ -306,9 +306,9 @@ func TestSetCompositeData(t *testing.T) {
 }
 
 func TestSetAggregateData(t *testing.T) {
-	ns := new(MockNodeService)
-	as := new(MockAlgoService)
-	provider := new(MockServiceProvider)
+	ns := new(MockNodeAPI)
+	as := new(MockAlgoAPI)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetNodeService").Return(ns)
 	provider.On("GetAlgoService").Return(as)
 	// Use the real permission service
@@ -387,9 +387,9 @@ func TestSetTestData(t *testing.T) {
 			},
 		}
 
-		os := new(MockObjectiveService)
-		dms := new(MockDataManagerService)
-		provider := new(MockServiceProvider)
+		os := new(MockObjectiveAPI)
+		dms := new(MockDataManagerAPI)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetObjectiveService").Return(os)
 		provider.On("GetDataManagerService").Return(dms)
 
@@ -431,10 +431,10 @@ func TestSetTestData(t *testing.T) {
 			},
 		}
 
-		os := new(MockObjectiveService)
-		dms := new(MockDataManagerService)
-		dss := new(MockDataSampleService)
-		provider := new(MockServiceProvider)
+		os := new(MockObjectiveAPI)
+		dms := new(MockDataManagerAPI)
+		dss := new(MockDataSampleAPI)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetObjectiveService").Return(os)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
@@ -480,10 +480,10 @@ func TestSetTestData(t *testing.T) {
 			},
 		}
 
-		os := new(MockObjectiveService)
-		dms := new(MockDataManagerService)
-		dss := new(MockDataSampleService)
-		provider := new(MockServiceProvider)
+		os := new(MockObjectiveAPI)
+		dms := new(MockDataManagerAPI)
+		dss := new(MockDataSampleAPI)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetObjectiveService").Return(os)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
@@ -830,7 +830,7 @@ func TestCheckCanProcessParent(t *testing.T) {
 			true,
 		},
 	}
-	provider := new(MockServiceProvider)
+	provider := new(MockDependenciesProvider)
 	// Use the real permission service
 	provider.On("GetPermissionService").Return(NewPermissionService(provider))
 	service := NewComputeTaskService(provider)
@@ -868,8 +868,8 @@ func TestCanDisableModels(t *testing.T) {
 			Worker: "woker",
 		}
 
-		dbal := new(persistenceHelper.MockDBAL)
-		provider := new(MockServiceProvider)
+		dbal := new(persistenceHelper.DBAL)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -887,8 +887,8 @@ func TestCanDisableModels(t *testing.T) {
 			Worker: "worker",
 		}
 
-		dbal := new(persistenceHelper.MockDBAL)
-		provider := new(MockServiceProvider)
+		dbal := new(persistenceHelper.DBAL)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -907,10 +907,10 @@ func TestCanDisableModels(t *testing.T) {
 			Worker:         "worker",
 		}
 
-		dbal := new(persistenceHelper.MockDBAL)
-		provider := new(MockServiceProvider)
+		dbal := new(persistenceHelper.DBAL)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetComputeTaskDBAL").Return(dbal)
-		cps := new(MockComputePlanService)
+		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -934,10 +934,10 @@ func TestCanDisableModels(t *testing.T) {
 			Worker:         "worker",
 		}
 
-		dbal := new(persistenceHelper.MockDBAL)
-		provider := new(MockServiceProvider)
+		dbal := new(persistenceHelper.DBAL)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetComputeTaskDBAL").Return(dbal)
-		cps := new(MockComputePlanService)
+		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -961,10 +961,10 @@ func TestCanDisableModels(t *testing.T) {
 			Worker:         "worker",
 		}
 
-		dbal := new(persistenceHelper.MockDBAL)
-		provider := new(MockServiceProvider)
+		dbal := new(persistenceHelper.DBAL)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetComputeTaskDBAL").Return(dbal)
-		cps := new(MockComputePlanService)
+		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -990,10 +990,10 @@ func TestCanDisableModels(t *testing.T) {
 			Worker:         "worker",
 		}
 
-		dbal := new(persistenceHelper.MockDBAL)
-		provider := new(MockServiceProvider)
+		dbal := new(persistenceHelper.DBAL)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetComputeTaskDBAL").Return(dbal)
-		cps := new(MockComputePlanService)
+		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -1020,10 +1020,10 @@ func TestCanDisableModels(t *testing.T) {
 			Worker:         "worker",
 		}
 
-		dbal := new(persistenceHelper.MockDBAL)
-		provider := new(MockServiceProvider)
+		dbal := new(persistenceHelper.DBAL)
+		provider := new(MockDependenciesProvider)
 		provider.On("GetComputeTaskDBAL").Return(dbal)
-		cps := new(MockComputePlanService)
+		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -1045,7 +1045,7 @@ func TestCanDisableModels(t *testing.T) {
 }
 
 func TestRegisterTasksEmptyList(t *testing.T) {
-	provider := new(MockServiceProvider)
+	provider := new(MockDependenciesProvider)
 
 	service := NewComputeTaskService(provider)
 
@@ -1054,8 +1054,8 @@ func TestRegisterTasksEmptyList(t *testing.T) {
 }
 
 func TestGetRegisteredTask(t *testing.T) {
-	provider := new(MockServiceProvider)
-	dbal := new(persistenceHelper.MockDBAL)
+	provider := new(MockDependenciesProvider)
+	dbal := new(persistenceHelper.DBAL)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 
 	service := NewComputeTaskService(provider)

@@ -105,3 +105,18 @@ type DBAL interface {
 	PerformanceDBAL
 	EventDBAL
 }
+
+// DBALProvider exposes all available DBAL.
+type DBALProvider interface {
+	NodeDBALProvider
+	ObjectiveDBALProvider
+	DataSampleDBALProvider
+	AlgoDBALProvider
+	DataManagerDBALProvider
+	DatasetDBALProvider
+	ComputeTaskDBALProvider
+	ModelDBALProvider
+	ComputePlanDBALProvider
+	PerformanceDBALProvider
+	EventDBALProvider
+}

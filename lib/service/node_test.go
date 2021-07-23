@@ -6,14 +6,14 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterNode(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
+	es := new(MockEventAPI)
 
 	provider.On("GetNodeDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -23,7 +23,7 @@ func TestRegisterNode(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_NODE,
 		AssetKey:  "uuid1",
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	expected := asset.Node{
 		Id: "uuid1",
@@ -40,8 +40,8 @@ func TestRegisterNode(t *testing.T) {
 }
 
 func TestRegisterExistingNode(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetNodeDBAL").Return(dbal)
 

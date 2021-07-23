@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getMockedService(ctx *testHelper.MockedContext) *service.MockDataSampleService {
-	mockService := new(service.MockDataSampleService)
+func getMockedService(ctx *testHelper.MockedContext) *service.MockDataSampleAPI {
+	mockService := new(service.MockDataSampleAPI)
 
-	provider := new(service.MockServiceProvider)
+	provider := new(service.MockDependenciesProvider)
 	provider.On("GetDataSampleService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()

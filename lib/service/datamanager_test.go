@@ -6,17 +6,17 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/testing"
+	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterDataManager(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	obj := new(MockObjectiveService)
-	provider := new(MockServiceProvider)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	obj := new(MockObjectiveAPI)
+	provider := new(MockDependenciesProvider)
+	es := new(MockEventAPI)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
@@ -70,7 +70,7 @@ func TestRegisterDataManager(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  storedDataManager.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	dm, err := service.RegisterDataManager(newDataManager, "owner")
 
@@ -81,10 +81,10 @@ func TestRegisterDataManager(t *testing.T) {
 }
 
 func TestRegisterDataManagerEmptyObjective(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	provider := new(MockServiceProvider)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	provider := new(MockDependenciesProvider)
+	es := new(MockEventAPI)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetDataManagerDBAL").Return(dbal)
@@ -137,7 +137,7 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  storedDataManager.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	dm, err := service.RegisterDataManager(newDataManager, "owner")
 
@@ -148,10 +148,10 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 }
 
 func TestRegisterDataManagerUnknownObjective(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	obj := new(MockObjectiveService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	obj := new(MockObjectiveAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
@@ -191,11 +191,11 @@ func TestRegisterDataManagerUnknownObjective(t *testing.T) {
 }
 
 func TestUpdateDataManager(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	obj := new(MockObjectiveService)
-	provider := new(MockServiceProvider)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	obj := new(MockObjectiveAPI)
+	provider := new(MockDependenciesProvider)
+	es := new(MockEventAPI)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
@@ -253,7 +253,7 @@ func TestUpdateDataManager(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  updatedDataManager.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "owner")
 
@@ -264,11 +264,11 @@ func TestUpdateDataManager(t *testing.T) {
 }
 
 func TestUpdateDataManagerOtherOwner(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	provider := new(MockServiceProvider)
-	obj := new(MockObjectiveService)
-	es := new(MockEventService)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	provider := new(MockDependenciesProvider)
+	obj := new(MockObjectiveAPI)
+	es := new(MockEventAPI)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
@@ -326,7 +326,7 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  updatedDataManager.Key,
 	}
-	es.On("RegisterEvents", []*asset.Event{e}).Once().Return(nil)
+	es.On("RegisterEvents", e).Once().Return(nil)
 
 	err := service.UpdateDataManager(dataManagerUpdate, "other_owner")
 
@@ -337,9 +337,9 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 }
 
 func TestUpdateDataManagerObjectiveKeyAlreadySet(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	provider := new(MockDependenciesProvider)
 
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
@@ -384,10 +384,10 @@ func TestUpdateDataManagerObjectiveKeyAlreadySet(t *testing.T) {
 }
 
 func TestUpdateDataManagerUnknownObjective(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	mps := new(MockPermissionService)
-	provider := new(MockServiceProvider)
-	obj := new(MockObjectiveService)
+	dbal := new(persistenceHelper.DBAL)
+	mps := new(MockPermissionAPI)
+	provider := new(MockDependenciesProvider)
+	obj := new(MockObjectiveAPI)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
@@ -435,8 +435,8 @@ func TestUpdateDataManagerUnknownObjective(t *testing.T) {
 }
 
 func TestGetDataManager(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)
 
@@ -454,8 +454,8 @@ func TestGetDataManager(t *testing.T) {
 }
 
 func TestQueryDataManagers(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)
 
@@ -482,8 +482,8 @@ func TestQueryDataManagers(t *testing.T) {
 }
 
 func TestIsOwner(t *testing.T) {
-	dbal := new(persistenceHelper.MockDBAL)
-	provider := new(MockServiceProvider)
+	dbal := new(persistenceHelper.DBAL)
+	provider := new(MockDependenciesProvider)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)
 
