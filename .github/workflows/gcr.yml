@@ -46,6 +46,7 @@ jobs:
     - name: Build and Push
       uses: docker/build-push-action@v2
       with:
+        push: true
         file: ./docker/${{ matrix.docker-image }}/Dockerfile
         context: .
         tags: ${{ steps.docker-metadata.outputs.tags }}
