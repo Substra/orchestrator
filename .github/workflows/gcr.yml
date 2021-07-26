@@ -16,6 +16,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Set env variables
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/master" ]; then
+          echo "LATEST=true" >> $GITHUB_ENV
+          echo "LATEST is set to true"
+        else
+          echo "LATEST=false" >> $GITHUB_ENV
+          echo "LATEST is set to false"
+        fi
+
     - name: Set up gcloud Cloud SDK environment
       uses: google-github-actions/setup-gcloud@v0.2.1
       with:
@@ -25,10 +35,18 @@ jobs:
     - name: Configure docker for GCP
       run: gcloud auth configure-docker
 
-    - name: Build docker images
-      run: |
-        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/orchestrator-${{matrix.docker-image}}:${GITHUB_REF#refs/*/} -f ./docker/${{matrix.docker-image}}/Dockerfile .
+    - name: Docker metadata
+      id: docker-metadata
+      uses: docker/metadata-action@v3
+      with:
+        images: 'gcr.io/${{ secrets.GCP_PROJECT_ID }}/orchestrator-${{matrix.docker-image}}'
+        flavor: |
+          latest=${{ env.LATEST }}
 
-    - name: Push to Google Container Registry
-      run: |
-        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/orchestrator-${{matrix.docker-image}}:${GITHUB_REF#refs/*/}
+    - name: Build and Push
+      uses: docker/build-push-action@v2
+      with:
+        file: ./docker/${{ matrix.docker-image }}/Dockerfile
+        context: .
+        tags: ${{ steps.docker-metadata.outputs.tags }}
+        labels: ${{ steps.docker-metadata.outputs.labels }}
