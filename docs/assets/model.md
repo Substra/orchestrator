@@ -19,12 +19,11 @@ A model has a category, and it can only be registered for a compatible task (y):
 
 | model category ↓ / task category → | Train | Test | Aggregate | Composite |
 |------------------------------------|-------|------|-----------|-----------|
-| Simple                             | y     | n    | y         | n         |
+| Simple                             | y     | n    | y         | y         |
 | Head                               | n     | n    | n         | y         |
-| Trunk                              | n     | n    | n         | y         |
 
 As stated before, a task may produce several models, but can only have one of each category.
-ie: composite task can only have one *head* AND one *trunk*.
+ie: composite task can only have one *head* AND one *simple*.
 
 ```suggestion
 ## Disabling intermediary models

@@ -10,7 +10,6 @@ enum ModelCategory {
   MODEL_UNKNOWN = 0;
   MODEL_SIMPLE = 1;
   MODEL_HEAD = 2;
-  MODEL_TRUNK = 3;
 }
 
 message Model {

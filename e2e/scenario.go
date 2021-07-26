@@ -79,6 +79,10 @@ var testScenarios = map[string]scenario{
 		testSmallCp,
 		[]string{"short", "plan"},
 	},
+	"AggregateComposite": {
+		testAggregateComposite,
+		[]string{"short", "plan", "aggregate", "composite"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -93,7 +97,7 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(defaultParent))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(defaultParent...))
 	appClient.StartTask(client.DefaultTaskRef)
 }
 
@@ -133,7 +137,7 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent...))
 	}
 
 	appClient.StartTask(client.DefaultTaskRef)
@@ -166,7 +170,7 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent...))
 	}
 
 	appClient.StartTask(client.DefaultTaskRef)
@@ -199,7 +203,7 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent...))
 	}
 
 	appClient.StartTask(client.DefaultTaskRef)
@@ -231,8 +235,8 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithDeleteIntermediaryModels(true))
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithParentsRef(defaultParent))
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child2").WithParentsRef([]string{"child1"}))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithParentsRef(defaultParent...))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child2").WithParentsRef("child1"))
 
 	// First task done
 	appClient.StartTask(client.DefaultTaskRef)
@@ -326,18 +330,18 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	)
 	// step 2
 	appClient.RegisterTasks(
-		client.DefaultAggregateTaskOptions().WithKeyRef("aggC2").WithParentsRef([]string{"compA1", "compB1"}).WithAlgoRef("algoAgg"),
+		client.DefaultAggregateTaskOptions().WithKeyRef("aggC2").WithParentsRef("compA1", "compB1").WithAlgoRef("algoAgg"),
 	)
 	// step 3
 	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("compA3").WithParentsRef([]string{"compA1", "aggC2"}).WithAlgoRef("algoComp"),
+		client.DefaultCompositeTaskOptions().WithKeyRef("compA3").WithParentsRef("compA1", "aggC2").WithAlgoRef("algoComp"),
 	)
 	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("compB3").WithParentsRef([]string{"compB1", "aggC2"}).WithAlgoRef("algoComp"),
+		client.DefaultCompositeTaskOptions().WithKeyRef("compB3").WithParentsRef("compB1", "aggC2").WithAlgoRef("algoComp"),
 	)
 	// step 4
 	appClient.RegisterTasks(
-		client.DefaultAggregateTaskOptions().WithKeyRef("aggC4").WithParentsRef([]string{"compA3", "compB3"}).WithAlgoRef("algoAgg"),
+		client.DefaultAggregateTaskOptions().WithKeyRef("aggC4").WithParentsRef("compA3", "compB3").WithAlgoRef("algoAgg"),
 	)
 
 	lastAggregate := appClient.GetComputeTask("aggC4")
@@ -350,9 +354,9 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.StartTask("compB1")
 
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA1").WithKeyRef("modelA1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA1").WithKeyRef("modelA1T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA1").WithKeyRef("modelA1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 
 	// Start step 2
 	appClient.StartTask("aggC2")
@@ -363,9 +367,9 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.StartTask("compB3")
 
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA3").WithKeyRef("modelA3H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA3").WithKeyRef("modelA3T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA3").WithKeyRef("modelA3T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 
 	// Start step 4
 	appClient.StartTask("aggC4")
@@ -409,7 +413,7 @@ func testRegisterPerformance(conn *grpc.ClientConn) {
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 	// to create a test task
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent...))
 	appClient.StartTask("testTask")
 	appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask"))
 
@@ -437,16 +441,16 @@ func testCompositeParentChild(conn *grpc.ClientConn) {
 		client.DefaultCompositeTaskOptions().WithKeyRef("comp1").WithAlgoRef("algoComp"),
 	)
 	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("comp2").WithAlgoRef("algoComp").WithParentsRef([]string{"comp1", "comp1"}),
+		client.DefaultCompositeTaskOptions().WithKeyRef("comp2").WithAlgoRef("algoComp").WithParentsRef("comp1", "comp1"),
 	)
 
 	appClient.StartTask("comp1")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 
 	appClient.StartTask("comp2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2T").WithCategory(asset.ModelCategory_MODEL_TRUNK))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 }
 
 func testConcurrency(conn *grpc.ClientConn) {
@@ -475,11 +479,11 @@ func testConcurrency(conn *grpc.ClientConn) {
 	for i := 0; i < 5; i++ {
 		wg.Add(2)
 		go func(i int) {
-			client1.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task1%d", i)).WithParentsRef([]string{"parent1"}))
+			client1.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task1%d", i)).WithParentsRef("parent1"))
 			wg.Done()
 		}(i)
 		go func(i int) {
-			client2.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task2%d", i)).WithParentsRef([]string{"parent2"}))
+			client2.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task2%d", i)).WithParentsRef("parent2"))
 			wg.Done()
 		}(i)
 	}
@@ -503,10 +507,10 @@ func testLeaderBoard(conn *grpc.ClientConn) {
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 	// to create a test task
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent...))
 	appClient.StartTask("testTask")
 	appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask2").WithParentsRef(defaultParent))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask2").WithParentsRef(defaultParent...))
 	appClient.StartTask("testTask2")
 	appClient.RegisterPerformance(&client.PerformanceOptions{
 		KeyRef:           "testTask2",
@@ -537,7 +541,7 @@ func testLargeComputePlan(conn *grpc.ClientConn) {
 
 	start := time.Now()
 	for i := 0; i < nbTasks; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent...))
 	}
 	log.WithField("registrationDuration", time.Since(start)).WithField("nbTasks", nbTasks).Info("registration done")
 
@@ -573,7 +577,7 @@ func testBatchLargeComputePlan(conn *grpc.ClientConn) {
 		newTasks := make([]client.Taskable, 0, batchSize)
 		for c := 0; c < batchSize && i < nbTasks; c++ {
 			i++
-			newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent))
+			newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent...))
 		}
 		appClient.RegisterTasks(newTasks...)
 		log.WithField("batchDuration", time.Since(batchStart)).WithField("nbTasks", i).Info("batch done")
@@ -606,7 +610,48 @@ func testSmallCp(conn *grpc.ClientConn) {
 	appClient.RegisterTasks(
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train2"),
-		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef([]string{"train1", "train2"}),
-		client.DefaultTestTaskOptions().WithParentsRef([]string{"train3"}),
+		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef("train1", "train2"),
+		client.DefaultTestTaskOptions().WithParentsRef("train3"),
 	)
+}
+
+func testAggregateComposite(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.EnsureNode()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_AGGREGATE).WithKeyRef("aggAlgo"))
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("objSample"))
+
+	appClient.RegisterTasks(
+		client.DefaultCompositeTaskOptions().WithKeyRef("c1"),
+		client.DefaultCompositeTaskOptions().WithKeyRef("c2"),
+		client.DefaultAggregateTaskOptions().WithKeyRef("a1").WithAlgoRef("aggAlgo").WithParentsRef("c1", "c2"),
+		client.DefaultCompositeTaskOptions().WithKeyRef("c3").WithParentsRef("a1", "c1"),
+	)
+
+	appClient.StartTask("c1")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+
+	appClient.StartTask("c2")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2H").WithCategory(asset.ModelCategory_MODEL_HEAD))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+
+	appClient.StartTask("a1")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("a1").WithKeyRef("mAgg").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+
+	appClient.StartTask("c3")
+
+	inputs := appClient.GetInputModels("c3")
+	if len(inputs) != 2 {
+		log.Fatal("composite should have 2 input models")
+	}
 }

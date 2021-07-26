@@ -111,7 +111,7 @@ func (o *TestTaskOptions) WithObjectiveRef(ref string) *TestTaskOptions {
 	return o
 }
 
-func (o *TestTaskOptions) WithParentsRef(p []string) *TestTaskOptions {
+func (o *TestTaskOptions) WithParentsRef(p ...string) *TestTaskOptions {
 	o.ParentsRef = p
 	return o
 }
@@ -151,7 +151,7 @@ func (o *TrainTaskOptions) WithKeyRef(ref string) *TrainTaskOptions {
 	return o
 }
 
-func (o *TrainTaskOptions) WithParentsRef(p []string) *TrainTaskOptions {
+func (o *TrainTaskOptions) WithParentsRef(p ...string) *TrainTaskOptions {
 	o.ParentsRef = p
 	return o
 }
@@ -198,7 +198,7 @@ func (o *CompositeTaskOptions) WithKeyRef(ref string) *CompositeTaskOptions {
 	return o
 }
 
-func (o *CompositeTaskOptions) WithParentsRef(p []string) *CompositeTaskOptions {
+func (o *CompositeTaskOptions) WithParentsRef(p ...string) *CompositeTaskOptions {
 	o.ParentsRef = p
 	return o
 }
@@ -244,7 +244,7 @@ func (o *AggregateTaskOptions) WithKeyRef(ref string) *AggregateTaskOptions {
 	return o
 }
 
-func (o *AggregateTaskOptions) WithParentsRef(p []string) *AggregateTaskOptions {
+func (o *AggregateTaskOptions) WithParentsRef(p ...string) *AggregateTaskOptions {
 	o.ParentsRef = p
 	return o
 }

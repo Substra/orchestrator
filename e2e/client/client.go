@@ -348,3 +348,15 @@ func (c *TestClient) GetLeaderboard(key string) *asset.Leaderboard {
 	}
 	return resp
 }
+
+func (c *TestClient) GetInputModels(taskRef string) []*asset.Model {
+	param := &asset.GetComputeTaskModelsParam{
+		ComputeTaskKey: c.ks.GetKey(taskRef),
+	}
+	log.WithField("task key", c.ks.GetKey(taskRef)).Debug("GetComputeTaskInputModels")
+	resp, err := c.modelService.GetComputeTaskInputModels(c.ctx, param)
+	if err != nil {
+		log.WithError(err).Fatal("Task input model retrieval failed")
+	}
+	return resp.Models
+}

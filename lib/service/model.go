@@ -71,13 +71,28 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 			return nil, err
 		}
 
-		if task.Category == asset.ComputeTaskCategory_TASK_AGGREGATE {
+		switch task.Category {
+		case asset.ComputeTaskCategory_TASK_AGGREGATE:
 			for _, model := range models {
-				if model.Category != asset.ModelCategory_MODEL_HEAD {
+				if model.Category == asset.ModelCategory_MODEL_SIMPLE {
 					inputs = append(inputs, model)
 				}
 			}
-		} else {
+		case asset.ComputeTaskCategory_TASK_COMPOSITE:
+			hasAggregateParent := len(task.ParentTaskKeys) == 2
+			if len(models) == 2 {
+				// Only composite tasks produce 2 models
+				for _, model := range models {
+					if model.Category == asset.ModelCategory_MODEL_HEAD || (model.Category == asset.ModelCategory_MODEL_SIMPLE && !hasAggregateParent) {
+						inputs = append(inputs, model)
+					}
+				}
+			}
+			if len(models) == 1 {
+				// This is the model of the aggregate task
+				inputs = append(inputs, models...)
+			}
+		default:
 			inputs = append(inputs, models...)
 		}
 	}
@@ -103,7 +118,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 	}
 
 	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
-		return nil, fmt.Errorf("%w: cannot register model for taks with status \"%s\"", errors.ErrBadRequest, task.Status.String())
+		return nil, fmt.Errorf("%w: cannot register model for task with status \"%s\"", errors.ErrBadRequest, task.Status.String())
 	}
 
 	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(task.Key)
@@ -117,7 +132,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 	var model *asset.Model
 
 	switch task.Category {
-	case asset.ComputeTaskCategory_TASK_AGGREGATE, asset.ComputeTaskCategory_TASK_TRAIN:
+	case asset.ComputeTaskCategory_TASK_TRAIN, asset.ComputeTaskCategory_TASK_AGGREGATE:
 		model, err = s.registerSimpleModel(newModel, requester, task)
 		if err != nil {
 			return nil, err
@@ -196,7 +211,7 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 	if task.Category != asset.ComputeTaskCategory_TASK_COMPOSITE {
 		return nil, fmt.Errorf("%w: cannot register composite model for \"%s\" task", errors.ErrBadRequest, task.Category.String())
 	}
-	if !(newModel.Category == asset.ModelCategory_MODEL_HEAD || newModel.Category == asset.ModelCategory_MODEL_TRUNK) {
+	if !(newModel.Category == asset.ModelCategory_MODEL_HEAD || newModel.Category == asset.ModelCategory_MODEL_SIMPLE) {
 		return nil, fmt.Errorf("%w: cannot register non-composite model", errors.ErrBadRequest)
 	}
 
@@ -205,7 +220,7 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 	switch newModel.Category {
 	case asset.ModelCategory_MODEL_HEAD:
 		permissions = task.GetComposite().HeadPermissions
-	case asset.ModelCategory_MODEL_TRUNK:
+	case asset.ModelCategory_MODEL_SIMPLE:
 		permissions = task.GetComposite().TrunkPermissions
 	default:
 		return nil, fmt.Errorf("%w: cannot set permissions for \"%s\" model", errors.ErrBadRequest, newModel.Category.String())
@@ -275,7 +290,6 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 type modelCount struct {
 	simple uint
 	head   uint
-	trunk  uint
 }
 
 func countModels(models []*asset.Model) modelCount {
@@ -287,8 +301,6 @@ func countModels(models []*asset.Model) modelCount {
 			count.simple++
 		case asset.ModelCategory_MODEL_HEAD:
 			count.head++
-		case asset.ModelCategory_MODEL_TRUNK:
-			count.trunk++
 		}
 	}
 
@@ -298,14 +310,15 @@ func countModels(models []*asset.Model) modelCount {
 // areAllOutputsRegistered is based on the cardinality of existingModels to return whether all
 // expected outputs are registered or not.
 func areAllOutputsRegistered(task *asset.ComputeTask, existingModels []*asset.Model) bool {
-	// TOOD: unit test
 	count := countModels(existingModels)
 
 	switch task.Category {
-	case asset.ComputeTaskCategory_TASK_AGGREGATE, asset.ComputeTaskCategory_TASK_TRAIN:
+	case asset.ComputeTaskCategory_TASK_TRAIN:
 		return count.simple == 1
 	case asset.ComputeTaskCategory_TASK_COMPOSITE:
-		return count.head == 1 && count.trunk == 1
+		return count.head == 1 && count.simple == 1
+	case asset.ComputeTaskCategory_TASK_AGGREGATE:
+		return count.simple == 1
 	default:
 		log.WithField("taskKey", task.Key).WithField("category", task.Category).Warn("unexpected output model check")
 		return false
@@ -314,7 +327,6 @@ func areAllOutputsRegistered(task *asset.ComputeTask, existingModels []*asset.Mo
 
 // checkDuplicateModel returns an error if a model of the same category already exist
 func checkDuplicateModel(existingModels []*asset.Model, model *asset.NewModel) error {
-	// TODO: unit test
 	for _, m := range existingModels {
 		if m.Category == model.Category {
 			return fmt.Errorf("%w: task already has a %s model", errors.ErrConflict, model.Category.String())

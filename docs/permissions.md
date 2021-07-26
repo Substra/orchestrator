@@ -33,10 +33,10 @@ These are generaly computed during registration, but follow specific rules depen
 **Train Task**: model permissions are the [intersection](#intersection) of algo and datamanager permissions
 
 **Composite Task**: this one is more complex since there are two output models.
-The *Trunk* model receives its permissions from the task input (ie: set by the creator of the task), and is owned by the datamanager's owner.
+The *Simple* model receives its permissions from the task input (ie: set by the creator of the task), and is owned by the datamanager's owner.
 The *Head* model is restricted to the datamanager's owner only.
 
-**Aggregate Task**: permissions of the output model is the [union](#union) of the permissions of the parent models (only trunk is considered for composite parents).
+**Aggregate Task**: permissions of the output model is the [union](#union) of the permissions of the parent models (only *Simple* model is considered for composite parents).
 
 
 ## Permissions operations

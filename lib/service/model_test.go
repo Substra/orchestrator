@@ -114,7 +114,7 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
-func TestRegisterSimpleModel(t *testing.T) {
+func TestRegisterTrainModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
@@ -185,6 +185,85 @@ func TestRegisterSimpleModel(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
+
+	// Model registration will initiate a task transition to done
+	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
+
+	_, err := service.RegisterModel(model, "test")
+	assert.NoError(t, err)
+
+	dbal.AssertExpectations(t)
+	cts.AssertExpectations(t)
+	provider.AssertExpectations(t)
+	es.AssertExpectations(t)
+}
+
+func TestRegisterAggregateModel(t *testing.T) {
+	dbal := new(persistenceHelper.DBAL)
+	cts := new(MockComputeTaskAPI)
+	es := new(MockEventAPI)
+	provider := new(MockDependenciesProvider)
+	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetEventService").Return(es)
+	service := NewModelService(provider)
+
+	task := &asset.ComputeTask{
+		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status:   asset.ComputeTaskStatus_STATUS_DOING,
+		Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
+		Worker:   "test",
+		Data: &asset.ComputeTask_Aggregate{
+			Aggregate: &asset.AggregateTrainTaskData{
+				ModelPermissions: &asset.Permissions{
+					Process: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{"org1", "org2"},
+					},
+					Download: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+				},
+			},
+		},
+	}
+
+	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
+
+	// No models registered
+	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
+
+	model := &asset.NewModel{
+		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:       asset.ModelCategory_MODEL_SIMPLE,
+		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Address: &asset.Addressable{
+			StorageAddress: "https://somewhere",
+			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		},
+	}
+
+	storedModel := &asset.Model{
+		Key:            model.Key,
+		Category:       model.Category,
+		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Address:        model.Address,
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{"org1", "org2"},
+			},
+			Download: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+		},
+		Owner: "test",
+	}
+	dbal.On("AddModel", storedModel).Once().Return(nil)
+
+	es.On("RegisterEvents", mock.AnythingOfType("*asset.Event")).Once().Return(nil)
 
 	// Model registration will initiate a task transition to done
 	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
@@ -284,7 +363,7 @@ func TestRegisterHeadModel(t *testing.T) {
 
 	// Trunk already known
 	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{
-		{Category: asset.ModelCategory_MODEL_TRUNK},
+		{Category: asset.ModelCategory_MODEL_SIMPLE},
 	}, nil)
 
 	model := &asset.NewModel{
@@ -347,7 +426,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 		&asset.ComputeTask{
 			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
+			Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
 			Worker:   "test",
 		},
 		nil,
@@ -356,7 +435,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_SIMPLE, // cannot register a SIMPLE model on composite task
+		Category:       asset.ModelCategory_MODEL_HEAD, // cannot register a HEAD model on composite task
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
@@ -439,6 +518,70 @@ func TestGetInputModels(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, []*asset.Model{model1, model2}, models)
+
+	cts.AssertExpectations(t)
+	dbal.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
+func TestGetCompositeInputModels(t *testing.T) {
+	dbal := new(persistenceHelper.DBAL)
+	cts := new(MockComputeTaskAPI)
+	provider := new(MockDependenciesProvider)
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetComputeTaskService").Return(cts)
+	service := NewModelService(provider)
+
+	cts.On("GetTask", "uuid").Once().Return(
+		&asset.ComputeTask{
+			Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+			ParentTaskKeys: []string{"composite"},
+		},
+		nil,
+	)
+
+	mc1 := &asset.Model{Key: "c1", Category: asset.ModelCategory_MODEL_HEAD}
+	mc2 := &asset.Model{Key: "c2", Category: asset.ModelCategory_MODEL_SIMPLE}
+
+	dbal.On("GetComputeTaskOutputModels", "composite").Once().Return([]*asset.Model{mc1, mc2}, nil)
+
+	models, err := service.GetComputeTaskInputModels("uuid")
+	assert.NoError(t, err)
+
+	assert.Equal(t, []*asset.Model{mc1, mc2}, models)
+
+	cts.AssertExpectations(t)
+	dbal.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
+func TestGetAggregateChildInputModels(t *testing.T) {
+	dbal := new(persistenceHelper.DBAL)
+	cts := new(MockComputeTaskAPI)
+	provider := new(MockDependenciesProvider)
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetComputeTaskService").Return(cts)
+	service := NewModelService(provider)
+
+	cts.On("GetTask", "uuid").Once().Return(
+		&asset.ComputeTask{
+			Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+			ParentTaskKeys: []string{"composite", "aggregate"},
+		},
+		nil,
+	)
+
+	mc1 := &asset.Model{Key: "c1", Category: asset.ModelCategory_MODEL_HEAD}
+	mc2 := &asset.Model{Key: "c2", Category: asset.ModelCategory_MODEL_SIMPLE}
+	ma := &asset.Model{Key: "aggregate", Category: asset.ModelCategory_MODEL_SIMPLE}
+
+	dbal.On("GetComputeTaskOutputModels", "composite").Once().Return([]*asset.Model{mc1, mc2}, nil)
+	dbal.On("GetComputeTaskOutputModels", "aggregate").Once().Return([]*asset.Model{ma}, nil)
+
+	models, err := service.GetComputeTaskInputModels("uuid")
+	assert.NoError(t, err)
+
+	assert.Equal(t, []*asset.Model{mc1, ma}, models)
 
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
@@ -563,14 +706,14 @@ func TestAreAllOutputsRegistered(t *testing.T) {
 			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}},
 			outcome: false,
 		},
-		"composite with trunk": {
+		"composite with simple": {
 			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_COMPOSITE},
-			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_TRUNK}},
+			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}},
 			outcome: false,
 		},
-		"composite with head & trunk": {
+		"composite with head & simple": {
 			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_COMPOSITE},
-			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_TRUNK}, {Category: asset.ModelCategory_MODEL_HEAD}},
+			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}, {Category: asset.ModelCategory_MODEL_HEAD}},
 			outcome: true,
 		},
 	}
@@ -605,12 +748,12 @@ func TestCheckDuplicateModel(t *testing.T) {
 		},
 		"head and trunk": {
 			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}},
-			&asset.NewModel{Category: asset.ModelCategory_MODEL_TRUNK},
+			&asset.NewModel{Category: asset.ModelCategory_MODEL_SIMPLE},
 			false,
 		},
 		"complete composite": {
-			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}, {Category: asset.ModelCategory_MODEL_TRUNK}},
-			&asset.NewModel{Category: asset.ModelCategory_MODEL_TRUNK},
+			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}, {Category: asset.ModelCategory_MODEL_SIMPLE}},
+			&asset.NewModel{Category: asset.ModelCategory_MODEL_SIMPLE},
 			true,
 		},
 	}
