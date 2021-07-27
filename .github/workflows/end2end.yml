@@ -33,7 +33,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.15.x
+          go-version: 1.16.x
       - name: Cache Go modules
         uses: actions/cache@v2
         with:
@@ -44,12 +44,12 @@ jobs:
           curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip
           unzip protoc-3.14.0-linux-x86_64.zip -d $HOME/.local
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-          go install google.golang.org/protobuf/cmd/protoc-gen-go
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
-      - name: Install go-bindata
+      - name: Install go tools
         run: |
           cd /tmp
-          go get -u github.com/go-bindata/go-bindata/...
+          go get google.golang.org/protobuf/cmd/protoc-gen-go
+          go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
+          go get github.com/go-bindata/go-bindata/...
       - name: build orchestrator
         run: make orchestrator
       - name: build end2end tests

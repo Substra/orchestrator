@@ -8,7 +8,7 @@ This repository contains the logic to orchestrate Substra assets.
 
 Make sure you have theses requirements fulfilled before trying to build the orchestrator:
 
-- [go](https://golang.org/): v1.15.5
+- [go](https://golang.org/): v1.16
 - [protoc](https://github.com/protocolbuffers/protobuf): v3.14.0
 - [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.25.0
 - [go-bindata](https://github.com/go-bindata/go-bindata): v3.1.0
