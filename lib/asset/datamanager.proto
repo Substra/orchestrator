@@ -7,52 +7,52 @@ import "common.proto";
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
 message DataManager {
-    string key = 1;
-    string name = 2;
-    string owner = 3;
-    Permissions permissions = 4;
-    string objective_key = 5; // mutable
-    Addressable description = 6;
-    Addressable opener = 7;
-    string type = 8;
-    map <string, string> metadata = 16;
+  string key = 1;
+  string name = 2;
+  string owner = 3;
+  Permissions permissions = 4;
+  string objective_key = 5; // mutable
+  Addressable description = 6;
+  Addressable opener = 7;
+  string type = 8;
+  map <string, string> metadata = 16;
 }
 
 message NewDataManager {
-    string key = 1;
-    string name = 2;
-    NewPermissions new_permissions = 3;
-    string objective_key = 4;
-    Addressable description = 5;
-    Addressable opener = 6;
-    string type = 7;
-    map <string, string> metadata = 16;
+  string key = 1;
+  string name = 2;
+  NewPermissions new_permissions = 3;
+  string objective_key = 4;
+  Addressable description = 5;
+  Addressable opener = 6;
+  string type = 7;
+  map <string, string> metadata = 16;
 }
 
 message DataManagerUpdateParam {
-    string key = 1;
-    string objective_key = 2;
+  string key = 1;
+  string objective_key = 2;
 }
 
 message DataManagerUpdateResponse {}
 
 message GetDataManagerParam {
-    string key = 1;
+  string key = 1;
 }
 
 message QueryDataManagersParam {
-    string page_token = 1;
-    uint32 page_size = 2;
+  string page_token = 1;
+  uint32 page_size = 2;
 }
 
 message QueryDataManagersResponse {
-    repeated DataManager data_managers = 1;
-    string next_page_token = 2;
+  repeated DataManager data_managers = 1;
+  string next_page_token = 2;
 }
 
 service DataManagerService {
-    rpc RegisterDataManager(NewDataManager) returns (DataManager) {}
-    rpc UpdateDataManager(DataManagerUpdateParam) returns (DataManagerUpdateResponse) {}
-    rpc GetDataManager(GetDataManagerParam) returns (DataManager) {}
-    rpc QueryDataManagers(QueryDataManagersParam) returns (QueryDataManagersResponse) {}
+  rpc RegisterDataManager(NewDataManager) returns (DataManager);
+  rpc UpdateDataManager(DataManagerUpdateParam) returns (DataManagerUpdateResponse);
+  rpc GetDataManager(GetDataManagerParam) returns (DataManager);
+  rpc QueryDataManagers(QueryDataManagersParam) returns (QueryDataManagersResponse);
 }

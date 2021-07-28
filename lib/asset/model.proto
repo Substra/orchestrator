@@ -66,11 +66,11 @@ message QueryModelsResponse {
 message DisableModelResponse {}
 
 service ModelService {
-  rpc RegisterModel(NewModel) returns (Model) {}
-  rpc GetModel(GetModelParam) returns (Model) {}
-  rpc QueryModels(QueryModelsParam) returns (QueryModelsResponse) {}
-  rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {}
-  rpc GetComputeTaskInputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {}
-  rpc CanDisableModel(CanDisableModelParam) returns (CanDisableModelResponse) {}
-  rpc DisableModel(DisableModelParam) returns (DisableModelResponse) {}
+  rpc RegisterModel(NewModel) returns (Model);
+  rpc GetModel(GetModelParam) returns (Model);
+  rpc QueryModels(QueryModelsParam) returns (QueryModelsResponse);
+  rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse);
+  rpc GetComputeTaskInputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse);
+  rpc CanDisableModel(CanDisableModelParam) returns (CanDisableModelResponse);
+  rpc DisableModel(DisableModelParam) returns (DisableModelResponse);
 }

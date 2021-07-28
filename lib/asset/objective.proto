@@ -67,8 +67,8 @@ message Leaderboard {
 }
 
 service ObjectiveService {
-  rpc RegisterObjective(NewObjective) returns (Objective) {}
-  rpc GetObjective(GetObjectiveParam) returns (Objective) {}
-  rpc QueryObjectives(QueryObjectivesParam) returns (QueryObjectivesResponse) {}
-  rpc GetLeaderboard(LeaderboardQueryParam) returns (Leaderboard) {}
+  rpc RegisterObjective(NewObjective) returns (Objective);
+  rpc GetObjective(GetObjectiveParam) returns (Objective);
+  rpc QueryObjectives(QueryObjectivesParam) returns (QueryObjectivesResponse);
+  rpc GetLeaderboard(LeaderboardQueryParam) returns (Leaderboard);
 }

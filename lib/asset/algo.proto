@@ -54,7 +54,7 @@ message QueryAlgosParam {
 }
 
 service AlgoService {
-  rpc RegisterAlgo(NewAlgo) returns (Algo) {}
-  rpc GetAlgo(GetAlgoParam) returns (Algo) {}
-  rpc QueryAlgos(QueryAlgosParam) returns (QueryAlgosResponse) {}
+  rpc RegisterAlgo(NewAlgo) returns (Algo);
+  rpc GetAlgo(GetAlgoParam) returns (Algo);
+  rpc QueryAlgos(QueryAlgosParam) returns (QueryAlgosResponse);
 }

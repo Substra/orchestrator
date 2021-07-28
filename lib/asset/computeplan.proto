@@ -60,8 +60,8 @@ message QueryPlansResponse {
 }
 
 service ComputePlanService {
-  rpc RegisterPlan(NewComputePlan) returns (ComputePlan) {}
-  rpc GetPlan(GetComputePlanParam) returns (ComputePlan) {}
-  rpc ApplyPlanAction(ApplyPlanActionParam) returns (ApplyPlanActionResponse) {}
-  rpc QueryPlans(QueryPlansParam) returns (QueryPlansResponse) {}
+  rpc RegisterPlan(NewComputePlan) returns (ComputePlan);
+  rpc GetPlan(GetComputePlanParam) returns (ComputePlan);
+  rpc ApplyPlanAction(ApplyPlanActionParam) returns (ApplyPlanActionResponse);
+  rpc QueryPlans(QueryPlansParam) returns (QueryPlansResponse);
 }

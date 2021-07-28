@@ -14,9 +14,9 @@ message Dataset {
 }
 
 message GetDatasetParam {
-    string key = 1;
+  string key = 1;
 }
 
 service DatasetService {
-    rpc GetDataset(GetDatasetParam) returns (Dataset) {}
+  rpc GetDataset(GetDatasetParam) returns (Dataset);
 }

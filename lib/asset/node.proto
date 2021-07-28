@@ -6,17 +6,17 @@ option go_package = "github.com/owkin/orchestrator/lib/asset";
 
 // Node is a member of the network
 message Node {
-    string id = 1;
+  string id = 1;
 }
 
 message GetAllNodesResponse {
-    repeated Node nodes = 1;
+  repeated Node nodes = 1;
 }
 
 message RegisterNodeParam {}
 message GetAllNodesParam {}
 
 service NodeService {
-    rpc RegisterNode(RegisterNodeParam) returns (Node) {}
-    rpc GetAllNodes(GetAllNodesParam) returns (GetAllNodesResponse) {}
+  rpc RegisterNode(RegisterNodeParam) returns (Node);
+  rpc GetAllNodes(GetAllNodesParam) returns (GetAllNodesResponse);
 }
