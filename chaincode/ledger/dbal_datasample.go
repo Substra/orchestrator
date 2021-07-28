@@ -125,7 +125,7 @@ func (db *DB) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bo
 				"test_only": testOnly,
 			},
 		},
-		Fields: []string{"assets.keys"},
+		Fields: []string{"asset.key"},
 	}
 
 	b, err := json.Marshal(query)
