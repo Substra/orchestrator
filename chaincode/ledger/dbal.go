@@ -46,11 +46,6 @@ type storedAsset struct {
 	Asset   json.RawMessage `json:"asset"`
 }
 
-// storedKey wraps index results
-type storedKey struct {
-	Key string `json:"key"`
-}
-
 // dbal indexes
 const computePlanTaskStatusIndex = "computePlan~computePlanKey~status~task"
 const computeTaskParentIndex = "computeTask~parentTask~key"

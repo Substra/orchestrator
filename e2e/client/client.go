@@ -17,6 +17,7 @@ const DefaultTaskRef = "task"
 const DefaultPlanRef = "cp"
 const DefaultAlgoRef = "algo"
 const DefaultObjectiveRef = "objective"
+const DefaultDataManagerRef = "dm"
 
 // Taskable represent the ability to create a new task
 type Taskable interface {
@@ -66,6 +67,7 @@ type TestClient struct {
 	computeTaskService asset.ComputeTaskServiceClient
 	computePlanService asset.ComputePlanServiceClient
 	performanceService asset.PerformanceServiceClient
+	datasetService     asset.DatasetServiceClient
 }
 
 func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*TestClient, error) {
@@ -84,6 +86,7 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 		computeTaskService: asset.NewComputeTaskServiceClient(conn),
 		computePlanService: asset.NewComputePlanServiceClient(conn),
 		performanceService: asset.NewPerformanceServiceClient(conn),
+		datasetService:     asset.NewDatasetServiceClient(conn),
 	}, nil
 }
 
@@ -134,7 +137,7 @@ func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 
 func (c *TestClient) RegisterDataManager() {
 	newDm := &asset.NewDataManager{
-		Key:            c.ks.GetKey("dm"),
+		Key:            c.ks.GetKey(DefaultDataManagerRef),
 		Name:           "Test datamanager",
 		NewPermissions: &asset.NewPermissions{Public: true},
 		Description: &asset.Addressable{
@@ -158,7 +161,7 @@ func (c *TestClient) RegisterDataManager() {
 func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
 	newDs := &asset.NewDataSample{
 		Key:             c.ks.GetKey(o.KeyRef),
-		DataManagerKeys: []string{c.ks.GetKey("dm")},
+		DataManagerKeys: []string{c.ks.GetKey(DefaultDataManagerRef)},
 		TestOnly:        o.TestOnly,
 		Checksum:        "7e87a07aeb05e0e66918ce1c93155acf54649eec453060b75caf494bc0bc0b9c",
 	}
@@ -359,4 +362,16 @@ func (c *TestClient) GetInputModels(taskRef string) []*asset.Model {
 		log.WithError(err).Fatal("Task input model retrieval failed")
 	}
 	return resp.Models
+}
+
+func (c *TestClient) GetDataset(dataManagerRef string) *asset.Dataset {
+	param := &asset.GetDatasetParam{
+		Key: c.ks.GetKey(dataManagerRef),
+	}
+	log.WithField("data manager key", c.ks.GetKey(dataManagerRef)).Debug("GetDataset")
+	resp, err := c.datasetService.GetDataset(c.ctx, param)
+	if err != nil {
+		log.WithError(err).Fatal("GetDataset failed")
+	}
+	return resp
 }

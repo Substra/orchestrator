@@ -83,6 +83,10 @@ var testScenarios = map[string]scenario{
 		testAggregateComposite,
 		[]string{"short", "plan", "aggregate", "composite"},
 	},
+	"DatasetSampleKeys": {
+		testDatasetSampleKeys,
+		[]string{"short", "dataset"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -653,5 +657,30 @@ func testAggregateComposite(conn *grpc.ClientConn) {
 	inputs := appClient.GetInputModels("c3")
 	if len(inputs) != 2 {
 		log.Fatal("composite should have 2 input models")
+	}
+}
+
+func testDatasetSampleKeys(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.EnsureNode()
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("ds1"))
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("ds2"))
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithTestOnly(true).WithKeyRef("testds"))
+
+	dataset := appClient.GetDataset(client.DefaultDataManagerRef)
+
+	if len(dataset.TestDataSampleKeys) != 1 {
+		log.Fatal("dataset should contain a single test sample")
+	}
+	if len(dataset.TrainDataSampleKeys) != 2 {
+		log.Fatal("dataset should contain 2 train samples")
+	}
+	if dataset.TestDataSampleKeys[0] != appClient.GetKeyStore().GetKey("testds") {
+		log.Fatal("dataset should contain valid test sample ID")
 	}
 }

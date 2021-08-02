@@ -149,12 +149,19 @@ func (db *DB) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bo
 		if err != nil {
 			return nil, err
 		}
-		var storedkey storedKey
-		err = json.Unmarshal(queryResult.Value, &storedkey)
+
+		var storedAsset storedAsset
+		err = json.Unmarshal(queryResult.Value, &storedAsset)
 		if err != nil {
 			return nil, err
 		}
-		keys = append(keys, storedkey.Key)
+		ds := &asset.DataSample{}
+		err = json.Unmarshal(storedAsset.Asset, ds)
+		if err != nil {
+			return nil, err
+		}
+
+		keys = append(keys, ds.Key)
 	}
 
 	return keys, nil

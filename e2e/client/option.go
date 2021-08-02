@@ -71,7 +71,7 @@ type PerformanceOptions struct {
 func DefaultObjectiveOptions() *ObjectiveOptions {
 	return &ObjectiveOptions{
 		KeyRef:         DefaultObjectiveRef,
-		DataManagerRef: "dm",
+		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  "ds",
 	}
 }
@@ -141,7 +141,7 @@ func DefaultTrainTaskOptions() *TrainTaskOptions {
 		AlgoRef:        DefaultAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
-		DataManagerRef: "dm",
+		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  "ds",
 	}
 }
@@ -188,7 +188,7 @@ func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 		AlgoRef:        DefaultAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
-		DataManagerRef: "dm",
+		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  "ds",
 	}
 }
