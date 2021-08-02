@@ -9,10 +9,9 @@ import (
 	"os"
 
 	"github.com/go-playground/log/v7"
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
+	"github.com/owkin/orchestrator/forwarder/event"
 	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/distributed/event"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"github.com/owkin/orchestrator/utils"
 	"gopkg.in/yaml.v2"
@@ -38,6 +37,12 @@ func main() {
 	utils.InitLogging()
 
 	networkConfig := mustGetEnv("NETWORK_CONFIG")
+	indexFile := mustGetEnv("EVENT_INDEX_FILE")
+
+	eventIdx, err := event.NewIndex(indexFile)
+	if err != nil {
+		log.WithError(err).WithField("indexFile", indexFile).Fatal("cannot instanciate event indexer")
+	}
 
 	rabbitDSN := mustGetEnv("AMQP_DSN")
 	session := common.NewSession("orchestrator", rabbitDSN)
@@ -57,12 +62,19 @@ func main() {
 		log.WithField("channel", channel).Info("instanciated AMQP forwarder")
 
 		for _, chaincode := range chaincodes {
-			go listenToChannel(wallet, config, forwarder, mspID, chaincode, channel)
+			ccData := event.ListenerChaincodeData{
+				Wallet:    wallet,
+				Config:    config,
+				MSPID:     mspID,
+				Channel:   channel,
+				Chaincode: chaincode,
+			}
+			go listenToChannel(ccData, forwarder, eventIdx)
 		}
 	}
 
 	http.HandleFunc("/", healthcheck)
-	err := http.ListenAndServe(":8000", nil)
+	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.WithError(err).Fatal("Could not spawn http server")
 	}
@@ -73,15 +85,15 @@ func healthcheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK\n")
 }
 
-func listenToChannel(wallet *wallet.Wallet, config core.ConfigProvider, forwarder *event.Forwarder, mspID string, chaincode string, channel string) {
-	listener, err := event.NewListener(wallet, config, mspID, channel, chaincode, forwarder.Forward)
+func listenToChannel(ccData event.ListenerChaincodeData, forwarder *event.Forwarder, eventIdx event.Indexer) {
+	listener, err := event.NewListener(&ccData, eventIdx, forwarder.Forward)
 
 	if err != nil {
 		log.WithError(err).Fatal("Failed to instanciate listener")
 	}
 
 	defer listener.Close()
-	log.WithField("channel", channel).WithField("chaincode", chaincode).Info("Listening to channel events")
+	log.WithField("channel", ccData.Channel).WithField("chaincode", ccData.Chaincode).Info("Listening to channel events")
 
 	listener.Listen()
 }

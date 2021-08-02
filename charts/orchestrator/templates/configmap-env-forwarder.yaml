@@ -13,4 +13,5 @@ data:
   FORWARDER_FABRIC_KEY: /var/hyperledger/msp/keystore/key.pem
   FORWARDER_MSPID: {{ .Values.fabric.mspID }}
   FORWARDER_NETWORK_CONFIG: /var/hyperledger/fabric-config.yaml
+  FORWARDER_EVENT_INDEX_FILE: /var/lib/forwarder/event_index.json
 {{- end }}

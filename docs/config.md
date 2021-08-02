@@ -28,14 +28,15 @@ Unless specified, all settings are mandatory.
 
 **Note**: forwarder is only meaningful in distributed mode
 
-| Env Var                    | type   | usage                                                                 |
-|----------------------------|--------|-----------------------------------------------------------------------|
-| `FORWARDER_NETWORK_CONFIG` | string | path of the hyperledger fabric's network configuration                |
-| `FORWARDER_FABRIC_CERT`    | string | path of the certificate to present to fabric's peer                   |
-| `FORWARDER_FABRIC_KEY`     | string | path of the key corresponding to fabric's certificate                 |
-| `FORWARDER_AMQP_DSN`       | string | [rabbitmq connection string](https://www.rabbitmq.com/uri-spec.html)  |
-| `FORWARDER_CONFIG_PATH`    | string | which channel/chaincode combination to forward events for (see below) |
-| `FORWARDER_MSPID`          | string | MSP ID to use to connect to the channels                              |
+| Env Var                      | type   | usage                                                                 |
+|------------------------------|--------|-----------------------------------------------------------------------|
+| `FORWARDER_NETWORK_CONFIG`   | string | path of the hyperledger fabric's network configuration                |
+| `FORWARDER_FABRIC_CERT`      | string | path of the certificate to present to fabric's peer                   |
+| `FORWARDER_FABRIC_KEY`       | string | path of the key corresponding to fabric's certificate                 |
+| `FORWARDER_AMQP_DSN`         | string | [rabbitmq connection string](https://www.rabbitmq.com/uri-spec.html)  |
+| `FORWARDER_CONFIG_PATH`      | string | which channel/chaincode combination to forward events for (see below) |
+| `FORWARDER_MSPID`            | string | MSP ID to use to connect to the channels                              |
+| `FORWARDER_EVENT_INDEX_FILE` | string | path of the event tracker index                                       |
 
 Here is a configuration example:
 ```yaml

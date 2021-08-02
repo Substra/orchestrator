@@ -77,6 +77,8 @@ spec:
               mountPath: /var/hyperledger/tls/client/pair
             - name: cacert
               mountPath: /var/hyperledger/tls/server/cert/
+            - name: data
+              mountPath: /var/lib/forwarder
       volumes:
         - name: user-cert
           secret:
@@ -102,6 +104,14 @@ spec:
         - name: forwarder-config
           configMap:
             name: {{ include "orchestrator.eventForwarder.fullname" . }}
+        {{- if not .Values.forwarder.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- else }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ template "orchestrator.eventForwarder.fullname" . }}-data
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

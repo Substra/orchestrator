@@ -44,7 +44,7 @@ $(LIBCODEGEN_BIN): $(PROJECT_ROOT)/lib/codegen/main.go
 	go build -o $(LIBCODEGEN_BIN) $(PROJECT_ROOT)/lib/codegen
 
 $(FORWARDER_BIN): ${go_src} $(OUTPUT_DIR) $(pbgo) $(lib_generated)
-	go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/server/distributed/forwarder
+	go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/forwarder
 
 $(E2E_BIN): $(go_src) $(OUTPUT_DIR) $(pbgo)
 	go build -o $(E2E_BIN) $(PROJECT_ROOT)/e2e
@@ -81,6 +81,7 @@ mocks:
 	mockery --dir $(PROJECT_ROOT)/lib/event --all --inpackage --quiet
 	mockery --dir $(PROJECT_ROOT)/lib/service --all --inpackage --quiet
 	mockery --dir $(PROJECT_ROOT)/lib/persistence --all --output $(PROJECT_ROOT)/lib/persistence/mocks --quiet
+	mockery --dir $(PROJECT_ROOT)/forwarder/event --all --inpackage --quiet
 
 .PHONY: clean
 clean: clean-protos clean-migrations-binpack clean-generated clean-mocks
@@ -95,6 +96,7 @@ clean-mocks:
 	-rm $(PROJECT_ROOT)/lib/service/mock_*.go
 	-rm $(PROJECT_ROOT)/lib/event/mock_*.go
 	-rm -r $(PROJECT_ROOT)/lib/persistence/mocks
+	-rm -r $(PROJECT_ROOT)/forwarder/event/mocks_*.go
 
 .PHONY: clean-protos
 clean-protos:

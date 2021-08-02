@@ -19,6 +19,7 @@ RUN go mod download
 COPY Makefile ./
 COPY server ./server
 COPY chaincode ./chaincode
+COPY forwarder ./forwarder
 COPY lib ./lib
 COPY utils ./utils
 

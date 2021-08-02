@@ -8,4 +8,5 @@ lib/asset/*.pb.go
 lib/service/mock_*.go
 lib/event/mock_*.go
 lib/persistence/mocks
+forwarder/event/mock_*.go
 server/standalone/migration/bindata.go

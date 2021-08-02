@@ -349,8 +349,8 @@ github.com/hyperledger/fabric-protos-go v0.0.0-20200424173316-dd554ba3746e/go.mo
 github.com/hyperledger/fabric-protos-go v0.0.0-20200707132912-fee30f3ccd23/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
 github.com/hyperledger/fabric-protos-go v0.0.0-20200917184523-71c4060efc42 h1:g+r5PwknXSMj0cCleBdfiTYLHiPBQKvzFy/EVk/FMz4=
 github.com/hyperledger/fabric-protos-go v0.0.0-20200917184523-71c4060efc42/go.mod h1:xVYTjK4DtZRBxZ2D9aE4y6AbLaPwue2o/criQyQbVD0=
-github.com/hyperledger/fabric-sdk-go v1.0.1-0.20210603143513-14047c6d88f0 h1:oEe76aOtdYHGIK444LLhud6Hj5GHU7PZACzG3Y1sVcg=
-github.com/hyperledger/fabric-sdk-go v1.0.1-0.20210603143513-14047c6d88f0/go.mod h1:B+oxJGMEurW4HsUZbeLRXp60O52rKhWp57Ko1kQOSnk=
+github.com/hyperledger/fabric-sdk-go v1.0.1-0.20210729165856-3be4ed253dcf h1:ljkc+X5hb1AGG/6fIk9Tm/ZC33BsueUKMmM52BQ36js=
+github.com/hyperledger/fabric-sdk-go v1.0.1-0.20210729165856-3be4ed253dcf/go.mod h1:B+oxJGMEurW4HsUZbeLRXp60O52rKhWp57Ko1kQOSnk=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=

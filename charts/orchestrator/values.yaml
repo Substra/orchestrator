@@ -156,6 +156,12 @@ forwarder:
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: ""
+  persistence:
+    # Persistence is required to properly keep track of processed events.
+    # Without it, the forwarder will ALWAYS process ALL events (from block 0).
+    enabled: false
+    # There is no need for more, the forwarder only stores a small json file
+    size: 100Mi
 
 rabbitmqOperator:
   image:

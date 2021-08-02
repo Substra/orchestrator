@@ -20,41 +20,57 @@ type Listener struct {
 	registration fab.Registration
 	events       <-chan *fab.CCEvent
 	done         chan bool
-	onEvent      Handler
+	handler      Handler
 	channel      string
+	eventIdx     Indexer
+	logger       log.Entry
+}
+
+type ListenerChaincodeData struct {
+	Wallet    *wallet.Wallet
+	Config    core.ConfigProvider
+	MSPID     string
+	Channel   string
+	Chaincode string
 }
 
 // NewListener instanciate a Listener listening events on the configured blockchain.
 // It filters only events emitted by the chaincode (see ledger.EventName).
 // The onEvent callback will be called for every event received.
 func NewListener(
-	wallet *wallet.Wallet,
-	config core.ConfigProvider,
-	mspid string,
-	channel string,
-	chaincode string,
-	onEvent Handler,
+	ccData *ListenerChaincodeData,
+	eventIdx Indexer,
+	handler Handler,
 ) (*Listener, error) {
-	label := mspid + "-listener"
-	err := wallet.EnsureIdentity(label, mspid)
+	label := ccData.MSPID + "-listener"
+	err := ccData.Wallet.EnsureIdentity(label, ccData.MSPID)
 	if err != nil {
 		return nil, err
 	}
 
-	gw, err := gateway.Connect(gateway.WithConfig(config), gateway.WithIdentity(wallet, label))
+	logger := log.WithFields(
+		log.F("channel", ccData.Channel),
+		log.F("chaincode", ccData.Chaincode),
+	)
 
+	// For new index (without referenced events), this will default to block 0
+	checkpoint := eventIdx.GetLastEvent(ccData.Channel)
+
+	logger.WithField("lastEventBlock", checkpoint.BlockNum).WithField("lastTxID", checkpoint.TxID).Debug("instanciating event listener")
+
+	gw, err := gateway.Connect(gateway.WithConfig(ccData.Config), gateway.WithIdentity(ccData.Wallet, label), gateway.WithBlockNum(checkpoint.BlockNum))
 	if err != nil {
 		return nil, err
 	}
 
 	defer gw.Close()
 
-	network, err := gw.GetNetwork(channel)
+	network, err := gw.GetNetwork(ccData.Channel)
 	if err != nil {
 		return nil, err
 	}
 
-	contract := network.GetContract(chaincode)
+	contract := network.GetContract(ccData.Chaincode)
 
 	registration, eventStream, err := contract.RegisterEvent(ledger.EventName)
 	if err != nil {
@@ -66,34 +82,48 @@ func NewListener(
 		registration: registration,
 		events:       eventStream,
 		done:         make(chan bool),
-		onEvent:      onEvent,
-		channel:      channel,
+		handler:      handler,
+		channel:      ccData.Channel,
+		logger:       logger,
+		eventIdx:     eventIdx,
 	}, nil
 }
 
 // Close will unregister the chaincode listener and properly stop the event listening loop.
 func (l *Listener) Close() {
-	log.Debug("Closing chaincode event listener")
+	l.logger.Debug("Closing chaincode event listener")
 	l.contract.Unregister(l.registration)
 	close(l.done)
 }
 
 // Listen will trigger the callback with every event received, until *Listener.Close() is called.
 func (l *Listener) Listen() {
+	checkpoint := l.eventIdx.GetLastEvent(l.channel)
+	// As a block may have multiple transactions, make sure we skip events until we reach the last seen
+	skipEvent := checkpoint.TxID != ""
 	for {
 		select {
 		case event := <-l.events:
-			log.WithFields(
-				log.F("channel", l.channel),
-				log.F("ccId", event.ChaincodeID),
+			logger := l.logger.WithFields(
 				log.F("eventName", event.EventName),
 				log.F("blockNumber", event.BlockNumber),
 				log.F("source", event.SourceURL),
 				log.F("txID", event.TxID),
-			).Debug("event received")
-			l.onEvent(event)
+			)
+			skipEvent = skipEvent && event.TxID != checkpoint.TxID
+			if skipEvent || event.TxID == checkpoint.TxID {
+				logger.Debug("skipping previously handled event")
+				break
+			}
+
+			logger.Debug("handling event")
+			l.handler(event)
+			err := l.eventIdx.SetLastEvent(l.channel, event)
+			if err != nil {
+				logger.WithError(err).Error("cannot track event")
+			}
 		case <-l.done:
-			log.Debug("Stop listening")
+			l.logger.Debug("Stop listening")
 			break
 		}
 	}
