@@ -27,7 +27,7 @@ spec:
       initContainers:
       - name: wait-rabbitmq
         image: jwilder/dockerize
-        command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}']
+        command: ['dockerize', '-timeout', '90s', '-wait', 'tcp://{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}']
       containers:
         - name: rabbitmq-operator
           securityContext:

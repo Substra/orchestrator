@@ -33,7 +33,7 @@ spec:
       {{- end}}
       - name: wait-rabbitmq
         image: jwilder/dockerize
-        command: ['dockerize', '-timeout', '30s', '-wait', 'tcp://{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{- if $.Values.rabbitmq.auth.tls.enabled -}}{{.Values.rabbitmq.service.tlsPort}}{{- else -}}{{.Values.rabbitmq.service.port}}{{- end -}}']
+        command: ['dockerize', '-timeout', '90s', '-wait', 'tcp://{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{- if $.Values.rabbitmq.auth.tls.enabled -}}{{.Values.rabbitmq.service.tlsPort}}{{- else -}}{{.Values.rabbitmq.service.port}}{{- end -}}']
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
