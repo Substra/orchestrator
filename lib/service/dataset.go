@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/persistence"
 )
 
 // DatasetAPI defines the methods to act on Datasets
@@ -17,7 +16,6 @@ type DatasetServiceProvider interface {
 
 // DatasetDependencyProvider defines what the DatasetService needs to perform its duty
 type DatasetDependencyProvider interface {
-	persistence.DatasetDBALProvider
 	DataManagerServiceProvider
 	DataSampleServiceProvider
 }
@@ -35,5 +33,26 @@ func NewDatasetService(provider DatasetDependencyProvider) *DatasetService {
 
 // GetDataset retrieves a single Dataset by its ID
 func (s *DatasetService) GetDataset(id string) (*asset.Dataset, error) {
-	return s.GetDatasetDBAL().GetDataset(id)
+	datamanager, err := s.GetDataManagerService().GetDataManager(id)
+	if err != nil {
+		return nil, err
+	}
+
+	trainDataSampleKeys, err := s.GetDataSampleService().GetDataSampleKeysByManager(id, false)
+	if err != nil {
+		return nil, err
+	}
+
+	testDataSampleKeys, err := s.GetDataSampleService().GetDataSampleKeysByManager(id, true)
+	if err != nil {
+		return nil, err
+	}
+
+	dataset := &asset.Dataset{
+		DataManager:         datamanager,
+		TrainDataSampleKeys: trainDataSampleKeys,
+		TestDataSampleKeys:  testDataSampleKeys,
+	}
+
+	return dataset, nil
 }

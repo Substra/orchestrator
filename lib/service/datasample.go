@@ -20,6 +20,7 @@ type DataSampleAPI interface {
 	CheckSameManager(managerKey string, sampleKeys []string) error
 	IsTestOnly(sampleKeys []string) (bool, error)
 	ContainsTestSample(sampleKeys []string) (bool, error)
+	GetDataSampleKeysByManager(managerKey string, testOnly bool) ([]string, error)
 }
 
 // DataSampleServiceProvider defines an object able to provide a DataSampleAPI instance
@@ -197,4 +198,8 @@ func (s *DataSampleService) ContainsTestSample(sampleKeys []string) (bool, error
 		hasTest = hasTest || dataSample.TestOnly
 	}
 	return hasTest, nil
+}
+
+func (s *DataSampleService) GetDataSampleKeysByManager(managerKey string, testOnly bool) ([]string, error) {
+	return s.GetDataSampleDBAL().GetDataSampleKeysByManager(managerKey, testOnly)
 }

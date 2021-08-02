@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetDataSampleKeysByDataManager(t *testing.T) {
+func TestGetDataSampleKeysByManager(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
 
@@ -21,6 +21,6 @@ func TestGetDataSampleKeysByDataManager(t *testing.T) {
 	queryString := `{"selector":{"doc_type":"datasample","asset":{"data_manager_keys":{"$elemMatch":{"$eq":"dmkey"}},"test_only":false}},"fields":["asset.key"]}`
 	stub.On("GetQueryResult", queryString).Return(resp, nil)
 
-	_, err := db.GetDataSamplesKeysByDataManager("dmkey", false)
+	_, err := db.GetDataSampleKeysByManager("dmkey", false)
 	assert.NoError(t, err)
 }

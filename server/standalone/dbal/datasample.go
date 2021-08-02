@@ -144,8 +144,8 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, comm
 	return datasamples, bookmark, nil
 }
 
-// GetDataSamplesKeysByDataManager implements persistence.DataSample
-func (d *DBAL) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bool) ([]string, error) {
+// GetDataSampleKeysByManager returns sample keys linked to given manager.
+func (d *DBAL) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) ([]string, error) {
 	var rows pgx.Rows
 	var err error
 

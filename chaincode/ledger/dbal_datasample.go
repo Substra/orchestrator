@@ -111,8 +111,8 @@ func (db *DB) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, commo
 	return datasamples, bookmark.Bookmark, nil
 }
 
-// GetDataSamplesKeysByDataManager implements persistence.DataSampleDBAL
-func (db *DB) GetDataSamplesKeysByDataManager(dataManagerKey string, testOnly bool) ([]string, error) {
+// GetDataSampleKeysByManager returns sample keys linked to given manager.
+func (db *DB) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) ([]string, error) {
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
 			DocType: asset.DataSampleKind,

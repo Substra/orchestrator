@@ -70,11 +70,6 @@ func (sc *Provider) GetDataManagerDBAL() persistence.DataManagerDBAL {
 	return sc.dbal
 }
 
-// GetDatasetDBAL returns the database abstraction layer for Dataset
-func (sc *Provider) GetDatasetDBAL() persistence.DatasetDBAL {
-	return sc.dbal
-}
-
 // GetAlgoDBAL returns the database abstraction layer for Algos
 func (sc *Provider) GetAlgoDBAL() persistence.AlgoDBAL {
 	return sc.dbal

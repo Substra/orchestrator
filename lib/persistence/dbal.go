@@ -37,6 +37,7 @@ type DataSampleDBAL interface {
 	GetDataSample(key string) (*asset.DataSample, error)
 	QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
 	DataSampleExists(key string) (bool, error)
+	GetDataSampleKeysByManager(managerKey string, testOnly bool) ([]string, error)
 }
 
 // AlgoDBAL is the database abstraction layer for Algos
@@ -54,11 +55,6 @@ type DataManagerDBAL interface {
 	GetDataManager(key string) (*asset.DataManager, error)
 	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	DataManagerExists(key string) (bool, error)
-}
-
-// DatasetDBAL is the database abstraction layer for Datasets
-type DatasetDBAL interface {
-	GetDataset(id string) (*asset.Dataset, error)
 }
 
 // NodeDBALProvider representes an object capable of providing a NodeDBAL
@@ -86,11 +82,6 @@ type DataManagerDBALProvider interface {
 	GetDataManagerDBAL() DataManagerDBAL
 }
 
-// DatasetDBALProvider represents an object capable of providing a DatasetDBAL
-type DatasetDBALProvider interface {
-	GetDatasetDBAL() DatasetDBAL
-}
-
 // DBAL stands for Database Abstraction Layer, it exposes methods to interact with asset storage.
 type DBAL interface {
 	NodeDBAL
@@ -98,7 +89,6 @@ type DBAL interface {
 	DataSampleDBAL
 	AlgoDBAL
 	DataManagerDBAL
-	DatasetDBAL
 	ComputeTaskDBAL
 	ModelDBAL
 	ComputePlanDBAL
@@ -113,7 +103,6 @@ type DBALProvider interface {
 	DataSampleDBALProvider
 	AlgoDBALProvider
 	DataManagerDBALProvider
-	DatasetDBALProvider
 	ComputeTaskDBALProvider
 	ModelDBALProvider
 	ComputePlanDBALProvider
