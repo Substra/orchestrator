@@ -2,11 +2,12 @@
 package event
 
 import (
+	"context"
 	"encoding/json"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 )
 
 // AMQPDispatcher dispatch events on an AMQP channel
@@ -28,8 +29,8 @@ func NewAMQPDispatcher(amqp common.AMQPPublisher, channel string) *AMQPDispatche
 }
 
 // Dispatch sends events one by one to the AMQP channel
-func (d *AMQPDispatcher) Dispatch() error {
-	log.WithField("num_events", d.Len()).WithField("channel", d.channel).Debug("Dispatching events")
+func (d *AMQPDispatcher) Dispatch(ctx context.Context) error {
+	logger.Get(ctx).WithField("num_events", d.Len()).WithField("channel", d.channel).Debug("Dispatching events")
 	for _, event := range d.GetEvents() {
 		// Contextualize the event in a channel
 		event.Channel = d.channel
@@ -39,7 +40,7 @@ func (d *AMQPDispatcher) Dispatch() error {
 			return err
 		}
 
-		err = d.amqp.Publish(d.channel, data)
+		err = d.amqp.Publish(ctx, d.channel, data)
 		if err != nil {
 			return err
 		}

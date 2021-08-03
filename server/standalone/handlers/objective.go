@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
@@ -23,7 +23,7 @@ func NewObjectiveServer() *ObjectiveServer {
 
 // RegisterObjective will persiste a new objective
 func (s *ObjectiveServer) RegisterObjective(ctx context.Context, o *asset.NewObjective) (*asset.Objective, error) {
-	log.WithField("objective", o).Debug("register objective")
+	logger.Get(ctx).WithField("objective", o).Debug("register objective")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {

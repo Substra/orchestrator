@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/log/v7"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/event"
 	"google.golang.org/grpc"
@@ -77,7 +77,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 
 		if pi.shouldRetry(start, err) {
 			attempt++
-			log.
+			logger.Get(ctx).
 				WithField("method", info.FullMethod).
 				WithField("previous attempt duration", attemptDuration).
 				WithField("next attempt number", attempt).
@@ -113,10 +113,10 @@ func (pi *ProviderInterceptor) handleIsolated(ctx context.Context, req interface
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	provider := service.NewProvider(tx, dispatcher)
+	provider := service.NewProvider(logger.Get(ctx), tx, dispatcher)
 
-	newCtx := WithProvider(ctx, provider)
-	res, err := handler(newCtx, req)
+	ctx = WithProvider(ctx, provider)
+	res, err := handler(ctx, req)
 
 	// Events should be dispatched only on successful transactions
 	if err != nil {
@@ -130,10 +130,10 @@ func (pi *ProviderInterceptor) handleIsolated(ctx context.Context, req interface
 			return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
 		}
 		go func() {
-			dispatchErr := dispatcher.Dispatch()
+			dispatchErr := dispatcher.Dispatch(ctx)
 			if dispatchErr != nil {
 				// simply log since we cannot rollback the DB transaction anyway
-				log.WithError(dispatchErr).
+				logger.Get(ctx).WithError(dispatchErr).
 					WithField("events", dispatcher.GetEvents()).
 					Error("failed to dispatch events after successful transaction commit")
 			}

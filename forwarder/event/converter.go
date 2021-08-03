@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/go-playground/log/v7"
@@ -55,7 +56,7 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 			logger.WithError(err).Error("Failed to serialize")
 			continue
 		}
-		err = f.publisher.Publish(f.channel, data)
+		err = f.publisher.Publish(context.Background(), f.channel, data)
 		if err != nil {
 			logger.WithError(err).Error("Failed to push event")
 			continue

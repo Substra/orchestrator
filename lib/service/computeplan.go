@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -26,6 +25,7 @@ type ComputePlanServiceProvider interface {
 
 // ComputePlanDependencyProvider defines what the ComputePlanService needs to perform its duty
 type ComputePlanDependencyProvider interface {
+	LoggerProvider
 	persistence.ComputePlanDBALProvider
 	persistence.ComputeTaskDBALProvider
 	EventServiceProvider
@@ -43,7 +43,7 @@ func NewComputePlanService(provider ComputePlanDependencyProvider) *ComputePlanS
 }
 
 func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner string) (*asset.ComputePlan, error) {
-	log.WithField("plan", input).WithField("owner", owner).Debug("Registering new compute plan")
+	s.GetLogger().WithField("plan", input).WithField("owner", owner).Debug("Registering new compute plan")
 	err := input.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
@@ -118,7 +118,7 @@ func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
 	for _, task := range tasks {
 		err := s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_CANCELED, fmt.Sprintf("compute plan %s is cancelled", plan.Key), plan.Owner)
 		if _, isInvalidEvent := err.(fsm.InvalidEventError); isInvalidEvent {
-			log.WithError(err).WithField("taskKey", task.Key).WithField("taskStatus", task.Status).Debug("skipping task cancellation: expected error")
+			s.GetLogger().WithError(err).WithField("taskKey", task.Key).WithField("taskStatus", task.Status).Debug("skipping task cancellation: expected error")
 		} else {
 			return err
 		}

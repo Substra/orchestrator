@@ -1,16 +1,18 @@
 package common
 
 import (
+	"context"
 	"errors"
 	"time"
 
 	"github.com/go-playground/log/v7"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/streadway/amqp"
 )
 
 // AMQPPublisher represent the ability to push a message to a broker.
 type AMQPPublisher interface {
-	Publish(routingKey string, data []byte) error
+	Publish(ctx context.Context, routingKey string, data []byte) error
 }
 
 // Session object wraps amqp library.
@@ -190,14 +192,14 @@ func (session *Session) changeChannel(channel *amqp.Channel) {
 // it continuously re-sends messages until a confirm is received.
 // This will block until the server sends a confirm. Errors are
 // only returned if the push action itself fails, see UnsafePush.
-func (session *Session) Publish(routingKey string, data []byte) error {
-	log := log.WithField("numBytes", len(data))
+func (session *Session) Publish(ctx context.Context, routingKey string, data []byte) error {
+	log := logger.Get(ctx).WithField("numBytes", len(data))
 
 	if !session.isReady {
 		return errors.New("failed to push message: not connected")
 	}
 	for {
-		err := session.UnsafePush((routingKey), data)
+		err := session.UnsafePush(ctx, (routingKey), data)
 		if err != nil {
 			log.WithError(err).Warn("Push failed. Retrying...")
 			select {
@@ -223,7 +225,7 @@ func (session *Session) Publish(routingKey string, data []byte) error {
 // confirmation. It returns an error if it fails to connect.
 // No guarantees are provided for whether the server will
 // recieve the message.
-func (session *Session) UnsafePush(routingKey string, data []byte) error {
+func (session *Session) UnsafePush(ctx context.Context, routingKey string, data []byte) error {
 	if !session.isReady {
 		return errNotConnected
 	}

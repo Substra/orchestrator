@@ -27,7 +27,7 @@ func (a *ObjectiveAdapter) RegisterObjective(ctx context.Context, in *asset.NewO
 
 	response := &asset.Objective{}
 
-	err = invocator.Call(method, in, response)
+	err = invocator.Call(ctx, method, in, response)
 
 	return response, err
 }
@@ -42,7 +42,7 @@ func (a *ObjectiveAdapter) GetObjective(ctx context.Context, query *asset.GetObj
 
 	response := &asset.Objective{}
 
-	err = invocator.Call(method, query, response)
+	err = invocator.Call(ctx, method, query, response)
 
 	return response, err
 }
@@ -57,7 +57,7 @@ func (a *ObjectiveAdapter) QueryObjectives(ctx context.Context, query *asset.Que
 
 	response := &asset.QueryObjectivesResponse{}
 
-	err = invocator.Call(method, query, response)
+	err = invocator.Call(ctx, method, query, response)
 
 	return response, err
 }
@@ -72,7 +72,7 @@ func (a *ObjectiveAdapter) GetLeaderboard(ctx context.Context, query *asset.Lead
 
 	response := &asset.Leaderboard{}
 
-	err = invocator.Call(method, query, response)
+	err = invocator.Call(ctx, method, query, response)
 
 	return response, err
 }

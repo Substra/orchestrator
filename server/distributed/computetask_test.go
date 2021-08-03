@@ -21,7 +21,7 @@ func TestRegisterTasks(t *testing.T) {
 
 	param := &asset.RegisterTasksParam{}
 
-	invocator.On("Call", "orchestrator.computetask:RegisterTasks", param, nil).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -38,7 +38,7 @@ func TestQueryTasks(t *testing.T) {
 
 	param := &asset.QueryTasksParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", "orchestrator.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

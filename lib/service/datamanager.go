@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -26,6 +25,7 @@ type DataManagerServiceProvider interface {
 
 // DataManagerDependencyProvider defines what the DataManagerService needs to perform its duty
 type DataManagerDependencyProvider interface {
+	LoggerProvider
 	persistence.DataManagerDBALProvider
 	ObjectiveServiceProvider
 	PermissionServiceProvider
@@ -49,7 +49,7 @@ type DataManagerPermissions struct {
 
 // RegisterDataManager persists a DataManager
 func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner string) (*asset.DataManager, error) {
-	log.WithField("owner", owner).WithField("newDataManager", d).Debug("Registering DataManager")
+	s.GetLogger().WithField("owner", owner).WithField("newDataManager", d).Debug("Registering DataManager")
 	err := d.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
@@ -112,7 +112,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 
 // UpdateDataManager updates a DataManager to link an objective
 func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, requester string) error {
-	log.WithField("owner", requester).WithField("dataManagerUpdate", d).Debug("updating data manager")
+	s.GetLogger().WithField("owner", requester).WithField("dataManagerUpdate", d).Debug("updating data manager")
 	err := d.Validate()
 	if err != nil {
 		return fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())

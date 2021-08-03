@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/go-playground/log/v7"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"google.golang.org/grpc"
 )
 
@@ -17,14 +17,14 @@ func LogRequest(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo
 		}
 	}
 
-	logger := log.WithField("method", info.FullMethod)
+	log := logger.Get(ctx).WithField("method", info.FullMethod)
 
 	resp, err := handler(ctx, req)
 
 	if err != nil {
-		logger.WithError(err).Error("Error response")
+		log.WithError(err).Error("Error response")
 	} else {
-		logger.WithField("response", resp).Debug("Success reponse")
+		log.WithField("response", resp).Debug("Success reponse")
 	}
 
 	return resp, err

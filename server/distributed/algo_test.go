@@ -23,7 +23,7 @@ func TestRegisterAlgo(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -40,7 +40,7 @@ func TestGetAlgo(t *testing.T) {
 
 	param := &asset.GetAlgoParam{Key: "uuid"}
 
-	invocator.On("Call", "orchestrator.algo:GetAlgo", param, &asset.Algo{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.algo:GetAlgo", param, &asset.Algo{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -57,7 +57,7 @@ func TestQueryAlgos(t *testing.T) {
 
 	param := &asset.QueryAlgosParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", "orchestrator.algo:QueryAlgos", param, &asset.QueryAlgosResponse{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.algo:QueryAlgos", param, &asset.QueryAlgosResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/handlers"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
@@ -35,6 +36,7 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session, piConfig)
 
 	interceptor := grpc.ChainUnaryInterceptor(
+		logger.AddLogger,
 		common.LogRequest,
 		common.InterceptStandaloneErrors,
 		common.InterceptMSPID,

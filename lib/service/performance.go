@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
@@ -19,6 +18,7 @@ type PerformanceServiceProvider interface {
 }
 
 type PerformanceDependencyProvider interface {
+	LoggerProvider
 	persistence.PerformanceDBALProvider
 	ComputeTaskServiceProvider
 	EventServiceProvider
@@ -35,7 +35,7 @@ func NewPerformanceService(provider PerformanceDependencyProvider) *PerformanceS
 // RegisterPerformance check asset validity and stores a new performance report for the given task.
 // Note that the task key will also be the performance key (1:1 relationship).
 func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, requester string) (*asset.Performance, error) {
-	log.WithField("taskKey", newPerf.ComputeTaskKey).WithField("requester", requester).Debug("Registering new performance")
+	s.GetLogger().WithField("taskKey", newPerf.ComputeTaskKey).WithField("requester", requester).Debug("Registering new performance")
 	err := newPerf.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errors.ErrInvalidAsset, err.Error())

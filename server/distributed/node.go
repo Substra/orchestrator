@@ -27,7 +27,7 @@ func (a *NodeAdapter) RegisterNode(ctx context.Context, in *asset.RegisterNodePa
 
 	node := &asset.Node{}
 
-	err = invocator.Call(method, in, node)
+	err = invocator.Call(ctx, method, in, node)
 
 	return node, err
 }
@@ -42,7 +42,7 @@ func (a *NodeAdapter) GetAllNodes(ctx context.Context, in *asset.GetAllNodesPara
 
 	nodes := &asset.GetAllNodesResponse{}
 
-	err = invocator.Call(method, in, nodes)
+	err = invocator.Call(ctx, method, in, nodes)
 
 	return nodes, err
 }

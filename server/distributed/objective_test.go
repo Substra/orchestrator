@@ -23,7 +23,7 @@ func TestRegisterObjective(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", "orchestrator.objective:RegisterObjective", newObj, &asset.Objective{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.objective:RegisterObjective", newObj, &asset.Objective{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -40,7 +40,7 @@ func TestGetObjective(t *testing.T) {
 
 	param := &asset.GetObjectiveParam{Key: "uuid"}
 
-	invocator.On("Call", "orchestrator.objective:GetObjective", param, &asset.Objective{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.objective:GetObjective", param, &asset.Objective{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -57,7 +57,7 @@ func TestQueryObjectives(t *testing.T) {
 
 	param := &asset.QueryObjectivesParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", "orchestrator.objective:QueryObjectives", param, &asset.QueryObjectivesResponse{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.objective:QueryObjectives", param, &asset.QueryObjectivesResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -74,7 +74,7 @@ func TestGetLeaderboard(t *testing.T) {
 
 	param := &asset.LeaderboardQueryParam{ObjectiveKey: "uuid", SortOrder: 0}
 
-	invocator.On("Call", "orchestrator.objective:GetLeaderboard", param, &asset.Leaderboard{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.objective:GetLeaderboard", param, &asset.Leaderboard{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

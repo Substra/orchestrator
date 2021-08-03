@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -29,6 +28,7 @@ type ObjectiveServiceProvider interface {
 
 // ObjectiveDependencyProvider defines what the ObjectiveService needs to perform its duty
 type ObjectiveDependencyProvider interface {
+	LoggerProvider
 	persistence.ObjectiveDBALProvider
 	EventServiceProvider
 	PermissionServiceProvider
@@ -49,7 +49,7 @@ func NewObjectiveService(provider ObjectiveDependencyProvider) *ObjectiveService
 
 // RegisterObjective persist an objective
 func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string) (*asset.Objective, error) {
-	log.WithField("owner", owner).WithField("newObj", o).Debug("Registering objective")
+	s.GetLogger().WithField("owner", owner).WithField("newObj", o).Debug("Registering objective")
 	err := o.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())

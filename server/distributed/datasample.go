@@ -25,7 +25,7 @@ func (a *DataSampleAdapter) RegisterDataSamples(ctx context.Context, param *asse
 	}
 	method := "orchestrator.datasample:RegisterDataSamples"
 
-	err = invocator.Call(method, param, nil)
+	err = invocator.Call(ctx, method, param, nil)
 
 	return &asset.RegisterDataSamplesResponse{}, err
 }
@@ -38,7 +38,7 @@ func (a *DataSampleAdapter) UpdateDataSamples(ctx context.Context, param *asset.
 	}
 	method := "orchestrator.datasample:UpdateDataSamples"
 
-	err = invocator.Call(method, param, nil)
+	err = invocator.Call(ctx, method, param, nil)
 
 	return &asset.UpdateDataSamplesResponse{}, err
 }
@@ -52,7 +52,7 @@ func (a *DataSampleAdapter) QueryDataSamples(ctx context.Context, param *asset.Q
 	method := "orchestrator.datasample:QueryDataSamples"
 	response := &asset.QueryDataSamplesResponse{}
 
-	err = invocator.Call(method, param, response)
+	err = invocator.Call(ctx, method, param, response)
 
 	return response, err
 }

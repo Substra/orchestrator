@@ -26,7 +26,7 @@ func (a *ComputePlanAdapter) RegisterPlan(ctx context.Context, in *asset.NewComp
 
 	response := &asset.ComputePlan{}
 
-	err = invocator.Call(method, in, response)
+	err = invocator.Call(ctx, method, in, response)
 
 	return response, err
 }
@@ -40,7 +40,7 @@ func (a *ComputePlanAdapter) GetPlan(ctx context.Context, param *asset.GetComput
 
 	response := &asset.ComputePlan{}
 
-	err = invocator.Call(method, param, response)
+	err = invocator.Call(ctx, method, param, response)
 
 	return response, err
 }
@@ -54,7 +54,7 @@ func (a *ComputePlanAdapter) QueryPlans(ctx context.Context, param *asset.QueryP
 
 	response := &asset.QueryPlansResponse{}
 
-	err = invocator.Call(method, param, response)
+	err = invocator.Call(ctx, method, param, response)
 
 	return response, err
 }
@@ -68,7 +68,7 @@ func (a *ComputePlanAdapter) ApplyPlanAction(ctx context.Context, param *asset.A
 
 	response := &asset.ApplyPlanActionResponse{}
 
-	err = invocator.Call(method, param, nil)
+	err = invocator.Call(ctx, method, param, nil)
 
 	return response, err
 }

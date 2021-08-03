@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
@@ -23,7 +23,7 @@ func NewDataManagerServer() *DataManagerServer {
 
 // RegisterDataManager will persist new DataManagers
 func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.DataManager, error) {
-	log.WithField("datamanager", d).Debug("Register DataManager")
+	logger.Get(ctx).WithField("datamanager", d).Debug("Register DataManager")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.Ne
 
 // UpdateDataManager will update the objective of an existing DataManager
 func (s *DataManagerServer) UpdateDataManager(ctx context.Context, d *asset.DataManagerUpdateParam) (*asset.DataManagerUpdateResponse, error) {
-	log.WithField("datamanager", d).Debug("Update UpdateDataManager")
+	logger.Get(ctx).WithField("datamanager", d).Debug("Update UpdateDataManager")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {

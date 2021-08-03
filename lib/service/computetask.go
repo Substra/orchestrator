@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -31,6 +30,7 @@ type ComputeTaskServiceProvider interface {
 
 // ComputeTaskDependencyProvider defines what the ComputeTaskService needs to perform its duty
 type ComputeTaskDependencyProvider interface {
+	LoggerProvider
 	persistence.ComputeTaskDBALProvider
 	EventServiceProvider
 	AlgoServiceProvider
@@ -62,21 +62,21 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 
 // QueryTasks returns tasks matching filter
 func (s *ComputeTaskService) QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
-	log.WithField("pagination", p).WithField("filter", filter).Debug("Querying ComputeTasks")
+	s.GetLogger().WithField("pagination", p).WithField("filter", filter).Debug("Querying ComputeTasks")
 
 	return s.GetComputeTaskDBAL().QueryComputeTasks(p, filter)
 }
 
 // GetTask return a single task
 func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
-	log.WithField("key", key).Debug("Get ComputeTask")
+	s.GetLogger().WithField("key", key).Debug("Get ComputeTask")
 
 	return s.GetComputeTaskDBAL().GetComputeTask(key)
 }
 
 // RegisterTasks creates multiple compute tasks
 func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) error {
-	log.WithField("numTasks", len(tasks)).WithField("owner", owner).Debug("Registering new compute tasks")
+	s.GetLogger().WithField("numTasks", len(tasks)).WithField("owner", owner).Debug("Registering new compute tasks")
 	if len(tasks) == 0 {
 		return fmt.Errorf("%w no task to register", orcerrors.ErrBadRequest)
 	}
@@ -85,7 +85,7 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	if err != nil {
 		return err
 	}
-	sortedTasks, err := sortTasks(tasks, existingKeys)
+	sortedTasks, err := s.SortTasks(tasks, existingKeys)
 	if err != nil {
 		return err
 	}
@@ -122,13 +122,13 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	return nil
 }
 
-// sortTasks is a function to sort a list of tasks in a valid order for their registration.
+// SortTasks is a function to sort a list of tasks in a valid order for their registration.
 // It performs a topological sort of the tasks such that for every dependency from task A to B
 // A comes before B in the resulting list of tasks.
 // A topological ordering is possible only if the graph is a DAG and has no cycles. This function will
 // raise an error if there is a cycle in the list of tasks.
 // This sorting function is based on Kahn's algorithm.
-func sortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*asset.NewComputeTask, error) {
+func (s *ComputeTaskService) SortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*asset.NewComputeTask, error) {
 	sortedTasks := make([]*asset.NewComputeTask, len(newTasks))
 	unsortedTasks := make([]*asset.NewComputeTask, len(newTasks))
 	copy(unsortedTasks, newTasks)
@@ -178,7 +178,8 @@ func sortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*ass
 	}
 
 	if len(unsortedTasks) > 0 {
-		log.WithField("unsortedTasks", len(unsortedTasks)).
+		s.GetLogger().
+			WithField("unsortedTasks", len(unsortedTasks)).
 			WithField("existingTasks", len(existingTasks)).
 			Debug("Failed to sort tasks, cyclic dependency in compute plan graph or unknown parent")
 		return nil, fmt.Errorf("cyclic dependency in compute plan graph or unknown task parent: %w, unsorted_tasks_count: %d", orcerrors.ErrInvalidAsset, len(unsortedTasks))
@@ -207,7 +208,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	if err != nil {
 		return nil, err
 	}
-	if !isCompatibleWithParents(input.Category, parentTasks) {
+	if !s.IsCompatibleWithParents(input.Category, parentTasks) {
 		return nil, fmt.Errorf("incompatible models from parent tasks: %w", orcerrors.ErrInvalidAsset)
 	}
 
@@ -261,7 +262,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 // - task is in a terminal state (done, failed, canceled)
 // - all children are in a terminal state
 func (s *ComputeTaskService) canDisableModels(key string, requester string) (bool, error) {
-	logger := log.WithField("taskKey", key)
+	logger := s.GetLogger().WithField("taskKey", key)
 	task, err := s.GetTask(key)
 	if err != nil {
 		return false, err
@@ -613,15 +614,15 @@ func (s *ComputeTaskService) getExistingKeys(tasks []*asset.NewComputeTask) ([]s
 	return existingKeys, nil
 }
 
-// Check task compatibility with parents tasks
-func isCompatibleWithParents(category asset.ComputeTaskCategory, parents []*asset.ComputeTask) bool {
+// IsCompatibleWithParents checks task compatibility with parents tasks
+func (s *ComputeTaskService) IsCompatibleWithParents(category asset.ComputeTaskCategory, parents []*asset.ComputeTask) bool {
 	inputs := map[asset.ComputeTaskCategory]uint32{}
 
 	for _, p := range parents {
 		inputs[p.Category]++
 	}
 
-	log.WithField("category", category).WithField("parents", inputs).Debug("checking parent compatibility")
+	s.GetLogger().WithField("category", category).WithField("parents", inputs).Debug("checking parent compatibility")
 
 	noTest := inputs[asset.ComputeTaskCategory_TASK_TEST] == 0
 	noTrain := inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0

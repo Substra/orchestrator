@@ -3,15 +3,24 @@ package service
 import (
 	"testing"
 
+	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/event"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
+func newMockedProvider() *MockDependenciesProvider {
+	provider := new(MockDependenciesProvider)
+	// Unconditionally mock logger
+	provider.On("GetLogger").Maybe().Return(log.Entry{})
+
+	return provider
+}
+
 func TestServiceProviderInit(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dispatcher := new(event.MockDispatcher)
-	provider := NewProvider(dbal, dispatcher)
+	provider := NewProvider(log.Entry{}, dbal, dispatcher)
 
 	assert.Implements(t, (*NodeServiceProvider)(nil), provider, "service provider should provide NodeService")
 	assert.Implements(t, (*ObjectiveServiceProvider)(nil), provider, "service provider should provide ObjectiveService")
@@ -27,7 +36,7 @@ func TestServiceProviderInit(t *testing.T) {
 func TestLazyInstanciation(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dispatcher := new(event.MockDispatcher)
-	provider := NewProvider(dbal, dispatcher)
+	provider := NewProvider(log.Entry{}, dbal, dispatcher)
 
 	assert.Nil(t, provider.node, "service should be instanciated when needed")
 

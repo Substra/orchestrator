@@ -119,7 +119,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 // applyTaskAction is the internal method allowing any transition (string).
 // This allows to use this method with internal only transitions (abort).
 func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
-	log.WithField("taskKey", task.Key).WithField("action", action).WithField("reason", reason).Debug("Applying task action")
+	s.GetLogger().WithField("taskKey", task.Key).WithField("action", action).WithField("reason", reason).Debug("Applying task action")
 	state := newState(s, task)
 	return state.Event(string(action), task, reason)
 }
@@ -142,7 +142,7 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 		return
 	}
 
-	log.WithFields(
+	s.GetLogger().WithFields(
 		log.F("taskKey", task.Key),
 		log.F("taskStatus", task.Status),
 		log.F("numChildren", len(children)),
@@ -160,7 +160,7 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 // propagateDone propagates the DONE status of a parent to the task.
 // This will iterate over task parents and mark it as TODO if all parents are DONE.
 func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.ComputeTask) error {
-	logger := log.WithFields(
+	logger := s.GetLogger().WithFields(
 		log.F("triggeringParent", triggeringParent.Key),
 		log.F("triggeringParentStatus", triggeringParent.Status),
 		log.F("child", child.Key),
@@ -221,7 +221,7 @@ func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition taskTran
 		return
 	}
 
-	log.WithFields(
+	s.GetLogger().WithFields(
 		log.F("taskKey", task.Key),
 		log.F("taskStatus", task.Status),
 		log.F("numChildren", len(children)),
@@ -261,7 +261,7 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 	}
 	task.Status = asset.ComputeTaskStatus(statusVal)
 
-	log.WithFields(
+	s.GetLogger().WithFields(
 		log.F("taskKey", task.Key),
 		log.F("newStatus", task.Status),
 		log.F("reason", reason),

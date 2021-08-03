@@ -11,7 +11,7 @@ import (
 
 func TestGetPlan(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetComputePlanDBAL").Return(dbal)
 
@@ -31,7 +31,7 @@ func TestGetPlan(t *testing.T) {
 func TestRegisterPlan(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputePlanDBAL").Return(dbal)
@@ -70,7 +70,7 @@ func TestRegisterPlan(t *testing.T) {
 func TestCancelPlan(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetComputeTaskService").Return(cts)

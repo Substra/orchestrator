@@ -29,7 +29,7 @@ func TestRegisterDataSample(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", "orchestrator.datasample:RegisterDataSamples", param, nil).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.datasample:RegisterDataSamples", param, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -49,7 +49,7 @@ func TestUpdateDataSamples(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", "orchestrator.datasample:UpdateDataSamples", updatedDS, nil).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.datasample:UpdateDataSamples", updatedDS, nil).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -64,7 +64,7 @@ func TestQueryDataSamples(t *testing.T) {
 	invocator := &mockedInvocator{}
 
 	queryParam := &asset.QueryDataSamplesParam{PageToken: "", PageSize: 10}
-	invocator.On("Call", "orchestrator.datasample:QueryDataSamples", queryParam, &asset.QueryDataSamplesResponse{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.datasample:QueryDataSamples", queryParam, &asset.QueryDataSamplesResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

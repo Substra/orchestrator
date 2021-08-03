@@ -8,6 +8,7 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/utils"
 )
 
@@ -54,8 +55,9 @@ func (c *Context) GetProvider() service.DependenciesProvider {
 	ctx := c.GetContext()
 	db := NewDB(ctx, stub)
 	dispatcher := c.GetDispatcher()
+	logger := logger.Get(ctx)
 
-	return service.NewProvider(db, dispatcher)
+	return service.NewProvider(logger, db, dispatcher)
 }
 
 // GetDispatcher returns inner event.Dispatcher

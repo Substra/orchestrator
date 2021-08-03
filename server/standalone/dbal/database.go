@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/go-playground/log/v7"
 	"github.com/golang-migrate/migrate/v4"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/standalone/migration"
 )
 
@@ -26,7 +26,7 @@ type Database struct {
 type SQLLogger struct{}
 
 func (*SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
-	log.
+	logger.Get(ctx).
 		WithField("msg", msg).
 		WithField("level", level).
 		// Other available fields (omitted to keep logs readable):
@@ -94,7 +94,7 @@ func (d *Database) Close() {
 // The transaction is configured with SERIALIZABLE isolation level to protect against potential
 // inconsistencies with concurrent requests.
 func (d *Database) GetTransactionalDBAL(ctx context.Context, channel string, readOnly bool) (TransactionDBAL, error) {
-	log.WithField("ReadOnly", readOnly).WithField("channel", channel).Debug("new DB transaction")
+	logger.Get(ctx).WithField("ReadOnly", readOnly).WithField("channel", channel).Debug("new DB transaction")
 	txOpts := pgx.TxOptions{
 		IsoLevel: pgx.Serializable, // This level of isolation is the guarantee to always return consistent data
 	}

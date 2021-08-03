@@ -1,13 +1,12 @@
 package handlers
 
 import (
-	"github.com/go-playground/log/v7"
-
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
@@ -24,7 +23,7 @@ func NewAlgoServer() *AlgoServer {
 
 // RegisterAlgo will persiste a new algo
 func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset.Algo, error) {
-	log.WithField("algo", a).Debug("Register Algo")
+	logger.Get(ctx).WithField("algo", a).Debug("Register Algo")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {

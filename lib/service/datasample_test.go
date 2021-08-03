@@ -15,7 +15,7 @@ import (
 func TestRegisterSingleDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dm := new(MockDataManagerAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
@@ -58,7 +58,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dm := new(MockDataManagerAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -82,7 +82,7 @@ func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
 func TestRegisterMultipleDataSamples(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dm := new(MockDataManagerAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
@@ -138,7 +138,7 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 func TestUpdateSingleExistingDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dm := new(MockDataManagerAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
@@ -186,7 +186,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 func TestUpdateMultipleExistingDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dm := new(MockDataManagerAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
@@ -245,7 +245,7 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 func TestUpdateSingleNewDataSample(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dm := new(MockDataManagerAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
 	service := NewDataSampleService(provider)
@@ -267,7 +267,7 @@ func TestUpdateSingleNewDataSample(t *testing.T) {
 
 func TestQueryDataSamples(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	service := NewDataSampleService(provider)
 
@@ -295,7 +295,7 @@ func TestQueryDataSamples(t *testing.T) {
 
 func TestCheckSameManager(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	service := NewDataSampleService(provider)
 
@@ -325,7 +325,7 @@ func TestCheckSameManager(t *testing.T) {
 
 func TestIsTestOnly(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	service := NewDataSampleService(provider)
 

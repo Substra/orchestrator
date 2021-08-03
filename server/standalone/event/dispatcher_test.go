@@ -2,6 +2,7 @@
 package event
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -15,8 +16,8 @@ type MockAMQPChannel struct {
 	mock.Mock
 }
 
-func (m *MockAMQPChannel) Publish(routingKey string, data []byte) error {
-	args := m.Called(routingKey, data)
+func (m *MockAMQPChannel) Publish(ctx context.Context, routingKey string, data []byte) error {
+	args := m.Called(ctx, routingKey, data)
 	return args.Error(0)
 }
 
@@ -34,8 +35,8 @@ func TestEventChannel(t *testing.T) {
 	data, err := json.Marshal(eventWithChannel)
 	require.NoError(t, err)
 
-	amqp.On("Publish", "testChannel", data).Once().Return(nil)
+	amqp.On("Publish", context.TODO(), "testChannel", data).Once().Return(nil)
 
-	err = dispatcher.Dispatch()
+	err = dispatcher.Dispatch(context.Background())
 	assert.NoError(t, err)
 }

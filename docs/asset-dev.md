@@ -149,7 +149,7 @@ func (a *AssetAdapter) DoSomething(ctx context.Context, input *assets.AssetDoSom
     }
     response := &assets.DoSomethingResponse
 
-    err = invocator.Call("orchestrator.asset:DoSomething", input, response)
+    err = invocator.Call(ctx, "orchestrator.asset:DoSomething", input, response)
 
     return response, err
 }

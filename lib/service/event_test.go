@@ -12,7 +12,7 @@ import (
 func TestEnqueue(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dispatcher := new(event.MockDispatcher)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetEventDBAL").Return(dbal)
 	provider.On("GetEventQueue").Return(dispatcher)

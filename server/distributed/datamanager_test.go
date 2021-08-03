@@ -19,10 +19,10 @@ func TestRegisterDatamanager(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
+	invocator.On("Call", AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
 		Once().
 		Run(func(args mock.Arguments) {
-			dm := args.Get(2).(*asset.DataManager)
+			dm := args.Get(3).(*asset.DataManager)
 			dm.Key = "uuid"
 			dm.Owner = "test"
 		}).

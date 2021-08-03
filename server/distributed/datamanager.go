@@ -27,7 +27,7 @@ func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.N
 
 	response := &asset.DataManager{}
 
-	err = invocator.Call(method, d, response)
+	err = invocator.Call(ctx, method, d, response)
 
 	return response, err
 }
@@ -40,7 +40,7 @@ func (s *DataManagerAdapter) UpdateDataManager(ctx context.Context, d *asset.Dat
 	}
 	method := "orchestrator.datamanager:UpdateDataManager"
 
-	err = invocator.Call(method, d, nil)
+	err = invocator.Call(ctx, method, d, nil)
 
 	return &asset.DataManagerUpdateResponse{}, err
 }
@@ -54,7 +54,7 @@ func (s *DataManagerAdapter) GetDataManager(ctx context.Context, params *asset.G
 	method := "orchestrator.datamanager:GetDataManager"
 	response := &asset.DataManager{}
 
-	err = invocator.Call(method, params, response)
+	err = invocator.Call(ctx, method, params, response)
 
 	return response, err
 }
@@ -68,7 +68,7 @@ func (s *DataManagerAdapter) QueryDataManagers(ctx context.Context, params *asse
 	method := "orchestrator.datamanager:QueryDataManagers"
 	response := &asset.QueryDataManagersResponse{}
 
-	err = invocator.Call(method, params, response)
+	err = invocator.Call(ctx, method, params, response)
 
 	return response, err
 }

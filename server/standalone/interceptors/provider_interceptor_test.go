@@ -97,7 +97,7 @@ func TestOnSuccess(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 
-	publisher.On("Publish", "testChannel", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+	publisher.On("Publish", mock.Anything, "testChannel", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
 		wg.Done()
 	})
 
@@ -169,7 +169,7 @@ func TestRetryOnUnserializableTransaction(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 
-	publisher.On("Publish", "testChannel", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
+	publisher.On("Publish", mock.Anything, "testChannel", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
 		wg.Done()
 	})
 

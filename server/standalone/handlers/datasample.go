@@ -3,11 +3,10 @@ package handlers
 import (
 	"context"
 
-	"github.com/go-playground/log/v7"
-
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
@@ -24,7 +23,7 @@ func NewDataSampleServer() *DataSampleServer {
 
 // RegisterDataSamples will persist new DataSamples
 func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
-	log.WithField("nbSamples", len(input.Samples)).Debug("Register DataSamples")
+	logger.Get(ctx).WithField("nbSamples", len(input.Samples)).Debug("Register DataSamples")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {
@@ -45,7 +44,7 @@ func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset
 
 // UpdateDataSamples will update the datamanagers existing DataSamples
 func (s *DataSampleServer) UpdateDataSamples(ctx context.Context, datasample *asset.UpdateDataSamplesParam) (*asset.UpdateDataSamplesResponse, error) {
-	log.WithField("datasample", datasample).Debug("Update DataSample")
+	logger.Get(ctx).WithField("datasample", datasample).Debug("Update DataSample")
 
 	mspid, err := common.ExtractMSPID(ctx)
 	if err != nil {

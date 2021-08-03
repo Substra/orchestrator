@@ -15,7 +15,7 @@ import (
 
 func TestGetComputeTasksOutputModels(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetModelDBAL").Return(dbal)
 
@@ -36,7 +36,7 @@ func TestGetComputeTasksOutputModels(t *testing.T) {
 
 func TestGetModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetModelDBAL").Return(dbal)
 
@@ -58,7 +58,7 @@ func TestGetModel(t *testing.T) {
 
 func TestRegisterOnNonDoingTask(t *testing.T) {
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
 
@@ -87,7 +87,7 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 
 func TestRegisterModelWrongPermissions(t *testing.T) {
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
 
@@ -118,7 +118,7 @@ func TestRegisterTrainModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -202,7 +202,7 @@ func TestRegisterAggregateModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -280,7 +280,7 @@ func TestRegisterAggregateModel(t *testing.T) {
 func TestRegisterDuplicateModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	service := NewModelService(provider)
@@ -323,7 +323,7 @@ func TestRegisterHeadModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -417,7 +417,7 @@ func TestRegisterHeadModel(t *testing.T) {
 func TestRegisterWrongModelType(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	service := NewModelService(provider)
@@ -455,7 +455,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 func TestRegisterMultipleHeads(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	service := NewModelService(provider)
@@ -496,7 +496,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 func TestGetInputModels(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
@@ -591,7 +591,7 @@ func TestGetAggregateChildInputModels(t *testing.T) {
 func TestCanDisableModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
@@ -616,7 +616,7 @@ func TestDisableModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetEventService").Return(es)
@@ -650,7 +650,7 @@ func TestDisableModel(t *testing.T) {
 
 func TestQueryModels(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	service := NewModelService(provider)
 
@@ -718,9 +718,12 @@ func TestAreAllOutputsRegistered(t *testing.T) {
 		},
 	}
 
+	provider := newMockedProvider()
+	service := NewModelService(provider)
+
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.outcome, areAllOutputsRegistered(tc.task, tc.models))
+			assert.Equal(t, tc.outcome, service.AreAllOutputsRegistered(tc.task, tc.models))
 		})
 	}
 }

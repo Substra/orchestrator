@@ -28,7 +28,7 @@ var newTrainTask = &asset.NewComputeTask{
 
 func TestGetTask(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 
@@ -50,7 +50,7 @@ func TestGetTask(t *testing.T) {
 
 func TestQueryTasks(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 
@@ -73,7 +73,7 @@ func TestQueryTasks(t *testing.T) {
 
 func TestRegisterTaskConflict(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 
@@ -92,7 +92,7 @@ func TestRegisterTaskConflict(t *testing.T) {
 func TestRegisterTrainTask(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	dms := new(MockDataManagerAPI)
 	dss := new(MockDataSampleAPI)
@@ -193,7 +193,7 @@ func TestRegisterTrainTask(t *testing.T) {
 
 func TestRegisterFailedTask(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
@@ -260,7 +260,7 @@ func TestSetCompositeData(t *testing.T) {
 	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
@@ -308,7 +308,7 @@ func TestSetCompositeData(t *testing.T) {
 func TestSetAggregateData(t *testing.T) {
 	ns := new(MockNodeAPI)
 	as := new(MockAlgoAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetNodeService").Return(ns)
 	provider.On("GetAlgoService").Return(as)
 	// Use the real permission service
@@ -389,7 +389,7 @@ func TestSetTestData(t *testing.T) {
 
 		os := new(MockObjectiveAPI)
 		dms := new(MockDataManagerAPI)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetObjectiveService").Return(os)
 		provider.On("GetDataManagerService").Return(dms)
 
@@ -434,7 +434,7 @@ func TestSetTestData(t *testing.T) {
 		os := new(MockObjectiveAPI)
 		dms := new(MockDataManagerAPI)
 		dss := new(MockDataSampleAPI)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetObjectiveService").Return(os)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
@@ -483,7 +483,7 @@ func TestSetTestData(t *testing.T) {
 		os := new(MockObjectiveAPI)
 		dms := new(MockDataManagerAPI)
 		dss := new(MockDataSampleAPI)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetObjectiveService").Return(os)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
@@ -616,11 +616,14 @@ func TestIsParentCompatible(t *testing.T) {
 		},
 	}
 
+	provider := newMockedProvider()
+	service := NewComputeTaskService(provider)
+
 	for _, c := range cases {
 		t.Run(
 			fmt.Sprintf("%s: %t", c.n, c.o),
 			func(t *testing.T) {
-				assert.Equal(t, c.o, isCompatibleWithParents(c.t, c.p))
+				assert.Equal(t, c.o, service.IsCompatibleWithParents(c.t, c.p))
 			},
 		)
 	}
@@ -665,7 +668,9 @@ func TestSortTasks(t *testing.T) {
 	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
 	existingKeys := []string{}
 
-	result, err := sortTasks(nodes, existingKeys)
+	provider := newMockedProvider()
+	service := NewComputeTaskService(provider)
+	result, err := service.SortTasks(nodes, existingKeys)
 
 	assert.NoError(t, err)
 	assert.Equal(t, len(nodes), len(result))
@@ -702,7 +707,9 @@ func TestSortTasksWithCircularDependency(t *testing.T) {
 	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
 	existingKeys := []string{}
 
-	_, err := sortTasks(nodes, existingKeys)
+	provider := newMockedProvider()
+	service := NewComputeTaskService(provider)
+	_, err := service.SortTasks(nodes, existingKeys)
 
 	assert.Error(t, err)
 }
@@ -737,7 +744,9 @@ func TestSortDependencyWithExistingTasks(t *testing.T) {
 	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
 	existingKeys := []string{existing1, existing2}
 
-	result, err := sortTasks(nodes, existingKeys)
+	provider := newMockedProvider()
+	service := NewComputeTaskService(provider)
+	result, err := service.SortTasks(nodes, existingKeys)
 
 	assert.NoError(t, err)
 	assert.Equal(t, len(nodes), len(result))
@@ -770,7 +779,9 @@ func TestSortTasksUnknownRef(t *testing.T) {
 	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
 	existingKeys := []string{}
 
-	_, err := sortTasks(nodes, existingKeys)
+	provider := newMockedProvider()
+	service := NewComputeTaskService(provider)
+	_, err := service.SortTasks(nodes, existingKeys)
 
 	assert.Error(t, err)
 }
@@ -830,7 +841,7 @@ func TestCheckCanProcessParent(t *testing.T) {
 			true,
 		},
 	}
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	// Use the real permission service
 	provider.On("GetPermissionService").Return(NewPermissionService(provider))
 	service := NewComputeTaskService(provider)
@@ -869,7 +880,7 @@ func TestCanDisableModels(t *testing.T) {
 		}
 
 		dbal := new(persistenceHelper.DBAL)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -888,7 +899,7 @@ func TestCanDisableModels(t *testing.T) {
 		}
 
 		dbal := new(persistenceHelper.DBAL)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
@@ -908,7 +919,7 @@ func TestCanDisableModels(t *testing.T) {
 		}
 
 		dbal := new(persistenceHelper.DBAL)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
@@ -935,7 +946,7 @@ func TestCanDisableModels(t *testing.T) {
 		}
 
 		dbal := new(persistenceHelper.DBAL)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
@@ -962,7 +973,7 @@ func TestCanDisableModels(t *testing.T) {
 		}
 
 		dbal := new(persistenceHelper.DBAL)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
@@ -991,7 +1002,7 @@ func TestCanDisableModels(t *testing.T) {
 		}
 
 		dbal := new(persistenceHelper.DBAL)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
@@ -1021,7 +1032,7 @@ func TestCanDisableModels(t *testing.T) {
 		}
 
 		dbal := new(persistenceHelper.DBAL)
-		provider := new(MockDependenciesProvider)
+		provider := newMockedProvider()
 		provider.On("GetComputeTaskDBAL").Return(dbal)
 		cps := new(MockComputePlanAPI)
 		provider.On("GetComputePlanService").Return(cps)
@@ -1045,7 +1056,7 @@ func TestCanDisableModels(t *testing.T) {
 }
 
 func TestRegisterTasksEmptyList(t *testing.T) {
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	service := NewComputeTaskService(provider)
 
@@ -1054,7 +1065,7 @@ func TestRegisterTasksEmptyList(t *testing.T) {
 }
 
 func TestGetRegisteredTask(t *testing.T) {
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	dbal := new(persistenceHelper.DBAL)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 

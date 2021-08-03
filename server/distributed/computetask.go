@@ -27,7 +27,7 @@ func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.Reg
 
 	response := &asset.RegisterTasksResponse{}
 
-	err = Invocator.Call(method, input, nil)
+	err = Invocator.Call(ctx, method, input, nil)
 
 	return response, err
 }
@@ -42,7 +42,7 @@ func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.GetTaskPa
 
 	response := &asset.ComputeTask{}
 
-	err = invocator.Call(method, query, response)
+	err = invocator.Call(ctx, method, query, response)
 
 	return response, err
 }
@@ -57,7 +57,7 @@ func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryT
 
 	response := &asset.QueryTasksResponse{}
 
-	err = invocator.Call(method, param, response)
+	err = invocator.Call(ctx, method, param, response)
 
 	return response, err
 }
@@ -70,7 +70,7 @@ func (a *ComputeTaskAdapter) ApplyTaskAction(ctx context.Context, param *asset.A
 	}
 	method := "orchestrator.computetask:ApplyTaskAction"
 
-	err = invocator.Call(method, param, nil)
+	err = invocator.Call(ctx, method, param, nil)
 	if err != nil {
 		return nil, err
 	}

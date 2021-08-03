@@ -26,7 +26,7 @@ func (a *PerformanceAdapter) RegisterPerformance(ctx context.Context, newPerf *a
 
 	perf := &asset.Performance{}
 
-	err = invocator.Call(method, newPerf, perf)
+	err = invocator.Call(ctx, method, newPerf, perf)
 
 	return perf, err
 }
@@ -40,7 +40,7 @@ func (a *PerformanceAdapter) GetComputeTaskPerformance(ctx context.Context, para
 
 	perf := &asset.Performance{}
 
-	err = invocator.Call(method, param, perf)
+	err = invocator.Call(ctx, method, param, perf)
 
 	return perf, err
 }

@@ -1,9 +1,15 @@
 package service
 
 import (
+	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
 )
+
+// LoggerProvider describes a provider of logger instance.
+type LoggerProvider interface {
+	GetLogger() log.Entry
+}
 
 // DependenciesProvider describes a Provider exposing all orchestration services.
 type DependenciesProvider interface {
@@ -21,6 +27,7 @@ type DependenciesProvider interface {
 	ComputePlanServiceProvider
 	PerformanceServiceProvider
 	EventServiceProvider
+	LoggerProvider
 }
 
 // Provider is the central part of the dependency injection pattern.
@@ -29,6 +36,7 @@ type DependenciesProvider interface {
 // Each service should define a ServiceDependencyProvider interface which states what are its requirements.
 // Since the Provider implements every Provider interface, it can fit all service dependencies.
 type Provider struct {
+	logger      log.Entry
 	dbal        persistence.DBAL
 	eventQueue  event.Queue
 	node        NodeAPI
@@ -45,9 +53,14 @@ type Provider struct {
 	event       EventAPI
 }
 
+// GetLogger returns a logger instance.
+func (sc *Provider) GetLogger() log.Entry {
+	return sc.logger
+}
+
 // NewProvider return an instance of Provider based on given persistence layer.
-func NewProvider(dbal persistence.DBAL, queue event.Queue) *Provider {
-	return &Provider{dbal: dbal, eventQueue: queue}
+func NewProvider(logger log.Entry, dbal persistence.DBAL, queue event.Queue) *Provider {
+	return &Provider{logger: logger, dbal: dbal, eventQueue: queue}
 }
 
 // GetNodeDBAL returns the database abstraction layer for Nodes

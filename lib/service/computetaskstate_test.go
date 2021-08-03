@@ -94,7 +94,7 @@ func TestFailedStateChange(t *testing.T) {
 func TestDispatchOnTransition(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -135,7 +135,7 @@ func TestDispatchOnTransition(t *testing.T) {
 func TestUpdateTaskStateCanceled(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -166,7 +166,7 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 func TestCascadeStatusDone(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)

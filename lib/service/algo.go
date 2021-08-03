@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -24,6 +23,7 @@ type AlgoServiceProvider interface {
 
 // AlgoDependencyProvider defines what the AlgoService needs to perform its duty
 type AlgoDependencyProvider interface {
+	LoggerProvider
 	persistence.AlgoDBALProvider
 	EventServiceProvider
 	PermissionServiceProvider
@@ -42,7 +42,7 @@ func NewAlgoService(provider AlgoDependencyProvider) *AlgoService {
 
 // RegisterAlgo persist an algo
 func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo, error) {
-	log.WithField("owner", owner).WithField("newObj", a).Debug("Registering algo")
+	s.GetLogger().WithField("owner", owner).WithField("newObj", a).Debug("Registering algo")
 	err := a.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())

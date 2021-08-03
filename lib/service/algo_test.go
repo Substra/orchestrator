@@ -14,7 +14,7 @@ func TestRegisterAlgo(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetAlgoDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
@@ -79,7 +79,7 @@ func TestRegisterAlgo(t *testing.T) {
 
 func TestGetAlgo(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetAlgoDBAL").Return(dbal)
 	service := NewAlgoService(provider)
 
@@ -97,7 +97,7 @@ func TestGetAlgo(t *testing.T) {
 
 func TestQueryAlgos(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetAlgoDBAL").Return(dbal)
 	service := NewAlgoService(provider)
 

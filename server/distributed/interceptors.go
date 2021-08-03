@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/owkin/orchestrator/chaincode/contracts"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -65,7 +65,7 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 
 	chaincode := md.Get(headerChaincode)[0]
 
-	log.WithField("chaincode", chaincode).
+	logger.Get(ctx).WithField("chaincode", chaincode).
 		WithField("channel", channel).
 		WithField("mspid", mspid).
 		Debug("Successfully retrieved chaincode metadata from headers")
@@ -82,7 +82,7 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 		gateway.WithIdentity(ci.wallet, label),
 	)
 	elapsed := time.Since(start)
-	log.WithField("duration", elapsed).Debug("Connected to gateway")
+	logger.Get(ctx).WithField("duration", elapsed).Debug("Connected to gateway")
 
 	if err != nil {
 		return nil, err

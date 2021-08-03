@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
@@ -26,6 +25,7 @@ type ModelServiceProvider interface {
 }
 
 type ModelDependencyProvider interface {
+	LoggerProvider
 	persistence.ModelDBALProvider
 	persistence.AlgoDBALProvider
 	persistence.DataManagerDBALProvider
@@ -48,7 +48,7 @@ func (s *ModelService) GetComputeTaskOutputModels(key string) ([]*asset.Model, e
 }
 
 func (s *ModelService) GetModel(key string) (*asset.Model, error) {
-	log.WithField("key", key).Debug("Get model")
+	s.GetLogger().WithField("key", key).Debug("Get model")
 	return s.GetModelDBAL().GetModel(key)
 }
 
@@ -101,7 +101,7 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 }
 
 func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string) (*asset.Model, error) {
-	log.WithField("model", newModel).WithField("requester", requester).Debug("Registering new model")
+	s.GetLogger().WithField("model", newModel).WithField("requester", requester).Debug("Registering new model")
 
 	err := newModel.Validate()
 	if err != nil {
@@ -164,7 +164,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 	}
 
 	existingModels = append(existingModels, model)
-	if areAllOutputsRegistered(task, existingModels) {
+	if s.AreAllOutputsRegistered(task, existingModels) {
 		reason := fmt.Sprintf("Last model %s registered by %s", model.Key, requester)
 		err = s.GetComputeTaskService().applyTaskAction(task, transitionDone, reason)
 		if err != nil {
@@ -253,7 +253,7 @@ func (s *ModelService) canDisableModel(model *asset.Model, requester string) (bo
 
 // DisableModel removes model's address and emit an "disabled" event
 func (s *ModelService) DisableModel(key string, requester string) error {
-	log.WithField("modelKey", key).Debug("disabling model")
+	s.GetLogger().WithField("modelKey", key).Debug("disabling model")
 	model, err := s.GetModelDBAL().GetModel(key)
 	if err != nil {
 		return err
@@ -287,6 +287,25 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 	return nil
 }
 
+// AreAllOutputsRegistered is based on the cardinality of existingModels to return whether all
+// expected outputs are registered or not.
+func (s *ModelService) AreAllOutputsRegistered(task *asset.ComputeTask, existingModels []*asset.Model) bool {
+	// TOOD: unit test
+	count := countModels(existingModels)
+
+	switch task.Category {
+	case asset.ComputeTaskCategory_TASK_TRAIN:
+		return count.simple == 1
+	case asset.ComputeTaskCategory_TASK_COMPOSITE:
+		return count.head == 1 && count.simple == 1
+	case asset.ComputeTaskCategory_TASK_AGGREGATE:
+		return count.simple == 1
+	default:
+		s.GetLogger().WithField("taskKey", task.Key).WithField("category", task.Category).Warn("unexpected output model check")
+		return false
+	}
+}
+
 type modelCount struct {
 	simple uint
 	head   uint
@@ -305,24 +324,6 @@ func countModels(models []*asset.Model) modelCount {
 	}
 
 	return count
-}
-
-// areAllOutputsRegistered is based on the cardinality of existingModels to return whether all
-// expected outputs are registered or not.
-func areAllOutputsRegistered(task *asset.ComputeTask, existingModels []*asset.Model) bool {
-	count := countModels(existingModels)
-
-	switch task.Category {
-	case asset.ComputeTaskCategory_TASK_TRAIN:
-		return count.simple == 1
-	case asset.ComputeTaskCategory_TASK_COMPOSITE:
-		return count.head == 1 && count.simple == 1
-	case asset.ComputeTaskCategory_TASK_AGGREGATE:
-		return count.simple == 1
-	default:
-		log.WithField("taskKey", task.Key).WithField("category", task.Category).Warn("unexpected output model check")
-		return false
-	}
 }
 
 // checkDuplicateModel returns an error if a model of the same category already exist

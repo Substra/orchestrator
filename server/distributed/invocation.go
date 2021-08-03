@@ -1,14 +1,15 @@
 package distributed
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -26,7 +27,7 @@ type GatewayContract interface {
 // Invocator describe how to invoke chaincode in a somewhat generic way.
 // This is the Gandalf of fabric.
 type Invocator interface {
-	Call(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error
+	Call(ctx context.Context, method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error
 }
 
 // ContractInvocator implements the Invocator interface.
@@ -43,7 +44,7 @@ func NewContractInvocator(c GatewayContract, checker common.TransactionChecker, 
 
 // Call will evaluate or invoke a transaction to the ledger, deserializing its result in the output parameter.
 // The choice of evaluation or invocation is based on contracts.AllEvaluateTransactions.
-func (i *ContractInvocator) Call(method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
+func (i *ContractInvocator) Call(ctx context.Context, method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
 	isEvaluate := i.checker.IsEvaluateMethod(method)
 
 	txType := "Invoke"
@@ -51,7 +52,7 @@ func (i *ContractInvocator) Call(method string, param protoreflect.ProtoMessage,
 		txType = "Evaluate"
 	}
 
-	logger := log.WithField("method", method).WithField("param", param).WithField("txType", txType)
+	logger := logger.Get(ctx).WithField("method", method).WithField("param", param).WithField("txType", txType)
 	logger.Debug("Calling chaincode")
 
 	start := time.Now()

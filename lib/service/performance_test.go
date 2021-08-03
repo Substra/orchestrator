@@ -13,7 +13,7 @@ func TestRegisterPerformance(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetPerformanceDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -57,7 +57,7 @@ func TestRegisterPerformance(t *testing.T) {
 
 func TestRegisterPerformanceInvalidTask(t *testing.T) {
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	service := NewPerformanceService(provider)
 

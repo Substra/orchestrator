@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
@@ -24,6 +23,7 @@ type PermissionServiceProvider interface {
 
 // PermissionDependencyProvider defines what the PermissionService needs to perform its duty
 type PermissionDependencyProvider interface {
+	LoggerProvider
 	NodeServiceProvider
 }
 
@@ -91,7 +91,7 @@ func (s *PermissionService) CanProcess(perms *asset.Permissions, requester strin
 	if perms.Process.Public || utils.StringInSlice(perms.Process.AuthorizedIds, requester) {
 		return true
 	}
-	log.WithField("requester", requester).WithField("permissions", perms).Debug("Requester can't process the asset")
+	s.GetLogger().WithField("requester", requester).WithField("permissions", perms).Debug("Requester can't process the asset")
 	return false
 }
 

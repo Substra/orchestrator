@@ -15,7 +15,7 @@ func TestRegisterDataManager(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
 	obj := new(MockObjectiveAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	es := new(MockEventAPI)
 
 	provider.On("GetObjectiveService").Return(obj)
@@ -83,7 +83,7 @@ func TestRegisterDataManager(t *testing.T) {
 func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	es := new(MockEventAPI)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
@@ -151,7 +151,7 @@ func TestRegisterDataManagerUnknownObjective(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
 	obj := new(MockObjectiveAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
@@ -194,7 +194,7 @@ func TestUpdateDataManager(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
 	obj := new(MockObjectiveAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	es := new(MockEventAPI)
 
 	provider.On("GetObjectiveService").Return(obj)
@@ -266,7 +266,7 @@ func TestUpdateDataManager(t *testing.T) {
 func TestUpdateDataManagerOtherOwner(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	obj := new(MockObjectiveAPI)
 	es := new(MockEventAPI)
 
@@ -339,7 +339,7 @@ func TestUpdateDataManagerOtherOwner(t *testing.T) {
 func TestUpdateDataManagerObjectiveKeyAlreadySet(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
@@ -386,7 +386,7 @@ func TestUpdateDataManagerObjectiveKeyAlreadySet(t *testing.T) {
 func TestUpdateDataManagerUnknownObjective(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	obj := new(MockObjectiveAPI)
 
 	provider.On("GetObjectiveService").Return(obj)
@@ -436,7 +436,7 @@ func TestUpdateDataManagerUnknownObjective(t *testing.T) {
 
 func TestGetDataManager(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)
 
@@ -455,7 +455,7 @@ func TestGetDataManager(t *testing.T) {
 
 func TestQueryDataManagers(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)
 
@@ -483,7 +483,7 @@ func TestQueryDataManagers(t *testing.T) {
 
 func TestIsOwner(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)
 

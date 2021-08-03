@@ -21,7 +21,7 @@ func TestRegisterPerformance(t *testing.T) {
 
 	param := &asset.NewPerformance{}
 
-	invocator.On("Call", "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -38,7 +38,7 @@ func TestGetPerformance(t *testing.T) {
 
 	param := &asset.GetComputeTaskPerformanceParam{}
 
-	invocator.On("Call", "orchestrator.performance:GetComputeTaskPerformance", param, &asset.Performance{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.performance:GetComputeTaskPerformance", param, &asset.Performance{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

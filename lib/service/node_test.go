@@ -12,7 +12,7 @@ import (
 
 func TestRegisterNode(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	es := new(MockEventAPI)
 
 	provider.On("GetNodeDBAL").Return(dbal)
@@ -41,7 +41,7 @@ func TestRegisterNode(t *testing.T) {
 
 func TestRegisterExistingNode(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 
 	provider.On("GetNodeDBAL").Return(dbal)
 

@@ -1,6 +1,7 @@
 package distributed
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -102,7 +103,7 @@ func TestParamWrapping(t *testing.T) {
 	contract.On("SubmitTransaction", "orchestrator.objective:QueryObjectives", expectedInput).Return(serializedResponse, nil)
 
 	output := &asset.QueryObjectivesResponse{}
-	err = invocator.Call("orchestrator.objective:QueryObjectives", param, output)
+	err = invocator.Call(context.TODO(), "orchestrator.objective:QueryObjectives", param, output)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "test", output.NextPageToken, "response should be properly unwrapped")
@@ -119,7 +120,7 @@ func TestNoOutput(t *testing.T) {
 	checker.On("IsEvaluateMethod", "org.test:NoOutput").Return(false)
 	contract.On("SubmitTransaction", "org.test:NoOutput", expectedInput).Return([]byte{}, nil)
 
-	err := invocator.Call("org.test:NoOutput", nil, nil)
+	err := invocator.Call(context.TODO(), "org.test:NoOutput", nil, nil)
 	assert.NoError(t, err)
 }
 
@@ -133,7 +134,7 @@ func TestInvoke(t *testing.T) {
 	checker.On("IsEvaluateMethod", "orchestrator.some_contract:SomeMethod").Return(false)
 	contract.On("SubmitTransaction", "orchestrator.some_contract:SomeMethod", expectedInput).Return([]byte{}, nil)
 
-	err := invocator.Call("orchestrator.some_contract:SomeMethod", nil, nil)
+	err := invocator.Call(context.TODO(), "orchestrator.some_contract:SomeMethod", nil, nil)
 	assert.NoError(t, err)
 }
 

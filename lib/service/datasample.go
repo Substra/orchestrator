@@ -6,7 +6,6 @@ import (
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/persistence"
@@ -30,6 +29,7 @@ type DataSampleServiceProvider interface {
 
 // DataSampleDependencyProvider defines what the DataSampleService needs to perform its duty
 type DataSampleDependencyProvider interface {
+	LoggerProvider
 	persistence.DataSampleDBALProvider
 	DataManagerServiceProvider
 	EventServiceProvider
@@ -47,7 +47,7 @@ func NewDataSampleService(provider DataSampleDependencyProvider) *DataSampleServ
 }
 
 func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, owner string) error {
-	log.WithField("owner", owner).WithField("nbSamples", len(samples)).Debug("Registering data samples")
+	s.GetLogger().WithField("owner", owner).WithField("nbSamples", len(samples)).Debug("Registering data samples")
 
 	registeredSamples := []*asset.DataSample{}
 	events := []*asset.Event{}
@@ -82,7 +82,7 @@ func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, 
 
 // registerDataSample persist one datasamples
 func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner string) (*asset.DataSample, error) {
-	log.WithField("owner", owner).WithField("newDataSample", sample).Debug("Registering data sample")
+	s.GetLogger().WithField("owner", owner).WithField("newDataSample", sample).Debug("Registering data sample")
 	err := sample.Validate()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
@@ -113,7 +113,7 @@ func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner 
 
 // UpdateDataSamples update or add one or multiple datasamples
 func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, owner string) error {
-	log.WithField("owner", owner).WithField("dataSampleUpdate", d).Debug("Updating data sample")
+	s.GetLogger().WithField("owner", owner).WithField("dataSampleUpdate", d).Debug("Updating data sample")
 	err := d.Validate()
 	if err != nil {
 		return fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())

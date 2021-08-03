@@ -26,7 +26,7 @@ func (a *ModelAdapter) RegisterModel(ctx context.Context, newModel *asset.NewMod
 
 	model := &asset.Model{}
 
-	err = invocator.Call(method, newModel, model)
+	err = invocator.Call(ctx, method, newModel, model)
 
 	return model, err
 }
@@ -40,7 +40,7 @@ func (a *ModelAdapter) GetModel(ctx context.Context, param *asset.GetModelParam)
 
 	response := &asset.Model{}
 
-	err = invocator.Call(method, param, response)
+	err = invocator.Call(ctx, method, param, response)
 
 	return response, err
 }
@@ -55,7 +55,7 @@ func (a *ModelAdapter) QueryModels(ctx context.Context, query *asset.QueryModels
 
 	response := &asset.QueryModelsResponse{}
 
-	err = invocator.Call(method, query, response)
+	err = invocator.Call(ctx, method, query, response)
 
 	return response, err
 }
@@ -69,7 +69,7 @@ func (a *ModelAdapter) GetComputeTaskOutputModels(ctx context.Context, param *as
 
 	response := new(asset.GetComputeTaskModelsResponse)
 
-	err = invocator.Call(method, param, response)
+	err = invocator.Call(ctx, method, param, response)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (a *ModelAdapter) GetComputeTaskInputModels(ctx context.Context, param *ass
 
 	response := new(asset.GetComputeTaskModelsResponse)
 
-	err = invocator.Call(method, param, response)
+	err = invocator.Call(ctx, method, param, response)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (a *ModelAdapter) CanDisableModel(ctx context.Context, param *asset.CanDisa
 
 	response := new(asset.CanDisableModelResponse)
 
-	err = invocator.Call(method, param, response)
+	err = invocator.Call(ctx, method, param, response)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (a *ModelAdapter) DisableModel(ctx context.Context, param *asset.DisableMod
 	}
 	method := "orchestrator.model:DisableModel"
 
-	err = invocator.Call(method, param, nil)
+	err = invocator.Call(ctx, method, param, nil)
 	if err != nil {
 		return nil, err
 	}

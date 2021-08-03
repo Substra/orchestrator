@@ -26,7 +26,7 @@ func (s *DatasetAdapter) GetDataset(ctx context.Context, params *asset.GetDatase
 	method := "orchestrator.dataset:GetDataset"
 	response := &asset.Dataset{}
 
-	err = invocator.Call(method, params, response)
+	err = invocator.Call(ctx, method, params, response)
 
 	return response, err
 }

@@ -26,7 +26,7 @@ func (a *EventAdapter) QueryEvents(ctx context.Context, query *asset.QueryEvents
 
 	response := &asset.QueryEventsResponse{}
 
-	err = invocator.Call(method, query, response)
+	err = invocator.Call(ctx, method, query, response)
 
 	return response, err
 }

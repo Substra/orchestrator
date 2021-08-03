@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -63,8 +64,8 @@ func TestForwardCCEvent(t *testing.T) {
 	bytes2, err := json.Marshal(&publishedEvents[1])
 	require.NoError(t, err)
 
-	publisher.On("Publish", "testChannel", bytes1).Once().Return(nil)
-	publisher.On("Publish", "testChannel", bytes2).Once().Return(nil)
+	publisher.On("Publish", context.TODO(), "testChannel", bytes1).Once().Return(nil)
+	publisher.On("Publish", context.TODO(), "testChannel", bytes2).Once().Return(nil)
 
 	forwarder.Forward(ccEvent)
 }
