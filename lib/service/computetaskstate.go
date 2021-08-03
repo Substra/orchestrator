@@ -201,10 +201,6 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 
 // onCancel iterate over children to propagate the cancellation
 func (s *ComputeTaskService) onCancel(e *fsm.Event) {
-	s.cascadeTransition(e, transitionCanceled)
-}
-
-func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition taskTransition) {
 	if len(e.Args) != 2 {
 		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
 		return
@@ -225,11 +221,17 @@ func (s *ComputeTaskService) cascadeTransition(e *fsm.Event, transition taskTran
 		log.F("taskKey", task.Key),
 		log.F("taskStatus", task.Status),
 		log.F("numChildren", len(children)),
-		log.F("transition", transition),
-	).Debug("Cascading task transition")
+		log.F("transition", transitionCanceled),
+	).Debug("onCancel: updating children statuses")
 
 	for _, child := range children {
-		err := s.applyTaskAction(child, transition, fmt.Sprintf("Cascading status from parent %s", task.Key))
+		state := newState(s, child)
+		if !state.Can(string(transitionTodo)) {
+			log.WithField("taskKey", child.Key).WithField("status", child.Status).Debug("propagateCancel: skipping child")
+			// this is expected as we might go over already failed children (from another parent)
+			continue
+		}
+		err := s.applyTaskAction(child, transitionCanceled, fmt.Sprintf("Cascading status from parent %s", task.Key))
 		if err != nil {
 			e.Err = err
 			return
