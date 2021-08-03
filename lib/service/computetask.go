@@ -299,7 +299,7 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 		}
 		state := newState(&dumbUpdater, child)
 		if len(state.AvailableTransitions()) > 0 {
-			logger.WithField("childKey", child.Key).Debug("cannot disable model: taks has active children")
+			logger.WithField("childKey", child.Key).Debug("cannot disable model: task has active children")
 			return false, nil
 		}
 	}
