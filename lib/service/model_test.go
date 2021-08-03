@@ -527,7 +527,7 @@ func TestGetInputModels(t *testing.T) {
 func TestGetCompositeInputModels(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
@@ -558,7 +558,7 @@ func TestGetCompositeInputModels(t *testing.T) {
 func TestGetAggregateChildInputModels(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
-	provider := new(MockDependenciesProvider)
+	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
