@@ -77,6 +77,7 @@ func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, com
 		Selector: couchAssetQuery{
 			DocType: asset.ComputePlanKind,
 		},
+		Fields: []string{"asset.key"},
 	}
 
 	b, err := json.Marshal(query)
@@ -104,8 +105,13 @@ func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, com
 		if err != nil {
 			return nil, "", err
 		}
-		plan := &asset.ComputePlan{}
-		err = json.Unmarshal(storedAsset.Asset, plan)
+		identifiedPlan := &asset.ComputePlan{} // This is an empty plan which will only contains its key
+		err = json.Unmarshal(storedAsset.Asset, identifiedPlan)
+		if err != nil {
+			return nil, "", err
+		}
+
+		plan, err := db.GetComputePlan(identifiedPlan.Key)
 		if err != nil {
 			return nil, "", err
 		}

@@ -362,6 +362,14 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 
+	cp := appClient.GetComputePlan(client.DefaultPlanRef)
+	if cp.Status != asset.ComputePlanStatus_PLAN_STATUS_DOING {
+		log.WithField("status", cp.Status).Fatal("unexpected compute plan status")
+	}
+	if cp.DoneCount != 2 {
+		log.WithField("doneCount", cp.DoneCount).Fatal("invalid task count")
+	}
+
 	// Start step 2
 	appClient.StartTask("aggC2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC2").WithKeyRef("modelC2").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
@@ -617,6 +625,14 @@ func testSmallCp(conn *grpc.ClientConn) {
 		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef("train1", "train2"),
 		client.DefaultTestTaskOptions().WithParentsRef("train3"),
 	)
+
+	cp := appClient.GetComputePlan(client.DefaultPlanRef)
+	if cp.Status != asset.ComputePlanStatus_PLAN_STATUS_TODO {
+		log.WithField("status", cp.Status).Fatal("unexpected plan status")
+	}
+	if cp.TaskCount != 4 {
+		log.WithField("taskCount", cp.TaskCount).Fatal("invalid task count")
+	}
 }
 
 func testAggregateComposite(conn *grpc.ClientConn) {

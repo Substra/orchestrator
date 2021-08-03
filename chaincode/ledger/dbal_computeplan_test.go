@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
+	"github.com/hyperledger/fabric-protos-go/peer"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -119,4 +121,37 @@ func getIterator(count int, key string) *testHelper.MockedStateQueryIterator {
 	}, nil)
 
 	return iter
+}
+
+func TestQueryComputePlans(t *testing.T) {
+	stub := new(testHelper.MockedStub)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+
+	resp := &testHelper.MockedStateQueryIterator{}
+	resp.On("Close").Return(nil)
+	resp.On("HasNext").Once().Return(true)
+	resp.On("HasNext").Once().Return(false)
+	resp.On("Next").Once().Return(&queryresult.KV{Value: []byte(`{"asset":{"key":"uuid"}}`)}, nil)
+
+	stub.On("GetState", "computeplan:uuid").Once().Return([]byte(`{"asset":{"key":"uuid"}}`), nil)
+	idxIterator := &testHelper.MockedStateQueryIterator{}
+	idxIterator.On("Close").Return(nil)
+	// 2 calls for general index
+	idxIterator.On("HasNext").Once().Return(true)
+	idxIterator.On("HasNext").Once().Return(false)
+	// 2 calls for DONE index
+	idxIterator.On("HasNext").Once().Return(true)
+	idxIterator.On("HasNext").Once().Return(false)
+	idxIterator.On("Next").Return(&queryresult.KV{Key: "computeplan~uuid~STATUS_DONE~task1"}, nil)
+	stub.On("SplitCompositeKey", "computeplan~uuid~STATUS_DONE~task1").Return("", []string{"computeplan", "uuid", "STATUS_DONE", "task1"}, nil)
+
+	stub.On("GetStateByPartialCompositeKey", "computePlan~computePlanKey~status~task", []string{"computeplan", "uuid"}).Once().Return(idxIterator, nil)
+	stub.On("GetStateByPartialCompositeKey", "computePlan~computePlanKey~status~task", []string{"computeplan", "uuid", "STATUS_DONE"}).Once().Return(idxIterator, nil)
+
+	queryString := `{"selector":{"doc_type":"computeplan"},"fields":["asset.key"]}`
+	stub.On("GetQueryResultWithPagination", queryString, int32(1), "").
+		Return(resp, &peer.QueryResponseMetadata{Bookmark: "", FetchedRecordsCount: 1}, nil)
+
+	_, _, err := db.QueryComputePlans(common.NewPagination("", 1))
+	assert.NoError(t, err)
 }
