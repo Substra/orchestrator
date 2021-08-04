@@ -1,7 +1,6 @@
 package dbal
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -15,20 +14,20 @@ import (
 // AddDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) AddDataManager(datamanager *asset.DataManager) error {
 	stmt := `insert into "datamanagers" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(context.Background(), stmt, datamanager.GetKey(), datamanager, d.channel)
+	_, err := d.tx.Exec(d.ctx, stmt, datamanager.GetKey(), datamanager, d.channel)
 	return err
 }
 
 // UpdateDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) UpdateDataManager(datamanager *asset.DataManager) error {
 	stmt := `update "datamanagers" set asset=$3 where id=$1 and channel=$2`
-	_, err := d.tx.Exec(context.Background(), stmt, datamanager.GetKey(), d.channel, datamanager)
+	_, err := d.tx.Exec(d.ctx, stmt, datamanager.GetKey(), d.channel, datamanager)
 	return err
 }
 
 // DataManagerExists implements persistence.DataManagerDBAL
 func (d *DBAL) DataManagerExists(key string) (bool, error) {
-	row := d.tx.QueryRow(context.Background(), `select count(id) from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select count(id) from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -38,7 +37,7 @@ func (d *DBAL) DataManagerExists(key string) (bool, error) {
 
 // GetDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
-	row := d.tx.QueryRow(context.Background(), `select "asset" from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select "asset" from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
 
 	datamanager := new(asset.DataManager)
 	err := row.Scan(&datamanager)
@@ -64,7 +63,7 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 	}
 
 	query := `select "asset" from "datamanagers" where channel=$3 order by created_at asc limit $1 offset $2`
-	rows, err = d.tx.Query(context.Background(), query, p.Size+1, offset, d.channel)
+	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}

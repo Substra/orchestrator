@@ -1,7 +1,6 @@
 package dbal
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -38,13 +37,13 @@ func (d *DBAL) AddComputeTasks(tasks ...*asset.ComputeTask) error {
 
 func (d *DBAL) addTask(t *asset.ComputeTask) error {
 	stmt := `insert into "compute_tasks" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(context.Background(), stmt, t.GetKey(), t, d.channel)
+	_, err := d.tx.Exec(d.ctx, stmt, t.GetKey(), t, d.channel)
 	return err
 }
 
 func (d *DBAL) addTasks(tasks []*asset.ComputeTask) error {
 	_, err := d.tx.CopyFrom(
-		context.Background(),
+		d.ctx,
 		pgx.Identifier{"compute_tasks"},
 		[]string{"id", "asset", "channel"},
 		pgx.CopyFromSlice(len(tasks), func(i int) ([]interface{}, error) {
@@ -67,13 +66,13 @@ func (d *DBAL) addTasks(tasks []*asset.ComputeTask) error {
 // UpdateComputeTask updates an existing task
 func (d *DBAL) UpdateComputeTask(t *asset.ComputeTask) error {
 	stmt := `update "compute_tasks" set asset=$3 where id=$1 and channel=$2`
-	_, err := d.tx.Exec(context.Background(), stmt, t.GetKey(), d.channel, t)
+	_, err := d.tx.Exec(d.ctx, stmt, t.GetKey(), d.channel, t)
 	return err
 }
 
 // ComputeTaskExists returns true if a task with the given ID exists
 func (d *DBAL) ComputeTaskExists(key string) (bool, error) {
-	row := d.tx.QueryRow(context.Background(), `select count(id) from "compute_tasks" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select count(id) from "compute_tasks" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -95,7 +94,7 @@ func (d *DBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
 		return nil, err
 	}
 
-	rows, err := d.tx.Query(context.Background(), query, args...)
+	rows, err := d.tx.Query(d.ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +118,7 @@ func (d *DBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
 
 // GetComputeTask returns a single task by its key
 func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
-	row := d.tx.QueryRow(context.Background(), `select asset from "compute_tasks" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select asset from "compute_tasks" where id=$1 and channel=$2`, key, d.channel)
 
 	task := new(asset.ComputeTask)
 	err := row.Scan(task)
@@ -145,7 +144,7 @@ func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 		return nil, err
 	}
 
-	rows, err := d.tx.Query(context.Background(), query, args...)
+	rows, err := d.tx.Query(d.ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +171,7 @@ func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 
 // GetComputeTaskChildren returns the children of the task identified by the given key
 func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
-	rows, err := d.tx.Query(context.Background(), `select asset from "compute_tasks" where asset->'parentTaskKeys' ? $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select asset from "compute_tasks" where asset->'parentTaskKeys' ? $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +195,7 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 
 // GetComputePlanTasksKeys returns the list of task keys from the provided compute plan
 func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
-	rows, err := d.tx.Query(context.Background(), `select id from "compute_tasks" where asset->>'computePlanKey' = $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select id from "compute_tasks" where asset->>'computePlanKey' = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +219,7 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 
 // GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
-	rows, err := d.tx.Query(context.Background(), `select asset from "compute_tasks" where asset->>'computePlanKey' = $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select asset from "compute_tasks" where asset->>'computePlanKey' = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +266,7 @@ func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFi
 		return nil, "", err
 	}
 
-	rows, err = d.tx.Query(context.Background(), query, args...)
+	rows, err = d.tx.Query(d.ctx, query, args...)
 	if err != nil {
 		return nil, "", err
 	}

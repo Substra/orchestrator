@@ -61,7 +61,7 @@ func TestGetTasks(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	res, err := dbal.GetComputeTasks(keys)
 	assert.NoError(t, err)
@@ -88,7 +88,7 @@ func TestGetNoTask(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	_, err = dbal.GetComputeTask("uuid")
 	assert.Error(t, err)
@@ -117,7 +117,7 @@ func TestQueryComputeTasks(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	res, _, err := dbal.QueryComputeTasks(
 		common.NewPagination("", 1),

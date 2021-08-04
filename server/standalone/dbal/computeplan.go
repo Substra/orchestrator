@@ -1,7 +1,6 @@
 package dbal
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -14,7 +13,7 @@ import (
 
 // ComputePlanExists returns true if a ComputePlan with the given key already exists
 func (d *DBAL) ComputePlanExists(key string) (bool, error) {
-	row := d.tx.QueryRow(context.Background(), `select count(id) from "compute_plans" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select count(id) from "compute_plans" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -25,7 +24,7 @@ func (d *DBAL) ComputePlanExists(key string) (bool, error) {
 // AddComputePlan stores a new ComputePlan in DB
 func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 	stmt := `insert into "compute_plans" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(context.Background(), stmt, plan.GetKey(), plan, d.channel)
+	_, err := d.tx.Exec(d.ctx, stmt, plan.GetKey(), plan, d.channel)
 	return err
 }
 
@@ -45,7 +44,7 @@ where cp.id=$1 and cp.channel=$2
 group by cp.asset
 `
 
-	row := d.tx.QueryRow(context.Background(), query, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, query, key, d.channel)
 
 	plan := new(asset.ComputePlan)
 	var total, done, doing, waiting, failed, canceled uint32
@@ -87,7 +86,7 @@ group by cp.asset, cp.created_at
 order by cp.created_at asc limit $1 offset $2
 `
 
-	rows, err = d.tx.Query(context.Background(), query, p.Size+1, offset, d.channel)
+	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}

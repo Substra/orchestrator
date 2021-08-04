@@ -1,7 +1,6 @@
 package dbal
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -15,14 +14,14 @@ import (
 // AddObjective implements persistence.ObjectiveDBAL
 func (d *DBAL) AddObjective(obj *asset.Objective) error {
 	stmt := `insert into "objectives" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(context.Background(), stmt, obj.GetKey(), obj, d.channel)
+	_, err := d.tx.Exec(d.ctx, stmt, obj.GetKey(), obj, d.channel)
 
 	return err
 }
 
 // GetObjective implements persistence.ObjectiveDBAL
 func (d *DBAL) GetObjective(key string) (*asset.Objective, error) {
-	row := d.tx.QueryRow(context.Background(), `select "asset" from "objectives" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select "asset" from "objectives" where id=$1 and channel=$2`, key, d.channel)
 
 	objective := new(asset.Objective)
 	err := row.Scan(&objective)
@@ -39,7 +38,7 @@ func (d *DBAL) GetObjective(key string) (*asset.Objective, error) {
 
 // ObjectiveExists implements persistence.ObjectiveDBAL
 func (d *DBAL) ObjectiveExists(key string) (bool, error) {
-	row := d.tx.QueryRow(context.Background(), `select count(id) from "objectives" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select count(id) from "objectives" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -55,7 +54,7 @@ func (d *DBAL) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common
 	}
 
 	query := `select "asset" from "objectives" where channel=$3 order by created_at asc limit $1 offset $2`
-	rows, err := d.tx.Query(context.Background(), query, p.Size+1, offset, d.channel)
+	rows, err := d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}
@@ -120,7 +119,7 @@ func (d *DBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 	and c.asset->'test'->>'certified' = 'true'
 	and c.asset->'test'->>'objectiveKey' = $1`
 
-	rows, err := d.tx.Query(context.Background(), query, key)
+	rows, err := d.tx.Query(d.ctx, query, key)
 
 	if err != nil {
 		return nil, err

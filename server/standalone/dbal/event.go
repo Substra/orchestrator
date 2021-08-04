@@ -1,7 +1,6 @@
 package dbal
 
 import (
-	"context"
 	"strconv"
 	"time"
 
@@ -34,7 +33,7 @@ func (d *DBAL) AddEvents(events ...*asset.Event) error {
 
 func (d *DBAL) addEvent(event *asset.Event) error {
 	stmt := `insert into "events" ("id", "asset_key", "event", "channel") values ($1, $2, $3, $4)`
-	_, err := d.tx.Exec(context.Background(), stmt, event.Id, event.AssetKey, event, d.channel)
+	_, err := d.tx.Exec(d.ctx, stmt, event.Id, event.AssetKey, event, d.channel)
 	return err
 }
 
@@ -42,7 +41,7 @@ func (d *DBAL) addEvent(event *asset.Event) error {
 // According to the doc, it might even be faster for as few as 5 rows.
 func (d *DBAL) addEvents(events []*asset.Event) error {
 	_, err := d.tx.CopyFrom(
-		context.Background(),
+		d.ctx,
 		pgx.Identifier{"events"},
 		[]string{"id", "asset_key", "event", "channel"},
 		pgx.CopyFromSlice(len(events), func(i int) ([]interface{}, error) {
@@ -90,7 +89,7 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter)
 		return nil, "", err
 	}
 
-	rows, err = d.tx.Query(context.Background(), query, args...)
+	rows, err = d.tx.Query(d.ctx, query, args...)
 	if err != nil {
 		return nil, "", err
 	}

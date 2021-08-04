@@ -1,7 +1,6 @@
 package dbal
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
@@ -11,7 +10,7 @@ import (
 )
 
 func (d *DBAL) GetModel(key string) (*asset.Model, error) {
-	row := d.tx.QueryRow(context.Background(), `select asset from "models" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select asset from "models" where id=$1 and channel=$2`, key, d.channel)
 
 	model := new(asset.Model)
 	err := row.Scan(model)
@@ -48,7 +47,7 @@ func (d *DBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asse
 		return nil, "", err
 	}
 
-	rows, err = d.tx.Query(context.Background(), query, args...)
+	rows, err = d.tx.Query(d.ctx, query, args...)
 	if err != nil {
 		return nil, "", err
 	}
@@ -86,7 +85,7 @@ func (d *DBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asse
 }
 
 func (d *DBAL) ModelExists(key string) (bool, error) {
-	row := d.tx.QueryRow(context.Background(), `select count(id) from "models" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select count(id) from "models" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -95,7 +94,7 @@ func (d *DBAL) ModelExists(key string) (bool, error) {
 }
 
 func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
-	rows, err := d.tx.Query(context.Background(), `select asset from "models" where asset->>'computeTaskKey' = $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select asset from "models" where asset->>'computeTaskKey' = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -120,12 +119,12 @@ func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 
 func (d *DBAL) AddModel(model *asset.Model) error {
 	stmt := `insert into "models" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(context.Background(), stmt, model.GetKey(), model, d.channel)
+	_, err := d.tx.Exec(d.ctx, stmt, model.GetKey(), model, d.channel)
 	return err
 }
 
 func (d *DBAL) UpdateModel(model *asset.Model) error {
 	stmt := `update "models" set asset = $2 where id = $1 and channel = $3`
-	_, err := d.tx.Exec(context.Background(), stmt, model.GetKey(), model, d.channel)
+	_, err := d.tx.Exec(d.ctx, stmt, model.GetKey(), model, d.channel)
 	return err
 }

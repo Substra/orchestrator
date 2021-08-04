@@ -29,7 +29,7 @@ func TestQueryDataManagers(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	res, bookmark, err := dbal.QueryDataManagers(common.NewPagination("", 12))
 	assert.NoError(t, err)
@@ -59,7 +59,7 @@ func TestPaginatedQueryDataManagers(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	res, bookmark, err := dbal.QueryDataManagers(common.NewPagination("", 1))
 	assert.NoError(t, err)

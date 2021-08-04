@@ -41,7 +41,7 @@ func TestQueryObjectives(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	res, bookmark, err := dbal.QueryObjectives(common.NewPagination("", 12))
 	assert.NoError(t, err)
@@ -71,7 +71,7 @@ func TestPaginatedQueryObjectives(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	res, bookmark, err := dbal.QueryObjectives(common.NewPagination("", 1))
 	assert.NoError(t, err)
@@ -101,7 +101,7 @@ func TestQueryAlgos(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	res, bookmark, err := dbal.QueryAlgos(asset.AlgoCategory_ALGO_COMPOSITE, common.NewPagination("", 12))
 	assert.NoError(t, err)
@@ -131,7 +131,7 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	res, bookmark, err := dbal.QueryAlgos(asset.AlgoCategory_ALGO_COMPOSITE, common.NewPagination("", 1))
 	assert.NoError(t, err)
@@ -157,10 +157,7 @@ func TestGetAlgoFail(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{
-		tx:      tx,
-		channel: testChannel,
-	}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	_, err = dbal.GetAlgo(uid)
 

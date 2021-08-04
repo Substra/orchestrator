@@ -29,7 +29,7 @@ func TestGetComputeTasks(t *testing.T) {
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
-	dbal := &DBAL{tx, testChannel}
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
 	plan, err := dbal.GetComputePlan("uuid")
 	assert.NoError(t, err)

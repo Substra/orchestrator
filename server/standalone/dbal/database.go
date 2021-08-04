@@ -106,5 +106,5 @@ func (d *Database) GetTransactionalDBAL(ctx context.Context, channel string, rea
 		return nil, err
 	}
 
-	return &DBAL{tx: tx, channel: channel}, nil
+	return &DBAL{ctx: ctx, tx: tx, channel: channel}, nil
 }

@@ -1,7 +1,6 @@
 package dbal
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -17,7 +16,7 @@ import (
 
 // DataSampleExists implements persistence.DataSampleDBAL
 func (d *DBAL) DataSampleExists(key string) (bool, error) {
-	row := d.tx.QueryRow(context.Background(), `select count(id) from "datasamples" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select count(id) from "datasamples" where id=$1 and channel=$2`, key, d.channel)
 
 	var count int
 	err := row.Scan(&count)
@@ -46,13 +45,13 @@ func (d *DBAL) AddDataSamples(datasamples ...*asset.DataSample) error {
 
 func (d *DBAL) addDataSample(dataSample *asset.DataSample) error {
 	stmt := `insert into "datasamples" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(context.Background(), stmt, dataSample.GetKey(), dataSample, d.channel)
+	_, err := d.tx.Exec(d.ctx, stmt, dataSample.GetKey(), dataSample, d.channel)
 	return err
 }
 
 func (d *DBAL) addDataSamples(samples []*asset.DataSample) error {
 	_, err := d.tx.CopyFrom(
-		context.Background(),
+		d.ctx,
 		pgx.Identifier{"datasamples"},
 		[]string{"id", "asset", "channel"},
 		pgx.CopyFromSlice(len(samples), func(i int) ([]interface{}, error) {
@@ -75,13 +74,13 @@ func (d *DBAL) addDataSamples(samples []*asset.DataSample) error {
 // UpdateDataSample implements persistence.DataSampleDBAL
 func (d *DBAL) UpdateDataSample(dataSample *asset.DataSample) error {
 	stmt := `update "datasamples" set asset=$3 where id=$1 and channel=$2`
-	_, err := d.tx.Exec(context.Background(), stmt, dataSample.GetKey(), d.channel, dataSample)
+	_, err := d.tx.Exec(d.ctx, stmt, dataSample.GetKey(), d.channel, dataSample)
 	return err
 }
 
 // GetDataSample implements persistence.DataSample
 func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
-	row := d.tx.QueryRow(context.Background(), `select "asset" from "datasamples" where id=$1 and channel=$2`, key, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select "asset" from "datasamples" where id=$1 and channel=$2`, key, d.channel)
 
 	datasample := new(asset.DataSample)
 	err := row.Scan(&datasample)
@@ -107,7 +106,7 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, comm
 	}
 
 	query := `select "asset" from "datasamples" where channel=$3 order by created_at asc limit $1 offset $2`
-	rows, err = d.tx.Query(context.Background(), query, p.Size+1, offset, d.channel)
+	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}
@@ -156,7 +155,7 @@ func (d *DBAL) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) 
 
 	query := `select "id" from "datasamples" where channel=$1 and (asset->'dataManagerKeys') ? $2 and ` + testOnlyFilter + ` (asset ? 'testOnly' and (asset->'testOnly')::boolean) order by created_at asc`
 
-	rows, err = d.tx.Query(context.Background(), query, d.channel, dataManagerKey)
+	rows, err = d.tx.Query(d.ctx, query, d.channel, dataManagerKey)
 
 	if err != nil {
 		return nil, err
