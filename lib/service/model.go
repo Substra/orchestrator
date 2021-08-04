@@ -239,6 +239,7 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 
 // CanDisableModel returns true if the model can be disabled
 func (s *ModelService) CanDisableModel(key string, requester string) (bool, error) {
+	s.GetLogger().WithField("model", key).Debug("checking whether model can be disabled")
 	model, err := s.GetModelDBAL().GetModel(key)
 	if err != nil {
 		return false, err

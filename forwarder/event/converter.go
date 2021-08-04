@@ -61,5 +61,6 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 			logger.WithError(err).Error("Failed to push event")
 			continue
 		}
+		logger.Debug("successfully pushed event to broker")
 	}
 }
