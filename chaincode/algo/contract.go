@@ -32,6 +32,7 @@ func NewSmartContract() *SmartContract {
 // RegisterAlgo creates a new algo in world state
 // If the key exists, it will override the existing value with the new one
 func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetAlgoService()
 
 	params := new(asset.NewAlgo)
@@ -52,7 +53,7 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 		s.logger.WithError(err).Error("failed to register algo")
 		return nil, err
 	}
-	response, err := communication.Wrap(a)
+	response, err := communication.Wrap(ctx.GetContext(), a)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -62,6 +63,7 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 
 // GetAlgo returns the algo with given key
 func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetAlgoService()
 
 	params := new(asset.GetAlgoParam)
@@ -77,7 +79,7 @@ func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communic
 		return nil, err
 	}
 
-	wrapped, err := communication.Wrap(algo)
+	wrapped, err := communication.Wrap(ctx.GetContext(), algo)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -87,6 +89,7 @@ func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communic
 
 // QueryAlgos returns the algos
 func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetAlgoService()
 
 	params := new(asset.QueryAlgosParam)
@@ -107,7 +110,7 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 		NextPageToken: nextPage,
 	}
 
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err

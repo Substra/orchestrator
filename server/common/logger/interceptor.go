@@ -2,10 +2,9 @@ package logger
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-playground/log/v7"
-	"github.com/google/uuid"
+	"github.com/owkin/orchestrator/server/common/trace"
 	"google.golang.org/grpc"
 )
 
@@ -14,12 +13,7 @@ import (
 // `logger.Get(ctx)`. This ensures all the log entries have the same "request id" field, making it easy filter log entries by
 // "request id".
 func AddLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	u, err := uuid.NewRandom()
-	if err != nil {
-		return nil, err
-	}
-
-	logger := log.WithField("request id", fmt.Sprintf("%v", u)[:8])
+	logger := log.WithField("requestID", trace.GetRequestID(ctx))
 
 	ctx = log.SetContext(ctx, logger)
 

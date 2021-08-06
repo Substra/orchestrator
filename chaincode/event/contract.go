@@ -36,6 +36,7 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 
 // QueryEvents returns the models
 func (s *SmartContract) QueryEvents(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetEventService()
 
 	params := new(asset.QueryEventsParam)
@@ -56,7 +57,7 @@ func (s *SmartContract) QueryEvents(ctx ledger.TransactionContext, wrapper *comm
 		NextPageToken: nextPage,
 	}
 
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err

@@ -31,6 +31,7 @@ func NewSmartContract() *SmartContract {
 
 // RegisterModel associates a new model to a running task
 func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetModelService()
 
 	params := new(asset.NewModel)
@@ -51,7 +52,7 @@ func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *co
 		s.logger.WithError(err).Error("failed to register model")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(obj)
+	wrapped, err := communication.Wrap(ctx.GetContext(), obj)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -60,6 +61,7 @@ func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *co
 }
 
 func (s *SmartContract) GetModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetModelService()
 
 	params := new(asset.GetModelParam)
@@ -75,7 +77,7 @@ func (s *SmartContract) GetModel(ctx ledger.TransactionContext, wrapper *communi
 		return nil, err
 	}
 
-	wrapped, err := communication.Wrap(model)
+	wrapped, err := communication.Wrap(ctx.GetContext(), model)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -85,6 +87,7 @@ func (s *SmartContract) GetModel(ctx ledger.TransactionContext, wrapper *communi
 
 // QueryModels returns the models
 func (s *SmartContract) QueryModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetModelService()
 
 	params := new(asset.QueryModelsParam)
@@ -105,7 +108,7 @@ func (s *SmartContract) QueryModels(ctx ledger.TransactionContext, wrapper *comm
 		NextPageToken: nextPage,
 	}
 
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -114,6 +117,7 @@ func (s *SmartContract) QueryModels(ctx ledger.TransactionContext, wrapper *comm
 }
 
 func (s *SmartContract) GetComputeTaskOutputModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetModelService()
 
 	param := new(asset.GetComputeTaskModelsParam)
@@ -132,7 +136,7 @@ func (s *SmartContract) GetComputeTaskOutputModels(ctx ledger.TransactionContext
 		Models: models,
 	}
 
-	wrapped, err := communication.Wrap(response)
+	wrapped, err := communication.Wrap(ctx.GetContext(), response)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -141,6 +145,7 @@ func (s *SmartContract) GetComputeTaskOutputModels(ctx ledger.TransactionContext
 }
 
 func (s *SmartContract) GetComputeTaskInputModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetModelService()
 
 	param := new(asset.GetComputeTaskModelsParam)
@@ -159,7 +164,7 @@ func (s *SmartContract) GetComputeTaskInputModels(ctx ledger.TransactionContext,
 		Models: models,
 	}
 
-	wrapped, err := communication.Wrap(response)
+	wrapped, err := communication.Wrap(ctx.GetContext(), response)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -168,6 +173,7 @@ func (s *SmartContract) GetComputeTaskInputModels(ctx ledger.TransactionContext,
 }
 
 func (s *SmartContract) CanDisableModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetModelService()
 
 	params := new(asset.CanDisableModelParam)
@@ -188,7 +194,7 @@ func (s *SmartContract) CanDisableModel(ctx ledger.TransactionContext, wrapper *
 		s.logger.WithError(err).Error("failed to check whether model can be disabled")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(&asset.CanDisableModelResponse{CanDisable: can})
+	wrapped, err := communication.Wrap(ctx.GetContext(), &asset.CanDisableModelResponse{CanDisable: can})
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -197,6 +203,7 @@ func (s *SmartContract) CanDisableModel(ctx ledger.TransactionContext, wrapper *
 }
 
 func (s *SmartContract) DisableModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetModelService()
 
 	params := new(asset.DisableModelParam)

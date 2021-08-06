@@ -34,7 +34,8 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 }
 
 // RegisterNode creates a new node in world state
-func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*communication.Wrapper, error) {
+func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
 		s.logger.WithError(err).Error("failed to extract tx creator")
@@ -48,7 +49,7 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*communicat
 		s.logger.WithError(err).Error("failed to register node")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(node)
+	wrapped, err := communication.Wrap(ctx.GetContext(), node)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -57,7 +58,8 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext) (*communicat
 }
 
 // GetAllNodes retrieves all known nodes
-func (s *SmartContract) GetAllNodes(ctx ledger.TransactionContext) (*communication.Wrapper, error) {
+func (s *SmartContract) GetAllNodes(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetNodeService()
 
 	nodes, err := service.GetAllNodes()
@@ -70,7 +72,7 @@ func (s *SmartContract) GetAllNodes(ctx ledger.TransactionContext) (*communicati
 		Nodes: nodes,
 	}
 
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err

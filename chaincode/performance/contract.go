@@ -35,6 +35,7 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 }
 
 func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetPerformanceService()
 
 	newPerf := new(asset.NewPerformance)
@@ -55,7 +56,7 @@ func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapp
 		s.logger.WithError(err).Error("failed to register performance")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(t)
+	wrapped, err := communication.Wrap(ctx.GetContext(), t)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -64,6 +65,7 @@ func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapp
 }
 
 func (s *SmartContract) GetComputeTaskPerformance(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetPerformanceService()
 
 	param := new(asset.GetComputeTaskPerformanceParam)
@@ -78,7 +80,7 @@ func (s *SmartContract) GetComputeTaskPerformance(ctx ledger.TransactionContext,
 		s.logger.WithError(err).Error("failed to get performance")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(perf)
+	wrapped, err := communication.Wrap(ctx.GetContext(), perf)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err

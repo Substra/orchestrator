@@ -3,8 +3,10 @@
 package communication
 
 import (
+	"context"
 	"encoding/json"
 
+	"github.com/owkin/orchestrator/server/common/trace"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -16,17 +18,23 @@ import (
 // Using json.RawMessage for Param would be more appropriate, unfortunately contractapi has an issue with []byte representation:
 // https://jira.hyperledger.org/browse/FABCAG-34
 type Wrapper struct {
-	Message string `json:"msg"`
+	Message   string `json:"msg"`
+	RequestID string `json:"request_id"`
 }
 
 // Wrap a ProtoMessage in a Wrapper
-func Wrap(param protoreflect.ProtoMessage) (*Wrapper, error) {
+func Wrap(ctx context.Context, param protoreflect.ProtoMessage) (*Wrapper, error) {
 	p, err := protojson.Marshal(param)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Wrapper{Message: string(p)}, nil
+	wrapper := &Wrapper{
+		Message:   string(p),
+		RequestID: trace.GetRequestID(ctx),
+	}
+
+	return wrapper, nil
 }
 
 // Unwrap a serialized Wrapper into inner ProtoMessage

@@ -30,6 +30,7 @@ func NewSmartContract() *SmartContract {
 }
 
 func (s *SmartContract) RegisterPlan(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetComputePlanService()
 
 	newPlan := new(asset.NewComputePlan)
@@ -50,7 +51,7 @@ func (s *SmartContract) RegisterPlan(ctx ledger.TransactionContext, wrapper *com
 		s.logger.WithError(err).Error("failed to register compute plan")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(t)
+	wrapped, err := communication.Wrap(ctx.GetContext(), t)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -59,6 +60,7 @@ func (s *SmartContract) RegisterPlan(ctx ledger.TransactionContext, wrapper *com
 }
 
 func (s *SmartContract) GetPlan(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetComputePlanService()
 
 	param := new(asset.GetComputePlanParam)
@@ -73,7 +75,7 @@ func (s *SmartContract) GetPlan(ctx ledger.TransactionContext, wrapper *communic
 		s.logger.WithError(err).Error("failed to get compute plan")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(t)
+	wrapped, err := communication.Wrap(ctx.GetContext(), t)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -82,6 +84,7 @@ func (s *SmartContract) GetPlan(ctx ledger.TransactionContext, wrapper *communic
 }
 
 func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetComputePlanService()
 
 	param := new(asset.QueryPlansParam)
@@ -100,7 +103,7 @@ func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *commu
 		Plans:         plans,
 		NextPageToken: nextPage,
 	}
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -109,6 +112,7 @@ func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *commu
 }
 
 func (s *SmartContract) ApplyPlanAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetComputePlanService()
 
 	param := new(asset.ApplyPlanActionParam)

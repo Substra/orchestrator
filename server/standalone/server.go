@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
+	"github.com/owkin/orchestrator/server/common/trace"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/handlers"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
@@ -36,6 +37,7 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session, piConfig)
 
 	interceptor := grpc.ChainUnaryInterceptor(
+		trace.InterceptRequestID,
 		logger.AddLogger,
 		common.LogRequest,
 		common.InterceptStandaloneErrors,

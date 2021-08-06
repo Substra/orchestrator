@@ -1,9 +1,11 @@
 package objective
 
 import (
+	"context"
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/mocks"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -12,13 +14,15 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *service.MockObjectiveAPI {
+func getMockedService(ctx *mocks.TransactionContext) *service.MockObjectiveAPI {
 	mockService := new(service.MockObjectiveAPI)
 
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetObjectiveService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("SetRequestID", "").Once()
+	ctx.On("GetContext").Return(context.Background())
 
 	return mockService
 }
@@ -41,12 +45,12 @@ func TestRegistration(t *testing.T) {
 		Metadata:       metadata,
 		NewPermissions: newPerms,
 	}
-	wrapper, err := communication.Wrap(newObj)
+	wrapper, err := communication.Wrap(context.Background(), newObj)
 	assert.NoError(t, err)
 
 	o := &asset.Objective{}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterObjective", newObj, mspid).Return(o, nil).Once()
@@ -68,12 +72,12 @@ func TestQueryObjectives(t *testing.T) {
 		{Name: "test2"},
 	}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 	service := getMockedService(ctx)
 	service.On("QueryObjectives", &common.Pagination{Token: "", Size: 20}).Return(objectives, "", nil).Once()
 
 	param := &asset.QueryObjectivesParam{PageToken: "", PageSize: 20}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.QueryObjectives(ctx, wrapper)

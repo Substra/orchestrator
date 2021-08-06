@@ -1,9 +1,11 @@
 package model
 
 import (
+	"context"
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/mocks"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
@@ -11,13 +13,15 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *service.MockModelAPI {
+func getMockedService(ctx *mocks.TransactionContext) *service.MockModelAPI {
 	mockService := new(service.MockModelAPI)
 
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetModelService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("SetRequestID", "").Once()
+	ctx.On("GetContext").Return(context.Background())
 
 	return mockService
 }
@@ -28,10 +32,10 @@ func TestGetTaskOutputModels(t *testing.T) {
 	param := &asset.GetComputeTaskModelsParam{
 		ComputeTaskKey: "uuid",
 	}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("GetComputeTaskOutputModels", "uuid").Return([]*asset.Model{{}, {}}, nil).Once()
@@ -52,10 +56,10 @@ func TestGetTaskInputModels(t *testing.T) {
 	param := &asset.GetComputeTaskModelsParam{
 		ComputeTaskKey: "uuid",
 	}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("GetComputeTaskInputModels", "uuid").Return([]*asset.Model{{}, {}}, nil).Once()
@@ -81,12 +85,12 @@ func TestRegisterModel(t *testing.T) {
 		ComputeTaskKey: "taskUuid",
 		Address:        &asset.Addressable{},
 	}
-	wrapper, err := communication.Wrap(newModel)
+	wrapper, err := communication.Wrap(context.Background(), newModel)
 	assert.NoError(t, err)
 
 	model := &asset.Model{}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterModel", newModel, mspid).Return(model, nil).Once()
@@ -105,10 +109,10 @@ func TestCanDisableModel(t *testing.T) {
 
 	mspid := "org"
 
-	wrapper, err := communication.Wrap(&asset.CanDisableModelParam{ModelKey: "uuid"})
+	wrapper, err := communication.Wrap(context.Background(), &asset.CanDisableModelParam{ModelKey: "uuid"})
 	assert.NoError(t, err)
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("CanDisableModel", "uuid", mspid).Return(true, nil).Once()
@@ -133,10 +137,10 @@ func TestDisableModel(t *testing.T) {
 
 	mspid := "org"
 
-	wrapper, err := communication.Wrap(&asset.CanDisableModelParam{ModelKey: "uuid"})
+	wrapper, err := communication.Wrap(context.Background(), &asset.CanDisableModelParam{ModelKey: "uuid"})
 	assert.NoError(t, err)
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("DisableModel", "uuid", mspid).Return(nil).Once()

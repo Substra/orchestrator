@@ -1,9 +1,11 @@
 package datasample
 
 import (
+	"context"
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/mocks"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -11,13 +13,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getMockedService(ctx *testHelper.MockedContext) *service.MockDataSampleAPI {
+func getMockedService(ctx *mocks.TransactionContext) *service.MockDataSampleAPI {
 	mockService := new(service.MockDataSampleAPI)
 
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetDataSampleService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("SetRequestID", "").Once()
+	ctx.On("GetContext").Return(context.Background())
 
 	return mockService
 }
@@ -34,10 +38,10 @@ func TestRegistration(t *testing.T) {
 		},
 	}
 	param := &asset.RegisterDataSamplesParam{Samples: newSamples}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterDataSamples", newSamples, mspid).Return(nil).Once()
@@ -58,10 +62,10 @@ func TestUpdate(t *testing.T) {
 		Keys:            []string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		DataManagerKeys: []string{"0b4b4466-9a81-4084-9bab-80939b78addd", "5067eb48-b29e-4a2d-81a0-82033a7d2ef8"},
 	}
-	wrapper, err := communication.Wrap(updateDataSample)
+	wrapper, err := communication.Wrap(context.Background(), updateDataSample)
 	assert.NoError(t, err)
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("UpdateDataSamples", updateDataSample, mspid).Return(nil).Once()
@@ -82,13 +86,13 @@ func TestQueryDataSamples(t *testing.T) {
 		{Key: "9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 	}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("QueryDataSamples", &common.Pagination{Token: "", Size: 10}).Return(datasamples, "", nil).Once()
 
 	param := &asset.QueryDataSamplesParam{PageToken: "", PageSize: 10}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.QueryDataSamples(ctx, wrapper)

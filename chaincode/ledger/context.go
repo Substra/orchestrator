@@ -9,6 +9,7 @@ import (
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common/logger"
+	"github.com/owkin/orchestrator/server/common/trace"
 	"github.com/owkin/orchestrator/utils"
 )
 
@@ -20,6 +21,7 @@ type TransactionContext interface {
 	GetContext() context.Context
 	GetProvider() service.DependenciesProvider
 	GetDispatcher() event.Dispatcher
+	SetRequestID(string)
 }
 
 // Context is a TransactionContext implementation
@@ -67,6 +69,14 @@ func (c *Context) GetDispatcher() event.Dispatcher {
 		c.dispatcher = newEventDispatcher(stub)
 	}
 	return c.dispatcher
+}
+
+func (c *Context) SetRequestID(ID string) {
+	ctx := context.WithValue(c.Context, trace.RequestIDMarker, ID)
+	logger := log.WithField("requestID", ID)
+	ctx = log.SetContext(ctx, logger)
+
+	c.Context = ctx
 }
 
 type ctxIsInvokeMarker struct{}

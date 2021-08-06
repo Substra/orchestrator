@@ -57,7 +57,7 @@ func (i *ContractInvocator) Call(ctx context.Context, method string, param proto
 
 	start := time.Now()
 
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(ctx, param)
 	if err != nil {
 		return err
 	}

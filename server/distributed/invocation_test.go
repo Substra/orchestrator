@@ -80,7 +80,7 @@ func TestParamWrapping(t *testing.T) {
 
 	// Invocation param is a protoreflect.ProtoMessage
 	param := &asset.QueryObjectivesParam{PageToken: "uuid", PageSize: 20}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
 	// Which is serialized
@@ -91,7 +91,7 @@ func TestParamWrapping(t *testing.T) {
 
 	// Response is also a wrapper
 	response := &asset.QueryObjectivesResponse{Objectives: []*asset.Objective{}, NextPageToken: "test"}
-	wrappedResponse, err := communication.Wrap(response)
+	wrappedResponse, err := communication.Wrap(context.Background(), response)
 	assert.NoError(t, err)
 	// Then serialized to match contractapi
 	serializedResponse, err := json.Marshal(wrappedResponse)
@@ -139,9 +139,8 @@ func TestInvoke(t *testing.T) {
 }
 
 func getEmptyExpectedInput(t *testing.T) []string {
-
 	// Invocation param is a protoreflect.ProtoMessage
-	wrapper, err := communication.Wrap(nil)
+	wrapper, err := communication.Wrap(context.Background(), nil)
 	assert.NoError(t, err)
 
 	// Which is serialized

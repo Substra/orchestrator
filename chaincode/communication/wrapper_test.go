@@ -1,6 +1,7 @@
 package communication
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -14,7 +15,7 @@ func TestWrapUnwrap(t *testing.T) {
 		Category: asset.AlgoCategory_ALGO_SIMPLE,
 	}
 
-	wrapped, err := Wrap(msg)
+	wrapped, err := Wrap(context.Background(), msg)
 	assert.NoError(t, err)
 
 	out := new(asset.NewAlgo)

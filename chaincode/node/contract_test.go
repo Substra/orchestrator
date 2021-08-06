@@ -1,22 +1,28 @@
 package node
 
 import (
+	"context"
 	"testing"
 
+	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/mocks"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *service.MockNodeAPI {
+func getMockedService(ctx *mocks.TransactionContext) *service.MockNodeAPI {
 	mockService := new(service.MockNodeAPI)
 
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetNodeService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("SetRequestID", "").Once()
+	ctx.On("GetContext").Return(context.Background())
 
 	return mockService
 }
@@ -31,14 +37,17 @@ func TestRegistration(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterNode", org).Return(o, nil).Once()
 
 	ctx.On("GetStub").Return(stub).Once()
 
-	wrapped, err := contract.RegisterNode(ctx)
+	wrapper, err := communication.Wrap(context.Background(), nil)
+	require.NoError(t, err)
+
+	wrapped, err := contract.RegisterNode(ctx, wrapper)
 	assert.NoError(t, err, "node registration should not fail")
 	node := new(asset.Node)
 	err = wrapped.Unwrap(node)
@@ -54,12 +63,15 @@ func TestGetAllNodes(t *testing.T) {
 		{Id: "org2"},
 	}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("GetAllNodes").Return(nodes, nil).Once()
 
-	wrapped, err := contract.GetAllNodes(ctx)
+	wrapper, err := communication.Wrap(context.Background(), nil)
+	require.NoError(t, err)
+
+	wrapped, err := contract.GetAllNodes(ctx, wrapper)
 	assert.NoError(t, err, "querying nodes should not fail")
 	queryResult := new(asset.GetAllNodesResponse)
 	err = wrapped.Unwrap(queryResult)

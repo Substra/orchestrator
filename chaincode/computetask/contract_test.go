@@ -1,9 +1,11 @@
 package computetask
 
 import (
+	"context"
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/mocks"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
@@ -11,13 +13,15 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *service.MockComputeTaskAPI {
+func getMockedService(ctx *mocks.TransactionContext) *service.MockComputeTaskAPI {
 	mockService := new(service.MockComputeTaskAPI)
 
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetComputeTaskService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("SetRequestID", "").Once()
+	ctx.On("GetContext").Return(context.Background())
 
 	return mockService
 }
@@ -28,14 +32,14 @@ func TestRegistration(t *testing.T) {
 	org := "TestOrg"
 	tasks := []*asset.NewComputeTask{{}, {}}
 	input := &asset.RegisterTasksParam{Tasks: tasks}
-	wrapper, err := communication.Wrap(input)
+	wrapper, err := communication.Wrap(context.Background(), input)
 	assert.NoError(t, err)
 	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterTasks", tasks, org).Return(nil).Once()

@@ -32,6 +32,7 @@ func NewSmartContract() *SmartContract {
 // RegisterDataManager creates a new data Manager in world state
 // If the key exists, it will throw an error
 func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetDataManagerService()
 
 	params := new(asset.NewDataManager)
@@ -53,7 +54,7 @@ func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapp
 		return nil, err
 	}
 
-	response, err := communication.Wrap(dm)
+	response, err := communication.Wrap(ctx.GetContext(), dm)
 
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
@@ -66,6 +67,7 @@ func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapp
 // UpdateDataManager updates a data manager in world state
 // If the key does not exist, it will throw an error
 func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetDataManagerService()
 
 	params := new(asset.DataManagerUpdateParam)
@@ -91,6 +93,7 @@ func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, wrapper
 
 // GetDataManager returns the DataManager with given key
 func (s *SmartContract) GetDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetDataManagerService()
 
 	params := new(asset.GetDataManagerParam)
@@ -105,7 +108,7 @@ func (s *SmartContract) GetDataManager(ctx ledger.TransactionContext, wrapper *c
 		s.logger.WithError(err).Error("failed to query datamanager")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(dataManager)
+	wrapped, err := communication.Wrap(ctx.GetContext(), dataManager)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -115,6 +118,7 @@ func (s *SmartContract) GetDataManager(ctx ledger.TransactionContext, wrapper *c
 
 // QueryDataManagers returns the DataManager
 func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetDataManagerService()
 
 	params := new(asset.QueryDataManagersParam)
@@ -134,7 +138,7 @@ func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper
 		DataManagers:  datamanagers,
 		NextPageToken: nextPage,
 	}
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err

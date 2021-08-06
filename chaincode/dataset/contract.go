@@ -35,6 +35,7 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 
 // GetDataset returns the Dataset with given key
 func (s *SmartContract) GetDataset(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetDatasetService()
 
 	params := new(asset.GetDatasetParam)
@@ -49,7 +50,7 @@ func (s *SmartContract) GetDataset(ctx ledger.TransactionContext, wrapper *commu
 		s.logger.WithError(err).Error("failed to query dataset")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(dataset)
+	wrapped, err := communication.Wrap(ctx.GetContext(), dataset)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err

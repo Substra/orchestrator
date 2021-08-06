@@ -1,9 +1,11 @@
 package datamanager
 
 import (
+	"context"
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/mocks"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -19,13 +21,15 @@ func TestEvaluateTransactions(t *testing.T) {
 	assert.Equal(t, query, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
 }
 
-func getMockedService(ctx *testHelper.MockedContext) *service.MockDataManagerAPI {
+func getMockedService(ctx *mocks.TransactionContext) *service.MockDataManagerAPI {
 	mockService := new(service.MockDataManagerAPI)
 
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetDataManagerService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("SetRequestID", "").Once()
+	ctx.On("GetContext").Return(context.Background())
 
 	return mockService
 }
@@ -38,13 +42,13 @@ func TestQueryDataManagers(t *testing.T) {
 		{Key: "9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 	}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("QueryDataManagers", &common.Pagination{Token: "", Size: 10}).Return(datamanagers, "", nil).Once()
 
 	param := &asset.QueryDataManagersParam{PageToken: "", PageSize: 10}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.QueryDataManagers(ctx, wrapper)
@@ -75,12 +79,12 @@ func TestRegistration(t *testing.T) {
 		Type:           "test",
 	}
 
-	wrapper, err := communication.Wrap(newObj)
+	wrapper, err := communication.Wrap(context.Background(), newObj)
 	assert.NoError(t, err)
 
 	dm := &asset.DataManager{}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterDataManager", newObj, mspid).Return(dm, nil).Once()

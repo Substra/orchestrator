@@ -1,9 +1,11 @@
 package computeplan
 
 import (
+	"context"
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
+	"github.com/owkin/orchestrator/chaincode/mocks"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -12,13 +14,15 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *service.MockComputePlanAPI {
+func getMockedService(ctx *mocks.TransactionContext) *service.MockComputePlanAPI {
 	mockService := new(service.MockComputePlanAPI)
 
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetComputePlanService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("SetRequestID", "").Once()
+	ctx.On("GetContext").Return(context.Background())
 
 	return mockService
 }
@@ -28,7 +32,7 @@ func TestRegistration(t *testing.T) {
 
 	org := "TestOrg"
 	input := &asset.NewComputePlan{}
-	wrapper, err := communication.Wrap(input)
+	wrapper, err := communication.Wrap(context.Background(), input)
 	assert.NoError(t, err)
 	output := &asset.ComputePlan{Key: "test"}
 	b := testHelper.FakeTxCreator(t, org)
@@ -36,7 +40,7 @@ func TestRegistration(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterPlan", input, org).Return(output, nil).Once()
@@ -56,14 +60,14 @@ func TestApplyAction(t *testing.T) {
 
 	org := "TestOrg"
 	input := &asset.ApplyPlanActionParam{Key: "test", Action: asset.ComputePlanAction_PLAN_ACTION_CANCELED}
-	wrapper, err := communication.Wrap(input)
+	wrapper, err := communication.Wrap(context.Background(), input)
 	assert.NoError(t, err)
 	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("ApplyPlanAction", input.Key, input.Action, org).Return(nil).Once()
@@ -82,12 +86,12 @@ func TestQueryComputePlans(t *testing.T) {
 		{Tag: "test2"},
 	}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 	service := getMockedService(ctx)
 	service.On("QueryPlans", &common.Pagination{Token: "", Size: 20}).Return(computePlans, "", nil).Once()
 
 	param := &asset.QueryPlansParam{PageToken: "", PageSize: 20}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.QueryPlans(ctx, wrapper)

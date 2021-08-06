@@ -30,6 +30,7 @@ func NewSmartContract() *SmartContract {
 }
 
 func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetComputeTaskService()
 
 	newTasks := new(asset.RegisterTasksParam)
@@ -53,7 +54,7 @@ func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *co
 
 	resp := &asset.RegisterTasksResponse{}
 
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -63,6 +64,7 @@ func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *co
 
 // GetTask returns the task with given key
 func (s *SmartContract) GetTask(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetComputeTaskService()
 
 	params := new(asset.GetTaskParam)
@@ -78,7 +80,7 @@ func (s *SmartContract) GetTask(ctx ledger.TransactionContext, wrapper *communic
 		return nil, err
 	}
 
-	wrapped, err := communication.Wrap(task)
+	wrapped, err := communication.Wrap(ctx.GetContext(), task)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -87,6 +89,7 @@ func (s *SmartContract) GetTask(ctx ledger.TransactionContext, wrapper *communic
 }
 
 func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetComputeTaskService()
 
 	param := new(asset.QueryTasksParam)
@@ -109,7 +112,7 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 		NextPageToken: nextPage,
 	}
 
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -118,6 +121,7 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 }
 
 func (s *SmartContract) ApplyTaskAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetComputeTaskService()
 
 	requester, err := ledger.GetTxCreator(ctx.GetStub())

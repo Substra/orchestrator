@@ -32,6 +32,7 @@ func NewSmartContract() *SmartContract {
 // RegisterObjective creates a new objective in world state
 // If the key exists, it will override the existing value with the new one
 func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetObjectiveService()
 
 	params := new(asset.NewObjective)
@@ -52,7 +53,7 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper
 		s.logger.WithError(err).Error("failed to register objective")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(obj)
+	wrapped, err := communication.Wrap(ctx.GetContext(), obj)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -62,6 +63,7 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper
 
 // GetObjective returns the objective with given key
 func (s *SmartContract) GetObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetObjectiveService()
 
 	params := new(asset.GetObjectiveParam)
@@ -76,7 +78,7 @@ func (s *SmartContract) GetObjective(ctx ledger.TransactionContext, wrapper *com
 		s.logger.WithError(err).Error("failed to query objective")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(obj)
+	wrapped, err := communication.Wrap(ctx.GetContext(), obj)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -86,6 +88,7 @@ func (s *SmartContract) GetObjective(ctx ledger.TransactionContext, wrapper *com
 
 // QueryObjectives returns the objectives
 func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetObjectiveService()
 
 	params := new(asset.QueryObjectivesParam)
@@ -105,7 +108,7 @@ func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *
 		Objectives:    objectives,
 		NextPageToken: nextPage,
 	}
-	wrapped, err := communication.Wrap(resp)
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -115,6 +118,7 @@ func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *
 
 // GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
 func (s *SmartContract) GetLeaderboard(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	ctx.SetRequestID(wrapper.RequestID)
 	service := ctx.GetProvider().GetObjectiveService()
 
 	params := new(asset.LeaderboardQueryParam)
@@ -131,7 +135,7 @@ func (s *SmartContract) GetLeaderboard(ctx ledger.TransactionContext, wrapper *c
 		return nil, err
 	}
 
-	resp, err := communication.Wrap(leaderboard)
+	resp, err := communication.Wrap(ctx.GetContext(), leaderboard)
 
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")

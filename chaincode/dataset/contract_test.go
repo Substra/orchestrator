@@ -1,23 +1,26 @@
 package dataset
 
 import (
+	"context"
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
+	"github.com/owkin/orchestrator/chaincode/mocks"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *testHelper.MockedContext) *service.MockDatasetAPI {
+func getMockedService(ctx *mocks.TransactionContext) *service.MockDatasetAPI {
 	mockService := new(service.MockDatasetAPI)
 
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetDatasetService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("SetRequestID", "").Once()
+	ctx.On("GetContext").Return(context.Background())
 
 	return mockService
 }
@@ -42,13 +45,13 @@ func TestGetDataset(t *testing.T) {
 		},
 	}
 
-	ctx := new(testHelper.MockedContext)
+	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("GetDataset", key).Return(dataset, nil).Once()
 
 	param := &asset.GetDatasetParam{Key: key}
-	wrapper, err := communication.Wrap(param)
+	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
 	wrapped, err := contract.GetDataset(ctx, wrapper)

@@ -12,6 +12,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/utils"
 )
 
@@ -27,9 +28,7 @@ type DB struct {
 
 // NewDB creates a ledger.DB instance based on given stub
 func NewDB(ctx context.Context, stub shim.ChaincodeStubInterface) *DB {
-	logger := log.WithFields(
-		log.F("db_backend", "ledger"),
-	)
+	logger := logger.Get(ctx)
 
 	return &DB{
 		context:          ctx,

@@ -5,6 +5,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
+	"github.com/owkin/orchestrator/server/common/trace"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"google.golang.org/grpc"
 )
@@ -26,6 +27,7 @@ func GetServer(networkConfig string, certificate string, key string, additionalO
 	channelInterceptor := common.NewChannelInterceptor(orcConf)
 
 	interceptor := grpc.ChainUnaryInterceptor(
+		trace.InterceptRequestID,
 		logger.AddLogger,
 		common.LogRequest,
 		common.InterceptDistributedErrors,
