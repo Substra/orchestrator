@@ -5,10 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgerrcode"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
@@ -22,17 +19,12 @@ var ignoredMethods = [...]string{
 	"grpc.health",
 }
 
-type ProviderInterceptorConfiguration struct {
-	TxRetryBudget time.Duration
-}
-
 // ProviderInterceptor intercepts gRPC requests and assign a request-scoped orchestration.Provider
 // to the request context.
 type ProviderInterceptor struct {
 	amqp         common.AMQPPublisher
 	dbalProvider dbal.TransactionalDBALProvider
 	txChecker    common.TransactionChecker
-	config       ProviderInterceptorConfiguration
 }
 
 type ctxProviderInterceptorMarker struct{}
@@ -40,12 +32,11 @@ type ctxProviderInterceptorMarker struct{}
 var ctxProviderKey = &ctxProviderInterceptorMarker{}
 
 // NewProviderInterceptor returns an instance of ProviderInterceptor
-func NewProviderInterceptor(dbalProvider dbal.TransactionalDBALProvider, amqp common.AMQPPublisher, config ProviderInterceptorConfiguration) *ProviderInterceptor {
+func NewProviderInterceptor(dbalProvider dbal.TransactionalDBALProvider, amqp common.AMQPPublisher) *ProviderInterceptor {
 	return &ProviderInterceptor{
 		amqp:         amqp,
 		dbalProvider: dbalProvider,
 		txChecker:    new(common.GrpcMethodChecker),
-		config:       config,
 	}
 }
 
@@ -63,41 +54,6 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		}
 	}
 
-	attempt := 1
-	start := time.Now()
-
-	for {
-		attemptStart := time.Now()
-		res, err := pi.handleIsolated(ctx, req, info, handler)
-		attemptDuration := time.Since(attemptStart)
-
-		if err == nil {
-			return res, nil
-		}
-
-		if pi.shouldRetry(start, err) {
-			attempt++
-			logger.Get(ctx).
-				WithField("method", info.FullMethod).
-				WithField("previous attempt duration", attemptDuration).
-				WithField("next attempt number", attempt).
-				Info("retrying conflicting transaction")
-			continue
-		}
-		return nil, err
-	}
-}
-
-// shouldRetry returns true if the retry budget is not exhausted and the error is a transaction serialization failure.
-func (pi *ProviderInterceptor) shouldRetry(start time.Time, err error) bool {
-	retryBudgetExhausted := time.Since(start) > pi.config.TxRetryBudget
-	var pgErr *pgconn.PgError
-
-	return errors.As(err, &pgErr) && pgErr.Code == pgerrcode.SerializationFailure && !retryBudgetExhausted
-}
-
-// handleIsolated creates a transaction both at the SQL and event level.
-func (pi *ProviderInterceptor) handleIsolated(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	channel, err := common.ExtractChannel(ctx)
 	if err != nil {
 		return nil, err

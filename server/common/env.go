@@ -2,6 +2,7 @@ package common
 
 import (
 	"os"
+	"time"
 
 	"github.com/go-playground/log/v7"
 )
@@ -32,4 +33,13 @@ func MustGetEnvFlag(name string) bool {
 func GetEnv(name string) (string, bool) {
 	n := envPrefix + name
 	return os.LookupEnv(n)
+}
+
+// MustParseDuration parse input as a duration or log and exit.
+func MustParseDuration(duration string) time.Duration {
+	res, err := time.ParseDuration(duration)
+	if err != nil {
+		log.WithField("duration", duration).Fatal("Cannot parse duration")
+	}
+	return res
 }

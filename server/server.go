@@ -24,12 +24,12 @@ import (
 const httpPort = "8484"
 const grpcPort = "9000"
 
-func getDistributedServer(tlsOption []grpc.ServerOption, config *common.OrchestratorConfiguration) common.Runnable {
+func getDistributedServer(params common.AppParameters) common.Runnable {
 	networkConfig := common.MustGetEnv("NETWORK_CONFIG")
 	certificate := common.MustGetEnv("FABRIC_CERT")
 	key := common.MustGetEnv("FABRIC_KEY")
 
-	server, err := distributed.GetServer(networkConfig, certificate, key, tlsOption, config)
+	server, err := distributed.GetServer(networkConfig, certificate, key, params)
 	if err != nil {
 		log.WithError(err).Fatal("failed to create standalone server")
 	}
@@ -37,11 +37,11 @@ func getDistributedServer(tlsOption []grpc.ServerOption, config *common.Orchestr
 	return server
 }
 
-func getStandaloneServer(tlsOptions []grpc.ServerOption, config *common.OrchestratorConfiguration) common.Runnable {
+func getStandaloneServer(params common.AppParameters) common.Runnable {
 	dbURL := common.MustGetEnv("DATABASE_URL")
 	rabbitDSN := common.MustGetEnv("AMQP_DSN")
 
-	server, err := standalone.GetServer(dbURL, rabbitDSN, tlsOptions, config)
+	server, err := standalone.GetServer(dbURL, rabbitDSN, params)
 	if err != nil {
 		log.WithError(err).Fatal("failed to create standalone server")
 	}
@@ -76,11 +76,19 @@ func main() {
 
 	orchestrationConfig := common.NewConfig(common.MustGetEnv("CHANNEL_CONFIG"))
 
+	retryBudget := common.MustParseDuration(common.MustGetEnv("TX_RETRY_BUDGET"))
+
+	params := common.AppParameters{
+		GrpcOptions: serverOptions,
+		Config:      orchestrationConfig,
+		RetryBudget: retryBudget,
+	}
+
 	var app common.Runnable
 	if standaloneMode {
-		app = getStandaloneServer(serverOptions, orchestrationConfig)
+		app = getStandaloneServer(params)
 	} else {
-		app = getDistributedServer(serverOptions, orchestrationConfig)
+		app = getDistributedServer(params)
 	}
 	defer app.Stop()
 

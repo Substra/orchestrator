@@ -1,9 +1,10 @@
 package standalone
 
 import (
-	"time"
+	"errors"
 
-	"github.com/go-playground/log/v7"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
@@ -20,7 +21,7 @@ type AppServer struct {
 	db   *dbal.Database
 }
 
-func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOption, config *common.OrchestratorConfiguration) (*AppServer, error) {
+func GetServer(dbURL string, rabbitDSN string, params common.AppParameters) (*AppServer, error) {
 	pgDB, err := dbal.InitDatabase(dbURL)
 	if err != nil {
 		return nil, err
@@ -28,13 +29,12 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 
 	session := common.NewSession("orchestrator", rabbitDSN)
 
-	channelInterceptor := common.NewChannelInterceptor(config)
+	channelInterceptor := common.NewChannelInterceptor(params.Config)
 
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
-	piConfig := interceptors.ProviderInterceptorConfiguration{
-		TxRetryBudget: mustParseDuration(common.MustGetEnv("TX_RETRY_BUDGET")),
-	}
-	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session, piConfig)
+	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session)
+
+	retryInterceptor := common.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 
 	interceptor := grpc.ChainUnaryInterceptor(
 		trace.InterceptRequestID,
@@ -43,10 +43,11 @@ func GetServer(dbURL string, rabbitDSN string, additionalOptions []grpc.ServerOp
 		common.InterceptStandaloneErrors,
 		common.InterceptMSPID,
 		channelInterceptor.InterceptChannel,
+		retryInterceptor.Intercept,
 		providerInterceptor.Intercept,
 	)
 
-	serverOptions := append(additionalOptions, interceptor)
+	serverOptions := append(params.GrpcOptions, interceptor)
 
 	server := grpc.NewServer(serverOptions...)
 
@@ -80,10 +81,10 @@ func (a *AppServer) Stop() {
 	a.amqp.Close()
 }
 
-func mustParseDuration(duration string) time.Duration {
-	res, err := time.ParseDuration(duration)
-	if err != nil {
-		log.WithField("duration", duration).Fatal("Cannot parse duration")
-	}
-	return res
+// shouldRetry is used as RetryInterceptor's checker function
+// and allow a retry on transaction serialization failure.
+func shouldRetry(err error) bool {
+	var pgErr *pgconn.PgError
+
+	return errors.As(err, &pgErr) && pgErr.Code == pgerrcode.SerializationFailure
 }

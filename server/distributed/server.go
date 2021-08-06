@@ -1,8 +1,11 @@
 package distributed
 
 import (
+	"strings"
+
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/owkin/orchestrator/lib/asset"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/common/trace"
@@ -14,7 +17,7 @@ type AppServer struct {
 	grpc *grpc.Server
 }
 
-func GetServer(networkConfig string, certificate string, key string, additionalOptions []grpc.ServerOption, orcConf *common.OrchestratorConfiguration) (*AppServer, error) {
+func GetServer(networkConfig string, certificate string, key string, params common.AppParameters) (*AppServer, error) {
 	wallet := wallet.New(certificate, key)
 	config := config.FromFile(networkConfig)
 
@@ -24,7 +27,9 @@ func GetServer(networkConfig string, certificate string, key string, additionalO
 
 	}
 
-	channelInterceptor := common.NewChannelInterceptor(orcConf)
+	channelInterceptor := common.NewChannelInterceptor(params.Config)
+
+	retryInterceptor := common.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 
 	interceptor := grpc.ChainUnaryInterceptor(
 		trace.InterceptRequestID,
@@ -33,10 +38,11 @@ func GetServer(networkConfig string, certificate string, key string, additionalO
 		common.InterceptDistributedErrors,
 		common.InterceptMSPID,
 		channelInterceptor.InterceptChannel,
+		retryInterceptor.Intercept,
 		chaincodeInterceptor.Intercept,
 	)
 
-	serverOptions := append(additionalOptions, interceptor)
+	serverOptions := append(params.GrpcOptions, interceptor)
 
 	server := grpc.NewServer(serverOptions...)
 
@@ -62,4 +68,22 @@ func (a *AppServer) GetGrpcServer() *grpc.Server {
 
 func (a *AppServer) Stop() {
 	a.grpc.Stop()
+}
+
+// shouldRetry will trigger a retry on specific orchestration error.
+func shouldRetry(err error) bool {
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, orcerrors.ErrReferenceNotFound.Error()):
+		// Reference not found might be due to an out of sync ledger
+		return true
+	case strings.Contains(msg, orcerrors.ErrNotFound.Error()):
+		// Asset not found might be due to an out of sync ledger
+		return true
+	case strings.Contains(msg, orcerrors.ErrIncompatibleTaskStatus.Error()):
+		// Task status mismatch might be due to an out of sync ledger
+		return true
+	default:
+		return false
+	}
 }
