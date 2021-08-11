@@ -2,7 +2,9 @@ package distributed
 
 import (
 	"strings"
+	"time"
 
+	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -17,11 +19,11 @@ type AppServer struct {
 	grpc *grpc.Server
 }
 
-func GetServer(networkConfig string, certificate string, key string, params common.AppParameters) (*AppServer, error) {
+func GetServer(networkConfig string, certificate string, key string, gatewayTimeout time.Duration, params common.AppParameters) (*AppServer, error) {
 	wallet := wallet.New(certificate, key)
 	config := config.FromFile(networkConfig)
 
-	chaincodeInterceptor, err := NewInterceptor(config, wallet)
+	chaincodeInterceptor, err := NewInterceptor(config, wallet, gatewayTimeout)
 	if err != nil {
 		return nil, err
 
@@ -72,8 +74,11 @@ func (a *AppServer) Stop() {
 
 // shouldRetry will trigger a retry on specific orchestration error.
 func shouldRetry(err error) bool {
+	st, ok := status.FromError(err)
 	msg := err.Error()
 	switch {
+	case ok && st.Code == int32(status.Timeout):
+		return true
 	case strings.Contains(msg, orcerrors.ErrReferenceNotFound.Error()):
 		// Reference not found might be due to an out of sync ledger
 		return true

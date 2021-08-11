@@ -125,6 +125,8 @@ orchestrator:
   verifyClientMSPID: true
   # Delay we can afford to retry failed transactions
   txRetryBudget: 500ms
+  # commit timeout for all transaction submissions for the gateway
+  fabricGatewayTimeout: 20s
 
   tls:
     enabled: false

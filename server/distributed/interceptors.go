@@ -26,13 +26,14 @@ var ignoredMethods = [...]string{
 // Interceptor is a structure referencing a wallet which will keeps identities for the duration of program execution.
 // It is responsible for injecting a chaincode Invocator in the request's context.
 type Interceptor struct {
-	wallet *wallet.Wallet
-	config core.ConfigProvider
+	wallet    *wallet.Wallet
+	config    core.ConfigProvider
+	gwTimeout time.Duration
 }
 
 // NewInterceptor creates an Interceptor
-func NewInterceptor(config core.ConfigProvider, wallet *wallet.Wallet) (*Interceptor, error) {
-	return &Interceptor{wallet: wallet, config: config}, nil
+func NewInterceptor(config core.ConfigProvider, wallet *wallet.Wallet, gatewayTimeout time.Duration) (*Interceptor, error) {
+	return &Interceptor{wallet: wallet, config: config, gwTimeout: gatewayTimeout}, nil
 }
 
 // Intercept is a gRPC interceptor and will make the fabric contract available in the request context
@@ -80,6 +81,7 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 	gw, err := gateway.Connect(
 		gateway.WithConfig(ci.config),
 		gateway.WithIdentity(ci.wallet, label),
+		gateway.WithTimeout(ci.gwTimeout),
 	)
 	elapsed := time.Since(start)
 	logger.Get(ctx).WithField("duration", elapsed).Debug("Connected to gateway")

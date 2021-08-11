@@ -28,8 +28,9 @@ func getDistributedServer(params common.AppParameters) common.Runnable {
 	networkConfig := common.MustGetEnv("NETWORK_CONFIG")
 	certificate := common.MustGetEnv("FABRIC_CERT")
 	key := common.MustGetEnv("FABRIC_KEY")
+	gatewayTimeout := common.MustParseDuration(common.MustGetEnv("FABRIC_GATEWAY_TIMEOUT"))
 
-	server, err := distributed.GetServer(networkConfig, certificate, key, params)
+	server, err := distributed.GetServer(networkConfig, certificate, key, gatewayTimeout, params)
 	if err != nil {
 		log.WithError(err).Fatal("failed to create standalone server")
 	}
