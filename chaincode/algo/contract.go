@@ -99,7 +99,7 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 		return nil, err
 	}
 
-	algos, nextPage, err := service.QueryAlgos(params.Category, &common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
+	algos, nextPage, err := service.QueryAlgos(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()}, params.Filter)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query algos")
 		return nil, err

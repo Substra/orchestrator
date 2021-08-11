@@ -53,7 +53,7 @@ func (s *AlgoServer) QueryAlgos(ctx context.Context, params *asset.QueryAlgosPar
 		return nil, err
 	}
 
-	algos, paginationToken, err := services.GetAlgoService().QueryAlgos(params.Category, libCommon.NewPagination(params.PageToken, params.PageSize))
+	algos, paginationToken, err := services.GetAlgoService().QueryAlgos(libCommon.NewPagination(params.PageToken, params.PageSize), params.Filter)
 	if err != nil {
 		return nil, err
 	}

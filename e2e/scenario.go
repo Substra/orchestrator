@@ -87,6 +87,10 @@ var testScenarios = map[string]scenario{
 		testDatasetSampleKeys,
 		[]string{"short", "dataset"},
 	},
+	"QueryAlgos": {
+		testQueryAlgos,
+		[]string{"short", "algo"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -698,5 +702,47 @@ func testDatasetSampleKeys(conn *grpc.ClientConn) {
 	}
 	if dataset.TestDataSampleKeys[0] != appClient.GetKeyStore().GetKey("testds") {
 		log.Fatal("dataset should contain valid test sample ID")
+	}
+}
+
+func testQueryAlgos(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.EnsureNode()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
+	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("objSample"))
+
+	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{}, "", 100)
+
+	// We cannot check for equality since this test may run after others,
+	// we will probably have more than the registered algo above.
+	if len(resp.Algos) < 1 {
+		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected total number of algo")
+	}
+
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	planKey := appClient.GetKeyStore().GetKey(client.DefaultPlanRef)
+
+	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)
+	if len(resp.Algos) != 0 {
+		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected number algo used in compute plan without tasks")
+	}
+
+	appClient.RegisterTasks(
+		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
+		client.DefaultTrainTaskOptions().WithKeyRef("train2"),
+		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef("train1", "train2"),
+		client.DefaultTestTaskOptions().WithParentsRef("train3"),
+	)
+
+	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)
+	if len(resp.Algos) != 1 {
+		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected number of algo used in compute plan with tasks")
 	}
 }

@@ -114,9 +114,10 @@ func TestQueryAlgos(t *testing.T) {
 
 	pagination := common.NewPagination("", 12)
 
-	dbal.On("QueryAlgos", asset.AlgoCategory_ALGO_SIMPLE, pagination).Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
+	dbal.On("QueryAlgos", pagination, &asset.AlgoQueryFilter{Category: asset.AlgoCategory_ALGO_SIMPLE}).
+		Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
 
-	r, token, err := service.QueryAlgos(asset.AlgoCategory_ALGO_SIMPLE, pagination)
+	r, token, err := service.QueryAlgos(pagination, &asset.AlgoQueryFilter{Category: asset.AlgoCategory_ALGO_SIMPLE})
 	require.Nil(t, err)
 
 	assert.Len(t, r, 2)

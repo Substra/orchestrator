@@ -10,7 +10,6 @@ import (
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/utils"
@@ -301,108 +300,6 @@ func (db *DB) GetNode(id string) (*asset.Node, error) {
 // NodeExists test if a node with given ID is already stored
 func (db *DB) NodeExists(id string) (bool, error) {
 	return db.hasKey(asset.NodeKind, id)
-}
-
-// AddAlgo stores a new algo
-func (db *DB) AddAlgo(algo *asset.Algo) error {
-
-	exists, err := db.hasKey(asset.AlgoKind, algo.GetKey())
-	if err != nil {
-		return err
-	}
-	if exists {
-		return fmt.Errorf("failed to add algo: %w", errors.ErrConflict)
-	}
-
-	algoBytes, err := json.Marshal(algo)
-	if err != nil {
-		return err
-	}
-	err = db.putState(asset.AlgoKind, algo.GetKey(), algoBytes)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// GetAlgo retrieves an algo by its key
-func (db *DB) GetAlgo(key string) (*asset.Algo, error) {
-	a := asset.Algo{}
-
-	b, err := db.getState(asset.AlgoKind, key)
-	if err != nil {
-		return &a, err
-	}
-
-	err = json.Unmarshal(b, &a)
-	return &a, err
-}
-
-// QueryAlgos retrieves all algos
-func (db *DB) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
-	logger := db.logger.WithFields(
-		log.F("pagination", p),
-		log.F("algo_category", c.String()),
-	)
-	logger.Debug("get algos")
-
-	query := richQuerySelector{
-		Selector: couchAssetQuery{
-			DocType: asset.AlgoKind,
-		},
-	}
-
-	assetFilter := map[string]interface{}{}
-	if c != asset.AlgoCategory_ALGO_UNKNOWN {
-		assetFilter["category"] = c.String()
-	}
-	if len(assetFilter) > 0 {
-		query.Selector.Asset = assetFilter
-	}
-
-	b, err := json.Marshal(query)
-	if err != nil {
-		return nil, "", err
-	}
-
-	queryString := string(b)
-
-	log.WithField("couchQuery", queryString).Debug("mango query")
-
-	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
-	if err != nil {
-		return nil, "", err
-	}
-	defer resultsIterator.Close()
-
-	algos := make([]*asset.Algo, 0)
-
-	for resultsIterator.HasNext() {
-		queryResult, err := resultsIterator.Next()
-		if err != nil {
-			return nil, "", err
-		}
-		var storedAsset storedAsset
-		err = json.Unmarshal(queryResult.Value, &storedAsset)
-		if err != nil {
-			return nil, "", err
-		}
-		algo := &asset.Algo{}
-		err = json.Unmarshal(storedAsset.Asset, algo)
-		if err != nil {
-			return nil, "", err
-		}
-
-		algos = append(algos, algo)
-	}
-
-	return algos, bookmark.Bookmark, nil
-}
-
-// AlgoExists implements persistence.ObjectiveDBAL
-func (db *DB) AlgoExists(key string) (bool, error) {
-	return db.hasKey(asset.AlgoKind, key)
 }
 
 type couchAssetQuery struct {

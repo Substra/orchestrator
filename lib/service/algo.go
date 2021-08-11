@@ -13,7 +13,7 @@ import (
 type AlgoAPI interface {
 	RegisterAlgo(algo *asset.NewAlgo, owner string) (*asset.Algo, error)
 	GetAlgo(string) (*asset.Algo, error)
-	QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error)
+	QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error)
 }
 
 // AlgoServiceProvider defines an object able to provide an AlgoAPI instance
@@ -97,6 +97,6 @@ func (s *AlgoService) GetAlgo(key string) (*asset.Algo, error) {
 }
 
 // QueryAlgos returns all stored algos
-func (s *AlgoService) QueryAlgos(c asset.AlgoCategory, p *common.Pagination) ([]*asset.Algo, common.PaginationToken, error) {
-	return s.GetAlgoDBAL().QueryAlgos(c, p)
+func (s *AlgoService) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
+	return s.GetAlgoDBAL().QueryAlgos(p, filter)
 }

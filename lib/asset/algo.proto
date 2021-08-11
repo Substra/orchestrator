@@ -47,10 +47,15 @@ message QueryAlgosResponse {
   string next_page_token = 2;
 }
 
-message QueryAlgosParam {
+message AlgoQueryFilter {
   AlgoCategory category = 1;
-  string page_token = 2;
-  uint32 page_size = 3;
+  string compute_plan_key = 2;
+}
+
+message QueryAlgosParam {
+  string page_token = 1;
+  uint32 page_size = 2;
+  AlgoQueryFilter filter = 3;
 }
 
 service AlgoService {

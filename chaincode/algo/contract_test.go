@@ -73,11 +73,15 @@ func TestQueryAlgos(t *testing.T) {
 		{Name: "test2", Category: asset.AlgoCategory_ALGO_SIMPLE},
 	}
 
+	filter := &asset.AlgoQueryFilter{
+		Category: asset.AlgoCategory_ALGO_SIMPLE,
+	}
+
 	ctx := new(mocks.TransactionContext)
 	service := getMockedService(ctx)
-	service.On("QueryAlgos", asset.AlgoCategory_ALGO_SIMPLE, &common.Pagination{Token: "", Size: 20}).Return(algos, "", nil).Once()
+	service.On("QueryAlgos", &common.Pagination{Token: "", Size: 20}, filter).Return(algos, "", nil).Once()
 
-	param := &asset.QueryAlgosParam{Category: asset.AlgoCategory_ALGO_SIMPLE, PageToken: "", PageSize: 20}
+	param := &asset.QueryAlgosParam{Filter: filter, PageToken: "", PageSize: 20}
 	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 

@@ -375,3 +375,12 @@ func (c *TestClient) GetDataset(dataManagerRef string) *asset.Dataset {
 	}
 	return resp
 }
+
+func (c *TestClient) QueryAlgos(filter *asset.AlgoQueryFilter, pageToken string, pageSize int) *asset.QueryAlgosResponse {
+	resp, err := c.algoService.QueryAlgos(c.ctx, &asset.QueryAlgosParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
+	if err != nil {
+		log.WithError(err).Fatal("QueryAlgos failed")
+	}
+
+	return resp
+}
