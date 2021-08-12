@@ -1,13 +1,14 @@
 package distributed
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/common"
 )
 
 func TestRetryOnSpecificError(t *testing.T) {
@@ -17,6 +18,19 @@ func TestRetryOnSpecificError(t *testing.T) {
 	assert.True(t, shouldRetry(fmt.Errorf("%w", errors.ErrNotFound)))
 	assert.True(t, shouldRetry(fmt.Errorf("%w", errors.ErrReferenceNotFound)))
 
-	fabricTimeout := status.New(status.ClientStatus, status.Timeout.ToInt32(), "request timed out or been cancelled", nil)
 	assert.True(t, shouldRetry(fabricTimeout))
+}
+
+func TestIsFabricTimeoutRetry(t *testing.T) {
+	ctx := context.Background()
+
+	assert.False(t, isFabricTimeoutRetry(ctx))
+
+	ctx = common.WithLastError(ctx, fmt.Errorf("test error"))
+
+	assert.False(t, isFabricTimeoutRetry(ctx))
+
+	ctx = common.WithLastError(ctx, fabricTimeout)
+
+	assert.True(t, isFabricTimeoutRetry(ctx))
 }

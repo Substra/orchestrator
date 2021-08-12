@@ -2,8 +2,10 @@ package distributed
 
 import (
 	"context"
+	"strings"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
 )
 
 // PerformanceAdapter is a grpc server exposing the same Performance interface than standalone mode,
@@ -27,6 +29,19 @@ func (a *PerformanceAdapter) RegisterPerformance(ctx context.Context, newPerf *a
 	perf := &asset.Performance{}
 
 	err = invocator.Call(ctx, method, newPerf, perf)
+
+	if err != nil && isFabricTimeoutRetry(ctx) && strings.Contains(err.Error(), errors.ErrConflict.Error()) {
+		// In this very specific case we are in a retry context after a timeout.
+		// We can assume that the previous request succeeded and created the asset.
+		// So we convert the error in a success response.
+		err = invocator.Call(
+			ctx,
+			"orchestrator.performance:GetComputeTaskPerformance",
+			&asset.GetComputeTaskPerformanceParam{ComputeTaskKey: newPerf.ComputeTaskKey},
+			perf,
+		)
+		return perf, err
+	}
 
 	return perf, err
 }

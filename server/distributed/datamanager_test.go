@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -35,4 +37,27 @@ func TestRegisterDatamanager(t *testing.T) {
 
 	assert.Equal(t, "uuid", dm.Key)
 	assert.Equal(t, "test", dm.Owner)
+}
+
+func TestHandleDatamanagerConflictAfterTimeout(t *testing.T) {
+	adapter := NewDataManagerAdapter()
+
+	newObj := &asset.NewDataManager{
+		Key: "uuid",
+	}
+
+	newCtx := common.WithLastError(context.Background(), fabricTimeout)
+	invocator := &mockedInvocator{}
+
+	invocator.On("Call", AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
+		Once().
+		Return(errors.ErrConflict)
+	invocator.On("Call", AnyContext, "orchestrator.datamanager:GetDataManager", &asset.GetDataManagerParam{Key: newObj.Key}, &asset.DataManager{}).
+		Once().
+		Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.RegisterDataManager(ctx, newObj)
+	assert.NoError(t, err, "Registration should pass")
 }

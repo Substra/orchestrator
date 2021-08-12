@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -71,4 +73,60 @@ func TestQueryDataSamples(t *testing.T) {
 	_, err := adapter.QueryDataSamples(ctx, queryParam)
 
 	assert.NoError(t, err, "Query should pass")
+}
+
+func TestHandleDataSampleConflictAfterTimeout(t *testing.T) {
+	adapter := NewDataSampleAdapter()
+
+	param := &asset.RegisterDataSamplesParam{
+		Samples: []*asset.NewDataSample{
+			{
+				Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+				DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+				TestOnly:        false,
+			},
+		},
+	}
+
+	newCtx := common.WithLastError(context.Background(), fabricTimeout)
+	invocator := &mockedInvocator{}
+
+	invocator.On("Call", AnyContext, "orchestrator.datasample:RegisterDataSamples", param, nil).Return(errors.ErrConflict)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.RegisterDataSamples(ctx, param)
+
+	assert.NoError(t, err, "Registration should pass")
+}
+
+func TestHandleDataSampleBatchConflictAfterTimeout(t *testing.T) {
+	adapter := NewDataSampleAdapter()
+
+	param := &asset.RegisterDataSamplesParam{
+		Samples: []*asset.NewDataSample{
+			{
+				Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+				DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+				TestOnly:        false,
+			},
+			{
+				Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
+				DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
+				TestOnly:        false,
+			},
+		},
+	}
+
+	newCtx := common.WithLastError(context.Background(), fabricTimeout)
+	invocator := &mockedInvocator{}
+
+	invocator.On("Call", AnyContext, "orchestrator.datasample:RegisterDataSamples", param, nil).Return(errors.ErrConflict)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.RegisterDataSamples(ctx, param)
+
+	// We cannot assume that ALL the assets have been created, it might be a legitimate conflict not due to the timeout.
+	assert.Error(t, err, "Registration fail because batch contains more than one sample")
 }

@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -64,4 +66,25 @@ func TestQueryAlgos(t *testing.T) {
 	_, err := adapter.QueryAlgos(ctx, param)
 
 	assert.NoError(t, err, "Query should pass")
+}
+
+func TestHandleAlgoConflictAfterTimeout(t *testing.T) {
+	adapter := NewAlgoAdapter()
+
+	newObj := &asset.NewAlgo{
+		Key: "uuid",
+	}
+
+	newCtx := common.WithLastError(context.Background(), fabricTimeout)
+	invocator := &mockedInvocator{}
+
+	invocator.On("Call", AnyContext, "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(errors.ErrConflict)
+
+	invocator.On("Call", AnyContext, "orchestrator.algo:GetAlgo", &asset.GetAlgoParam{Key: newObj.Key}, &asset.Algo{}).Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.RegisterAlgo(ctx, newObj)
+
+	assert.NoError(t, err, "Registration should pass")
 }

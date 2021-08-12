@@ -2,8 +2,10 @@ package distributed
 
 import (
 	"context"
+	"strings"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
 )
 
 // DataSampleAdapter is a grpc server exposing the same datasample interface,
@@ -26,6 +28,13 @@ func (a *DataSampleAdapter) RegisterDataSamples(ctx context.Context, param *asse
 	method := "orchestrator.datasample:RegisterDataSamples"
 
 	err = invocator.Call(ctx, method, param, nil)
+
+	if err != nil && isFabricTimeoutRetry(ctx) && len(param.Samples) == 1 && strings.Contains(err.Error(), errors.ErrConflict.Error()) {
+		// In this very specific case we are in a retry context after a timeout and the registration is limited to a single sample.
+		// We can assume that the previous request succeeded and created the asset.
+		// So we convert the error in a success response.
+		return &asset.RegisterDataSamplesResponse{}, nil
+	}
 
 	return &asset.RegisterDataSamplesResponse{}, err
 }

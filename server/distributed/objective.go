@@ -2,8 +2,10 @@ package distributed
 
 import (
 	"context"
+	"strings"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
 )
 
 // ObjectiveAdapter is a grpc server exposing the same node interface,
@@ -28,6 +30,14 @@ func (a *ObjectiveAdapter) RegisterObjective(ctx context.Context, in *asset.NewO
 	response := &asset.Objective{}
 
 	err = invocator.Call(ctx, method, in, response)
+
+	if err != nil && isFabricTimeoutRetry(ctx) && strings.Contains(err.Error(), errors.ErrConflict.Error()) {
+		// In this very specific case we are in a retry context after a timeout.
+		// We can assume that the previous request succeeded and created the asset.
+		// So we convert the error in a success response.
+		err = invocator.Call(ctx, "orchestrator.objective:GetObjective", &asset.GetObjectiveParam{Key: in.Key}, response)
+		return response, err
+	}
 
 	return response, err
 }

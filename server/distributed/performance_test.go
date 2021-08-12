@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -43,6 +45,32 @@ func TestGetPerformance(t *testing.T) {
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
 	_, err := adapter.GetComputeTaskPerformance(ctx, param)
+
+	assert.NoError(t, err, "Query should pass")
+}
+
+func TestHandlePerfConflictAfterTimeout(t *testing.T) {
+	adapter := NewPerformanceAdapter()
+
+	newCtx := common.WithLastError(context.Background(), fabricTimeout)
+	invocator := &mockedInvocator{}
+
+	param := &asset.NewPerformance{
+		ComputeTaskKey: "uuid",
+	}
+
+	invocator.On("Call", AnyContext, "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).Return(errors.ErrConflict)
+	invocator.On(
+		"Call",
+		AnyContext,
+		"orchestrator.performance:GetComputeTaskPerformance",
+		&asset.GetComputeTaskPerformanceParam{ComputeTaskKey: param.ComputeTaskKey},
+		&asset.Performance{},
+	).Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.RegisterPerformance(ctx, param)
 
 	assert.NoError(t, err, "Query should pass")
 }

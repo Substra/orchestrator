@@ -2,8 +2,10 @@ package distributed
 
 import (
 	"context"
+	"strings"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
 )
 
 // ModelAdapter is a grpc server exposing the same Model interface,
@@ -27,6 +29,14 @@ func (a *ModelAdapter) RegisterModel(ctx context.Context, newModel *asset.NewMod
 	model := &asset.Model{}
 
 	err = invocator.Call(ctx, method, newModel, model)
+
+	if err != nil && isFabricTimeoutRetry(ctx) && strings.Contains(err.Error(), errors.ErrConflict.Error()) {
+		// In this very specific case we are in a retry context after a timeout.
+		// We can assume that the previous request succeeded and created the asset.
+		// So we convert the error in a success response.
+		err = invocator.Call(ctx, "orchestrator.model:GetModel", &asset.GetModelParam{Key: newModel.Key}, model)
+		return model, err
+	}
 
 	return model, err
 }

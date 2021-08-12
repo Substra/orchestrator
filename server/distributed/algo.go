@@ -2,8 +2,10 @@ package distributed
 
 import (
 	"context"
+	"strings"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/errors"
 )
 
 // AlgoAdapter is a grpc server exposing the same algo interface than standalone,
@@ -28,6 +30,14 @@ func (a *AlgoAdapter) RegisterAlgo(ctx context.Context, in *asset.NewAlgo) (*ass
 	response := &asset.Algo{}
 
 	err = invocator.Call(ctx, method, in, response)
+
+	if err != nil && isFabricTimeoutRetry(ctx) && strings.Contains(err.Error(), errors.ErrConflict.Error()) {
+		// In this very specific case we are in a retry context after a timeout.
+		// We can assume that the previous request succeeded and created the asset.
+		// So we convert the error in a success response.
+		err = invocator.Call(ctx, "orchestrator.algo:GetAlgo", &asset.GetAlgoParam{Key: in.Key}, response)
+		return response, err
+	}
 
 	return response, err
 }
