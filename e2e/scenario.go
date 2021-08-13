@@ -91,6 +91,10 @@ var testScenarios = map[string]scenario{
 		testQueryAlgos,
 		[]string{"short", "algo"},
 	},
+	"FailLargeComputePlan": {
+		testFailLargeComputePlan,
+		[]string{"long", "plan"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -745,4 +749,55 @@ func testQueryAlgos(conn *grpc.ClientConn) {
 	if len(resp.Algos) != 1 {
 		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected number of algo used in compute plan with tasks")
 	}
+}
+
+func testFailLargeComputePlan(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	nbRounds := 1000
+	nbPharma := 11
+	var nbTasks int
+
+	appClient.EnsureNode()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	for i := 0; i < nbRounds; {
+		start := time.Now()
+		newTasks := make([]client.Taskable, 0)
+		compKeys := make([]string, nbPharma)
+
+		for pharma := 1; pharma < nbPharma+1; {
+			compKey := fmt.Sprintf("compP%dR%d", pharma, i)
+			compKeys[pharma-1] = compKey
+
+			task := client.DefaultCompositeTaskOptions().WithKeyRef(compKey).WithAlgoRef("algoComp")
+			if i > 0 {
+				// Reference previous composite and aggregate
+				task.WithParentsRef(fmt.Sprintf("compP%dR%d", pharma, i-1), fmt.Sprintf("aggR%d", i-1))
+			}
+			newTasks = append(newTasks, task)
+			nbTasks++
+			pharma++
+		}
+
+		// Add aggregate
+		newTasks = append(newTasks, client.DefaultAggregateTaskOptions().WithKeyRef(fmt.Sprintf("aggR%d", i)).WithParentsRef(compKeys...).WithAlgoRef("algoAgg"))
+		nbTasks++
+
+		appClient.RegisterTasks(newTasks...)
+		i++
+		log.WithField("round", i).WithField("nbTasks", nbTasks).WithField("duration", time.Since(start)).Debug("Round registered")
+	}
+
+	// Fail the composite of rank 0 on pharma1
+	start := time.Now()
+	appClient.FailTask("compP1R0")
+	log.WithField("duration", time.Since(start)).WithField("nbTasks", nbTasks).Info("canceled compute plan")
 }
