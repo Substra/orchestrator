@@ -54,9 +54,6 @@ type taskStateUpdater interface {
 	// and the transition reason as second argument
 	// any error should be registered as e.Err
 	onStateChange(e *fsm.Event)
-	// Cascade Canceled status to children. Parent task is given as argument
-	// any error should be registered as e.Err
-	onCancel(e *fsm.Event)
 	// Recompute children status according to all its parents
 	// Task is received as argument
 	// any error should be registered as e.Err
@@ -68,7 +65,6 @@ type taskStateUpdater interface {
 type dumbStateUpdater struct{}
 
 func (d *dumbStateUpdater) onStateChange(e *fsm.Event) {}
-func (d *dumbStateUpdater) onCancel(e *fsm.Event)      {}
 func (d *dumbStateUpdater) onDone(e *fsm.Event)        {}
 
 var dumbUpdater = dumbStateUpdater{}
@@ -78,10 +74,8 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 		task.Status.String(),
 		taskStateEvents,
 		fsm.Callbacks{
-			"enter_state":              updater.onStateChange,
-			"after_transitionCanceled": updater.onCancel,
-			"after_transitionFailed":   updater.onCancel,
-			"after_transitionDone":     updater.onDone,
+			"enter_state":          updater.onStateChange,
+			"after_transitionDone": updater.onDone,
 		},
 	)
 }
@@ -197,46 +191,6 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 	}
 
 	return nil
-}
-
-// onCancel iterate over children to propagate the cancellation
-func (s *ComputeTaskService) onCancel(e *fsm.Event) {
-	if len(e.Args) != 2 {
-		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
-		return
-	}
-	task, ok := e.Args[0].(*asset.ComputeTask)
-	if !ok {
-		e.Err = fmt.Errorf("cannot cast argument into task")
-		return
-	}
-
-	children, err := s.GetComputeTaskDBAL().GetComputeTaskChildren(task.Key)
-	if err != nil {
-		e.Err = err
-		return
-	}
-
-	s.GetLogger().WithFields(
-		log.F("taskKey", task.Key),
-		log.F("taskStatus", task.Status),
-		log.F("numChildren", len(children)),
-		log.F("transition", transitionCanceled),
-	).Debug("onCancel: updating children statuses")
-
-	for _, child := range children {
-		state := newState(s, child)
-		if !state.Can(string(transitionTodo)) {
-			log.WithField("taskKey", child.Key).WithField("status", child.Status).Debug("propagateCancel: skipping child")
-			// this is expected as we might go over already failed children (from another parent)
-			continue
-		}
-		err := s.applyTaskAction(child, transitionCanceled, fmt.Sprintf("Cascading status from parent %s", task.Key))
-		if err != nil {
-			e.Err = err
-			return
-		}
-	}
 }
 
 // onStateChange enqueue an orchestration event and saves the task

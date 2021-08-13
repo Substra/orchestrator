@@ -18,10 +18,6 @@ func (m *mockStateUpdater) onStateChange(e *fsm.Event) {
 	m.Called(e)
 }
 
-func (m *mockStateUpdater) onCancel(e *fsm.Event) {
-	m.Called(e)
-}
-
 func (m *mockStateUpdater) onDone(e *fsm.Event) {
 	m.Called(e)
 }
@@ -145,41 +141,6 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 		Key:    "uuid",
 		Status: asset.ComputeTaskStatus_STATUS_WAITING,
 		Owner:  "owner",
-	}, nil)
-	// Check for children to be updated
-	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{}, nil)
-	// An update event should be enqueued
-	es.On("RegisterEvents", mock.Anything).Return(nil)
-	// Updated task should be saved
-	updatedTask := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_CANCELED, Owner: "owner"}
-	dbal.On("UpdateComputeTask", updatedTask).Return(nil)
-
-	service := NewComputeTaskService(provider)
-
-	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_CANCELED, "", "owner")
-	assert.NoError(t, err)
-
-	dbal.AssertExpectations(t)
-	es.AssertExpectations(t)
-}
-
-func TestCanceledAlreadyCanceledChild(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
-	es := new(MockEventAPI)
-	provider := newMockedProvider()
-
-	provider.On("GetComputeTaskDBAL").Return(dbal)
-	provider.On("GetEventService").Return(es)
-
-	// task is retrieved from persistence layer
-	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
-		Key:    "uuid",
-		Status: asset.ComputeTaskStatus_STATUS_WAITING,
-		Owner:  "owner",
-	}, nil)
-	// Check for children to be updated
-	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
-		{Key: "child", Status: asset.ComputeTaskStatus_STATUS_CANCELED},
 	}, nil)
 	// An update event should be enqueued
 	es.On("RegisterEvents", mock.Anything).Return(nil)

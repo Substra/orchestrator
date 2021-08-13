@@ -136,6 +136,7 @@ func testRegisterModel(conn *grpc.ClientConn) {
 }
 
 // Register 10 children tasks and cancel their parent
+// Only the parent should be canceled
 func testCascadeCancel(conn *grpc.ClientConn) {
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
@@ -157,8 +158,8 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
-		if task.Status != asset.ComputeTaskStatus_STATUS_CANCELED {
-			log.Fatal("child task should be CANCELED")
+		if task.Status != asset.ComputeTaskStatus_STATUS_WAITING {
+			log.Fatal("child task should be WAITING")
 		}
 	}
 
@@ -202,6 +203,7 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 }
 
 // Register 10 tasks and set their parent as failed
+// Only the parent should be FAILED
 func testCascadeFailure(conn *grpc.ClientConn) {
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
@@ -223,8 +225,8 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
-		if task.Status != asset.ComputeTaskStatus_STATUS_CANCELED {
-			log.Fatal("child task should be CANCELED")
+		if task.Status != asset.ComputeTaskStatus_STATUS_WAITING {
+			log.Fatal("child task should be WAITING")
 		}
 	}
 
