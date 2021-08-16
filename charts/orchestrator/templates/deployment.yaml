@@ -59,7 +59,9 @@ spec:
                 - "-v"
                 {{- end }}
                 {{- end }}
-          readinessProbe:
+            periodSeconds: 10
+            timeoutSeconds: 2
+          startupProbe:
             exec:
               command:
                 - "/bin/grpc_health_probe"
@@ -74,6 +76,9 @@ spec:
                 - "-v"
                 {{- end }}
                 {{- end }}
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           envFrom:
