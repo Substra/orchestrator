@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
@@ -57,6 +59,8 @@ func main() {
 
 	conf := getConf(mustGetEnv("CONFIG_PATH"))
 
+	wg := new(sync.WaitGroup)
+
 	for channel, chaincodes := range conf.Listeners {
 		forwarder := event.NewForwarder(channel, session)
 		log.WithField("channel", channel).Info("instanciated AMQP forwarder")
@@ -69,9 +73,13 @@ func main() {
 				Channel:   channel,
 				Chaincode: chaincode,
 			}
-			go listenToChannel(ccData, forwarder, eventIdx)
+			wg.Add(1)
+			go listenToChannel(ccData, forwarder, eventIdx, wg)
 		}
 	}
+
+	wg.Wait()
+	log.Debug("all listeners ready")
 
 	http.HandleFunc("/", healthcheck)
 	err = http.ListenAndServe(":8000", nil)
@@ -85,12 +93,24 @@ func healthcheck(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "OK\n")
 }
 
-func listenToChannel(ccData event.ListenerChaincodeData, forwarder *event.Forwarder, eventIdx event.Indexer) {
-	listener, err := event.NewListener(&ccData, eventIdx, forwarder.Forward)
+func listenToChannel(ccData event.ListenerChaincodeData, forwarder *event.Forwarder, eventIdx event.Indexer, wg *sync.WaitGroup) {
+	var listener *event.Listener
 
-	if err != nil {
-		log.WithError(err).Fatal("Failed to instanciate listener")
+	for {
+		var err error
+		listener, err = event.NewListener(&ccData, eventIdx, forwarder.Forward)
+
+		if err != nil {
+			waitTime := time.Second * 5
+			log.WithError(err).WithField("waitTime", waitTime).Error("Failed to instanciate listener, retrying")
+			time.Sleep(waitTime)
+			continue
+		}
+
+		break
 	}
+
+	wg.Done()
 
 	defer listener.Close()
 	log.WithField("channel", ccData.Channel).WithField("chaincode", ccData.Chaincode).Info("Listening to channel events")
