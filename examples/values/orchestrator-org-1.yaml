@@ -1,6 +1,8 @@
 ---
 orchestrator:
   mode: standalone
+  logLevel: DEBUG
+  logSQL: true
   tls:
     enabled: true
     secrets:

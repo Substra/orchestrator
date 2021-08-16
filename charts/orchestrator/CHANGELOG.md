@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- logSQL flag to debug SQL statements (default to false)
+
+### Changed
+- default log level set to INFO
+
 ## [0.1.2] - 2021-08-11
 
 ### Added

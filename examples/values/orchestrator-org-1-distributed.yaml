@@ -3,6 +3,8 @@ orchestrator:
   mode: distributed
   channel: mychannel
   chaincode: mycc
+  logLevel: DEBUG
+  logSQL: true
   tls:
     enabled: true
     secrets:

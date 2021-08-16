@@ -119,7 +119,8 @@ orchestrator:
     # Overrides the image tag whose default is the chart appVersion.
     tag: ""
 
-  logLevel: DEBUG
+  logLevel: INFO
+  logSQL: false
   mode: standalone # the orchestrator can run in either "standalone" or "distributed" mode
   chaincode: mycc
   verifyClientMSPID: true

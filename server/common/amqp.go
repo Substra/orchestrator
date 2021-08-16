@@ -212,7 +212,6 @@ func (session *Session) Publish(ctx context.Context, routingKey string, data []b
 		select {
 		case confirm := <-session.notifyConfirm:
 			if confirm.Ack {
-				log.Debug("Push confirmed")
 				return nil
 			}
 		case <-time.After(resendDelay):

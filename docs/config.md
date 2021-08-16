@@ -24,6 +24,9 @@ Unless specified, all settings are mandatory.
 | `ORCHESTRATOR_AMQP_DSN`               | standalone              | string                                                             | [rabbitmq connection string](https://www.rabbitmq.com/uri-spec.html)                                                       |
 | `ORCHESTRATOR_VERIFY_CLIENT_MSP_ID`   | standalone, distributed | bool: `true`/`false`                                               | whether to check that client certificate matches the MSPID header                                                          |
 | `ORCHESTRATOR_CHANNEL_CONFIG`         | standalone, distributed | string (path)                                                      | where to find the [application configuration](#orchestration-configuration)                                                |
+| `LOG_LEVEL`                           | standalone, distributed | string (INFO, WARN, NOTICE, ERROR, etc)                            | log verbosity (default to INFO)                                                                                            |
+| `NO_COLOR`                            | standalone, distributed | presence (regardless of its value)                                 | disable log color (see [no-color](https://no-color.org/))                                                                  |
+| `LOG_SQL`                             | standalone              | presence (regardless of its value)                                 | log SQL statements with debug verbosity.                                                                                   |
 
 ## Forwarder settings
 

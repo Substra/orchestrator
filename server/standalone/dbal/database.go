@@ -3,6 +3,7 @@ package dbal
 import (
 	"context"
 	"errors"
+	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
@@ -23,9 +24,14 @@ type Database struct {
 	pool *pgxpool.Pool
 }
 
-type SQLLogger struct{}
+type SQLLogger struct {
+	debug bool
+}
 
-func (*SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
+func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
+	if !l.debug && level <= pgx.LogLevelDebug {
+		return
+	}
 	logger.Get(ctx).
 		WithField("msg", msg).
 		WithField("level", level).
@@ -46,7 +52,10 @@ func InitDatabase(databaseURL string) (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	config.ConnConfig.Logger = &SQLLogger{}
+
+	_, logSQL := os.LookupEnv("LOG_SQL")
+	config.ConnConfig.Logger = &SQLLogger{debug: logSQL}
+
 	pool, err := pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {
 		return nil, err

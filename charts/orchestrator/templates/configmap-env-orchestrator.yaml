@@ -15,6 +15,9 @@ data:
   # Standalone settings
   {{- if .Values.postgresql.enabled }}
   ORCHESTRATOR_DATABASE_URL: postgresql://{{ .Values.postgresql.postgresqlUsername}}:{{ .Values.postgresql.postgresqlPassword}}@{{ template "postgresql.serviceName" . }}.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}/{{ .Values.postgresql.postgresqlDatabase}}?sslmode=disable
+  {{- if .Values.orchestrator.logSQL }}
+  LOG_SQL: "true"
+  {{- end }}
   {{- end }}
 
   # Distributed settings
