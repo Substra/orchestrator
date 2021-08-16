@@ -1,4 +1,4 @@
-FROM debian:stable-slim
+FROM debian:bullseye-slim
 
 RUN apt-get update && apt-get install python3 curl -y && apt-get clean
 
