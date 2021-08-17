@@ -133,6 +133,13 @@ func testRegisterModel(conn *grpc.ClientConn) {
 
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
+
+	taskEvents := appClient.QueryEvents(&asset.EventQueryFilter{AssetKey: appClient.GetKeyStore().GetKey(client.DefaultTaskRef)}, "", 10)
+
+	if len(taskEvents.Events) != 3 {
+		// 3 events: creation, start, done
+		log.WithField("events", taskEvents.Events).Fatal("Unexpected number of events")
+	}
 }
 
 // Register 10 children tasks and cancel their parent

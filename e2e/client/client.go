@@ -68,6 +68,7 @@ type TestClient struct {
 	computePlanService asset.ComputePlanServiceClient
 	performanceService asset.PerformanceServiceClient
 	datasetService     asset.DatasetServiceClient
+	eventService       asset.EventServiceClient
 }
 
 func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*TestClient, error) {
@@ -87,6 +88,7 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 		computePlanService: asset.NewComputePlanServiceClient(conn),
 		performanceService: asset.NewPerformanceServiceClient(conn),
 		datasetService:     asset.NewDatasetServiceClient(conn),
+		eventService:       asset.NewEventServiceClient(conn),
 	}, nil
 }
 
@@ -380,6 +382,15 @@ func (c *TestClient) QueryAlgos(filter *asset.AlgoQueryFilter, pageToken string,
 	resp, err := c.algoService.QueryAlgos(c.ctx, &asset.QueryAlgosParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
 		log.WithError(err).Fatal("QueryAlgos failed")
+	}
+
+	return resp
+}
+
+func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken string, pageSize int) *asset.QueryEventsResponse {
+	resp, err := c.eventService.QueryEvents(c.ctx, &asset.QueryEventsParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
+	if err != nil {
+		log.WithError(err).Fatal("QueryEvents failed")
 	}
 
 	return resp

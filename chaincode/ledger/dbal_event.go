@@ -59,13 +59,13 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) 
 
 	assetFilter := map[string]interface{}{}
 	if filter.AssetKey != "" {
-		assetFilter["assetKey"] = filter.AssetKey
+		assetFilter["asset_key"] = filter.AssetKey
 	}
 	if filter.AssetKind != asset.AssetKind_ASSET_UNKNOWN {
-		assetFilter["assetKind"] = filter.AssetKind.String()
+		assetFilter["asset_kind"] = filter.AssetKind.String()
 	}
 	if filter.EventKind != asset.EventKind_EVENT_UNKNOWN {
-		assetFilter["eventKind"] = filter.EventKind.String()
+		assetFilter["event_kind"] = filter.EventKind.String()
 	}
 	if len(assetFilter) > 0 {
 		query.Selector.Asset = assetFilter
