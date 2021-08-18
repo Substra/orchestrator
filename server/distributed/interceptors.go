@@ -90,6 +90,8 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 		return nil, err
 	}
 
+	defer gw.Close()
+
 	configBackend, err := ci.config()
 	if err != nil {
 		return nil, err
@@ -99,8 +101,6 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 	if err != nil {
 		return nil, err
 	}
-
-	defer gw.Close()
 
 	network, err := gw.GetNetwork(channel)
 	if err != nil {
