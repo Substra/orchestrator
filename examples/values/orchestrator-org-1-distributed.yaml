@@ -15,6 +15,8 @@ orchestrator:
       secrets:
         clientCACerts:
           orchestrator-ca: orchestrator-tls-cacert
+  txRetryBudget: 90s
+  fabricGatewayTimeout: 40s
 
 rabbitmq:
   auth:
