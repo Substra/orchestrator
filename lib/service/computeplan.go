@@ -16,6 +16,7 @@ type ComputePlanAPI interface {
 	GetPlan(key string) (*asset.ComputePlan, error)
 	QueryPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error)
 	ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error
+	canDeleteModels(key string) (bool, error)
 }
 
 // ComputePlanServiceProvider defines an object able to provide a ComputePlanAPI instance
@@ -125,4 +126,14 @@ func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
 	}
 
 	return nil
+}
+
+// canDeleteModels returns true if the compute plan allows intermediary models deletion.
+func (s *ComputePlanService) canDeleteModels(key string) (bool, error) {
+	plan, err := s.GetComputePlanDBAL().GetRawComputePlan(key)
+	if err != nil {
+		return false, err
+	}
+
+	return plan.DeleteIntermediaryModels, nil
 }

@@ -39,14 +39,7 @@ func (db *DB) ComputePlanExists(key string) (bool, error) {
 
 // GetComputePlan returns a ComputePlan by its key
 func (db *DB) GetComputePlan(key string) (*asset.ComputePlan, error) {
-	plan := new(asset.ComputePlan)
-
-	b, err := db.getState(asset.ComputePlanKind, key)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(b, plan)
+	plan, err := db.GetRawComputePlan(key)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +57,23 @@ func (db *DB) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	plan.DoneCount = uint32(len(doneTasks))
 
 	plan.Status, err = db.getPlanStatus(key, len(allTasks), len(doneTasks))
+	if err != nil {
+		return nil, err
+	}
+
+	return plan, nil
+}
+
+// GetRawComputePlan returns a compute plan without its computed properties
+func (db *DB) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
+	plan := new(asset.ComputePlan)
+
+	b, err := db.getState(asset.ComputePlanKind, key)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(b, plan)
 	if err != nil {
 		return nil, err
 	}

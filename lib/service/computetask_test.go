@@ -926,9 +926,7 @@ func TestCanDisableModels(t *testing.T) {
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
 
-		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
-			DeleteIntermediaryModels: false,
-		}, nil)
+		cps.On("canDeleteModels", "cpKey").Return(false, nil)
 
 		service := NewComputeTaskService(provider)
 		can, err := service.canDisableModels("uuid", "worker")
@@ -952,9 +950,7 @@ func TestCanDisableModels(t *testing.T) {
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
-		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
-			DeleteIntermediaryModels: true,
-		}, nil)
+		cps.On("canDeleteModels", "cpKey").Return(true, nil)
 		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{}, nil)
 
 		service := NewComputeTaskService(provider)
@@ -979,9 +975,7 @@ func TestCanDisableModels(t *testing.T) {
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
-		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
-			DeleteIntermediaryModels: true,
-		}, nil)
+		cps.On("canDeleteModels", "cpKey").Return(true, nil)
 		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
 			{Status: asset.ComputeTaskStatus_STATUS_DOING},
 		}, nil)
@@ -1008,9 +1002,7 @@ func TestCanDisableModels(t *testing.T) {
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
-		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
-			DeleteIntermediaryModels: true,
-		}, nil)
+		cps.On("canDeleteModels", "cpKey").Return(true, nil)
 		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
 			{Status: asset.ComputeTaskStatus_STATUS_DONE, Category: asset.ComputeTaskCategory_TASK_TEST},
 		}, nil)
@@ -1038,9 +1030,7 @@ func TestCanDisableModels(t *testing.T) {
 		provider.On("GetComputePlanService").Return(cps)
 
 		dbal.On("GetComputeTask", "uuid").Return(task, nil)
-		cps.On("GetPlan", "cpKey").Return(&asset.ComputePlan{
-			DeleteIntermediaryModels: true,
-		}, nil)
+		cps.On("canDeleteModels", "cpKey").Return(true, nil)
 		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
 			{Status: asset.ComputeTaskStatus_STATUS_DONE},
 		}, nil)

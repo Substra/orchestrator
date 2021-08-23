@@ -63,6 +63,24 @@ group by cp.asset
 	return plan, nil
 }
 
+// GetRawComputePlan returns a compute plan without its computed properties.
+func (d *DBAL) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
+	query := `select asset from compute_plans where id=$1 and channel=$2`
+
+	row := d.tx.QueryRow(d.ctx, query, key, d.channel)
+
+	plan := new(asset.ComputePlan)
+	err := row.Scan(plan)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("computeplan not found: %w", orcerrors.ErrNotFound)
+		}
+		return nil, err
+	}
+
+	return plan, nil
+}
+
 func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
 	var rows pgx.Rows
 	var err error

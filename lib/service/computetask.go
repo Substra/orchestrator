@@ -277,12 +277,12 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 		return false, nil
 	}
 
-	plan, err := s.GetComputePlanService().GetPlan(task.ComputePlanKey)
+	planAllowIntermediary, err := s.GetComputePlanService().canDeleteModels(task.ComputePlanKey)
 	if err != nil {
 		return false, err
 	}
-	if !plan.DeleteIntermediaryModels {
-		logger.WithField("computePlanKey", plan.Key).Debug("skip model disable: DeleteIntermediaryModels is false")
+	if !planAllowIntermediary {
+		logger.WithField("computePlanKey", task.ComputePlanKey).Debug("skip model disable: DeleteIntermediaryModels is false")
 		return false, nil
 	}
 
