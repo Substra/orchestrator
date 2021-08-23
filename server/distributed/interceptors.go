@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/owkin/orchestrator/chaincode/contracts"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
+	"github.com/owkin/orchestrator/server/distributed/gateway"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -26,14 +26,20 @@ var ignoredMethods = [...]string{
 // Interceptor is a structure referencing a wallet which will keeps identities for the duration of program execution.
 // It is responsible for injecting a chaincode Invocator in the request's context.
 type Interceptor struct {
-	wallet    *wallet.Wallet
-	config    core.ConfigProvider
-	gwTimeout time.Duration
+	gwPool gateway.Pool
 }
 
 // NewInterceptor creates an Interceptor
-func NewInterceptor(config core.ConfigProvider, wallet *wallet.Wallet, gatewayTimeout time.Duration) (*Interceptor, error) {
-	return &Interceptor{wallet: wallet, config: config, gwTimeout: gatewayTimeout}, nil
+func NewInterceptor(config core.ConfigProvider, wallet *wallet.Wallet, gatewayTimeout time.Duration) *Interceptor {
+	checker := contracts.NewContractCollection()
+	return &Interceptor{
+		gwPool: gateway.NewPool(config, wallet, gatewayTimeout, checker),
+	}
+}
+
+// Close make sure all gateways are closed
+func (ci *Interceptor) Close() {
+	ci.gwPool.Close()
 }
 
 // Intercept is a gRPC interceptor and will make the fabric contract available in the request context
@@ -71,45 +77,12 @@ func (ci *Interceptor) Intercept(ctx context.Context, req interface{}, info *grp
 		WithField("mspid", mspid).
 		Debug("Successfully retrieved chaincode metadata from headers")
 
-	label := mspid + "-id"
-
-	err = ci.wallet.EnsureIdentity(label, mspid)
-	if err != nil {
-		return nil, err
-	}
-	start := time.Now()
-	gw, err := gateway.Connect(
-		gateway.WithConfig(ci.config),
-		gateway.WithIdentity(ci.wallet, label),
-		gateway.WithTimeout(ci.gwTimeout),
-	)
-	elapsed := time.Since(start)
-	logger.Get(ctx).WithField("duration", elapsed).Debug("Connected to gateway")
-
+	gw, err := ci.gwPool.GetGateway(ctx, mspid)
 	if err != nil {
 		return nil, err
 	}
 
-	defer gw.Close()
-
-	configBackend, err := ci.config()
-	if err != nil {
-		return nil, err
-	}
-
-	peers, err := extractChannelLocalPeers(configBackend, channel)
-	if err != nil {
-		return nil, err
-	}
-
-	network, err := gw.GetNetwork(channel)
-	if err != nil {
-		return nil, err
-	}
-
-	contract := network.GetContract(chaincode)
-	checker := contracts.NewContractCollection()
-	invocator := NewContractInvocator(contract, checker, peers)
+	invocator := NewContractInvocator(gw, channel, chaincode)
 
 	newCtx := context.WithValue(ctx, ctxInvocatorKey, invocator)
 	return handler(newCtx, req)
@@ -129,26 +102,4 @@ func ExtractInvocator(ctx context.Context) (Invocator, error) {
 		return nil, errors.New("invocator not found in context")
 	}
 	return invocator, nil
-}
-
-// ExtractChannelLocalPeers retrieves the local peers present in the provided channel from the config file
-func extractChannelLocalPeers(configBackend []core.ConfigBackend, channel string) ([]string, error) {
-	if len(configBackend) != 1 {
-		return nil, errors.New("invalid config file")
-	}
-
-	config := configBackend[0]
-	channelPeers, _ := config.Lookup(fmt.Sprintf("channels.%s.peers", channel))
-
-	peersMap, ok := channelPeers.(map[string]interface{})
-
-	if !ok {
-		return nil, errors.New("invalid config structure")
-	}
-
-	peers := make([]string, 0, len(peersMap))
-	for k := range peersMap {
-		peers = append(peers, k)
-	}
-	return peers, nil
 }

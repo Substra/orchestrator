@@ -17,18 +17,15 @@ import (
 )
 
 type AppServer struct {
-	grpc *grpc.Server
+	grpc          *grpc.Server
+	ccInterceptor *Interceptor
 }
 
 func GetServer(networkConfig string, certificate string, key string, gatewayTimeout time.Duration, params common.AppParameters) (*AppServer, error) {
 	wallet := wallet.New(certificate, key)
 	config := config.FromFile(networkConfig)
 
-	chaincodeInterceptor, err := NewInterceptor(config, wallet, gatewayTimeout)
-	if err != nil {
-		return nil, err
-
-	}
+	chaincodeInterceptor := NewInterceptor(config, wallet, gatewayTimeout)
 
 	channelInterceptor := common.NewChannelInterceptor(params.Config)
 
@@ -62,7 +59,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 	asset.RegisterPerformanceServiceServer(server, NewPerformanceAdapter())
 	asset.RegisterEventServiceServer(server, NewEventAdapter())
 
-	return &AppServer{server}, nil
+	return &AppServer{server, chaincodeInterceptor}, nil
 }
 
 func (a *AppServer) GetGrpcServer() *grpc.Server {
@@ -71,6 +68,7 @@ func (a *AppServer) GetGrpcServer() *grpc.Server {
 
 func (a *AppServer) Stop() {
 	a.grpc.Stop()
+	a.ccInterceptor.Close()
 }
 
 // shouldRetry will trigger a retry on specific orchestration error.
