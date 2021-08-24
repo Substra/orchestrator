@@ -2,11 +2,11 @@ apiVersion: skaffold/v2beta10
 kind: Config
 build:
   artifacts:
-    - image: substrafoundation/orchestrator
+    - image: substrafoundation/orchestrator-server
       context: .
       docker:
         dockerfile: docker/server/Dockerfile
-    - image: substrafoundation/rabbitmq-operator
+    - image: substrafoundation/orchestrator-rabbitmq-operator
       context: .
       docker:
         dockerfile: docker/rabbitmq-operator/Dockerfile
@@ -18,8 +18,8 @@ deploy:
         namespace: org-1
         createNamespace: true
         artifactOverrides:
-          orchestrator.image: substrafoundation/orchestrator
-          rabbitmqOperator.image: substrafoundation/rabbitmq-operator
+          orchestrator.image: substrafoundation/orchestrator-server
+          rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
         imageStrategy:
           helm: {}
         valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
@@ -36,7 +36,7 @@ profiles:
   - op: add
     path: "/build/artifacts/-"
     value:
-      image: substrafoundation/forwarder
+      image: substrafoundation/orchestrator-forwarder
       context: .
       docker:
         dockerfile: docker/forwarder/Dockerfile
@@ -46,9 +46,9 @@ profiles:
   - op: replace
     path: /deploy/helm/releases/0/artifactOverrides
     value:
-      orchestrator.image: substrafoundation/orchestrator
-      forwarder.image: substrafoundation/forwarder
-      rabbitmqOperator.image: substrafoundation/rabbitmq-operator
+      orchestrator.image: substrafoundation/orchestrator-server
+      forwarder.image: substrafoundation/orchestrator-forwarder
+      rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
   - op: add
     path: "/deploy/helm/releases/-"
     value:
@@ -57,9 +57,9 @@ profiles:
       namespace: org-2
       createNamespace: true
       artifactOverrides:
-        orchestrator.image: substrafoundation/orchestrator
-        forwarder.image: substrafoundation/forwarder
-        rabbitmqOperator.image: substrafoundation/rabbitmq-operator
+        orchestrator.image: substrafoundation/orchestrator-server
+        forwarder.image: substrafoundation/orchestrator-forwarder
+        rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
       imageStrategy:
         helm: {}
       valuesFiles: [ examples/values/orchestrator-org-2-distributed.yaml ]
