@@ -36,7 +36,7 @@ make ./bin/e2e-tests
     -server_addr orchestrator.node-1.com:443
 ```
 
-Refer to `./bin/e2e-tests --help` for more options.
+Refer to `./bin/e2e-tests --help` for more options (you can run tests by name or tag).
 
 ## Developping the orchestrator
 
@@ -65,13 +65,14 @@ You can also deploy [connect-backend](https://github.com/owkin/connect-backend/t
 
 ### Distributed mode
 
-In distributed mode, the orchestrator only requires a matching chaincode:
-So you need to build the chaincode image (from this repo) to be used in `hlf-k8s` in your k8s cluster
+In distributed mode, the orchestrator only requires a matching chaincode.
+So you need to build the chaincode image (from this repo) to be used in `hlf-k8s` in your k8s cluster.
+Choose a tag (example uses `dev`) and update hlf-k8s' values accordingly.
 
 ```bash
 # If you use minikube, run `eval $(minikube -p minikube docker-env)` before the `docker build` command
-# If you use kind, run `kind load docker-image my-chaincode:1.0.0` after the `docker build` command
-docker build -f docker/chaincode/Dockerfile -t my-chaincode:1.0.0 .
+# If you use kind, run `kind load docker-image gcr.io/connect-314908/orchestrator-chaincode:dev` after the `docker build` command
+docker build -f docker/chaincode/Dockerfile -t gcr.io/connect-314908/orchestrator-chaincode:dev .
 ```
 
 Make sure you deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev` or `skaffold run`
