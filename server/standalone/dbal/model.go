@@ -34,7 +34,7 @@ func (d *DBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asse
 	builder := pgDialect.Select("asset").
 		From("models").
 		Where(squirrel.Eq{"channel": d.channel}).
-		OrderByClause("created_at ASC").
+		OrderByClause("asset->>'creationDate' ASC").
 		Offset(uint64(offset)).
 		Limit(uint64(p.Size + 1))
 

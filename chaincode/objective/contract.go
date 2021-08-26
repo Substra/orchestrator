@@ -33,10 +33,14 @@ func NewSmartContract() *SmartContract {
 // If the key exists, it will override the existing value with the new one
 func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetObjectiveService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetObjectiveService()
 
 	params := new(asset.NewObjective)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -64,10 +68,14 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper
 // GetObjective returns the objective with given key
 func (s *SmartContract) GetObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetObjectiveService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetObjectiveService()
 
 	params := new(asset.GetObjectiveParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -89,10 +97,14 @@ func (s *SmartContract) GetObjective(ctx ledger.TransactionContext, wrapper *com
 // QueryObjectives returns the objectives
 func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetObjectiveService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetObjectiveService()
 
 	params := new(asset.QueryObjectivesParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -119,10 +131,14 @@ func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *
 // GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
 func (s *SmartContract) GetLeaderboard(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetObjectiveService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetObjectiveService()
 
 	params := new(asset.LeaderboardQueryParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err

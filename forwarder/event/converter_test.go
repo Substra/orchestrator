@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestForwardCCEvent(t *testing.T) {
@@ -18,7 +20,7 @@ func TestForwardCCEvent(t *testing.T) {
 			AssetKey:  "uuid1",
 			AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 			EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-			Timestamp: 12,
+			Timestamp: timestamppb.New(time.Unix(12, 0)),
 		},
 		{
 			Id:        "event2",
@@ -26,7 +28,7 @@ func TestForwardCCEvent(t *testing.T) {
 			AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 			EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 			Metadata:  map[string]string{"test": "value"},
-			Timestamp: 12,
+			Timestamp: timestamppb.New(time.Unix(12, 0)),
 		},
 	}
 
@@ -38,7 +40,7 @@ func TestForwardCCEvent(t *testing.T) {
 			AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 			EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 			Channel:   "testChannel",
-			Timestamp: 12,
+			Timestamp: timestamppb.New(time.Unix(12, 0)),
 		},
 		{
 			Id:        "event2",
@@ -47,7 +49,7 @@ func TestForwardCCEvent(t *testing.T) {
 			EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 			Metadata:  map[string]string{"test": "value"},
 			Channel:   "testChannel",
-			Timestamp: 12,
+			Timestamp: timestamppb.New(time.Unix(12, 0)),
 		},
 	}
 

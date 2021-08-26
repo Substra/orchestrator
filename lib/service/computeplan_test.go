@@ -2,11 +2,13 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestGetPlan(t *testing.T) {
@@ -31,19 +33,24 @@ func TestGetPlan(t *testing.T) {
 func TestRegisterPlan(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputePlanDBAL").Return(dbal)
+	provider.On("GetTimeService").Return(ts)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewComputePlanService(provider)
 
 	newPlan := &asset.NewComputePlan{Key: "b9b3ecda-0a90-41da-a2e3-945eeafb06d8", Tag: "test"}
 
 	expected := &asset.ComputePlan{
-		Key:   "b9b3ecda-0a90-41da-a2e3-945eeafb06d8",
-		Tag:   "test",
-		Owner: "org1",
+		Key:          "b9b3ecda-0a90-41da-a2e3-945eeafb06d8",
+		Tag:          "test",
+		Owner:        "org1",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	dbal.On("AddComputePlan", expected).Once().Return(nil)
@@ -65,6 +72,7 @@ func TestRegisterPlan(t *testing.T) {
 
 	es.AssertExpectations(t)
 	dbal.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestCancelPlan(t *testing.T) {

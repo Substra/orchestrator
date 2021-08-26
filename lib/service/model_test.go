@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -11,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestGetComputeTasksOutputModels(t *testing.T) {
@@ -118,11 +120,15 @@ func TestRegisterTrainModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
 	service := NewModelService(provider)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	task := &asset.ComputeTask{
 		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -175,7 +181,8 @@ func TestRegisterTrainModel(t *testing.T) {
 				AuthorizedIds: []string{},
 			},
 		},
-		Owner: "test",
+		Owner:        "test",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 
@@ -196,17 +203,22 @@ func TestRegisterTrainModel(t *testing.T) {
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRegisterAggregateModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
 	service := NewModelService(provider)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	task := &asset.ComputeTask{
 		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -259,7 +271,8 @@ func TestRegisterAggregateModel(t *testing.T) {
 				AuthorizedIds: []string{},
 			},
 		},
-		Owner: "test",
+		Owner:        "test",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 
@@ -275,6 +288,7 @@ func TestRegisterAggregateModel(t *testing.T) {
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRegisterDuplicateModel(t *testing.T) {
@@ -323,11 +337,15 @@ func TestRegisterHeadModel(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
 	service := NewModelService(provider)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	task := &asset.ComputeTask{
 		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -391,7 +409,8 @@ func TestRegisterHeadModel(t *testing.T) {
 				AuthorizedIds: []string{},
 			},
 		},
-		Owner: "test",
+		Owner:        "test",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 	dbal.On("AddModel", storedModel).Once().Return(nil)
 
@@ -412,6 +431,7 @@ func TestRegisterHeadModel(t *testing.T) {
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRegisterWrongModelType(t *testing.T) {

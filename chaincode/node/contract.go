@@ -42,7 +42,11 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext, wrapper *com
 		return nil, err
 	}
 
-	service := ctx.GetProvider().GetNodeService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetNodeService()
 
 	node, err := service.RegisterNode(txCreator)
 	if err != nil {
@@ -60,7 +64,11 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext, wrapper *com
 // GetAllNodes retrieves all known nodes
 func (s *SmartContract) GetAllNodes(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetNodeService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetNodeService()
 
 	nodes, err := service.GetAllNodes()
 	if err != nil {

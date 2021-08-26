@@ -8,6 +8,7 @@ import (
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ComputeTaskAPI defines the methods to act on ComputeTasks
@@ -41,6 +42,7 @@ type ComputeTaskDependencyProvider interface {
 	NodeServiceProvider
 	ComputePlanServiceProvider
 	ModelServiceProvider
+	TimeServiceProvider
 }
 
 // ComputeTaskService is the compute task manipulation entry point
@@ -227,6 +229,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		Status:         status,
 		Rank:           getRank(parentTasks),
 		ParentTaskKeys: input.ParentTaskKeys,
+		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
 	switch x := input.Data.(type) {

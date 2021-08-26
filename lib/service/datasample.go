@@ -5,6 +5,7 @@ import (
 
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -33,6 +34,7 @@ type DataSampleDependencyProvider interface {
 	persistence.DataSampleDBALProvider
 	DataManagerServiceProvider
 	EventServiceProvider
+	TimeServiceProvider
 }
 
 // DataSampleService is the data samples manipulation entry point
@@ -106,6 +108,7 @@ func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner 
 		TestOnly:        sample.GetTestOnly(),
 		Owner:           owner,
 		Checksum:        sample.Checksum,
+		CreationDate:    timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
 	return datasample, nil

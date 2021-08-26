@@ -31,10 +31,14 @@ func NewSmartContract() *SmartContract {
 
 func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetComputeTaskService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetComputeTaskService()
 
 	newTasks := new(asset.RegisterTasksParam)
-	err := wrapper.Unwrap(newTasks)
+	err = wrapper.Unwrap(newTasks)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -65,10 +69,14 @@ func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *co
 // GetTask returns the task with given key
 func (s *SmartContract) GetTask(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetComputeTaskService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetComputeTaskService()
 
 	params := new(asset.GetTaskParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -90,10 +98,14 @@ func (s *SmartContract) GetTask(ctx ledger.TransactionContext, wrapper *communic
 
 func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetComputeTaskService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetComputeTaskService()
 
 	param := new(asset.QueryTasksParam)
-	err := wrapper.Unwrap(param)
+	err = wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -122,7 +134,11 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 
 func (s *SmartContract) ApplyTaskAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetComputeTaskService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetComputeTaskService()
 
 	requester, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {

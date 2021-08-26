@@ -3,24 +3,29 @@ package service
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterObjective(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
-
+	provider.On("GetTimeService").Return(ts)
 	provider.On("GetEventService").Return(es)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewObjectiveService(provider)
 
@@ -53,13 +58,14 @@ func TestRegisterObjective(t *testing.T) {
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 
 	storedObjective := &asset.Objective{
-		Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Name:        "Test objective",
-		MetricsName: "test perf",
-		Metrics:     metrics,
-		Description: description,
-		Permissions: perms,
-		Owner:       "owner",
+		Key:          "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Name:         "Test objective",
+		MetricsName:  "test perf",
+		Metrics:      metrics,
+		Description:  description,
+		Permissions:  perms,
+		Owner:        "owner",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
@@ -76,6 +82,7 @@ func TestRegisterObjective(t *testing.T) {
 	assert.Equal(t, "owner", o.Owner, "Owner should be set")
 
 	dbal.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestGetObjective(t *testing.T) {
@@ -173,6 +180,7 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 	mds := new(MockDataSampleAPI)
 	mdm := new(MockDataManagerAPI)
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
@@ -180,6 +188,9 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 	provider.On("GetDataSampleService").Return(mds)
 	provider.On("GetDataManagerService").Return(mdm)
 	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewObjectiveService(provider)
 
@@ -232,6 +243,7 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 		Owner:          "owner",
 		DataManagerKey: objective.DataManagerKey,
 		DataSampleKeys: objective.DataSampleKeys,
+		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
@@ -248,15 +260,20 @@ func TestRegisterObjectiveWithDatamanager(t *testing.T) {
 	assert.Equal(t, "owner", o.Owner, "Owner should be set")
 
 	dbal.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRejectInvalidDatamanager(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mds := new(MockDataSampleAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetDataSampleService").Return(mds)
+	provider.On("GetTimeService").Return(ts)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewObjectiveService(provider)
 

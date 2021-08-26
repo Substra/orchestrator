@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // DataManagerAPI defines the methods to act on DataManagers
@@ -30,6 +31,7 @@ type DataManagerDependencyProvider interface {
 	ObjectiveServiceProvider
 	PermissionServiceProvider
 	EventServiceProvider
+	TimeServiceProvider
 }
 
 // DataManagerService is the DataManager manipulation entry point
@@ -84,6 +86,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 		Opener:       d.GetOpener(),
 		Metadata:     d.GetMetadata(),
 		Type:         d.GetType(),
+		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
 	datamanager.Permissions, err = s.GetPermissionService().CreatePermissions(owner, d.NewPermissions)

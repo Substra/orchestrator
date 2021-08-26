@@ -100,8 +100,8 @@ count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED')
 from "compute_plans" as cp
 left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
 where cp.channel=$3
-group by cp.asset, cp.created_at
-order by cp.created_at asc limit $1 offset $2
+group by cp.asset, cp.asset->>'creationDate'
+order by cp.asset->>'creationDate' asc limit $1 offset $2
 `
 
 	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)

@@ -2,22 +2,28 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterPerformance(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetPerformanceDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
 	service := NewPerformanceService(provider)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	task := &asset.ComputeTask{
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
@@ -34,6 +40,7 @@ func TestRegisterPerformance(t *testing.T) {
 	stored := &asset.Performance{
 		ComputeTaskKey:   perf.ComputeTaskKey,
 		PerformanceValue: perf.PerformanceValue,
+		CreationDate:     timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	dbal.On("AddPerformance", stored).Once().Return(nil)
@@ -53,6 +60,7 @@ func TestRegisterPerformance(t *testing.T) {
 
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRegisterPerformanceInvalidTask(t *testing.T) {

@@ -62,7 +62,7 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 		return nil, "", err
 	}
 
-	query := `select "asset" from "datamanagers" where channel=$3 order by created_at asc limit $1 offset $2`
+	query := `select "asset" from "datamanagers" where channel=$3 order by asset->>'creationDate' asc limit $1 offset $2`
 	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err

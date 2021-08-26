@@ -8,6 +8,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ComputePlanAPI defines the methods to act on ComputePlans
@@ -31,6 +32,7 @@ type ComputePlanDependencyProvider interface {
 	persistence.ComputeTaskDBALProvider
 	EventServiceProvider
 	ComputeTaskServiceProvider
+	TimeServiceProvider
 }
 
 // ComputePlanService is the compute plan manipulation entry point
@@ -64,6 +66,7 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		Tag:                      input.Tag,
 		Metadata:                 input.Metadata,
 		DeleteIntermediaryModels: input.DeleteIntermediaryModels,
+		CreationDate:             timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
 	err = s.GetComputePlanDBAL().AddComputePlan(plan)

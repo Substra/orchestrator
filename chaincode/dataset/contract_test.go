@@ -18,7 +18,7 @@ func getMockedService(ctx *mocks.TransactionContext) *service.MockDatasetAPI {
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetDatasetService").Return(mockService).Once()
 
-	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("GetProvider").Return(provider, nil).Once()
 	ctx.On("SetRequestID", "").Once()
 	ctx.On("GetContext").Return(context.Background())
 

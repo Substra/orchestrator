@@ -2,6 +2,7 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/event"
@@ -12,10 +13,12 @@ import (
 func TestEnqueue(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	dispatcher := new(event.MockDispatcher)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetEventDBAL").Return(dbal)
 	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetTimeService").Return(ts)
 
 	service := NewEventService(provider)
 
@@ -26,6 +29,7 @@ func TestEnqueue(t *testing.T) {
 
 	dbal.On("AddEvents", event).Once().Return(nil)
 	dispatcher.On("Enqueue", event).Once().Return(nil)
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	err := service.RegisterEvents(event)
 	assert.NoError(t, err)

@@ -36,10 +36,14 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 
 func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetPerformanceService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetPerformanceService()
 
 	newPerf := new(asset.NewPerformance)
-	err := wrapper.Unwrap(newPerf)
+	err = wrapper.Unwrap(newPerf)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -66,10 +70,14 @@ func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapp
 
 func (s *SmartContract) GetComputeTaskPerformance(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetPerformanceService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetPerformanceService()
 
 	param := new(asset.GetComputeTaskPerformanceParam)
-	err := wrapper.Unwrap(param)
+	err = wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err

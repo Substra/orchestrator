@@ -20,11 +20,6 @@ func (db *DB) addSingleEvent(event *asset.Event) error {
 	if exists {
 		return fmt.Errorf("failed to add event: %w", errors.ErrConflict)
 	}
-	protoTime, err := db.ccStub.GetTxTimestamp()
-	if err != nil {
-		return err
-	}
-	event.Timestamp = uint64(protoTime.AsTime().Unix())
 	bytes, err := json.Marshal(event)
 	if err != nil {
 		return err

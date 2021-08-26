@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ModelAPI interface {
@@ -33,6 +34,7 @@ type ModelDependencyProvider interface {
 	ComputeTaskServiceProvider
 	ComputePlanServiceProvider
 	EventServiceProvider
+	TimeServiceProvider
 }
 
 type ModelService struct {
@@ -147,6 +149,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 	}
 
 	model.Owner = requester
+	model.CreationDate = timestamppb.New(s.GetTimeService().GetTransactionTime())
 
 	err = s.GetModelDBAL().AddModel(model)
 	if err != nil {

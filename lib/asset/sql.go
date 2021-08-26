@@ -9,6 +9,23 @@ import (
 )
 
 // Value implements the driver.Valuer interface.
+// Simply returns the JSON-encoded representation of the Node.
+func (n *Node) Value() (driver.Value, error) {
+	return protojson.Marshal(n)
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes JSON into Node.
+func (n *Node) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot scan node: %w", errors.ErrByteArray)
+	}
+
+	return protojson.Unmarshal(b, n)
+}
+
+// Value implements the driver.Valuer interface.
 // Simply returns the JSON-encoded representation of the Objective.
 func (o *Objective) Value() (driver.Value, error) {
 	return protojson.Marshal(o)

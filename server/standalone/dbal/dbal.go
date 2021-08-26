@@ -43,8 +43,8 @@ func (d *DBAL) Rollback() error {
 
 // AddNode implements persistence.NodeDBAL
 func (d *DBAL) AddNode(node *asset.Node) error {
-	stmt := `insert into "nodes" ("id", "channel") values ($1, $2)`
-	_, err := d.tx.Exec(d.ctx, stmt, node.GetId(), d.channel)
+	stmt := `insert into "nodes" ("id", "asset", "channel") values ($1, $2, $3)`
+	_, err := d.tx.Exec(d.ctx, stmt, node.GetId(), node, d.channel)
 	return err
 }
 
@@ -60,7 +60,7 @@ func (d *DBAL) NodeExists(key string) (bool, error) {
 
 // GetAllNodes implements persistence.NodeDBAL
 func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
-	rows, err := d.tx.Query(d.ctx, `select "id" from "nodes" where channel=$1`, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select "asset" from "nodes" where channel=$1`, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
 	for rows.Next() {
 		node := new(asset.Node)
 
-		err = rows.Scan(&node.Id)
+		err = rows.Scan(&node)
 		if err != nil {
 			return nil, err
 		}
@@ -87,10 +87,10 @@ func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
 
 // GetNode implements persistence.NodeDBAL
 func (d *DBAL) GetNode(id string) (*asset.Node, error) {
-	row := d.tx.QueryRow(d.ctx, `select "id" from "nodes" where id=$1 and channel=$2`, id, d.channel)
+	row := d.tx.QueryRow(d.ctx, `select "asset" from "nodes" where id=$1 and channel=$2`, id, d.channel)
 
 	node := new(asset.Node)
-	err := row.Scan(&node.Id)
+	err := row.Scan(&node)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

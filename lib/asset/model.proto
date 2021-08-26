@@ -4,6 +4,7 @@ package orchestrator;
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
+import "google/protobuf/timestamp.proto";
 import "common.proto";
 
 enum ModelCategory {
@@ -19,6 +20,7 @@ message Model {
   Addressable address = 4;
   Permissions permissions = 5;
   string owner = 6;
+  google.protobuf.Timestamp creation_date = 7;
 }
 
 message NewModel {

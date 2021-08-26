@@ -28,6 +28,7 @@ type DependenciesProvider interface {
 	PerformanceServiceProvider
 	EventServiceProvider
 	LoggerProvider
+	TimeServiceProvider
 }
 
 // Provider is the central part of the dependency injection pattern.
@@ -51,6 +52,7 @@ type Provider struct {
 	computePlan ComputePlanAPI
 	performance PerformanceAPI
 	event       EventAPI
+	time        TimeAPI
 }
 
 // GetLogger returns a logger instance.
@@ -58,9 +60,18 @@ func (sc *Provider) GetLogger() log.Entry {
 	return sc.logger
 }
 
+func (sc *Provider) GetTimeService() TimeAPI {
+	return sc.time
+}
+
 // NewProvider return an instance of Provider based on given persistence layer.
-func NewProvider(logger log.Entry, dbal persistence.DBAL, queue event.Queue) *Provider {
-	return &Provider{logger: logger, dbal: dbal, eventQueue: queue}
+func NewProvider(logger log.Entry, dbal persistence.DBAL, queue event.Queue, time TimeAPI) *Provider {
+	return &Provider{
+		logger:     logger,
+		dbal:       dbal,
+		eventQueue: queue,
+		time:       time,
+	}
 }
 
 // GetNodeDBAL returns the database abstraction layer for Nodes

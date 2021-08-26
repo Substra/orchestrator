@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type PerformanceAPI interface {
@@ -22,6 +23,7 @@ type PerformanceDependencyProvider interface {
 	persistence.PerformanceDBALProvider
 	ComputeTaskServiceProvider
 	EventServiceProvider
+	TimeServiceProvider
 }
 
 type PerformanceService struct {
@@ -61,6 +63,7 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 	perf := &asset.Performance{
 		ComputeTaskKey:   newPerf.ComputeTaskKey,
 		PerformanceValue: newPerf.PerformanceValue,
+		CreationDate:     timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
 	err = s.GetPerformanceDBAL().AddPerformance(perf)

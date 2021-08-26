@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package orchestrator;
 
+import "google/protobuf/timestamp.proto";
 import "common.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
@@ -23,6 +24,7 @@ message Algo {
   Addressable algorithm = 5;
   Permissions permissions = 6;
   string owner = 7;
+  google.protobuf.Timestamp creation_date = 8;
   map<string, string> metadata = 16;
 }
 

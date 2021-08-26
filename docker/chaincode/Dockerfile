@@ -1,6 +1,6 @@
 # Build stage
 FROM golang:1.16-alpine AS build
-RUN apk add --no-cache git make protoc
+RUN apk add --no-cache git make protoc protobuf-dev
 
 ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/chaincode

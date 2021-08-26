@@ -31,10 +31,14 @@ func NewSmartContract() *SmartContract {
 
 func (s *SmartContract) RegisterPlan(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetComputePlanService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetComputePlanService()
 
 	newPlan := new(asset.NewComputePlan)
-	err := wrapper.Unwrap(newPlan)
+	err = wrapper.Unwrap(newPlan)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -61,10 +65,14 @@ func (s *SmartContract) RegisterPlan(ctx ledger.TransactionContext, wrapper *com
 
 func (s *SmartContract) GetPlan(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetComputePlanService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetComputePlanService()
 
 	param := new(asset.GetComputePlanParam)
-	err := wrapper.Unwrap(param)
+	err = wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -85,10 +93,14 @@ func (s *SmartContract) GetPlan(ctx ledger.TransactionContext, wrapper *communic
 
 func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetComputePlanService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetComputePlanService()
 
 	param := new(asset.QueryPlansParam)
-	err := wrapper.Unwrap(param)
+	err = wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -113,10 +125,14 @@ func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *commu
 
 func (s *SmartContract) ApplyPlanAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetComputePlanService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetComputePlanService()
 
 	param := new(asset.ApplyPlanActionParam)
-	err := wrapper.Unwrap(param)
+	err = wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return err

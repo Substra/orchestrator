@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package orchestrator;
 
+import "google/protobuf/timestamp.proto";
 import "algo.proto";
 import "common.proto";
 
@@ -38,6 +39,7 @@ message ComputeTask {
   int32 rank = 7;
   ComputeTaskStatus status = 8; // mutable
   string worker = 9;
+  google.protobuf.Timestamp creation_date = 10;
   oneof data {
     TestTaskData test = 12;
     TrainTaskData train = 13;

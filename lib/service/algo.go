@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // AlgoAPI defines the methods to act on Algos
@@ -27,6 +28,7 @@ type AlgoDependencyProvider interface {
 	persistence.AlgoDBALProvider
 	EventServiceProvider
 	PermissionServiceProvider
+	TimeServiceProvider
 }
 
 // AlgoService is the algo manipulation entry point
@@ -57,13 +59,14 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 	}
 
 	algo := &asset.Algo{
-		Key:         a.Key,
-		Name:        a.Name,
-		Category:    a.Category,
-		Description: a.Description,
-		Algorithm:   a.Algorithm,
-		Metadata:    a.Metadata,
-		Owner:       owner,
+		Key:          a.Key,
+		Name:         a.Name,
+		Category:     a.Category,
+		Description:  a.Description,
+		Algorithm:    a.Algorithm,
+		Metadata:     a.Metadata,
+		Owner:        owner,
+		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
 	algo.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)

@@ -4,6 +4,8 @@ package orchestrator;
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
+import "google/protobuf/timestamp.proto";
+
 enum ComputePlanStatus {
   PLAN_STATUS_UNKNOWN = 0;
   PLAN_STATUS_WAITING = 1;
@@ -21,6 +23,7 @@ message ComputePlan {
   uint32 task_count = 4; // Dynamic data, not persisted and set on query
   ComputePlanStatus status = 5; // Dynamic data, not persisted and set on query
   bool delete_intermediary_models = 6;
+  google.protobuf.Timestamp creation_date = 7;
   string tag = 16;
   map<string, string> metadata = 17;
 }

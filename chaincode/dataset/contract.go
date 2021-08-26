@@ -36,10 +36,14 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 // GetDataset returns the Dataset with given key
 func (s *SmartContract) GetDataset(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetDatasetService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetDatasetService()
 
 	params := new(asset.GetDatasetParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err

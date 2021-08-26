@@ -33,10 +33,14 @@ func NewSmartContract() *SmartContract {
 // If the key exists, it will override the existing value with the new one
 func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetAlgoService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetAlgoService()
 
 	params := new(asset.NewAlgo)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -64,10 +68,14 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 // GetAlgo returns the algo with given key
 func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetAlgoService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetAlgoService()
 
 	params := new(asset.GetAlgoParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
@@ -90,10 +98,14 @@ func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communic
 // QueryAlgos returns the algos
 func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetAlgoService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetAlgoService()
 
 	params := new(asset.QueryAlgosParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err

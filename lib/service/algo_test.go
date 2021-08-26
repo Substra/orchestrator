@@ -2,25 +2,31 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterAlgo(t *testing.T) {
 	dbal := new(persistenceHelper.DBAL)
 	mps := new(MockPermissionAPI)
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetAlgoDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
 
 	service := NewAlgoService(provider)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	description := &asset.Addressable{
 		StorageAddress: "ftp://127.0.0.1/test",
@@ -51,13 +57,14 @@ func TestRegisterAlgo(t *testing.T) {
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 
 	storedAlgo := &asset.Algo{
-		Key:         "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Name:        "Test algo",
-		Category:    asset.AlgoCategory_ALGO_SIMPLE,
-		Algorithm:   algorithm,
-		Description: description,
-		Permissions: perms,
-		Owner:       "owner",
+		Key:          "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Name:         "Test algo",
+		Category:     asset.AlgoCategory_ALGO_SIMPLE,
+		Algorithm:    algorithm,
+		Description:  description,
+		Permissions:  perms,
+		Owner:        "owner",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
@@ -75,6 +82,7 @@ func TestRegisterAlgo(t *testing.T) {
 	assert.Equal(t, "owner", o.Owner, "Owner should be set")
 
 	dbal.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestGetAlgo(t *testing.T) {

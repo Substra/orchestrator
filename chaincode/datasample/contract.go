@@ -33,10 +33,14 @@ func NewSmartContract() *SmartContract {
 // If the key exists, it will throw an error
 func (s *SmartContract) RegisterDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetDataSampleService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetDataSampleService()
 
 	params := new(asset.RegisterDataSamplesParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return err
@@ -60,10 +64,14 @@ func (s *SmartContract) RegisterDataSamples(ctx ledger.TransactionContext, wrapp
 // If the key does not exist, it will throw an error
 func (s *SmartContract) UpdateDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetDataSampleService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetDataSampleService()
 
 	params := new(asset.UpdateDataSamplesParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return err
@@ -86,10 +94,14 @@ func (s *SmartContract) UpdateDataSamples(ctx ledger.TransactionContext, wrapper
 // QueryDataSamples returns the datasamples
 func (s *SmartContract) QueryDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetDataSampleService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetDataSampleService()
 
 	params := new(asset.QueryDataSamplesParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err

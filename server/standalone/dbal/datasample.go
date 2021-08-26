@@ -105,7 +105,7 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, comm
 		return nil, "", err
 	}
 
-	query := `select "asset" from "datasamples" where channel=$3 order by created_at asc limit $1 offset $2`
+	query := `select "asset" from "datasamples" where channel=$3 order by asset->>'creationDate' asc limit $1 offset $2`
 	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
@@ -153,7 +153,9 @@ func (d *DBAL) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) 
 		testOnlyFilter = ``
 	}
 
-	query := `select "id" from "datasamples" where channel=$1 and (asset->'dataManagerKeys') ? $2 and ` + testOnlyFilter + ` (asset ? 'testOnly' and (asset->'testOnly')::boolean) order by created_at asc`
+	query := `select "id" from "datasamples" where channel=$1 and (asset->'dataManagerKeys') ? $2 and ` +
+		testOnlyFilter +
+		` (asset ? 'testOnly' and (asset->'testOnly')::boolean) order by asset->>'creationDate' asc`
 
 	rows, err = d.tx.Query(d.ctx, query, d.channel, dataManagerKey)
 

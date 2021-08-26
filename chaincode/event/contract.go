@@ -37,10 +37,14 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 // QueryEvents returns the models
 func (s *SmartContract) QueryEvents(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
-	service := ctx.GetProvider().GetEventService()
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetEventService()
 
 	params := new(asset.QueryEventsParam)
-	err := wrapper.Unwrap(params)
+	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err

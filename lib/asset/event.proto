@@ -3,6 +3,7 @@ syntax = "proto3";
 package orchestrator;
 
 import "common.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
@@ -21,7 +22,7 @@ message Event {
   AssetKind asset_kind = 3;
   EventKind event_kind = 4;
   string channel = 5;
-  uint64 timestamp = 6;
+  google.protobuf.Timestamp timestamp = 6;
   map<string, string> metadata = 18;
 }
 

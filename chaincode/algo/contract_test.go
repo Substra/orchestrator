@@ -20,7 +20,7 @@ func getMockedService(ctx *mocks.TransactionContext) *service.MockAlgoAPI {
 	provider := new(service.MockDependenciesProvider)
 	provider.On("GetAlgoService").Return(mockService).Once()
 
-	ctx.On("GetProvider").Return(provider).Once()
+	ctx.On("GetProvider").Return(provider, nil).Once()
 	ctx.On("SetRequestID", "").Once()
 	ctx.On("GetContext").Return(context.Background())
 

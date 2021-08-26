@@ -4,6 +4,8 @@ package orchestrator;
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
+import "google/protobuf/timestamp.proto";
+
 // DataSample represent a data sample that will be processed by an
 // algorithm to produce or test a model.
 message DataSample {
@@ -12,6 +14,7 @@ message DataSample {
   string owner = 3;
   bool test_only = 4;
   string checksum = 5;
+  google.protobuf.Timestamp creation_date = 6;
 }
 
 message NewDataSample {

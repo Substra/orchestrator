@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterSingleDataSample(t *testing.T) {
@@ -17,10 +19,14 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	dm := new(MockDataManagerAPI)
 	provider := newMockedProvider()
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
+	provider.On("GetTimeService").Return(ts)
 	service := NewDataSampleService(provider)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	datasample := &asset.NewDataSample{
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
@@ -35,6 +41,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		Owner:           "owner",
 		TestOnly:        false,
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		CreationDate:    timestamppb.New(time.Unix(1337, 0)),
 	}
 	dbal.On("DataSampleExists", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83").Return(false, nil).Once()
 	dbal.On("AddDataSamples", storedDataSample).Return(nil).Once()
@@ -53,6 +60,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
@@ -84,10 +92,14 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 	dm := new(MockDataManagerAPI)
 	provider := newMockedProvider()
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetDataSampleDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dm)
+	provider.On("GetTimeService").Return(ts)
 	service := NewDataSampleService(provider)
+
+	ts.On("GetTransactionTime").Twice().Return(time.Unix(1337, 0))
 
 	datasamples := []*asset.NewDataSample{
 		{
@@ -110,6 +122,7 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 		Owner:           "owner",
 		TestOnly:        false,
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		CreationDate:    timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	storedDataSample2 := &asset.DataSample{
@@ -118,6 +131,7 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 		Owner:           "owner",
 		TestOnly:        false,
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		CreationDate:    timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(nil).Times(2)
@@ -133,6 +147,7 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestUpdateSingleExistingDataSample(t *testing.T) {

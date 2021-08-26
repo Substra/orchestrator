@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -11,6 +12,7 @@ import (
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var newTrainTask = &asset.NewComputeTask{
@@ -98,6 +100,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
+	ts := new(MockTimeAPI)
 
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
@@ -105,6 +108,9 @@ func TestRegisterTrainTask(t *testing.T) {
 	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
+	provider.On("GetTimeService").Return(ts)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewComputeTaskService(provider)
 
@@ -168,6 +174,7 @@ func TestRegisterTrainTask(t *testing.T) {
 				ModelPermissions: modelPerms,
 			},
 		},
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	// finally store the created task
@@ -189,6 +196,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRegisterFailedTask(t *testing.T) {

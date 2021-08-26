@@ -4,15 +4,25 @@ import (
 	"context"
 	"testing"
 
+	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestGetProvider(t *testing.T) {
+	stub := new(testHelper.MockedStub)
+
 	ctx := NewContext()
 	ctx.SetContext(context.Background())
-	assert.Implements(t, (*service.DependenciesProvider)(nil), ctx.GetProvider(), "GetProvider should return a service provider")
+	ctx.SetStub(stub)
+
+	stub.On("GetTxTimestamp").Once().Return(timestamppb.Now(), nil)
+
+	provider, err := ctx.GetProvider()
+	assert.NoError(t, err)
+	assert.Implements(t, (*service.DependenciesProvider)(nil), provider, "GetProvider should return a service provider")
 }
 
 func TestAfterTransactionHook(t *testing.T) {

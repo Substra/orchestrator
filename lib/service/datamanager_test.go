@@ -3,12 +3,14 @@ package service
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterDataManager(t *testing.T) {
@@ -17,11 +19,15 @@ func TestRegisterDataManager(t *testing.T) {
 	obj := new(MockObjectiveAPI)
 	provider := newMockedProvider()
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 
 	provider.On("GetObjectiveService").Return(obj)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewDataManagerService(provider)
 
@@ -58,6 +64,7 @@ func TestRegisterDataManager(t *testing.T) {
 		Description:  description,
 		Opener:       opener,
 		Type:         "test dm",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
@@ -78,6 +85,7 @@ func TestRegisterDataManager(t *testing.T) {
 	assert.NotNil(t, dm, "Registratrion should return a datamanager asset")
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRegisterDataManagerEmptyObjective(t *testing.T) {
@@ -85,11 +93,15 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	mps := new(MockPermissionAPI)
 	provider := newMockedProvider()
 	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
 
 	provider.On("GetObjectiveDBAL").Return(dbal)
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewDataManagerService(provider)
 
@@ -126,6 +138,7 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 		Description:  description,
 		Opener:       opener,
 		Type:         "test dm",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
@@ -145,6 +158,7 @@ func TestRegisterDataManagerEmptyObjective(t *testing.T) {
 	assert.NotNil(t, dm, "Registration should return a data manager")
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }
 
 func TestRegisterDataManagerUnknownObjective(t *testing.T) {

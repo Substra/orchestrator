@@ -19,7 +19,7 @@ type TransactionContext interface {
 	contractapi.TransactionContextInterface
 	SetContext(context.Context)
 	GetContext() context.Context
-	GetProvider() service.DependenciesProvider
+	GetProvider() (service.DependenciesProvider, error)
 	GetDispatcher() event.Dispatcher
 	SetRequestID(string)
 }
@@ -51,7 +51,7 @@ func (c *Context) GetContext() context.Context {
 }
 
 // GetProvider returns a new instance of ServiceProvider
-func (c *Context) GetProvider() service.DependenciesProvider {
+func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 	stub := c.GetStub()
 
 	ctx := c.GetContext()
@@ -59,7 +59,14 @@ func (c *Context) GetProvider() service.DependenciesProvider {
 	dispatcher := c.GetDispatcher()
 	logger := logger.Get(ctx)
 
-	return service.NewProvider(logger, db, dispatcher)
+	txTimestamp, err := stub.GetTxTimestamp()
+	if err != nil {
+		return nil, err
+	}
+
+	ts := service.NewTimeService(txTimestamp.AsTime())
+
+	return service.NewProvider(logger, db, dispatcher, ts), nil
 }
 
 // GetDispatcher returns inner event.Dispatcher

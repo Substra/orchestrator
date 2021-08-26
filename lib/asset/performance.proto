@@ -4,6 +4,8 @@ package orchestrator;
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 
+import "google/protobuf/timestamp.proto";
+
 message NewPerformance {
   string compute_task_key = 1;
   float performance_value = 2;
@@ -12,6 +14,7 @@ message NewPerformance {
 message Performance {
   string compute_task_key = 1;
   float performance_value = 2;
+  google.protobuf.Timestamp creation_date = 3;
 }
 
 message GetComputeTaskPerformanceParam {

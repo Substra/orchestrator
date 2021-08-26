@@ -9,6 +9,7 @@ import (
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ObjectiveAPI defines the methods to act on Objectives
@@ -34,6 +35,7 @@ type ObjectiveDependencyProvider interface {
 	PermissionServiceProvider
 	DataSampleServiceProvider
 	DataManagerServiceProvider
+	TimeServiceProvider
 }
 
 // ObjectiveService is the objective manipulation entry point
@@ -56,13 +58,14 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 	}
 
 	objective := &asset.Objective{
-		Key:         o.Key,
-		Name:        o.Name,
-		Description: o.Description,
-		MetricsName: o.MetricsName,
-		Metrics:     o.Metrics,
-		Metadata:    o.Metadata,
-		Owner:       owner,
+		Key:          o.Key,
+		Name:         o.Name,
+		Description:  o.Description,
+		MetricsName:  o.MetricsName,
+		Metrics:      o.Metrics,
+		Metadata:     o.Metadata,
+		Owner:        owner,
+		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
 	if o.DataManagerKey != "" {

@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type EventAPI interface {
@@ -21,6 +22,7 @@ type EventServiceProvider interface {
 type EventDependencyProvider interface {
 	persistence.EventDBALProvider
 	event.QueueProvider
+	TimeServiceProvider
 }
 
 type EventService struct {
@@ -35,6 +37,7 @@ func NewEventService(provider EventDependencyProvider) *EventService {
 func (s *EventService) RegisterEvents(events ...*asset.Event) error {
 	for _, e := range events {
 		e.Id = uuid.NewString()
+		e.Timestamp = timestamppb.New(s.GetTimeService().GetTransactionTime())
 		err := s.GetEventQueue().Enqueue(e)
 		if err != nil {
 			return err

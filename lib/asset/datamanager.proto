@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package orchestrator;
 
+import "google/protobuf/timestamp.proto";
 import "common.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
@@ -15,6 +16,7 @@ message DataManager {
   Addressable description = 6;
   Addressable opener = 7;
   string type = 8;
+  google.protobuf.Timestamp creation_date = 9;
   map <string, string> metadata = 16;
 }
 

@@ -2,7 +2,6 @@ package dbal
 
 import (
 	"strconv"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/go-playground/log/v7"
@@ -75,10 +74,10 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter)
 	}
 
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	builder := pgDialect.Select("event", "created_at").
+	builder := pgDialect.Select("event").
 		From("events").
 		Where(squirrel.Eq{"channel": d.channel}).
-		OrderByClause("created_at ASC").
+		OrderByClause("event->'timestamp' ASC").
 		Offset(uint64(offset)).
 		Limit(uint64(p.Size + 1))
 
@@ -100,14 +99,12 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter)
 
 	for rows.Next() {
 		event := new(asset.Event)
-		creation := new(time.Time)
 
-		err = rows.Scan(&event, &creation)
+		err = rows.Scan(&event)
 		if err != nil {
 			return nil, "", err
 		}
 
-		event.Timestamp = uint64(creation.Unix())
 		events = append(events, event)
 		count++
 

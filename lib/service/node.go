@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // NodeAPI defines the methods to act on Nodes
@@ -24,6 +25,7 @@ type NodeServiceProvider interface {
 type NodeDependencyProvider interface {
 	persistence.NodeDBALProvider
 	EventServiceProvider
+	TimeServiceProvider
 }
 
 // NodeService is the node manipulation entry point
@@ -49,6 +51,8 @@ func (s *NodeService) RegisterNode(id string) (*asset.Node, error) {
 	if exists {
 		return nil, fmt.Errorf("node %s already exists: %w", node.GetId(), orcerrors.ErrConflict)
 	}
+
+	node.CreationDate = timestamppb.New(s.GetTimeService().GetTransactionTime())
 
 	err = s.GetNodeDBAL().AddNode(node)
 	if err != nil {
