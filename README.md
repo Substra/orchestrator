@@ -86,8 +86,7 @@ skaffold run -p distributed
 
 Assuming `orchestrator.node-1.com` and `orchestrator.node-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
 ```bash
-grpcurl -insecure orchestrator.node-1.com:443 list
-grpcurl -insecure orchestrator.node-2.com:443 list
+grpcurl --cacert examples/tools/ca.crt --key examples/tools/client-org-1.key --cert examples/tools/client-org-1.crt --rpc-header 'mspid: MyOrg1MSP' --rpc-header 'channel: mychannel' --rpc-header 'chaincode: mycc' orchestrator.node-1.com:443 list
 ```
 
 You can also deploy [connect-backend](https://github.com/owkin/connect-backend/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev -p distributed` or `skaffold run -p distributed`
