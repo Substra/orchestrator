@@ -629,7 +629,6 @@ func (s *ComputeTaskService) IsCompatibleWithParents(category asset.ComputeTaskC
 
 	noTest := inputs[asset.ComputeTaskCategory_TASK_TEST] == 0
 	noTrain := inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0
-	noAggregate := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE] == 0
 	noComposite := inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 0
 	noParent := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0
 	compositeOnly := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0 && inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 1
@@ -639,7 +638,7 @@ func (s *ComputeTaskService) IsCompatibleWithParents(category asset.ComputeTaskC
 	case asset.ComputeTaskCategory_TASK_TRAIN:
 		return noTest && noComposite
 	case asset.ComputeTaskCategory_TASK_TEST:
-		return noTest && noAggregate && inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 1
+		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 1
 	case asset.ComputeTaskCategory_TASK_AGGREGATE:
 		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] >= 1
 	case asset.ComputeTaskCategory_TASK_COMPOSITE:
