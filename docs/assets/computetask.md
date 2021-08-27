@@ -22,7 +22,7 @@ Here is the expected cardinality for each task category:
 
 **Note**:
 
-- the asterisk denotes an exclusive link, ie a *Train* task can only have **one** parent at most
+- the asterisk denotes an exclusive link, ie a *Test* task can only have **one** parent at most
 - parenthesis denotes optional dependencies
 - no parents may be a valid input
 
