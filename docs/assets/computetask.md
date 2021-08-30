@@ -67,13 +67,10 @@ This is an overview of a task's lifecycle:
 
 ![](./schemas/computetask.state.svg)
 
-A task can be created in almost any state (except DOING/DONE) depending on its parents.
+A task can be created in TODO or WAITING state depending on its parents.
 
-During the ComputePlan execution, as tasks are done or failed, their statuses will be reflected to their children.
-This is done in a recursive way: a failed or canceled task propagate a "CANCELED" status to all its children.
-
-In case of success (task DONE), this is a bit more convoluted since we need to iterate over the children
-and all their parents to update them to TODO if all the parents are DONE.
+During the ComputePlan execution, as tasks are DONE, their statuses will be reflected to their children.
+If all the parents of a child task are DONE, this task enters TODO state.
 
 A task may produces one or more [models](./model.md), they can only be registered when the task in in DOING.
 This is to ensure that when a task starts (switch to DOING), all its inputs are available.
