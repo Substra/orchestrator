@@ -44,6 +44,15 @@ data:
             eventSource: true
             chaincodeQuery: true
             ledgerQuery: true
+        policies:
+          eventService:
+            # PreferOrg is the default, but let's be explicit
+            resolverStrategy: PreferOrg
+            # Disable block height filtering so that org's peer will always be preferred, even if they lag behind
+            blockHeightLagThreshold: -1
+            # Disable peer monitor: we never want to disconnect since we are in a single peer configuration,
+            # there wouldn't be any more appropriate peer to connect to.
+            peerMonitorPeriod: 0
       {{ end }}
         # orderers:
         #   - orderer.example.org

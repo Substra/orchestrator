@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Assets expose a creation date (#328)
 
+### Changed
+- Do not retry on assets out of sync (#335)
+
 ## [0.0.1] - 2021-06-29
 
 - Automatic generation of graphviz documentation from *.proto file definition
