@@ -7,10 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Expose worker in task event metadata
 - Assets expose a creation date (#328)
+- Query algo by compute plan (#307)
+- Handle event backlog (#288)
+- Retry on fabric timeout
+- Add request ID to log context
 
 ### Changed
 - Do not retry on assets out of sync (#335)
+- Do not compute plan status on model deletion (#329)
+- Reuse gateway connection in distributed mode (#324)
+- Replace readinessProbe by startupProbe (#314)
+- Do not cascade canceled status (#313)
+
+### Fixed
+- Filtering events by asset in distributed mode (#321)
+- Input models for composite child of aggregate (#280)
 
 ## [0.0.1] - 2021-06-29
 
