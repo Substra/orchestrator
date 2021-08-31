@@ -186,6 +186,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Metadata: map[string]string{
 			"status": storedTask.Status.String(),
+			"worker": dataManager.Owner,
 		},
 	}
 	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
