@@ -236,6 +236,7 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 		Metadata: map[string]string{
 			"status": task.Status.String(),
 			"reason": reason,
+			"worker": task.Worker,
 		},
 	}
 	err = s.GetEventService().RegisterEvents(event)

@@ -118,6 +118,7 @@ func TestDispatchOnTransition(t *testing.T) {
 		Metadata: map[string]string{
 			"status": expectedTask.Status.String(),
 			"reason": "User action",
+			"worker": "worker",
 		},
 	}
 	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
