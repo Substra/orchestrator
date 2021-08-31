@@ -44,24 +44,25 @@ func (db *DB) GetComputePlan(key string) (*asset.ComputePlan, error) {
 		return nil, err
 	}
 
-	allTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key})
-	if err != nil {
-		return nil, err
-	}
-	plan.TaskCount = uint32(len(allTasks))
-
-	doneTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DONE.String()})
-	if err != nil {
-		return nil, err
-	}
-	plan.DoneCount = uint32(len(doneTasks))
-
-	plan.Status, err = db.getPlanStatus(key, len(allTasks), len(doneTasks))
+	err = db.computePlanProperties(plan)
 	if err != nil {
 		return nil, err
 	}
 
 	return plan, nil
+}
+
+func (db *DB) computePlanProperties(plan *asset.ComputePlan) error {
+	count, err := db.getTaskCounts(plan.Key)
+	if err != nil {
+		return err
+	}
+
+	plan.TaskCount = uint32(count.total)
+	plan.DoneCount = uint32(count.done)
+	plan.Status = count.getPlanStatus()
+
+	return nil
 }
 
 // GetRawComputePlan returns a compute plan without its computed properties
@@ -87,7 +88,6 @@ func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, com
 		Selector: couchAssetQuery{
 			DocType: asset.ComputePlanKind,
 		},
-		Fields: []string{"asset.key"},
 	}
 
 	b, err := json.Marshal(query)
@@ -115,13 +115,13 @@ func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, com
 		if err != nil {
 			return nil, "", err
 		}
-		identifiedPlan := &asset.ComputePlan{} // This is an empty plan which will only contains its key
-		err = json.Unmarshal(storedAsset.Asset, identifiedPlan)
+		plan := &asset.ComputePlan{}
+		err = json.Unmarshal(storedAsset.Asset, plan)
 		if err != nil {
 			return nil, "", err
 		}
 
-		plan, err := db.GetComputePlan(identifiedPlan.Key)
+		err = db.computePlanProperties(plan)
 		if err != nil {
 			return nil, "", err
 		}
@@ -132,48 +132,73 @@ func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, com
 	return plans, bookmark.Bookmark, nil
 }
 
-// getPlanStatus returns the plan status from its tasks.
-// It attempts to limit the amount of read operation.
-func (db *DB) getPlanStatus(key string, total, done int) (asset.ComputePlanStatus, error) {
-	if done == total {
-		return asset.ComputePlanStatus_PLAN_STATUS_DONE, nil
+type planTaskCount struct {
+	total    int
+	done     int
+	waiting  int
+	doing    int
+	failed   int
+	canceled int
+}
+
+func (c *planTaskCount) getPlanStatus() asset.ComputePlanStatus {
+	if c.done == c.total {
+		return asset.ComputePlanStatus_PLAN_STATUS_DONE
 	}
 
-	failedTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_FAILED.String()})
+	if c.failed > 0 {
+		return asset.ComputePlanStatus_PLAN_STATUS_FAILED
+	}
+
+	if c.canceled > 0 {
+		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED
+	}
+
+	if c.waiting == c.total {
+		return asset.ComputePlanStatus_PLAN_STATUS_WAITING
+	}
+
+	if c.waiting < c.total && c.doing == 0 && c.done == 0 {
+		return asset.ComputePlanStatus_PLAN_STATUS_TODO
+	}
+
+	return asset.ComputePlanStatus_PLAN_STATUS_DOING
+}
+
+// getTaskCounts returns the count of plan's tasks by status.
+func (db *DB) getTaskCounts(key string) (planTaskCount, error) {
+	count := planTaskCount{}
+
+	iterator, err := db.ccStub.GetStateByPartialCompositeKey(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key})
 	if err != nil {
-		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
+		return count, err
 	}
-	if len(failedTasks) > 0 {
-		return asset.ComputePlanStatus_PLAN_STATUS_FAILED, nil
-	}
+	defer iterator.Close()
 
-	canceledTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_CANCELED.String()})
-	if err != nil {
-		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
-	}
-	if len(canceledTasks) > 0 {
-		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED, nil
-	}
-
-	waitingTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_WAITING.String()})
-	if err != nil {
-		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
-	}
-	if len(waitingTasks) == total {
-		return asset.ComputePlanStatus_PLAN_STATUS_WAITING, nil
-	}
-
-	if len(waitingTasks) < total && done == 0 {
-		doingTasks, err := db.getIndexKeys(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key, asset.ComputeTaskStatus_STATUS_DOING.String()})
+	for iterator.HasNext() {
+		compositeKey, err := iterator.Next()
 		if err != nil {
-			return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, err
+			return count, err
 		}
-		// len(waitingTasks) and done == 0 are redundant with upper condition but make the condition more readable.
-		// see asset documentation for inference rules.
-		if len(waitingTasks) < total && len(doingTasks) == 0 && done == 0 {
-			return asset.ComputePlanStatus_PLAN_STATUS_TODO, nil
+		_, keyParts, err := db.ccStub.SplitCompositeKey(compositeKey.Key)
+		if err != nil {
+			return count, err
 		}
+		switch keyParts[2] {
+		case asset.ComputeTaskStatus_STATUS_CANCELED.String():
+			count.canceled++
+		case asset.ComputeTaskStatus_STATUS_DONE.String():
+			count.done++
+		case asset.ComputeTaskStatus_STATUS_FAILED.String():
+			count.failed++
+		case asset.ComputeTaskStatus_STATUS_WAITING.String():
+			count.waiting++
+		case asset.ComputeTaskStatus_STATUS_DOING.String():
+			count.doing++
+		}
+
+		count.total++
 	}
 
-	return asset.ComputePlanStatus_PLAN_STATUS_DOING, nil
+	return count, nil
 }
