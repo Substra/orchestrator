@@ -11,7 +11,7 @@ jobs:
   build:
     strategy:
       matrix:
-        docker-image: [server, chaincode, forwarder, rabbitmq-operator]
+        docker-image: [orchestrator-server, orchestrator-chaincode, orchestrator-forwarder, orchestrator-rabbitmq-operator]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -37,7 +37,7 @@ jobs:
       id: docker-metadata
       uses: docker/metadata-action@v3
       with:
-        images: 'gcr.io/${{ secrets.GCP_PROJECT_ID }}/orchestrator-${{matrix.docker-image}}'
+        images: 'gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{matrix.docker-image}}'
         flavor: |
           latest=${{ env.LATEST }}
 

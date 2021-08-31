@@ -72,7 +72,7 @@ Choose a tag (example uses `dev`) and update hlf-k8s' values accordingly.
 ```bash
 # If you use minikube, run `eval $(minikube -p minikube docker-env)` before the `docker build` command
 # If you use kind, run `kind load docker-image gcr.io/connect-314908/orchestrator-chaincode:dev` after the `docker build` command
-docker build -f docker/chaincode/Dockerfile -t gcr.io/connect-314908/orchestrator-chaincode:dev .
+docker build -f docker/orchestrator-chaincode/Dockerfile -t gcr.io/connect-314908/orchestrator-chaincode:dev .
 ```
 
 Make sure you deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev` or `skaffold run`

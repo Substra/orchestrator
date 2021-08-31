@@ -5,11 +5,11 @@ build:
     - image: substrafoundation/orchestrator-server
       context: .
       docker:
-        dockerfile: docker/server/Dockerfile
+        dockerfile: docker/orchestrator-server/Dockerfile
     - image: substrafoundation/orchestrator-rabbitmq-operator
       context: .
       docker:
-        dockerfile: docker/rabbitmq-operator/Dockerfile
+        dockerfile: docker/orchestrator-rabbitmq-operator/Dockerfile
 deploy:
   helm:
     releases:
@@ -39,7 +39,7 @@ profiles:
       image: substrafoundation/orchestrator-forwarder
       context: .
       docker:
-        dockerfile: docker/forwarder/Dockerfile
+        dockerfile: docker/orchestrator-forwarder/Dockerfile
   - op: replace
     path: /deploy/helm/releases/0/valuesFiles
     value: [ examples/values/orchestrator-org-1-distributed.yaml ]
