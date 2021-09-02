@@ -84,6 +84,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ template "orchestrator.server.fullname" . }}-env
+            - secretRef:
+                name: {{ template "orchestrator.server.fullname" . }}-secret
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}

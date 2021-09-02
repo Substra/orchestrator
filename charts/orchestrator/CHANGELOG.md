@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - logSQL flag to debug SQL statements (default to false)
 
 ### Changed
+- credentials are moved from a configmap to a secret
 - default log level set to INFO
 - replaced readiness probes by startup probes
 

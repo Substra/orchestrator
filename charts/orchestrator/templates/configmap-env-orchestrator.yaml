@@ -8,13 +8,11 @@ data:
   # Global settings
   ORCHESTRATOR_MODE: {{ .Values.orchestrator.mode }}
   ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled $.Values.orchestrator.verifyClientMSPID }}"
-  ORCHESTRATOR_AMQP_DSN: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
   ORCHESTRATOR_CHANNEL_CONFIG: /var/orchestrator/config.yaml
   ORCHESTRATOR_TX_RETRY_BUDGET: "{{ .Values.orchestrator.txRetryBudget }}"
 
   # Standalone settings
   {{- if .Values.postgresql.enabled }}
-  ORCHESTRATOR_DATABASE_URL: postgresql://{{ .Values.postgresql.postgresqlUsername}}:{{ .Values.postgresql.postgresqlPassword}}@{{ template "postgresql.serviceName" . }}.{{ .Release.Namespace }}:{{ .Values.postgresql.service.port}}/{{ .Values.postgresql.postgresqlDatabase}}?sslmode=disable
   {{- if .Values.orchestrator.logSQL }}
   LOG_SQL: "true"
   {{- end }}
