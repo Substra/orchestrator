@@ -25,7 +25,6 @@ A model has a category, and it can only be registered for a compatible task (y):
 As stated before, a task may produce several models, but can only have one of each category.
 ie: composite task can only have one *head* AND one *simple*.
 
-```suggestion
 ## Disabling intermediary models
 
 As part of compute plan execution, some models may be *disabled* (depending on the `delete_intermediary_models` flag of the compute plan).
