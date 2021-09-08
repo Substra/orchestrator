@@ -1,7 +1,12 @@
 package dbal
 
 import (
+	"errors"
+	"fmt"
+
+	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 func (d *DBAL) AddPerformance(perf *asset.Performance) error {
@@ -16,6 +21,9 @@ func (d *DBAL) GetComputeTaskPerformance(key string) (*asset.Performance, error)
 	perf := new(asset.Performance)
 	err := row.Scan(perf)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("performance not found: %w", orcerrors.ErrNotFound)
+		}
 		return nil, err
 	}
 

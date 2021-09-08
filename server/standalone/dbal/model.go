@@ -1,12 +1,15 @@
 package dbal
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 func (d *DBAL) GetModel(key string) (*asset.Model, error) {
@@ -14,7 +17,11 @@ func (d *DBAL) GetModel(key string) (*asset.Model, error) {
 
 	model := new(asset.Model)
 	err := row.Scan(model)
+
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("model not found: %w", orcerrors.ErrNotFound)
+		}
 		return nil, err
 	}
 
