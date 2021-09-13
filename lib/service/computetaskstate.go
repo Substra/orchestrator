@@ -220,6 +220,7 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 	s.GetLogger().WithFields(
 		log.F("taskKey", task.Key),
 		log.F("newStatus", task.Status),
+		log.F("taskWorker", task.Worker),
 		log.F("reason", reason),
 	).Debug("Updating task status")
 

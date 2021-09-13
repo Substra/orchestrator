@@ -24,7 +24,7 @@ func LogRequest(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo
 	if err != nil {
 		log.WithError(err).Error("Error response")
 	} else {
-		log.WithField("response", resp).Debug("Success reponse")
+		log.WithField("response", resp).Debug("Success response")
 	}
 
 	return resp, err
