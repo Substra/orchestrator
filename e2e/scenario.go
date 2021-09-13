@@ -777,9 +777,9 @@ func testFailLargeComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
+	newTasks := make([]client.Taskable, 0)
+	start := time.Now()
 	for i := 0; i < nbRounds; {
-		start := time.Now()
-		newTasks := make([]client.Taskable, 0)
 		compKeys := make([]string, nbPharma)
 
 		for pharma := 1; pharma < nbPharma+1; {
@@ -800,13 +800,24 @@ func testFailLargeComputePlan(conn *grpc.ClientConn) {
 		newTasks = append(newTasks, client.DefaultAggregateTaskOptions().WithKeyRef(fmt.Sprintf("aggR%d", i)).WithParentsRef(compKeys...).WithAlgoRef("algoAgg"))
 		nbTasks++
 
-		appClient.RegisterTasks(newTasks...)
 		i++
-		log.WithField("round", i).WithField("nbTasks", nbTasks).WithField("duration", time.Since(start)).Debug("Round registered")
+
+		if i%20 == 0 {
+			appClient.RegisterTasks(newTasks...)
+			log.WithField("round", i).WithField("nbTasks", nbTasks).WithField("duration", time.Since(start)).Debug("Round registered")
+			newTasks = make([]client.Taskable, 0)
+			start = time.Now()
+		}
+	}
+
+	if len(newTasks) > 0 {
+		appClient.RegisterTasks(newTasks...)
+		log.WithField("nbTasks", nbTasks).WithField("duration", time.Since(start)).Debug("Round registered")
 	}
 
 	// Fail the composite of rank 0 on pharma1
-	start := time.Now()
+	start = time.Now()
+	appClient.StartTask("compP1R0")
 	appClient.FailTask("compP1R0")
 	log.WithField("duration", time.Since(start)).WithField("nbTasks", nbTasks).Info("canceled compute plan")
 }
