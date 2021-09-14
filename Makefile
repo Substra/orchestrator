@@ -70,11 +70,8 @@ $(lib_generated): $(LIBCODEGEN_BIN) $(pbgo)
 proto-docgen:
 	./tools/generate_proto_svg.sh
 
-.PHONY: proto-gen
-proto-gen: $(pbgo)
-
 .PHONY: proto-codegen
-proto-codegen: proto-gen proto-docgen
+proto-codegen: $(pbgo)
 
 .PHONY: mocks
 mocks:

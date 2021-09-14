@@ -19,8 +19,7 @@ The protobuf definition define the main structures of the asset, it is used by b
 Create an `asset.proto` file in the asset directory and define your messages and methods.
 This will be automatically picked up by the Makefile to generate the corresponding go code.
 
-You can run `make proto-codegen` to generate go code from your protobuf.
-Proto graph documentation will be generated in [proto doc ](./assets/protos)
+You can run `make proto-codegen` to generate go code from your protobuf or `make proto-docgen` to generate the [protobuf documentation](./assets/protos).
 
 Converting from the existing chaincode is mostly a 3 steps process:
 

@@ -11,12 +11,8 @@ if [ ! -d protodot ]; then
     cd protodot
 
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        # linux
-        sudo apt-get install graphviz -y
         sed -i 's@"${HOME}/protodot/generated"@"${PROTO_DOC_PATH}"@g' config.json
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        # Mac OSX
-        brew install graphviz
         gsed -i 's@"${HOME}/protodot/generated"@"${PROTO_DOC_PATH}"@g' config.json
     fi
     go install
