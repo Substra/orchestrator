@@ -32,7 +32,7 @@ fabric:
   organization: MyOrg1
   mspID: MyOrg1MSP
   peer:
-    host: network-org-1-peer-1-hlf-peer.org-1
+    host: network-org-1-peer-1-hlf-peer.org-1.svc.cluster.local
 
 postgresql:
   enabled: false

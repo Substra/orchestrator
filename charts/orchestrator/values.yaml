@@ -89,7 +89,7 @@ fabric:
   user:
     name: User
   peer:
-    host: network-org-1-peer-1-hlf-peer.org-1
+    host: network-org-1-peer-1-hlf-peer.org-1.svc.cluster.local
     port: 7051
   waitForEventTimeoutSeconds: 45
   logLevel: INFO
