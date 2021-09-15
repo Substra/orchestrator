@@ -29,7 +29,7 @@ Here is the expected cardinality for each task category:
 | children ↓ / parent → | Train | Test | Aggregate | Composite |
 |-----------------------|-------|------|-----------|-----------|
 | Train                 | n     | 0    | n         | 0         |
-| Test                  | 1*    | 0    | 0         | 1*        |
+| Test                  | 1*    | 0    | 1*        | 1*        |
 | Aggregate             | n     | 0    | n         | n         |
 | Composite             | 0     | 0    | (1)       | 1         |
 
