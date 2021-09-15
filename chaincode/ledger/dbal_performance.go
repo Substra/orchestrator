@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
@@ -15,7 +14,7 @@ func (db *DB) AddPerformance(perf *asset.Performance) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("failed to add performance: %w", errors.ErrConflict)
+		return errors.NewConflict(asset.PerformanceKind, perf.ComputeTaskKey)
 	}
 	bytes, err := json.Marshal(perf)
 	if err != nil {

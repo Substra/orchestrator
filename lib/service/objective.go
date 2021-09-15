@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/owkin/orchestrator/lib/asset"
@@ -54,7 +53,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 	s.GetLogger().WithField("owner", owner).WithField("newObj", o).Debug("Registering objective")
 	err := o.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
+		return nil, orcerrors.FromValidationError(asset.ObjectiveKind, err)
 	}
 
 	objective := &asset.Objective{
@@ -78,7 +77,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 			return nil, err
 		}
 		if !testOnly {
-			return nil, fmt.Errorf("datasamples are not test only: %w", orcerrors.ErrInvalidAsset)
+			return nil, orcerrors.NewInvalidAsset("datasamples are not test only")
 		}
 
 		// Couple manager + samples is valid, let's associate them with the objective
@@ -116,7 +115,7 @@ func (s *ObjectiveService) RegisterObjective(o *asset.NewObjective, owner string
 		}
 		err = s.GetDataManagerService().UpdateDataManager(dataManagerUpdate, owner)
 		if err != nil {
-			return nil, fmt.Errorf("datamanager cannot be associated with the objective: %w: %s", orcerrors.ErrBadRequest, err.Error())
+			return nil, orcerrors.NewBadRequest("datamanager cannot be associated with the objective").Wrap(err)
 		}
 	}
 
@@ -138,7 +137,7 @@ func (s *ObjectiveService) GetLeaderboard(params *asset.LeaderboardQueryParam) (
 	lb, err := s.GetObjectiveDBAL().GetLeaderboard(params.GetObjectiveKey())
 
 	if err != nil {
-		return nil, fmt.Errorf("cannot retrieve leaderboard for objective: %w %s", orcerrors.ErrNotFound, err.Error())
+		return nil, orcerrors.NewNotFound("leaderboard", params.ObjectiveKey).Wrap(err)
 	}
 
 	sort.SliceStable(lb.BoardItems, func(i, j int) bool {

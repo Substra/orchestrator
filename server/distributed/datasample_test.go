@@ -91,7 +91,8 @@ func TestHandleDataSampleConflictAfterTimeout(t *testing.T) {
 	newCtx := common.WithLastError(context.Background(), fabricTimeout)
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", AnyContext, "orchestrator.datasample:RegisterDataSamples", param, nil).Return(errors.ErrConflict)
+	invocator.On("Call", AnyContext, "orchestrator.datasample:RegisterDataSamples", param, nil).
+		Return(errors.NewError(errors.ErrConflict, "test"))
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -121,7 +122,8 @@ func TestHandleDataSampleBatchConflictAfterTimeout(t *testing.T) {
 	newCtx := common.WithLastError(context.Background(), fabricTimeout)
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", AnyContext, "orchestrator.datasample:RegisterDataSamples", param, nil).Return(errors.ErrConflict)
+	invocator.On("Call", AnyContext, "orchestrator.datasample:RegisterDataSamples", param, nil).
+		Return(errors.NewError(errors.ErrConflict, "test"))
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

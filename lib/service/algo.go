@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -47,7 +45,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 	s.GetLogger().WithField("owner", owner).WithField("newObj", a).Debug("Registering algo")
 	err := a.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
+		return nil, orcerrors.FromValidationError(asset.AlgoKind, err)
 	}
 
 	exists, err := s.GetAlgoDBAL().AlgoExists(a.Key)
@@ -55,7 +53,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		return nil, err
 	}
 	if exists {
-		return nil, fmt.Errorf("there is already an algo with this key: %w", orcerrors.ErrConflict)
+		return nil, orcerrors.NewConflict(asset.AlgoKind, a.Key)
 	}
 
 	algo := &asset.Algo{

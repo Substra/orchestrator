@@ -2,7 +2,6 @@ package asset
 
 import (
 	"database/sql/driver"
-	"fmt"
 
 	"github.com/owkin/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -19,7 +18,7 @@ func (n *Node) Value() (driver.Value, error) {
 func (n *Node) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan node: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan node")
 	}
 
 	return protojson.Unmarshal(b, n)
@@ -36,7 +35,7 @@ func (o *Objective) Value() (driver.Value, error) {
 func (o *Objective) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan objective: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan objective")
 	}
 
 	return protojson.Unmarshal(b, o)
@@ -59,7 +58,7 @@ func (d *DataManager) Value() (driver.Value, error) {
 func (d *DataSample) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan datasample: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan datasample")
 	}
 
 	return protojson.Unmarshal(b, d)
@@ -76,7 +75,7 @@ func (a *Algo) Value() (driver.Value, error) {
 func (a *Algo) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan algo: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan algo")
 	}
 
 	return protojson.Unmarshal(b, a)
@@ -87,7 +86,7 @@ func (a *Algo) Scan(value interface{}) error {
 func (d *DataManager) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan datamanager: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan datamanager")
 	}
 
 	return protojson.Unmarshal(b, d)
@@ -104,7 +103,7 @@ func (a *ComputeTask) Value() (driver.Value, error) {
 func (a *ComputeTask) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan compute task: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan compute task")
 	}
 
 	return protojson.Unmarshal(b, a)
@@ -121,7 +120,7 @@ func (a *Model) Value() (driver.Value, error) {
 func (a *Model) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan model: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan model")
 	}
 
 	return protojson.Unmarshal(b, a)
@@ -138,7 +137,7 @@ func (cp *ComputePlan) Value() (driver.Value, error) {
 func (cp *ComputePlan) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan compute plan: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan compute plan")
 	}
 
 	return protojson.Unmarshal(b, cp)
@@ -155,7 +154,7 @@ func (p *Performance) Value() (driver.Value, error) {
 func (p *Performance) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan performance: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan performance")
 	}
 
 	return protojson.Unmarshal(b, p)
@@ -171,7 +170,7 @@ func (e *Event) Value() (driver.Value, error) {
 func (e *Event) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("cannot scan event: %w", errors.ErrByteArray)
+		return errors.NewError(errors.ErrByteArray, "cannot scan event")
 	}
 
 	return protojson.Unmarshal(b, e)

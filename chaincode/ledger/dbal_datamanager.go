@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -16,7 +15,7 @@ func (db *DB) AddDataManager(datamanager *asset.DataManager) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("failed to add datamanager: %w", errors.ErrConflict)
+		return errors.NewConflict(asset.DataManagerKind, datamanager.Key)
 	}
 
 	dataManagerBytes, err := json.Marshal(datamanager)

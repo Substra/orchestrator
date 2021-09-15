@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -18,7 +17,7 @@ func (db *DB) addSingleEvent(event *asset.Event) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("failed to add event: %w", errors.ErrConflict)
+		return errors.NewConflict("event", event.Id)
 	}
 	bytes, err := json.Marshal(event)
 	if err != nil {

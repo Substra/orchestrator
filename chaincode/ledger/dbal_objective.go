@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -17,7 +16,7 @@ func (db *DB) AddObjective(obj *asset.Objective) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("objective already exists: %w", errors.ErrConflict)
+		return errors.NewConflict(asset.ObjectiveKind, obj.Key)
 	}
 
 	objBytes, err := json.Marshal(obj)

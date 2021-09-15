@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -16,7 +15,7 @@ func (db *DB) AddComputePlan(cp *asset.ComputePlan) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("failed to add compute plan: %w", errors.ErrConflict)
+		return errors.NewConflict(asset.ComputePlanKind, cp.Key)
 	}
 
 	bytes, err := json.Marshal(cp)

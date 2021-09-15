@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
@@ -49,7 +47,7 @@ func (s *NodeService) RegisterNode(id string) (*asset.Node, error) {
 	}
 
 	if exists {
-		return nil, fmt.Errorf("node %s already exists: %w", node.GetId(), orcerrors.ErrConflict)
+		return nil, orcerrors.NewConflict(asset.NodeKind, id)
 	}
 
 	node.CreationDate = timestamppb.New(s.GetTimeService().GetTransactionTime())

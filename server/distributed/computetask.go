@@ -31,7 +31,7 @@ func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.Reg
 
 	err = Invocator.Call(ctx, method, input, nil)
 
-	if err != nil && isFabricTimeoutRetry(ctx) && len(input.Tasks) == 1 && strings.Contains(err.Error(), errors.ErrConflict.Error()) {
+	if err != nil && isFabricTimeoutRetry(ctx) && len(input.Tasks) == 1 && strings.Contains(err.Error(), errors.ErrConflict) {
 		// In this very specific case we are in a retry context after a timeout and the batch only contains a single task.
 		// We can assume that the previous request succeeded and created the asset.
 		// So we convert the error in a success response.

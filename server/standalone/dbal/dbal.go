@@ -3,7 +3,6 @@ package dbal
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 
 	// migration driver
@@ -94,7 +93,7 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("node not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("node", id)
 		}
 		return nil, err
 	}

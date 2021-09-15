@@ -26,15 +26,15 @@ func (p *Permissions) Validate() error {
 func validateMetadata(input interface{}) error {
 	metadata, ok := input.(map[string]string)
 	if !ok {
-		return fmt.Errorf("metadata is not a proper map %w", errors.ErrInvalidAsset)
+		return errors.NewInvalidAsset("metadata is not a proper map")
 	}
 
 	for k, v := range metadata {
 		if len(k) > 100 {
-			return fmt.Errorf("metadata key '%v' is too long, %w", k, errors.ErrInvalidAsset)
+			return errors.NewInvalidAsset(fmt.Sprintf("metadata key %q is too long", k))
 		}
 		if len(v) > 100 {
-			return fmt.Errorf("metadata value for key '%v' is too long, %w", k, errors.ErrInvalidAsset)
+			return errors.NewInvalidAsset(fmt.Sprintf("metadata value for key %q is too long", k))
 		}
 	}
 

@@ -54,7 +54,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 	s.GetLogger().WithField("owner", owner).WithField("newDataManager", d).Debug("Registering DataManager")
 	err := d.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
+		return nil, orcerrors.FromValidationError(asset.DataManagerKind, err)
 	}
 
 	exists, err := s.GetDataManagerDBAL().DataManagerExists(d.GetKey())
@@ -63,7 +63,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 		return nil, err
 	}
 	if exists {
-		return nil, fmt.Errorf("there is already a datamanager with this key: %w", orcerrors.ErrConflict)
+		return nil, orcerrors.NewConflict(asset.DataManagerKind, d.Key)
 	}
 
 	// The objective key should be empty or referencing a valid objective
@@ -73,7 +73,7 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 			return nil, err
 		}
 		if !ok {
-			return nil, fmt.Errorf("the datamanager owner can't download the provided objective: %w", orcerrors.ErrConflict)
+			return nil, orcerrors.NewPermissionDenied("datamanager owner cannot download the objective")
 		}
 	}
 
@@ -118,20 +118,20 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 	s.GetLogger().WithField("owner", requester).WithField("dataManagerUpdate", d).Debug("updating data manager")
 	err := d.Validate()
 	if err != nil {
-		return fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
+		return orcerrors.FromValidationError(asset.DataManagerKind, err)
 	}
 
 	datamanager, err := s.GetDataManagerDBAL().GetDataManager(d.GetKey())
 	if err != nil {
-		return fmt.Errorf("datamanager not found: %w: %s", orcerrors.ErrNotFound, err.Error())
+		return orcerrors.NewNotFound(asset.DataManagerKind, d.Key).Wrap(err)
 	}
 
 	if !s.GetPermissionService().CanProcess(datamanager.Permissions, requester) {
-		return fmt.Errorf("requester does not have the permissions to update the datamanager: %w", orcerrors.ErrPermissionDenied)
+		return orcerrors.NewPermissionDenied("requester does not have the permissions to update the datamanager")
 	}
 
 	if datamanager.GetObjectiveKey() != "" {
-		return fmt.Errorf("datamanager already has an objective: %w", orcerrors.ErrBadRequest)
+		return orcerrors.NewBadRequest("datamanager already has an objective")
 	}
 
 	// Validation of the asset existence is implicit because to check download permissions the ObjectiveService needs to query the
@@ -141,7 +141,7 @@ func (s *DataManagerService) UpdateDataManager(d *asset.DataManagerUpdateParam, 
 		return err
 	}
 	if !ok {
-		return fmt.Errorf("the datamanager owner can't download the provided objective: %w", orcerrors.ErrConflict)
+		return orcerrors.NewPermissionDenied("the datamanager owner can't download the provided objective")
 	}
 
 	datamanager.ObjectiveKey = d.GetObjectiveKey()
@@ -177,7 +177,7 @@ func (s *DataManagerService) CheckOwner(keys []string, requester string) error {
 			return err
 		}
 		if !ok {
-			return fmt.Errorf("requester does not own the datamanager: %w datamanager: %s", orcerrors.ErrPermissionDenied, dataManagerKey)
+			return orcerrors.NewPermissionDenied(fmt.Sprintf("requester does not own the datamanager %q", dataManagerKey))
 		}
 	}
 	return nil
@@ -187,7 +187,7 @@ func (s *DataManagerService) CheckOwner(keys []string, requester string) error {
 func (s *DataManagerService) isOwner(key string, requester string) (bool, error) {
 	dm, err := s.GetDataManagerDBAL().GetDataManager(key)
 	if err != nil {
-		return false, fmt.Errorf("provided datamanager not found: %w datamanager: %s", orcerrors.ErrNotFound, key)
+		return false, orcerrors.NewNotFound(asset.DataManagerKind, key).Wrap(err)
 	}
 
 	return dm.GetOwner() == requester, nil

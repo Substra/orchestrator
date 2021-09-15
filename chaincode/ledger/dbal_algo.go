@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -12,13 +11,12 @@ import (
 
 // AddAlgo stores a new algo
 func (db *DB) AddAlgo(algo *asset.Algo) error {
-
 	exists, err := db.hasKey(asset.AlgoKind, algo.GetKey())
 	if err != nil {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("failed to add algo: %w", errors.ErrConflict)
+		return errors.NewConflict(asset.AlgoKind, algo.Key)
 	}
 
 	algoBytes, err := json.Marshal(algo)

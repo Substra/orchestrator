@@ -81,7 +81,9 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)
 
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
@@ -110,7 +112,9 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test") // "test" is not "owner" of the task
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrPermissionDenied))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrPermissionDenied, orcError.Kind)
 
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
@@ -326,7 +330,9 @@ func TestRegisterDuplicateModel(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
 
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
@@ -465,7 +471,9 @@ func TestRegisterWrongModelType(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)
 
 	dbal.AssertExpectations(t)
 	cts.AssertExpectations(t)
@@ -506,7 +514,9 @@ func TestRegisterMultipleHeads(t *testing.T) {
 
 	_, err := service.RegisterModel(model, "test")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
 
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)

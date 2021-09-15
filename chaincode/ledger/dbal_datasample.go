@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -31,7 +30,7 @@ func (db *DB) addDataSample(dataSample *asset.DataSample) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("failed to add datasample: %w", errors.ErrConflict)
+		return errors.NewConflict(asset.DataSampleKind, dataSample.Key)
 	}
 
 	dataSampleBytes, err := json.Marshal(dataSample)

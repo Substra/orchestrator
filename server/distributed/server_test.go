@@ -13,10 +13,9 @@ import (
 
 func TestRetryOnSpecificError(t *testing.T) {
 	assert.False(t, shouldRetry(fmt.Errorf("not an orchestration error")))
-	assert.False(t, shouldRetry(fmt.Errorf("%w", errors.ErrCannotDisableModel)))
-	assert.False(t, shouldRetry(fmt.Errorf("%w", errors.ErrIncompatibleTaskStatus)))
-	assert.False(t, shouldRetry(fmt.Errorf("%w", errors.ErrNotFound)))
-	assert.False(t, shouldRetry(fmt.Errorf("%w", errors.ErrReferenceNotFound)))
+	assert.False(t, shouldRetry(errors.NewError(errors.ErrCannotDisableModel, "test")))
+	assert.False(t, shouldRetry(errors.NewError(errors.ErrIncompatibleTaskStatus, "test")))
+	assert.False(t, shouldRetry(errors.NewError(errors.ErrNotFound, "test")))
 
 	assert.True(t, shouldRetry(fabricTimeout))
 }

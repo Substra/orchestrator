@@ -40,7 +40,7 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 	s.GetLogger().WithField("taskKey", newPerf.ComputeTaskKey).WithField("requester", requester).Debug("Registering new performance")
 	err := newPerf.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInvalidAsset, err.Error())
+		return nil, errors.FromValidationError(asset.PerformanceKind, err)
 	}
 
 	task, err := s.GetComputeTaskService().GetTask(newPerf.ComputeTaskKey)
@@ -49,15 +49,15 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 	}
 
 	if task.Worker != requester {
-		return nil, fmt.Errorf("%w: only \"%s\" worker can register performance", errors.ErrPermissionDenied, task.Worker)
+		return nil, errors.NewPermissionDenied(fmt.Sprintf("only %q worker can register performance", task.Worker))
 	}
 
 	if task.Category != asset.ComputeTaskCategory_TASK_TEST {
-		return nil, fmt.Errorf("%w: cannot register performance on non test task", errors.ErrBadRequest)
+		return nil, errors.NewBadRequest("cannot register performance on non test task")
 	}
 
 	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
-		return nil, fmt.Errorf("%w: cannot register performance for task with status \"%s\"", errors.ErrBadRequest, task.Status.String())
+		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register performance for task with status %q", task.Status.String()))
 	}
 
 	perf := &asset.Performance{

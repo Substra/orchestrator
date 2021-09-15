@@ -15,16 +15,15 @@ func TestStatusConversion(t *testing.T) {
 		err  error
 		code codes.Code
 	}{
-		"conflict":            {err: errors.ErrConflict, code: codes.AlreadyExists},
-		"validation":          {err: errors.ErrInvalidAsset, code: codes.InvalidArgument},
+		"conflict":            {err: errors.NewError(errors.ErrConflict, "test"), code: codes.AlreadyExists},
+		"validation":          {err: errors.NewError(errors.ErrInvalidAsset, "test"), code: codes.InvalidArgument},
 		"unknown":             {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
-		"unauthorized":        {err: errors.ErrPermissionDenied, code: codes.PermissionDenied},
-		"invalid_reference":   {err: errors.ErrReferenceNotFound, code: codes.InvalidArgument},
-		"notfound":            {err: errors.ErrNotFound, code: codes.NotFound},
-		"badrequest":          {err: errors.ErrBadRequest, code: codes.FailedPrecondition},
-		"incompatible_status": {err: errors.ErrIncompatibleTaskStatus, code: codes.InvalidArgument},
-		"unimplemented":       {err: errors.ErrUnimplemented, code: codes.Unimplemented},
-		"unprocessable model": {err: errors.ErrCannotDisableModel, code: codes.InvalidArgument},
+		"unauthorized":        {err: errors.NewError(errors.ErrPermissionDenied, "test"), code: codes.PermissionDenied},
+		"notfound":            {err: errors.NewError(errors.ErrNotFound, "test"), code: codes.NotFound},
+		"badrequest":          {err: errors.NewError(errors.ErrBadRequest, "test"), code: codes.FailedPrecondition},
+		"incompatible_status": {err: errors.NewError(errors.ErrIncompatibleTaskStatus, "test"), code: codes.InvalidArgument},
+		"unimplemented":       {err: errors.NewError(errors.ErrUnimplemented, "test"), code: codes.Unimplemented},
+		"unprocessable model": {err: errors.NewError(errors.ErrCannotDisableModel, "test"), code: codes.InvalidArgument},
 	}
 
 	for name, tc := range cases {

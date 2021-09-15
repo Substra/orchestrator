@@ -2,7 +2,6 @@ package dbal
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/jackc/pgx/v4"
@@ -51,7 +50,7 @@ group by cp.asset
 	err := row.Scan(plan, &total, &done, &doing, &waiting, &failed, &canceled)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("computeplan not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("computeplan", key)
 		}
 		return nil, err
 	}
@@ -73,7 +72,7 @@ func (d *DBAL) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
 	err := row.Scan(plan)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("computeplan not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("computeplan", key)
 		}
 		return nil, err
 	}

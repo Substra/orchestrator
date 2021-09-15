@@ -85,7 +85,9 @@ func TestRegisterTaskConflict(t *testing.T) {
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(true, nil)
 
 	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
-	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
 
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
@@ -242,7 +244,9 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrIncompatibleTaskStatus))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrIncompatibleTaskStatus, orcError.Kind)
 
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
@@ -863,7 +867,9 @@ func TestCheckCanProcessParent(t *testing.T) {
 				assert.NoError(t, err)
 			} else {
 				assert.Error(t, err)
-				assert.True(t, errors.Is(err, orcerrors.ErrPermissionDenied))
+				orcError := new(orcerrors.OrcError)
+				assert.True(t, errors.As(err, &orcError))
+				assert.Equal(t, orcerrors.ErrPermissionDenied, orcError.Kind)
 			}
 		})
 	}
@@ -897,7 +903,9 @@ func TestCanDisableModels(t *testing.T) {
 		service := NewComputeTaskService(provider)
 		_, err := service.canDisableModels("uuid", "notworker")
 		assert.Error(t, err)
-		assert.True(t, errors.Is(err, orcerrors.ErrPermissionDenied))
+		orcError := new(orcerrors.OrcError)
+		assert.True(t, errors.As(err, &orcError))
+		assert.Equal(t, orcerrors.ErrPermissionDenied, orcError.Kind)
 
 		dbal.AssertExpectations(t)
 	})
@@ -1060,7 +1068,9 @@ func TestRegisterTasksEmptyList(t *testing.T) {
 	service := NewComputeTaskService(provider)
 
 	err := service.RegisterTasks([]*asset.NewComputeTask{}, "test")
-	assert.True(t, errors.Is(err, orcerrors.ErrBadRequest))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)
 }
 
 func TestGetRegisteredTask(t *testing.T) {

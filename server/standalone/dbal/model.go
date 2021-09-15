@@ -2,7 +2,6 @@ package dbal
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
@@ -20,7 +19,7 @@ func (d *DBAL) GetModel(key string) (*asset.Model, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("model not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("model", key)
 		}
 		return nil, err
 	}

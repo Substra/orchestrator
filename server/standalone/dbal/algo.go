@@ -2,7 +2,6 @@ package dbal
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
@@ -28,7 +27,7 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("algo not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("algo", key)
 		}
 		return nil, err
 	}

@@ -19,7 +19,7 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("failed to add compute task: %w", errors.ErrConflict)
+		return errors.NewConflict(asset.ComputeTaskKind, t.Key)
 	}
 
 	bytes, err := json.Marshal(t)
@@ -70,7 +70,7 @@ func (db *DB) UpdateComputeTask(task *asset.ComputeTask) error {
 	prevTask.Status = task.Status
 	if !reflect.DeepEqual(prevTask, task) {
 		// We only implement status update, so prevent any other update as it would require full index update
-		return fmt.Errorf("only task status update is implemented: %w", errors.ErrUnimplemented)
+		return errors.NewError(errors.ErrUnimplemented, "only task status update is implemented")
 	}
 	prevTask.Status = prevStatus
 

@@ -107,7 +107,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 
 	err := newModel.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errors.ErrInvalidAsset, err.Error())
+		return nil, errors.FromValidationError(asset.ModelKind, err)
 	}
 
 	task, err := s.GetComputeTaskService().GetTask(newModel.ComputeTaskKey)
@@ -116,11 +116,11 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 	}
 
 	if task.Worker != requester {
-		return nil, fmt.Errorf("%w: only \"%s\" worker can register model", errors.ErrPermissionDenied, task.Worker)
+		return nil, errors.NewPermissionDenied(fmt.Sprintf("only %q worker can register model", task.Worker))
 	}
 
 	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
-		return nil, fmt.Errorf("%w: cannot register model for task with status \"%s\"", errors.ErrBadRequest, task.Status.String())
+		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register model for task with status %q", task.Status.String()))
 	}
 
 	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(task.Key)
@@ -145,7 +145,7 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("unhandled model category")
+		return nil, errors.NewError(errors.ErrUnimplemented, "unhandled model category")
 	}
 
 	model.Owner = requester
@@ -181,10 +181,10 @@ func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string)
 func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester string, task *asset.ComputeTask) (*asset.Model, error) {
 	// This should be checked by caller, but better safe than sorry
 	if !(task.Category == asset.ComputeTaskCategory_TASK_TRAIN || task.Category == asset.ComputeTaskCategory_TASK_AGGREGATE) {
-		return nil, fmt.Errorf("%w: cannot register train model for \"%s\" task", errors.ErrBadRequest, task.Category.String())
+		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register train model for %q task", task.Category.String()))
 	}
 	if newModel.Category != asset.ModelCategory_MODEL_SIMPLE {
-		return nil, fmt.Errorf("%w: cannot register non-simple model", errors.ErrBadRequest)
+		return nil, errors.NewBadRequest("cannot register non-simple model")
 	}
 
 	var permissions *asset.Permissions
@@ -195,7 +195,7 @@ func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester s
 	case asset.ComputeTaskCategory_TASK_AGGREGATE:
 		permissions = task.GetAggregate().ModelPermissions
 	default:
-		return nil, fmt.Errorf("%w: cannot set model permissions for \"%s\" task", errors.ErrBadRequest, task.Category.String())
+		return nil, errors.NewBadRequest(fmt.Sprintf("cannot set model permissions for %q task", task.Category.String()))
 	}
 
 	model := &asset.Model{
@@ -212,10 +212,10 @@ func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester s
 func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requester string, task *asset.ComputeTask) (*asset.Model, error) {
 	// This should be checked by caller, but better safe than sorry
 	if task.Category != asset.ComputeTaskCategory_TASK_COMPOSITE {
-		return nil, fmt.Errorf("%w: cannot register composite model for \"%s\" task", errors.ErrBadRequest, task.Category.String())
+		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register composite model for %q task", task.Category.String()))
 	}
 	if !(newModel.Category == asset.ModelCategory_MODEL_HEAD || newModel.Category == asset.ModelCategory_MODEL_SIMPLE) {
-		return nil, fmt.Errorf("%w: cannot register non-composite model", errors.ErrBadRequest)
+		return nil, errors.NewBadRequest("cannot register non-composite model")
 	}
 
 	var permissions *asset.Permissions
@@ -226,7 +226,7 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 	case asset.ModelCategory_MODEL_SIMPLE:
 		permissions = task.GetComposite().TrunkPermissions
 	default:
-		return nil, fmt.Errorf("%w: cannot set permissions for \"%s\" model", errors.ErrBadRequest, newModel.Category.String())
+		return nil, errors.NewBadRequest(fmt.Sprintf("cannot set permissions for %q model", newModel.Category.String()))
 	}
 
 	model := &asset.Model{
@@ -268,7 +268,7 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 		return err
 	}
 	if !canClean {
-		return fmt.Errorf("cannot disable a model in use: %w", errors.ErrCannotDisableModel)
+		return errors.NewCannotDisableModel("cannot disable a model in use")
 	}
 
 	model.Address = nil
@@ -334,7 +334,7 @@ func countModels(models []*asset.Model) modelCount {
 func checkDuplicateModel(existingModels []*asset.Model, model *asset.NewModel) error {
 	for _, m := range existingModels {
 		if m.Category == model.Category {
-			return fmt.Errorf("%w: task already has a %s model", errors.ErrConflict, model.Category.String())
+			return errors.NewError(errors.ErrConflict, fmt.Sprintf("task already has a %s model", model.Category.String()))
 		}
 	}
 	return nil

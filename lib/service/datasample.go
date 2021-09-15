@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -87,7 +85,7 @@ func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner 
 	s.GetLogger().WithField("owner", owner).WithField("newDataSample", sample).Debug("Registering data sample")
 	err := sample.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
+		return nil, orcerrors.FromValidationError(asset.DataSampleKind, err)
 	}
 
 	err = s.GetDataManagerService().CheckOwner(sample.GetDataManagerKeys(), owner)
@@ -100,7 +98,7 @@ func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner 
 		return nil, err
 	}
 	if exists {
-		return nil, fmt.Errorf("datasample whith the same key already exist: %w key: %s", orcerrors.ErrConflict, sample.Key)
+		return nil, orcerrors.NewConflict(asset.DataSampleKind, sample.Key)
 	}
 	datasample := &asset.DataSample{
 		Key:             sample.Key,
@@ -119,7 +117,7 @@ func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, o
 	s.GetLogger().WithField("owner", owner).WithField("dataSampleUpdate", d).Debug("Updating data sample")
 	err := d.Validate()
 	if err != nil {
-		return fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
+		return orcerrors.FromValidationError(asset.DataSampleKind, err)
 	}
 
 	err = s.GetDataManagerService().CheckOwner(d.GetDataManagerKeys(), owner)
@@ -130,11 +128,11 @@ func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, o
 	for _, dataSampleKey := range d.GetKeys() {
 		datasample, err := s.GetDataSampleDBAL().GetDataSample(dataSampleKey)
 		if err != nil {
-			return fmt.Errorf("datasample not found: %w key: %s", orcerrors.ErrNotFound, dataSampleKey)
+			return orcerrors.NewNotFound(asset.DataSampleKind, dataSampleKey)
 		}
 
 		if datasample.GetOwner() != owner {
-			return fmt.Errorf("requester does not own the datasample: %w", orcerrors.ErrPermissionDenied)
+			return orcerrors.NewPermissionDenied("requester does not own the datasample")
 		}
 
 		datasample.DataManagerKeys = utils.Combine(datasample.GetDataManagerKeys(), d.GetDataManagerKeys())
@@ -171,7 +169,7 @@ func (s *DataSampleService) CheckSameManager(managerKey string, sampleKeys []str
 			return err
 		}
 		if !utils.StringInSlice(dataSample.DataManagerKeys, managerKey) {
-			return fmt.Errorf("datasamples do not share a common manager: %w", orcerrors.ErrInvalidAsset)
+			return orcerrors.NewInvalidAsset("datasamples do not share a common manager")
 		}
 	}
 	return nil

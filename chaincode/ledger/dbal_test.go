@@ -80,7 +80,9 @@ func TestAddExistingObjective(t *testing.T) {
 	stub.On("GetState", "objective:test").Return([]byte("{}"), nil).Once()
 
 	err := db.AddObjective(objective)
-	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
+	orcErr := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcErr))
+	assert.Equal(t, orcerrors.ErrConflict, orcErr.Kind)
 }
 
 func TestValidateQueryContext(t *testing.T) {
@@ -91,12 +93,16 @@ func TestValidateQueryContext(t *testing.T) {
 	// no context: error
 	db = NewDB(context.Background(), mockStub)
 	err = db.validateQueryContext()
-	assert.True(t, errors.Is(err, orcerrors.ErrInternalError))
+	orcErr := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcErr))
+	assert.Equal(t, orcerrors.ErrInternalError, orcErr.Kind)
 
 	// context with isEval=false: error
 	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, false), mockStub)
 	err = db.validateQueryContext()
-	assert.True(t, errors.Is(err, orcerrors.ErrInternalError))
+	orcErr = new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcErr))
+	assert.Equal(t, orcerrors.ErrInternalError, orcErr.Kind)
 
 	// context with isEval=true: ok
 	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), mockStub)
@@ -113,12 +119,16 @@ func TestCheckQueryContext(t *testing.T) {
 	// getQueryResult
 	db = NewDB(context.Background(), mockStub)
 	_, err = db.getQueryResult("some query")
-	assert.True(t, errors.Is(err, orcerrors.ErrInternalError))
+	orcErr := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcErr))
+	assert.Equal(t, orcerrors.ErrInternalError, orcErr.Kind)
 
 	// getQueryResultWithPagination
 	db = NewDB(context.Background(), mockStub)
 	_, _, err = db.getQueryResultWithPagination("some query", 0, "bookmark")
-	assert.True(t, errors.Is(err, orcerrors.ErrInternalError))
+	orcErr = new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcErr))
+	assert.Equal(t, orcerrors.ErrInternalError, orcErr.Kind)
 }
 
 func TestTransactionState(t *testing.T) {

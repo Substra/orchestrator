@@ -2,7 +2,6 @@ package dbal
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/jackc/pgx/v4"
@@ -44,7 +43,7 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("datamanager not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("datamanager", key)
 		}
 		return nil, err
 	}

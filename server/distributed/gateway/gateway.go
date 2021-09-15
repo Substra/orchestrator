@@ -222,7 +222,7 @@ func (gw *Gateway) Request(ctx context.Context, channel, chaincode, method strin
 
 	if gw.closed {
 		logger.Get(ctx).Warn("Gateway closed")
-		err <- fmt.Errorf("%w: gateway closed", orcerrors.ErrInternalError)
+		err <- orcerrors.NewInternal("gateway closed")
 		close(out)
 		close(err)
 		return out, err

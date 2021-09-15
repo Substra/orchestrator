@@ -61,5 +61,7 @@ func TestRegisterExistingNode(t *testing.T) {
 
 	_, err := service.RegisterNode("uuid1")
 	assert.Error(t, err, "Registration should fail for existing node")
-	assert.True(t, errors.Is(err, orcerrors.ErrConflict))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
 }

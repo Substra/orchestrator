@@ -2,7 +2,6 @@ package dbal
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/go-playground/log/v7"
@@ -87,7 +86,7 @@ func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("datasample not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("datasample", key)
 		}
 		return nil, err
 	}

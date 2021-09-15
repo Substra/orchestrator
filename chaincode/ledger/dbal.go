@@ -132,7 +132,7 @@ func (db *DB) getState(resource string, key string) ([]byte, error) {
 		}
 
 		if len(b) == 0 {
-			return nil, fmt.Errorf("%s not found: %w key: %s", resource, errors.ErrNotFound, key)
+			return nil, errors.NewNotFound(resource, key)
 		}
 
 		db.putTransactionState(k, b)
@@ -164,7 +164,7 @@ func (db *DB) validateQueryContext() error {
 	isEvalTx := db.context.Value(ctxIsEvaluateTransaction)
 
 	if isEvalTx == nil {
-		return fmt.Errorf("missing key ctxIsEvaluateTransaction in transaction context: %w", errors.ErrInternalError)
+		return errors.NewInternal("missing key ctxIsEvaluateTransaction in transaction context")
 	}
 
 	if isEvalTx != true {
@@ -172,7 +172,7 @@ func (db *DB) validateQueryContext() error {
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("function \"%s\" must be called from an \"Evaluate\" transaction: %w", fnName, errors.ErrInternalError)
+		return errors.NewInternal(fmt.Sprintf("function %q must be called from an \"Evaluate\" transaction", fnName))
 	}
 
 	return nil

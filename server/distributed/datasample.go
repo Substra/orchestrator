@@ -29,7 +29,7 @@ func (a *DataSampleAdapter) RegisterDataSamples(ctx context.Context, param *asse
 
 	err = invocator.Call(ctx, method, param, nil)
 
-	if err != nil && isFabricTimeoutRetry(ctx) && len(param.Samples) == 1 && strings.Contains(err.Error(), errors.ErrConflict.Error()) {
+	if err != nil && isFabricTimeoutRetry(ctx) && len(param.Samples) == 1 && strings.Contains(err.Error(), errors.ErrConflict) {
 		// In this very specific case we are in a retry context after a timeout and the registration is limited to a single sample.
 		// We can assume that the previous request succeeded and created the asset.
 		// So we convert the error in a success response.

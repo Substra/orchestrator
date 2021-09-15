@@ -31,7 +31,7 @@ func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.N
 
 	err = invocator.Call(ctx, method, d, response)
 
-	if err != nil && isFabricTimeoutRetry(ctx) && strings.Contains(err.Error(), errors.ErrConflict.Error()) {
+	if err != nil && isFabricTimeoutRetry(ctx) && strings.Contains(err.Error(), errors.ErrConflict) {
 		// In this very specific case we are in a retry context after a timeout.
 		// We can assume that the previous request succeeded and created the asset.
 		// So we convert the error in a success response.

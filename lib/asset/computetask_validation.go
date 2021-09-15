@@ -35,7 +35,7 @@ func (t *NewComputeTask) Validate() error {
 	case *NewComputeTask_Train:
 		return t.Data.(*NewComputeTask_Train).Train.Validate()
 	default:
-		return fmt.Errorf("unkwown task data: %T, %w", x, errors.ErrInvalidAsset)
+		return errors.NewInvalidAsset(fmt.Sprintf("unknown task data %T", x))
 	}
 }
 

@@ -59,7 +59,8 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 		ComputeTaskKey: "uuid",
 	}
 
-	invocator.On("Call", AnyContext, "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).Return(errors.ErrConflict)
+	invocator.On("Call", AnyContext, "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).
+		Return(errors.NewError(errors.ErrConflict, "test"))
 	invocator.On(
 		"Call",
 		AnyContext,

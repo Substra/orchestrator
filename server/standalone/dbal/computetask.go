@@ -2,7 +2,6 @@ package dbal
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
@@ -124,7 +123,7 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	err := row.Scan(task)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("computetask not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("computetask", key)
 		}
 		return nil, err
 	}

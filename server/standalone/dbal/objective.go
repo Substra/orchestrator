@@ -28,7 +28,7 @@ func (d *DBAL) GetObjective(key string) (*asset.Objective, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("objective not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("objective", key)
 		}
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (d *DBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("objective not found: %w", orcerrors.ErrNotFound)
+			return nil, orcerrors.NewNotFound("objective", key)
 		}
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (d *DBAL) GetLeaderboard(key string) (*asset.Leaderboard, error) {
 		err = rows.Scan(&boardItem.Algo, &boardItem.ObjectiveKey, &boardItem.ComputeTaskKey, &boardItem.Perf)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, fmt.Errorf("%w: No board item found", orcerrors.ErrNotFound)
+				return nil, orcerrors.NewNotFound("board item", key)
 			}
 			return nil, fmt.Errorf("failed to scan BoardItem: %w", err)
 		}

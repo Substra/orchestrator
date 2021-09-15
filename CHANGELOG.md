@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Do not cascade canceled status (#313)
 
 ### Fixed
+- Properly retry on postgres' serialization error
 - Filtering events by asset in distributed mode (#321)
 - Input models for composite child of aggregate (#280)
 

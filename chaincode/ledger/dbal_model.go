@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -60,7 +59,7 @@ func (db *DB) AddModel(model *asset.Model) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("failed to add model: %w", errors.ErrConflict)
+		return errors.NewConflict(asset.ModelKind, model.Key)
 	}
 	bytes, err := json.Marshal(model)
 	if err != nil {

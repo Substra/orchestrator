@@ -49,7 +49,7 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 	s.GetLogger().WithField("plan", input).WithField("owner", owner).Debug("Registering new compute plan")
 	err := input.Validate()
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", orcerrors.ErrInvalidAsset, err.Error())
+		return nil, orcerrors.FromValidationError(asset.ComputePlanKind, err)
 	}
 
 	exist, err := s.GetComputePlanDBAL().ComputePlanExists(input.Key)
@@ -57,7 +57,7 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		return nil, err
 	}
 	if exist {
-		return nil, fmt.Errorf("plan %s already exists: %w", input.Key, orcerrors.ErrConflict)
+		return nil, orcerrors.NewConflict(asset.ComputePlanKind, input.Key)
 	}
 
 	plan := &asset.ComputePlan{
@@ -94,14 +94,14 @@ func (s *ComputePlanService) ApplyPlanAction(key string, action asset.ComputePla
 		return err
 	}
 	if requester != plan.Owner {
-		return fmt.Errorf("only plan owner can act on it: %w", orcerrors.ErrPermissionDenied)
+		return orcerrors.NewPermissionDenied("only plan owner can act on it")
 	}
 
 	switch action {
 	case asset.ComputePlanAction_PLAN_ACTION_CANCELED:
 		return s.cancelPlan(plan)
 	default:
-		return fmt.Errorf("plan action unimplemented: %w", orcerrors.ErrUnimplemented)
+		return orcerrors.NewError(orcerrors.ErrUnimplemented, "plan action unimplemented")
 	}
 }
 

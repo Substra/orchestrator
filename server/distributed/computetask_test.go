@@ -59,7 +59,7 @@ func TestHandleTasksConflictAfterTimeout(t *testing.T) {
 		Tasks: []*asset.NewComputeTask{{}},
 	}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, nil).Return(errors.ErrConflict)
+	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, nil).Return(errors.NewError(errors.ErrConflict, "test"))
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -78,7 +78,7 @@ func TestHandleTasksBatchConflictAfterTimeout(t *testing.T) {
 		Tasks: []*asset.NewComputeTask{{}, {}, {}},
 	}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, nil).Return(errors.ErrConflict)
+	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, nil).Return(errors.NewError(errors.ErrConflict, "test"))
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

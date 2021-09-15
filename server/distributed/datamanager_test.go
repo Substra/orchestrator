@@ -51,7 +51,7 @@ func TestHandleDatamanagerConflictAfterTimeout(t *testing.T) {
 
 	invocator.On("Call", AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
 		Once().
-		Return(errors.ErrConflict)
+		Return(errors.NewError(errors.ErrConflict, "test"))
 	invocator.On("Call", AnyContext, "orchestrator.datamanager:GetDataManager", &asset.GetDataManagerParam{Key: newObj.Key}, &asset.DataManager{}).
 		Once().
 		Return(nil)

@@ -92,7 +92,9 @@ func TestGetNoTask(t *testing.T) {
 
 	_, err = dbal.GetComputeTask("uuid")
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, orcerrors.ErrNotFound))
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrNotFound, orcError.Kind)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)

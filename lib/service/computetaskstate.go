@@ -92,7 +92,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 	case asset.ComputeTaskAction_TASK_ACTION_FAILED:
 		transition = transitionFailed
 	default:
-		return fmt.Errorf("%w unsupported action", errors.ErrBadRequest)
+		return errors.NewBadRequest("unsupported action")
 	}
 
 	if reason == "" {
@@ -104,7 +104,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 		return err
 	}
 	if !updateAllowed(task, action, requester) {
-		return fmt.Errorf("only task owner can update it: %w", errors.ErrPermissionDenied)
+		return errors.NewPermissionDenied("only task owner can update it")
 	}
 
 	return s.applyTaskAction(task, transition, reason)
@@ -121,12 +121,12 @@ func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action tas
 // onDone will iterate over task children to update their statuses
 func (s *ComputeTaskService) onDone(e *fsm.Event) {
 	if len(e.Args) != 2 {
-		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
+		e.Err = errors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
 	}
 	task, ok := e.Args[0].(*asset.ComputeTask)
 	if !ok {
-		e.Err = fmt.Errorf("cannot cast argument into task")
+		e.Err = errors.NewInternal("cannot cast argument into task")
 		return
 	}
 
@@ -196,23 +196,24 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 // onStateChange enqueue an orchestration event and saves the task
 func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 	if len(e.Args) != 2 {
-		e.Err = fmt.Errorf("cannot handle state change with argument: %v", e.Args)
+		e.Err = errors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
 	}
 	task, ok := e.Args[0].(*asset.ComputeTask)
 	if !ok {
-		e.Err = fmt.Errorf("cannot cast into task: %v", e.Args[0])
+		e.Err = errors.NewInternal("cannot cast argument into task")
 		return
 	}
 	reason, ok := e.Args[1].(string)
 	if !ok {
-		e.Err = fmt.Errorf("cannot cast into string: %v", e.Args[1])
+		e.Err = errors.NewInternal(fmt.Sprintf("cannot cast into string: %v", e.Args[1]))
+		return
 	}
 
 	statusVal, ok := asset.ComputeTaskStatus_value[e.Dst]
 	if !ok {
 		// This should not happen since state codes are string representation of statuses
-		e.Err = fmt.Errorf("unknown task status: %s", e.Dst)
+		e.Err = errors.NewInternal(fmt.Sprintf("unknown task status %q", e.Dst))
 		return
 	}
 	task.Status = asset.ComputeTaskStatus(statusVal)
