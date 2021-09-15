@@ -8,11 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - logSQL flag to debug SQL statements (default to false)
+- support for Kubernetes 1.22
 
 ### Changed
 - credentials are moved from a configmap to a secret
 - default log level set to INFO
 - replaced readiness probes by startup probes
+
+### Removed
+- support for Kubernetes versions prior to 1.19
 
 ## [0.1.2] - 2021-08-11
 

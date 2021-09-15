@@ -1,10 +1,8 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "orchestrator.server.fullname" . -}}
-{{- $svcPort := .Values.service.port -}}
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "orchestrator.server.fullname" . }}
   labels:
     {{- include "orchestrator.server.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
@@ -12,15 +10,8 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.ingress.tls }}
-  tls:
-    {{- range .Values.ingress.tls }}
-    - hosts:
-        {{- range .hosts }}
-        - {{ . | quote }}
-        {{- end }}
-      secretName: {{ .secretName }}
-    {{- end }}
+  {{- if .Values.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.ingress.ingressClassName | quote }}
   {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
@@ -28,11 +19,19 @@ spec:
       http:
         paths:
           {{- range .paths }}
-          - path: {{ . }}
-            pathType: Prefix
-            backend:
-              serviceName: {{ $fullName }}
-              servicePort: {{ $svcPort }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:  {{- include "orchestrator.ingress.backend" (dict "serviceName" (include "orchestrator.server.fullname" $) "servicePort" $.Values.service.port) | nindent 14 }}
           {{- end }}
     {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . }}
+        {{- end }}
+      secretName: {{ .secretName }}
+      {{- end }}
   {{- end }}
+{{- end }}

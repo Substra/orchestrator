@@ -168,3 +168,24 @@ Redefine the rabbitmq service name because we can't use subchart templates direc
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+
+{{/*
+Generate ingress backend entry that is compatible with all ports types.
+Usage:
+{{ include "orchestrator.ingress.backend" (dict "serviceName" "backendName" "servicePort" "backendPort") }}
+
+Params:
+  - serviceName - String. Name of an existing service backend
+  - servicePort - String/Int. Port name (or number) of the service. It will be translated to different yaml depending if it is a string or an integer.
+*/}}
+{{- define "orchestrator.ingress.backend" -}}
+service:
+  name: {{ .serviceName }}
+  port:
+    {{- if typeIs "string" .servicePort }}
+    name: {{ .servicePort }}
+    {{- else if or (typeIs "int" .servicePort) (typeIs "float64" .servicePort) }}
+    number: {{ .servicePort | int }}
+    {{- end }}
+{{- end -}}

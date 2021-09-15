@@ -42,7 +42,8 @@ ingress:
   hosts:
   - host: orchestrator.node-1.com
     paths:
-      - "/"
+      - path: "/"
+        pathType: ImplementationSpecific
 
 channels:
   - name: mychannel
