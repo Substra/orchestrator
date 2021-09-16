@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"errors"
 	"os"
 
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/console"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 // InitLogging configure log library to output to console with appropriate levels
@@ -17,6 +19,20 @@ func InitLogging() {
 	levels := getLevelsFromEnv()
 
 	log.AddHandler(cLog, levels...)
+
+	log.SetWithErrorFn(handleOrcError)
+}
+
+// handleOrcError augment the log output with error's source
+func handleOrcError(entry log.Entry, err error) log.Entry {
+	out := entry.WithField("error", err.Error())
+
+	orcError := new(orcerrors.OrcError)
+	if errors.As(err, &orcError) {
+		out = out.WithField("source", orcError.Source())
+	}
+
+	return out
 }
 
 // getLevelsFromEnv set logging level to match the LOG_LEVEL environment var.

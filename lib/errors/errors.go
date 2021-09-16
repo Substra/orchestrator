@@ -11,6 +11,7 @@ package errors
 
 import (
 	"fmt"
+	"runtime"
 )
 
 // ErrorKind is unique per kind of orchestration error.
@@ -64,6 +65,7 @@ type OrcError struct {
 	Kind     ErrorKind
 	msg      string
 	internal error
+	source   string
 }
 
 // Error returns the error message
@@ -88,11 +90,30 @@ func (e *OrcError) Wrap(err error) *OrcError {
 	return e
 }
 
+// Source will return error's source as file:line
+func (e *OrcError) Source() string {
+	return e.source
+}
+
 // NewError creates an OrcError with given kind and message
 func NewError(kind ErrorKind, msg string) *OrcError {
+	return newErrorWithSource(kind, msg)
+}
+
+// newErrorWithSource should be called by public error creation methods.
+// It will set the source property from the caller.
+func newErrorWithSource(kind ErrorKind, msg string) *OrcError {
+	var caller string
+
+	_, file, line, ok := runtime.Caller(2)
+	if ok {
+		caller = fmt.Sprintf("%s:%d", file, line)
+	}
+
 	return &OrcError{
-		Kind: kind,
-		msg:  msg,
+		Kind:   kind,
+		msg:    msg,
+		source: caller,
 	}
 }
 
@@ -100,40 +121,40 @@ func NewError(kind ErrorKind, msg string) *OrcError {
 
 // NewNotFound returns an ErrNotFound kind of OrcError with relevant message
 func NewNotFound(resource, key string) *OrcError {
-	return NewError(ErrNotFound, fmt.Sprintf("%s with key %q not found", resource, key))
+	return newErrorWithSource(ErrNotFound, fmt.Sprintf("%s with key %q not found", resource, key))
 }
 
 // NewConflict returns an ErrConflict kind of OrcError with relevant message
 func NewConflict(resource, key string) *OrcError {
-	return NewError(ErrConflict, fmt.Sprintf("%s with key %q already exists", resource, key))
+	return newErrorWithSource(ErrConflict, fmt.Sprintf("%s with key %q already exists", resource, key))
 }
 
 // NewBadRequest returns an ErrBadRequest kind of OrcError with given message
 func NewBadRequest(msg string) *OrcError {
-	return NewError(ErrBadRequest, msg)
+	return newErrorWithSource(ErrBadRequest, msg)
 }
 
 // NewInvalidAsset returns an ErrInvalidAsset kind of OrcError with given message
 func NewInvalidAsset(msg string) *OrcError {
-	return NewError(ErrInvalidAsset, msg)
+	return newErrorWithSource(ErrInvalidAsset, msg)
 }
 
 // NewPermissionDenied returns an ErrPermissionDenied kind of OrcError with given message
 func NewPermissionDenied(msg string) *OrcError {
-	return NewError(ErrPermissionDenied, msg)
+	return newErrorWithSource(ErrPermissionDenied, msg)
 }
 
 // NewCannotDisableModel returns an ErrCannotDisableModel kind of OrcError with given message
 func NewCannotDisableModel(msg string) *OrcError {
-	return NewError(ErrCannotDisableModel, msg)
+	return newErrorWithSource(ErrCannotDisableModel, msg)
 }
 
 // NewInternal returns an ErrInternalError kind of OrcError with given message
 func NewInternal(msg string) *OrcError {
-	return NewError(ErrInternalError, msg)
+	return newErrorWithSource(ErrInternalError, msg)
 }
 
 // FromValidationError returns an OrcError with ErrInvalidAsset kind wrapping the underlying validation error
 func FromValidationError(resource string, err error) *OrcError {
-	return NewError(ErrInvalidAsset, fmt.Sprintf("%s is not valid", resource)).Wrap(err)
+	return newErrorWithSource(ErrInvalidAsset, fmt.Sprintf("%s is not valid", resource)).Wrap(err)
 }

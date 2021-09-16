@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,7 +27,16 @@ func InterceptStandaloneErrors(ctx context.Context, req interface{}, info *grpc.
 		}
 	}
 
-	return res, fromError(err)
+	if err != nil {
+		grpcError := fromError(err)
+
+		log := logger.Get(ctx).WithField("method", info.FullMethod).WithError(err)
+		log.WithField("grpcCode", status.Code(grpcError)).Error("Error response")
+
+		return res, grpcError
+	}
+
+	return res, nil
 }
 
 // InterceptDistributedErrors is a gRPC interceptor which converts orchestration errors into nice gRPC ones.
@@ -46,6 +56,8 @@ func InterceptDistributedErrors(ctx context.Context, req interface{}, info *grpc
 	var wrappedErr error
 	if err != nil {
 		wrappedErr = fromMessage(err.Error())
+		log := logger.Get(ctx).WithField("method", info.FullMethod).WithError(err)
+		log.WithField("grpcCode", status.Code(wrappedErr)).Error("Error response")
 	}
 
 	return res, wrappedErr
