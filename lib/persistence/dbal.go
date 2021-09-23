@@ -1,6 +1,5 @@
 // Package persistence holds everything related to data persistence.
 // Each asset has its own database abstraction layer (DBAL).
-// Note that one cannot read its own writes: ie AddObjective then GetObjective won't work.
 // Each request is a transaction which is only commited once a successful response is returned.
 package persistence
 
