@@ -77,7 +77,7 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter)
 	builder := pgDialect.Select("event").
 		From("events").
 		Where(squirrel.Eq{"channel": d.channel}).
-		OrderByClause("event->'timestamp' ASC").
+		OrderByClause("event->'timestamp' ASC, id").
 		Offset(uint64(offset)).
 		Limit(uint64(p.Size + 1))
 

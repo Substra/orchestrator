@@ -95,6 +95,10 @@ var testScenarios = map[string]scenario{
 		testFailLargeComputePlan,
 		[]string{"long", "plan"},
 	},
+	"StableTaskSort": {
+		testStableTaskSort,
+		[]string{"task", "query"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -820,4 +824,51 @@ func testFailLargeComputePlan(conn *grpc.ClientConn) {
 	appClient.StartTask("compP1R0")
 	appClient.FailTask("compP1R0")
 	log.WithField("duration", time.Since(start)).WithField("nbTasks", nbTasks).Info("canceled compute plan")
+}
+
+// testStableTaskSort will register several hundreds of tasks and query them all multiple time, failing if there are duplicates.
+func testStableTaskSort(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	nbTasks := 1000
+	nbQuery := 10
+
+	appClient.EnsureNode()
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+
+	newTasks := make([]client.Taskable, 0, nbTasks)
+	for i := 0; i < nbTasks; i++ {
+		newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent...))
+	}
+	appClient.RegisterTasks(newTasks...)
+
+	getPage := func(token string) *asset.QueryTasksResponse {
+		return appClient.QueryTasks(
+			&asset.TaskQueryFilter{ComputePlanKey: appClient.GetKeyStore().GetKey(client.DefaultPlanRef)},
+			token,
+			100,
+		)
+	}
+
+	for i := 0; i < nbQuery; i++ {
+		keys := make(map[string]struct{})
+		resp := getPage("")
+
+		for resp.NextPageToken != "" {
+			for _, task := range resp.Tasks {
+				if _, ok := keys[task.Key]; ok {
+					log.WithField("iteration", i+1).Fatal("Unstable task sorting: duplicate task found")
+				}
+				keys[task.Key] = struct{}{}
+			}
+			resp = getPage(resp.NextPageToken)
+		}
+	}
 }

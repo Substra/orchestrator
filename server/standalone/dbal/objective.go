@@ -53,7 +53,7 @@ func (d *DBAL) QueryObjectives(p *common.Pagination) ([]*asset.Objective, common
 		return nil, "", err
 	}
 
-	query := `select "asset" from "objectives" where channel=$3 order by asset->>'creationDate' asc limit $1 offset $2`
+	query := `select "asset" from "objectives" where channel=$3 order by asset->>'creationDate' asc, id limit $1 offset $2`
 	rows, err := d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err

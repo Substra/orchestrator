@@ -49,7 +49,7 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	builder := pgDialect.Select("asset").
 		From("algos").
 		Where(squirrel.Eq{"channel": d.channel}).
-		OrderByClause("asset->>'creationDate' ASC").
+		OrderByClause("asset->>'creationDate' ASC, id").
 		Offset(uint64(offset)).
 		Limit(uint64(p.Size + 1))
 
