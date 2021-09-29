@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -143,6 +144,38 @@ func TestGetRawComputePlan(t *testing.T) {
 	assert.Equal(t, uint32(0), plan.TaskCount)
 	assert.Equal(t, uint32(0), plan.DoneCount)
 	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, plan.Status)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestQueryComputePlans(t *testing.T) {
+	mock, err := pgxmock.NewConn()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	rows := pgxmock.NewRows([]string{"cp.asset", "total", "done", "doing", "waiting", "failed", "canceled"}).
+		AddRow(asset.ComputePlan{}, uint32(2), uint32(2), uint32(0), uint32(0), uint32(0), uint32(0))
+
+	mock.ExpectQuery(`select cp.asset,.* from "compute_plans" .* order by cp.asset->>'creationDate' asc, cp.id`).
+		WithArgs(uint32(11), 0, testChannel).
+		WillReturnRows(rows)
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	plans, _, err := dbal.QueryComputePlans(common.NewPagination("", 10))
+	assert.NoError(t, err)
+
+	assert.Len(t, plans, 1)
+	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DONE, plans[0].Status)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)

@@ -99,6 +99,10 @@ var testScenarios = map[string]scenario{
 		testStableTaskSort,
 		[]string{"task", "query"},
 	},
+	"QueryComputePlan": {
+		testQueryComputePlan,
+		[]string{"short", "plan", "query"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -870,5 +874,22 @@ func testStableTaskSort(conn *grpc.ClientConn) {
 			}
 			resp = getPage(resp.NextPageToken)
 		}
+	}
+}
+
+func testQueryComputePlan(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp1"))
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp2"))
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp3"))
+
+	resp := appClient.QueryPlans("", 3)
+
+	if len(resp.Plans) != 3 {
+		log.WithField("nbPlans", len(resp.Plans)).Fatal("Unexpected number of compute plans")
 	}
 }
