@@ -2,7 +2,7 @@
 FROM golang:1.16-alpine AS build
 RUN apk add --no-cache git make protoc protobuf-dev
 
-ARG IMAGE_TAG=dev
+ARG VERSION=dev
 ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/chaincode
 
@@ -18,7 +18,7 @@ RUN go mod download
 
 COPY . ${SRC_DIR}
 
-RUN make ./bin/chaincode VERSION=$IMAGE_TAG
+RUN make ./bin/chaincode VERSION=$VERSION
 RUN mv ./bin/chaincode /bin/chaincode
 
 
