@@ -2,6 +2,7 @@
 FROM golang:1.16-alpine AS build
 RUN apk add --no-cache git make protoc protobuf-dev
 
+ARG version=dev
 ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/orchestrator
 
@@ -25,7 +26,7 @@ COPY chaincode ./chaincode
 COPY lib ./lib
 COPY utils ./utils
 
-RUN make ./bin/orchestrator
+RUN make ./bin/orchestrator VERSION=$version
 RUN mv ./bin/orchestrator /bin/orchestrator
 
 

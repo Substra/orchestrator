@@ -21,6 +21,7 @@ var ReadOnlyMethods = map[string][]string{
 	"ComputeTask": {"QueryTasks", "GetTask"},
 	"ComputePlan": {"GetPlan", "QueryPlans"},
 	"Performance": {"GetComputeTaskPerformance"},
+	"Info":        {"QueryVersion"},
 }
 
 // TransactionChecker is able to characterize a transaction based on the gRPC method.

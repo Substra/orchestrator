@@ -15,6 +15,8 @@ type OrchestratorConfiguration struct {
 	Channels map[string][]string `yaml:"channels"`
 }
 
+const Version = "dev"
+
 func NewConfig(path string) *OrchestratorConfiguration {
 	conf := new(OrchestratorConfiguration)
 

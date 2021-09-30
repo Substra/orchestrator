@@ -63,6 +63,7 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters) (*Ap
 	asset.RegisterComputePlanServiceServer(server, handlers.NewComputePlanServer())
 	asset.RegisterPerformanceServiceServer(server, handlers.NewPerformanceServer())
 	asset.RegisterEventServiceServer(server, handlers.NewEventServer())
+	asset.RegisterInfoServiceServer(server, handlers.NewInfoServer())
 
 	return &AppServer{
 		grpc: server,

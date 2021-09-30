@@ -20,8 +20,9 @@ fi
 
 #find modified protofiles
 find $PROTO_SRC_PATH -name "*.proto" | while read fname; do
+    echo "generating schema for ${fname}"
     protodot -src $fname
-    
+
     # remove intermediary dot file
     find $PROTO_DOC_PATH -name "*.dot" -exec rm {} \;
 
@@ -29,5 +30,5 @@ find $PROTO_SRC_PATH -name "*.proto" | while read fname; do
     find $PROTO_DOC_PATH -name "*.dot.svg" -print0 \
         | xargs -0 ls -1 -t \
         | head -1 \
-        | xargs -I '{}' mv {} $PROTO_DOC_PATH/$(basename $fname .proto).svg 
+        | xargs -I '{}' mv {} $PROTO_DOC_PATH/$(basename $fname .proto).svg
 done

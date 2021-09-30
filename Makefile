@@ -6,6 +6,7 @@ FORWARDER_BIN = $(OUTPUT_DIR)/forwarder
 E2E_BIN = $(OUTPUT_DIR)/e2e-tests
 PROJECT_ROOT = .
 MIGRATIONS_DIR = $(PROJECT_ROOT)/server/standalone/migration
+VERSION = dirty-$(shell git rev-parse --short HEAD)
 protos = $(PROJECT_ROOT)/lib/asset
 go_src = $(shell find . -type f -name '*.go')
 sql_migrations = $(wildcard $(MIGRATIONS_DIR)/*.sql)
@@ -35,10 +36,10 @@ lint: codegen mocks
 	golangci-lint run
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
-	go build -o $(ORCHESTRATOR_BIN) ./server
+	go build -o $(ORCHESTRATOR_BIN) -ldflags="-X 'server.common.Version=$(VERSION)'" ./server
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
-	go build -o $(CHAINCODE_BIN) ./chaincode
+	go build -o $(CHAINCODE_BIN) -ldflags="-X 'chaincode.info.Version=$(VERSION)'" ./chaincode
 
 $(LIBCODEGEN_BIN): $(PROJECT_ROOT)/lib/codegen/main.go
 	go build -o $(LIBCODEGEN_BIN) $(PROJECT_ROOT)/lib/codegen

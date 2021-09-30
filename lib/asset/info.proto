@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package orchestrator;
+
+option go_package = "github.com/owkin/orchestrator/lib/asset";
+
+message QueryVersionParam {}
+
+message QueryVersionResponse {
+    string orchestrator = 1;
+    string chaincode = 2;
+}
+
+service InfoService {
+    rpc QueryVersion(QueryVersionParam) returns (QueryVersionResponse);
+}
