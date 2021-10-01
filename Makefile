@@ -67,10 +67,6 @@ $(migrations_binpack): $(sql_migrations)
 $(lib_generated): $(LIBCODEGEN_BIN) $(pbgo)
 	$(LIBCODEGEN_BIN) -path $(protos) > $(lib_generated)
 
-.PHONY: proto-docgen
-proto-docgen:
-	./tools/generate_proto_svg.sh
-
 .PHONY: proto-codegen
 proto-codegen: $(pbgo)
 

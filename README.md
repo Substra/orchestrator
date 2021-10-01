@@ -16,11 +16,6 @@ Make sure you have theses requirements fulfilled before trying to build the orch
 - [skaffold](https://skaffold.dev/): used to run the orchestrator locally
 - [mockery](https://github.com/vektra/mockery#installation): used to generate mocks
 
-
-Make sure you have theses requirements fulfilled before regenerating the proto documentation:
-- [protodot](https://github.com/seamia/protodot): used to generate proto documentation
-- [graphviz](https://graphviz.org/)
-
 #### Build
 
 `make`
