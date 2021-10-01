@@ -21,7 +21,7 @@ type SmartContract struct {
 // NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
 	contract := &SmartContract{}
-	contract.Name = "orchestrator.node"
+	contract.Name = "orchestrator.info"
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
