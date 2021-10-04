@@ -10,6 +10,11 @@ spec:
     - port: {{ .Values.service.port }}
       targetPort: 9000
       protocol: TCP
+      {{- if (eq .Values.service.type "ClusterIP") }}
+      nodePort: null
+      {{- else if and (or (eq .Values.service.type "NodePort") (eq .Values.service.type "LoadBalancer")) (not (empty .Values.service.nodePort)) }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
       name: grpc
   selector:
     {{- include "orchestrator.server.selectorLabels" . | nindent 4 }}
