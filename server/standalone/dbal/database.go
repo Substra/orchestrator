@@ -32,17 +32,21 @@ func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, dat
 	if !l.debug && level <= pgx.LogLevelDebug {
 		return
 	}
-	logger.Get(ctx).
+	log := logger.Get(ctx).
 		WithField("msg", msg).
-		WithField("level", level).
+		WithField("level", level)
 		// Other available fields (omitted to keep logs readable):
 		// - data["args"]: the query arguments (truncated if too long)
 		// - data["time"]: the query execution time
 		// - data["err"]: the SQL error text, if any
 		// - data["rowCount"]: number of rows returned, for SELECT statements
 		// - data["pid"]
-		WithField("sql", data["sql"]).
-		Debug("SQL")
+
+	if query, ok := data["sql"]; ok {
+		log = log.WithField("sql", query)
+	}
+
+	log.Debug("SQL")
 }
 
 // InitDatabase opens a database connexion from given url.
