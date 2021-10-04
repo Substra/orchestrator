@@ -9,6 +9,9 @@ Asset list:
 - [DataSamples](./datasamples.md)
 - [Model](./model.md)
 
+Here is an overview of how assets relate to each other:
+
+![](../schemas/entities.svg)
 
 ## Assets lifecycle
 

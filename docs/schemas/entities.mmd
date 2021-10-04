@@ -1,0 +1,34 @@
+erDiagram
+    DataManager }|--o{ DataSample : opens
+    ComputeTask }o--|| ComputePlan : "belongs to"
+    ComputeTask {
+        ComputeTaskCategory category
+    }
+
+    ComputeTask }o--|| Algo : execute
+    Algo {
+        AlgoCategory category
+    }
+
+    TrainTaskData |o--|| ComputeTask: specializes
+    TrainTaskData ||--|| Model: produces
+    TrainTaskData }o--|| DataManager: uses
+    TrainTaskData }o--|{ DataSample: uses
+
+    TestTaskData |o--|| ComputeTask: specializes
+    TestTaskData }o--|| Metric : evaluates
+    TestTaskData ||--|| Performance: produces
+    TestTaskData }o--|| DataManager: uses
+    TestTaskData }o--|{ DataSample: uses
+
+    AggregateTaskData |o--|| ComputeTask: specializes
+    AggregateTaskData ||--|| Model: produces
+
+    CompositeTaskData |o--|| ComputeTask: specializes
+    CompositeTaskData ||--|| Model: "produces (x2)"
+    CompositeTaskData }o--|| DataManager: uses
+    CompositeTaskData }o--|{ DataSample: uses
+
+    Model {
+        ModelCategory category
+    }
