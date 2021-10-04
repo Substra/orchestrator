@@ -24,7 +24,6 @@ data:
   ORCHESTRATOR_FABRIC_KEY: /var/hyperledger/msp/keystore/key.pem
   ORCHESTRATOR_MSPID: {{ .Values.fabric.mspID }}
   ORCHESTRATOR_NETWORK_CONFIG: /var/hyperledger/fabric-config.yaml
-  ORCHESTRATOR_CHAINCODE: {{ .Values.orchestrator.chaincode }}
   ORCHESTRATOR_FABRIC_GATEWAY_TIMEOUT: {{ .Values.orchestrator.fabricGatewayTimeout }}
   {{- end }}
 

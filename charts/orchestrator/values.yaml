@@ -126,7 +126,6 @@ orchestrator:
   logLevel: INFO
   logSQL: false
   mode: standalone # the orchestrator can run in either "standalone" or "distributed" mode
-  chaincode: mycc
   verifyClientMSPID: true
   # Delay we can afford to retry failed transactions
   txRetryBudget: 500ms
