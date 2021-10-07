@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2021-10-07
+### Changed
+
+refacto of the Ingress
+
+If you had a single host and a single path for your ingress:
+- move `backend.ingress.hosts[0].host` to `backend.ingress.hostname`
+- move `backend.ingress.hosts[0].paths[0]` to `backend.ingress.path`
+
+If you had multiple hosts you can proceed as for a single host for your first host and then add your other hosts to `backend.ingress.extraHosts`.
+
+The other significant change is a rename from `backend.ingress.tls` to `backend.ingress.extraTls`, the data structure inside is the same.
+
 ## [2.1.0] - 2021-10-04
 
 ### Added
@@ -15,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - `orchestrator.chaincode` value was not used
+
 
 ## [2.0.0] - 2021-09-16
 

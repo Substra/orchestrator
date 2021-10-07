@@ -38,11 +38,7 @@ postgresql:
 
 ingress:
   enabled: true
-  hosts:
-  - host: orchestrator.node-2.com
-    paths:
-      - path: "/"
-        pathType: ImplementationSpecific
+  hostname: "orchestrator.node-2.com"
 
 channels:
   - name: mychannel

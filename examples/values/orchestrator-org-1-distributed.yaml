@@ -38,12 +38,8 @@ postgresql:
 
 ingress:
   enabled: true
-  hosts:
-  - host: orchestrator.node-1.com
-    paths:
-      - path: "/"
-        pathType: ImplementationSpecific
-
+  hostname: "orchestrator.node-1.com"
+  
 channels:
   - name: mychannel
     organizations: [ MyOrg1MSP ] # single org required here
