@@ -80,7 +80,7 @@ func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, 
 	return nil
 }
 
-// registerDataSample persist one datasamples
+// createDataSample persist one datasample
 func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner string) (*asset.DataSample, error) {
 	s.GetLogger().WithField("owner", owner).WithField("newDataSample", sample).Debug("Registering data sample")
 	err := sample.Validate()
