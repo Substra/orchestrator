@@ -41,9 +41,9 @@ func (t *NewComputeTask) Validate() error {
 
 func (t *NewTestTaskData) Validate() error {
 	return validation.ValidateStruct(t,
-		validation.Field(&t.ObjectiveKey, validation.Required, is.UUID),
-		validation.Field(&t.DataManagerKey, is.UUID),
-		validation.Field(&t.DataSampleKeys, validation.When(t.DataManagerKey != "", validation.Required, validation.Each(validation.Required, is.UUID))),
+		validation.Field(&t.MetricKey, validation.Required, is.UUID),
+		validation.Field(&t.DataManagerKey, validation.Required, is.UUID),
+		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)),
 	)
 }
 

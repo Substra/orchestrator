@@ -25,17 +25,17 @@ func (n *Node) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the Objective.
-func (o *Objective) Value() (driver.Value, error) {
+// Simply returns the JSON-encoded representation of the Metric.
+func (o *Metric) Value() (driver.Value, error) {
 	return protojson.Marshal(o)
 }
 
 // Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the Objective.
-func (o *Objective) Scan(value interface{}) error {
+// Simply decodes JSON into the Metric.
+func (o *Metric) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan objective")
+		return errors.NewError(errors.ErrByteArray, "cannot scan metric")
 	}
 
 	return protojson.Unmarshal(b, o)

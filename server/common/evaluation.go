@@ -10,7 +10,7 @@ import (
 // This mapping is used in chaincode mode to determine Evaluate transactions
 // and in Standalone mode to set transactions as "read only"
 var ReadOnlyMethods = map[string][]string{
-	"Objective":   {"GetObjective", "QueryObjectives", "GetLeaderboard"},
+	"Metric":      {"GetMetric", "QueryMetrics"},
 	"Node":        {"GetAllNodes"},
 	"Algo":        {"GetAlgo", "QueryAlgos"},
 	"Event":       {"QueryEvents"},

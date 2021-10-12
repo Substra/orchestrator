@@ -38,7 +38,7 @@ type ComputeTaskDependencyProvider interface {
 	DataManagerServiceProvider
 	DataSampleServiceProvider
 	PermissionServiceProvider
-	ObjectiveServiceProvider
+	MetricServiceProvider
 	NodeServiceProvider
 	ComputePlanServiceProvider
 	ModelServiceProvider
@@ -489,45 +489,29 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 
 // setTestData hydrates task specific TestTaskData from input
 func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
-	var certified bool
-	var dataManagerKey string
-	var dataSampleKeys []string
-	var datamanager *asset.DataManager
-
-	objective, err := s.GetObjectiveService().GetObjective(input.ObjectiveKey)
+	datamanager, err := s.getCheckedDataManager(input.DataManagerKey, input.DataSampleKeys, task.Owner)
 	if err != nil {
 		return err
 	}
 
-	if input.DataManagerKey != "" {
-		// Using custom datamanger and samples
-		datamanager, err = s.getCheckedDataManager(input.DataManagerKey, input.DataSampleKeys, task.Owner)
-		if err != nil {
-			return err
-		}
+	_, err = s.GetMetricService().GetMetric(input.MetricKey)
+	if err != nil {
+		return err
+	}
 
-		dataManagerKey = input.DataManagerKey
-		dataSampleKeys = input.DataSampleKeys
-
-		certified = input.DataManagerKey == objective.DataManagerKey && utils.IsEqual(input.DataSampleKeys, objective.DataSampleKeys)
-	} else {
-		// Relying on objective datamanager and samples
-		datamanager, err = s.GetDataManagerService().GetDataManager(objective.DataManagerKey)
-		if err != nil {
-			return err
-		}
-
-		// Test is certified when using objective test data
-		certified = true
-		dataManagerKey = objective.DataManagerKey
-		dataSampleKeys = objective.DataSampleKeys
+	// ensure the task will be able to download the metric
+	ok, err := s.GetMetricService().CanDownload(input.MetricKey, datamanager.Owner)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return orcerrors.NewPermissionDenied("datamanager owner cannot download the objective")
 	}
 
 	taskData := &asset.TestTaskData{
-		DataManagerKey: dataManagerKey,
-		DataSampleKeys: dataSampleKeys,
-		Certified:      certified,
-		ObjectiveKey:   objective.Key,
+		DataManagerKey: input.DataManagerKey,
+		DataSampleKeys: input.DataSampleKeys,
+		MetricKey:      input.MetricKey,
 	}
 
 	task.Data = &asset.ComputeTask_Test{

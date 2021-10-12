@@ -20,13 +20,11 @@ type NodeDBAL interface {
 	GetNode(id string) (*asset.Node, error)
 }
 
-// ObjectiveDBAL is the database abstraction layer for Objectives
-type ObjectiveDBAL interface {
-	AddObjective(obj *asset.Objective) error
-	GetObjective(key string) (*asset.Objective, error)
-	QueryObjectives(p *common.Pagination) ([]*asset.Objective, common.PaginationToken, error)
-	ObjectiveExists(key string) (bool, error)
-	GetLeaderboard(key string) (*asset.Leaderboard, error)
+// MetricDBAL is the database abstraction layer for Metrics
+type MetricDBAL interface {
+	AddMetric(obj *asset.Metric) error
+	GetMetric(key string) (*asset.Metric, error)
+	QueryMetrics(p *common.Pagination) ([]*asset.Metric, common.PaginationToken, error)
 }
 
 // DataSampleDBAL is the database abstraction layer for DataSamples
@@ -50,7 +48,6 @@ type AlgoDBAL interface {
 // DataManagerDBAL is the database abstraction layer for DataManagers
 type DataManagerDBAL interface {
 	AddDataManager(datamanager *asset.DataManager) error
-	UpdateDataManager(datamanager *asset.DataManager) error
 	GetDataManager(key string) (*asset.DataManager, error)
 	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	DataManagerExists(key string) (bool, error)
@@ -61,9 +58,9 @@ type NodeDBALProvider interface {
 	GetNodeDBAL() NodeDBAL
 }
 
-// ObjectiveDBALProvider represents an object capable of providing an ObjectiveDBAL
-type ObjectiveDBALProvider interface {
-	GetObjectiveDBAL() ObjectiveDBAL
+// MetricDBALProvider represents an object capable of providing an MetricDBAL
+type MetricDBALProvider interface {
+	GetMetricDBAL() MetricDBAL
 }
 
 // DataSampleDBALProvider represents an object capable of providing a DataSampleDBAL
@@ -84,7 +81,7 @@ type DataManagerDBALProvider interface {
 // DBAL stands for Database Abstraction Layer, it exposes methods to interact with asset storage.
 type DBAL interface {
 	NodeDBAL
-	ObjectiveDBAL
+	MetricDBAL
 	DataSampleDBAL
 	AlgoDBAL
 	DataManagerDBAL
@@ -98,7 +95,7 @@ type DBAL interface {
 // DBALProvider exposes all available DBAL.
 type DBALProvider interface {
 	NodeDBALProvider
-	ObjectiveDBALProvider
+	MetricDBALProvider
 	DataSampleDBALProvider
 	AlgoDBALProvider
 	DataManagerDBALProvider

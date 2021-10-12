@@ -106,7 +106,7 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	return algos, bookmark, nil
 }
 
-// AlgoExists implements persistence.ObjectiveDBAL
+// AlgoExists implements persistence.AlgoDBAL
 func (d *DBAL) AlgoExists(key string) (bool, error) {
 	row := d.tx.QueryRow(d.ctx, `select count(id) from "algos" where id=$1 and channel=$2`, key, d.channel)
 

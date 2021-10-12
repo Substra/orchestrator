@@ -1,4 +1,4 @@
-package objective
+package metric
 
 import (
 	"context"
@@ -14,11 +14,11 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *mocks.TransactionContext) *service.MockObjectiveAPI {
-	mockService := new(service.MockObjectiveAPI)
+func getMockedService(ctx *mocks.TransactionContext) *service.MockMetricAPI {
+	mockService := new(service.MockMetricAPI)
 
 	provider := new(service.MockDependenciesProvider)
-	provider.On("GetObjectiveService").Return(mockService).Once()
+	provider.On("GetMetricService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider, nil).Once()
 	ctx.On("SetRequestID", "").Once()
@@ -36,66 +36,64 @@ func TestRegistration(t *testing.T) {
 
 	mspid := "org"
 
-	newObj := &asset.NewObjective{
+	newObj := &asset.NewMetric{
 		Key:            "uuid1",
-		Name:           "Objective name",
+		Name:           "Metric name",
 		Description:    addressable,
-		MetricsName:    "metrics name",
-		Metrics:        addressable,
+		Address:        addressable,
 		Metadata:       metadata,
 		NewPermissions: newPerms,
 	}
 	wrapper, err := communication.Wrap(context.Background(), newObj)
 	assert.NoError(t, err)
 
-	o := &asset.Objective{}
+	o := &asset.Metric{}
 
 	ctx := new(mocks.TransactionContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterObjective", newObj, mspid).Return(o, nil).Once()
+	service.On("RegisterMetric", newObj, mspid).Return(o, nil).Once()
 
 	stub := new(testHelper.MockedStub)
 	ctx.On("GetStub").Return(stub).Once()
 
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	_, err = contract.RegisterObjective(ctx, wrapper)
+	_, err = contract.RegisterMetric(ctx, wrapper)
 	assert.NoError(t, err)
 }
 
-func TestQueryObjectives(t *testing.T) {
+func TestQueryMetrics(t *testing.T) {
 	contract := &SmartContract{}
 
-	objectives := []*asset.Objective{
+	metrics := []*asset.Metric{
 		{Name: "test"},
 		{Name: "test2"},
 	}
 
 	ctx := new(mocks.TransactionContext)
 	service := getMockedService(ctx)
-	service.On("QueryObjectives", &common.Pagination{Token: "", Size: 20}).Return(objectives, "", nil).Once()
+	service.On("QueryMetrics", &common.Pagination{Token: "", Size: 20}).Return(metrics, "", nil).Once()
 
-	param := &asset.QueryObjectivesParam{PageToken: "", PageSize: 20}
+	param := &asset.QueryMetricsParam{PageToken: "", PageSize: 20}
 	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
-	wrapped, err := contract.QueryObjectives(ctx, wrapper)
+	wrapped, err := contract.QueryMetrics(ctx, wrapper)
 	assert.NoError(t, err, "query should not fail")
 
-	resp := new(asset.QueryObjectivesResponse)
+	resp := new(asset.QueryMetricsResponse)
 	err = wrapped.Unwrap(resp)
 	assert.NoError(t, err)
-	assert.Len(t, resp.Objectives, len(objectives), "query should return all objectives")
+	assert.Len(t, resp.Metrics, len(metrics), "query should return all metrics")
 }
 
 func TestEvaluateTransactions(t *testing.T) {
 	contract := &SmartContract{}
 
 	queries := []string{
-		"GetObjective",
-		"QueryObjectives",
-		"GetLeaderboard",
+		"GetMetric",
+		"QueryMetrics",
 	}
 
 	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")

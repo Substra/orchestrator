@@ -68,37 +68,6 @@ func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapp
 	return response, nil
 }
 
-// UpdateDataManager updates a data manager in world state
-// If the key does not exist, it will throw an error
-func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
-	ctx.SetRequestID(wrapper.RequestID)
-	provider, err := ctx.GetProvider()
-	if err != nil {
-		return err
-	}
-	service := provider.GetDataManagerService()
-
-	params := new(asset.DataManagerUpdateParam)
-	err = wrapper.Unwrap(params)
-	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
-		return err
-	}
-
-	owner, err := ledger.GetTxCreator(ctx.GetStub())
-	if err != nil {
-		s.logger.WithError(err).Error("failed to extract tx creator")
-		return err
-	}
-
-	err = service.UpdateDataManager(params, owner)
-	if err != nil {
-		s.logger.WithError(err).Error("failed to update datamanager")
-		return err
-	}
-	return nil
-}
-
 // GetDataManager returns the DataManager with given key
 func (s *SmartContract) GetDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)

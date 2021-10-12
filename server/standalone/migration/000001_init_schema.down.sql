@@ -1,8 +1,8 @@
 DROP TABLE IF EXISTS nodes;
 DROP INDEX IF EXISTS ix_nodes_creation;
 
-DROP TABLE IF EXISTS objectives;
-DROP INDEX IF EXISTS ix_objectives_creation;
+DROP TABLE IF EXISTS metrics;
+DROP INDEX IF EXISTS ix_metrics_creation;
 
 DROP TABLE IF EXISTS datasamples;
 DROP INDEX IF EXISTS ix_datasamples_creation;
@@ -20,7 +20,7 @@ DROP INDEX IF EXISTS ix_compute_tasks_status;
 DROP INDEX IF EXISTS ix_compute_tasks_category;
 DROP INDEX IF EXISTS ix_compute_tasks_compute_plan_key;
 DROP INDEX IF EXISTS ix_compute_tasks_worker;
-DROP INDEX IF EXISTS ix_compute_tasks_test_objective_key;
+DROP INDEX IF EXISTS ix_compute_tasks_test_metric_key;
 DROP INDEX IF EXISTS ix_compute_tasks_creation;
 
 DROP TABLE IF EXISTS models;

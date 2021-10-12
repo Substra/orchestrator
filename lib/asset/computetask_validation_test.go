@@ -125,20 +125,17 @@ func TestNewTrainTaskDataValidation(t *testing.T) {
 }
 
 func TestNewTestTaskDataValidation(t *testing.T) {
-	valid := &NewTestTaskData{
-		ObjectiveKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
-	}
 	validDataSamples := &NewTestTaskData{
-		ObjectiveKey:   "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+		MetricKey:      "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
 		DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
 		DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
 	}
-	missingObjective := &NewTestTaskData{
+	missingMetric := &NewTestTaskData{
 		DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
 		DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
 	}
 	missingSamples := &NewTestTaskData{
-		ObjectiveKey:   "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+		MetricKey:      "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
 		DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
 	}
 
@@ -146,10 +143,9 @@ func TestNewTestTaskDataValidation(t *testing.T) {
 		valid bool
 		data  *NewTestTaskData
 	}{
-		"valid":              {valid: true, data: valid},
-		"with samples":       {valid: true, data: validDataSamples},
-		"missing objectives": {valid: false, data: missingObjective},
-		"missing samples":    {valid: false, data: missingSamples},
+		"with samples":    {valid: true, data: validDataSamples},
+		"missing metrics": {valid: false, data: missingMetric},
+		"missing samples": {valid: false, data: missingSamples},
 	}
 
 	for name, c := range cases {

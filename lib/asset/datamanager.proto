@@ -12,7 +12,6 @@ message DataManager {
   string name = 2;
   string owner = 3;
   Permissions permissions = 4;
-  string objective_key = 5; // mutable
   Addressable description = 6;
   Addressable opener = 7;
   string type = 8;
@@ -24,19 +23,11 @@ message NewDataManager {
   string key = 1;
   string name = 2;
   NewPermissions new_permissions = 3;
-  string objective_key = 4;
   Addressable description = 5;
   Addressable opener = 6;
   string type = 7;
   map <string, string> metadata = 16;
 }
-
-message DataManagerUpdateParam {
-  string key = 1;
-  string objective_key = 2;
-}
-
-message DataManagerUpdateResponse {}
 
 message GetDataManagerParam {
   string key = 1;
@@ -54,7 +45,6 @@ message QueryDataManagersResponse {
 
 service DataManagerService {
   rpc RegisterDataManager(NewDataManager) returns (DataManager);
-  rpc UpdateDataManager(DataManagerUpdateParam) returns (DataManagerUpdateResponse);
   rpc GetDataManager(GetDataManagerParam) returns (DataManager);
   rpc QueryDataManagers(QueryDataManagersParam) returns (QueryDataManagersResponse);
 }

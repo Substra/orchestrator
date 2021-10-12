@@ -6,12 +6,12 @@ CREATE TABLE nodes (
 );
 CREATE INDEX ix_nodes_creation ON nodes ((asset->>'creationDate'));
 
-CREATE TABLE objectives (
+CREATE TABLE metrics (
        id UUID PRIMARY KEY,
        channel varchar(100) NOT NULL,
        asset JSONB NOT NULL
 );
-CREATE INDEX ix_objectives_creation ON objectives ((asset->>'creationDate'));
+CREATE INDEX ix_metrics_creation ON metrics ((asset->>'creationDate'));
 
 CREATE TABLE datasamples (
     id UUID PRIMARY KEY,
@@ -45,7 +45,7 @@ CREATE INDEX ix_compute_tasks_status ON compute_tasks USING HASH ((asset->>'stat
 CREATE INDEX ix_compute_tasks_category ON compute_tasks USING HASH ((asset->>'category'));
 CREATE INDEX ix_compute_tasks_compute_plan_key ON compute_tasks USING HASH ((asset->>'computePlanKey'));
 CREATE INDEX ix_compute_tasks_worker ON compute_tasks USING HASH ((asset->>'worker'));
-CREATE INDEX ix_compute_tasks_test_objective_key ON compute_tasks USING HASH ((asset->'test'->>'objectiveKey'));
+CREATE INDEX ix_compute_tasks_test_metric_key ON compute_tasks USING HASH ((asset->'test'->>'metricKey'));
 CREATE INDEX ix_compute_tasks_creation ON compute_tasks ((asset->>'creationDate'));
 
 CREATE TABLE models (

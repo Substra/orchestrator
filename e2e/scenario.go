@@ -63,10 +63,6 @@ var testScenarios = map[string]scenario{
 		testConcurrency,
 		[]string{"short", "concurrency"},
 	},
-	"ObjectiveLeaderboard": {
-		testLeaderBoard,
-		[]string{"short", "objective"},
-	},
 	"LargeComputePlan": {
 		testLargeComputePlan,
 		[]string{"long", "plan"},
@@ -76,7 +72,7 @@ var testScenarios = map[string]scenario{
 		[]string{"long", "plan"},
 	},
 	"SmallComputePlan": {
-		testSmallCp,
+		testSmallComputePlan,
 		[]string{"short", "plan"},
 	},
 	"AggregateComposite": {
@@ -443,14 +439,14 @@ func testRegisterPerformance(conn *grpc.ClientConn) {
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
-	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("testds"))
+	appClient.RegisterMetric(client.DefaultMetricOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	// Parent train task is necessary
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 	// to create a test task
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent...))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(defaultParent...))
 	appClient.StartTask("testTask")
 	appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask"))
 
@@ -528,38 +524,6 @@ func testConcurrency(conn *grpc.ClientConn) {
 	wg.Wait()
 }
 
-func testLeaderBoard(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
-	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
-	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
-	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("testds"))
-	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-	// Parent train task is necessary
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.StartTask(client.DefaultTaskRef)
-	appClient.RegisterModel(client.DefaultModelOptions())
-	// to create a test task
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithParentsRef(defaultParent...))
-	appClient.StartTask("testTask")
-	appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask2").WithParentsRef(defaultParent...))
-	appClient.StartTask("testTask2")
-	appClient.RegisterPerformance(&client.PerformanceOptions{
-		KeyRef:           "testTask2",
-		PerformanceValue: 0.8,
-	})
-	resp := appClient.GetLeaderboard(client.DefaultObjectiveRef)
-
-	if len(resp.BoardItems) != 2 {
-		log.WithField("numItems", len(resp.BoardItems)).Fatal("Query Leaderboard should return 2 Board Items")
-	}
-}
-
 func testLargeComputePlan(conn *grpc.ClientConn) {
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
@@ -630,7 +594,7 @@ func testBatchLargeComputePlan(conn *grpc.ClientConn) {
 	}
 }
 
-func testSmallCp(conn *grpc.ClientConn) {
+func testSmallComputePlan(conn *grpc.ClientConn) {
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
 		log.WithError(err).Fatal("could not create TestClient")
@@ -642,13 +606,13 @@ func testSmallCp(conn *grpc.ClientConn) {
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("objSample"))
+	appClient.RegisterMetric(client.DefaultMetricOptions())
 
 	appClient.RegisterTasks(
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train2"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef("train1", "train2"),
-		client.DefaultTestTaskOptions().WithParentsRef("train3"),
+		client.DefaultTestTaskOptions().WithDataSampleRef("objSample").WithParentsRef("train3"),
 	)
 
 	cp := appClient.GetComputePlan(client.DefaultPlanRef)
@@ -673,7 +637,7 @@ func testAggregateComposite(conn *grpc.ClientConn) {
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("objSample"))
+	appClient.RegisterMetric(client.DefaultMetricOptions())
 
 	appClient.RegisterTasks(
 		client.DefaultCompositeTaskOptions().WithKeyRef("c1"),
@@ -737,7 +701,7 @@ func testQueryAlgos(conn *grpc.ClientConn) {
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
-	appClient.RegisterObjective(client.DefaultObjectiveOptions().WithDataSampleRef("objSample"))
+	appClient.RegisterMetric(client.DefaultMetricOptions())
 
 	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{}, "", 100)
 
@@ -759,7 +723,7 @@ func testQueryAlgos(conn *grpc.ClientConn) {
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train2"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef("train1", "train2"),
-		client.DefaultTestTaskOptions().WithParentsRef("train3"),
+		client.DefaultTestTaskOptions().WithDataSampleRef("objSample").WithParentsRef("train3"),
 	)
 
 	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)

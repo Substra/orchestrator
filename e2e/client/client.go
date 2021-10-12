@@ -16,8 +16,9 @@ import (
 const DefaultTaskRef = "task"
 const DefaultPlanRef = "cp"
 const DefaultAlgoRef = "algo"
-const DefaultObjectiveRef = "objective"
+const DefaultMetricRef = "metric"
 const DefaultDataManagerRef = "dm"
+const DefaultDataSampleRef = "ds"
 
 // Taskable represent the ability to create a new task
 type Taskable interface {
@@ -59,7 +60,7 @@ type TestClient struct {
 	ctx                context.Context
 	ks                 *KeyStore
 	nodeService        asset.NodeServiceClient
-	objectiveService   asset.ObjectiveServiceClient
+	metricService      asset.MetricServiceClient
 	algoService        asset.AlgoServiceClient
 	dataManagerService asset.DataManagerServiceClient
 	dataSampleService  asset.DataSampleServiceClient
@@ -80,7 +81,7 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 		ks:                 NewKeyStore(),
 		nodeService:        asset.NewNodeServiceClient(conn),
 		algoService:        asset.NewAlgoServiceClient(conn),
-		objectiveService:   asset.NewObjectiveServiceClient(conn),
+		metricService:      asset.NewMetricServiceClient(conn),
 		dataManagerService: asset.NewDataManagerServiceClient(conn),
 		dataSampleService:  asset.NewDataSampleServiceClient(conn),
 		modelService:       asset.NewModelServiceClient(conn),
@@ -177,28 +178,25 @@ func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
 	}
 }
 
-func (c *TestClient) RegisterObjective(o *ObjectiveOptions) {
-	newObj := &asset.NewObjective{
-		Key:            c.ks.GetKey(o.KeyRef),
-		Name:           "test objective",
-		DataManagerKey: c.ks.GetKey(o.DataManagerRef),
-		DataSampleKeys: []string{c.ks.GetKey(o.DataSampleRef)},
+func (c *TestClient) RegisterMetric(o *MetricOptions) {
+	newObj := &asset.NewMetric{
+		Key:  c.ks.GetKey(o.KeyRef),
+		Name: "test metric",
 		Description: &asset.Addressable{
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/desc",
 		},
-		MetricsName: "test metrics",
-		Metrics: &asset.Addressable{
+		Address: &asset.Addressable{
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/metrics",
 		},
 		NewPermissions: &asset.NewPermissions{Public: true},
 	}
 
-	log.WithField("objective", newObj).Debug("registering objective")
-	_, err := c.objectiveService.RegisterObjective(c.ctx, newObj)
+	log.WithField("metric", newObj).Debug("registering metric")
+	_, err := c.metricService.RegisterMetric(c.ctx, newObj)
 	if err != nil {
-		log.WithError(err).Fatal("RegisterObjective failed")
+		log.WithError(err).Fatal("RegisterMetric failed")
 	}
 }
 
@@ -342,16 +340,6 @@ func (c *TestClient) GetTaskPerformance(taskRef string) *asset.Performance {
 	}
 
 	return perf
-}
-
-func (c *TestClient) GetLeaderboard(key string) *asset.Leaderboard {
-	param := &asset.LeaderboardQueryParam{ObjectiveKey: c.ks.GetKey(key), SortOrder: asset.SortOrder_ASCENDING}
-	log.WithField("objective key", c.ks.GetKey(key)).Debug("GetLeaderboard")
-	resp, err := c.objectiveService.GetLeaderboard(c.ctx, param)
-	if err != nil {
-		log.WithError(err).Fatal("Query Leaderboard failed")
-	}
-	return resp
 }
 
 func (c *TestClient) GetInputModels(taskRef string) []*asset.Model {

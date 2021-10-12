@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Expose the orchestrator version and chaincode version (#370)
 
+### Changed
+- (BREAKING) Replace objective by metric (#356)
+
 ## [0.0.2] - 2021-09-16
 
 ### Added

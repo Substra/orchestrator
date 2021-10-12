@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestObjectiveServerImplementServer(t *testing.T) {
-	server := NewObjectiveServer()
-	assert.Implementsf(t, (*asset.ObjectiveServiceServer)(nil), server, "ObjectiveServer should implements ObjectiveServiceServer")
+func TestMetricServerImplementServer(t *testing.T) {
+	server := NewMetricServer()
+	assert.Implementsf(t, (*asset.MetricServiceServer)(nil), server, "MetricServer should implements MetricServiceServer")
 }

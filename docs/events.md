@@ -20,7 +20,7 @@ An event will hold the following fields:
 ## Asset Kind
 
 - node
-- objective
+- metric
 - datasample
 - algo
 - datamanager

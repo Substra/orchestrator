@@ -1,4 +1,4 @@
-package objective
+package metric
 
 import (
 	"github.com/go-playground/log/v7"
@@ -10,7 +10,7 @@ import (
 	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
-// SmartContract manages objectives
+// SmartContract manages metrics
 type SmartContract struct {
 	contractapi.Contract
 	logger log.Entry
@@ -19,7 +19,7 @@ type SmartContract struct {
 // NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
 	contract := &SmartContract{}
-	contract.Name = "orchestrator.objective"
+	contract.Name = "orchestrator.metric"
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
@@ -29,17 +29,17 @@ func NewSmartContract() *SmartContract {
 	return contract
 }
 
-// RegisterObjective creates a new objective in world state
+// RegisterMetric creates a new metric in world state
 // If the key exists, it will override the existing value with the new one
-func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+func (s *SmartContract) RegisterMetric(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
 	}
-	service := provider.GetObjectiveService()
+	service := provider.GetMetricService()
 
-	params := new(asset.NewObjective)
+	params := new(asset.NewMetric)
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
@@ -52,9 +52,9 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper
 		return nil, err
 	}
 
-	obj, err := service.RegisterObjective(params, owner)
+	obj, err := service.RegisterMetric(params, owner)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to register objective")
+		s.logger.WithError(err).Error("failed to register metric")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(ctx.GetContext(), obj)
@@ -65,25 +65,25 @@ func (s *SmartContract) RegisterObjective(ctx ledger.TransactionContext, wrapper
 	return wrapped, nil
 }
 
-// GetObjective returns the objective with given key
-func (s *SmartContract) GetObjective(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// GetMetric returns the metric with given key
+func (s *SmartContract) GetMetric(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
 	}
-	service := provider.GetObjectiveService()
+	service := provider.GetMetricService()
 
-	params := new(asset.GetObjectiveParam)
+	params := new(asset.GetMetricParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
-	obj, err := service.GetObjective(params.GetKey())
+	obj, err := service.GetMetric(params.GetKey())
 	if err != nil {
-		s.logger.WithError(err).Error("failed to query objective")
+		s.logger.WithError(err).Error("failed to query metric")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(ctx.GetContext(), obj)
@@ -94,30 +94,30 @@ func (s *SmartContract) GetObjective(ctx ledger.TransactionContext, wrapper *com
 	return wrapped, nil
 }
 
-// QueryObjectives returns the objectives
-func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// QueryMetrics returns the metrics
+func (s *SmartContract) QueryMetrics(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
 	}
-	service := provider.GetObjectiveService()
+	service := provider.GetMetricService()
 
-	params := new(asset.QueryObjectivesParam)
+	params := new(asset.QueryMetricsParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
-	objectives, nextPage, err := service.QueryObjectives(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
+	metrics, nextPage, err := service.QueryMetrics(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()})
 	if err != nil {
-		s.logger.WithError(err).Error("failed to query objectives")
+		s.logger.WithError(err).Error("failed to query metrics")
 		return nil, err
 	}
 
-	resp := &asset.QueryObjectivesResponse{
-		Objectives:    objectives,
+	resp := &asset.QueryMetricsResponse{
+		Metrics:       metrics,
 		NextPageToken: nextPage,
 	}
 	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
@@ -128,40 +128,7 @@ func (s *SmartContract) QueryObjectives(ctx ledger.TransactionContext, wrapper *
 	return wrapped, nil
 }
 
-// GetLeaderboard returns for an objective all its certified ComputeTask with ComputeTaskCategory: TEST_TASK with a done status
-func (s *SmartContract) GetLeaderboard(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
-	provider, err := ctx.GetProvider()
-	if err != nil {
-		return nil, err
-	}
-	service := provider.GetObjectiveService()
-
-	params := new(asset.LeaderboardQueryParam)
-	err = wrapper.Unwrap(params)
-	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
-		return nil, err
-	}
-
-	leaderboard, err := service.GetLeaderboard(params)
-
-	if err != nil {
-		s.logger.WithError(err).Error("failed to query leaderboard")
-		return nil, err
-	}
-
-	resp, err := communication.Wrap(ctx.GetContext(), leaderboard)
-
-	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
-		return nil, err
-	}
-
-	return resp, nil
-}
-
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return commonserv.ReadOnlyMethods["Objective"]
+	return commonserv.ReadOnlyMethods["Metric"]
 }

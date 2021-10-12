@@ -42,27 +42,6 @@ func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.Ne
 	return dm, nil
 }
 
-// UpdateDataManager will update the objective of an existing DataManager
-func (s *DataManagerServer) UpdateDataManager(ctx context.Context, d *asset.DataManagerUpdateParam) (*asset.DataManagerUpdateResponse, error) {
-	logger.Get(ctx).WithField("datamanager", d).Debug("Update UpdateDataManager")
-
-	mspid, err := common.ExtractMSPID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	services, err := interceptors.ExtractProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = services.GetDataManagerService().UpdateDataManager(d, mspid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &asset.DataManagerUpdateResponse{}, nil
-}
-
 // GetDataManager fetches a datamanager by its key
 func (s *DataManagerServer) GetDataManager(ctx context.Context, params *asset.GetDataManagerParam) (*asset.DataManager, error) {
 	services, err := interceptors.ExtractProvider(ctx)

@@ -20,7 +20,7 @@ func TestGetFullKey(t *testing.T) {
 	assert.Equal(t, "resource:id", k, "key should be prefixed with resource type")
 }
 
-// In this test we fake 2 objectives in db, and fetch them in two queries of pageSize 1
+// In this test we fake 2 metrics in db, and fetch them in two queries of pageSize 1
 func TestGetPagination(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
@@ -38,7 +38,7 @@ func TestGetPagination(t *testing.T) {
 
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
-			DocType: asset.ObjectiveKind,
+			DocType: asset.MetricKind,
 		},
 	}
 
@@ -70,16 +70,16 @@ func TestGetPagination(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestAddExistingObjective(t *testing.T) {
+func TestAddExistingMetric(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 
 	db := NewDB(context.TODO(), stub)
 
-	objective := &asset.Objective{Key: "test"}
+	metric := &asset.Metric{Key: "test"}
 
-	stub.On("GetState", "objective:test").Return([]byte("{}"), nil).Once()
+	stub.On("GetState", "metric:test").Return([]byte("{}"), nil).Once()
 
-	err := db.AddObjective(objective)
+	err := db.AddMetric(metric)
 	orcErr := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcErr))
 	assert.Equal(t, orcerrors.ErrConflict, orcErr.Kind)

@@ -9,13 +9,13 @@ interface lib.orchestration.ServiceProvider
 class lib.orchestration.Provider {
   ~DatabaseService
   ~NodeService
-  ~ObjectiveService
+  ~MetricService
   ~...
 }
 lib.orchestration.ServiceProvider <|-- lib.orchestration.Provider
 
 lib.orchestration.ServiceProvider *-- lib.orchestration.NodeService
-lib.orchestration.ServiceProvider *-- lib.orchestration.ObjectiveService
+lib.orchestration.ServiceProvider *-- lib.orchestration.MetricService
 lib.orchestration.ServiceProvider *-- lib.orchestration.XXXService
 note bottom
 asset services depend

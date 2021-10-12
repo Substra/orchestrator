@@ -79,16 +79,13 @@ message NewTrainTaskData {
 message TestTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  string objective_key = 3;
-  bool certified = 4;
+  string metric_key = 3;
 }
 
 message NewTestTaskData {
-  // If NewTestTaskData has datasamples, the results will not be certified and
-  // the objective will be evaluated on this new dataset (not the objective dataset)
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  string objective_key = 3;
+  string metric_key = 3;
 }
 
 message CompositeTrainTaskData {

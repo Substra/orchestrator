@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package orchestrator;
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+import "algo.proto";
+
+option go_package = "github.com/owkin/orchestrator/lib/asset";
+
+// Metric is used to evaluate a model according to a problem type
+message Metric {
+  string key = 1;
+  string name = 2;
+  Addressable description = 3;
+  Addressable address = 5;
+  Permissions permissions = 6;
+  string owner = 7;
+  google.protobuf.Timestamp creation_date = 8;
+  map<string, string> metadata = 18;
+}
+
+// NewMetric is used to register a Metric.
+// It will be processed into a Metric.
+message NewMetric {
+  string key = 1;
+  string name = 2;
+  Addressable description = 3;
+  Addressable address = 5;
+  NewPermissions new_permissions = 6;
+  map<string, string> metadata = 18;
+}
+
+message GetMetricParam {
+  string key = 1;
+}
+
+message QueryMetricsResponse {
+  repeated Metric metrics = 1;
+  string next_page_token = 2;
+}
+
+message QueryMetricsParam {
+  string page_token = 1;
+  uint32 page_size = 2;
+}
+
+service MetricService {
+  rpc RegisterMetric(NewMetric) returns (Metric);
+  rpc GetMetric(GetMetricParam) returns (Metric);
+  rpc QueryMetrics(QueryMetricsParam) returns (QueryMetricsResponse);
+}

@@ -16,7 +16,7 @@ type DependenciesProvider interface {
 	persistence.DBALProvider
 	event.QueueProvider
 	NodeServiceProvider
-	ObjectiveServiceProvider
+	MetricServiceProvider
 	DataSampleServiceProvider
 	AlgoServiceProvider
 	PermissionServiceProvider
@@ -41,7 +41,7 @@ type Provider struct {
 	dbal        persistence.DBAL
 	eventQueue  event.Queue
 	node        NodeAPI
-	objective   ObjectiveAPI
+	metric      MetricAPI
 	permission  PermissionAPI
 	datasample  DataSampleAPI
 	algo        AlgoAPI
@@ -79,8 +79,8 @@ func (sc *Provider) GetNodeDBAL() persistence.NodeDBAL {
 	return sc.dbal
 }
 
-// GetObjectiveDBAL returns the database abstraction layer for Objectives
-func (sc *Provider) GetObjectiveDBAL() persistence.ObjectiveDBAL {
+// GetMetricDBAL returns the database abstraction layer for Metrics
+func (sc *Provider) GetMetricDBAL() persistence.MetricDBAL {
 	return sc.dbal
 }
 
@@ -137,13 +137,13 @@ func (sc *Provider) GetNodeService() NodeAPI {
 	return sc.node
 }
 
-// GetObjectiveService returns an ObjectiveAPI instance.
+// GetMetricService returns an MetricAPI instance.
 // The service will be instanciated if needed.
-func (sc *Provider) GetObjectiveService() ObjectiveAPI {
-	if sc.objective == nil {
-		sc.objective = NewObjectiveService(sc)
+func (sc *Provider) GetMetricService() MetricAPI {
+	if sc.metric == nil {
+		sc.metric = NewMetricService(sc)
 	}
-	return sc.objective
+	return sc.metric
 }
 
 // GetDataSampleService returns a DataSampleAPI instance.

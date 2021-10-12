@@ -17,18 +17,18 @@ type DataSampleOptions struct {
 	TestOnly bool
 }
 
-type ObjectiveOptions struct {
-	KeyRef         string
-	DataManagerRef string
-	DataSampleRef  string
+type MetricOptions struct {
+	KeyRef string
 }
 
 type TestTaskOptions struct {
-	KeyRef       string
-	AlgoRef      string
-	ParentsRef   []string
-	PlanRef      string
-	ObjectiveRef string
+	KeyRef         string
+	AlgoRef        string
+	ParentsRef     []string
+	PlanRef        string
+	MetricRef      string
+	DataManagerRef string
+	DataSampleRef  string
 }
 
 type TrainTaskOptions struct {
@@ -68,32 +68,32 @@ type PerformanceOptions struct {
 	PerformanceValue float32
 }
 
-func DefaultObjectiveOptions() *ObjectiveOptions {
-	return &ObjectiveOptions{
-		KeyRef:         DefaultObjectiveRef,
-		DataManagerRef: DefaultDataManagerRef,
-		DataSampleRef:  "ds",
+func DefaultMetricOptions() *MetricOptions {
+	return &MetricOptions{
+		KeyRef: DefaultMetricRef,
 	}
 }
 
-func (o *ObjectiveOptions) WithKeyRef(ref string) *ObjectiveOptions {
+func (o *MetricOptions) WithKeyRef(ref string) *MetricOptions {
 	o.KeyRef = ref
-	return o
-}
-
-func (o *ObjectiveOptions) WithDataSampleRef(ref string) *ObjectiveOptions {
-	o.DataSampleRef = ref
 	return o
 }
 
 func DefaultTestTaskOptions() *TestTaskOptions {
 	return &TestTaskOptions{
-		KeyRef:       DefaultTaskRef,
-		AlgoRef:      DefaultAlgoRef,
-		ParentsRef:   []string{},
-		PlanRef:      DefaultPlanRef,
-		ObjectiveRef: DefaultObjectiveRef,
+		KeyRef:         DefaultTaskRef,
+		AlgoRef:        DefaultAlgoRef,
+		ParentsRef:     []string{},
+		PlanRef:        DefaultPlanRef,
+		MetricRef:      DefaultMetricRef,
+		DataManagerRef: DefaultDataManagerRef,
+		DataSampleRef:  DefaultDataSampleRef,
 	}
+}
+
+func (o *TestTaskOptions) WithDataSampleRef(ref string) *TestTaskOptions {
+	o.DataSampleRef = ref
+	return o
 }
 
 func (o *TestTaskOptions) WithKeyRef(ref string) *TestTaskOptions {
@@ -106,8 +106,8 @@ func (o *TestTaskOptions) WithAlgoRef(ref string) *TestTaskOptions {
 	return o
 }
 
-func (o *TestTaskOptions) WithObjectiveRef(ref string) *TestTaskOptions {
-	o.ObjectiveRef = ref
+func (o *TestTaskOptions) WithMetricRef(ref string) *TestTaskOptions {
+	o.MetricRef = ref
 	return o
 }
 
@@ -129,7 +129,9 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Data: &asset.NewComputeTask_Test{
 			Test: &asset.NewTestTaskData{
-				ObjectiveKey: ks.GetKey(o.ObjectiveRef),
+				DataManagerKey: ks.GetKey(o.DataManagerRef),
+				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
+				MetricKey:      ks.GetKey(o.MetricRef),
 			},
 		},
 	}
@@ -142,7 +144,7 @@ func DefaultTrainTaskOptions() *TrainTaskOptions {
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
-		DataSampleRef:  "ds",
+		DataSampleRef:  DefaultDataSampleRef,
 	}
 }
 
@@ -189,7 +191,7 @@ func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
-		DataSampleRef:  "ds",
+		DataSampleRef:  DefaultDataSampleRef,
 	}
 }
 

@@ -383,51 +383,9 @@ func TestSetAggregateData(t *testing.T) {
 }
 
 func TestSetTestData(t *testing.T) {
-	t.Run("objective only", func(t *testing.T) {
-		specificInput := &asset.NewTestTaskData{
-			ObjectiveKey: "objUuid",
-		}
-		task := &asset.ComputeTask{
-			Owner:    "org1",
-			Category: asset.ComputeTaskCategory_TASK_TEST,
-		}
-
-		parents := []*asset.ComputeTask{
-			{
-				Algo:           &asset.Algo{Key: "algoKey"},
-				ComputePlanKey: "cpKey",
-				Rank:           2,
-			},
-		}
-
-		os := new(MockObjectiveAPI)
-		dms := new(MockDataManagerAPI)
-		provider := newMockedProvider()
-		provider.On("GetObjectiveService").Return(os)
-		provider.On("GetDataManagerService").Return(dms)
-
-		service := NewComputeTaskService(provider)
-
-		os.On("GetObjective", "objUuid").Return(&asset.Objective{Key: "objUuid", DataManagerKey: "dmUuid"}, nil)
-
-		dms.On("GetDataManager", "dmUuid").Once().Return(&asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}, nil)
-
-		err := service.setTestData(specificInput, task, parents)
-		assert.NoError(t, err)
-
-		assert.Equal(t, parents[0].Algo, task.Algo)
-		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
-		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
-		assert.True(t, task.Data.(*asset.ComputeTask_Test).Test.Certified)
-
-		os.AssertExpectations(t)
-		dms.AssertExpectations(t)
-		provider.AssertExpectations(t)
-	})
-
 	t.Run("custom samples", func(t *testing.T) {
 		specificInput := &asset.NewTestTaskData{
-			ObjectiveKey:   "objUuid",
+			MetricKey:      "objUuid",
 			DataManagerKey: "cdmKey",
 			DataSampleKeys: []string{"sample1", "sample2"},
 		}
@@ -444,11 +402,11 @@ func TestSetTestData(t *testing.T) {
 			},
 		}
 
-		os := new(MockObjectiveAPI)
+		ms := new(MockMetricAPI)
 		dms := new(MockDataManagerAPI)
 		dss := new(MockDataSampleAPI)
 		provider := newMockedProvider()
-		provider.On("GetObjectiveService").Return(os)
+		provider.On("GetMetricService").Return(ms)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
 		// Use the real permission service
@@ -456,9 +414,11 @@ func TestSetTestData(t *testing.T) {
 
 		service := NewComputeTaskService(provider)
 
-		os.On("GetObjective", "objUuid").Return(&asset.Objective{Key: "objUuid", DataManagerKey: "dmUuid"}, nil)
+		ms.On("GetMetric", "objUuid").Return(&asset.Metric{Key: "objUuid"}, nil)
 
-		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}}, nil)
+		ms.On("CanDownload", "objUuid", "dmowner").Return(true, nil)
+
+		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
 
 		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
 
@@ -468,62 +428,11 @@ func TestSetTestData(t *testing.T) {
 		assert.Equal(t, parents[0].Algo, task.Algo)
 		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
 		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
-		assert.False(t, task.Data.(*asset.ComputeTask_Test).Test.Certified)
+		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
+		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
+		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.MetricKey, specificInput.MetricKey)
 
-		os.AssertExpectations(t)
-		provider.AssertExpectations(t)
-	})
-
-	t.Run("certified custom samples", func(t *testing.T) {
-		specificInput := &asset.NewTestTaskData{
-			ObjectiveKey:   "objUuid",
-			DataManagerKey: "cdmKey",
-			DataSampleKeys: []string{"sample1", "sample2"},
-		}
-		task := &asset.ComputeTask{
-			Owner:    "org1",
-			Category: asset.ComputeTaskCategory_TASK_TEST,
-		}
-
-		parents := []*asset.ComputeTask{
-			{
-				Algo:           &asset.Algo{Key: "algoKey"},
-				ComputePlanKey: "cpKey",
-				Rank:           2,
-			},
-		}
-
-		os := new(MockObjectiveAPI)
-		dms := new(MockDataManagerAPI)
-		dss := new(MockDataSampleAPI)
-		provider := newMockedProvider()
-		provider.On("GetObjectiveService").Return(os)
-		provider.On("GetDataManagerService").Return(dms)
-		provider.On("GetDataSampleService").Return(dss)
-		// Use the real permission service
-		provider.On("GetPermissionService").Return(NewPermissionService(provider))
-
-		service := NewComputeTaskService(provider)
-
-		os.On("GetObjective", "objUuid").Return(&asset.Objective{
-			Key:            "objUuid",
-			DataManagerKey: "cdmKey",                       // Same as the specific input
-			DataSampleKeys: []string{"sample1", "sample2"}, // Same as the specific input
-		}, nil)
-
-		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}}, nil)
-
-		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
-
-		err := service.setTestData(specificInput, task, parents)
-		assert.NoError(t, err)
-
-		assert.Equal(t, parents[0].Algo, task.Algo)
-		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
-		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
-		assert.True(t, task.Data.(*asset.ComputeTask_Test).Test.Certified)
-
-		os.AssertExpectations(t)
+		ms.AssertExpectations(t)
 		provider.AssertExpectations(t)
 	})
 }

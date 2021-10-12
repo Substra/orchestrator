@@ -35,5 +35,5 @@ peer chaincode invoke \
         --certfile /var/hyperledger/tls/server/pair/tls.crt \
         --keyfile /var/hyperledger/tls/server/pair/tls.key \
         -o network-orderer-hlf-ord.orderer:7050 \
-        -c '{"Args":["orchestrator.objective:RegisterObjective", "test", "Test", "{\"checksum\":\"669831a3180f1e77e9e3c904b76d625403924303118ff97acff2d8599b9dc91b\",\"storage_address\":\"Qsdf\"}", "TestMetrics", "{\"checksum\":\"669831a3180f1e77e9e3c904b76d625403924303118ff97acff2d8599b9dc91b\",\"storage_address\":\"Test\"}", "{\"key\":\"Test\",\"sample_keys\":[\"1\",\"2\"]}", "{\"test\":\"True\"}", "{\"public\":true,\"authorized_ids\":[\"1\"]}"]}'
+        -c '{"Args":["orchestrator.metric:RegisterMetric", "test", "Test", "{\"checksum\":\"669831a3180f1e77e9e3c904b76d625403924303118ff97acff2d8599b9dc91b\",\"storage_address\":\"Qsdf\"}", "TestMetrics", "{\"checksum\":\"669831a3180f1e77e9e3c904b76d625403924303118ff97acff2d8599b9dc91b\",\"storage_address\":\"Test\"}", "{\"key\":\"Test\",\"sample_keys\":[\"1\",\"2\"]}", "{\"test\":\"True\"}", "{\"public\":true,\"authorized_ids\":[\"1\"]}"]}'
 ```

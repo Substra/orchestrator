@@ -74,7 +74,6 @@ func TestRegistration(t *testing.T) {
 		Description:    addressable,
 		Metadata:       metadata,
 		NewPermissions: newPerms,
-		ObjectiveKey:   "uuid2",
 		Opener:         addressable,
 		Type:           "test",
 	}

@@ -114,7 +114,7 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 	return algos, bookmark.Bookmark, nil
 }
 
-// AlgoExists implements persistence.ObjectiveDBAL
+// AlgoExists implements persistence.AlgoDBAL
 func (db *DB) AlgoExists(key string) (bool, error) {
 	return db.hasKey(asset.AlgoKind, key)
 }

@@ -21,7 +21,7 @@ Each action has the same structure:
 The following assets have their permissions set by their owner at registration:
 
 - algo
-- objective
+- metric
 - [datamanager](./assets/datamanager.md)
 
 If a permission is not `public` and `authorized_ids` does not contain the creator's node ID, it will be added.

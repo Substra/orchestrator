@@ -12,18 +12,9 @@ func (d *NewDataManager) Validate() error {
 		validation.Field(&d.Key, validation.Required, is.UUID),
 		validation.Field(&d.Name, validation.Required, validation.Length(1, 100)),
 		validation.Field(&d.NewPermissions, validation.Required),
-		validation.Field(&d.ObjectiveKey, validation.When(d.GetObjectiveKey() != ""), is.UUID),
 		validation.Field(&d.Description, validation.Required),
 		validation.Field(&d.Opener, validation.Required),
 		validation.Field(&d.Metadata, validation.By(validateMetadata)),
 		validation.Field(&d.Type, validation.Required, validation.Length(1, 30)),
-	)
-}
-
-// Validate returns an error if the DataManagerUpdate is not valid
-func (d *DataManagerUpdateParam) Validate() error {
-	return validation.ValidateStruct(d,
-		validation.Field(&d.Key, validation.Required, is.UUID),
-		validation.Field(&d.ObjectiveKey, validation.Required, is.UUID),
 	)
 }

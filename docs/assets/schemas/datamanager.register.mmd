@@ -8,17 +8,9 @@ err_input_valid[Error]
 dm_exists{{Datamanager already exists}}
 err_dm_exists[Error]
 
-obj_owner{{Owner can download Objective}}
-err_obj_owner[Error]
-
 set_owner(Set asset owner)
 
-obj_set{{Is objective_key set}}
-
 store_dm(Store dataManager)
-
-obj_exists{{Objective exists}}
-err_obj_exists[Error]
 
 End1((End))
 
@@ -28,17 +20,8 @@ start --> input_valid
 input_valid --yes--> dm_exists
 input_valid --no--> err_input_valid
 
-dm_exists --no--> obj_set
+dm_exists --no--> set_owner
 dm_exists --yes--> err_dm_exists
-
-obj_set --no--> set_owner
-obj_set --yes--> obj_exists
-
-obj_exists --yes--> obj_owner
-obj_exists --no--> err_obj_exists
-
-obj_owner --yes--> set_owner
-obj_owner --no--> err_obj_owner
 
 set_owner --> store_dm
 

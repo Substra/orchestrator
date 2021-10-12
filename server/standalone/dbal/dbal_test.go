@@ -23,7 +23,7 @@ func TestGetOffset(t *testing.T) {
 	assert.Equal(t, 12, valueOffset, "valued token should be parserd as int")
 }
 
-func TestQueryObjectives(t *testing.T) {
+func TestQueryMetrics(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -33,17 +33,17 @@ func TestQueryObjectives(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.Objective{}).
-		AddRow(&asset.Objective{})
+		AddRow(&asset.Metric{}).
+		AddRow(&asset.Metric{})
 
-	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(uint32(13), 0, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "metrics"`).WithArgs(uint32(13), 0, testChannel).WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	res, bookmark, err := dbal.QueryObjectives(common.NewPagination("", 12))
+	res, bookmark, err := dbal.QueryMetrics(common.NewPagination("", 12))
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 	assert.Equal(t, "", bookmark, "last page should be reached")
@@ -53,7 +53,7 @@ func TestQueryObjectives(t *testing.T) {
 	}
 }
 
-func TestPaginatedQueryObjectives(t *testing.T) {
+func TestPaginatedQueryMetrics(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -63,17 +63,17 @@ func TestPaginatedQueryObjectives(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.Objective{}).
-		AddRow(&asset.Objective{})
+		AddRow(&asset.Metric{}).
+		AddRow(&asset.Metric{})
 
-	mock.ExpectQuery(`select "asset" from "objectives"`).WithArgs(uint32(2), 0, testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`select "asset" from "metrics"`).WithArgs(uint32(2), 0, testChannel).WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	res, bookmark, err := dbal.QueryObjectives(common.NewPagination("", 1))
+	res, bookmark, err := dbal.QueryMetrics(common.NewPagination("", 1))
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "1", bookmark, "There should be another page")

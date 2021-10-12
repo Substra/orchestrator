@@ -42,19 +42,6 @@ func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.N
 	return response, err
 }
 
-// UpdateDataManager will update the objective of an existing DataManager
-func (s *DataManagerAdapter) UpdateDataManager(ctx context.Context, d *asset.DataManagerUpdateParam) (*asset.DataManagerUpdateResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
-	if err != nil {
-		return nil, err
-	}
-	method := "orchestrator.datamanager:UpdateDataManager"
-
-	err = invocator.Call(ctx, method, d, nil)
-
-	return &asset.DataManagerUpdateResponse{}, err
-}
-
 // GetDataManager fetches a datamanager by its key
 func (s *DataManagerAdapter) GetDataManager(ctx context.Context, params *asset.GetDataManagerParam) (*asset.DataManager, error) {
 	invocator, err := ExtractInvocator(ctx)

@@ -21,20 +21,20 @@ func TestNodeValue(t *testing.T) {
 	assert.Equal(t, node, scanned)
 }
 
-func TestObjectiveValue(t *testing.T) {
-	objective := &Objective{
+func TestMetricValue(t *testing.T) {
+	metric := &Metric{
 		Name:  "test",
 		Owner: "testOwner",
 	}
 
-	value, err := objective.Value()
-	assert.NoError(t, err, "objective serialization should not fail")
+	value, err := metric.Value()
+	assert.NoError(t, err, "metric serialization should not fail")
 
-	scanned := new(Objective)
+	scanned := new(Metric)
 	err = scanned.Scan(value)
-	assert.NoError(t, err, "objective scan should not fail")
+	assert.NoError(t, err, "metric scan should not fail")
 
-	assert.Equal(t, objective, scanned)
+	assert.Equal(t, metric, scanned)
 }
 
 func TestDataSampleValue(t *testing.T) {
