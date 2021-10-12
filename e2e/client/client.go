@@ -319,27 +319,15 @@ func (c *TestClient) QueryTasks(filter *asset.TaskQueryFilter, pageToken string,
 	return resp
 }
 
-func (c *TestClient) RegisterPerformance(o *PerformanceOptions) {
+func (c *TestClient) RegisterPerformance(o *PerformanceOptions) (*asset.Performance, error) {
 	newPerf := &asset.NewPerformance{
-		ComputeTaskKey:   c.ks.GetKey(o.KeyRef),
+		ComputeTaskKey:   c.ks.GetKey(o.ComputeTaskKeyRef),
+		MetricKey:        c.ks.GetKey(o.MetricKeyRef),
 		PerformanceValue: o.PerformanceValue,
 	}
 
 	log.WithField("performance", newPerf).Debug("registering performance")
-	_, err := c.performanceService.RegisterPerformance(c.ctx, newPerf)
-	if err != nil {
-		log.WithError(err).Fatal("RegisterPerformance failed")
-	}
-}
-
-func (c *TestClient) GetTaskPerformance(taskRef string) *asset.Performance {
-	param := &asset.GetComputeTaskPerformanceParam{ComputeTaskKey: c.ks.GetKey(taskRef)}
-	perf, err := c.performanceService.GetComputeTaskPerformance(c.ctx, param)
-	if err != nil {
-		log.WithError(err).Fatal("GetTaskPerformance failed")
-	}
-
-	return perf
+	return c.performanceService.RegisterPerformance(c.ctx, newPerf)
 }
 
 func (c *TestClient) GetInputModels(taskRef string) []*asset.Model {

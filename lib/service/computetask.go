@@ -39,6 +39,7 @@ type ComputeTaskDependencyProvider interface {
 	DataSampleServiceProvider
 	PermissionServiceProvider
 	MetricServiceProvider
+	persistence.MetricDBALProvider
 	NodeServiceProvider
 	ComputePlanServiceProvider
 	ModelServiceProvider
@@ -494,24 +495,28 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 		return err
 	}
 
-	_, err = s.GetMetricService().GetMetric(input.MetricKey)
-	if err != nil {
-		return err
-	}
-
-	// ensure the task will be able to download the metric
-	ok, err := s.GetMetricService().CanDownload(input.MetricKey, datamanager.Owner)
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return orcerrors.NewPermissionDenied("datamanager owner cannot download the objective")
+	for _, metricKey := range input.MetricKeys {
+		metricExists, err := s.GetMetricDBAL().MetricExists(metricKey)
+		if err != nil {
+			return err
+		}
+		if !metricExists {
+			return orcerrors.NewNotFound(asset.MetricKind, metricKey)
+		}
+		// ensure the task will be able to download the metric
+		ok, err := s.GetMetricService().CanDownload(metricKey, datamanager.Owner)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return orcerrors.NewPermissionDenied(fmt.Sprintf("datamanager owner cannot download the metric %q", metricKey))
+		}
 	}
 
 	taskData := &asset.TestTaskData{
 		DataManagerKey: input.DataManagerKey,
 		DataSampleKeys: input.DataSampleKeys,
-		MetricKey:      input.MetricKey,
+		MetricKeys:     input.MetricKeys,
 	}
 
 	task.Data = &asset.ComputeTask_Test{

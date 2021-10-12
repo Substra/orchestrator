@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testCase struct {
+type metricTestCase struct {
 	metric *NewMetric
 	valid  bool
 }
@@ -22,7 +22,7 @@ func TestMetricValidate(t *testing.T) {
 		AuthorizedIds: []string{"org1"},
 	}
 
-	cases := map[string]testCase{
+	cases := map[string]metricTestCase{
 		"emtpy": {&NewMetric{}, false},
 		"invalidKey": {&NewMetric{
 			Key:            "not36chars",

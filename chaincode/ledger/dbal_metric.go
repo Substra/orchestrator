@@ -39,6 +39,11 @@ func (db *DB) GetMetric(key string) (*asset.Metric, error) {
 	return &o, err
 }
 
+// MetricExists implements persistence.MetricDBAL
+func (db *DB) MetricExists(key string) (bool, error) {
+	return db.hasKey(asset.MetricKind, key)
+}
+
 // QueryMetrics retrieves all metrics
 func (db *DB) QueryMetrics(p *common.Pagination) ([]*asset.Metric, common.PaginationToken, error) {
 	query := richQuerySelector{

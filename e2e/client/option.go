@@ -26,7 +26,7 @@ type TestTaskOptions struct {
 	AlgoRef        string
 	ParentsRef     []string
 	PlanRef        string
-	MetricRef      string
+	MetricsRef     []string
 	DataManagerRef string
 	DataSampleRef  string
 }
@@ -64,8 +64,9 @@ type ModelOptions struct {
 }
 
 type PerformanceOptions struct {
-	KeyRef           string
-	PerformanceValue float32
+	ComputeTaskKeyRef string
+	MetricKeyRef      string
+	PerformanceValue  float32
 }
 
 func DefaultMetricOptions() *MetricOptions {
@@ -85,7 +86,7 @@ func DefaultTestTaskOptions() *TestTaskOptions {
 		AlgoRef:        DefaultAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
-		MetricRef:      DefaultMetricRef,
+		MetricsRef:     []string{DefaultMetricRef},
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
 	}
@@ -106,8 +107,8 @@ func (o *TestTaskOptions) WithAlgoRef(ref string) *TestTaskOptions {
 	return o
 }
 
-func (o *TestTaskOptions) WithMetricRef(ref string) *TestTaskOptions {
-	o.MetricRef = ref
+func (o *TestTaskOptions) WithMetricsRef(ref ...string) *TestTaskOptions {
+	o.MetricsRef = ref
 	return o
 }
 
@@ -121,6 +122,10 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	for i, ref := range o.ParentsRef {
 		parentKeys[i] = ks.GetKey(ref)
 	}
+	metricKeys := make([]string, len(o.MetricsRef))
+	for i, ref := range o.MetricsRef {
+		metricKeys[i] = ks.GetKey(ref)
+	}
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_TEST,
@@ -131,7 +136,7 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 			Test: &asset.NewTestTaskData{
 				DataManagerKey: ks.GetKey(o.DataManagerRef),
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
-				MetricKey:      ks.GetKey(o.MetricRef),
+				MetricKeys:     metricKeys,
 			},
 		},
 	}
@@ -339,13 +344,19 @@ func (o *ModelOptions) WithCategory(category asset.ModelCategory) *ModelOptions 
 
 func DefaultPerformanceOptions() *PerformanceOptions {
 	return &PerformanceOptions{
-		KeyRef:           DefaultTaskRef,
-		PerformanceValue: 0.5,
+		ComputeTaskKeyRef: DefaultTaskRef,
+		MetricKeyRef:      DefaultMetricRef,
+		PerformanceValue:  0.5,
 	}
 }
 
 func (o *PerformanceOptions) WithTaskRef(ref string) *PerformanceOptions {
-	o.KeyRef = ref
+	o.ComputeTaskKeyRef = ref
+	return o
+}
+
+func (o *PerformanceOptions) WithMetricRef(ref string) *PerformanceOptions {
+	o.MetricKeyRef = ref
 	return o
 }
 

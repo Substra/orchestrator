@@ -80,3 +80,13 @@ func (d *DBAL) QueryMetrics(p *common.Pagination) ([]*asset.Metric, common.Pagin
 
 	return metrics, bookmark, nil
 }
+
+// MetricExists implements persistence.MetricDBAL
+func (d *DBAL) MetricExists(key string) (bool, error) {
+	row := d.tx.QueryRow(d.ctx, `select count(id) from "metrics" where id=$1 and channel=$2`, key, d.channel)
+
+	var count int
+	err := row.Scan(&count)
+
+	return count == 1, err
+}

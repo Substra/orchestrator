@@ -55,6 +55,14 @@ var testScenarios = map[string]scenario{
 		testRegisterPerformance,
 		[]string{"short", "perf"},
 	},
+	"RegisterMultiplePerformances": {
+		testRegisterMultiplePerformances,
+		[]string{"short", "perf"},
+	},
+	"RegisterMultiplePerformancesForSameMetric": {
+		testRegisterMultiplePerformancesForSameMetric,
+		[]string{"short", "perf"},
+	},
 	"CompositeParentChild": {
 		testCompositeParentChild,
 		[]string{"short", "plan"},
@@ -439,22 +447,100 @@ func testRegisterPerformance(conn *grpc.ClientConn) {
 	appClient.RegisterDataManager()
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
-	appClient.RegisterMetric(client.DefaultMetricOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-	// Parent train task is necessary
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
-	// to create a test task
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(defaultParent...))
+
+	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(defaultParent...).WithMetricsRef("testmetric"))
 	appClient.StartTask("testTask")
-	appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask"))
 
-	appClient.GetTaskPerformance("testTask")
-
+	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
+	if err != nil {
+		log.WithError(err).Fatal("RegisterPerformance failed")
+	}
 	task := appClient.GetComputeTask("testTask")
 	if task.Status != asset.ComputeTaskStatus_STATUS_DONE {
 		log.Fatal("test task should be DONE")
+	}
+}
+
+func testRegisterMultiplePerformances(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.RegisterModel(client.DefaultModelOptions())
+
+	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric1"))
+	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric2"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(defaultParent...).WithMetricsRef("testmetric1", "testmetric2"))
+	appClient.StartTask("testTask")
+
+	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
+	if err != nil {
+		log.WithError(err).Fatal("RegisterPerformance failed")
+	}
+	task := appClient.GetComputeTask("testTask")
+	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
+		log.Fatal("test task should be DOING")
+	}
+
+	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric2"))
+	if err != nil {
+		log.WithError(err).Fatal("RegisterPerformance failed")
+	}
+	task = appClient.GetComputeTask("testTask")
+	if task.Status != asset.ComputeTaskStatus_STATUS_DONE {
+		log.Fatal("test task should be DONE")
+	}
+}
+
+func testRegisterMultiplePerformancesForSameMetric(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.RegisterModel(client.DefaultModelOptions())
+
+	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric1"))
+	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric2"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(defaultParent...).WithMetricsRef("testmetric1", "testmetric2"))
+	appClient.StartTask("testTask")
+
+	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
+	if err != nil {
+		log.WithError(err).Fatal("RegisterPerformance failed")
+	}
+	task := appClient.GetComputeTask("testTask")
+	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
+		log.Fatal("test task should be DOING")
+	}
+
+	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
+	if err == nil {
+		log.Fatal("RegisterPerformance should have failed.")
+	}
+	task = appClient.GetComputeTask("testTask")
+	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
+		log.Fatal("test task should be DOING")
 	}
 }
 

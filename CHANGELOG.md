@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - (BREAKING) Replace objective by metric (#356)
+- (BREAKING) Multiple metrics and performances per test task (#369)
 
 ## [0.0.2] - 2021-09-16
 

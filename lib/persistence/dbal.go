@@ -25,6 +25,7 @@ type MetricDBAL interface {
 	AddMetric(obj *asset.Metric) error
 	GetMetric(key string) (*asset.Metric, error)
 	QueryMetrics(p *common.Pagination) ([]*asset.Metric, common.PaginationToken, error)
+	MetricExists(key string) (bool, error)
 }
 
 // DataSampleDBAL is the database abstraction layer for DataSamples

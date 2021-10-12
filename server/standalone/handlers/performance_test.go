@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,10 +20,18 @@ func TestRegisterPerformance(t *testing.T) {
 
 	server := NewPerformanceServer()
 
-	newPerf := &asset.NewPerformance{ComputeTaskKey: "uuid", PerformanceValue: 3.14}
+	newPerf := &asset.NewPerformance{
+		ComputeTaskKey:   "taskUuid",
+		MetricKey:        "metricUuid",
+		PerformanceValue: 3.14,
+	}
 
 	p.On("GetPerformanceService").Return(ps)
-	ps.On("RegisterPerformance", newPerf, "requester").Once().Return(&asset.Performance{ComputeTaskKey: "uuid"}, nil)
+	ps.On("RegisterPerformance", newPerf, "requester").Once().Return(&asset.Performance{
+		ComputeTaskKey:   newPerf.ComputeTaskKey,
+		MetricKey:        newPerf.MetricKey,
+		PerformanceValue: newPerf.PerformanceValue,
+	}, nil)
 
 	_, err := server.RegisterPerformance(ctx, newPerf)
 	assert.NoError(t, err)
@@ -37,12 +46,25 @@ func TestGetPerformance(t *testing.T) {
 
 	server := NewPerformanceServer()
 
-	perf := &asset.Performance{ComputeTaskKey: "uuid", PerformanceValue: 3.14}
+	perf := &asset.Performance{
+		ComputeTaskKey:   "taskUuid",
+		MetricKey:        "metricUuid",
+		PerformanceValue: 3.14,
+	}
+	param := &asset.QueryPerformancesParam{
+		Filter: &asset.PerformanceQueryFilter{
+			ComputeTaskKey: perf.ComputeTaskKey,
+			MetricKey:      perf.MetricKey,
+		},
+		PageToken: "",
+		PageSize:  100,
+	}
 
 	p.On("GetPerformanceService").Return(ps)
-	ps.On("GetComputeTaskPerformance", "uuid").Once().Return(perf, nil)
+	ps.On("QueryPerformances", common.NewPagination(param.PageToken, param.PageSize), param.Filter).Once().Return([]*asset.Performance{}, param.PageToken, nil)
 
-	_, err := server.GetComputeTaskPerformance(ctx, &asset.GetComputeTaskPerformanceParam{ComputeTaskKey: "uuid"})
+	_, err := server.QueryPerformances(ctx, param)
+
 	assert.NoError(t, err)
 
 	p.AssertExpectations(t)

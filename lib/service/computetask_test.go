@@ -383,9 +383,9 @@ func TestSetAggregateData(t *testing.T) {
 }
 
 func TestSetTestData(t *testing.T) {
-	t.Run("custom samples", func(t *testing.T) {
+	t.Run("single metric", func(t *testing.T) {
 		specificInput := &asset.NewTestTaskData{
-			MetricKey:      "objUuid",
+			MetricKeys:     []string{"metric"},
 			DataManagerKey: "cdmKey",
 			DataSampleKeys: []string{"sample1", "sample2"},
 		}
@@ -393,7 +393,6 @@ func TestSetTestData(t *testing.T) {
 			Owner:    "org1",
 			Category: asset.ComputeTaskCategory_TASK_TEST,
 		}
-
 		parents := []*asset.ComputeTask{
 			{
 				Algo:           &asset.Algo{Key: "algoKey"},
@@ -402,36 +401,129 @@ func TestSetTestData(t *testing.T) {
 			},
 		}
 
+		dbal := new(persistenceHelper.DBAL)
 		ms := new(MockMetricAPI)
 		dms := new(MockDataManagerAPI)
 		dss := new(MockDataSampleAPI)
 		provider := newMockedProvider()
+		provider.On("GetMetricDBAL").Return(dbal)
 		provider.On("GetMetricService").Return(ms)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
-		// Use the real permission service
 		provider.On("GetPermissionService").Return(NewPermissionService(provider))
-
 		service := NewComputeTaskService(provider)
 
-		ms.On("GetMetric", "objUuid").Return(&asset.Metric{Key: "objUuid"}, nil)
-
-		ms.On("CanDownload", "objUuid", "dmowner").Return(true, nil)
-
+		// single metric
+		dbal.On("MetricExists", "metric").Return(true, nil)
+		ms.On("CanDownload", "metric", "dmowner").Return(true, nil)
 		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
-
 		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
 
 		err := service.setTestData(specificInput, task, parents)
 		assert.NoError(t, err)
-
 		assert.Equal(t, parents[0].Algo, task.Algo)
 		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
 		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
 		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
 		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
-		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.MetricKey, specificInput.MetricKey)
+		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.MetricKeys, specificInput.MetricKeys)
 
+		dbal.AssertExpectations(t)
+		ms.AssertExpectations(t)
+		provider.AssertExpectations(t)
+	})
+	t.Run("multiple metrics", func(t *testing.T) {
+		specificInput := &asset.NewTestTaskData{
+			MetricKeys:     []string{"metric1", "metric2"},
+			DataManagerKey: "cdmKey",
+			DataSampleKeys: []string{"sample1", "sample2"},
+		}
+		task := &asset.ComputeTask{
+			Owner:    "org1",
+			Category: asset.ComputeTaskCategory_TASK_TEST,
+		}
+		parents := []*asset.ComputeTask{
+			{
+				Algo:           &asset.Algo{Key: "algoKey"},
+				ComputePlanKey: "cpKey",
+				Rank:           2,
+			},
+		}
+
+		dbal := new(persistenceHelper.DBAL)
+		ms := new(MockMetricAPI)
+		dms := new(MockDataManagerAPI)
+		dss := new(MockDataSampleAPI)
+		provider := newMockedProvider()
+		provider.On("GetMetricDBAL").Return(dbal)
+		provider.On("GetMetricService").Return(ms)
+		provider.On("GetDataManagerService").Return(dms)
+		provider.On("GetDataSampleService").Return(dss)
+		provider.On("GetPermissionService").Return(NewPermissionService(provider))
+		service := NewComputeTaskService(provider)
+
+		// multiple metrics
+		dbal.On("MetricExists", "metric1").Return(true, nil)
+		dbal.On("MetricExists", "metric2").Return(true, nil)
+		ms.On("CanDownload", "metric1", "dmowner").Return(true, nil)
+		ms.On("CanDownload", "metric2", "dmowner").Return(true, nil)
+		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
+		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+
+		err := service.setTestData(specificInput, task, parents)
+		assert.NoError(t, err)
+		assert.Equal(t, parents[0].Algo, task.Algo)
+		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
+		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
+		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
+		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
+		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.MetricKeys, specificInput.MetricKeys)
+
+		dbal.AssertExpectations(t)
+		ms.AssertExpectations(t)
+		provider.AssertExpectations(t)
+	})
+	t.Run("invalid metric", func(t *testing.T) {
+		specificInput := &asset.NewTestTaskData{
+			MetricKeys:     []string{"metric"},
+			DataManagerKey: "cdmKey",
+			DataSampleKeys: []string{"sample1", "sample2"},
+		}
+		task := &asset.ComputeTask{
+			Owner:    "org1",
+			Category: asset.ComputeTaskCategory_TASK_TEST,
+		}
+		parents := []*asset.ComputeTask{
+			{
+				Algo:           &asset.Algo{Key: "algoKey"},
+				ComputePlanKey: "cpKey",
+				Rank:           2,
+			},
+		}
+
+		dbal := new(persistenceHelper.DBAL)
+		ms := new(MockMetricAPI)
+		dms := new(MockDataManagerAPI)
+		dss := new(MockDataSampleAPI)
+		provider := newMockedProvider()
+		provider.On("GetMetricDBAL").Return(dbal)
+		provider.On("GetMetricService").Return(ms)
+		provider.On("GetDataManagerService").Return(dms)
+		provider.On("GetDataSampleService").Return(dss)
+		// Use the real permission service
+		provider.On("GetPermissionService").Return(NewPermissionService(provider))
+		service := NewComputeTaskService(provider)
+
+		// can not download metric
+		dbal.On("MetricExists", "metric").Return(true, nil)
+		ms.On("CanDownload", "metric", "dmowner").Return(false, nil)
+		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
+		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+
+		err := service.setTestData(specificInput, task, parents)
+		assert.Error(t, err)
+
+		dbal.AssertExpectations(t)
 		ms.AssertExpectations(t)
 		provider.AssertExpectations(t)
 	})

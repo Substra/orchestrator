@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
@@ -68,7 +69,7 @@ func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapp
 	return wrapped, nil
 }
 
-func (s *SmartContract) GetComputeTaskPerformance(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+func (s *SmartContract) QueryPerformances(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
@@ -76,19 +77,25 @@ func (s *SmartContract) GetComputeTaskPerformance(ctx ledger.TransactionContext,
 	}
 	service := provider.GetPerformanceService()
 
-	param := new(asset.GetComputeTaskPerformanceParam)
+	param := new(asset.QueryPerformancesParam)
 	err = wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
 		return nil, err
 	}
 
-	perf, err := service.GetComputeTaskPerformance(param.ComputeTaskKey)
+	performances, nextPage, err := service.QueryPerformances(&common.Pagination{Token: param.GetPageToken(), Size: param.GetPageSize()}, param.Filter)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to get performance")
+		s.logger.WithError(err).Error("failed to query performances")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(ctx.GetContext(), perf)
+
+	resp := &asset.QueryPerformancesResponse{
+		Performances:  performances,
+		NextPageToken: nextPage,
+	}
+
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err

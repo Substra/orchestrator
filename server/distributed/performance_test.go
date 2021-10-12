@@ -8,6 +8,7 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestPerformanceAdapterImplementServer(t *testing.T) {
@@ -32,19 +33,19 @@ func TestRegisterPerformance(t *testing.T) {
 	assert.NoError(t, err, "Query should pass")
 }
 
-func TestGetPerformance(t *testing.T) {
+func TestQueryPerformances(t *testing.T) {
 	adapter := NewPerformanceAdapter()
 
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	param := &asset.GetComputeTaskPerformanceParam{}
+	param := &asset.QueryPerformancesParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", AnyContext, "orchestrator.performance:GetComputeTaskPerformance", param, &asset.Performance{}).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.performance:QueryPerformances", param, &asset.QueryPerformancesResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
-	_, err := adapter.GetComputeTaskPerformance(ctx, param)
+	_, err := adapter.QueryPerformances(ctx, param)
 
 	assert.NoError(t, err, "Query should pass")
 }
@@ -55,23 +56,48 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 	newCtx := common.WithLastError(context.Background(), fabricTimeout)
 	invocator := &mockedInvocator{}
 
-	param := &asset.NewPerformance{
-		ComputeTaskKey: "uuid",
+	newPerf := &asset.NewPerformance{
+		ComputeTaskKey: "taskUuid",
+		MetricKey:      "metricUuid",
 	}
 
-	invocator.On("Call", AnyContext, "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).
-		Return(errors.NewError(errors.ErrConflict, "test"))
+	// register fail
 	invocator.On(
 		"Call",
 		AnyContext,
-		"orchestrator.performance:GetComputeTaskPerformance",
-		&asset.GetComputeTaskPerformanceParam{ComputeTaskKey: param.ComputeTaskKey},
+		"orchestrator.performance:RegisterPerformance",
+		newPerf,
 		&asset.Performance{},
-	).Return(nil)
+	).Return(errors.NewError(errors.ErrConflict, "test"))
+
+	// perf already registered
+	param := &asset.QueryPerformancesParam{
+		PageToken: "",
+		PageSize:  1,
+		Filter: &asset.PerformanceQueryFilter{
+			ComputeTaskKey: newPerf.ComputeTaskKey,
+			MetricKey:      newPerf.MetricKey,
+		},
+	}
+	invocator.On(
+		"Call",
+		AnyContext,
+		"orchestrator.performance:QueryPerformances",
+		param,
+		&asset.QueryPerformancesResponse{},
+	).Run(func(args mock.Arguments) {
+		response := args.Get(3).(*asset.QueryPerformancesResponse)
+		response.Performances = []*asset.Performance{
+			{
+				ComputeTaskKey: newPerf.ComputeTaskKey,
+				MetricKey:      newPerf.MetricKey,
+			},
+		}
+	}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
-	_, err := adapter.RegisterPerformance(ctx, param)
+	_, err := adapter.RegisterPerformance(ctx, newPerf)
 
 	assert.NoError(t, err, "Query should pass")
 }

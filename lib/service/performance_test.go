@@ -18,6 +18,7 @@ func TestRegisterPerformance(t *testing.T) {
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetMetricDBAL").Return(dbal)
 	provider.On("GetPerformanceDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
@@ -25,29 +26,41 @@ func TestRegisterPerformance(t *testing.T) {
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
+	metric := &asset.Metric{Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275"}
+	dbal.On("MetricExists", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(true, nil)
+
 	task := &asset.ComputeTask{
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Worker:   "test",
 		Category: asset.ComputeTaskCategory_TASK_TEST,
+		Data: &asset.ComputeTask_Test{
+			Test: &asset.TestTaskData{
+				MetricKeys: []string{metric.Key},
+			},
+		},
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 
 	perf := &asset.NewPerformance{
 		ComputeTaskKey:   "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		MetricKey:        "1da600d4-f8ad-45d7-92a0-7ff752a82275",
 		PerformanceValue: 0.36492,
 	}
 
 	stored := &asset.Performance{
 		ComputeTaskKey:   perf.ComputeTaskKey,
+		MetricKey:        perf.MetricKey,
 		PerformanceValue: perf.PerformanceValue,
 		CreationDate:     timestamppb.New(time.Unix(1337, 0)),
 	}
 
+	dbal.On("PerformanceExists", stored).Return(false, nil).Once()
 	dbal.On("AddPerformance", stored).Once().Return(nil)
+	dbal.On("CountComputeTaskPerformances", perf.ComputeTaskKey).Return(0, nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,
-		AssetKey:  perf.ComputeTaskKey,
+		AssetKey:  stored.GetKey(),
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
@@ -77,6 +90,7 @@ func TestRegisterPerformanceInvalidTask(t *testing.T) {
 
 	perf := &asset.NewPerformance{
 		ComputeTaskKey:   "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		MetricKey:        "1da600d4-f8ad-45d7-92a0-7ff752a82275",
 		PerformanceValue: 0.36492,
 	}
 

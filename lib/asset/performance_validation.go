@@ -10,5 +10,6 @@ import (
 func (a *NewPerformance) Validate() error {
 	return validation.ValidateStruct(a,
 		validation.Field(&a.ComputeTaskKey, validation.Required, is.UUID),
+		validation.Field(&a.MetricKey, validation.Required, is.UUID),
 	)
 }

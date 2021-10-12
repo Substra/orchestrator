@@ -4,42 +4,89 @@ import (
 	"encoding/json"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
 )
 
 func (db *DB) AddPerformance(perf *asset.Performance) error {
-	// use task key since a task can have at most 1 performance report
-	exists, err := db.hasKey(asset.PerformanceKind, perf.ComputeTaskKey)
+	exists, err := db.hasKey(asset.PerformanceKind, perf.GetKey())
 	if err != nil {
 		return err
 	}
 	if exists {
-		return errors.NewConflict(asset.PerformanceKind, perf.ComputeTaskKey)
+		return errors.NewConflict(asset.PerformanceKind, perf.GetKey())
 	}
 	bytes, err := json.Marshal(perf)
 	if err != nil {
 		return err
 	}
 
-	err = db.putState(asset.PerformanceKind, perf.ComputeTaskKey, bytes)
+	err = db.putState(asset.PerformanceKind, perf.GetKey(), bytes)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return db.createIndex(performanceIndex, []string{asset.PerformanceKind, perf.GetComputeTaskKey(), perf.GetMetricKey()})
 }
 
-func (db *DB) GetComputeTaskPerformance(key string) (*asset.Performance, error) {
-	perf := new(asset.Performance)
+// PerformanceExists implements persistence.PerformanceDBAL
+func (db *DB) PerformanceExists(perf *asset.Performance) (bool, error) {
+	return db.hasKey(asset.PerformanceKind, perf.GetKey())
+}
 
-	b, err := db.getState(asset.PerformanceKind, key)
+func (db *DB) CountComputeTaskPerformances(computeTaskKey string) (int, error) {
+	elementKeys, err := db.getIndexKeys(performanceIndex, []string{asset.PerformanceKind, computeTaskKey})
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
+	return len(elementKeys), nil
+}
 
-	err = json.Unmarshal(b, perf)
-	if err != nil {
-		return nil, err
+func (db *DB) QueryPerformances(p *common.Pagination, filter *asset.PerformanceQueryFilter) ([]*asset.Performance, common.PaginationToken, error) {
+	query := richQuerySelector{
+		Selector: couchAssetQuery{
+			DocType: asset.PerformanceKind,
+		},
 	}
-	return perf, nil
+	assetFilter := map[string]interface{}{}
+	if filter.ComputeTaskKey != "" {
+		assetFilter["compute_task_key"] = filter.ComputeTaskKey
+	}
+	if filter.MetricKey != "" {
+		assetFilter["metric_key"] = filter.MetricKey
+	}
+	query.Selector.Asset = assetFilter
+	b, err := json.Marshal(query)
+	if err != nil {
+		return nil, "", err
+	}
+	queryString := string(b)
+
+	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resultsIterator.Close()
+
+	performances := make([]*asset.Performance, 0)
+
+	for resultsIterator.HasNext() {
+		queryResult, err := resultsIterator.Next()
+		if err != nil {
+			return nil, "", err
+		}
+		var storedAsset storedAsset
+		err = json.Unmarshal(queryResult.Value, &storedAsset)
+		if err != nil {
+			return nil, "", err
+		}
+		performance := &asset.Performance{}
+		err = json.Unmarshal(storedAsset.Asset, performance)
+		if err != nil {
+			return nil, "", err
+		}
+
+		performances = append(performances, performance)
+	}
+	return performances, bookmark.Bookmark, nil
 }

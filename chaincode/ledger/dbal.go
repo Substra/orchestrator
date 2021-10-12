@@ -48,6 +48,7 @@ type storedAsset struct {
 const computePlanTaskStatusIndex = "computePlan~computePlanKey~status~task"
 const computeTaskParentIndex = "computeTask~parentTask~key"
 const modelTaskKeyIndex = "model~taskKey~modelKey"
+const performanceIndex = "performance~taskKey~metricKey"
 const allNodesIndex = "nodes~id"
 
 // getTransactionState returns a copy of an object that has been updated or created during the transaction

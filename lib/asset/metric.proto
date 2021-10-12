@@ -4,7 +4,6 @@ package orchestrator;
 
 import "google/protobuf/timestamp.proto";
 import "common.proto";
-import "algo.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
 

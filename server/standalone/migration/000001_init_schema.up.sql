@@ -65,7 +65,9 @@ CREATE TABLE compute_plans (
 CREATE INDEX ix_compute_plans_creation ON compute_plans ((asset->>'creationDate'));
 
 CREATE TABLE performances (
-    id UUID PRIMARY KEY,
+    compute_task_id UUID REFERENCES compute_tasks (id),
+    metric_id UUID REFERENCES metrics (id),
+    PRIMARY KEY (compute_task_id, metric_id),
     channel varchar(100) NOT NULL,
     asset JSONB NOT NULL
 );

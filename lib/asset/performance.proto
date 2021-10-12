@@ -8,20 +8,34 @@ import "google/protobuf/timestamp.proto";
 
 message NewPerformance {
   string compute_task_key = 1;
+  string metric_key = 5;
   float performance_value = 2;
 }
 
 message Performance {
   string compute_task_key = 1;
+  string metric_key = 5;
   float performance_value = 2;
   google.protobuf.Timestamp creation_date = 3;
 }
 
-message GetComputeTaskPerformanceParam {
+message PerformanceQueryFilter {
   string compute_task_key = 1;
+  string metric_key = 2;
+}
+
+message QueryPerformancesParam {
+  string page_token = 1;
+  uint32 page_size = 2;
+  PerformanceQueryFilter filter = 3;
+}
+
+message QueryPerformancesResponse {
+  repeated Performance Performances = 1;
+  string next_page_token = 2;
 }
 
 service PerformanceService {
   rpc RegisterPerformance(NewPerformance) returns (Performance);
-  rpc GetComputeTaskPerformance(GetComputeTaskPerformanceParam) returns (Performance);
+  rpc QueryPerformances(QueryPerformancesParam) returns (QueryPerformancesResponse);
 }

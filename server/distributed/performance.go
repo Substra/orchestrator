@@ -34,28 +34,37 @@ func (a *PerformanceAdapter) RegisterPerformance(ctx context.Context, newPerf *a
 		// In this very specific case we are in a retry context after a timeout.
 		// We can assume that the previous request succeeded and created the asset.
 		// So we convert the error in a success response.
+		response := &asset.QueryPerformancesResponse{}
 		err = invocator.Call(
 			ctx,
-			"orchestrator.performance:GetComputeTaskPerformance",
-			&asset.GetComputeTaskPerformanceParam{ComputeTaskKey: newPerf.ComputeTaskKey},
-			perf,
+			"orchestrator.performance:QueryPerformances",
+			&asset.QueryPerformancesParam{
+				PageToken: "",
+				PageSize:  1,
+				Filter: &asset.PerformanceQueryFilter{
+					ComputeTaskKey: newPerf.ComputeTaskKey,
+					MetricKey:      newPerf.MetricKey,
+				},
+			},
+			response,
 		)
+		perf = response.Performances[0]
 		return perf, err
 	}
 
 	return perf, err
 }
 
-func (a *PerformanceAdapter) GetComputeTaskPerformance(ctx context.Context, param *asset.GetComputeTaskPerformanceParam) (*asset.Performance, error) {
+func (a *PerformanceAdapter) QueryPerformances(ctx context.Context, param *asset.QueryPerformancesParam) (*asset.QueryPerformancesResponse, error) {
 	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.performance:GetComputeTaskPerformance"
+	method := "orchestrator.performance:QueryPerformances"
 
-	perf := &asset.Performance{}
+	response := &asset.QueryPerformancesResponse{}
 
-	err = invocator.Call(ctx, method, param, perf)
+	err = invocator.Call(ctx, method, param, response)
 
-	return perf, err
+	return response, err
 }
