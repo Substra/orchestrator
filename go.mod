@@ -17,7 +17,7 @@ require (
 	github.com/jackc/pgconn v1.10.0
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgx/v4 v4.13.0
-	github.com/looplab/fsm v0.2.0
+	github.com/looplab/fsm v0.3.0
 	github.com/onsi/gomega v1.10.4 // indirect
 	github.com/pashagolub/pgxmock v1.4.0
 	github.com/spf13/afero v1.3.4 // indirect
