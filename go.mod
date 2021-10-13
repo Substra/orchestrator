@@ -1,9 +1,10 @@
 module github.com/owkin/orchestrator
 
-go 1.15
+go 1.16
 
 require (
 	github.com/Masterminds/squirrel v1.5.0
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/go-playground/log/v7 v7.0.2
 	github.com/golang-migrate/migrate/v4 v4.15.0
@@ -17,7 +18,6 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/looplab/fsm v0.2.0
-	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.4 // indirect
 	github.com/pashagolub/pgxmock v1.4.0
 	github.com/spf13/afero v1.3.4 // indirect
