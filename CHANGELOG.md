@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- (BREAKING) Replace objective by metric (#356)
+- (BREAKING) Multiple metrics and performances per test task (#369)
+
 ## [0.1.0] - 2021-10-04
 
 ### Fixed
@@ -13,10 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Expose the orchestrator version and chaincode version (#370)
-
-### Changed
-- (BREAKING) Replace objective by metric (#356)
-- (BREAKING) Multiple metrics and performances per test task (#369)
 
 ## [0.0.2] - 2021-09-16
 
