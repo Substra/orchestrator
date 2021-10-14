@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+
+	// #nosec: profiling tool is exposed on a separate port
 	_ "net/http/pprof"
 
 	"github.com/go-playground/log/v7"

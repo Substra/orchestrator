@@ -70,5 +70,5 @@ func (ei *Index) SetLastEvent(channel string, e *fab.CCEvent) error {
 		return err
 	}
 
-	return ioutil.WriteFile(ei.filepath, data, 0644)
+	return ioutil.WriteFile(ei.filepath, data, 0600)
 }

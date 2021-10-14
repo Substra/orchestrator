@@ -88,6 +88,7 @@ func main() {
 			InsecureSkipVerify: false,
 			Certificates:       []tls.Certificate{cert},
 			RootCAs:            cp,
+			MinVersion:         tls.VersionTLS12,
 		}
 		creds := grpc.WithTransportCredentials(credentials.NewTLS(config))
 

@@ -6,6 +6,7 @@ linters:
     - gofmt
     - importas
     - rowserrcheck
+    - gosec
 
 linters-settings:
   importas:

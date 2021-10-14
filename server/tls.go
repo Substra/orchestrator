@@ -32,6 +32,7 @@ func getTLSOptions() grpc.ServerOption {
 	// Create the credentials and return it
 	config := &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
+		MinVersion:   tls.VersionTLS12,
 	}
 
 	if common.MustGetEnvFlag("MTLS_ENABLED") {
