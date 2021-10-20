@@ -26,8 +26,8 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
       - name: wait-rabbitmq
-        image: jwilder/dockerize
-        command: ['dockerize', '-timeout', '90s', '-wait', 'tcp://{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}']
+        image: busybox
+        command: ['sh', '-c', 'until nc -vz {{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }} {{ if $.Values.rabbitmq.auth.tls.enabled }}{{.Values.rabbitmq.service.tlsPort}}{{ else }}{{.Values.rabbitmq.service.port}}{{ end }}; do echo "Waiting for rabbitmq service"; sleep 5; done;']
       containers:
         - name: rabbitmq-operator
           securityContext:

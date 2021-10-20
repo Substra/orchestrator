@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2021-10-19
+### Changed
+- Use netcat from busybox image as init containers to wait for rabbitmq and postgresql
+
 ## [3.0.0] - 2021-10-07
 ### Changed
 
