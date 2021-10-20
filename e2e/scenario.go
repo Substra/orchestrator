@@ -303,6 +303,12 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 	if models[0].Address != nil {
 		log.Fatal("model has not been disabled")
 	}
+
+	err = appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTaskRef))
+	if err == nil {
+		log.Fatal("registering a task with disabled input models should fail")
+	}
+	log.WithError(err).Debug("Failed to register task, as expected")
 }
 
 // This is the "canonical" example of FL with 2 nodes aggregating their trunks

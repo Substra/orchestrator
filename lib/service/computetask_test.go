@@ -252,6 +252,65 @@ func TestRegisterFailedTask(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
+func TestRegisterDeletedModel(t *testing.T) {
+	dbal := new(persistenceHelper.DBAL)
+	ms := new(MockModelAPI)
+	provider := newMockedProvider()
+
+	newTask := &asset.NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		ParentTaskKeys: []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"},
+		Data: &asset.NewComputeTask_Train{
+			Train: &asset.NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+	}
+
+	provider.On("GetComputeTaskDBAL").Return(dbal)
+	provider.On("GetModelService").Return(ms)
+
+	service := NewComputeTaskService(provider)
+
+	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
+	// Checking existing task
+	dbal.On("ComputeTaskExists", newTask.Key).Once().Return(false, nil)
+
+	parentPerms := &asset.Permissions{Process: &asset.Permission{Public: true}}
+	parentTask := &asset.ComputeTask{
+		Status:         asset.ComputeTaskStatus_STATUS_DONE,
+		Key:            "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db82309fff",
+		Data: &asset.ComputeTask_Train{
+			Train: &asset.TrainTaskData{
+				ModelPermissions: parentPerms,
+			},
+		},
+	}
+
+	dbal.On("GetComputeTasks", []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}).Once().
+		Return([]*asset.ComputeTask{parentTask}, nil)
+
+	ms.On("GetComputeTaskOutputModels", parentTask.Key).Once().Return([]*asset.Model{
+		{Key: "uuid1", Address: &asset.Addressable{}},
+		{Key: "disabled"},
+	}, nil)
+
+	err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
+	assert.Error(t, err)
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrInvalidAsset, orcError.Kind)
+
+	dbal.AssertExpectations(t)
+	ms.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
 func TestSetCompositeData(t *testing.T) {
 	taskInput := &asset.NewComputeTask{
 		AlgoKey: "algoUuid",
@@ -637,7 +696,7 @@ func TestIsParentCompatible(t *testing.T) {
 		t.Run(
 			fmt.Sprintf("%s: %t", c.n, c.o),
 			func(t *testing.T) {
-				assert.Equal(t, c.o, service.IsCompatibleWithParents(c.t, c.p))
+				assert.Equal(t, c.o, service.isCompatibleWithParents(c.t, c.p))
 			},
 		)
 	}

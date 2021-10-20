@@ -214,7 +214,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	if err != nil {
 		return nil, err
 	}
-	if !s.IsCompatibleWithParents(input.Category, parentTasks) {
+	if !s.isCompatibleWithParents(input.Category, parentTasks) {
 		return nil, orcerrors.NewInvalidAsset("incompatible models from parent tasks")
 	}
 
@@ -222,6 +222,10 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 	if status == asset.ComputeTaskStatus_STATUS_CANCELED || status == asset.ComputeTaskStatus_STATUS_FAILED {
 		return nil, orcerrors.NewError(orcerrors.ErrIncompatibleTaskStatus, fmt.Sprintf("cannot create a task with status %q", status.String()))
+	}
+
+	if err := s.allModelsAvailable(parentTasks); err != nil {
+		return nil, err
 	}
 
 	task := &asset.ComputeTask{
@@ -609,8 +613,8 @@ func (s *ComputeTaskService) getExistingKeys(tasks []*asset.NewComputeTask) ([]s
 	return existingKeys, nil
 }
 
-// IsCompatibleWithParents checks task compatibility with parents tasks
-func (s *ComputeTaskService) IsCompatibleWithParents(category asset.ComputeTaskCategory, parents []*asset.ComputeTask) bool {
+// isCompatibleWithParents checks task compatibility with parents tasks
+func (s *ComputeTaskService) isCompatibleWithParents(category asset.ComputeTaskCategory, parents []*asset.ComputeTask) bool {
 	inputs := map[asset.ComputeTaskCategory]uint32{}
 
 	for _, p := range parents {
@@ -638,6 +642,26 @@ func (s *ComputeTaskService) IsCompatibleWithParents(category asset.ComputeTaskC
 	default:
 		return false
 	}
+}
+
+// allModelsAvailable checks that all parent models are available to the task
+func (s *ComputeTaskService) allModelsAvailable(parents []*asset.ComputeTask) error {
+	for _, p := range parents {
+		if p.Status == asset.ComputeTaskStatus_STATUS_DONE {
+			models, err := s.GetModelService().GetComputeTaskOutputModels(p.Key)
+			if err != nil {
+				return err
+			}
+
+			for _, m := range models {
+				if m.Address == nil {
+					return orcerrors.NewInvalidAsset(fmt.Sprintf("Model %q has been disabled", m.Key))
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory

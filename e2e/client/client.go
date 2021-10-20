@@ -201,15 +201,20 @@ func (c *TestClient) RegisterMetric(o *MetricOptions) {
 }
 
 func (c *TestClient) RegisterTasks(optList ...Taskable) {
+	err := c.FailableRegisterTasks(optList...)
+	if err != nil {
+		log.WithError(err).Fatal("RegisterTasks failed")
+	}
+}
+
+func (c *TestClient) FailableRegisterTasks(optList ...Taskable) error {
 	newTasks := make([]*asset.NewComputeTask, len(optList))
 	for i, o := range optList {
 		newTasks[i] = o.GetNewTask(c.ks)
 	}
 	log.WithField("nbTasks", len(newTasks)).Debug("registering tasks")
 	_, err := c.computeTaskService.RegisterTasks(c.ctx, &asset.RegisterTasksParam{Tasks: newTasks})
-	if err != nil {
-		log.WithError(err).Fatal("RegisterTasks failed")
-	}
+	return err
 }
 
 func (c *TestClient) StartTask(keyRef string) {
