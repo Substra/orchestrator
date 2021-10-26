@@ -43,7 +43,7 @@ spec:
               hostname = {{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}
               port = {{.Values.rabbitmq.service.managerPort}}
               username = {{.Values.rabbitmq.auth.username}}
-              password = {{.Values.rabbitmq.auth.password}}
+              password = $RABBITMQ_PASSWORD
               " > ~/.rabbitmqadmin.conf
 
               echo "rabbitmqadmin configured"
@@ -145,6 +145,16 @@ spec:
               done # main loop
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  {{- if .Values.rabbitmq.auth.password }}
+                  name: {{ template "rabbitmq.serviceName" . }}
+                  {{- else }}
+                  name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
+                  {{- end }}
+                  key: rabbitmq-password
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
