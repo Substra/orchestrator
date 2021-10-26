@@ -32,11 +32,12 @@ func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	query := `
 select cp.asset,
 count(t.id),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_DONE'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_DOING'),
 count(t.id) filter (where t.asset->>'status' = 'STATUS_WAITING'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_TODO'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_DOING'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED'),
 count(t.id) filter (where t.asset->>'status' = 'STATUS_FAILED'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED')
+count(t.id) filter (where t.asset->>'status' = 'STATUS_DONE')
 from "compute_plans" as cp
 left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
 where cp.id=$1 and cp.channel=$2
@@ -46,8 +47,10 @@ group by cp.asset
 	row := d.tx.QueryRow(d.ctx, query, key, d.channel)
 
 	plan := new(asset.ComputePlan)
-	var total, done, doing, waiting, failed, canceled uint32
-	err := row.Scan(plan, &total, &done, &doing, &waiting, &failed, &canceled)
+	var total, waiting, todo, doing, canceled, failed, done uint32
+	err := row.Scan(plan, &total, &waiting, &todo, &doing, &canceled, &failed, &done)
+	println("extracted data from row:")
+	println(total, waiting, todo, doing, canceled, failed, done)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("computeplan", key)
@@ -55,8 +58,13 @@ group by cp.asset
 		return nil, err
 	}
 
-	plan.DoneCount = done
 	plan.TaskCount = total
+	plan.WaitingCount = waiting
+	plan.TodoCount = todo
+	plan.DoingCount = doing
+	plan.CanceledCount = canceled
+	plan.FailedCount = failed
+	plan.DoneCount = done
 	plan.Status = getPlanStatus(total, done, doing, waiting, failed, canceled)
 
 	return plan, nil
@@ -91,15 +99,16 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, co
 	query := `
 select cp.asset,
 count(t.id),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_DONE'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_DOING'),
 count(t.id) filter (where t.asset->>'status' = 'STATUS_WAITING'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_TODO'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_DOING'),
+count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED'),
 count(t.id) filter (where t.asset->>'status' = 'STATUS_FAILED'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED')
+count(t.id) filter (where t.asset->>'status' = 'STATUS_DONE')
 from "compute_plans" as cp
 left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
 where cp.channel=$3
-group by cp.asset, cp.asset->>'creationDate', cp.id
+group by cp.id
 order by cp.asset->>'creationDate' asc, cp.id limit $1 offset $2
 `
 
@@ -114,15 +123,21 @@ order by cp.asset->>'creationDate' asc, cp.id limit $1 offset $2
 
 	for rows.Next() {
 		plan := new(asset.ComputePlan)
-		var total, done, doing, waiting, failed, canceled uint32
 
-		err = rows.Scan(plan, &total, &done, &doing, &waiting, &failed, &canceled)
+		var total, waiting, todo, doing, canceled, failed, done uint32
+
+		err = rows.Scan(plan, &total, &waiting, &todo, &doing, &canceled, &failed, &done)
 		if err != nil {
 			return nil, "", err
 		}
 
-		plan.DoneCount = done
 		plan.TaskCount = total
+		plan.WaitingCount = waiting
+		plan.TodoCount = todo
+		plan.DoingCount = doing
+		plan.CanceledCount = canceled
+		plan.FailedCount = failed
+		plan.DoneCount = done
 		plan.Status = getPlanStatus(total, done, doing, waiting, failed, canceled)
 
 		plans = append(plans, plan)

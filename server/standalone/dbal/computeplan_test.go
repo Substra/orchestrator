@@ -20,10 +20,10 @@ func TestGetComputeTasks(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"asset", "total", "done", "todo", "waiting", "failed", "canceled"}).
-		AddRow(asset.ComputePlan{}, uint32(11), uint32(2), uint32(3), uint32(6), uint32(0), uint32(0))
+	rows := pgxmock.NewRows([]string{"asset", "total", "waiting", "todo", "doing", "canceled", "failed", "done"}).
+		AddRow(asset.ComputePlan{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
-	mock.ExpectQuery(`select cp\.asset, count\(t\.id\), count\(t\.id\) filter \(where t.asset->>'status' = 'STATUS_DONE'\)`).
+	mock.ExpectQuery(`select cp.asset`).
 		WithArgs("uuid", testChannel).
 		WillReturnRows(rows)
 
@@ -35,9 +35,14 @@ func TestGetComputeTasks(t *testing.T) {
 	plan, err := dbal.GetComputePlan("uuid")
 	assert.NoError(t, err)
 
-	assert.Equal(t, uint32(11), plan.TaskCount)
-	assert.Equal(t, uint32(2), plan.DoneCount)
-	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DOING, plan.Status)
+	assert.Equal(t, uint32(21), plan.TaskCount)
+	assert.Equal(t, uint32(1), plan.WaitingCount)
+	assert.Equal(t, uint32(2), plan.TodoCount)
+	assert.Equal(t, uint32(3), plan.DoingCount)
+	assert.Equal(t, uint32(4), plan.CanceledCount)
+	assert.Equal(t, uint32(5), plan.FailedCount)
+	assert.Equal(t, uint32(6), plan.DoneCount)
+	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plan.Status)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
@@ -159,8 +164,8 @@ func TestQueryComputePlans(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"cp.asset", "total", "done", "doing", "waiting", "failed", "canceled"}).
-		AddRow(asset.ComputePlan{}, uint32(2), uint32(2), uint32(0), uint32(0), uint32(0), uint32(0))
+	rows := pgxmock.NewRows([]string{"asset", "total", "waiting", "todo", "doing", "canceled", "failed", "done"}).
+		AddRow(asset.ComputePlan{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
 	mock.ExpectQuery(`select cp.asset,.* from "compute_plans" .* order by cp.asset->>'creationDate' asc, cp.id`).
 		WithArgs(uint32(11), 0, testChannel).
@@ -175,7 +180,14 @@ func TestQueryComputePlans(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, plans, 1)
-	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DONE, plans[0].Status)
+	assert.Equal(t, uint32(21), plans[0].TaskCount)
+	assert.Equal(t, uint32(1), plans[0].WaitingCount)
+	assert.Equal(t, uint32(2), plans[0].TodoCount)
+	assert.Equal(t, uint32(3), plans[0].DoingCount)
+	assert.Equal(t, uint32(4), plans[0].CanceledCount)
+	assert.Equal(t, uint32(5), plans[0].FailedCount)
+	assert.Equal(t, uint32(6), plans[0].DoneCount)
+	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plans[0].Status)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)

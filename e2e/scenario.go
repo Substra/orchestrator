@@ -107,6 +107,10 @@ var testScenarios = map[string]scenario{
 		testQueryComputePlan,
 		[]string{"short", "plan", "query"},
 	},
+	"GetComputePlan": {
+		testGetComputePlan,
+		[]string{"short", "plan", "query"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -947,5 +951,47 @@ func testQueryComputePlan(conn *grpc.ClientConn) {
 
 	if len(resp.Plans) != 3 {
 		log.WithField("nbPlans", len(resp.Plans)).Fatal("Unexpected number of compute plans")
+	}
+}
+
+func testGetComputePlan(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+
+	// A CP with 1 parent task and 2 child tasks
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task#1").WithParentsRef(defaultParent...))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task#2").WithParentsRef(defaultParent...))
+
+	plan := appClient.GetComputePlan(client.DefaultPlanRef)
+	expectedCounts := [7]uint32{3, 2, 1, 0, 0, 0, 0}
+	actualCounts := [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
+	if expectedCounts != actualCounts {
+		log.WithField("taskCounts", actualCounts).WithField("expected", expectedCounts).Fatal("Unexpected Values")
+	}
+
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.CancelTask("task#1")
+	appClient.FailTask("task#2")
+	plan = appClient.GetComputePlan(client.DefaultPlanRef)
+	expectedCounts = [7]uint32{3, 0, 0, 1, 1, 1, 0}
+	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
+	if expectedCounts != actualCounts {
+		log.WithField("taskCounts", actualCounts).WithField("expected", expectedCounts).Fatal("Unexpected Values")
+	}
+
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef(client.DefaultTaskRef))
+	plan = appClient.GetComputePlan(client.DefaultPlanRef)
+	expectedCounts = [7]uint32{3, 0, 0, 0, 1, 1, 1}
+	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
+	if expectedCounts != actualCounts {
+		log.WithField("taskCounts", actualCounts).WithField("expected", expectedCounts).Fatal("Unexpected Values")
 	}
 }

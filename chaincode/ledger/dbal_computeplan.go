@@ -58,6 +58,11 @@ func (db *DB) computePlanProperties(plan *asset.ComputePlan) error {
 	}
 
 	plan.TaskCount = uint32(count.total)
+	plan.WaitingCount = uint32(count.waiting)
+	plan.TodoCount = uint32(count.todo)
+	plan.DoingCount = uint32(count.doing)
+	plan.CanceledCount = uint32(count.canceled)
+	plan.FailedCount = uint32(count.failed)
 	plan.DoneCount = uint32(count.done)
 	plan.Status = count.getPlanStatus()
 
@@ -133,11 +138,12 @@ func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, com
 
 type planTaskCount struct {
 	total    int
-	done     int
 	waiting  int
+	todo     int
 	doing    int
-	failed   int
 	canceled int
+	failed   int
+	done     int
 }
 
 func (c *planTaskCount) getPlanStatus() asset.ComputePlanStatus {
@@ -194,6 +200,8 @@ func (db *DB) getTaskCounts(key string) (planTaskCount, error) {
 			count.waiting++
 		case asset.ComputeTaskStatus_STATUS_DOING.String():
 			count.doing++
+		case asset.ComputeTaskStatus_STATUS_TODO.String():
+			count.todo++
 		}
 
 		count.total++

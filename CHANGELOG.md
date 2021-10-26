@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING) Replace objective by metric (#356)
 - (BREAKING) Multiple metrics and performances per test task (#369)
 
+### Added
+- Get task counts grouped by status when querying compute plans (#400)
+
 ## [0.1.0] - 2021-10-04
 
 ### Fixed

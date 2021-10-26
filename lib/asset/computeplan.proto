@@ -19,6 +19,11 @@ enum ComputePlanStatus {
 message ComputePlan {
   string key = 1;
   string owner = 2;
+  uint32 waiting_count = 8; // Dynamic data, not persisted and set on query
+  uint32 todo_count = 9; // Dynamic data, not persisted and set on query
+  uint32 doing_count = 10; // Dynamic data, not persisted and set on query
+  uint32 canceled_count = 11; // Dynamic data, not persisted and set on query
+  uint32 failed_count = 12; // Dynamic data, not persisted and set on query
   uint32 done_count = 3; // Dynamic data, not persisted and set on query
   uint32 task_count = 4; // Dynamic data, not persisted and set on query
   ComputePlanStatus status = 5; // Dynamic data, not persisted and set on query
