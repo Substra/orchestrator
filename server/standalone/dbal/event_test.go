@@ -1,11 +1,15 @@
 package dbal
 
 import (
+	"context"
 	"testing"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
+	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEventFilterToQuery(t *testing.T) {
@@ -38,5 +42,37 @@ func TestEventFilterToQuery(t *testing.T) {
 			assert.Contains(t, query, c.queryContains)
 			assert.Equal(t, c.params, params)
 		})
+	}
+}
+
+func TestEventQuery(t *testing.T) {
+	mock, err := pgxmock.NewConn()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	rows := pgxmock.NewRows([]string{"asset"}).
+		AddRow(&asset.Event{}).
+		AddRow(&asset.Event{})
+
+	mock.ExpectQuery(`SELECT event FROM events`).WithArgs(testChannel).WillReturnRows(rows)
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	res, _, err := dbal.QueryEvents(common.NewPagination("", 10), &asset.EventQueryFilter{})
+	assert.NoError(t, err)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+	for _, event := range res {
+		assert.Equal(t, testChannel, event.Channel)
 	}
 }

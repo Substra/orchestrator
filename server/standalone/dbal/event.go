@@ -104,6 +104,7 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter)
 		if err != nil {
 			return nil, "", err
 		}
+		event.Channel = d.channel
 
 		events = append(events, event)
 		count++

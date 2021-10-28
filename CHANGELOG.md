@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Get task counts grouped by status when querying compute plans (#400)
 
+### Fixed
+- Events queried from the gRPC API now have their channel properly set (#414)
+
 ## [0.1.0] - 2021-10-04
 
 ### Fixed

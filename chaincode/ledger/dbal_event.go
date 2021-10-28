@@ -97,6 +97,7 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) 
 		if err != nil {
 			return nil, "", err
 		}
+		event.Channel = db.ccStub.GetChannelID()
 
 		events = append(events, event)
 	}

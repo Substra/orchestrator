@@ -15,15 +15,16 @@ import (
 func TestQueryTaskEvents(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	stub.On("GetChannelID").Return("eventTestChannel")
 
-	resp := &testHelper.MockedStateQueryIterator{}
-	resp.On("Close").Return(nil)
-	resp.On("HasNext").Once().Return(false)
-	resp.On("Next").Once().Return(&queryresult.KV{}, nil)
+	iter := &testHelper.MockedStateQueryIterator{}
+	iter.On("Close").Return(nil)
+	iter.On("HasNext").Once().Return(false)
+	iter.On("Next").Once().Return(&queryresult.KV{}, nil)
 
 	queryString := `{"selector":{"doc_type":"event","asset":{"asset_key":"uuid","asset_kind":"ASSET_COMPUTE_TASK"}}}`
 	stub.On("GetQueryResultWithPagination", queryString, int32(10), "").
-		Return(resp, &peer.QueryResponseMetadata{Bookmark: "", FetchedRecordsCount: 1}, nil)
+		Return(iter, &peer.QueryResponseMetadata{Bookmark: "", FetchedRecordsCount: 1}, nil)
 
 	pagination := common.NewPagination("", 10)
 
@@ -32,6 +33,10 @@ func TestQueryTaskEvents(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 	}
 
-	_, _, err := db.QueryEvents(pagination, filter)
+	resp, _, err := db.QueryEvents(pagination, filter)
 	assert.NoError(t, err)
+
+	for _, event := range resp {
+		assert.Equal(t, "eventTestChannel", event.Channel)
+	}
 }
