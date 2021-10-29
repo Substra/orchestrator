@@ -64,6 +64,11 @@ database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker 
 To launch the orchestrator:
 ```bash
 skaffold dev
+```
+
+or
+
+```bash
 skaffold run
 ```
 
@@ -72,7 +77,7 @@ Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster IP (edi
 grpcurl -insecure orchestrator.node-1.com:443 list
 ```
 
-You can also deploy [connect-backend](https://github.com/owkin/connect-backend/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev` or `skaffold run`
+You can also deploy [connect-backend](https://github.com/owkin/connect-backend) with a `skaffold dev` or `skaffold run`
 
 ### Distributed mode
 
