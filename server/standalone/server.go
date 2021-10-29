@@ -13,6 +13,7 @@ import (
 	"github.com/owkin/orchestrator/server/standalone/handlers"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
 )
 
 type AppServer struct {
@@ -21,7 +22,7 @@ type AppServer struct {
 	db   *dbal.Database
 }
 
-func GetServer(dbURL string, rabbitDSN string, params common.AppParameters) (*AppServer, error) {
+func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, healthcheck *health.Server) (*AppServer, error) {
 	pgDB, err := dbal.InitDatabase(dbURL)
 	if err != nil {
 		return nil, err
@@ -32,7 +33,7 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters) (*Ap
 	channelInterceptor := common.NewChannelInterceptor(params.Config)
 
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
-	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session)
+	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session, healthcheck)
 
 	retryInterceptor := common.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 

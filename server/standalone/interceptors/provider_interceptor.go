@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
@@ -20,12 +21,17 @@ var ignoredMethods = [...]string{
 	"grpc.health",
 }
 
+type HealthReporter interface {
+	Shutdown()
+}
+
 // ProviderInterceptor intercepts gRPC requests and assign a request-scoped orchestration.Provider
 // to the request context.
 type ProviderInterceptor struct {
-	amqp         common.AMQPPublisher
-	dbalProvider dbal.TransactionalDBALProvider
-	txChecker    common.TransactionChecker
+	amqp           common.AMQPPublisher
+	dbalProvider   dbal.TransactionalDBALProvider
+	txChecker      common.TransactionChecker
+	statusReporter HealthReporter
 }
 
 type ctxProviderInterceptorMarker struct{}
@@ -33,11 +39,12 @@ type ctxProviderInterceptorMarker struct{}
 var ctxProviderKey = &ctxProviderInterceptorMarker{}
 
 // NewProviderInterceptor returns an instance of ProviderInterceptor
-func NewProviderInterceptor(dbalProvider dbal.TransactionalDBALProvider, amqp common.AMQPPublisher) *ProviderInterceptor {
+func NewProviderInterceptor(dbalProvider dbal.TransactionalDBALProvider, amqp common.AMQPPublisher, statusReporter HealthReporter) *ProviderInterceptor {
 	return &ProviderInterceptor{
-		amqp:         amqp,
-		dbalProvider: dbalProvider,
-		txChecker:    new(common.GrpcMethodChecker),
+		amqp:           amqp,
+		dbalProvider:   dbalProvider,
+		txChecker:      new(common.GrpcMethodChecker),
+		statusReporter: statusReporter,
 	}
 }
 
@@ -53,6 +60,11 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		if strings.Contains(info.FullMethod, m) {
 			return handler(ctx, req)
 		}
+	}
+
+	if !pi.amqp.IsReady() {
+		pi.statusReporter.Shutdown()
+		return nil, orcerrors.NewInternal("Message broker not ready")
 	}
 
 	channel, err := common.ExtractChannel(ctx)
@@ -83,6 +95,9 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 			return nil, fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
 		}
 	} else {
+		if !pi.amqp.IsReady() {
+			return nil, orcerrors.NewInternal("Message broker not ready")
+		}
 		commitErr := tx.Commit()
 		if commitErr != nil {
 			return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
@@ -90,7 +105,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		go func() {
 			dispatchErr := dispatcher.Dispatch(ctx)
 			if dispatchErr != nil {
-				// simply log since we cannot rollback the DB transaction anyway
+				pi.statusReporter.Shutdown()
 				logger.Get(ctx).WithError(dispatchErr).
 					WithField("events", dispatcher.GetEvents()).
 					Error("failed to dispatch events after successful transaction commit")

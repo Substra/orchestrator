@@ -82,6 +82,8 @@ func fromMessage(msg string) error {
 		return status.Error(codes.Unimplemented, msg)
 	case strings.Contains(msg, orcerrors.ErrCannotDisableModel):
 		return status.Error(codes.InvalidArgument, msg)
+	case strings.Contains(msg, orcerrors.ErrInternal):
+		return status.Error(codes.Internal, msg)
 	default:
 		return status.Error(codes.Unknown, msg)
 	}
@@ -115,6 +117,8 @@ func fromError(err error) error {
 		return status.Error(codes.Unimplemented, err.Error())
 	case orcError.Kind == orcerrors.ErrCannotDisableModel:
 		return status.Error(codes.InvalidArgument, err.Error())
+	case orcError.Kind == orcerrors.ErrInternal:
+		return status.Error(codes.Internal, err.Error())
 	default:
 		return status.Error(codes.Unknown, err.Error())
 	}

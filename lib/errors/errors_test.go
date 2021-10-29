@@ -19,7 +19,7 @@ func TestMessageFormating(t *testing.T) {
 }
 
 func TestErrorWrapping(t *testing.T) {
-	err := NewError(ErrInternalError, "test").Wrap(errTest)
+	err := NewError(ErrInternal, "test").Wrap(errTest)
 
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, errTest))
@@ -28,5 +28,5 @@ func TestErrorWrapping(t *testing.T) {
 	outErr := new(OrcError)
 	assert.True(t, errors.As(err, &outErr))
 
-	assert.Equal(t, ErrInternalError, outErr.Kind)
+	assert.Equal(t, ErrInternal, outErr.Kind)
 }

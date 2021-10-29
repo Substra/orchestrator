@@ -24,6 +24,7 @@ func TestStatusConversion(t *testing.T) {
 		"incompatible_status": {err: errors.NewError(errors.ErrIncompatibleTaskStatus, "test"), code: codes.InvalidArgument},
 		"unimplemented":       {err: errors.NewError(errors.ErrUnimplemented, "test"), code: codes.Unimplemented},
 		"unprocessable model": {err: errors.NewError(errors.ErrCannotDisableModel, "test"), code: codes.InvalidArgument},
+		"internal":            {err: errors.NewInternal("test"), code: codes.Internal},
 	}
 
 	for name, tc := range cases {

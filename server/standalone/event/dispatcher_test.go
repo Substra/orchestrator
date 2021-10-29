@@ -7,22 +7,13 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-type MockAMQPChannel struct {
-	mock.Mock
-}
-
-func (m *MockAMQPChannel) Publish(ctx context.Context, routingKey string, data []byte) error {
-	args := m.Called(ctx, routingKey, data)
-	return args.Error(0)
-}
-
 func TestEventChannel(t *testing.T) {
-	amqp := &MockAMQPChannel{}
+	amqp := new(common.MockPublisher)
 	dispatcher := NewAMQPDispatcher(amqp, "testChannel")
 
 	e := &asset.Event{AssetKind: asset.AssetKind_ASSET_NODE, AssetKey: "test", EventKind: asset.EventKind_EVENT_ASSET_CREATED}

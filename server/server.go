@@ -40,11 +40,11 @@ func getDistributedServer(params common.AppParameters) common.Runnable {
 	return server
 }
 
-func getStandaloneServer(params common.AppParameters) common.Runnable {
+func getStandaloneServer(params common.AppParameters, healthcheck *health.Server) common.Runnable {
 	dbURL := common.MustGetEnv("DATABASE_URL")
 	rabbitDSN := common.MustGetEnv("AMQP_DSN")
 
-	server, err := standalone.GetServer(dbURL, rabbitDSN, params)
+	server, err := standalone.GetServer(dbURL, rabbitDSN, params, healthcheck)
 	if err != nil {
 		log.WithError(err).Fatal("failed to create standalone server")
 	}
@@ -87,9 +87,11 @@ func main() {
 		RetryBudget: retryBudget,
 	}
 
+	healthcheck := health.NewServer()
+
 	var app common.Runnable
 	if standaloneMode {
-		app = getStandaloneServer(params)
+		app = getStandaloneServer(params, healthcheck)
 	} else {
 		app = getDistributedServer(params)
 	}
@@ -99,7 +101,6 @@ func main() {
 	reflection.Register(app.GetGrpcServer())
 
 	// Register healthcheck service
-	healthcheck := health.NewServer()
 	healthpb.RegisterHealthServer(app.GetGrpcServer(), healthcheck)
 
 	// Expose profiling endpoint

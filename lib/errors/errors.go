@@ -34,8 +34,8 @@ var (
 	// ErrConflict is a sentinel value to mark conflicting asset errors.
 	ErrConflict = "OE0006" // value 6 match gRPC AlreadyExists status code
 
-	// ErrInternalError happens when an unexpected error occurs (eg; unreachable code)
-	ErrInternalError = "OE0007"
+	// ErrInternal happens when an unexpected error occurs (eg; unreachable code)
+	ErrInternal = "OE0007"
 
 	// ErrUnimplemented occurs when unimplemented code is triggered
 	ErrUnimplemented = "OE0010"
@@ -151,7 +151,7 @@ func NewCannotDisableModel(msg string) *OrcError {
 
 // NewInternal returns an ErrInternalError kind of OrcError with given message
 func NewInternal(msg string) *OrcError {
-	return newErrorWithSource(ErrInternalError, msg)
+	return newErrorWithSource(ErrInternal, msg)
 }
 
 // FromValidationError returns an OrcError with ErrInvalidAsset kind wrapping the underlying validation error

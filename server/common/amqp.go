@@ -13,6 +13,8 @@ import (
 // AMQPPublisher represent the ability to push a message to a broker.
 type AMQPPublisher interface {
 	Publish(ctx context.Context, routingKey string, data []byte) error
+	// IsReady should return false if the publisher cannot handle message dispatch
+	IsReady() bool
 }
 
 // Session object wraps amqp library.
@@ -196,7 +198,7 @@ func (session *Session) Publish(ctx context.Context, routingKey string, data []b
 	log := logger.Get(ctx).WithField("numBytes", len(data))
 
 	if !session.isReady {
-		return errors.New("failed to push message: not connected")
+		return errNotConnected
 	}
 	for {
 		err := session.UnsafePush(ctx, (routingKey), data)
@@ -256,4 +258,8 @@ func (session *Session) Close() error {
 	close(session.done)
 	session.isReady = false
 	return nil
+}
+
+func (session *Session) IsReady() bool {
+	return session.isReady
 }

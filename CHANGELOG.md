@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - (BREAKING) Replace objective by metric (#356)
 - (BREAKING) Multiple metrics and performances per test task (#369)
+- fail gRPC healthcheck and stop serving on message broker disconnection (#397)
 
 ### Added
 - Get task counts grouped by status when querying compute plans (#400)

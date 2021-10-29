@@ -14,3 +14,8 @@ func (m *MockPublisher) Publish(ctx context.Context, routingKey string, data []b
 	args := m.Called(ctx, routingKey, data)
 	return args.Error(0)
 }
+
+func (m *MockPublisher) IsReady() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
