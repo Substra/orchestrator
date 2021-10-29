@@ -49,8 +49,6 @@ group by cp.asset
 	plan := new(asset.ComputePlan)
 	var total, waiting, todo, doing, canceled, failed, done uint32
 	err := row.Scan(plan, &total, &waiting, &todo, &doing, &canceled, &failed, &done)
-	println("extracted data from row:")
-	println(total, waiting, todo, doing, canceled, failed, done)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("computeplan", key)
