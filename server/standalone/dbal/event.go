@@ -133,7 +133,7 @@ func eventFilterToQuery(filter *asset.EventQueryFilter, builder squirrel.SelectB
 	}
 
 	if filter.AssetKey != "" {
-		builder = builder.Where(squirrel.Eq{"event->>'assetKey'": filter.AssetKey})
+		builder = builder.Where(squirrel.Eq{"asset_key": filter.AssetKey})
 	}
 	if filter.AssetKind != asset.AssetKind_ASSET_UNKNOWN {
 		builder = builder.Where(squirrel.Eq{"event->>'assetKind'": filter.AssetKind.String()})

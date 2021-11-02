@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Events queried from the gRPC API now have their channel properly set (#414)
+- Leverage asset_key index when querying events
 
 ## [0.1.0] - 2021-10-04
 

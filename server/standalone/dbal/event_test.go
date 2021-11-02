@@ -19,14 +19,14 @@ func TestEventFilterToQuery(t *testing.T) {
 		params        []interface{}
 	}{
 		"empty":         {&asset.EventQueryFilter{}, "", nil},
-		"single filter": {&asset.EventQueryFilter{AssetKey: "uuid"}, "event->>'assetKey' = $1", []interface{}{"uuid"}},
+		"single filter": {&asset.EventQueryFilter{AssetKey: "uuid"}, "asset_key = $1", []interface{}{"uuid"}},
 		"two filter": {
 			&asset.EventQueryFilter{AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK, EventKind: asset.EventKind_EVENT_ASSET_CREATED},
 			"event->>'assetKind' = $1 AND event->>'eventKind' = $2",
 			[]interface{}{asset.AssetKind_ASSET_COMPUTE_TASK.String(), asset.EventKind_EVENT_ASSET_CREATED.String()}},
 		"three filter": {
 			&asset.EventQueryFilter{AssetKey: "uuid", AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN, EventKind: asset.EventKind_EVENT_ASSET_UPDATED},
-			"event->>'assetKey' = $1 AND event->>'assetKind' = $2 AND event->>'eventKind' = $3",
+			"asset_key = $1 AND event->>'assetKind' = $2 AND event->>'eventKind' = $3",
 			[]interface{}{"uuid", asset.AssetKind_ASSET_COMPUTE_PLAN.String(), asset.EventKind_EVENT_ASSET_UPDATED.String()},
 		},
 	}
