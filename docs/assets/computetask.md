@@ -58,7 +58,6 @@ A task can have several status (see *States* below for available transitions):
 - DONE: task has been successfully completed.
 - FAILED: task execution has failed.
 - CANCELED: task execution has been interrupted or stopped before completion.
-This may happen if a parent has failed: the task won't be processed; or if the user cancels the compute plan.
 
 ## State
 
