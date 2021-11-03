@@ -71,6 +71,8 @@ A task can be created in TODO or WAITING state depending on its parents.
 During the ComputePlan execution, as tasks are DONE, their statuses will be reflected to their children.
 If all the parents of a child task are DONE, this task enters TODO state.
 
+When a parent task fails, children statuses are not changed.
+
 A task may produces one or more [models](./model.md), they can only be registered when the task in in DOING.
 This is to ensure that when a task starts (switch to DOING), all its inputs are available.
 
