@@ -58,14 +58,14 @@ func TestEventQuery(t *testing.T) {
 		AddRow(&asset.Event{}).
 		AddRow(&asset.Event{})
 
-	mock.ExpectQuery(`SELECT event FROM events`).WithArgs(testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT event FROM events .* ORDER BY event->'timestamp' ASC, id ASC`).WithArgs(testChannel).WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	res, _, err := dbal.QueryEvents(common.NewPagination("", 10), &asset.EventQueryFilter{})
+	res, _, err := dbal.QueryEvents(common.NewPagination("", 10), &asset.EventQueryFilter{}, asset.SortOrder_ASCENDING)
 	assert.NoError(t, err)
 
 	if err := mock.ExpectationsWereMet(); err != nil {

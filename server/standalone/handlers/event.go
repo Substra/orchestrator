@@ -24,7 +24,11 @@ func (s *EventServer) QueryEvents(ctx context.Context, params *asset.QueryEvents
 		return nil, err
 	}
 
-	events, paginationToken, err := services.GetEventService().QueryEvents(common.NewPagination(params.PageToken, params.PageSize), params.Filter)
+	events, paginationToken, err := services.GetEventService().QueryEvents(
+		common.NewPagination(params.PageToken, params.PageSize),
+		params.Filter,
+		params.Sort,
+	)
 	if err != nil {
 		return nil, err
 	}

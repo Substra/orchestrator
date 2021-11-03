@@ -50,7 +50,11 @@ func (s *SmartContract) QueryEvents(ctx ledger.TransactionContext, wrapper *comm
 		return nil, err
 	}
 
-	events, nextPage, err := service.QueryEvents(common.NewPagination(params.GetPageToken(), params.GetPageSize()), params.Filter)
+	events, nextPage, err := service.QueryEvents(
+		common.NewPagination(params.GetPageToken(), params.GetPageSize()),
+		params.Filter,
+		params.Sort,
+	)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query events")
 		return nil, err

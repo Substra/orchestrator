@@ -22,7 +22,7 @@ func TestQueryTaskEvents(t *testing.T) {
 	iter.On("HasNext").Once().Return(false)
 	iter.On("Next").Once().Return(&queryresult.KV{}, nil)
 
-	queryString := `{"selector":{"doc_type":"event","asset":{"asset_key":"uuid","asset_kind":"ASSET_COMPUTE_TASK"}}}`
+	queryString := `{"selector":{"doc_type":"event","asset":{"asset_key":"uuid","asset_kind":"ASSET_COMPUTE_TASK"}},"sort":[{"asset.timestamp":"asc"},{"asset.id":"asc"}]}`
 	stub.On("GetQueryResultWithPagination", queryString, int32(10), "").
 		Return(iter, &peer.QueryResponseMetadata{Bookmark: "", FetchedRecordsCount: 1}, nil)
 
@@ -33,7 +33,7 @@ func TestQueryTaskEvents(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 	}
 
-	resp, _, err := db.QueryEvents(pagination, filter)
+	resp, _, err := db.QueryEvents(pagination, filter, asset.SortOrder_ASCENDING)
 	assert.NoError(t, err)
 
 	for _, event := range resp {

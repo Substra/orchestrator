@@ -148,3 +148,45 @@ func TestTransactionState(t *testing.T) {
 	assert.Equal(t, b, []byte("{}"))
 	assert.NoError(t, err)
 }
+
+func TestRichQueryFilter(t *testing.T) {
+	cases := map[string]struct {
+		filter richQuerySelector
+		output string
+	}{
+		"simple asset": {
+			filter: richQuerySelector{
+				Selector: couchAssetQuery{DocType: "event"},
+			},
+			output: `{"selector":{"doc_type":"event"}}`,
+		},
+		"fields": {
+			filter: richQuerySelector{
+				Selector: couchAssetQuery{DocType: "event"},
+				Fields:   []string{"asset_key"},
+			},
+			output: `{"selector":{"doc_type":"event"},"fields":["asset_key"]}`,
+		},
+		"asset filter": {
+			filter: richQuerySelector{
+				Selector: couchAssetQuery{DocType: "event", Asset: map[string]interface{}{"asset_key": "uuid"}},
+			},
+			output: `{"selector":{"doc_type":"event","asset":{"asset_key":"uuid"}}}`,
+		},
+		"sort": {
+			filter: richQuerySelector{
+				Selector: couchAssetQuery{DocType: "event"},
+				Sort:     []map[string]string{{"asset.timestamp": CouchDBSortAsc}},
+			},
+			output: `{"selector":{"doc_type":"event"},"sort":[{"asset.timestamp":"asc"}]}`,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			b, err := json.Marshal(tc.filter)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.output, string(b))
+		})
+	}
+}

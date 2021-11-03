@@ -7,7 +7,7 @@ import (
 
 type EventDBAL interface {
 	AddEvents(events ...*asset.Event) error
-	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error)
+	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error)
 }
 
 type EventDBALProvider interface {

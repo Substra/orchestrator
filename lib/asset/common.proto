@@ -18,8 +18,9 @@ enum AssetKind {
 }
 
 enum SortOrder {
-  ASCENDING = 0;
-  DESCENDING = 1;
+  UNSPECIFIED = 0;
+  ASCENDING = 1;
+  DESCENDING = 2;
 }
 
 // Addressable references an asset on the network.

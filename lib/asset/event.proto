@@ -30,6 +30,7 @@ message QueryEventsParam {
   string page_token = 1;
   uint32 page_size = 2;
   EventQueryFilter filter = 3;
+  SortOrder sort = 4;
 }
 
 message EventQueryFilter {

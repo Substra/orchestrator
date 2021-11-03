@@ -1,6 +1,7 @@
 package dbal
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
@@ -64,7 +65,7 @@ func (d *DBAL) addEvents(events []*asset.Event) error {
 	return err
 }
 
-func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error) {
+func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error) {
 	var rows pgx.Rows
 	var err error
 
@@ -73,11 +74,17 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter)
 		return nil, "", err
 	}
 
+	order := PgSortAsc
+	if sortOrder == asset.SortOrder_DESCENDING {
+		order = PgSortDesc
+	}
+	orderBy := fmt.Sprintf("event->'timestamp' %s, id %s", order, order)
+
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	builder := pgDialect.Select("event").
 		From("events").
 		Where(squirrel.Eq{"channel": d.channel}).
-		OrderByClause("event->'timestamp' ASC, id").
+		OrderByClause(orderBy).
 		Offset(uint64(offset)).
 		Limit(uint64(p.Size + 1))
 

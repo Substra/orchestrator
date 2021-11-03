@@ -17,11 +17,19 @@ for CHAN in "${CHANS[@]}"; do
         sleep 10s
     done
 
-    echo "create index on $DB"
+    echo "create doc_type index on $DB"
     curl -S -s -o /dev/null -i -X POST -H "Content-Type: application/json" -d \
          "{\"index\":{\"fields\":[\"doc_type\"]},
          \"name\":\"ix_doc_type\",
          \"ddoc\":\"genericAssetDoc\",
+         \"type\":\"json\"}" \
+             "$COUCHDB_BASEURL/$DB/_index"
+
+    echo "create event_ts index on $DB"
+    curl -S -s -o /dev/null -i -X POST -H "Content-Type: application/json" -d \
+         "{\"index\":{\"fields\":[\"doc_type\",\"asset.timestamp\",\"asset.id\"]},
+         \"name\":\"ix_event_ts\",
+         \"ddoc\":\"eventDoc\",
          \"type\":\"json\"}" \
              "$COUCHDB_BASEURL/$DB/_index"
 done

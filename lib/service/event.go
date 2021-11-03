@@ -12,7 +12,7 @@ import (
 type EventAPI interface {
 	// RegisterEvents allow to register multiple events at once.
 	RegisterEvents(...*asset.Event) error
-	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error)
+	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error)
 }
 
 type EventServiceProvider interface {
@@ -52,6 +52,6 @@ func (s *EventService) RegisterEvents(events ...*asset.Event) error {
 	return nil
 }
 
-func (s *EventService) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error) {
-	return s.GetEventDBAL().QueryEvents(p, filter)
+func (s *EventService) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error) {
+	return s.GetEventDBAL().QueryEvents(p, filter, sortOrder)
 }

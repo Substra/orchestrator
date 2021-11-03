@@ -15,6 +15,9 @@ import (
 	"github.com/owkin/orchestrator/lib/persistence"
 )
 
+const PgSortAsc = "ASC"
+const PgSortDesc = "DESC"
+
 // TransactionDBAL is a persistence.DBAL augmented with transaction capabilities.
 // It's purpose is to be rollbacked in case of error or commited at the end of a successful request.
 type TransactionDBAL interface {

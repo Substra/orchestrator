@@ -38,7 +38,7 @@ func (db *DB) AddEvents(events ...*asset.Event) error {
 	return nil
 }
 
-func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) ([]*asset.Event, common.PaginationToken, error) {
+func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error) {
 	logger := db.logger.WithFields(
 		log.F("pagination", p),
 		log.F("filter", filter),
@@ -49,6 +49,16 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter) 
 		Selector: couchAssetQuery{
 			DocType: eventResource,
 		},
+	}
+
+	sort := CouchDBSortAsc
+	if sortOrder == asset.SortOrder_DESCENDING {
+		sort = CouchDBSortDesc
+	}
+
+	query.Sort = []map[string]string{
+		{"asset.timestamp": sort},
+		{"asset.id": sort},
 	}
 
 	assetFilter := map[string]interface{}{}

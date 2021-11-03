@@ -15,6 +15,14 @@ import (
 	"github.com/owkin/orchestrator/utils"
 )
 
+// CouchDBSortAsc represents the ascending sort order value used by CouchDB
+// as defined in https://docs.couchdb.org/en/stable/api/database/find.html#sort-syntax
+const CouchDBSortAsc = "asc"
+
+// CouchDBSortDesc represents the descending sort order value used by CouchDB
+// as defined in https://docs.couchdb.org/en/stable/api/database/find.html#sort-syntax
+const CouchDBSortDesc = "desc"
+
 // DB is the distributed ledger persistence layer implementing persistence.DBAL
 // This backend does not allow to read the current writes, they will only be commited after a successful response.
 type DB struct {
@@ -309,6 +317,7 @@ type couchAssetQuery struct {
 }
 
 type richQuerySelector struct {
-	Selector couchAssetQuery `json:"selector"`
-	Fields   []string        `json:"fields,omitempty"`
+	Selector couchAssetQuery     `json:"selector"`
+	Fields   []string            `json:"fields,omitempty"`
+	Sort     []map[string]string `json:"sort,omitempty"`
 }
