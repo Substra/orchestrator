@@ -37,6 +37,10 @@ spec:
           command: ['bash', '-c']
           args:
             - |
+              # Graceful shutdown on SIGTERM
+              # See https://veithen.io/2014/11/16/sigterm-propagation.html
+              trap 'exit 143' TERM
+
               ## Configure rabbitmqctl
               echo "
               [default]
@@ -141,7 +145,11 @@ spec:
               {{- end}}
               {{- end }}
 
-              sleep 30
+              # Graceful shutdown on SIGTERM
+              # See https://veithen.io/2014/11/16/sigterm-propagation.html
+              sleep 30 &
+              wait $!
+
               done # main loop
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

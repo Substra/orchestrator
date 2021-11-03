@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.3] - 2021-11-02
+### Fixed
+- Graceful shutdown of rabbitmq-operator
+
 ## [3.0.2] - 2021-10-25
 ### Changed
 - Pass broker password to the operator through env var
