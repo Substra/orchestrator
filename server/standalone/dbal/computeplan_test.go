@@ -23,7 +23,7 @@ func TestGetComputeTasks(t *testing.T) {
 	rows := pgxmock.NewRows([]string{"asset", "total", "waiting", "todo", "doing", "canceled", "failed", "done"}).
 		AddRow(asset.ComputePlan{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
-	mock.ExpectQuery(`select cp.asset`).
+	mock.ExpectQuery(`SELECT cp.asset`).
 		WithArgs("uuid", testChannel).
 		WillReturnRows(rows)
 
@@ -167,8 +167,8 @@ func TestQueryComputePlans(t *testing.T) {
 	rows := pgxmock.NewRows([]string{"asset", "total", "waiting", "todo", "doing", "canceled", "failed", "done"}).
 		AddRow(asset.ComputePlan{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
-	mock.ExpectQuery(`select cp.asset,.* from "compute_plans" .* order by cp.asset->>'creationDate' asc, cp.id`).
-		WithArgs(uint32(11), 0, testChannel).
+	mock.ExpectQuery(`SELECT cp.asset,.* FROM compute_plans .* ORDER BY cp.asset->>'creationDate' ASC, cp.id`).
+		WithArgs(testChannel).
 		WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())

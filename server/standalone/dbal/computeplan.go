@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -29,26 +30,32 @@ func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 
 // GetComputePlan returns a ComputePlan by its key
 func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
-	query := `
-select cp.asset,
-count(t.id),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_WAITING'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_TODO'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_DOING'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_FAILED'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_DONE')
-from "compute_plans" as cp
-left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
-where cp.id=$1 and cp.channel=$2
-group by cp.asset
-`
+	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	builder := pgDialect.Select().
+		Column("cp.asset").
+		Column(squirrel.Expr("COUNT(t.id)")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_WAITING')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_TODO')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_DOING')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_CANCELED')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_FAILED')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_DONE')")).
+		From("compute_plans AS cp").
+		LeftJoin("compute_tasks AS t ON (t.asset->>'computePlanKey')::uuid = cp.id AND t.channel = cp.channel").
+		Where(squirrel.Eq{"cp.id": key}).
+		Where(squirrel.Eq{"cp.channel": d.channel}).
+		GroupBy("cp.asset")
 
-	row := d.tx.QueryRow(d.ctx, query, key, d.channel)
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	row := d.tx.QueryRow(d.ctx, query, args...)
 
 	plan := new(asset.ComputePlan)
 	var total, waiting, todo, doing, canceled, failed, done uint32
-	err := row.Scan(plan, &total, &waiting, &todo, &doing, &canceled, &failed, &done)
+	err = row.Scan(plan, &total, &waiting, &todo, &doing, &canceled, &failed, &done)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("computeplan", key)
@@ -94,23 +101,30 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, co
 		return nil, "", err
 	}
 
-	query := `
-select cp.asset,
-count(t.id),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_WAITING'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_TODO'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_DOING'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_CANCELED'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_FAILED'),
-count(t.id) filter (where t.asset->>'status' = 'STATUS_DONE')
-from "compute_plans" as cp
-left join "compute_tasks" as t on (t.asset->>'computePlanKey')::uuid = cp.id and t.channel = cp.channel
-where cp.channel=$3
-group by cp.id
-order by cp.asset->>'creationDate' asc, cp.id limit $1 offset $2
-`
+	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	builder := pgDialect.Select().
+		Column("cp.asset").
+		Column(squirrel.Expr("COUNT(t.id)")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_WAITING')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_TODO')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_DOING')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_CANCELED')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_FAILED')")).
+		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_DONE')")).
+		From("compute_plans AS cp").
+		LeftJoin("compute_tasks AS t ON (t.asset->>'computePlanKey')::uuid = cp.id AND t.channel = cp.channel").
+		Where(squirrel.Eq{"cp.channel": d.channel}).
+		GroupBy("cp.id").
+		OrderBy("cp.asset->>'creationDate' ASC", "cp.id ASC").
+		Offset(uint64(offset)).
+		Limit(uint64(p.Size + 1))
 
-	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, "", err
+	}
+
+	rows, err = d.tx.Query(d.ctx, query, args...)
 	if err != nil {
 		return nil, "", err
 	}
