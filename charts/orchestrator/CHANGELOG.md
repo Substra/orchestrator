@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2021-11-04
+
+### Added
+- Create a _[Certificate](https://cert-manager.io/docs/concepts/certificate/)_ ressource as part of the chart
+
+### Changed
+
+- Moved `orchestrator.tls.mtls.secrets.clientCACerts` to `orchestrator.tls.mtls.clientCACerts`
+- Moved `orchestrator.tls.secrets.cacert` to `orchestrator.tls.cacert`
+
 ## [3.0.3] - 2021-11-02
 ### Fixed
 - Graceful shutdown of rabbitmq-operator

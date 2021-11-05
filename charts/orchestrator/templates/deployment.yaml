@@ -119,7 +119,7 @@ spec:
               mountPath: /var/orchestrator/tls/server/cacert
               readOnly: true
             {{- if $.Values.orchestrator.tls.mtls.enabled }}
-            {{- range $org, $secret := $.Values.orchestrator.tls.mtls.secrets.clientCACerts }}
+            {{- range $org, $secret := $.Values.orchestrator.tls.mtls.clientCACerts }}
             - name: orchestrator-tls-client-cacert-{{ $org }}
               mountPath: /var/orchestrator/tls/client/{{ $org }}
               readOnly: true
@@ -155,16 +155,16 @@ spec:
         {{- end }}
         {{- if $.Values.orchestrator.tls.enabled }}
         - name: orchestrator-tls-cacert
-          secret:
-            secretName: {{ $.Values.orchestrator.tls.secrets.cacert }}
+          configMap:
+            name: {{ $.Values.orchestrator.tls.cacert }}
         - name: orchestrator-tls-server-pair
           secret:
             secretName: {{ $.Values.orchestrator.tls.secrets.pair }}
         {{- if $.Values.orchestrator.tls.mtls.enabled }}
-        {{- range $org, $secret := $.Values.orchestrator.tls.mtls.secrets.clientCACerts }}
+        {{- range $org, $cacert := $.Values.orchestrator.tls.mtls.clientCACerts }}
         - name: orchestrator-tls-client-cacert-{{ $org }}
-          secret:
-            secretName: {{ $secret }}
+          configMap:
+            name: {{ $cacert }}
         {{- end }}
         {{- end }}
         {{- end }}

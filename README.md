@@ -56,6 +56,13 @@ If you are interested in adding a new asset there is a [step by step documentati
 
 A good entry point to get an overview of the codebase is to launch `godoc -http=:6060` and [open module documentation](http://localhost:6060/pkg/github.com/owkin/orchestrator/).
 
+
+If you want to run the orchestrator with Skaffold you will need to add the jetstack helm repo:
+
+```sh
+helm repo add jetstack https://charts.jetstack.io
+```
+
 ### Standalone mode
 
 When running in standalone mode, the orchestrator needs a [postgres](https://www.postgresql.org/)
@@ -63,13 +70,13 @@ database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker 
 
 To launch the orchestrator:
 ```bash
-skaffold dev
+skaffold dev --status-check=false
 ```
 
 or
 
 ```bash
-skaffold run
+skaffold run --status-check=false
 ```
 
 Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
@@ -96,8 +103,8 @@ Make sure you deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s/
 Then, in the orchestrator repo:
 
 ```bash
-skaffold dev -p distributed
-skaffold run -p distributed
+skaffold dev -p distributed --status-check=false
+skaffold run -p distributed --status-check=false
 ```
 
 Assuming `orchestrator.node-1.com` and `orchestrator.node-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
@@ -110,6 +117,8 @@ You can also deploy [connect-backend](https://github.com/owkin/connect-backend/t
 ### Testing
 
 You can call the local orchestrator gRPC endpoint using [evans](https://github.com/ktr0731/evans)
+
+Before launching Evans you may need to generate and retrieve a client certificate using the tool `examples/tools/dowload_client_cert.sh`.
 
 ```bash
 evans --tls --cacert examples/tools/ca.crt --host orchestrator.node-1.com -p 443 -r repl --cert examples/tools/client-org-1.crt --certkey examples/tools/client-org-1.key

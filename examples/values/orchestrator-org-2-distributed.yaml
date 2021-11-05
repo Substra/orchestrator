@@ -5,15 +5,22 @@ orchestrator:
   logLevel: DEBUG
   logSQL: true
   tls:
+    createCertificates:
+      enabled: true
+      domains:
+        - "orchestrator.node-2.com"
+        - "owkin-orchestrator-org-2-server.org-2.svc.cluster.local"
+        - "owkin-orchestrator-org-2-rabbitmq.org-2.svc.cluster.local"
+      duration: 2160h
+      issuer: owkin-issuer
     enabled: true
     secrets:
       pair: orchestrator-tls-server-pair
-      cacert: orchestrator-tls-cacert
+    cacert: orchestrator-tls-cacert
     mtls:
       enabled: true
-      secrets:
-        clientCACerts:
-          orchestrator-ca: orchestrator-tls-cacert
+      clientCACerts:
+        orchestrator-ca: orchestrator-tls-cacert
   txRetryBudget: 90s
   fabricGatewayTimeout: 40s
 

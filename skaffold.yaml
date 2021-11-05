@@ -1,4 +1,4 @@
-apiVersion: skaffold/v2beta10
+apiVersion: skaffold/v2beta24
 kind: Config
 build:
   artifacts:
@@ -13,6 +13,11 @@ build:
 deploy:
   helm:
     releases:
+      - name: cert-manager
+        remoteChart: jetstack/cert-manager
+        namespace: cert-manager
+        createNamespace: true
+        version: v1.6.0
       - name: owkin-orchestrator-org-1
         chartPath: charts/orchestrator
         namespace: org-1
@@ -23,13 +28,19 @@ deploy:
         imageStrategy:
           helm: {}
         valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
-
+    hooks:
+      before:
+        - host:
+            command:
+              - sh
+              - -c
+              - "kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.6.0/cert-manager.crds.yaml"
   kubectl:
     manifests:
-      - examples/secrets/secret-tls-org-1-cacert.yaml
-      - examples/secrets/secret-tls-org-1-server-pair.yaml
-      - examples/secrets/secret-tls-org-2-cacert.yaml
-
+      - examples/k8s/cm-tls-org-1-cacert.yaml
+      - examples/k8s/secret-cacert-certmanager.yaml
+      - examples/k8s/certmanagerca.yaml
+      - examples/k8s/cm-tls-org-2-cacert.yaml
 profiles:
 - name: distributed
   patches:
@@ -41,10 +52,10 @@ profiles:
       docker:
         dockerfile: docker/orchestrator-forwarder/Dockerfile
   - op: replace
-    path: /deploy/helm/releases/0/valuesFiles
+    path: /deploy/helm/releases/1/valuesFiles
     value: [ examples/values/orchestrator-org-1-distributed.yaml ]
   - op: replace
-    path: /deploy/helm/releases/0/artifactOverrides
+    path: /deploy/helm/releases/1/artifactOverrides
     value:
       orchestrator.image: substrafoundation/orchestrator-server
       forwarder.image: substrafoundation/orchestrator-forwarder
@@ -64,10 +75,6 @@ profiles:
         helm: {}
       valuesFiles: [ examples/values/orchestrator-org-2-distributed.yaml ]
       skipBuildDependencies: true # deps already built by other release (org-1)
-  - op: add
-    path: "/deploy/kubectl/manifests/-"
-    value:
-      examples/secrets/secret-tls-org-2-server-pair.yaml
 - name: nodeps
   patches:
     - op: add

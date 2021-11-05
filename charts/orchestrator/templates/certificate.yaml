@@ -1,0 +1,34 @@
+{{- if .Values.orchestrator.tls.createCertificates.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "orchestrator.server.fullname" . }}
+  labels:
+    {{- include "orchestrator.server.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: {{ .Values.orchestrator.tls.secrets.pair }}
+  secretTemplate:
+    labels:
+      {{- include "orchestrator.server.labels" . | nindent 6 }}
+  duration: {{ .Values.orchestrator.tls.createCertificates.duration }}
+  renewBefore: 360h # 15 days
+  subject:
+    organizations:
+      - {{ .Values.fabric.organization | default "Owkin" }}
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+  {{- range .Values.orchestrator.tls.createCertificates.domains }}
+    - {{ . }}
+  {{- end }}
+  issuerRef:
+    name: {{ .Values.orchestrator.tls.createCertificates.issuer }}
+    kind: ClusterIssuer
+{{- end }}

@@ -5,15 +5,22 @@ orchestrator:
   logLevel: DEBUG
   logSQL: true
   tls:
+    createCertificates:
+      enabled: true
+      domains:
+        - "orchestrator.node-1.com"
+        - "owkin-orchestrator-org-1-server.org-1.svc.cluster.local"
+        - "owkin-orchestrator-org-1-rabbitmq.org-1.svc.cluster.local"
+      duration: 2160h
+      issuer: owkin-issuer
     enabled: true
     secrets:
       pair: orchestrator-tls-server-pair
-      cacert: orchestrator-tls-cacert
+    cacert: orchestrator-tls-cacert
     mtls:
       enabled: true
-      secrets:
-        clientCACerts:
-          orchestrator-ca: orchestrator-tls-cacert
+      clientCACerts:
+        orchestrator-ca: orchestrator-tls-cacert
   txRetryBudget: 90s
   fabricGatewayTimeout: 40s
 
@@ -39,7 +46,7 @@ postgresql:
 ingress:
   enabled: true
   hostname: "orchestrator.node-1.com"
-  
+
 channels:
   - name: mychannel
     organizations: [ MyOrg1MSP ] # single org required here

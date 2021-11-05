@@ -76,10 +76,14 @@ The following table lists the configurable parameters of the orchestrator chart 
 | `orchestrator.fabricGatewayTimeout`           | Commit timeout ([go format](https://golang.org/pkg/time/#ParseDuration)) for all transaction submissions for the gateway (only used in distributed mode)                      | `20s`                                                                                           |
 | `orchestrator.tls`                            | Orchestrator TLS options. See [TLS](#TLS).                                                                                                                                    |                                                                                                 |
 | `orchestrator.tls.enabled`                    | If true, enable TLS for the orchestrator gRPC endpoint                                                                                                                        | `false`                                                                                         |
+| `orchestrator.tls.createCertificates.enabled` | If true, create a cert-manager _Certificate_ ressource for the orchestrator                                                                                                   | `false`                                                                                         |
+| `orchestrator.tls.createCertificates.domains` | A list of domains to be covered by the generated certificate                                                                                                                  | `[]`                                                                                            |
+| `orchestrator.tls.createCertificates.duration`| TTL of the orchestrator certificate                                                                                                                                           | `2160h`                                                                                         |
+| `orchestrator.tls.createCertificates.issuer`  | _ClusterIssuer_ responsible for the creation of this _Certificate_                                                                                                            | `""`                                                                                            |
 | `orchestrator.tls.secrets.pair`               | A secret containing the server TLS cert/key pair `tls.crt` and `tls.key`                                                                                                      | `orchestrator-tls-server-pair`                                                                  |
-| `orchestrator.tls.secrets.cacert`             | A secret containing the server TLS CA Cert `ca.crt`                                                                                                                           | `orchestrator-tls-cacert`                                                                       |
+| `orchestrator.tls.cacert`                     | A _ConfigMap_ containing the server TLS CA Cert `ca.crt`                                                                                                                      | `""`                                                                       |
 | `orchestrator.tls.mtls.enabled`               | If true, enable TLS client verification                                                                                                                                       | `false`                                                                                         |
-| `orchestrator.tls.mtls.secrets.clientCACerts` | A map whose keys are names of CAs, and values are secrets containing CA certs `ca.crt`                                                                                        |                                                                                                 |
+| `orchestrator.tls.mtls.clientCACerts`         | A map whose keys are names of CAs, and values are secrets containing CA certs `ca.crt`                                                                                        |                                                                                                 |
 | `forwarder.image.repository`                  | Event forwarder image repository                                                                                                                                              | `owkin/forwarder`                                                                               |
 | `forwarder.image.tag`                         | Event forwarder image tag                                                                                                                                                     | *Chart version*                                                                                 |
 | `forwarder.image.pullPolicy`                  | Image pull policy                                                                                                                                                             | `IfNotPresent`                                                                                  |
@@ -108,12 +112,11 @@ orchestrator:
     enabled: true
     secrets:
       pair: orchestrator-tls-server-pair
-      cacert: orchestrator-tls-cacert
+    cacert: orchestrator-tls-cacert
     mtls:
       enabled: true # enable mutual TLS
-      secrets:
-        clientCACerts: # list of client CA certs
-          orchestrator-ca: orchestrator-tls-cacert
+      clientCACerts: # list of client CA certs
+        orchestrator-ca: orchestrator-tls-cacert
 ```
 
 #### Ingress
