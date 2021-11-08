@@ -3,7 +3,9 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/go-playground/log/v7"
@@ -11,12 +13,25 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/owkin/orchestrator/chaincode/contracts"
 	"github.com/owkin/orchestrator/utils"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+const httpPort = "8484"
 
 func main() {
 	utils.InitLogging()
 
 	CCID := os.Getenv("CHAINCODE_CCID")
+
+	http.Handle("/metrics", promhttp.Handler())
+
+	// Expose HTTP endpoints
+	go func() {
+		err := http.ListenAndServe(fmt.Sprintf(":%s", httpPort), nil)
+		if err != nil {
+			log.WithError(err).WithField("port", httpPort).Error("failed to serve HTTP endpoints")
+		}
+	}()
 
 	allContracts := contracts.NewContractCollection().GetAllContracts()
 

@@ -16,6 +16,7 @@ import (
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"github.com/owkin/orchestrator/utils"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/yaml.v2"
 )
 
@@ -82,6 +83,7 @@ func main() {
 	log.Debug("all listeners ready")
 
 	http.HandleFunc("/", healthcheck)
+	http.Handle("/metrics", promhttp.Handler())
 	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.WithError(err).Fatal("Could not spawn http server")

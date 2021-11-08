@@ -20,6 +20,7 @@ require (
 	github.com/looplab/fsm v0.3.0
 	github.com/onsi/gomega v1.10.4 // indirect
 	github.com/pashagolub/pgxmock v1.4.0
+	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/spf13/afero v1.3.4 // indirect
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0

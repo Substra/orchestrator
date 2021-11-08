@@ -17,6 +17,7 @@ import (
 	"github.com/owkin/orchestrator/server/distributed"
 	"github.com/owkin/orchestrator/server/standalone"
 	"github.com/owkin/orchestrator/utils"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -103,7 +104,9 @@ func main() {
 	// Register healthcheck service
 	healthpb.RegisterHealthServer(app.GetGrpcServer(), healthcheck)
 
-	// Expose profiling endpoint
+	http.Handle("/metrics", promhttp.Handler())
+
+	// Expose HTTP endpoints
 	go func() {
 		err := http.ListenAndServe(fmt.Sprintf(":%s", httpPort), nil)
 		if err != nil {
