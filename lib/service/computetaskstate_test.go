@@ -98,16 +98,18 @@ func TestDispatchOnTransition(t *testing.T) {
 	service := NewComputeTaskService(provider)
 
 	returnedTask := &asset.ComputeTask{
-		Key:    "uuid",
-		Status: asset.ComputeTaskStatus_STATUS_TODO,
-		Worker: "worker",
+		Key:            "uuid",
+		Status:         asset.ComputeTaskStatus_STATUS_TODO,
+		Worker:         "worker",
+		ComputePlanKey: "uuidcp",
 	}
 	dbal.On("GetComputeTask", "uuid").Return(returnedTask, nil)
 
 	expectedTask := &asset.ComputeTask{
-		Key:    "uuid",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
-		Worker: "worker",
+		Key:            "uuid",
+		Status:         asset.ComputeTaskStatus_STATUS_DOING,
+		Worker:         "worker",
+		ComputePlanKey: "uuidcp",
 	}
 	dbal.On("UpdateComputeTask", expectedTask).Once().Return(nil)
 
@@ -116,9 +118,10 @@ func TestDispatchOnTransition(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 		Metadata: map[string]string{
-			"status": expectedTask.Status.String(),
-			"reason": "User action",
-			"worker": "worker",
+			"status":           expectedTask.Status.String(),
+			"reason":           "User action",
+			"worker":           "worker",
+			"compute_plan_key": "uuidcp",
 		},
 	}
 	es.On("RegisterEvents", expectedEvent).Once().Return(nil)

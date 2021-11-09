@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - sort queried events (#417)
 - expose basic metrics from server, chaincode and forwarder
+- filter queried events on metadata (#422)
 
 ## [0.2.0] - 2021-11-02
 

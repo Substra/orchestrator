@@ -71,6 +71,9 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, 
 	if filter.EventKind != asset.EventKind_EVENT_UNKNOWN {
 		assetFilter["event_kind"] = filter.EventKind.String()
 	}
+	if filter.Metadata != nil {
+		assetFilter["metadata"] = filter.Metadata
+	}
 	if len(assetFilter) > 0 {
 		query.Selector.Asset = assetFilter
 	}

@@ -148,6 +148,9 @@ func eventFilterToQuery(filter *asset.EventQueryFilter, builder squirrel.SelectB
 	if filter.EventKind != asset.EventKind_EVENT_UNKNOWN {
 		builder = builder.Where(squirrel.Eq{"event->>'eventKind'": filter.EventKind.String()})
 	}
+	if filter.Metadata != nil {
+		builder = builder.Where(squirrel.Expr("event->'metadata' @> ?", filter.Metadata))
+	}
 
 	return builder
 }

@@ -220,6 +220,7 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 
 	s.GetLogger().WithFields(
 		log.F("taskKey", task.Key),
+		log.F("computePlanKey", task.ComputePlanKey),
 		log.F("newStatus", task.Status),
 		log.F("taskWorker", task.Worker),
 		log.F("reason", reason),
@@ -236,9 +237,10 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 		AssetKey:  task.Key,
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 		Metadata: map[string]string{
-			"status": task.Status.String(),
-			"reason": reason,
-			"worker": task.Worker,
+			"status":           task.Status.String(),
+			"reason":           reason,
+			"worker":           task.Worker,
+			"compute_plan_key": task.ComputePlanKey,
 		},
 	}
 	err = s.GetEventService().RegisterEvents(event)
