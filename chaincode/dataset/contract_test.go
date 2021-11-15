@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/mocks"
+	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *mocks.TransactionContext) *service.MockDatasetAPI {
+func getMockedService(ctx *ledger.MockTransactionContext) *service.MockDatasetAPI {
 	mockService := new(service.MockDatasetAPI)
 
 	provider := new(service.MockDependenciesProvider)
@@ -45,7 +45,7 @@ func TestGetDataset(t *testing.T) {
 		},
 	}
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("GetDataset", key).Return(dataset, nil).Once()

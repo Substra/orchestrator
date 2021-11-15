@@ -6,14 +6,14 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterAlgo(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	mps := new(MockPermissionAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
@@ -86,7 +86,7 @@ func TestRegisterAlgo(t *testing.T) {
 }
 
 func TestGetAlgo(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	provider.On("GetAlgoDBAL").Return(dbal)
 	service := NewAlgoService(provider)
@@ -104,7 +104,7 @@ func TestGetAlgo(t *testing.T) {
 }
 
 func TestQueryAlgos(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	provider.On("GetAlgoDBAL").Return(dbal)
 	service := NewAlgoService(provider)

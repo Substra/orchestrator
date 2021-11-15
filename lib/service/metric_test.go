@@ -6,14 +6,14 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterMetric(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	mps := new(MockPermissionAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
@@ -83,7 +83,7 @@ func TestRegisterMetric(t *testing.T) {
 }
 
 func TestGetMetric(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	provider.On("GetMetricDBAL").Return(dbal)
 	service := NewMetricService(provider)
@@ -101,7 +101,7 @@ func TestGetMetric(t *testing.T) {
 }
 
 func TestQueryMetrics(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	provider.On("GetMetricDBAL").Return(dbal)
 	service := NewMetricService(provider)
@@ -128,7 +128,7 @@ func TestQueryMetrics(t *testing.T) {
 }
 
 func TestCanDownload(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	provider.On("GetMetricDBAL").Return(dbal)
 	service := NewMetricService(provider)

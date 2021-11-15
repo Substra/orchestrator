@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/mocks"
+	"github.com/owkin/orchestrator/chaincode/ledger"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -14,7 +14,7 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *mocks.TransactionContext) *service.MockAlgoAPI {
+func getMockedService(ctx *ledger.MockTransactionContext) *service.MockAlgoAPI {
 	mockService := new(service.MockAlgoAPI)
 
 	provider := new(service.MockDependenciesProvider)
@@ -51,7 +51,7 @@ func TestRegistration(t *testing.T) {
 
 	a := &asset.Algo{}
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterAlgo", newObj, mspid).Return(a, nil).Once()
@@ -77,7 +77,7 @@ func TestQueryAlgos(t *testing.T) {
 		Category: asset.AlgoCategory_ALGO_SIMPLE,
 	}
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 	service := getMockedService(ctx)
 	service.On("QueryAlgos", &common.Pagination{Token: "", Size: 20}, filter).Return(algos, "", nil).Once()
 

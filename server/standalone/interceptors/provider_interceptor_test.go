@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceTesting "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
@@ -18,7 +18,7 @@ import (
 )
 
 type mockedTransactionDBAL struct {
-	persistenceTesting.DBAL
+	persistence.MockDBAL
 }
 
 func (m *mockedTransactionDBAL) Commit() error {

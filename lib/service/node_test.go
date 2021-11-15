@@ -7,13 +7,13 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterNode(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
@@ -50,7 +50,7 @@ func TestRegisterNode(t *testing.T) {
 }
 
 func TestRegisterExistingNode(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 
 	provider.On("GetNodeDBAL").Return(dbal)

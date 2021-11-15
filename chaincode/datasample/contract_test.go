@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/mocks"
+	"github.com/owkin/orchestrator/chaincode/ledger"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getMockedService(ctx *mocks.TransactionContext) *service.MockDataSampleAPI {
+func getMockedService(ctx *ledger.MockTransactionContext) *service.MockDataSampleAPI {
 	mockService := new(service.MockDataSampleAPI)
 
 	provider := new(service.MockDependenciesProvider)
@@ -41,7 +41,7 @@ func TestRegistration(t *testing.T) {
 	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterDataSamples", newSamples, mspid).Return(nil).Once()
@@ -65,7 +65,7 @@ func TestUpdate(t *testing.T) {
 	wrapper, err := communication.Wrap(context.Background(), updateDataSample)
 	assert.NoError(t, err)
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("UpdateDataSamples", updateDataSample, mspid).Return(nil).Once()
@@ -86,7 +86,7 @@ func TestQueryDataSamples(t *testing.T) {
 		{Key: "9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 	}
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("QueryDataSamples", &common.Pagination{Token: "", Size: 10}).Return(datasamples, "", nil).Once()

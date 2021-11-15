@@ -5,11 +5,7 @@
 # Generated files
 lib/asset/json.go
 lib/asset/*.pb.go
-lib/service/mock_*.go
-lib/event/mock_*.go
-lib/persistence/mocks
-chaincode/mocks
-forwarder/event/mock_*.go
+mock_*.go
 server/standalone/migration/bindata.go
 examples/tools/client-org-1.crt
 examples/tools/client-org-1.key

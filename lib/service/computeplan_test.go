@@ -6,13 +6,13 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestGetPlan(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 
 	provider.On("GetComputePlanDBAL").Return(dbal)
@@ -31,7 +31,7 @@ func TestGetPlan(t *testing.T) {
 }
 
 func TestRegisterPlan(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
@@ -76,7 +76,7 @@ func TestRegisterPlan(t *testing.T) {
 }
 
 func TestCancelPlan(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
 
@@ -120,7 +120,7 @@ func TestCancelPlan(t *testing.T) {
 }
 
 func TestComputePlanAllowIntermediaryModelDeletion(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 
 	provider.On("GetComputePlanDBAL").Return(dbal)

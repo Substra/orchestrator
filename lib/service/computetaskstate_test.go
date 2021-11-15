@@ -5,7 +5,7 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -88,7 +88,7 @@ func TestFailedStateChange(t *testing.T) {
 }
 
 func TestDispatchOnTransition(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	provider := newMockedProvider()
 
@@ -133,7 +133,7 @@ func TestDispatchOnTransition(t *testing.T) {
 }
 
 func TestUpdateTaskStateCanceled(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	provider := newMockedProvider()
 
@@ -162,7 +162,7 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 }
 
 func TestCascadeStatusDone(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	provider := newMockedProvider()
 

@@ -6,14 +6,14 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterDataManager(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	mps := new(MockPermissionAPI)
 	provider := newMockedProvider()
 	es := new(MockEventAPI)
@@ -83,7 +83,7 @@ func TestRegisterDataManager(t *testing.T) {
 }
 
 func TestGetDataManager(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)
@@ -102,7 +102,7 @@ func TestGetDataManager(t *testing.T) {
 }
 
 func TestQueryDataManagers(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)
@@ -130,7 +130,7 @@ func TestQueryDataManagers(t *testing.T) {
 }
 
 func TestIsOwner(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerDBAL").Return(dbal)
 	service := NewDataManagerService(provider)

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/mocks"
+	"github.com/owkin/orchestrator/chaincode/ledger"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +18,7 @@ func TestQueryVersion(t *testing.T) {
 		Chaincode:    "dev",
 		Orchestrator: "",
 	}
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	ctx.On("SetRequestID", "").Once()
 	ctx.On("GetContext").Return(context.Background())

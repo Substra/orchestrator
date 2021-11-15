@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/mocks"
+	"github.com/owkin/orchestrator/chaincode/ledger"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -21,7 +21,7 @@ func TestEvaluateTransactions(t *testing.T) {
 	assert.Equal(t, query, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
 }
 
-func getMockedService(ctx *mocks.TransactionContext) *service.MockDataManagerAPI {
+func getMockedService(ctx *ledger.MockTransactionContext) *service.MockDataManagerAPI {
 	mockService := new(service.MockDataManagerAPI)
 
 	provider := new(service.MockDependenciesProvider)
@@ -42,7 +42,7 @@ func TestQueryDataManagers(t *testing.T) {
 		{Key: "9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 	}
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("QueryDataManagers", &common.Pagination{Token: "", Size: 10}).Return(datamanagers, "", nil).Once()
@@ -83,7 +83,7 @@ func TestRegistration(t *testing.T) {
 
 	dm := &asset.DataManager{}
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterDataManager", newObj, mspid).Return(dm, nil).Once()

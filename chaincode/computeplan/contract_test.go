@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/mocks"
+	"github.com/owkin/orchestrator/chaincode/ledger"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -14,7 +14,7 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *mocks.TransactionContext) *service.MockComputePlanAPI {
+func getMockedService(ctx *ledger.MockTransactionContext) *service.MockComputePlanAPI {
 	mockService := new(service.MockComputePlanAPI)
 
 	provider := new(service.MockDependenciesProvider)
@@ -40,7 +40,7 @@ func TestRegistration(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterPlan", input, org).Return(output, nil).Once()
@@ -67,7 +67,7 @@ func TestApplyAction(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("ApplyPlanAction", input.Key, input.Action, org).Return(nil).Once()
@@ -86,7 +86,7 @@ func TestQueryComputePlans(t *testing.T) {
 		{Tag: "test2"},
 	}
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 	service := getMockedService(ctx)
 	service.On("QueryPlans", &common.Pagination{Token: "", Size: 20}).Return(computePlans, "", nil).Once()
 

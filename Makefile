@@ -72,11 +72,7 @@ proto-codegen: $(pbgo)
 
 .PHONY: mocks
 mocks:
-	mockery --dir $(PROJECT_ROOT)/lib/event --all --inpackage --quiet
-	mockery --dir $(PROJECT_ROOT)/lib/service --all --inpackage --quiet
-	mockery --dir $(PROJECT_ROOT)/lib/persistence --all --output $(PROJECT_ROOT)/lib/persistence/mocks --quiet
-	mockery --dir $(PROJECT_ROOT)/forwarder/event --all --inpackage --quiet
-	mockery --dir $(PROJECT_ROOT)/chaincode --all --output $(PROJECT_ROOT)/chaincode/mocks --quiet
+	mockery --dir $(PROJECT_ROOT) --all --inpackage --quiet
 
 .PHONY: clean
 clean: clean-protos clean-migrations-binpack clean-generated clean-mocks
@@ -88,11 +84,7 @@ test: codegen mocks
 
 .PHONY: clean-mocks
 clean-mocks:
-	-rm $(PROJECT_ROOT)/lib/service/mock_*.go
-	-rm $(PROJECT_ROOT)/lib/event/mock_*.go
-	-rm -r $(PROJECT_ROOT)/lib/persistence/mocks
-	-rm -r $(PROJECT_ROOT)/forwarder/event/mock_*.go
-	-rm -r $(PROJECT_ROOT)/chaincode/mocks
+	find $(PROJECT_ROOT) -name "mock_*.go"
 
 .PHONY: clean-protos
 clean-protos:

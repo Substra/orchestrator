@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/mocks"
+	"github.com/owkin/orchestrator/chaincode/ledger"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
@@ -14,7 +14,7 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *mocks.TransactionContext) *service.MockNodeAPI {
+func getMockedService(ctx *ledger.MockTransactionContext) *service.MockNodeAPI {
 	mockService := new(service.MockNodeAPI)
 
 	provider := new(service.MockDependenciesProvider)
@@ -37,7 +37,7 @@ func TestRegistration(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	stub.On("GetCreator").Return(b, nil).Once()
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("RegisterNode", org).Return(o, nil).Once()
@@ -63,7 +63,7 @@ func TestGetAllNodes(t *testing.T) {
 		{Id: "org2"},
 	}
 
-	ctx := new(mocks.TransactionContext)
+	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
 	service.On("GetAllNodes").Return(nodes, nil).Once()

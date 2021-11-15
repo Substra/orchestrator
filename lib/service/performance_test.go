@@ -5,14 +5,14 @@ import (
 	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestRegisterPerformance(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)

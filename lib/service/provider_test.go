@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/event"
-	persistenceHelper "github.com/owkin/orchestrator/lib/persistence/mocks"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ func newMockedProvider() *MockDependenciesProvider {
 }
 
 func TestServiceProviderInit(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	dispatcher := new(event.MockDispatcher)
 	time := new(MockTimeAPI)
 	provider := NewProvider(log.Entry{}, dbal, dispatcher, time)
@@ -35,7 +35,7 @@ func TestServiceProviderInit(t *testing.T) {
 }
 
 func TestLazyInstanciation(t *testing.T) {
-	dbal := new(persistenceHelper.DBAL)
+	dbal := new(persistence.MockDBAL)
 	dispatcher := new(event.MockDispatcher)
 	time := new(MockTimeAPI)
 	provider := NewProvider(log.Entry{}, dbal, dispatcher, time)
