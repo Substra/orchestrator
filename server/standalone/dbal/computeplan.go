@@ -9,6 +9,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/lib/persistence"
 )
 
 // ComputePlanExists returns true if a ComputePlan with the given key already exists
@@ -174,18 +175,14 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, co
 
 // getPlanStatus determines ComputePlan status from its task counts
 func getPlanStatus(total, done, doing, waiting, failed, canceled uint32) asset.ComputePlanStatus {
-	switch true {
-	case failed > 0:
-		return asset.ComputePlanStatus_PLAN_STATUS_FAILED
-	case canceled > 0:
-		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED
-	case total == done:
-		return asset.ComputePlanStatus_PLAN_STATUS_DONE
-	case total == waiting:
-		return asset.ComputePlanStatus_PLAN_STATUS_WAITING
-	case waiting < total && done == 0 && doing == 0:
-		return asset.ComputePlanStatus_PLAN_STATUS_TODO
-	default:
-		return asset.ComputePlanStatus_PLAN_STATUS_DOING
+	count := persistence.ComputePlanTaskCount{
+		Total:    (int)(total),
+		Waiting:  (int)(waiting),
+		Doing:    (int)(doing),
+		Canceled: (int)(canceled),
+		Failed:   (int)(failed),
+		Done:     (int)(done),
 	}
+
+	return count.GetPlanStatus()
 }

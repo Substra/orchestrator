@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/lib/persistence"
 )
 
 // AddComputePlan stores a new ComputePlan in DB
@@ -57,14 +58,14 @@ func (db *DB) computePlanProperties(plan *asset.ComputePlan) error {
 		return err
 	}
 
-	plan.TaskCount = uint32(count.total)
-	plan.WaitingCount = uint32(count.waiting)
-	plan.TodoCount = uint32(count.todo)
-	plan.DoingCount = uint32(count.doing)
-	plan.CanceledCount = uint32(count.canceled)
-	plan.FailedCount = uint32(count.failed)
-	plan.DoneCount = uint32(count.done)
-	plan.Status = count.getPlanStatus()
+	plan.TaskCount = uint32(count.Total)
+	plan.WaitingCount = uint32(count.Waiting)
+	plan.TodoCount = uint32(count.Todo)
+	plan.DoingCount = uint32(count.Doing)
+	plan.CanceledCount = uint32(count.Canceled)
+	plan.FailedCount = uint32(count.Failed)
+	plan.DoneCount = uint32(count.Done)
+	plan.Status = count.GetPlanStatus()
 
 	return nil
 }
@@ -136,43 +137,9 @@ func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, com
 	return plans, bookmark.Bookmark, nil
 }
 
-type planTaskCount struct {
-	total    int
-	waiting  int
-	todo     int
-	doing    int
-	canceled int
-	failed   int
-	done     int
-}
-
-func (c *planTaskCount) getPlanStatus() asset.ComputePlanStatus {
-	if c.done == c.total {
-		return asset.ComputePlanStatus_PLAN_STATUS_DONE
-	}
-
-	if c.failed > 0 {
-		return asset.ComputePlanStatus_PLAN_STATUS_FAILED
-	}
-
-	if c.canceled > 0 {
-		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED
-	}
-
-	if c.waiting == c.total {
-		return asset.ComputePlanStatus_PLAN_STATUS_WAITING
-	}
-
-	if c.waiting < c.total && c.doing == 0 && c.done == 0 {
-		return asset.ComputePlanStatus_PLAN_STATUS_TODO
-	}
-
-	return asset.ComputePlanStatus_PLAN_STATUS_DOING
-}
-
 // getTaskCounts returns the count of plan's tasks by status.
-func (db *DB) getTaskCounts(key string) (planTaskCount, error) {
-	count := planTaskCount{}
+func (db *DB) getTaskCounts(key string) (persistence.ComputePlanTaskCount, error) {
+	count := persistence.ComputePlanTaskCount{}
 
 	iterator, err := db.ccStub.GetStateByPartialCompositeKey(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key})
 	if err != nil {
@@ -191,20 +158,20 @@ func (db *DB) getTaskCounts(key string) (planTaskCount, error) {
 		}
 		switch keyParts[2] {
 		case asset.ComputeTaskStatus_STATUS_CANCELED.String():
-			count.canceled++
+			count.Canceled++
 		case asset.ComputeTaskStatus_STATUS_DONE.String():
-			count.done++
+			count.Done++
 		case asset.ComputeTaskStatus_STATUS_FAILED.String():
-			count.failed++
+			count.Failed++
 		case asset.ComputeTaskStatus_STATUS_WAITING.String():
-			count.waiting++
+			count.Waiting++
 		case asset.ComputeTaskStatus_STATUS_DOING.String():
-			count.doing++
+			count.Doing++
 		case asset.ComputeTaskStatus_STATUS_TODO.String():
-			count.todo++
+			count.Todo++
 		}
 
-		count.total++
+		count.Total++
 	}
 
 	return count, nil
