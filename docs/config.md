@@ -27,6 +27,7 @@ Unless specified, all settings are mandatory.
 | `LOG_LEVEL`                           | standalone, distributed | string (INFO, WARN, NOTICE, ERROR, etc)                            | log verbosity (default to INFO)                                                                        |
 | `NO_COLOR`                            | standalone, distributed | presence (regardless of its value)                                 | disable log color (see [no-color](https://no-color.org/))                                              |
 | `LOG_SQL`                             | standalone              | presence (regardless of its value)                                 | log SQL statements with debug verbosity.                                                               |
+| `METRICS_ENABLED`                     | standalone, distributed | bool: `true`/`false`                                               | whether to enable prometheus metrics.                                                                   |
 
 ## Forwarder settings
 

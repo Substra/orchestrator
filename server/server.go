@@ -104,7 +104,9 @@ func main() {
 	// Register healthcheck service
 	healthpb.RegisterHealthServer(app.GetGrpcServer(), healthcheck)
 
-	http.Handle("/metrics", promhttp.Handler())
+	if metricsEnabled, _ := utils.GetenvBool("METRICS_ENABLED"); metricsEnabled {
+		http.Handle("/metrics", promhttp.Handler())
+	}
 
 	// Expose HTTP endpoints
 	go func() {

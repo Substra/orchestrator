@@ -23,15 +23,17 @@ func main() {
 
 	CCID := os.Getenv("CHAINCODE_CCID")
 
-	http.Handle("/metrics", promhttp.Handler())
+	if metricsEnabled, _ := utils.GetenvBool("METRICS_ENABLED"); metricsEnabled {
+		http.Handle("/metrics", promhttp.Handler())
 
-	// Expose HTTP endpoints
-	go func() {
-		err := http.ListenAndServe(fmt.Sprintf(":%s", httpPort), nil)
-		if err != nil {
-			log.WithError(err).WithField("port", httpPort).Error("failed to serve HTTP endpoints")
-		}
-	}()
+		// Expose HTTP endpoints
+		go func() {
+			err := http.ListenAndServe(fmt.Sprintf(":%s", httpPort), nil)
+			if err != nil {
+				log.WithError(err).WithField("port", httpPort).Error("failed to serve HTTP endpoints")
+			}
+		}()
+	}
 
 	allContracts := contracts.NewContractCollection().GetAllContracts()
 

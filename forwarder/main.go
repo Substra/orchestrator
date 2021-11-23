@@ -83,7 +83,11 @@ func main() {
 	log.Debug("all listeners ready")
 
 	http.HandleFunc("/", healthcheck)
-	http.Handle("/metrics", promhttp.Handler())
+
+	if metricsEnabled, _ := utils.GetenvBool("METRICS_ENABLED"); metricsEnabled {
+		http.Handle("/metrics", promhttp.Handler())
+	}
+
 	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.WithError(err).Fatal("Could not spawn http server")

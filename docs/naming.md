@@ -1,5 +1,7 @@
 # Naming conventions
 
+## Protobuf procedures
+
 Asset retrival and querying methods should follow these patterns:
 
 - GetXXX should take a key and return a single entity
@@ -15,3 +17,9 @@ Some RPC methods receive specific (ie: not an asset) input and output.
 In those cases, the following convention should be used: the input should be the name of the function suffixed by `Param`, the output suffixed by `Response`.
 
 Example: the function named `QueryComputeTask` takes a `QueryComputeTaskParam` and returns a `QueryComputeTaskResponse`.
+
+## Feature flags
+
+Feature flags passed through environment variables should follow the pattern `FEATURE_ENABLED` and accept a boolean value.
+
+Example: `METRICS_ENABLED`.

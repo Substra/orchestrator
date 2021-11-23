@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-playground/log/v7"
+	"github.com/owkin/orchestrator/utils"
 )
 
 // envPrefix is the string prefixing environment variables related to the orchestrator
@@ -25,7 +26,12 @@ func MustGetEnv(name string) string {
 // If the environment variable is not found, the program panics with an error message.
 // Every env var is prefixed with "ORCHESTRATOR_".
 func MustGetEnvFlag(name string) bool {
-	return MustGetEnv(name) == "true"
+	n := envPrefix + name
+	v, err := utils.GetenvBool(n)
+	if err != nil {
+		log.WithField("env_var", envPrefix+name).WithError(err).Fatal("Failed to determine flag from environment")
+	}
+	return v
 }
 
 // GetEnv attempts to get an environment variable
