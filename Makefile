@@ -84,7 +84,7 @@ test: codegen mocks
 
 .PHONY: clean-mocks
 clean-mocks:
-	find $(PROJECT_ROOT) -name "mock_*.go"
+	find $(PROJECT_ROOT) -name "mock_*.go" -delete
 
 .PHONY: clean-protos
 clean-protos:
