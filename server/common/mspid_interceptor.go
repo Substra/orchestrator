@@ -2,10 +2,10 @@ package common
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/owkin/orchestrator/lib/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -29,11 +29,11 @@ func InterceptMSPID(ctx context.Context, req interface{}, info *grpc.UnaryServer
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, errors.New("could not extract metadata")
+		return nil, errors.NewBadRequest("could not extract metadata")
 	}
 
 	if len(md.Get(headerMSPID)) != 1 {
-		return nil, fmt.Errorf("missing or invalid header '%s'", headerMSPID)
+		return nil, errors.NewBadRequest(fmt.Sprintf("missing or invalid header '%s'", headerMSPID))
 	}
 
 	MSPID := md.Get(headerMSPID)[0]
@@ -55,7 +55,7 @@ func VerifyClientMSPID(ctx context.Context, MSPID string) error {
 	peer, ok := peer.FromContext(ctx)
 
 	if !ok || peer == nil || peer.AuthInfo == nil {
-		return fmt.Errorf("error validating client MSPID: failed to extract MSP ID from TLS context")
+		return errors.NewInternal("error validating client MSPID: failed to extract MSP ID from TLS context")
 	}
 
 	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
@@ -72,7 +72,7 @@ func VerifyClientMSPID(ctx context.Context, MSPID string) error {
 		}
 	}
 
-	return fmt.Errorf("error validating client MSPID: cannot find MSPID %v in client TLS certificate Subject Organizations", MSPID)
+	return errors.NewPermissionDenied(fmt.Sprintf("invalid client MSPID: cannot find MSPID %v in client TLS certificate Subject Organizations", MSPID))
 }
 
 type ctxMSPIDMarker struct{}
@@ -88,7 +88,7 @@ var (
 func ExtractMSPID(ctx context.Context) (string, error) {
 	invocator, ok := ctx.Value(CtxMSPIDKey).(string)
 	if !ok {
-		return "", errors.New("MSPID not found in context")
+		return "", errors.NewInternal("MSPID not found in context")
 	}
 	return invocator, nil
 }

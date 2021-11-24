@@ -1,4 +1,4 @@
-package main
+package common
 
 import (
 	"crypto/tls"
@@ -8,18 +8,19 @@ import (
 	"path"
 
 	"github.com/go-playground/log/v7"
-	"github.com/owkin/orchestrator/server/common"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
 
-func getTLSOptions() grpc.ServerOption {
-	if !common.MustGetEnvFlag("TLS_ENABLED") {
+// GetTLSOptions will return server option with optional TLS and mTLS setup.
+// This may panic on missing or invalid configuration env var.
+func GetTLSOptions() grpc.ServerOption {
+	if !MustGetEnvFlag("TLS_ENABLED") {
 		return nil
 	}
 
-	tlsCertFile := common.MustGetEnv("TLS_CERT_PATH")
-	tlsKeyFile := common.MustGetEnv("TLS_KEY_PATH")
+	tlsCertFile := MustGetEnv("TLS_CERT_PATH")
+	tlsKeyFile := MustGetEnv("TLS_KEY_PATH")
 
 	log.WithField("cert", tlsCertFile).WithField("key", tlsKeyFile).Info("Loading TLS certificates")
 
@@ -35,14 +36,14 @@ func getTLSOptions() grpc.ServerOption {
 		MinVersion:   tls.VersionTLS12,
 	}
 
-	if common.MustGetEnvFlag("MTLS_ENABLED") {
+	if MustGetEnvFlag("MTLS_ENABLED") {
 		certPool := x509.NewCertPool()
 
 		// 1. Add our own CA to trusted client CAs
 		// This allows:
 		// - Clients to connect using certificates issued by our CA
 		// - Connecting to ourselves using our own cert/key (e.g. health probe)
-		serverCA := common.MustGetEnv("TLS_SERVER_CA_CERT")
+		serverCA := MustGetEnv("TLS_SERVER_CA_CERT")
 		pemServerCA, err := ioutil.ReadFile(serverCA)
 		if err != nil {
 			log.WithField("CA Cert", serverCA).Fatal("Failed to load TLS server CA")
@@ -52,7 +53,7 @@ func getTLSOptions() grpc.ServerOption {
 		}
 
 		// 2. Add provided client CAs
-		clientCAPath := common.MustGetEnv("TLS_CLIENT_CA_CERT_DIR")
+		clientCAPath := MustGetEnv("TLS_CLIENT_CA_CERT_DIR")
 		clientCAFiles, err := findCACerts(clientCAPath)
 		if err != nil {
 			log.WithError(err).Fatal("Failed to load TLS client CA certificates")

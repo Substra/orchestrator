@@ -12,9 +12,9 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-type FakeTLSAuthInfo struct{}
+type fakeTLSAuthInfo struct{}
 
-func (t FakeTLSAuthInfo) AuthType() string {
+func (t fakeTLSAuthInfo) AuthType() string {
 	return "fake"
 }
 func TestExtractMSPID(t *testing.T) {
@@ -51,7 +51,7 @@ func TestVerifyClientMSPID(t *testing.T) {
 
 	t.Run("Certificate with an invalid peer", verify(false, &peer.Peer{}))
 
-	t.Run("Certificate with an incorrect auth info type", verify(false, &peer.Peer{AuthInfo: FakeTLSAuthInfo{}}))
+	t.Run("Certificate with an incorrect auth info type", verify(false, &peer.Peer{AuthInfo: fakeTLSAuthInfo{}}))
 
 	t.Run("Certificate with an empty TLS info", verify(false, &peer.Peer{AuthInfo: credentials.TLSInfo{}}))
 

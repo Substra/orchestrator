@@ -74,7 +74,7 @@ func main() {
 	}
 
 	serverOptions := []grpc.ServerOption{}
-	if tlsOptions := getTLSOptions(); tlsOptions != nil {
+	if tlsOptions := common.GetTLSOptions(); tlsOptions != nil {
 		serverOptions = append(serverOptions, tlsOptions)
 	}
 
