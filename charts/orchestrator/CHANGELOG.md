@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.1] - 2021-11-25
+
+### Changed
+- Bump postgresql dependency from 10.3.6 to 10.13.8
+
 ## [4.0.0] - 2021-11-04
 
 ### Added
