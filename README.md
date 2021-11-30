@@ -141,7 +141,7 @@ Then you can launch call like this :
 package orchestrator
 service NodeService
 header mspid=MyOrg1MSP channel=mychannel chaincode=mycc
-call QueryNodes
+call GetAllNodes
 ```
 
 Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress).
