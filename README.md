@@ -35,6 +35,13 @@ Make sure you have theses requirements fulfilled before trying to build the orch
 
 `make test`
 
+Before running e2e tests, you may need to generate and retrieve a client certificate.
+
+```bash
+cd examples/tools
+./dowload_client_cert.sh
+```
+
 End to end testing requires a running orchestrator.
 Assuming you have one up and ready on orchestrator.node-1.com port 443, here is how to launch the tests:
 
@@ -118,7 +125,12 @@ You can also deploy [connect-backend](https://github.com/owkin/connect-backend/t
 
 You can call the local orchestrator gRPC endpoint using [evans](https://github.com/ktr0731/evans)
 
-Before launching Evans you may need to generate and retrieve a client certificate using the tool `examples/tools/dowload_client_cert.sh`.
+Before launching Evans you may need to generate and retrieve a client certificate.
+
+```bash
+cd examples/tools
+./dowload_client_cert.sh
+```
 
 ```bash
 evans --tls --cacert examples/tools/ca.crt --host orchestrator.node-1.com -p 443 -r repl --cert examples/tools/client-org-1.crt --certkey examples/tools/client-org-1.key
