@@ -1,13 +1,12 @@
 # Build stage
-FROM golang:1.16-alpine AS build
-RUN apk add --no-cache git make protoc protobuf-dev
+FROM golang:1.16-alpine3.15 AS build
+RUN apk add --no-cache git=2.34.1-r0 make=4.3-r0 protoc=3.18.1-r1 protobuf-dev=3.18.1-r1
 
 ARG VERSION=dev
 ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/orchestrator
 
-RUN wget https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.3.6/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe
-RUN chmod +x /bin/grpc_health_probe
+RUN wget -q https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.3.6/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe && chmod +x /bin/grpc_health_probe
 
 # Install protobuf codegen dependencies
 RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
@@ -26,8 +25,7 @@ COPY chaincode ./chaincode
 COPY lib ./lib
 COPY utils ./utils
 
-RUN make ./bin/orchestrator VERSION=$VERSION
-RUN mv ./bin/orchestrator /bin/orchestrator
+RUN make ./bin/orchestrator VERSION=$VERSION && mv ./bin/orchestrator /bin/orchestrator
 
 
 # Expose the binary
@@ -38,4 +36,4 @@ COPY --from=build /bin/grpc_health_probe /bin/grpc_health_probe
 USER 1000
 WORKDIR /app
 
-CMD ./orchestrator
+CMD ["/app/orchestrator"]

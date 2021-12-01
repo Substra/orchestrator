@@ -1,6 +1,6 @@
 # Build stage
-FROM golang:1.16-alpine AS build
-RUN apk add --no-cache git make protoc protobuf-dev
+FROM golang:1.16-alpine3.15 AS build
+RUN apk add --no-cache git=2.34.1-r0 make=4.3-r0 protoc=3.18.1-r1 protobuf-dev=3.18.1-r1
 
 ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/orchestrator
@@ -23,8 +23,7 @@ COPY forwarder ./forwarder
 COPY lib ./lib
 COPY utils ./utils
 
-RUN make ./bin/forwarder
-RUN mv ./bin/forwarder /bin/forwarder
+RUN make ./bin/forwarder && mv ./bin/forwarder /bin/forwarder
 
 
 # Expose the binary
@@ -34,4 +33,4 @@ COPY --from=build /bin/forwarder /app/forwarder
 USER 1000
 WORKDIR /app
 
-CMD ./forwarder
+CMD ["/app/forwarder"]

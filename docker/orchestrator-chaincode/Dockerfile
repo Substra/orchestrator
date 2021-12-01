@@ -1,6 +1,6 @@
 # Build stage
-FROM golang:1.16-alpine AS build
-RUN apk add --no-cache git make protoc protobuf-dev
+FROM golang:1.16-alpine3.15 AS build
+RUN apk add --no-cache git=2.34.1-r0 make=4.3-r0 protoc=3.18.1-r1 protobuf-dev=3.18.1-r1
 
 ARG VERSION=dev
 ENV GO111MODULE=on
@@ -18,8 +18,7 @@ RUN go mod download
 
 COPY . ${SRC_DIR}
 
-RUN make ./bin/chaincode VERSION=$VERSION
-RUN mv ./bin/chaincode /bin/chaincode
+RUN make ./bin/chaincode VERSION=$VERSION && mv ./bin/chaincode /bin/chaincode
 
 
 # Expose the binary
@@ -29,4 +28,4 @@ COPY --from=build /bin/chaincode /app/chaincode
 USER 1000
 WORKDIR /app
 
-CMD ./chaincode
+CMD ["/app/chaincode"]
