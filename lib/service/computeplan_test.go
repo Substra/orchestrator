@@ -6,6 +6,7 @@ import (
 
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -140,4 +141,27 @@ func TestComputePlanAllowIntermediaryModelDeletion(t *testing.T) {
 	assert.True(t, canDelete)
 
 	dbal.AssertExpectations(t)
+}
+
+func TestQueryPlans(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	provider := newMockedProvider()
+
+	provider.On("GetComputePlanDBAL").Return(dbal)
+
+	service := NewComputePlanService(provider)
+
+	pagination := common.NewPagination("", 2)
+	filter := &asset.PlanQueryFilter{
+		Owner: "owner",
+	}
+
+	returnedPlans := []*asset.ComputePlan{{}, {}}
+
+	dbal.On("QueryComputePlans", pagination, filter).Once().Return(returnedPlans, "", nil)
+
+	plans, _, err := service.QueryPlans(pagination, filter)
+	assert.NoError(t, err)
+
+	assert.Len(t, plans, 2)
 }

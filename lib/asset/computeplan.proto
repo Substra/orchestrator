@@ -56,10 +56,14 @@ message ApplyPlanActionParam {
 
 message ApplyPlanActionResponse {}
 
+message PlanQueryFilter {
+  string owner = 1;
+}
+
 message QueryPlansParam {
   string page_token = 1;
   uint32 page_size = 2;
-  // TODO: filters?
+  PlanQueryFilter filter = 3;
 }
 
 message QueryPlansResponse {

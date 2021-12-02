@@ -86,11 +86,15 @@ func TestQueryComputePlans(t *testing.T) {
 		{Tag: "test2"},
 	}
 
+	filter := &asset.PlanQueryFilter{
+		Owner: "owner",
+	}
+
 	ctx := new(ledger.MockTransactionContext)
 	service := getMockedService(ctx)
-	service.On("QueryPlans", &common.Pagination{Token: "", Size: 20}).Return(computePlans, "", nil).Once()
+	service.On("QueryPlans", &common.Pagination{Token: "", Size: 20}, filter).Return(computePlans, "", nil).Once()
 
-	param := &asset.QueryPlansParam{PageToken: "", PageSize: 20}
+	param := &asset.QueryPlansParam{Filter: filter, PageToken: "", PageSize: 20}
 	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 

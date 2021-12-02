@@ -377,8 +377,8 @@ func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken strin
 	return resp
 }
 
-func (c *TestClient) QueryPlans(pageToken string, pageSize int) *asset.QueryPlansResponse {
-	resp, err := c.computePlanService.QueryPlans(c.ctx, &asset.QueryPlansParam{PageToken: pageToken, PageSize: uint32(pageSize)})
+func (c *TestClient) QueryPlans(filter *asset.PlanQueryFilter, pageToken string, pageSize int) *asset.QueryPlansResponse {
+	resp, err := c.computePlanService.QueryPlans(c.ctx, &asset.QueryPlansParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
 		log.WithError(err).Fatal("QueryPlans failed")
 	}

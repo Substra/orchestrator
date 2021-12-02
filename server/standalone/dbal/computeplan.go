@@ -94,7 +94,7 @@ func (d *DBAL) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
 	return plan, nil
 }
 
-func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
+func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error) {
 	var rows pgx.Rows
 	var err error
 	offset, err := getOffset(p.Token)
@@ -119,6 +119,10 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, co
 		OrderBy("cp.asset->>'creationDate' ASC", "cp.id ASC").
 		Offset(uint64(offset)).
 		Limit(uint64(p.Size + 1))
+
+	if filter.Owner != "" {
+		builder = builder.Where(squirrel.Eq{"asset->>'owner'": filter.Owner})
+	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {

@@ -88,11 +88,21 @@ func (db *DB) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
 }
 
 // QueryComputePlans retrieves all ComputePlans
-func (db *DB) QueryComputePlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
+func (db *DB) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error) {
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
 			DocType: asset.ComputePlanKind,
 		},
+	}
+
+	assetFilter := map[string]interface{}{}
+
+	if filter.Owner != "" {
+		assetFilter["owner"] = filter.Owner
+	}
+
+	if len(assetFilter) > 0 {
+		query.Selector.Asset = assetFilter
 	}
 
 	b, err := json.Marshal(query)

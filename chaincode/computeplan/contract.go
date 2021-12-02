@@ -10,7 +10,7 @@ import (
 	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
-// SmartContract manages ComputeTask
+// SmartContract manages ComputePlan
 type SmartContract struct {
 	contractapi.Contract
 	logger log.Entry
@@ -106,7 +106,7 @@ func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *commu
 		return nil, err
 	}
 
-	plans, nextPage, err := service.QueryPlans(common.NewPagination(param.PageToken, param.PageSize))
+	plans, nextPage, err := service.QueryPlans(common.NewPagination(param.PageToken, param.PageSize), param.Filter)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query compute plans")
 		return nil, err

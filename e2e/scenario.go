@@ -947,7 +947,7 @@ func testQueryComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp2"))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp3"))
 
-	resp := appClient.QueryPlans("", 3)
+	resp := appClient.QueryPlans(&asset.PlanQueryFilter{}, "", 3)
 
 	if len(resp.Plans) != 3 {
 		log.WithField("nbPlans", len(resp.Plans)).Fatal("Unexpected number of compute plans")

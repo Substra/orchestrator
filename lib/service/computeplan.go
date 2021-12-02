@@ -15,7 +15,7 @@ import (
 type ComputePlanAPI interface {
 	RegisterPlan(plan *asset.NewComputePlan, owner string) (*asset.ComputePlan, error)
 	GetPlan(key string) (*asset.ComputePlan, error)
-	QueryPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error)
+	QueryPlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error)
 	ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error
 	canDeleteModels(key string) (bool, error)
 }
@@ -109,8 +109,8 @@ func (s *ComputePlanService) GetPlan(key string) (*asset.ComputePlan, error) {
 	return s.GetComputePlanDBAL().GetComputePlan(key)
 }
 
-func (s *ComputePlanService) QueryPlans(p *common.Pagination) ([]*asset.ComputePlan, common.PaginationToken, error) {
-	return s.GetComputePlanDBAL().QueryComputePlans(p)
+func (s *ComputePlanService) QueryPlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error) {
+	return s.GetComputePlanDBAL().QueryComputePlans(p, filter)
 }
 
 func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {

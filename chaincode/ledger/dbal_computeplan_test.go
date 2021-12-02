@@ -23,7 +23,7 @@ func TestQueryComputePlans(t *testing.T) {
 	resp.On("HasNext").Once().Return(false)
 	resp.On("Next").Once().Return(&queryresult.KV{Value: []byte(`{"asset":{"key":"uuid"}}`)}, nil)
 
-	queryString := `{"selector":{"doc_type":"computeplan"}}`
+	queryString := `{"selector":{"doc_type":"computeplan","asset":{"owner":"owner"}}}`
 	stub.On("GetQueryResultWithPagination", queryString, int32(1), "").
 		Return(resp, &peer.QueryResponseMetadata{Bookmark: "", FetchedRecordsCount: 1}, nil)
 
@@ -39,7 +39,10 @@ func TestQueryComputePlans(t *testing.T) {
 	stub.On("GetStateByPartialCompositeKey", computePlanTaskStatusIndex, []string{asset.ComputePlanKind, "uuid"}).
 		Return(index, nil)
 
-	_, _, err := db.QueryComputePlans(common.NewPagination("", 1))
+	_, _, err := db.QueryComputePlans(
+		common.NewPagination("", 1),
+		&asset.PlanQueryFilter{Owner: "owner"},
+	)
 	assert.NoError(t, err)
 
 	stub.AssertExpectations(t)

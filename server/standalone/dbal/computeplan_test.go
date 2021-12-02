@@ -95,7 +95,7 @@ func TestQueryComputePlans(t *testing.T) {
 		AddRow(asset.ComputePlan{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
 	mock.ExpectQuery(`SELECT cp.asset,.* FROM compute_plans .* ORDER BY cp.asset->>'creationDate' ASC, cp.id`).
-		WithArgs(testChannel).
+		WithArgs(testChannel, "owner").
 		WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
@@ -103,7 +103,10 @@ func TestQueryComputePlans(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	plans, _, err := dbal.QueryComputePlans(common.NewPagination("", 10))
+	plans, _, err := dbal.QueryComputePlans(
+		common.NewPagination("", 10),
+		&asset.PlanQueryFilter{Owner: "owner"},
+	)
 	assert.NoError(t, err)
 
 	assert.Len(t, plans, 1)
