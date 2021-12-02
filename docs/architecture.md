@@ -21,7 +21,7 @@ its sole purpose is to convert gRPC calls into chaincode invocation.
 By doing so, we always expose the same interface (gRPC) to external callers.
 That means the standalone or distributed deployments can be swapped without any impact on callers.
 
-However please note that there is no data migration.
+However, please note that there is no data migration.
 Since persistence layers are different from a mode to another,
 switching modes will result in a full reset.
 
@@ -68,7 +68,7 @@ and events emitted by the orchestrator.
 
 ![](./schemas/events.png)
 
-Following the pattern of the gRPC API, events will be have the same structure regardless of the execution mode.
+Following the pattern of the gRPC API, events will have the same structure regardless of the execution mode.
 Consumers should not have to adapt to the distributed ledger and should only interact with the broker.
 
 ### Standalone execution

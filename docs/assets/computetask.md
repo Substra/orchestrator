@@ -73,7 +73,7 @@ If all the parents of a child task are DONE, this task enters TODO state.
 
 When a parent task fails, children statuses are not changed.
 
-A task may produces one or more [models](./model.md), they can only be registered when the task in in DOING.
+A task may produce one or more [models](./model.md), they can only be registered when the task is in DOING.
 This is to ensure that when a task starts (switch to DOING), all its inputs are available.
 
 ### Status change
@@ -93,6 +93,6 @@ Basically:
 - only the worker can act on a task processing (DOING/DONE/FAILED)
 
 *DONE* status is a special case since the transition is internal:
-only registration of all outputs can trigger the transition to DONE.
-ie: when registering the last model of a train task, the task will switch to DONE.
+only registration of all outputs can trigger the transition to DONE
+i.e. when registering the last model of a train task, the task will switch to DONE.
 The same goes for test tasks once their performance are registered.

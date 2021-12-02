@@ -1,4 +1,4 @@
-# Developping assets
+# Developing assets
 
 ## General structure
 
@@ -54,7 +54,7 @@ At this point tests should pass, meaning other assets are not impacted by your c
 You can proceed with writing the orchestration logic for the new asset, in a `lib/service/<asset>.go` file.
 To match the existing patterns, you should define (*Asset* is the place-holder for the new asset):
 
-- an **AssetAPI** which defines the public interface of the service, ie: what you can do with the asset.
+- an **AssetAPI** which defines the public interface of the service, i.e. what you can do with the asset.
 This is what will be used by the smartcontract and the standalone gRPC service.
 - an **AssetServiceProvider** which should only expose a `GetAssetService() AssetAPI` method, this is used by dependency injection.
 - an **AssetDependencyProvider** which should list necessary providers (like DatabaseProvider or other services).
@@ -124,7 +124,7 @@ Don't forget to flag the evaluate transaction (query only) by implementing `GetE
 
 Using the *DependenciesProvider* is as easy as writing: `provider := ctx.GetProvider()` in your contracts.
 
-Finally you can add your smart contract to the contract provider in `chaincode/contracts/provider.go` to have it published.
+Finally, you can add your smart contract to the contract provider in `chaincode/contracts/provider.go` to have it published.
 
 **Note**: contracts should have the same inputs and outputs than the gRPC service.
 That way, the *Invocator* (more below) can transparently handle the serialization/deserialization.
@@ -133,7 +133,7 @@ That way, the *Invocator* (more below) can transparently handle the serializatio
 
 gRPC service relying on chaincode is defined in `server/distributed/<asset>.go`
 
-This is done the same way than for the standalone mode, except that there is a chaincode invocation instead of orchestration logic.
+This is done the same way as for the standalone mode, except that there is a chaincode invocation instead of orchestration logic.
 
 A specific structure, the *Invocator* is provided to invoke the chaincode.
 This *Invocator* is available from the context: `invocator, err := ExtractInvocator(ctx)`.

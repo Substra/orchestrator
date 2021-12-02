@@ -23,7 +23,7 @@ A model has a category, and it can only be registered for a compatible task (y):
 | Head                               | n     | n    | n         | y         |
 
 As stated before, a task may produce several models, but can only have one of each category.
-ie: composite task can only have one *head* AND one *simple*.
+i.e. composite task can only have one *head* AND one *simple*.
 
 ## Disabling intermediary models
 
@@ -31,7 +31,7 @@ As part of compute plan execution, some models may be *disabled* (depending on t
 This only occurs for **intermediary** models.
 
 An intermediary model is a model produced by a task which:
-- is not a leaf node (ie: a task with children)
+- is not a leaf node (i.e. a task with children)
 - have all its children in a final state.
 
 When a model is disabled by the orchestrator:

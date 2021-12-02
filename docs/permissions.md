@@ -28,12 +28,12 @@ If a permission is not `public` and `authorized_ids` does not contain the creato
 This is to make sure the creator of an asset cannot be "locked out".
 
 Compute tasks bears permissions related to their output models.
-These are generaly computed during registration, but follow specific rules depending on the task kind.
+These are generally computed during registration, but follow specific rules depending on the task kind.
 
 **Train Task**: model permissions are the [intersection](#intersection) of algo and datamanager permissions
 
 **Composite Task**: this one is more complex since there are two output models.
-The *Simple* model receives its permissions from the task input (ie: set by the creator of the task), and is owned by the datamanager's owner.
+The *Simple* model receives its permissions from the task input (i.e. set by the creator of the task), and is owned by the datamanager's owner.
 The *Head* model is restricted to the datamanager's owner only.
 
 **Aggregate Task**: permissions of the output model is the [union](#union) of the permissions of the parent models (only *Simple* model is considered for composite parents).

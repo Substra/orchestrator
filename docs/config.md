@@ -69,7 +69,7 @@ listeners:
 ## Orchestration configuration
 
 The orchestrator controls the access to channels for each call.
-To that end, it needs be aware of the channels and their allowed organizations.
+To that end, it needs to be aware of the channels and their allowed organizations.
 This is the `ORCHESTRATOR_CHANNEL_CONFIG` file, which content could look like this for two shared channels:
 
 ```yml

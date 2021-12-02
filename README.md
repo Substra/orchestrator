@@ -17,7 +17,7 @@ This component's purpose is to orchestrate task processing in multiple channels 
 
 #### Dev tools versions
 
-Make sure you have theses requirements fulfilled before trying to build the orchestrator:
+Make sure you have these requirements fulfilled before trying to build the orchestrator:
 
 - [go](https://golang.org/): v1.16
 - [protoc](https://github.com/protocolbuffers/protobuf): v3.14.0
@@ -42,7 +42,7 @@ cd examples/tools
 ./dowload_client_cert.sh
 ```
 
-End to end testing requires a running orchestrator.
+End-to-end testing requires a running orchestrator.
 Assuming you have one up and ready on orchestrator.node-1.com port 443, here is how to launch the tests:
 
 ```bash
@@ -56,7 +56,7 @@ make ./bin/e2e-tests
 
 Refer to `./bin/e2e-tests --help` for more options (you can run tests by name or tag).
 
-## Developping the orchestrator
+## Developing the orchestrator
 
 An overview of the code structure is [available in the docs directory](./docs/architecture.md) and there is also a [documentation of the assets](./docs/assets/README.md).
 If you are interested in adding a new asset there is a [step by step documentation](./docs/asset-dev.md) on this subject.
@@ -76,6 +76,7 @@ When running in standalone mode, the orchestrator needs a [postgres](https://www
 database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker to dispatch events.
 
 To launch the orchestrator:
+
 ```bash
 skaffold dev --status-check=false
 ```
@@ -87,6 +88,7 @@ skaffold run --status-check=false
 ```
 
 Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
+
 ```bash
 grpcurl -insecure orchestrator.node-1.com:443 list
 ```
@@ -115,6 +117,7 @@ skaffold run -p distributed --status-check=false
 ```
 
 Assuming `orchestrator.node-1.com` and `orchestrator.node-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
+
 ```bash
 grpcurl --cacert examples/tools/ca.crt --key examples/tools/client-org-1.key --cert examples/tools/client-org-1.crt --rpc-header 'mspid: MyOrg1MSP' --rpc-header 'channel: mychannel' --rpc-header 'chaincode: mycc' orchestrator.node-1.com:443 list
 ```
@@ -136,7 +139,8 @@ cd examples/tools
 evans --tls --cacert examples/tools/ca.crt --host orchestrator.node-1.com -p 443 -r repl --cert examples/tools/client-org-1.crt --certkey examples/tools/client-org-1.key
 ```
 
-Then you can launch call like this :
+Then you can launch call like this:
+
 ```
 package orchestrator
 service NodeService

@@ -11,9 +11,9 @@ Unit tests are executed with `make test`.
 They should be fairly fast and are self-contained: they do not rely on any external services.
 However, they only cover small parts of the application, not the whole system.
 
-## End to end tests
+## End-to-end tests
 
-End to end tests are much more extensive since they test the application from the outside:
+End-to-end tests are much more extensive since they test the application from the outside:
 they consume the gRPC API without any knowledge of the internal structure of the app.
 
 Launching e2e tests requires a running target server, the easiest way to get up and running
@@ -51,7 +51,7 @@ appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model1").WithTa
 ```
 
 You may hit a situation where the `WithXXX` method does not exist: feel free to add it.
-If you need to introduce new calls to the orchestrator, add an option with appropriate default values (ie: working with other default values).
+If you need to introduce new calls to the orchestrator, add an option with appropriate default values (i.e. working with other default values).
 
 E2e tests are organized in scenarios (see e2e/scenario.go), each scenario is made of client actions and optional assertions.
 This is where you will organize the calls to the API.
