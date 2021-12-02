@@ -6,13 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- add filter for compute plan query (#433)
+
 ## [0.3.0] - 2021-11-30
 
 ### Added
 - sort queried events (#417)
 - expose basic metrics from server, chaincode and forwarder behind `METRICS_ENABLED` feature flag
 - filter queried events on metadata (#422)
-- add filter for compute plan query (#433)
 
 ## [0.2.0] - 2021-11-02
 
