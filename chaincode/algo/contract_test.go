@@ -21,7 +21,6 @@ func getMockedService(ctx *ledger.MockTransactionContext) *service.MockAlgoAPI {
 	provider.On("GetAlgoService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider, nil).Once()
-	ctx.On("SetRequestID", "").Once()
 	ctx.On("GetContext").Return(context.Background())
 
 	return mockService

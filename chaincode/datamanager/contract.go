@@ -32,7 +32,6 @@ func NewSmartContract() *SmartContract {
 // RegisterDataManager creates a new data Manager in world state
 // If the key exists, it will throw an error
 func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -70,7 +69,6 @@ func (s *SmartContract) RegisterDataManager(ctx ledger.TransactionContext, wrapp
 
 // GetDataManager returns the DataManager with given key
 func (s *SmartContract) GetDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -99,7 +97,6 @@ func (s *SmartContract) GetDataManager(ctx ledger.TransactionContext, wrapper *c
 
 // QueryDataManagers returns the DataManager
 func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err

@@ -35,7 +35,6 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 
 // GetDataset returns the Dataset with given key
 func (s *SmartContract) GetDataset(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err

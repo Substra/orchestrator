@@ -32,7 +32,6 @@ func NewSmartContract() *SmartContract {
 // RegisterMetric creates a new metric in world state
 // If the key exists, it will override the existing value with the new one
 func (s *SmartContract) RegisterMetric(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -67,7 +66,6 @@ func (s *SmartContract) RegisterMetric(ctx ledger.TransactionContext, wrapper *c
 
 // GetMetric returns the metric with given key
 func (s *SmartContract) GetMetric(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -96,7 +94,6 @@ func (s *SmartContract) GetMetric(ctx ledger.TransactionContext, wrapper *commun
 
 // QueryMetrics returns the metrics
 func (s *SmartContract) QueryMetrics(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err

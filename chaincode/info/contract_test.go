@@ -20,7 +20,6 @@ func TestQueryVersion(t *testing.T) {
 	}
 	ctx := new(ledger.MockTransactionContext)
 
-	ctx.On("SetRequestID", "").Once()
 	ctx.On("GetContext").Return(context.Background())
 
 	wrapper, err := communication.Wrap(context.Background(), nil)

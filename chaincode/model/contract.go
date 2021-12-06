@@ -31,7 +31,6 @@ func NewSmartContract() *SmartContract {
 
 // RegisterModel associates a new model to a running task
 func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -65,7 +64,6 @@ func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *co
 }
 
 func (s *SmartContract) GetModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -95,7 +93,6 @@ func (s *SmartContract) GetModel(ctx ledger.TransactionContext, wrapper *communi
 
 // QueryModels returns the models
 func (s *SmartContract) QueryModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -129,7 +126,6 @@ func (s *SmartContract) QueryModels(ctx ledger.TransactionContext, wrapper *comm
 }
 
 func (s *SmartContract) GetComputeTaskOutputModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -161,7 +157,6 @@ func (s *SmartContract) GetComputeTaskOutputModels(ctx ledger.TransactionContext
 }
 
 func (s *SmartContract) GetComputeTaskInputModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -193,7 +188,6 @@ func (s *SmartContract) GetComputeTaskInputModels(ctx ledger.TransactionContext,
 }
 
 func (s *SmartContract) CanDisableModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -227,7 +221,6 @@ func (s *SmartContract) CanDisableModel(ctx ledger.TransactionContext, wrapper *
 }
 
 func (s *SmartContract) DisableModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return err

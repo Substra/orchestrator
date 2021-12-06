@@ -38,8 +38,6 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 
 // QueryVersion returns the chaincode version
 func (s *SmartContract) QueryVersion(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
-
 	info := &asset.QueryVersionResponse{
 		Chaincode: Version,
 	}

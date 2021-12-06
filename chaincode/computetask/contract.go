@@ -30,7 +30,6 @@ func NewSmartContract() *SmartContract {
 }
 
 func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -68,7 +67,6 @@ func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *co
 
 // GetTask returns the task with given key
 func (s *SmartContract) GetTask(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -97,7 +95,6 @@ func (s *SmartContract) GetTask(ctx ledger.TransactionContext, wrapper *communic
 }
 
 func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -133,7 +130,6 @@ func (s *SmartContract) QueryTasks(ctx ledger.TransactionContext, wrapper *commu
 }
 
 func (s *SmartContract) ApplyTaskAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return err

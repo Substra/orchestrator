@@ -2,10 +2,12 @@ package ledger
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common/logger"
@@ -21,7 +23,6 @@ type TransactionContext interface {
 	GetContext() context.Context
 	GetProvider() (service.DependenciesProvider, error)
 	GetDispatcher() event.Dispatcher
-	SetRequestID(string)
 }
 
 // Context is a TransactionContext implementation
@@ -73,17 +74,9 @@ func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 func (c *Context) GetDispatcher() event.Dispatcher {
 	if c.dispatcher == nil {
 		stub := c.GetStub()
-		c.dispatcher = newEventDispatcher(stub)
+		c.dispatcher = newEventDispatcher(stub, logger.Get(c.Context))
 	}
 	return c.dispatcher
-}
-
-func (c *Context) SetRequestID(ID string) {
-	ctx := context.WithValue(c.Context, trace.RequestIDMarker, ID)
-	logger := log.WithField("requestID", ID)
-	ctx = log.SetContext(ctx, logger)
-
-	c.Context = ctx
 }
 
 type ctxIsInvokeMarker struct{}
@@ -93,20 +86,39 @@ var (
 )
 
 // GetBeforeTransactionHook handles pre-transaction logic:
-// - setting the "IsEvaluateTransaction" boolean field.
-// Smart contracts MUST use this function as their "BeforeTransaction" attribute
+// - setting the "IsEvaluateTransaction" boolean field;
+// - populating context with logger and requestID;
+// Smart contracts MUST use this function as their "BeforeTransaction" attribute.
+// The requestID is automatically extracted from call parameters, as long as the first parameter is a communication.Wrapper.
 func GetBeforeTransactionHook(contract contractapi.EvaluationContractInterface) func(TransactionContext) error {
 	return func(c TransactionContext) error {
 		// Determine is method being called is an "Evaluation" method (v.s. "Invoke" method)
-		fnName, _ := c.GetStub().GetFunctionAndParameters()
-		log.WithField("function", fnName).Debug("Checking if calling function is an eval function")
+		fnName, args := c.GetStub().GetFunctionAndParameters()
+
+		l := log.WithField("function", fnName)
+
+		var requestID string
+		if len(args) > 0 {
+			w := new(communication.Wrapper)
+			if err := json.Unmarshal([]byte(args[0]), &w); err == nil {
+				requestID = w.RequestID
+			} else {
+				l.WithError(err).Warn("cannot extract request ID")
+			}
+		}
 
 		evalFuncs := contract.GetEvaluateTransactions()
 		isEval := IsEvaluateTransaction(fnName, evalFuncs)
 
+		l = l.WithField("isEval", isEval).WithField("requestID", requestID)
+
 		// Populate context
 		ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, isEval)
+		ctx = context.WithValue(ctx, trace.RequestIDMarker, requestID)
+		ctx = log.SetContext(ctx, l)
 		c.SetContext(ctx)
+
+		l.Debug("transaction context initialized")
 		return nil
 	}
 }

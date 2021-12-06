@@ -23,11 +23,11 @@ type eventDispatcher struct {
 }
 
 // newEventDispatcher returns an eventDispatcher instance
-func newEventDispatcher(stub shim.ChaincodeStubInterface) *eventDispatcher {
+func newEventDispatcher(stub shim.ChaincodeStubInterface, logger log.Entry) *eventDispatcher {
 	return &eventDispatcher{
 		Queue:  new(common.MemoryQueue),
 		stub:   stub,
-		logger: log.WithField("component", "event-dispatcher").WithField("mode", "chaincode"),
+		logger: logger,
 	}
 }
 

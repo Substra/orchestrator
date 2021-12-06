@@ -32,7 +32,6 @@ func NewSmartContract() *SmartContract {
 // RegisterDataSamples register new data samples in world state
 // If the key exists, it will throw an error
 func (s *SmartContract) RegisterDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return err
@@ -63,7 +62,6 @@ func (s *SmartContract) RegisterDataSamples(ctx ledger.TransactionContext, wrapp
 // UpdateDataSamples updates a data sample in world state
 // If the key does not exist, it will throw an error
 func (s *SmartContract) UpdateDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return err
@@ -93,7 +91,6 @@ func (s *SmartContract) UpdateDataSamples(ctx ledger.TransactionContext, wrapper
 
 // QueryDataSamples returns the datasamples
 func (s *SmartContract) QueryDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err

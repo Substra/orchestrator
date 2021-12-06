@@ -20,7 +20,6 @@ func getMockedService(ctx *ledger.MockTransactionContext) *service.MockDataSampl
 	provider.On("GetDataSampleService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider, nil).Once()
-	ctx.On("SetRequestID", "").Once()
 	ctx.On("GetContext").Return(context.Background())
 
 	return mockService

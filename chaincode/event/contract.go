@@ -36,7 +36,6 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 
 // QueryEvents returns the models
 func (s *SmartContract) QueryEvents(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err

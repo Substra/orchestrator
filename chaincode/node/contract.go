@@ -35,7 +35,6 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 
 // RegisterNode creates a new node in world state
 func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
 		s.logger.WithError(err).Error("failed to extract tx creator")
@@ -63,7 +62,6 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext, wrapper *com
 
 // GetAllNodes retrieves all known nodes
 func (s *SmartContract) GetAllNodes(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err

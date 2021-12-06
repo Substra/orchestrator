@@ -36,7 +36,6 @@ func (s *SmartContract) GetEvaluateTransactions() []string {
 }
 
 func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -70,7 +69,6 @@ func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapp
 }
 
 func (s *SmartContract) QueryPerformances(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err

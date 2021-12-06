@@ -30,7 +30,6 @@ func NewSmartContract() *SmartContract {
 }
 
 func (s *SmartContract) RegisterPlan(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -64,7 +63,6 @@ func (s *SmartContract) RegisterPlan(ctx ledger.TransactionContext, wrapper *com
 }
 
 func (s *SmartContract) GetPlan(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -92,7 +90,6 @@ func (s *SmartContract) GetPlan(ctx ledger.TransactionContext, wrapper *communic
 }
 
 func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
@@ -124,7 +121,6 @@ func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *commu
 }
 
 func (s *SmartContract) ApplyPlanAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
-	ctx.SetRequestID(wrapper.RequestID)
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return err
