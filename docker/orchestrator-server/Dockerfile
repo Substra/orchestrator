@@ -25,7 +25,7 @@ COPY chaincode ./chaincode
 COPY lib ./lib
 COPY utils ./utils
 
-RUN make ./bin/orchestrator VERSION=$VERSION && mv ./bin/orchestrator /bin/orchestrator
+RUN VERSION=$VERSION make ./bin/orchestrator && mv ./bin/orchestrator /bin/orchestrator
 
 
 # Expose the binary
