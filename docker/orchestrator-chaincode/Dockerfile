@@ -18,7 +18,7 @@ RUN go mod download
 
 COPY . ${SRC_DIR}
 
-RUN VERSION=$VERSION make ./bin/chaincode && mv ./bin/chaincode /bin/chaincode
+RUN make ./bin/chaincode VERSION=$VERSION && mv ./bin/chaincode /bin/chaincode
 
 
 # Expose the binary
