@@ -36,10 +36,10 @@ lint: codegen mocks
 	golangci-lint run
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
-	go build -o $(ORCHESTRATOR_BIN) -ldflags="-X 'server.common.Version=$(VERSION)'" ./server
+	go build -o $(ORCHESTRATOR_BIN) -ldflags="-X 'github.com/owkin/orchestrator/server/common.Version=$(VERSION)'" ./server
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
-	go build -o $(CHAINCODE_BIN) -ldflags="-X 'chaincode.info.Version=$(VERSION)'" ./chaincode
+	go build -o $(CHAINCODE_BIN) -ldflags="-X 'github.com/owkin/orchestrator/chaincode/info.Version=$(VERSION)'" ./chaincode
 
 $(LIBCODEGEN_BIN): $(PROJECT_ROOT)/lib/codegen/main.go
 	go build -o $(LIBCODEGEN_BIN) $(PROJECT_ROOT)/lib/codegen

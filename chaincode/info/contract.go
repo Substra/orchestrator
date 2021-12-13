@@ -10,7 +10,7 @@ import (
 )
 
 // Version represents the version of the chaincode, the value is changed at build time
-const Version = "dev"
+var Version = "dev"
 
 // SmartContract manages info
 type SmartContract struct {
