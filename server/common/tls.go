@@ -3,11 +3,14 @@ package common
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
+	"encoding/pem"
 	"io/ioutil"
 	"os"
 	"path"
 
 	"github.com/go-playground/log/v7"
+	"github.com/owkin/orchestrator/lib/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -61,10 +64,10 @@ func GetTLSOptions() grpc.ServerOption {
 		for _, f := range clientCAFiles {
 			pemClientCA, err := ioutil.ReadFile(f)
 			if err != nil {
-				log.WithField("CA Cert", f).Fatal("Failed to load TLS client CA certificate")
+				log.WithField("cacert", f).Fatal("Failed to load TLS client CA certificate")
 			}
 			if !certPool.AppendCertsFromPEM(pemClientCA) {
-				log.WithField("CA Cert", f).Fatal("Failed to add TLS client CA certificate to pool")
+				log.WithField("cacert", f).Fatal("Failed to add TLS client CA certificate to pool")
 			}
 			log.WithField("cacert", f).Info("Loaded TLS client CA certificate")
 		}
@@ -77,14 +80,15 @@ func GetTLSOptions() grpc.ServerOption {
 	return grpc.Creds(tlsCredentials)
 }
 
-// findCACerts walks a client CA cert root directory and returns
-// a list of all the client CA certificate it finds
-func findCACerts(root string) ([]string, error) {
-	var files []string
+type clientCACertCallback = func(org, filepath string) error
 
+// walkClientCACerts will walk the TLS client directory, stopping at the first error.
+// Expected structure is to have a directory per org, and one or more certificates in it.
+// The callback will receive the parent organisation name along with the file path.
+func walkClientCACerts(root string, callback clientCACertCallback) error {
 	fileInfo, err := ioutil.ReadDir(root)
 	if err != nil {
-		return files, err
+		return err
 	}
 
 	// for each org directory
@@ -95,7 +99,7 @@ func findCACerts(root string) ([]string, error) {
 		orgFullPath := path.Join(root, orgDir.Name())
 		fileInfo, err = ioutil.ReadDir(orgFullPath)
 		if err != nil {
-			return files, err
+			return err
 		}
 
 		// for each inode inside the org directory
@@ -106,22 +110,91 @@ func findCACerts(root string) ([]string, error) {
 			for file.Mode()&os.ModeSymlink != 0 {
 				resolved, err := os.Readlink(filePath)
 				if err != nil {
-					return files, err
+					return err
 				}
 				filePath = path.Join(path.Dir(filePath), resolved)
 				file, err = os.Stat(filePath)
 				if err != nil {
-					return files, err
+					return err
 				}
 				filePath = path.Join(orgFullPath, file.Name())
 			}
 
 			// we found a CA cert file
 			if !file.IsDir() {
-				files = append(files, filePath)
+				err = callback(orgDir.Name(), filePath)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 
+	return nil
+}
+
+// findCACerts walks a client CA cert root directory and returns
+// a list of all the client CA certificate it finds
+func findCACerts(root string) ([]string, error) {
+	var files []string
+
+	callback := func(_, filePath string) error {
+		files = append(files, filePath)
+		return nil
+	}
+
+	err := walkClientCACerts(root, callback)
+	if err != nil {
+		return nil, err
+	}
+
 	return files, nil
+}
+
+type OrgCACertList = map[string][]string
+
+// GetOrgCACerts returns the valid CA keys per organisation (mspid).
+func GetOrgCACerts() (OrgCACertList, error) {
+	orgCACerts := make(OrgCACertList)
+
+	clientCAPath, ok := GetEnv("TLS_CLIENT_CA_CERT_DIR")
+	if !ok {
+		return nil, errors.NewInternal("ORCHESTRATOR_TLS_CLIENT_CA_CERT_DIR env var is not set")
+	}
+
+	callback := func(org, filePath string) error {
+		key, err := getCAKeyID(filePath)
+		if err != nil {
+			return err
+		}
+		orgCACerts[org] = append(orgCACerts[org], key)
+
+		return nil
+	}
+
+	err := walkClientCACerts(clientCAPath, callback)
+	if err != nil {
+		return nil, err
+	}
+
+	return orgCACerts, nil
+}
+
+// getCAKeyID returns the identifier of the CA certificate
+func getCAKeyID(file string) (string, error) {
+	rawPem, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+	certPemBlock, _ := pem.Decode(rawPem)
+	if err != nil {
+		return "", err
+	}
+
+	cert, err := x509.ParseCertificate(certPemBlock.Bytes)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(cert.SubjectKeyId), nil
 }

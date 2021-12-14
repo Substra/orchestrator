@@ -32,6 +32,11 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 
 	channelInterceptor := common.NewChannelInterceptor(params.Config)
 
+	MSPIDInterceptor, err := common.NewMSPIDInterceptor()
+	if err != nil {
+		return nil, err
+	}
+
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
 	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session, healthcheck)
 
@@ -42,7 +47,7 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 		logger.AddLogger,
 		common.LogRequest,
 		common.InterceptStandaloneErrors,
-		common.InterceptMSPID,
+		MSPIDInterceptor.InterceptMSPID,
 		channelInterceptor.InterceptChannel,
 		retryInterceptor.Intercept,
 		providerInterceptor.Intercept,

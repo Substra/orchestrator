@@ -26,6 +26,10 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 	chaincodeInterceptor := NewInterceptor(config, wallet, gatewayTimeout)
 
 	channelInterceptor := common.NewChannelInterceptor(params.Config)
+	MSPIDInterceptor, err := common.NewMSPIDInterceptor()
+	if err != nil {
+		return nil, err
+	}
 
 	retryInterceptor := common.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 
@@ -34,7 +38,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 		logger.AddLogger,
 		common.LogRequest,
 		common.InterceptDistributedErrors,
-		common.InterceptMSPID,
+		MSPIDInterceptor.InterceptMSPID,
 		channelInterceptor.InterceptChannel,
 		retryInterceptor.Intercept,
 		chaincodeInterceptor.Intercept,

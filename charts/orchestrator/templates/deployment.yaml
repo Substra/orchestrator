@@ -120,7 +120,7 @@ spec:
               readOnly: true
             {{- if $.Values.orchestrator.tls.mtls.enabled }}
             {{- range $org, $secret := $.Values.orchestrator.tls.mtls.clientCACerts }}
-            - name: orchestrator-tls-client-cacert-{{ $org }}
+            - name: orchestrator-tls-client-cacert-{{ kebabcase $org }}
               mountPath: /var/orchestrator/tls/client/{{ $org }}
               readOnly: true
             {{- end }}
@@ -161,10 +161,17 @@ spec:
           secret:
             secretName: {{ $.Values.orchestrator.tls.secrets.pair }}
         {{- if $.Values.orchestrator.tls.mtls.enabled }}
-        {{- range $org, $cacert := $.Values.orchestrator.tls.mtls.clientCACerts }}
-        - name: orchestrator-tls-client-cacert-{{ $org }}
-          configMap:
-            name: {{ $cacert }}
+        {{- range $org, $cacerts := $.Values.orchestrator.tls.mtls.clientCACerts }}
+        - name: orchestrator-tls-client-cacert-{{ kebabcase $org }}
+          projected:
+            sources:
+              {{- range $cert := $cacerts }}
+              - configMap:
+                  name: {{ $cert }}
+                  items:
+                    - key: ca.crt
+                      path: {{ kebabcase $cert }}.crt
+              {{- end }}
         {{- end }}
         {{- end }}
         {{- end }}

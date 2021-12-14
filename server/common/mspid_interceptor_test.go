@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,15 +35,24 @@ func TestExtractMSPID(t *testing.T) {
 func TestVerifyClientMSPID(t *testing.T) {
 
 	MSPID := "my-msp-id"
+	org1AuthKeyID := []byte{12, 34, 03}
+	org2AuthKeyID := []byte{32, 124, 77}
+
+	interceptor := MSPIDInterceptor{
+		orgCaCertIDs: map[string][]string{
+			"my-msp-id": {hex.EncodeToString(org1AuthKeyID)},
+			"otherorg":  {hex.EncodeToString(org2AuthKeyID)},
+		},
+	}
 
 	var verify = func(isValid bool, p *peer.Peer) func(*testing.T) {
 		return func(t *testing.T) {
 			ctx := context.TODO()
 			ctx = peer.NewContext(ctx, p)
-			err := VerifyClientMSPID(ctx, MSPID)
+			err := interceptor.verifyClientMSPID(ctx, MSPID)
 			msg := "Should return a validation error"
 			if isValid {
-				msg = "Should not return a validation error"
+				msg = fmt.Sprintf("Should not return a validation error: %v", err)
 			}
 			assert.Equal(t, isValid, err == nil, msg)
 		}
@@ -73,13 +84,23 @@ func TestVerifyClientMSPID(t *testing.T) {
 			PeerCertificates: []*x509.Certificate{{Subject: pkix.Name{Organization: []string{}}}}},
 		}}))
 
-	t.Run("Certificate with a valid MSPID", verify(true,
+	t.Run("Certificate with a valid MSPID and CA", verify(true,
 		&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{
-			PeerCertificates: []*x509.Certificate{{Subject: pkix.Name{Organization: []string{MSPID}}}}},
+			PeerCertificates: []*x509.Certificate{{Subject: pkix.Name{Organization: []string{MSPID}}, AuthorityKeyId: org1AuthKeyID}}},
 		}}))
 
-	t.Run("Certificate with both a valid MSPID and and invalid one", verify(true,
+	t.Run("Certificate with both a valid MSPID+CA and and invalid one", verify(true,
 		&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{
-			PeerCertificates: []*x509.Certificate{{Subject: pkix.Name{Organization: []string{"other mspid", MSPID}}}}},
+			PeerCertificates: []*x509.Certificate{{Subject: pkix.Name{Organization: []string{"other mspid", MSPID}}, AuthorityKeyId: org1AuthKeyID}}},
+		}}))
+
+	t.Run("Certificate with a valid MSPID but invalid CA for org", verify(false,
+		&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{
+			PeerCertificates: []*x509.Certificate{{Subject: pkix.Name{Organization: []string{MSPID}}, AuthorityKeyId: org2AuthKeyID}}},
+		}}))
+
+	t.Run("Certificate with both a valid MSPID and invalid one but invalid CA for org", verify(false,
+		&peer.Peer{AuthInfo: credentials.TLSInfo{State: tls.ConnectionState{
+			PeerCertificates: []*x509.Certificate{{Subject: pkix.Name{Organization: []string{"other mspid", MSPID}}, AuthorityKeyId: org2AuthKeyID}}},
 		}}))
 }

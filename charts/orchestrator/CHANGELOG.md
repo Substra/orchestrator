@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0] - 2021-11-30
+
+### Changed
+- Client CA certs volumes are kebabcase
+- BREAKING: `orchestrator.tls.mtls.clientCACerts` now takes a list of secrets
+
 ## [4.0.1] - 2021-11-25
 
 ### Changed

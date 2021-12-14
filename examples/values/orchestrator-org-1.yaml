@@ -19,7 +19,12 @@ orchestrator:
     mtls:
       enabled: true
       clientCACerts:
-        orchestrator-ca: orchestrator-tls-cacert
+        orchestrator-ca:
+          - orchestrator-tls-cacert
+        MyOrg1MSP:
+          - orchestrator-tls-cacert
+        MyOrg2MSP:
+          - orchestrator-tls-cacert
 
 postgresql:
   enabled: true
