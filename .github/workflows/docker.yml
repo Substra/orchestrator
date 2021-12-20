@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - uses: hadolint/hadolint-action@v1.6.0
+    - uses: mblottiere/hadolint-action@390bcfc1bcbdbe0eab20a313ad47a2d297a69441
       with:
         dockerfile: ./docker/${{ matrix.dockerfile }}/Dockerfile
 
