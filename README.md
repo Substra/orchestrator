@@ -39,7 +39,7 @@ Before running e2e tests, you may need to generate and retrieve a client certifi
 
 ```bash
 cd examples/tools
-./dowload_client_cert.sh
+./download_client_cert.sh
 ```
 
 End-to-end testing requires a running orchestrator.
