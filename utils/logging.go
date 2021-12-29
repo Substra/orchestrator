@@ -5,20 +5,17 @@ import (
 	"os"
 
 	"github.com/go-playground/log/v7"
-	"github.com/go-playground/log/v7/handlers/console"
+	"github.com/go-playground/log/v7/handlers/json"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 )
 
 // InitLogging configure log library to output to console with appropriate levels
 func InitLogging() {
-	cLog := console.New(true)
-
-	_, noColor := os.LookupEnv("NO_COLOR")
-	cLog.SetDisplayColor(!noColor)
+	handler := json.New(os.Stdout)
 
 	levels := getLevelsFromEnv()
 
-	log.AddHandler(cLog, levels...)
+	log.AddHandler(handler, levels...)
 
 	log.SetWithErrorFn(handleOrcError)
 }
