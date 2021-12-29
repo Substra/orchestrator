@@ -16,5 +16,11 @@ spec:
       nodePort: {{ .Values.service.nodePort }}
       {{- end }}
       name: grpc
+    {{- if .Values.metrics.enabled }}
+    - port: 8484
+      targetPort: 8484
+      protocol: TCP
+      name: metrics 
+    {{- end }}
   selector:
     {{- include "orchestrator.server.selectorLabels" . | nindent 4 }}

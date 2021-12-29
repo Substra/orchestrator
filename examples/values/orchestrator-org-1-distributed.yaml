@@ -29,6 +29,9 @@ orchestrator:
   txRetryBudget: 90s
   fabricGatewayTimeout: 40s
 
+metrics:
+  enabled: true
+
 rabbitmq:
   auth:
     username: user

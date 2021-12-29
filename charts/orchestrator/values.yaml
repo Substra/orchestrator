@@ -33,6 +33,9 @@ service:
   port: 9000
   nodePort: ""
 
+metrics:
+  enabled: false
+
 ingress:
   enabled: false
   ingressClassName:

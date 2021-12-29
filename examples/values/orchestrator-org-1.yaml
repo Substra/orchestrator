@@ -26,6 +26,9 @@ orchestrator:
         MyOrg2MSP:
           - orchestrator-tls-cacert
 
+metrics:
+  enabled: true
+
 postgresql:
   enabled: true
   persistence:

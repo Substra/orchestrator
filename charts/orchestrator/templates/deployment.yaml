@@ -89,6 +89,10 @@ spec:
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
+           {{- if .Values.metrics.enabled }}
+           - name: METRICS_ENABLED
+             value: "true"
+           {{- end }}
           volumeMounts:
             - name: orchestrator-config
               mountPath: /var/orchestrator/config.yaml
