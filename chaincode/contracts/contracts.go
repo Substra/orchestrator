@@ -9,6 +9,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/datasample"
 	"github.com/owkin/orchestrator/chaincode/dataset"
 	"github.com/owkin/orchestrator/chaincode/event"
+	"github.com/owkin/orchestrator/chaincode/failurereport"
 	"github.com/owkin/orchestrator/chaincode/info"
 	"github.com/owkin/orchestrator/chaincode/metric"
 	"github.com/owkin/orchestrator/chaincode/model"
@@ -30,4 +31,5 @@ var AllContracts []contractapi.ContractInterface = []contractapi.ContractInterfa
 	performance.NewSmartContract(),
 	event.NewSmartContract(),
 	info.NewSmartContract(),
+	failurereport.NewSmartContract(),
 }

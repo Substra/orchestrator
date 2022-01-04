@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package orchestrator;
+
+option go_package = "github.com/owkin/orchestrator/lib/asset";
+
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+// FailureReport is used to store information related to a failed ComputeTask.
+message FailureReport {
+  string compute_task_key = 1;
+
+  // TODO: the error type should be stored in a FailureReport instead of being stored in an Event.
+  reserved 2;
+  reserved "error_type";
+
+  Addressable logs_address = 3;
+  google.protobuf.Timestamp creation_date = 4;
+}
+
+// NewFailureReport is used to register a FailureReport.
+// It will be processed into a FailureReport.
+message NewFailureReport {
+  string compute_task_key = 1;
+
+  // TODO: the error type should be stored in a FailureReport instead of being stored in an Event.
+  reserved 2;
+  reserved "error_type";
+
+  Addressable logs_address = 3;
+}
+
+// GetFailureReportParam is used to fetch a Failure.
+message GetFailureReportParam {
+  string compute_task_key = 1;
+}
+
+service FailureReportService {
+  rpc RegisterFailureReport(NewFailureReport) returns (FailureReport);
+  rpc GetFailureReport(GetFailureReportParam) returns (FailureReport);
+}

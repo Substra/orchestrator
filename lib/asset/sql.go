@@ -175,3 +175,20 @@ func (e *Event) Scan(value interface{}) error {
 
 	return protojson.Unmarshal(b, e)
 }
+
+// Value implements the driver.Valuer interface.
+// Simply returns the JSON-encoded representation of the FailureReport.
+func (f *FailureReport) Value() (driver.Value, error) {
+	return protojson.Marshal(f)
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes JSON into the FailureReport.
+func (f *FailureReport) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.NewError(errors.ErrByteArray, "cannot scan failure report")
+	}
+
+	return protojson.Unmarshal(b, f)
+}

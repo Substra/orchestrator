@@ -111,6 +111,10 @@ var testScenarios = map[string]scenario{
 		testGetComputePlan,
 		[]string{"short", "plan", "query"},
 	},
+	"RegisterFailureReport": {
+		testRegisterFailureReport,
+		[]string{"short", "failure", "report"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -993,5 +997,45 @@ func testGetComputePlan(conn *grpc.ClientConn) {
 	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
 	if expectedCounts != actualCounts {
 		log.WithField("taskCounts", actualCounts).WithField("expected", expectedCounts).Fatal("Unexpected Values")
+	}
+}
+
+// Register a task, start it, fail it, and register a failure report on it.
+func testRegisterFailureReport(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager()
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+
+	plan := appClient.GetComputePlan("cp")
+	if plan.TaskCount != 1 {
+		log.Fatal("compute plan has invalid task count")
+	}
+
+	appClient.StartTask(client.DefaultTaskRef)
+
+	// TODO: Once the error type is stored in a FailureReport asset and registering a failure report
+	//  switch the task to FAILED, this will no longer be necessary.
+	appClient.FailTask(client.DefaultTaskRef)
+
+	task := appClient.GetComputeTask(client.DefaultTaskRef)
+	if task.Status != asset.ComputeTaskStatus_STATUS_FAILED {
+		log.Fatal("compute task should be FAILED")
+	}
+
+	resp := appClient.RegisterFailureReport(client.DefaultTaskRef)
+	if resp.ComputeTaskKey != task.Key {
+		log.WithField("task key", client.DefaultTaskRef).WithField("failureReport", resp).Fatal("Task keys don't match")
+	}
+
+	failureReport := appClient.GetFailureReport(client.DefaultTaskRef)
+	if failureReport.ComputeTaskKey != task.Key {
+		log.WithField("task key", client.DefaultTaskRef).WithField("failureReport", failureReport).Fatal("Task keys don't match")
 	}
 }

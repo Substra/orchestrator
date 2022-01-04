@@ -57,19 +57,20 @@ func (ks *KeyStore) GetKey(id string) string {
 
 // TestClient is a client for the tested app
 type TestClient struct {
-	ctx                context.Context
-	ks                 *KeyStore
-	nodeService        asset.NodeServiceClient
-	metricService      asset.MetricServiceClient
-	algoService        asset.AlgoServiceClient
-	dataManagerService asset.DataManagerServiceClient
-	dataSampleService  asset.DataSampleServiceClient
-	modelService       asset.ModelServiceClient
-	computeTaskService asset.ComputeTaskServiceClient
-	computePlanService asset.ComputePlanServiceClient
-	performanceService asset.PerformanceServiceClient
-	datasetService     asset.DatasetServiceClient
-	eventService       asset.EventServiceClient
+	ctx                  context.Context
+	ks                   *KeyStore
+	nodeService          asset.NodeServiceClient
+	metricService        asset.MetricServiceClient
+	algoService          asset.AlgoServiceClient
+	dataManagerService   asset.DataManagerServiceClient
+	dataSampleService    asset.DataSampleServiceClient
+	modelService         asset.ModelServiceClient
+	computeTaskService   asset.ComputeTaskServiceClient
+	computePlanService   asset.ComputePlanServiceClient
+	performanceService   asset.PerformanceServiceClient
+	datasetService       asset.DatasetServiceClient
+	eventService         asset.EventServiceClient
+	failureReportService asset.FailureReportServiceClient
 }
 
 func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*TestClient, error) {
@@ -77,19 +78,20 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", mspid, "channel", channel, "chaincode", chaincode)
 
 	return &TestClient{
-		ctx:                ctx,
-		ks:                 NewKeyStore(),
-		nodeService:        asset.NewNodeServiceClient(conn),
-		algoService:        asset.NewAlgoServiceClient(conn),
-		metricService:      asset.NewMetricServiceClient(conn),
-		dataManagerService: asset.NewDataManagerServiceClient(conn),
-		dataSampleService:  asset.NewDataSampleServiceClient(conn),
-		modelService:       asset.NewModelServiceClient(conn),
-		computeTaskService: asset.NewComputeTaskServiceClient(conn),
-		computePlanService: asset.NewComputePlanServiceClient(conn),
-		performanceService: asset.NewPerformanceServiceClient(conn),
-		datasetService:     asset.NewDatasetServiceClient(conn),
-		eventService:       asset.NewEventServiceClient(conn),
+		ctx:                  ctx,
+		ks:                   NewKeyStore(),
+		nodeService:          asset.NewNodeServiceClient(conn),
+		algoService:          asset.NewAlgoServiceClient(conn),
+		metricService:        asset.NewMetricServiceClient(conn),
+		dataManagerService:   asset.NewDataManagerServiceClient(conn),
+		dataSampleService:    asset.NewDataSampleServiceClient(conn),
+		modelService:         asset.NewModelServiceClient(conn),
+		computeTaskService:   asset.NewComputeTaskServiceClient(conn),
+		computePlanService:   asset.NewComputePlanServiceClient(conn),
+		performanceService:   asset.NewPerformanceServiceClient(conn),
+		datasetService:       asset.NewDatasetServiceClient(conn),
+		eventService:         asset.NewEventServiceClient(conn),
+		failureReportService: asset.NewFailureReportServiceClient(conn),
 	}, nil
 }
 
@@ -384,4 +386,36 @@ func (c *TestClient) QueryPlans(filter *asset.PlanQueryFilter, pageToken string,
 	}
 
 	return resp
+}
+
+func (c *TestClient) RegisterFailureReport(taskRef string) *asset.FailureReport {
+	newFailureReport := &asset.NewFailureReport{
+		ComputeTaskKey: c.ks.GetKey(taskRef),
+		LogsAddress: &asset.Addressable{
+			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
+			StorageAddress: "http://somewhere.online/model",
+		},
+	}
+
+	log.WithField("failureReport", newFailureReport).Debug("registering failure report")
+	failureReport, err := c.failureReportService.RegisterFailureReport(c.ctx, newFailureReport)
+	if err != nil {
+		log.WithError(err).Fatal("RegisterFailureReport failed")
+	}
+
+	return failureReport
+}
+
+func (c *TestClient) GetFailureReport(taskRef string) *asset.FailureReport {
+	param := &asset.GetFailureReportParam{
+		ComputeTaskKey: c.ks.GetKey(taskRef),
+	}
+
+	log.WithField("task key", param.ComputeTaskKey).Debug("getting failure report")
+	failureReport, err := c.failureReportService.GetFailureReport(c.ctx, param)
+	if err != nil {
+		log.WithError(err).Fatal("GetFailureReport failed")
+	}
+
+	return failureReport
 }

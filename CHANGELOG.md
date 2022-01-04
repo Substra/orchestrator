@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add filter for compute plan query (#433)
 - chaincode now properly propagate request ID in every logs (#443)
 - log events as JSON (#452)
+- add FailureReport asset to store compute task failure information (#456)
 
 ## [0.3.0] - 2021-11-30
 

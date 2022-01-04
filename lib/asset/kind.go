@@ -22,4 +22,6 @@ var (
 	ModelKind = "model"
 	// PerformanceKind is the type of Performance assets
 	PerformanceKind = "performance"
+	// FailureReportKind is the type of FailureReport assets
+	FailureReportKind = "failurereport"
 )

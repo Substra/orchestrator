@@ -91,6 +91,7 @@ type DBAL interface {
 	ComputePlanDBAL
 	PerformanceDBAL
 	EventDBAL
+	FailureReportDBAL
 }
 
 // DBALProvider exposes all available DBAL.
@@ -105,4 +106,5 @@ type DBALProvider interface {
 	ComputePlanDBALProvider
 	PerformanceDBALProvider
 	EventDBALProvider
+	FailureReportDBALProvider
 }

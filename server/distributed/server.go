@@ -61,6 +61,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 	asset.RegisterPerformanceServiceServer(server, NewPerformanceAdapter())
 	asset.RegisterEventServiceServer(server, NewEventAdapter())
 	asset.RegisterInfoServiceServer(server, NewInfoAdapter())
+	asset.RegisterFailureReportServiceServer(server, NewFailureReportAdapter())
 
 	return &AppServer{server, chaincodeInterceptor}, nil
 }

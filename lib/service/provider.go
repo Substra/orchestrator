@@ -29,6 +29,7 @@ type DependenciesProvider interface {
 	EventServiceProvider
 	LoggerProvider
 	TimeServiceProvider
+	FailureReportServiceProvider
 }
 
 // Provider is the central part of the dependency injection pattern.
@@ -37,22 +38,23 @@ type DependenciesProvider interface {
 // Each service should define a ServiceDependencyProvider interface which states what are its requirements.
 // Since the Provider implements every Provider interface, it can fit all service dependencies.
 type Provider struct {
-	logger      log.Entry
-	dbal        persistence.DBAL
-	eventQueue  event.Queue
-	node        NodeAPI
-	metric      MetricAPI
-	permission  PermissionAPI
-	datasample  DataSampleAPI
-	algo        AlgoAPI
-	datamanager DataManagerAPI
-	dataset     DatasetAPI
-	computeTask ComputeTaskAPI
-	model       ModelAPI
-	computePlan ComputePlanAPI
-	performance PerformanceAPI
-	event       EventAPI
-	time        TimeAPI
+	logger        log.Entry
+	dbal          persistence.DBAL
+	eventQueue    event.Queue
+	node          NodeAPI
+	metric        MetricAPI
+	permission    PermissionAPI
+	datasample    DataSampleAPI
+	algo          AlgoAPI
+	datamanager   DataManagerAPI
+	dataset       DatasetAPI
+	computeTask   ComputeTaskAPI
+	model         ModelAPI
+	computePlan   ComputePlanAPI
+	performance   PerformanceAPI
+	event         EventAPI
+	time          TimeAPI
+	failureReport FailureReportAPI
 }
 
 // GetLogger returns a logger instance.
@@ -120,6 +122,10 @@ func (sc *Provider) GetPerformanceDBAL() persistence.PerformanceDBAL {
 }
 
 func (sc *Provider) GetEventDBAL() persistence.EventDBAL {
+	return sc.dbal
+}
+
+func (sc *Provider) GetFailureReportDBAL() persistence.FailureReportDBAL {
 	return sc.dbal
 }
 
@@ -234,4 +240,13 @@ func (sc *Provider) GetEventService() EventAPI {
 		sc.event = NewEventService(sc)
 	}
 	return sc.event
+}
+
+// GetFailureReportService returns a FailureAPI instance.
+// The service will be instantiated if needed.
+func (sc *Provider) GetFailureReportService() FailureReportAPI {
+	if sc.failureReport == nil {
+		sc.failureReport = NewFailureReportService(sc)
+	}
+	return sc.failureReport
 }

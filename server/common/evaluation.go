@@ -10,18 +10,19 @@ import (
 // This mapping is used in chaincode mode to determine Evaluate transactions
 // and in Standalone mode to set transactions as "read only"
 var ReadOnlyMethods = map[string][]string{
-	"Metric":      {"GetMetric", "QueryMetrics"},
-	"Node":        {"GetAllNodes"},
-	"Algo":        {"GetAlgo", "QueryAlgos"},
-	"Event":       {"QueryEvents"},
-	"Model":       {"GetComputeTaskOutputModels", "GetComputeTaskInputModels", "CanDisableModel", "GetModel", "QueryModels"},
-	"Dataset":     {"GetDataset"},
-	"DataSample":  {"QueryDataSamples"},
-	"DataManager": {"GetDataManager", "QueryDataManagers"},
-	"ComputeTask": {"QueryTasks", "GetTask"},
-	"ComputePlan": {"GetPlan", "QueryPlans"},
-	"Performance": {"QueryPerformances"},
-	"Info":        {"QueryVersion"},
+	"Metric":        {"GetMetric", "QueryMetrics"},
+	"Node":          {"GetAllNodes"},
+	"Algo":          {"GetAlgo", "QueryAlgos"},
+	"Event":         {"QueryEvents"},
+	"Model":         {"GetComputeTaskOutputModels", "GetComputeTaskInputModels", "CanDisableModel", "GetModel", "QueryModels"},
+	"Dataset":       {"GetDataset"},
+	"DataSample":    {"QueryDataSamples"},
+	"DataManager":   {"GetDataManager", "QueryDataManagers"},
+	"ComputeTask":   {"QueryTasks", "GetTask"},
+	"ComputePlan":   {"GetPlan", "QueryPlans"},
+	"Performance":   {"QueryPerformances"},
+	"Info":          {"QueryVersion"},
+	"FailureReport": {"GetFailureReport"},
 }
 
 // TransactionChecker is able to characterize a transaction based on the gRPC method.

@@ -70,6 +70,7 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 	asset.RegisterPerformanceServiceServer(server, handlers.NewPerformanceServer())
 	asset.RegisterEventServiceServer(server, handlers.NewEventServer())
 	asset.RegisterInfoServiceServer(server, handlers.NewInfoServer())
+	asset.RegisterFailureReportServiceServer(server, handlers.NewFailureReportServer())
 
 	return &AppServer{
 		grpc: server,
