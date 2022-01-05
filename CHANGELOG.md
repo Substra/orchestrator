@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2022-01-05
+
 ### Added
 - add filter for compute plan query (#433)
 - chaincode now properly propagate request ID in every logs (#443)
