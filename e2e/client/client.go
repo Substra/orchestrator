@@ -140,7 +140,7 @@ func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 
 }
 
-func (c *TestClient) RegisterDataManager() {
+func (c *TestClient) RegisterDataManager(o *DataManagerOptions) {
 	newDm := &asset.NewDataManager{
 		Key:            c.ks.GetKey(DefaultDataManagerRef),
 		Name:           "Test datamanager",
@@ -153,7 +153,8 @@ func (c *TestClient) RegisterDataManager() {
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/opener",
 		},
-		Type: "test",
+		Type:           "test",
+		LogsPermission: o.LogsPermission,
 	}
 	log.WithField("datamanager", newDm).Debug("registering datamanager")
 	_, err := c.dataManagerService.RegisterDataManager(c.ctx, newDm)

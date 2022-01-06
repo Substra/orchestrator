@@ -8,10 +8,13 @@ import (
 
 // PermissionAPI defines the methods to act on Permissions
 type PermissionAPI interface {
+	CreatePermission(owner string, newPerms *asset.NewPermissions) (*asset.Permission, error)
 	CreatePermissions(owner string, newPerms *asset.NewPermissions) (*asset.Permissions, error)
 	CanProcess(perms *asset.Permissions, requester string) bool
-	MakeIntersection(x, y *asset.Permissions) *asset.Permissions
-	MakeUnion(x, y *asset.Permissions) *asset.Permissions
+	IntersectPermissions(x, y *asset.Permissions) *asset.Permissions
+	UnionPermissions(x, y *asset.Permissions) *asset.Permissions
+	IntersectPermission(x, y *asset.Permission) *asset.Permission
+	UnionPermission(x, y *asset.Permission) *asset.Permission
 }
 
 // PermissionServiceProvider defines an object able to provide a PermissionAPI instance.
@@ -36,8 +39,8 @@ func NewPermissionService(provider PermissionDependencyProvider) *PermissionServ
 	return &PermissionService{provider}
 }
 
-// CreatePermissions process a NewPermissions object into a Permissions one.
-func (s *PermissionService) CreatePermissions(owner string, newPerms *asset.NewPermissions) (*asset.Permissions, error) {
+// CreatePermission processes a NewPermissions object into a Permission one.
+func (s *PermissionService) CreatePermission(owner string, newPerms *asset.NewPermissions) (*asset.Permission, error) {
 	if newPerms == nil {
 		newPerms = &asset.NewPermissions{
 			Public: false,
@@ -47,11 +50,19 @@ func (s *PermissionService) CreatePermissions(owner string, newPerms *asset.NewP
 	if !newPerms.Public {
 		// Restricted access, let's check that authorizedIds are valid
 		if err := s.validateAuthorizedIDs(newPerms.AuthorizedIds); err != nil {
-			return &asset.Permissions{}, err
+			return nil, err
 		}
 	}
 
-	defaultPerms := newPermission(newPerms, owner)
+	return newPermission(newPerms, owner), nil
+}
+
+// CreatePermissions processes a NewPermissions object into a Permissions one.
+func (s *PermissionService) CreatePermissions(owner string, newPerms *asset.NewPermissions) (*asset.Permissions, error) {
+	defaultPerms, err := s.CreatePermission(owner, newPerms)
+	if err != nil {
+		return nil, err
+	}
 
 	// Download permission is not implemented in the node server, so let's use the same permissions for process & download
 	permissions := &asset.Permissions{
@@ -93,21 +104,21 @@ func (s *PermissionService) CanProcess(perms *asset.Permissions, requester strin
 	return false
 }
 
-func (s *PermissionService) MakeIntersection(x, y *asset.Permissions) *asset.Permissions {
+func (s *PermissionService) IntersectPermissions(x, y *asset.Permissions) *asset.Permissions {
 	return &asset.Permissions{
-		Process:  intersect(x.Process, y.Process),
-		Download: intersect(x.Download, y.Download),
+		Process:  s.IntersectPermission(x.Process, y.Process),
+		Download: s.IntersectPermission(x.Download, y.Download),
 	}
 }
 
-func (s *PermissionService) MakeUnion(x, y *asset.Permissions) *asset.Permissions {
+func (s *PermissionService) UnionPermissions(x, y *asset.Permissions) *asset.Permissions {
 	return &asset.Permissions{
-		Process:  union(x.Process, y.Process),
-		Download: union(x.Download, y.Download),
+		Process:  s.UnionPermission(x.Process, y.Process),
+		Download: s.UnionPermission(x.Download, y.Download),
 	}
 }
 
-func intersect(x, y *asset.Permission) *asset.Permission {
+func (s *PermissionService) IntersectPermission(x, y *asset.Permission) *asset.Permission {
 	result := &asset.Permission{}
 	result.Public = x.Public && y.Public
 
@@ -122,7 +133,7 @@ func intersect(x, y *asset.Permission) *asset.Permission {
 	return result
 }
 
-func union(x, y *asset.Permission) *asset.Permission {
+func (s *PermissionService) UnionPermission(x, y *asset.Permission) *asset.Permission {
 	result := &asset.Permission{}
 	result.Public = x.Public || y.Public
 

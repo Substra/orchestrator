@@ -69,6 +69,10 @@ type PerformanceOptions struct {
 	PerformanceValue  float32
 }
 
+type DataManagerOptions struct {
+	LogsPermission *asset.NewPermissions
+}
+
 func DefaultMetricOptions() *MetricOptions {
 	return &MetricOptions{
 		KeyRef: DefaultMetricRef,
@@ -374,5 +378,16 @@ func (o *DataSampleOptions) WithKeyRef(ref string) *DataSampleOptions {
 
 func (o *DataSampleOptions) WithTestOnly(flag bool) *DataSampleOptions {
 	o.TestOnly = flag
+	return o
+}
+
+func DefaultDataManagerOptions() *DataManagerOptions {
+	return &DataManagerOptions{
+		LogsPermission: &asset.NewPermissions{Public: true},
+	}
+}
+
+func (o *DataManagerOptions) WithLogsPermission(permission *asset.NewPermissions) *DataManagerOptions {
+	o.LogsPermission = permission
 	return o
 }

@@ -16,6 +16,7 @@ message DataManager {
   Addressable opener = 7;
   string type = 8;
   google.protobuf.Timestamp creation_date = 9;
+  Permission logs_permission = 10;
   map <string, string> metadata = 16;
 }
 
@@ -26,6 +27,7 @@ message NewDataManager {
   Addressable description = 5;
   Addressable opener = 6;
   string type = 7;
+  NewPermissions logs_permission = 8;
   map <string, string> metadata = 16;
 }
 

@@ -40,6 +40,7 @@ message ComputeTask {
   ComputeTaskStatus status = 8; // mutable
   string worker = 9;
   google.protobuf.Timestamp creation_date = 10;
+  Permission logs_permission = 11;
   oneof data {
     TestTaskData test = 12;
     TrainTaskData train = 13;

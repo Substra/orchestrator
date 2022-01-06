@@ -130,6 +130,7 @@ func TestRegisterTrainTask(t *testing.T) {
 			Process:  &asset.Permission{Public: true},
 			Download: &asset.Permission{Public: true},
 		},
+		LogsPermission: &asset.Permission{Public: true},
 	}
 
 	// Checking datamanager permissions
@@ -157,7 +158,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		Process:  &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 	}
-	ps.On("MakeIntersection", algo.Permissions, dataManager.Permissions).Return(modelPerms)
+	ps.On("IntersectPermissions", algo.Permissions, dataManager.Permissions).Return(modelPerms)
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTrainTask.Key,
@@ -176,7 +177,8 @@ func TestRegisterTrainTask(t *testing.T) {
 				ModelPermissions: modelPerms,
 			},
 		},
-		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
+		LogsPermission: dataManager.LogsPermission,
 	}
 
 	// finally store the created task
@@ -410,13 +412,25 @@ func TestSetAggregateData(t *testing.T) {
 					},
 				},
 			},
+			LogsPermission: &asset.Permission{Public: false, AuthorizedIds: []string{"org2"}},
+		},
+		{
+			Data: &asset.ComputeTask_Train{
+				Train: &asset.TrainTaskData{
+					ModelPermissions: &asset.Permissions{
+						Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"org4"}},
+						Download: &asset.Permission{Public: false, AuthorizedIds: []string{"org4"}},
+					},
+				},
+			},
+			LogsPermission: &asset.Permission{Public: false, AuthorizedIds: []string{"org4"}},
 		},
 	}
 
 	// check node existence
 	ns.On("GetNode", "org3").Once().Return(&asset.Node{Id: "org3"}, nil)
 	// used by permissions service
-	ns.On("GetAllNodes").Once().Return([]*asset.Node{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
+	ns.On("GetAllNodes").Twice().Return([]*asset.Node{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
 
 	// getCheckedAlgo
 	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_AGGREGATE, Permissions: &asset.Permissions{
@@ -433,8 +447,9 @@ func TestSetAggregateData(t *testing.T) {
 	assert.Equal(t, "org3", task.Worker)
 	assert.False(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Process.Public)
 	assert.False(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Download.Public)
-	assert.ElementsMatch(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Process.AuthorizedIds, []string{"org1", "org3"})
-	assert.ElementsMatch(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Download.AuthorizedIds, []string{"org1"})
+	assert.ElementsMatch(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Process.AuthorizedIds, []string{"org1", "org3", "org4"})
+	assert.ElementsMatch(t, task.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions.Download.AuthorizedIds, []string{"org1", "org4"})
+	assert.ElementsMatch(t, task.LogsPermission.AuthorizedIds, []string{"org1", "org2", "org4"})
 
 	ns.AssertExpectations(t)
 	as.AssertExpectations(t)

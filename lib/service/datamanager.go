@@ -75,6 +75,11 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
+	datamanager.LogsPermission, err = s.GetPermissionService().CreatePermission(owner, d.LogsPermission)
+	if err != nil {
+		return nil, err
+	}
+
 	datamanager.Permissions, err = s.GetPermissionService().CreatePermissions(owner, d.NewPermissions)
 	if err != nil {
 		return nil, err

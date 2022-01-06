@@ -29,8 +29,10 @@ func TestRegisterDataManager(t *testing.T) {
 	service := NewDataManagerService(provider)
 
 	newPerms := &asset.NewPermissions{Public: true}
-
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
+
+	newLogsPerm := &asset.NewPermissions{Public: true}
+	logsPerm := &asset.Permission{Public: true}
 
 	description := &asset.Addressable{
 		StorageAddress: "ftp://127.0.0.1/test",
@@ -49,19 +51,22 @@ func TestRegisterDataManager(t *testing.T) {
 		Opener:         opener,
 		Type:           "test dm",
 		NewPermissions: newPerms,
+		LogsPermission: newLogsPerm,
 	}
 
 	storedDataManager := &asset.DataManager{
-		Key:          "65afb5fe-f6bc-4f8c-b488-f5e24a9d94a6",
-		Name:         "test datamanager",
-		Owner:        "owner",
-		Permissions:  perms,
-		Description:  description,
-		Opener:       opener,
-		Type:         "test dm",
-		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+		Key:            "65afb5fe-f6bc-4f8c-b488-f5e24a9d94a6",
+		Name:           "test datamanager",
+		Owner:          "owner",
+		Permissions:    perms,
+		Description:    description,
+		Opener:         opener,
+		Type:           "test dm",
+		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
+		LogsPermission: logsPerm,
 	}
 
+	mps.On("CreatePermission", "owner", newPerms).Return(&asset.Permission{Public: true}, nil).Once()
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
 	dbal.On("DataManagerExists", newDataManager.GetKey()).Return(false, nil).Once()
 	dbal.On("AddDataManager", storedDataManager).Return(nil).Once()

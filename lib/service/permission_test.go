@@ -7,6 +7,45 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestCreatePermission(t *testing.T) {
+	mockNodeService := new(MockNodeAPI)
+	provider := newMockedProvider()
+	provider.On("GetNodeService").Once().Return(mockNodeService)
+	service := NewPermissionService(provider)
+	nodes := []*asset.Node{{Id: "org"}}
+	mockNodeService.On("GetAllNodes").Once().Return(nodes, nil)
+
+	n := asset.NewPermissions{Public: false}
+	owner := "org"
+	permission, err := service.CreatePermission(owner, &n)
+
+	assert.NoError(t, err)
+	assert.Equal(t, permission, &asset.Permission{
+		Public: false, AuthorizedIds: []string{owner},
+	})
+	provider.AssertExpectations(t)
+}
+
+func TestCreatePermissions(t *testing.T) {
+	mockNodeService := new(MockNodeAPI)
+	provider := newMockedProvider()
+	provider.On("GetNodeService").Once().Return(mockNodeService)
+	service := NewPermissionService(provider)
+	nodes := []*asset.Node{{Id: "org"}}
+	mockNodeService.On("GetAllNodes").Once().Return(nodes, nil)
+
+	n := asset.NewPermissions{Public: false}
+	owner := "org"
+	permissions, err := service.CreatePermissions(owner, &n)
+
+	assert.NoError(t, err)
+	p := &asset.Permission{
+		Public: false, AuthorizedIds: []string{owner},
+	}
+	assert.Equal(t, permissions, &asset.Permissions{Download: p, Process: p})
+	provider.AssertExpectations(t)
+}
+
 func TestNewPermission(t *testing.T) {
 	n := asset.NewPermissions{Public: false}
 
@@ -119,9 +158,9 @@ func TestMakeIntersection(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.outcome, service.MakeIntersection(tc.a, tc.b))
+			assert.Equal(t, tc.outcome, service.IntersectPermissions(tc.a, tc.b))
 			// merge should be commutative
-			assert.Equal(t, tc.outcome, service.MakeIntersection(tc.b, tc.a))
+			assert.Equal(t, tc.outcome, service.IntersectPermissions(tc.b, tc.a))
 		})
 	}
 }
@@ -181,8 +220,8 @@ func TestMakeUnion(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			ab := service.MakeUnion(tc.a, tc.b)
-			ba := service.MakeUnion(tc.b, tc.a)
+			ab := service.UnionPermissions(tc.a, tc.b)
+			ba := service.UnionPermissions(tc.b, tc.a)
 
 			assert.Equal(t, ab.Process.Public, ba.Process.Public)
 			assert.ElementsMatch(t, ab.Process.AuthorizedIds, ba.Process.AuthorizedIds)

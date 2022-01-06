@@ -407,6 +407,7 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 	}
 	task.Worker = datamanager.Owner
 	task.Algo = algo
+	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
 }
@@ -422,34 +423,42 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 		return err
 	}
 
-	perms, err := s.GetPermissionService().CreatePermissions(task.Owner, &asset.NewPermissions{Public: false})
+	modelPermissions, err := s.GetPermissionService().CreatePermissions(task.Owner, &asset.NewPermissions{Public: false})
+	if err != nil {
+		return err
+	}
+
+	logsPermission, err := s.GetPermissionService().CreatePermission(task.Owner, &asset.NewPermissions{Public: false})
 	if err != nil {
 		return err
 	}
 
 	for _, p := range parentTasks {
-		var permissions *asset.Permissions
+		var modelPerms *asset.Permissions
 		switch p.Data.(type) {
 		case *asset.ComputeTask_Composite:
-			permissions = p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
+			modelPerms = p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
 		case *asset.ComputeTask_Aggregate:
-			permissions = p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
+			modelPerms = p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
 		case *asset.ComputeTask_Train:
-			permissions = p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
+			modelPerms = p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
 		default:
 			return orcerrors.NewPermissionDenied(fmt.Sprintf("cannot process parent task %q", p.Key))
 		}
-		perms = s.GetPermissionService().MakeUnion(permissions, perms)
+		modelPermissions = s.GetPermissionService().UnionPermissions(modelPerms, modelPermissions)
+
+		logsPermission = s.GetPermissionService().UnionPermission(p.LogsPermission, logsPermission)
 	}
 
 	taskData := &asset.AggregateTrainTaskData{
-		ModelPermissions: perms,
+		ModelPermissions: modelPermissions,
 	}
 	task.Data = &asset.ComputeTask_Aggregate{
 		Aggregate: taskData,
 	}
 	task.Worker = node.Id
 	task.Algo = algo
+	task.LogsPermission = logsPermission
 
 	return nil
 }
@@ -474,7 +483,7 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 		return err
 	}
 
-	permissions := s.GetPermissionService().MakeIntersection(algo.Permissions, datamanager.Permissions)
+	permissions := s.GetPermissionService().IntersectPermissions(algo.Permissions, datamanager.Permissions)
 
 	taskData := &asset.TrainTaskData{
 		DataManagerKey:   datamanager.Key,
@@ -486,8 +495,8 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 		Train: taskData,
 	}
 	task.Worker = datamanager.Owner
-
 	task.Algo = algo
+	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
 }
@@ -527,6 +536,7 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 		Test: taskData,
 	}
 	task.Worker = datamanager.Owner
+	task.LogsPermission = datamanager.LogsPermission
 
 	// Should not happen since it is validated by the NewTrain
 	if len(parentTasks) != 1 {

@@ -47,6 +47,10 @@ var testScenarios = map[string]scenario{
 		testMultiStageComputePlan,
 		[]string{"short", "plan"},
 	},
+	"GetTask": {
+		testPropagateLogsPermission,
+		[]string{"short", "task", "query"},
+	},
 	"QueryTasks": {
 		testQueryTasks,
 		[]string{"short", "task", "query"},
@@ -125,7 +129,7 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -141,7 +145,7 @@ func testRegisterModel(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -171,7 +175,7 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -204,7 +208,7 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -238,7 +242,7 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -271,7 +275,7 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithDeleteIntermediaryModels(true))
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -364,7 +368,7 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
@@ -431,6 +435,28 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 }
 
+func testPropagateLogsPermission(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+
+	logsPermission := &asset.NewPermissions{Public: false, AuthorizedIds: []string{*mspid}}
+	datamanager := client.DefaultDataManagerOptions().WithLogsPermission(logsPermission)
+	appClient.RegisterDataManager(datamanager)
+
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+
+	task := appClient.GetComputeTask(client.DefaultTaskRef)
+	if !(len(task.LogsPermission.AuthorizedIds) == 1 && task.LogsPermission.AuthorizedIds[0] == *mspid) {
+		log.Fatal("Unexpected task.LogsPermission.")
+	}
+}
+
 func testQueryTasks(conn *grpc.ClientConn) {
 	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
 	if err != nil {
@@ -438,7 +464,7 @@ func testQueryTasks(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -458,7 +484,7 @@ func testRegisterPerformance(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -487,7 +513,7 @@ func testRegisterMultiplePerformances(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -526,7 +552,7 @@ func testRegisterMultiplePerformancesForSameMetric(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -566,7 +592,7 @@ func testCompositeParentChild(conn *grpc.ClientConn) {
 
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
@@ -600,7 +626,7 @@ func testConcurrency(conn *grpc.ClientConn) {
 
 	client1.EnsureNode()
 	client1.RegisterAlgo(client.DefaultAlgoOptions())
-	client1.RegisterDataManager()
+	client1.RegisterDataManager(client.DefaultDataManagerOptions())
 	client1.RegisterDataSample(client.DefaultDataSampleOptions())
 	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
 
@@ -635,7 +661,7 @@ func testLargeComputePlan(conn *grpc.ClientConn) {
 
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -667,7 +693,7 @@ func testBatchLargeComputePlan(conn *grpc.ClientConn) {
 
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -702,7 +728,7 @@ func testSmallComputePlan(conn *grpc.ClientConn) {
 
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -733,7 +759,7 @@ func testAggregateComposite(conn *grpc.ClientConn) {
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_AGGREGATE).WithKeyRef("aggAlgo"))
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -772,7 +798,7 @@ func testDatasetSampleKeys(conn *grpc.ClientConn) {
 	}
 
 	appClient.EnsureNode()
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("ds1"))
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("ds2"))
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithTestOnly(true).WithKeyRef("testds"))
@@ -798,7 +824,7 @@ func testQueryAlgos(conn *grpc.ClientConn) {
 
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
 	appClient.RegisterMetric(client.DefaultMetricOptions())
@@ -845,7 +871,7 @@ func testFailLargeComputePlan(conn *grpc.ClientConn) {
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
@@ -906,7 +932,7 @@ func testStableTaskSort(conn *grpc.ClientConn) {
 
 	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -965,7 +991,7 @@ func testGetComputePlan(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
 	// A CP with 1 parent task and 2 child tasks
@@ -1008,7 +1034,7 @@ func testRegisterFailureReport(conn *grpc.ClientConn) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	appClient.RegisterDataManager()
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
