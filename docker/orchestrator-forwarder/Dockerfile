@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.16-alpine3.15 AS build
+FROM golang:1.17-alpine3.15 AS build
 RUN apk add --no-cache git=2.34.1-r0 make=4.3-r0 protoc=3.18.1-r1 protobuf-dev=3.18.1-r1
 
 ENV GO111MODULE=on
