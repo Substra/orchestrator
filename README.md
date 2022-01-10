@@ -20,9 +20,9 @@ This component's purpose is to orchestrate task processing in multiple channels 
 Make sure you have these requirements fulfilled before trying to build the orchestrator:
 
 - [go](https://golang.org/): v1.17
-- [protoc](https://github.com/protocolbuffers/protobuf): v3.14.0
-- [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.25.0
-- [go-bindata](https://github.com/go-bindata/go-bindata): v3.1.0
+- [protoc](https://github.com/protocolbuffers/protobuf): v3.18.0
+- [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.27.1
+- [go-bindata](https://github.com/go-bindata/go-bindata): v3.1.2
 - [golang-migrate](https://github.com/golang-migrate/migrate): optional, used to create migration files
 - [skaffold](https://skaffold.dev/): used to run the orchestrator locally
 - [mockery](https://github.com/vektra/mockery#installation): used to generate mocks

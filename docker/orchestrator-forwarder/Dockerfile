@@ -6,9 +6,8 @@ ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/orchestrator
 
 # Install protobuf codegen dependencies
-RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
-    google.golang.org/grpc/cmd/protoc-gen-go-grpc \
-    github.com/go-bindata/go-bindata/...
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 && \
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
 
 WORKDIR ${SRC_DIR}
 
@@ -27,7 +26,7 @@ RUN make ./bin/forwarder && mv ./bin/forwarder /bin/forwarder
 
 
 # Expose the binary
-FROM alpine:3.13 as prod
+FROM alpine:3.15 as prod
 
 COPY --from=build /bin/forwarder /app/forwarder
 USER 1000

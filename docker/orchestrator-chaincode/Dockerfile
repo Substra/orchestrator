@@ -7,8 +7,8 @@ ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/chaincode
 
 # Install protobuf codegen dependencies
-RUN go get google.golang.org/protobuf/cmd/protoc-gen-go \
-         google.golang.org/grpc/cmd/protoc-gen-go-grpc
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 && \
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
 
 WORKDIR ${SRC_DIR}
 
@@ -22,7 +22,7 @@ RUN make ./bin/chaincode VERSION=$VERSION && mv ./bin/chaincode /bin/chaincode
 
 
 # Expose the binary
-FROM alpine:3.13 as prod
+FROM alpine:3.15 as prod
 
 COPY --from=build /bin/chaincode /app/chaincode
 USER 1000
