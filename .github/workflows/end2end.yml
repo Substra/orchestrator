@@ -33,7 +33,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16.x
+          go-version: 1.17.x
       - name: Cache Go modules
         uses: actions/cache@v2
         with:
@@ -41,21 +41,21 @@ jobs:
           key: build-${{ hashFiles('**/go.sum') }}
       - name: Install protobuf codegen tool
         run: |
-          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip
-          unzip protoc-3.14.0-linux-x86_64.zip -d $HOME/.local
+          curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.18.1/protoc-3.18.1-linux-x86_64.zip
+          unzip protoc-3.18.1-linux-x86_64.zip -d $HOME/.local
           echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install go tools
         run: |
           cd /tmp
-          go get google.golang.org/protobuf/cmd/protoc-gen-go
-          go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
-          go get github.com/go-bindata/go-bindata/...
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+          go install github.com/go-bindata/go-bindata/...@v3.1.2
       - name: build orchestrator
         run: make orchestrator
       - name: build end2end tests
         run: make ./bin/e2e-tests
       - name: wait for rabbitmq
-        # We don't explicitely wait for postgres since it will almost certainly come up before rabbit
+        # We don't explicitly wait for postgres since it will almost certainly come up before rabbit
         run: |
           while ! $(nc localhost 5672 -z); do
             sleep 2
