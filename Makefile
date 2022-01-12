@@ -17,22 +17,22 @@ protobufs = $(wildcard $(protos)/*.proto)
 pbgo = $(protobufs:.proto=.pb.go)
 
 .PHONY: all
-all: chaincode orchestrator forwarder
+all: chaincode orchestrator forwarder  ## Build all binaries
 
 .PHONY: chaincode
-chaincode: $(CHAINCODE_BIN)
+chaincode: $(CHAINCODE_BIN)  ## Build chaincode binary
 
 .PHONY: orchestrator
-orchestrator: $(ORCHESTRATOR_BIN)
+orchestrator: $(ORCHESTRATOR_BIN)  ## Build server binary
 
 .PHONY: forwarder
-forwarder: $(FORWARDER_BIN)
+forwarder: $(FORWARDER_BIN)  ## Build event-forwarded binary
 
 .PHONY: codegen
-codegen: $(pbgo) $(migrations_binpack) $(lib_generated)
+codegen: $(pbgo) $(migrations_binpack) $(lib_generated)  ## Build codegen tool
 
 .PHONY: lint
-lint: codegen mocks
+lint: codegen mocks  ## Analyze the codebase
 	golangci-lint run
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
@@ -68,32 +68,38 @@ $(lib_generated): $(LIBCODEGEN_BIN) $(pbgo)
 	$(LIBCODEGEN_BIN) -path $(protos) > $(lib_generated)
 
 .PHONY: proto-codegen
-proto-codegen: $(pbgo)
+proto-codegen: $(pbgo)  ## Generate go code from proto files
 
 .PHONY: mocks
-mocks:
+mocks:  ## Generate mocks for public interfaces
 	mockery --dir $(PROJECT_ROOT) --all --inpackage --quiet
 
 .PHONY: clean
-clean: clean-protos clean-migrations-binpack clean-generated clean-mocks
+clean: clean-protos clean-migrations-binpack clean-generated clean-mocks  ## Remove all generated code
 	rm -rf $(OUTPUT_DIR)
 
 .PHONY: test
-test: codegen mocks
+test: codegen mocks  ## Run unit-tests
 	go test -race -cover ./... -short -timeout 30s
 
 .PHONY: clean-mocks
-clean-mocks:
+clean-mocks:  ## Remove generated mocks
 	find $(PROJECT_ROOT) -name "mock_*.go" -delete
 
 .PHONY: clean-protos
-clean-protos:
+clean-protos:  ## Remove go code generated from proto files
 	-rm $(wildcard $(protos)/*.pb.go)
 
 .PHONY: clean-migrations-binpack
-clean-migrations-binpack:
+clean-migrations-binpack:  ## Remove generated migration file
 	-rm  $(migrations_binpack)
 
 .PHONY: clean-generated
-clean-generated:
+clean-generated:  ## Remove codegen tool
 	-rm $(lib_generated)
+
+### Makefile
+
+.PHONY: help
+help:  ## Display this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
