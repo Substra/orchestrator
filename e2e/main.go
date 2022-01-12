@@ -19,6 +19,7 @@ import (
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type tagList struct {
@@ -94,7 +95,8 @@ func main() {
 
 		opts = append(opts, creds)
 	} else {
-		opts = append(opts, grpc.WithInsecure())
+		creds := grpc.WithTransportCredentials(insecure.NewCredentials())
+		opts = append(opts, creds)
 	}
 
 	opts = append(opts, grpc.WithBlock())
