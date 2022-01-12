@@ -185,6 +185,18 @@ func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
 	}
 }
 
+func (c *TestClient) GetDataSample(dataSampleRef string) *asset.DataSample {
+	param := &asset.GetDataSampleParam{
+		Key: c.ks.GetKey(dataSampleRef),
+	}
+	log.WithField("data sample key", c.ks.GetKey(dataSampleRef)).Debug("GetDataSample")
+	resp, err := c.dataSampleService.GetDataSample(c.ctx, param)
+	if err != nil {
+		log.WithError(err).Fatal("GetDataSample failed")
+	}
+	return resp
+}
+
 func (c *TestClient) RegisterMetric(o *MetricOptions) {
 	newObj := &asset.NewMetric{
 		Key:  c.ks.GetKey(o.KeyRef),

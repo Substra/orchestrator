@@ -105,7 +105,10 @@ func TestQueryDataSamples(t *testing.T) {
 func TestEvaluateTransactions(t *testing.T) {
 	contract := &SmartContract{}
 
-	query := []string{"QueryDataSamples"}
+	query := []string{
+		"GetDataSample",
+		"QueryDataSamples",
+	}
 
 	assert.Equal(t, query, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
 }

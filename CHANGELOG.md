@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - add a `logs_permission` field to the Dataset asset (#459)
+- add a `GetDataSample` method to the DataSample service(#479)
 
 ## [0.4.0] - 2022-01-05
 

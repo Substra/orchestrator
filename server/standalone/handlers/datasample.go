@@ -80,3 +80,12 @@ func (s *DataSampleServer) QueryDataSamples(ctx context.Context, params *asset.Q
 		NextPageToken: paginationToken,
 	}, nil
 }
+
+// GetDataSample fetches a datasample by its key
+func (s *DataSampleServer) GetDataSample(ctx context.Context, params *asset.GetDataSampleParam) (*asset.DataSample, error) {
+	services, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return services.GetDataSampleService().GetDataSample(params.Key)
+}

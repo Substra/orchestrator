@@ -89,6 +89,34 @@ func (s *SmartContract) UpdateDataSamples(ctx ledger.TransactionContext, wrapper
 	return nil
 }
 
+// GetDataSample returns the datasample with given key
+func (s *SmartContract) GetDataSample(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetDataSampleService()
+
+	params := new(asset.GetDataSampleParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return nil, err
+	}
+
+	obj, err := service.GetDataSample(params.GetKey())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to query datasample")
+		return nil, err
+	}
+	wrapped, err := communication.Wrap(ctx.GetContext(), obj)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
+}
+
 // QueryDataSamples returns the datasamples
 func (s *SmartContract) QueryDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()

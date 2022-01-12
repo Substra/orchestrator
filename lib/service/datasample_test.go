@@ -377,3 +377,23 @@ func TestIsTestOnly(t *testing.T) {
 	assert.NoError(t, err, "check on usage should not fail")
 	assert.True(t, testOnly)
 }
+
+func TestGetDataSample(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	provider := newMockedProvider()
+	provider.On("GetDataSampleDBAL").Return(dbal)
+	service := NewDataSampleService(provider)
+
+	ds1 := asset.DataSample{
+		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
+		Owner:    "owner",
+		TestOnly: true,
+	}
+
+	dbal.On("GetDataSample", ds1.GetKey()).Return(&ds1, nil).Once()
+
+	o, err := service.GetDataSample("4c67ad88-309a-48b4-8bc4-c2e2c1a87a84")
+	require.Nil(t, err)
+	assert.Equal(t, o.Owner, ds1.Owner)
+	dbal.AssertExpectations(t)
+}

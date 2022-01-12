@@ -132,3 +132,20 @@ func TestHandleDataSampleBatchConflictAfterTimeout(t *testing.T) {
 	// We cannot assume that ALL the assets have been created, it might be a legitimate conflict not due to the timeout.
 	assert.Error(t, err, "Registration fail because batch contains more than one sample")
 }
+
+func TestGetDataSample(t *testing.T) {
+	adapter := NewDataSampleAdapter()
+
+	newCtx := context.TODO()
+	invocator := &mockedInvocator{}
+
+	param := &asset.GetDataSampleParam{Key: "uuid"}
+
+	invocator.On("Call", AnyContext, "orchestrator.datasample:GetDataSample", param, &asset.DataSample{}).Return(nil)
+
+	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+
+	_, err := adapter.GetDataSample(ctx, param)
+
+	assert.NoError(t, err, "Query should pass")
+}

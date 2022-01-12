@@ -48,8 +48,13 @@ message QueryDataSamplesResponse {
   string next_page_token = 2;
 }
 
+message GetDataSampleParam {
+  string key = 1;
+}
+
 service DataSampleService {
   rpc RegisterDataSamples(RegisterDataSamplesParam) returns (RegisterDataSamplesResponse);
   rpc UpdateDataSamples(UpdateDataSamplesParam) returns (UpdateDataSamplesResponse);
   rpc QueryDataSamples(QueryDataSamplesParam) returns (QueryDataSamplesResponse);
+  rpc GetDataSample(GetDataSampleParam) returns (DataSample);
 }

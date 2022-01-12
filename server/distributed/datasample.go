@@ -65,3 +65,18 @@ func (a *DataSampleAdapter) QueryDataSamples(ctx context.Context, param *asset.Q
 
 	return response, err
 }
+
+// GetDataSample returns a datasample from its key
+func (a *DataSampleAdapter) GetDataSample(ctx context.Context, param *asset.GetDataSampleParam) (*asset.DataSample, error) {
+	invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.datasample:GetDataSample"
+
+	response := &asset.DataSample{}
+
+	err = invocator.Call(ctx, method, param, response)
+
+	return response, err
+}

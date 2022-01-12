@@ -131,6 +131,12 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+
+	ds := appClient.GetDataSample(client.DefaultDataSampleRef)
+	if ds.Key != appClient.GetKeyStore().GetKey(client.DefaultDataSampleRef) {
+		log.WithField("datasample key", ds.Key).Fatal("datasample could not be properly retrived")
+	}
+
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(defaultParent...))

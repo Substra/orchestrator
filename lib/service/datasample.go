@@ -19,6 +19,7 @@ type DataSampleAPI interface {
 	IsTestOnly(sampleKeys []string) (bool, error)
 	ContainsTestSample(sampleKeys []string) (bool, error)
 	GetDataSampleKeysByManager(managerKey string, testOnly bool) ([]string, error)
+	GetDataSample(string) (*asset.DataSample, error)
 }
 
 // DataSampleServiceProvider defines an object able to provide a DataSampleAPI instance
@@ -203,4 +204,9 @@ func (s *DataSampleService) ContainsTestSample(sampleKeys []string) (bool, error
 
 func (s *DataSampleService) GetDataSampleKeysByManager(managerKey string, testOnly bool) ([]string, error) {
 	return s.GetDataSampleDBAL().GetDataSampleKeysByManager(managerKey, testOnly)
+}
+
+// GetDataSample retrieves an datasample by its key
+func (s *DataSampleService) GetDataSample(key string) (*asset.DataSample, error) {
+	return s.GetDataSampleDBAL().GetDataSample(key)
 }
