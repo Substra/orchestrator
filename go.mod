@@ -3,7 +3,7 @@ module github.com/owkin/orchestrator
 go 1.17
 
 require (
-	github.com/Masterminds/squirrel v1.5.1
+	github.com/Masterminds/squirrel v1.5.2
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/go-playground/log/v7 v7.0.2
 	github.com/golang-migrate/migrate/v4 v4.15.1
