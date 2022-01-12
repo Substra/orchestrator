@@ -77,7 +77,7 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 	ctx := context.Background()
 	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", mspid, "channel", channel, "chaincode", chaincode)
 
-	return &TestClient{
+	client := &TestClient{
 		ctx:                  ctx,
 		ks:                   NewKeyStore(),
 		nodeService:          asset.NewNodeServiceClient(conn),
@@ -92,7 +92,11 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 		datasetService:       asset.NewDatasetServiceClient(conn),
 		eventService:         asset.NewEventServiceClient(conn),
 		failureReportService: asset.NewFailureReportServiceClient(conn),
-	}, nil
+	}
+
+	client.EnsureNode()
+
+	return client, nil
 }
 
 func (c *TestClient) WithKeyStore(ks *KeyStore) *TestClient {

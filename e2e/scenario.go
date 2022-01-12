@@ -365,7 +365,6 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -590,7 +589,6 @@ func testCompositeParentChild(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
@@ -624,7 +622,6 @@ func testConcurrency(conn *grpc.ClientConn) {
 	// Share the same key store for both clients
 	client2.WithKeyStore(client1.GetKeyStore())
 
-	client1.EnsureNode()
 	client1.RegisterAlgo(client.DefaultAlgoOptions())
 	client1.RegisterDataManager(client.DefaultDataManagerOptions())
 	client1.RegisterDataSample(client.DefaultDataSampleOptions())
@@ -659,7 +656,6 @@ func testLargeComputePlan(conn *grpc.ClientConn) {
 	nbTasks := 10000
 	nbQuery := 5000 // 10k exceed max response size
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
@@ -691,7 +687,6 @@ func testBatchLargeComputePlan(conn *grpc.ClientConn) {
 	batchSize := 1000
 	nbQuery := 5000 // 10k exceed max response size
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
@@ -726,7 +721,6 @@ func testSmallComputePlan(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
@@ -756,7 +750,6 @@ func testAggregateComposite(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_AGGREGATE).WithKeyRef("aggAlgo"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -797,7 +790,6 @@ func testDatasetSampleKeys(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.EnsureNode()
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("ds1"))
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("ds2"))
@@ -822,7 +814,6 @@ func testQueryAlgos(conn *grpc.ClientConn) {
 		log.WithError(err).Fatal("could not create TestClient")
 	}
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
@@ -868,7 +859,6 @@ func testFailLargeComputePlan(conn *grpc.ClientConn) {
 	nbPharma := 11
 	var nbTasks int
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -930,7 +920,6 @@ func testStableTaskSort(conn *grpc.ClientConn) {
 	nbTasks := 1000
 	nbQuery := 10
 
-	appClient.EnsureNode()
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
