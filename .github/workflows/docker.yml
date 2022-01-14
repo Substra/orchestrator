@@ -3,13 +3,11 @@ name: Build docker images
 on:
   push:
     branches:
-      - master
       - main
     tags:
       - '*'
   pull_request:
     branches:
-      - master
       - main
 
 jobs:
@@ -27,7 +25,7 @@ jobs:
 
     - name: Set env variables
       run: |
-        if [ "${{ github.ref }}" = "refs/heads/master" ] || [ "${{ github.ref }}" = "refs/heads/main" ]; then
+        if [ "${{ github.ref }}" = "refs/heads/main" ]; then
           echo "LATEST=true" >> $GITHUB_ENV
           echo "LATEST is set to true"
           echo "VERSION=latest+`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV

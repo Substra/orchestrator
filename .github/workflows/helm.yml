@@ -3,13 +3,11 @@ name: Helm
 on:
   push:
     branches:
-      - master
       - main
     paths:
       - "charts/**"
   pull_request:
     branches:
-      - master
       - main
     paths:
       - "charts/**"
@@ -31,7 +29,7 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: test
     steps:
       - uses: actions/checkout@v2
