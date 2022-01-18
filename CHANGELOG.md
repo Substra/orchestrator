@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - add `Start` and `End` timestamp filters for `EventQueryFilter` (#482)
 
+### Fixed
+- set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)
+
 ## [0.5.0] - 2022-01-16
 
 ### Added

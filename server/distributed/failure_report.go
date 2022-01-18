@@ -24,7 +24,7 @@ func (a *FailureReportAdapter) RegisterFailureReport(ctx context.Context, newFai
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.failurereport:RegisterFailure"
+	method := "orchestrator.failurereport:RegisterFailureReport"
 
 	failureReport := &asset.FailureReport{}
 
