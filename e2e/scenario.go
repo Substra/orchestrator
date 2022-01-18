@@ -119,6 +119,10 @@ var testScenarios = map[string]scenario{
 		testRegisterFailureReport,
 		[]string{"short", "failure", "report"},
 	},
+	"EventTSFilter": {
+		testEventTSFilter,
+		[]string{"short", "event"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -1059,4 +1063,48 @@ func testRegisterFailureReport(conn *grpc.ClientConn) {
 	if failureReport.ComputeTaskKey != task.Key {
 		log.WithField("task key", client.DefaultTaskRef).WithField("failureReport", failureReport).Fatal("Task keys don't match")
 	}
+}
+
+// testEventTSFilter will register some assets to generate events and filter event by timestamp.
+func testEventTSFilter(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	nbTasks := 10
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+
+	newTasks := make([]client.Taskable, 0, nbTasks)
+	for i := 0; i < nbTasks; i++ {
+		newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(defaultParent...))
+	}
+	appClient.RegisterTasks(newTasks...)
+
+	events := appClient.QueryEvents(&asset.EventQueryFilter{}, "", 100)
+
+	oneTSEvent := appClient.QueryEvents(&asset.EventQueryFilter{Start: events.Events[5].Timestamp, End: events.Events[5].Timestamp}, "", 100)
+	firstEvents := appClient.QueryEvents(&asset.EventQueryFilter{End: events.Events[5].Timestamp}, "", 100)
+	lastEvents := appClient.QueryEvents(&asset.EventQueryFilter{Start: events.Events[5].Timestamp}, "", 100)
+
+	if len(oneTSEvent.Events) >= len(events.Events) {
+		log.WithField("events", oneTSEvent.Events).Fatal("Unexpected number of events, should be lower than the total number of events")
+	}
+	if len(firstEvents.Events) >= len(lastEvents.Events) {
+		log.WithField("events", firstEvents.Events).Fatal("Unexpected number of events, should be lower than the number of last events")
+	}
+	if len(lastEvents.Events) > len(events.Events) { // can be equal with pagination
+		log.WithField("events", lastEvents.Events).Fatal("Unexpected number of events, should be lower than or equal to the total number of events")
+	}
+
+	allEvents := appClient.QueryEvents(&asset.EventQueryFilter{Start: events.Events[0].Timestamp, End: events.Events[len(events.Events)-1].Timestamp}, "", 100)
+	if len(allEvents.Events) != len(events.Events) {
+		log.WithField("events", allEvents.Events).Fatal("Unexpected number of events, should be equal to the total number of events")
+	}
+
 }

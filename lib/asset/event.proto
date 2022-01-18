@@ -38,6 +38,8 @@ message EventQueryFilter {
   AssetKind asset_kind = 2;
   EventKind event_kind = 3;
   map<string, string> metadata = 4;
+  google.protobuf.Timestamp start = 5; // timestamp inclusive lower bound
+  google.protobuf.Timestamp end = 6; // timestamp inclusive upper bound
 }
 
 message QueryEventsResponse {

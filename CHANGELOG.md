@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- add `Start` and `End` timestamp filters for `EventQueryFilter` (#482)
+
 ## [0.5.0] - 2022-01-16
+
 ### Added
 - add a `logs_permission` field to the Dataset asset (#459)
 - add a `GetDataSample` method to the DataSample service(#479)

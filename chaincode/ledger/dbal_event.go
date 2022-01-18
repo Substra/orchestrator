@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -73,6 +74,16 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, 
 	}
 	if filter.Metadata != nil {
 		assetFilter["metadata"] = filter.Metadata
+	}
+	if filter.Start != nil || filter.End != nil {
+		tsFilter := make(map[string]string)
+		if filter.Start != nil {
+			tsFilter["$gte"] = filter.Start.AsTime().Format(time.RFC3339Nano)
+		}
+		if filter.End != nil {
+			tsFilter["$lte"] = filter.End.AsTime().Format(time.RFC3339Nano)
+		}
+		assetFilter["timestamp"] = tsFilter
 	}
 	if len(assetFilter) > 0 {
 		query.Selector.Asset = assetFilter

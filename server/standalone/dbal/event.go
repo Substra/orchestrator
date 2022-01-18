@@ -3,6 +3,7 @@ package dbal
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/go-playground/log/v7"
@@ -150,6 +151,12 @@ func eventFilterToQuery(filter *asset.EventQueryFilter, builder squirrel.SelectB
 	}
 	if filter.Metadata != nil {
 		builder = builder.Where(squirrel.Expr("event->'metadata' @> ?", filter.Metadata))
+	}
+	if filter.Start != nil {
+		builder = builder.Where(squirrel.Expr("event->>'timestamp' >= ?", filter.Start.AsTime().Format(time.RFC3339Nano)))
+	}
+	if filter.End != nil {
+		builder = builder.Where(squirrel.Expr("event->>'timestamp' <= ?", filter.End.AsTime().Format(time.RFC3339Nano)))
 	}
 
 	return builder

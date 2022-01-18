@@ -3,6 +3,7 @@ package dbal
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -10,6 +11,7 @@ import (
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestEventFilterToQuery(t *testing.T) {
@@ -28,6 +30,11 @@ func TestEventFilterToQuery(t *testing.T) {
 			&asset.EventQueryFilter{AssetKey: "uuid", AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN, EventKind: asset.EventKind_EVENT_ASSET_UPDATED},
 			"asset_key = $1 AND event->>'assetKind' = $2 AND event->>'eventKind' = $3",
 			[]interface{}{"uuid", asset.AssetKind_ASSET_COMPUTE_PLAN.String(), asset.EventKind_EVENT_ASSET_UPDATED.String()},
+		},
+		"time filter": {
+			&asset.EventQueryFilter{Start: timestamppb.New(time.Unix(1337, 0)), End: timestamppb.New(time.Unix(7331, 0))},
+			"event->>'timestamp' >= $1 AND event->>'timestamp' <= $2",
+			[]interface{}{timestamppb.New(time.Unix(1337, 0)).AsTime().Format(time.RFC3339Nano), timestamppb.New(time.Unix(7331, 0)).AsTime().Format(time.RFC3339Nano)},
 		},
 	}
 
