@@ -81,18 +81,27 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 				}
 			}
 		case asset.ComputeTaskCategory_TASK_COMPOSITE:
-			hasAggregateParent := len(task.ParentTaskKeys) == 2
-			if len(models) == 2 {
-				// Only composite tasks produce 2 models
-				for _, model := range models {
-					if model.Category == asset.ModelCategory_MODEL_HEAD || (model.Category == asset.ModelCategory_MODEL_SIMPLE && !hasAggregateParent) {
-						inputs = append(inputs, model)
-					}
+			// true if the parent has contributed an input to the composite task
+			parentContributed := false
+			for _, model := range models {
+				// Head model should always come from the first parent possible
+				if model.Category == asset.ModelCategory_MODEL_HEAD && !containsHeadModel(inputs) {
+					inputs = append(inputs, model)
+					parentContributed = true
 				}
-			}
-			if len(models) == 1 {
-				// This is the model of the aggregate task
-				inputs = append(inputs, models...)
+
+				singleParent := len(task.ParentTaskKeys) == 1
+				completeInputs := len(inputs) < 2
+				// Add trunk from parent if it's a single parent or if we still miss an input and the parent has not contributed a model yet
+				// Current parent should contribute the trunk model if:
+				// - it's a single parent
+				// - it has not contributed yet but not all inputs are set
+				shouldContributeTrunk := singleParent || (!parentContributed && completeInputs)
+
+				if model.Category == asset.ModelCategory_MODEL_SIMPLE && shouldContributeTrunk {
+					inputs = append(inputs, model)
+					parentContributed = true
+				}
 			}
 		default:
 			inputs = append(inputs, models...)
@@ -338,4 +347,15 @@ func checkDuplicateModel(existingModels []*asset.Model, model *asset.NewModel) e
 		}
 	}
 	return nil
+}
+
+// containsHeadModel returns true if the slice contains a HEAD model
+func containsHeadModel(inputs []*asset.Model) bool {
+	for _, m := range inputs {
+		if m.Category == asset.ModelCategory_MODEL_HEAD {
+			return true
+		}
+	}
+
+	return false
 }

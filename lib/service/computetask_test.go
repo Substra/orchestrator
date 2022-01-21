@@ -204,6 +204,172 @@ func TestRegisterTrainTask(t *testing.T) {
 	ts.AssertExpectations(t)
 }
 
+func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
+	newTask := &asset.NewComputeTask{
+		Key:            "aaaaaaaa-cccc-bbbb-eeee-ffffffffffff",
+		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		ParentTaskKeys: []string{"aaaaaaaa-cccc-bbbb-eeee-111111111111", "aaaaaaaa-cccc-bbbb-eeee-222222222222"},
+		Data: &asset.NewComputeTask_Composite{
+			Composite: &asset.NewCompositeTrainTaskData{
+				DataManagerKey:   "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys:   []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+				TrunkPermissions: &asset.NewPermissions{AuthorizedIds: []string{"testOrg"}},
+			},
+		},
+	}
+
+	parent1 := &asset.ComputeTask{
+		Key:            "aaaaaaaa-cccc-bbbb-eeee-111111111111",
+		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Status:         asset.ComputeTaskStatus_STATUS_DOING,
+		Data: &asset.ComputeTask_Composite{
+			Composite: &asset.CompositeTrainTaskData{
+				HeadPermissions:  &asset.Permissions{Process: &asset.Permission{AuthorizedIds: []string{"testOwner"}}},
+				TrunkPermissions: &asset.Permissions{Process: &asset.Permission{AuthorizedIds: []string{"testOwner"}}},
+			},
+		},
+	}
+	parent2 := &asset.ComputeTask{
+		Key:            "aaaaaaaa-cccc-bbbb-eeee-222222222222",
+		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Status:         asset.ComputeTaskStatus_STATUS_DOING,
+		Data: &asset.ComputeTask_Composite{
+			Composite: &asset.CompositeTrainTaskData{
+				HeadPermissions:  &asset.Permissions{Process: &asset.Permission{AuthorizedIds: []string{"testOwner"}}},
+				TrunkPermissions: &asset.Permissions{Process: &asset.Permission{AuthorizedIds: []string{"testOwner"}}},
+			},
+		},
+	}
+
+	dbal := new(persistence.MockDBAL)
+	es := new(MockEventAPI)
+	provider := newMockedProvider()
+
+	dms := new(MockDataManagerAPI)
+	dss := new(MockDataSampleAPI)
+	ps := new(MockPermissionAPI)
+	as := new(MockAlgoAPI)
+	ts := new(MockTimeAPI)
+
+	provider.On("GetEventService").Return(es)
+	provider.On("GetComputeTaskDBAL").Return(dbal)
+	provider.On("GetDataManagerService").Return(dms)
+	provider.On("GetDataSampleService").Return(dss)
+	provider.On("GetPermissionService").Return(ps)
+	provider.On("GetAlgoService").Return(as)
+	provider.On("GetTimeService").Return(ts)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
+
+	service := NewComputeTaskService(provider)
+
+	// Checking existing task
+	dbal.On("ComputeTaskExists", newTask.Key).Once().Return(false, nil)
+	// All parents already exist
+	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return(newTask.ParentTaskKeys, nil)
+
+	dbal.On("GetComputeTasks", newTask.ParentTaskKeys).Once().Return([]*asset.ComputeTask{parent1, parent2}, nil)
+
+	dataManagerKey := newTask.Data.(*asset.NewComputeTask_Composite).Composite.DataManagerKey
+	dataSampleKeys := newTask.Data.(*asset.NewComputeTask_Composite).Composite.DataSampleKeys
+
+	dataManager := &asset.DataManager{
+		Key:   dataManagerKey,
+		Owner: "dm-owner",
+		Permissions: &asset.Permissions{
+			Process:  &asset.Permission{Public: true},
+			Download: &asset.Permission{Public: true},
+		},
+	}
+
+	// Checking datamanager permissions
+	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
+	ps.On("CanProcess", dataManager.Permissions, "testOwner").Once().Return(true)
+
+	// Checking sample consistency
+	dss.On("CheckSameManager", dataManagerKey, dataSampleKeys).Once().Return(nil)
+	// Cannot train on test data
+	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
+
+	algo := &asset.Algo{
+		Category: asset.AlgoCategory_ALGO_COMPOSITE,
+		Permissions: &asset.Permissions{
+			Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
+			Download: &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
+		},
+	}
+	// check algo matching
+	as.On("GetAlgo", newTask.AlgoKey).Once().Return(algo, nil)
+	ps.On("CanProcess", algo.Permissions, "testOwner").Once().Return(true)
+
+	// create new permissions
+	headPermissions := &asset.Permissions{
+		Process:  &asset.Permission{AuthorizedIds: []string{"testOwner"}},
+		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
+	}
+	ps.On("CreatePermissions", dataManager.Owner, (*asset.NewPermissions)(nil)).Once().Return(headPermissions, nil)
+	trunkPermissions := &asset.Permissions{
+		Process:  &asset.Permission{AuthorizedIds: []string{"testOwner"}},
+		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
+	}
+	ps.On("CreatePermissions", dataManager.Owner, newTask.Data.(*asset.NewComputeTask_Composite).Composite.TrunkPermissions).Once().Return(trunkPermissions, nil)
+
+	// Parent processing check -> requester is the task worker, so the datamanager owner here
+	ps.On("CanProcess", parent1.Data.(*asset.ComputeTask_Composite).Composite.HeadPermissions, dataManager.Owner).Once().Return(true)
+	ps.On("CanProcess", parent2.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions, dataManager.Owner).Once().Return(true)
+
+	storedTask := &asset.ComputeTask{
+		Key:            newTask.Key,
+		Category:       newTask.Category,
+		Algo:           algo,
+		Owner:          "testOwner",
+		ComputePlanKey: newTask.ComputePlanKey,
+		Metadata:       newTask.Metadata,
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+		ParentTaskKeys: newTask.ParentTaskKeys,
+		Worker:         dataManager.Owner,
+		Rank:           1,
+		Data: &asset.ComputeTask_Composite{
+			Composite: &asset.CompositeTrainTaskData{
+				DataManagerKey:   dataManagerKey,
+				DataSampleKeys:   dataSampleKeys,
+				HeadPermissions:  headPermissions,
+				TrunkPermissions: trunkPermissions,
+			},
+		},
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+	}
+
+	// finally store the created task
+	dbal.On("AddComputeTasks", storedTask).Once().Return(nil)
+
+	expectedEvent := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+		AssetKey:  newTask.Key,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		Metadata: map[string]string{
+			"status": storedTask.Status.String(),
+			"worker": dataManager.Owner,
+		},
+	}
+	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
+
+	err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
+	assert.NoError(t, err)
+
+	dbal.AssertExpectations(t)
+	provider.AssertExpectations(t)
+	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
+	ps.AssertExpectations(t)
+	dss.AssertExpectations(t)
+	dms.AssertExpectations(t)
+}
+
 func TestRegisterFailedTask(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
@@ -702,6 +868,18 @@ func TestIsParentCompatible(t *testing.T) {
 			[]*asset.ComputeTask{},
 			true,
 		},
+		{
+			"Composite task with two composite parents",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_COMPOSITE}, {Category: asset.ComputeTaskCategory_TASK_COMPOSITE}},
+			true,
+		},
+		{
+			"Composite task with two composite parents and aggregate",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_COMPOSITE}, {Category: asset.ComputeTaskCategory_TASK_COMPOSITE}, {Category: asset.ComputeTaskCategory_TASK_AGGREGATE}},
+			false,
+		},
 	}
 
 	provider := newMockedProvider()
@@ -875,34 +1053,48 @@ func TestSortTasksUnknownRef(t *testing.T) {
 }
 
 func TestCheckCanProcessParent(t *testing.T) {
-	parents := []*asset.ComputeTask{
-		{
-			Data: &asset.ComputeTask_Train{
-				Train: &asset.TrainTaskData{
-					ModelPermissions: &asset.Permissions{
-						Process: &asset.Permission{Public: true},
-					},
+	train := &asset.ComputeTask{
+		Key: "train",
+		Data: &asset.ComputeTask_Train{
+			Train: &asset.TrainTaskData{
+				ModelPermissions: &asset.Permissions{
+					Process: &asset.Permission{Public: true},
 				},
 			},
 		},
-		{
-			Data: &asset.ComputeTask_Composite{
-				Composite: &asset.CompositeTrainTaskData{
-					TrunkPermissions: &asset.Permissions{
-						Process: &asset.Permission{Public: false, AuthorizedIds: []string{"orgTest", "org2"}},
-					},
-					HeadPermissions: &asset.Permissions{
-						Process: &asset.Permission{Public: false, AuthorizedIds: []string{"org2"}},
-					},
+	}
+	composite1 := &asset.ComputeTask{
+		Key: "composite1",
+		Data: &asset.ComputeTask_Composite{
+			Composite: &asset.CompositeTrainTaskData{
+				TrunkPermissions: &asset.Permissions{
+					Process: &asset.Permission{Public: false, AuthorizedIds: []string{"orgTest", "org2", "orgComposite"}},
+				},
+				HeadPermissions: &asset.Permissions{
+					Process: &asset.Permission{Public: false, AuthorizedIds: []string{"org2", "orgComposite"}},
 				},
 			},
 		},
-		{
-			Data: &asset.ComputeTask_Aggregate{
-				Aggregate: &asset.AggregateTrainTaskData{
-					ModelPermissions: &asset.Permissions{
-						Process: &asset.Permission{Public: false, AuthorizedIds: []string{"orgTest", "org2"}},
-					},
+	}
+	composite2 := &asset.ComputeTask{
+		Key: "composite2",
+		Data: &asset.ComputeTask_Composite{
+			Composite: &asset.CompositeTrainTaskData{
+				TrunkPermissions: &asset.Permissions{
+					Process: &asset.Permission{Public: false, AuthorizedIds: []string{"orgTest", "org2", "orgComposite"}},
+				},
+				HeadPermissions: &asset.Permissions{
+					Process: &asset.Permission{Public: false, AuthorizedIds: []string{"org2", "orgTest"}},
+				},
+			},
+		},
+	}
+	aggregate := &asset.ComputeTask{
+		Key: "aggregate",
+		Data: &asset.ComputeTask_Aggregate{
+			Aggregate: &asset.AggregateTrainTaskData{
+				ModelPermissions: &asset.Permissions{
+					Process: &asset.Permission{Public: false, AuthorizedIds: []string{"orgTest", "org2"}},
 				},
 			},
 		},
@@ -911,21 +1103,73 @@ func TestCheckCanProcessParent(t *testing.T) {
 	cases := map[string]struct {
 		requester    string
 		taskCategory asset.ComputeTaskCategory
+		parents      []*asset.ComputeTask
 		canProcess   bool
 	}{
 		"train task": {
 			"orgTest",
 			asset.ComputeTaskCategory_TASK_TRAIN,
+			[]*asset.ComputeTask{train, aggregate},
 			true,
 		},
 		"test task": {
 			"orgTest",
 			asset.ComputeTaskCategory_TASK_TEST,
+			[]*asset.ComputeTask{composite1, aggregate},
 			false, // cannot test head from parent composite
 		},
 		"aggregate task": {
 			"org2",
 			asset.ComputeTaskCategory_TASK_AGGREGATE,
+			[]*asset.ComputeTask{composite1},
+			true,
+		},
+		"composite without trunk perm": {
+			"orgTest",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{composite1},
+			false, // cannot process head from parent composite1
+		},
+		"composite with aggregate and composite parents": {
+			"org2",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{aggregate, composite1},
+			true,
+		},
+		"composite with composite and aggregate parents": {
+			"org2",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{composite1, aggregate},
+			true,
+		},
+		"composite with composite and incompatible aggregate parents": {
+			"orgComposite",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{composite1, aggregate},
+			false,
+		},
+		"composite with aggregate and incompatible composite parents": {
+			"orgTest",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{aggregate, composite1},
+			false,
+		},
+		"composite with single parent": {
+			"orgComposite",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{composite1},
+			true,
+		},
+		"composite with parents 1,2": {
+			"orgTest",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{composite1, composite2},
+			false, // cannot process head from composite1
+		},
+		"composite with parents 2,1": {
+			"orgTest",
+			asset.ComputeTaskCategory_TASK_COMPOSITE,
+			[]*asset.ComputeTask{composite2, composite1},
 			true,
 		},
 	}
@@ -936,7 +1180,7 @@ func TestCheckCanProcessParent(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			err := service.checkCanProcessParents(tc.requester, parents, tc.taskCategory)
+			err := service.checkCanProcessParents(tc.requester, tc.parents, tc.taskCategory)
 
 			if tc.canProcess {
 				assert.NoError(t, err)

@@ -552,30 +552,107 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 }
 
 // checkCanProcessParents raises an error if one of the parent is not processable
-func (s *ComputeTaskService) checkCanProcessParents(requester string, parentTasks []*asset.ComputeTask, category asset.ComputeTaskCategory) error {
+func (s *ComputeTaskService) checkCanProcessParents(worker string, parentTasks []*asset.ComputeTask, category asset.ComputeTaskCategory) error {
+	switch category {
+	case asset.ComputeTaskCategory_TASK_AGGREGATE, asset.ComputeTaskCategory_TASK_TEST, asset.ComputeTaskCategory_TASK_TRAIN:
+		return s.checkGenericCanProcessParents(worker, parentTasks, category)
+	case asset.ComputeTaskCategory_TASK_COMPOSITE:
+		return s.checkCompositeCanProcessParents(worker, parentTasks)
+	default:
+		return orcerrors.NewError(orcerrors.ErrUnimplemented, "invalid task category")
+	}
+}
+
+// checkGenericCanProcessParents will loop over parents, regardless of task category and return an error if there are insufficient permissions.
+func (s *ComputeTaskService) checkGenericCanProcessParents(worker string, parentTasks []*asset.ComputeTask, category asset.ComputeTaskCategory) error {
 	for _, p := range parentTasks {
 		switch p.Data.(type) {
 		case *asset.ComputeTask_Composite:
 			trunkPerms := p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
-			if !s.GetPermissionService().CanProcess(trunkPerms, requester) {
-				return orcerrors.NewPermissionDenied(fmt.Sprintf("cannot process parent task %q", p.Key))
+			if !s.GetPermissionService().CanProcess(trunkPerms, worker) {
+				return orcerrors.NewPermissionDenied(fmt.Sprintf(
+					"cannot process composite parent task %q, worker %q is not allowed to process trunk model by permissions %v", p.Key, worker, trunkPerms,
+				))
 			}
 			headPerms := p.Data.(*asset.ComputeTask_Composite).Composite.HeadPermissions
-			if (category == asset.ComputeTaskCategory_TASK_COMPOSITE || category == asset.ComputeTaskCategory_TASK_TEST) && !s.GetPermissionService().CanProcess(headPerms, requester) {
-				return orcerrors.NewPermissionDenied(fmt.Sprintf("cannot process parent task %q", p.Key))
+			if category == asset.ComputeTaskCategory_TASK_TEST && !s.GetPermissionService().CanProcess(headPerms, worker) {
+				return orcerrors.NewPermissionDenied(fmt.Sprintf(
+					"cannot process composite parent task %q, worker %q is not allowed to process head model by permissions %v", p.Key, worker, headPerms,
+				))
 			}
 		case *asset.ComputeTask_Aggregate:
 			permissions := p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
-			if !s.GetPermissionService().CanProcess(permissions, requester) {
-				return orcerrors.NewPermissionDenied(fmt.Sprintf("cannot process parent task %q", p.Key))
+			if !s.GetPermissionService().CanProcess(permissions, worker) {
+				return orcerrors.NewPermissionDenied(fmt.Sprintf(
+					"cannot process aggregate parent task %q, worker %q is not allowed to process model by permissions %v", p.Key, worker, permissions,
+				))
 			}
 		case *asset.ComputeTask_Train:
 			permissions := p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
-			if !s.GetPermissionService().CanProcess(permissions, requester) {
-				return orcerrors.NewPermissionDenied(fmt.Sprintf("cannot process parent task %q", p.Key))
+			if !s.GetPermissionService().CanProcess(permissions, worker) {
+				return orcerrors.NewPermissionDenied(fmt.Sprintf(
+					"cannot process train parent task %q, worker %q is not allowed to process model by permissions %v", p.Key, worker, permissions,
+				))
 			}
 		default:
-			return orcerrors.NewPermissionDenied(fmt.Sprintf("cannot process parent task %q", p.Key))
+			return orcerrors.NewError(orcerrors.ErrUnimplemented, "invalid parent category")
+		}
+	}
+
+	return nil
+}
+
+// checkCompositeCanProcessParents returns an error if a composite task with given parents has insufficient permissions
+// It depends on both parent category and order if there are two composite parents.
+// The first composite parent will provide the HEAD model, while the second will provide the TRUNK
+func (s *ComputeTaskService) checkCompositeCanProcessParents(worker string, parentTasks []*asset.ComputeTask) error {
+	// compositeInputs contains a couple of tasks: first one will be checked for HEAD perm, second one for TRUNK perm
+	compositeInputs := make([]*asset.ComputeTask, 0, 2)
+	compositeInputs = append(compositeInputs, parentTasks...)
+
+	if len(parentTasks) == 1 {
+		// Single composite parent: it should be checked for both head and trunk permissions
+		compositeInputs = append(compositeInputs, parentTasks[0])
+	}
+
+	hasAggregateParent := false
+	for _, p := range parentTasks {
+		if _, ok := p.Data.(*asset.ComputeTask_Aggregate); ok {
+			hasAggregateParent = true
+		}
+	}
+
+	for i, p := range compositeInputs {
+		switch p.Data.(type) {
+		case *asset.ComputeTask_Composite:
+			switch {
+			case hasAggregateParent || i == 0:
+				// If there is an aggregate parent, the HEAD come from the composite parent, regardless of parent ordering.
+				// If there is no aggregate parent, the first composite parent should contribute the HEAD model.
+				headPerms := p.Data.(*asset.ComputeTask_Composite).Composite.HeadPermissions
+				if !s.GetPermissionService().CanProcess(headPerms, worker) {
+					return orcerrors.NewPermissionDenied(fmt.Sprintf(
+						"cannot process composite parent task %q, worker %q is not allowed to process head model by permissions %v", p.Key, worker, headPerms,
+					))
+				}
+			case !hasAggregateParent || i == 1:
+				// Without aggregate parent, the second composite parent should contribute the trunk model.
+				trunkPerms := p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
+				if !s.GetPermissionService().CanProcess(trunkPerms, worker) {
+					return orcerrors.NewPermissionDenied(fmt.Sprintf(
+						"cannot process composite parent task %q, worker %q is not allowed to process trunk model by permissions %v", p.Key, worker, trunkPerms,
+					))
+				}
+			}
+		case *asset.ComputeTask_Aggregate:
+			permissions := p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
+			if !s.GetPermissionService().CanProcess(permissions, worker) {
+				return orcerrors.NewPermissionDenied(fmt.Sprintf(
+					"cannot process aggregate parent task %q, worker %q is not allowed to process model by permissions %v", p.Key, worker, permissions,
+				))
+			}
+		default:
+			return orcerrors.NewError(orcerrors.ErrUnimplemented, "invalid parent category")
 		}
 	}
 
@@ -639,6 +716,7 @@ func (s *ComputeTaskService) isCompatibleWithParents(category asset.ComputeTaskC
 	noParent := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0
 	compositeOnly := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0 && inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 1
 	compositeAndAggregate := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE] == 1 && inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 1
+	twoComposites := inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 2 && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE] == 0
 
 	switch category {
 	case asset.ComputeTaskCategory_TASK_TRAIN:
@@ -648,7 +726,7 @@ func (s *ComputeTaskService) isCompatibleWithParents(category asset.ComputeTaskC
 	case asset.ComputeTaskCategory_TASK_AGGREGATE:
 		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] >= 1
 	case asset.ComputeTaskCategory_TASK_COMPOSITE:
-		return noTest && noTrain && (noParent || compositeOnly || compositeAndAggregate)
+		return noTest && noTrain && (noParent || compositeOnly || compositeAndAggregate || twoComposites)
 	default:
 		return false
 	}

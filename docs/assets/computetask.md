@@ -31,7 +31,12 @@ Here is the expected cardinality for each task category:
 | Train                 | n     | 0    | n         | 0         |
 | Test                  | 1*    | 0    | 1*        | 1*        |
 | Aggregate             | n     | 0    | n         | n         |
-| Composite             | 0     | 0    | (1)       | 1         |
+| Composite             | 0     | 0    | (1)       | 1, (2)    |
+
+A Composite task may have:
+- no parents
+- an aggregate and a composite (head will come from the composite)
+- two composites (head will come from the **first parent task**)
 
 ## Rank
 

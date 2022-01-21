@@ -585,6 +585,73 @@ func TestGetCompositeInputModels(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
+func TestGetInputModelsForCompositeWithAggregateParent(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	cts := new(MockComputeTaskAPI)
+	provider := newMockedProvider()
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetComputeTaskService").Return(cts)
+	service := NewModelService(provider)
+
+	cts.On("GetTask", "uuid").Once().Return(
+		&asset.ComputeTask{
+			Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+			ParentTaskKeys: []string{"aggregate", "composite"},
+		},
+		nil,
+	)
+
+	mc1 := &asset.Model{Key: "c1", Category: asset.ModelCategory_MODEL_HEAD}
+	mc2 := &asset.Model{Key: "c2", Category: asset.ModelCategory_MODEL_SIMPLE}
+	ma := &asset.Model{Key: "a", Category: asset.ModelCategory_MODEL_SIMPLE}
+
+	dbal.On("GetComputeTaskOutputModels", "composite").Once().Return([]*asset.Model{mc1, mc2}, nil)
+	dbal.On("GetComputeTaskOutputModels", "aggregate").Once().Return([]*asset.Model{ma}, nil)
+
+	models, err := service.GetComputeTaskInputModels("uuid")
+	assert.NoError(t, err)
+
+	assert.Equal(t, []*asset.Model{ma, mc1}, models)
+
+	cts.AssertExpectations(t)
+	dbal.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
+func TestGetInputModelsForCompositeWithCompositeParents(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	cts := new(MockComputeTaskAPI)
+	provider := newMockedProvider()
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetComputeTaskService").Return(cts)
+	service := NewModelService(provider)
+
+	cts.On("GetTask", "uuid").Once().Return(
+		&asset.ComputeTask{
+			Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+			ParentTaskKeys: []string{"composite1", "composite2"},
+		},
+		nil,
+	)
+
+	mc11 := &asset.Model{Key: "c11", Category: asset.ModelCategory_MODEL_HEAD}
+	mc12 := &asset.Model{Key: "c12", Category: asset.ModelCategory_MODEL_SIMPLE}
+	mc21 := &asset.Model{Key: "c21", Category: asset.ModelCategory_MODEL_HEAD}
+	mc22 := &asset.Model{Key: "c22", Category: asset.ModelCategory_MODEL_SIMPLE}
+
+	dbal.On("GetComputeTaskOutputModels", "composite1").Once().Return([]*asset.Model{mc11, mc12}, nil)
+	dbal.On("GetComputeTaskOutputModels", "composite2").Once().Return([]*asset.Model{mc21, mc22}, nil)
+
+	models, err := service.GetComputeTaskInputModels("uuid")
+	assert.NoError(t, err)
+
+	assert.Equal(t, []*asset.Model{mc11, mc22}, models)
+
+	cts.AssertExpectations(t)
+	dbal.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
 func TestGetAggregateChildInputModels(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	cts := new(MockComputeTaskAPI)

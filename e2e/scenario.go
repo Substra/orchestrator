@@ -69,7 +69,7 @@ var testScenarios = map[string]scenario{
 	},
 	"CompositeParentChild": {
 		testCompositeParentChild,
-		[]string{"short", "plan"},
+		[]string{"short", "plan", "composite"},
 	},
 	"Concurrency": {
 		testConcurrency,
@@ -618,6 +618,23 @@ func testCompositeParentChild(conn *grpc.ClientConn) {
 	appClient.StartTask("comp2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+
+	// Register a composite task with 2 composite parents
+	appClient.RegisterTasks(
+		client.DefaultCompositeTaskOptions().WithKeyRef("comp3").WithAlgoRef("algoComp").WithParentsRef("comp1", "comp2"),
+	)
+
+	inputs := appClient.GetInputModels("comp3")
+	if len(inputs) != 2 {
+		log.Fatal("composite task should have 2 input models")
+	}
+
+	if inputs[0].Key != appClient.GetKeyStore().GetKey("model1H") {
+		log.Fatal("first model should be HEAD from comp1")
+	}
+	if inputs[1].Key != appClient.GetKeyStore().GetKey("model2T") {
+		log.Fatal("second model should be TRUNK from comp2")
+	}
 }
 
 func testConcurrency(conn *grpc.ClientConn) {
