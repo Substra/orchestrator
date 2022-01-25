@@ -31,10 +31,10 @@ func NewSmartContract() *SmartContract {
 
 // RegisterDataSamples register new data samples in world state
 // If the key exists, it will throw an error
-func (s *SmartContract) RegisterDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+func (s *SmartContract) RegisterDataSamples(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	service := provider.GetDataSampleService()
 
@@ -42,21 +42,31 @@ func (s *SmartContract) RegisterDataSamples(ctx ledger.TransactionContext, wrapp
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to unwrap param")
-		return err
+		return nil, err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
 		s.logger.WithError(err).Error("failed to extract tx creator")
-		return err
+		return nil, err
 	}
 
-	err = service.RegisterDataSamples(params.Samples, owner)
+	datasamples, err := service.RegisterDataSamples(params.Samples, owner)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to register datasamples")
-		return err
+		return nil, err
 	}
-	return nil
+
+	resp := &asset.RegisterDataSamplesResponse{
+		DataSamples: datasamples,
+	}
+
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 // UpdateDataSamples updates a data sample in world state

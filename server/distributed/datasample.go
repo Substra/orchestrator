@@ -27,16 +27,25 @@ func (a *DataSampleAdapter) RegisterDataSamples(ctx context.Context, param *asse
 	}
 	method := "orchestrator.datasample:RegisterDataSamples"
 
-	err = invocator.Call(ctx, method, param, nil)
+	response := &asset.RegisterDataSamplesResponse{}
+
+	err = invocator.Call(ctx, method, param, response)
 
 	if err != nil && isFabricTimeoutRetry(ctx) && len(param.Samples) == 1 && strings.Contains(err.Error(), errors.ErrConflict) {
 		// In this very specific case we are in a retry context after a timeout and the registration is limited to a single sample.
 		// We can assume that the previous request succeeded and created the asset.
 		// So we convert the error in a success response.
-		return &asset.RegisterDataSamplesResponse{}, nil
+		datasample := &asset.DataSample{}
+		err = invocator.Call(ctx, "orchestrator.datasample:GetDataSample", &asset.GetDataSampleParam{Key: param.Samples[0].Key}, datasample)
+
+		return &asset.RegisterDataSamplesResponse{DataSamples: []*asset.DataSample{datasample}}, err
 	}
 
-	return &asset.RegisterDataSamplesResponse{}, err
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
 
 // UpdateDataSamples will update a DataSample from the state

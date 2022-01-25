@@ -34,12 +34,13 @@ func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset
 		return nil, err
 	}
 
-	err = services.GetDataSampleService().RegisterDataSamples(input.Samples, mspid)
+	datasamples, err := services.GetDataSampleService().RegisterDataSamples(input.Samples, mspid)
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.RegisterDataSamplesResponse{}, nil
+	return &asset.RegisterDataSamplesResponse{DataSamples: datasamples}, nil
+
 }
 
 // UpdateDataSamples will update the datamanagers existing DataSamples

@@ -28,8 +28,9 @@ message RegisterDataSamplesParam {
   repeated NewDataSample samples = 1;
 }
 
-// Do not returns anything on datasample registration
-message RegisterDataSamplesResponse {}
+message RegisterDataSamplesResponse {
+    repeated DataSample data_samples = 1;
+}
 
 message UpdateDataSamplesParam {
   repeated string keys = 1;

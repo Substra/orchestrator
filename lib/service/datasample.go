@@ -12,7 +12,7 @@ import (
 
 // DataSampleAPI defines the methods to act on DataSamples
 type DataSampleAPI interface {
-	RegisterDataSamples(datasamples []*asset.NewDataSample, owner string) error
+	RegisterDataSamples(datasamples []*asset.NewDataSample, owner string) ([]*asset.DataSample, error)
 	UpdateDataSamples(datasample *asset.UpdateDataSamplesParam, owner string) error
 	QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
 	CheckSameManager(managerKey string, sampleKeys []string) error
@@ -47,7 +47,7 @@ func NewDataSampleService(provider DataSampleDependencyProvider) *DataSampleServ
 	return &DataSampleService{provider}
 }
 
-func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, owner string) error {
+func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, owner string) ([]*asset.DataSample, error) {
 	s.GetLogger().WithField("owner", owner).WithField("nbSamples", len(samples)).Debug("Registering data samples")
 
 	registeredSamples := []*asset.DataSample{}
@@ -56,7 +56,7 @@ func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, 
 	for _, newSample := range samples {
 		sample, err := s.createDataSample(newSample, owner)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		registeredSamples = append(registeredSamples, sample)
 
@@ -70,15 +70,15 @@ func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, 
 	}
 	err := s.GetEventService().RegisterEvents(events...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = s.GetDataSampleDBAL().AddDataSamples(registeredSamples...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return registeredSamples, nil
 }
 
 // createDataSample persist one datasample

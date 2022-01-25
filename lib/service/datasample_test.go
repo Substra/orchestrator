@@ -54,7 +54,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	}
 	es.On("RegisterEvents", e).Once().Return(nil)
 
-	err := service.RegisterDataSamples([]*asset.NewDataSample{datasample}, "owner")
+	_, err := service.RegisterDataSamples([]*asset.NewDataSample{datasample}, "owner")
 
 	assert.NoError(t, err, "Registration of valid datasample should not fail")
 
@@ -80,7 +80,7 @@ func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
 
 	dm.On("CheckOwner", []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"}, "owner").Return(errors.New("unknown datamanager")).Once()
 
-	err := service.RegisterDataSamples([]*asset.NewDataSample{datasample}, "owner")
+	_, err := service.RegisterDataSamples([]*asset.NewDataSample{datasample}, "owner")
 
 	assert.Error(t, err, "Registration of datasample with invalid datamanager key should fail")
 
@@ -141,7 +141,7 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 
 	es.On("RegisterEvents", mock.AnythingOfType("*asset.Event"), mock.AnythingOfType("*asset.Event")).Once().Return(nil)
 
-	err := service.RegisterDataSamples(datasamples, "owner")
+	_, err := service.RegisterDataSamples(datasamples, "owner")
 
 	assert.NoError(t, err, "Registration of multiple valid assets should not fail")
 

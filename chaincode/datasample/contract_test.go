@@ -40,16 +40,20 @@ func TestRegistration(t *testing.T) {
 	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
 
+	datasamples := []*asset.DataSample{
+		{Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
+	}
+
 	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterDataSamples", newSamples, mspid).Return(nil).Once()
+	service.On("RegisterDataSamples", newSamples, mspid).Return(datasamples, nil).Once()
 
 	stub := new(testHelper.MockedStub)
 	ctx.On("GetStub").Return(stub).Once()
 	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
 
-	err = contract.RegisterDataSamples(ctx, wrapper)
+	_, err = contract.RegisterDataSamples(ctx, wrapper)
 	assert.NoError(t, err, "Smart contract execution should not fail")
 }
 

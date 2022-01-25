@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add `Start` and `End` timestamp filters for `EventQueryFilter` (#482)
 - support composite taks with two composite parents (#464)
 
+### Changed
+- Return `datasamples` list in `RegisterDataSamplesResponse` (#486)
+
 ### Fixed
 - set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)
 
