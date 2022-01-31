@@ -685,6 +685,39 @@ func TestGetAggregateChildInputModels(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
+func TestGetAggregateChildInoutModelsWithSimpleFirst(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	cts := new(MockComputeTaskAPI)
+	provider := newMockedProvider()
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetComputeTaskService").Return(cts)
+	service := NewModelService(provider)
+
+	cts.On("GetTask", "uuid").Once().Return(
+		&asset.ComputeTask{
+			Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
+			ParentTaskKeys: []string{"composite", "aggregate"},
+		},
+		nil,
+	)
+
+	mc1 := &asset.Model{Key: "c1", Category: asset.ModelCategory_MODEL_HEAD}
+	mc2 := &asset.Model{Key: "c2", Category: asset.ModelCategory_MODEL_SIMPLE}
+	ma := &asset.Model{Key: "aggregate", Category: asset.ModelCategory_MODEL_SIMPLE}
+
+	dbal.On("GetComputeTaskOutputModels", "composite").Once().Return([]*asset.Model{mc2, mc1}, nil)
+	dbal.On("GetComputeTaskOutputModels", "aggregate").Once().Return([]*asset.Model{ma}, nil)
+
+	models, err := service.GetComputeTaskInputModels("uuid")
+	assert.NoError(t, err)
+
+	assert.Equal(t, []*asset.Model{mc1, ma}, models)
+
+	cts.AssertExpectations(t)
+	dbal.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
 func TestCanDisableModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	cts := new(MockComputeTaskAPI)

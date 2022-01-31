@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -81,6 +82,11 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 				}
 			}
 		case asset.ComputeTaskCategory_TASK_COMPOSITE:
+			// For this function the order of assets is important we should always have the HEAD MODEL first in the list
+			// Otherwise we end up feeding the head and trunk from the previous composite, ignoring the aggregate
+			sort.SliceStable(models, func(i, j int) bool {
+				return models[i].Category == asset.ModelCategory_MODEL_HEAD
+			})
 			// true if the parent has contributed an input to the composite task
 			parentContributed := false
 			for _, model := range models {
