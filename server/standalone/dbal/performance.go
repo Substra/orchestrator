@@ -49,6 +49,7 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 		Where(squirrel.Eq{"channel": d.channel}).
 		OrderByClause("asset->>'creationDate' ASC, metric_id DESC, compute_task_id DESC").
 		Offset(uint64(offset)).
+		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	if filter.ComputeTaskKey != "" {

@@ -118,6 +118,7 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 		GroupBy("cp.id").
 		OrderBy("cp.asset->>'creationDate' ASC", "cp.id ASC").
 		Offset(uint64(offset)).
+		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	if filter.Owner != "" {

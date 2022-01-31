@@ -51,6 +51,7 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 		Where(squirrel.Eq{"channel": d.channel}).
 		OrderByClause("asset->>'creationDate' ASC, id").
 		Offset(uint64(offset)).
+		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {

@@ -256,6 +256,7 @@ func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFi
 		Where(squirrel.Eq{"channel": d.channel}).
 		OrderByClause("asset->>'creationDate' ASC, id").
 		Offset(uint64(offset)).
+		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	builder = taskFilterToQuery(filter, builder)
