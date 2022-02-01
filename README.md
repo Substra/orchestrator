@@ -132,7 +132,7 @@ Before launching Evans you may need to generate and retrieve a client certificat
 
 ```bash
 cd examples/tools
-./dowload_client_cert.sh
+./download_client_cert.sh
 ```
 
 ```bash
@@ -146,6 +146,20 @@ package orchestrator
 service NodeService
 header mspid=MyOrg1MSP channel=mychannel chaincode=mycc
 call GetAllNodes
+```
+
+or the one-liner
+
+```sh
+echo '{}' | evans \
+    --host orchestrator.node-1.com -p 443  \
+    --tls \
+    --cacert examples/tools/ca.crt \
+    --cert examples/tools/client-org-1.crt \
+    --certkey examples/tools/client-org-1.key \
+    -r cli \
+    --header 'mspid=MyOrg1MSP' --header 'channel=mychannel' \
+    call orchestrator.NodeService.RegisterNode
 ```
 
 Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress).

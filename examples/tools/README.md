@@ -13,4 +13,4 @@ You will need to move the generated ConfigMaps and Secrets to `/examples/k8s/`.
 
 ## Retrieving a client certificate for debug purposes
 
-After the deployment of the orchestrator in your cluster you can use `./dowload_client_cert.sh` to generate a valid client certificate to interact with your orchestrator.
+After the deployment of the orchestrator in your cluster you can use `./download_client_cert.sh` to generate a valid client certificate to interact with your orchestrator.

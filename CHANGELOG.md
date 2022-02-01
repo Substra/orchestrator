@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)
 - Return the correct models in `GetComputeTaskInputModels` for composite tasks (#499)
 - timestamp comparison when performing event sorting and filtering in PostgreSQL (#491)
+- ComputePlan query now uses correct SQL indexes (#500)
 
 ## [0.5.0] - 2022-01-16
 

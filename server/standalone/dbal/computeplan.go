@@ -42,7 +42,7 @@ func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_FAILED')")).
 		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_DONE')")).
 		From("compute_plans AS cp").
-		LeftJoin("compute_tasks AS t ON (t.asset->>'computePlanKey')::uuid = cp.id AND t.channel = cp.channel").
+		LeftJoin("compute_tasks AS t ON (t.asset->>'computePlanKey')::uuid = cp.id").
 		Where(squirrel.Eq{"cp.id": key}).
 		Where(squirrel.Eq{"cp.channel": d.channel}).
 		GroupBy("cp.id")
@@ -113,7 +113,7 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_FAILED')")).
 		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.asset->>'status' = 'STATUS_DONE')")).
 		From("compute_plans AS cp").
-		LeftJoin("compute_tasks AS t ON (t.asset->>'computePlanKey')::uuid = cp.id AND t.channel = cp.channel").
+		LeftJoin("compute_tasks AS t ON (t.asset->>'computePlanKey')::uuid = cp.id").
 		Where(squirrel.Eq{"cp.channel": d.channel}).
 		GroupBy("cp.id").
 		OrderBy("cp.asset->>'creationDate' ASC", "cp.id ASC").
