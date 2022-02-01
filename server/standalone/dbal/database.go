@@ -3,14 +3,17 @@ package dbal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 
+	"github.com/go-playground/log/v7"
 	"github.com/golang-migrate/migrate/v4"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/standalone/migration"
+	"github.com/owkin/orchestrator/utils"
 )
 
 // TransactionalDBALProvider describe an object able to return a TransactionalDBAL
@@ -47,6 +50,24 @@ func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, dat
 	}
 
 	log.Debug("SQL")
+}
+
+type MigrationsLogger struct {
+}
+
+func (ml *MigrationsLogger) Printf(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
+
+	// remove final newline
+	if msg[len(msg)-1] == '\n' {
+		msg = msg[:len(msg)-1]
+	}
+
+	log.WithField("context", "migrations").Info(msg)
+}
+
+func (ml *MigrationsLogger) Verbose() bool {
+	return utils.GetLogLevelFromEnv() == log.DebugLevel
 }
 
 // InitDatabase opens a database connexion from given url.
@@ -90,6 +111,7 @@ func executeMigrations(databaseURL string) error {
 		return err
 	}
 
+	m.Log = &MigrationsLogger{}
 	err = m.Up()
 	// Treat no change as normal behavior
 	if err != nil && errors.Is(err, migrate.ErrNoChange) {

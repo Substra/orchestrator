@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - add `Start` and `End` timestamp filters for `EventQueryFilter` (#482)
 - support composite tasks with two composite parents (#464)
+- Add migration logs (#501)
 
 ### Changed
 - Return `datasamples` list in `RegisterDataSamplesResponse` (#486)

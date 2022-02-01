@@ -20,6 +20,12 @@ func InitLogging() {
 	log.SetWithErrorFn(handleOrcError)
 }
 
+// GetLogLevelFromEnv gets the logging level from the environment variable LOG_LEVEL
+func GetLogLevelFromEnv() log.Level {
+	level := os.Getenv("LOG_LEVEL")
+	return parseLevel(level)
+}
+
 // handleOrcError augment the log output with error's source
 func handleOrcError(entry log.Entry, err error) log.Entry {
 	out := entry.WithField("error", err.Error())
@@ -32,11 +38,10 @@ func handleOrcError(entry log.Entry, err error) log.Entry {
 	return out
 }
 
-// getLevelsFromEnv set logging level to match the LOG_LEVEL environment var.
+// getLevelsFromEnv set logging level to match the level provided by GetLogLevelFromEnv.
 // It defaults to INFO if the env var does not exist.
 func getLevelsFromEnv() []log.Level {
-	level := os.Getenv("LOG_LEVEL")
-	minLevel := parseLevel(level)
+	minLevel := GetLogLevelFromEnv()
 
 	levels := make([]log.Level, 0)
 
