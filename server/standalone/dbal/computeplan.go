@@ -45,7 +45,7 @@ func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 		LeftJoin("compute_tasks AS t ON (t.asset->>'computePlanKey')::uuid = cp.id AND t.channel = cp.channel").
 		Where(squirrel.Eq{"cp.id": key}).
 		Where(squirrel.Eq{"cp.channel": d.channel}).
-		GroupBy("cp.asset")
+		GroupBy("cp.id")
 
 	query, args, err := builder.ToSql()
 	if err != nil {
