@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - add `Start` and `End` timestamp filters for `EventQueryFilter` (#482)
-- support composite taks with two composite parents (#464)
+- support composite tasks with two composite parents (#464)
 
 ### Changed
 - Return `datasamples` list in `RegisterDataSamplesResponse` (#486)
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)
 - Return the correct models in `GetComputeTaskInputModels` for composite tasks (#499)
+- timestamp comparison when performing event sorting and filtering in PostgreSQL (#491)
 
 ## [0.5.0] - 2022-01-16
 

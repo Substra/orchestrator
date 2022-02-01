@@ -1105,23 +1105,31 @@ func testEventTSFilter(conn *grpc.ClientConn) {
 
 	events := appClient.QueryEvents(&asset.EventQueryFilter{}, "", 100)
 
-	oneTSEvent := appClient.QueryEvents(&asset.EventQueryFilter{Start: events.Events[5].Timestamp, End: events.Events[5].Timestamp}, "", 100)
-	firstEvents := appClient.QueryEvents(&asset.EventQueryFilter{End: events.Events[5].Timestamp}, "", 100)
-	lastEvents := appClient.QueryEvents(&asset.EventQueryFilter{Start: events.Events[5].Timestamp}, "", 100)
+	bound := events.Events[5].Timestamp
+	eventsBetween := appClient.QueryEvents(&asset.EventQueryFilter{Start: bound, End: bound}, "", 100)
+	for _, e := range eventsBetween.Events {
+		if !e.Timestamp.AsTime().Equal(bound.AsTime()) {
+			log.Fatalf("Unexpected value for event timestamp. Expected %s, got %s", bound.AsTime(), e.Timestamp.AsTime())
+		}
+	}
 
-	if len(oneTSEvent.Events) >= len(events.Events) {
-		log.WithField("events", oneTSEvent.Events).Fatal("Unexpected number of events, should be lower than the total number of events")
+	eventsBefore := appClient.QueryEvents(&asset.EventQueryFilter{End: bound}, "", 100)
+	for _, e := range eventsBefore.Events {
+		if e.Timestamp.AsTime().After(bound.AsTime()) {
+			log.Fatalf("Unexpected value for event timestamp. Expected a value lower than %s, got %s", bound.AsTime(), e.Timestamp.AsTime())
+		}
 	}
-	if len(firstEvents.Events) >= len(lastEvents.Events) {
-		log.WithField("events", firstEvents.Events).Fatal("Unexpected number of events, should be lower than the number of last events")
-	}
-	if len(lastEvents.Events) > len(events.Events) { // can be equal with pagination
-		log.WithField("events", lastEvents.Events).Fatal("Unexpected number of events, should be lower than or equal to the total number of events")
+
+	eventsAfter := appClient.QueryEvents(&asset.EventQueryFilter{Start: bound}, "", 100)
+	for _, e := range eventsAfter.Events {
+		if e.Timestamp.AsTime().Before(bound.AsTime()) {
+			log.Fatalf("Unexpected value for event timestamp. Expected a value greater than %s, got %s", bound.AsTime(), e.Timestamp.AsTime())
+		}
 	}
 
 	allEvents := appClient.QueryEvents(&asset.EventQueryFilter{Start: events.Events[0].Timestamp, End: events.Events[len(events.Events)-1].Timestamp}, "", 100)
 	if len(allEvents.Events) != len(events.Events) {
-		log.WithField("events", allEvents.Events).Fatal("Unexpected number of events, should be equal to the total number of events")
+		log.Fatalf("Unexpected number of events. Expected %d, got %d", len(events.Events), len(allEvents.Events))
 	}
 
 }

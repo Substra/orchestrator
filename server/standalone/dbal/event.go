@@ -79,7 +79,7 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter,
 	if sortOrder == asset.SortOrder_DESCENDING {
 		order = PgSortDesc
 	}
-	orderBy := fmt.Sprintf("event->'timestamp' %s, id %s", order, order)
+	orderBy := fmt.Sprintf("cast(event->>'timestamp' as timestamptz) %s, id %s", order, order)
 
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	builder := pgDialect.Select("event").
@@ -154,10 +154,10 @@ func eventFilterToQuery(filter *asset.EventQueryFilter, builder squirrel.SelectB
 		builder = builder.Where(squirrel.Expr("event->'metadata' @> ?", filter.Metadata))
 	}
 	if filter.Start != nil {
-		builder = builder.Where(squirrel.Expr("event->>'timestamp' >= ?", filter.Start.AsTime().Format(time.RFC3339Nano)))
+		builder = builder.Where(squirrel.Expr("cast(event->>'timestamp' as timestamptz) >= cast(? as timestamptz)", filter.Start.AsTime().Format(time.RFC3339Nano)))
 	}
 	if filter.End != nil {
-		builder = builder.Where(squirrel.Expr("event->>'timestamp' <= ?", filter.End.AsTime().Format(time.RFC3339Nano)))
+		builder = builder.Where(squirrel.Expr("cast(event->>'timestamp' as timestamptz) <= cast(? as timestamptz)", filter.End.AsTime().Format(time.RFC3339Nano)))
 	}
 
 	return builder

@@ -33,8 +33,8 @@ func TestEventFilterToQuery(t *testing.T) {
 		},
 		"time filter": {
 			&asset.EventQueryFilter{Start: timestamppb.New(time.Unix(1337, 0)), End: timestamppb.New(time.Unix(7331, 0))},
-			"event->>'timestamp' >= $1 AND event->>'timestamp' <= $2",
-			[]interface{}{timestamppb.New(time.Unix(1337, 0)).AsTime().Format(time.RFC3339Nano), timestamppb.New(time.Unix(7331, 0)).AsTime().Format(time.RFC3339Nano)},
+			"cast(event->>'timestamp' as timestamptz) >= cast($1 as timestamptz) AND cast(event->>'timestamp' as timestamptz) <= cast($2 as timestamptz)",
+			[]interface{}{time.Unix(1337, 0).UTC().Format(time.RFC3339Nano), time.Unix(7331, 0).UTC().Format(time.RFC3339Nano)},
 		},
 	}
 
@@ -65,7 +65,7 @@ func TestEventQuery(t *testing.T) {
 		AddRow(&asset.Event{}).
 		AddRow(&asset.Event{})
 
-	mock.ExpectQuery(`SELECT event FROM events .* ORDER BY event->'timestamp' ASC, id ASC`).WithArgs(testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT event FROM events .* ORDER BY cast\(event->>'timestamp' as timestamptz\) ASC, id ASC`).WithArgs(testChannel).WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
