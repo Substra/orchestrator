@@ -7,14 +7,27 @@ option go_package = "github.com/owkin/orchestrator/lib/asset";
 import "google/protobuf/timestamp.proto";
 import "common.proto";
 
+// ErrorType defines the types of errors that can occur in a compute task.
+enum ErrorType {
+  ERROR_TYPE_UNSPECIFIED = 0;
+
+  // An ERROR_TYPE_BUILD is an error occurring during the build of the container image.
+  // It is likely to be caused by the user's code.
+  ERROR_TYPE_BUILD = 1;
+
+  // An ERROR_TYPE_EXECUTION is an error occurring during the execution of the algo/metric container.
+  // It is likely to be caused by the user's code.
+  ERROR_TYPE_EXECUTION = 2;
+
+  // An ERROR_TYPE_INTERNAL describes any other error that does not fall into the previous categories.
+  // It is likely to be caused by a fault in the system. It would require the action of a system administrator.
+  ERROR_TYPE_INTERNAL = 3;
+}
+
 // FailureReport is used to store information related to a failed ComputeTask.
 message FailureReport {
   string compute_task_key = 1;
-
-  // TODO: the error type should be stored in a FailureReport instead of being stored in an Event.
-  reserved 2;
-  reserved "error_type";
-
+  ErrorType error_type = 2;
   Addressable logs_address = 3;
   google.protobuf.Timestamp creation_date = 4;
 }
@@ -23,11 +36,7 @@ message FailureReport {
 // It will be processed into a FailureReport.
 message NewFailureReport {
   string compute_task_key = 1;
-
-  // TODO: the error type should be stored in a FailureReport instead of being stored in an Event.
-  reserved 2;
-  reserved "error_type";
-
+  ErrorType error_type = 2;
   Addressable logs_address = 3;
 }
 

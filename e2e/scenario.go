@@ -1062,18 +1062,14 @@ func testRegisterFailureReport(conn *grpc.ClientConn) {
 
 	appClient.StartTask(client.DefaultTaskRef)
 
-	// TODO: Once the error type is stored in a FailureReport asset and registering a failure report
-	//  switch the task to FAILED, this will no longer be necessary.
-	appClient.FailTask(client.DefaultTaskRef)
-
-	task := appClient.GetComputeTask(client.DefaultTaskRef)
-	if task.Status != asset.ComputeTaskStatus_STATUS_FAILED {
-		log.Fatal("compute task should be FAILED")
-	}
-
 	resp := appClient.RegisterFailureReport(client.DefaultTaskRef)
+	task := appClient.GetComputeTask(client.DefaultTaskRef)
+
 	if resp.ComputeTaskKey != task.Key {
 		log.WithField("task key", client.DefaultTaskRef).WithField("failureReport", resp).Fatal("Task keys don't match")
+	}
+	if task.Status != asset.ComputeTaskStatus_STATUS_FAILED {
+		log.Fatal("compute task should be FAILED")
 	}
 
 	failureReport := appClient.GetFailureReport(client.DefaultTaskRef)

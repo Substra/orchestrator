@@ -50,15 +50,18 @@ func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.New
 		return nil, errors.NewPermissionDenied(fmt.Sprintf("only %q worker can register failure report", task.Worker))
 	}
 
-	// TODO: Once the error type is stored in a FailureReport asset, registering a failure report should switch
-	// 	the task to FAILED. Then the restriction on task status will be different, it will only be possible to register
-	//  a failure report on a DOING task.
-	if task.Status != asset.ComputeTaskStatus_STATUS_FAILED {
+	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register failure report for task with status %q", task.Status.String()))
+	}
+
+	err = s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "failure report registered", requester)
+	if err != nil {
+		return nil, err
 	}
 
 	failureReport := &asset.FailureReport{
 		ComputeTaskKey: newFailureReport.ComputeTaskKey,
+		ErrorType:      newFailureReport.ErrorType,
 		LogsAddress:    newFailureReport.LogsAddress,
 		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}

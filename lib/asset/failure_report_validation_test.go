@@ -21,12 +21,39 @@ func TestFailureReportValidate(t *testing.T) {
 		"empty": {&NewFailureReport{}, false},
 		"invalidComputeTaskKey": {&NewFailureReport{
 			ComputeTaskKey: "notUUID",
+			ErrorType:      ErrorType_ERROR_TYPE_BUILD,
+			LogsAddress:    nil,
+		}, false},
+		"validBuildError": {&NewFailureReport{
+			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ErrorType:      ErrorType_ERROR_TYPE_BUILD,
+			LogsAddress:    nil,
+		}, true},
+		"invalidBuildError": {&NewFailureReport{
+			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ErrorType:      ErrorType_ERROR_TYPE_BUILD,
 			LogsAddress:    validAddressable,
 		}, false},
-		"valid": {&NewFailureReport{
+		"validExecutionError": {&NewFailureReport{
 			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ErrorType:      ErrorType_ERROR_TYPE_EXECUTION,
 			LogsAddress:    validAddressable,
 		}, true},
+		"invalidExecutionError": {&NewFailureReport{
+			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ErrorType:      ErrorType_ERROR_TYPE_EXECUTION,
+			LogsAddress:    nil,
+		}, false},
+		"validInternalError": {&NewFailureReport{
+			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ErrorType:      ErrorType_ERROR_TYPE_INTERNAL,
+			LogsAddress:    nil,
+		}, true},
+		"invalidInternalError": {&NewFailureReport{
+			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ErrorType:      ErrorType_ERROR_TYPE_INTERNAL,
+			LogsAddress:    validAddressable,
+		}, false},
 	}
 
 	for name, tc := range cases {

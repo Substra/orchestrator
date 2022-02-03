@@ -9,6 +9,7 @@ import (
 func (f *NewFailureReport) Validate() error {
 	return validation.ValidateStruct(f,
 		validation.Field(&f.ComputeTaskKey, validation.Required, is.UUID),
-		validation.Field(&f.LogsAddress, validation.Required),
+		validation.Field(&f.ErrorType, validation.In(ErrorType_ERROR_TYPE_BUILD, ErrorType_ERROR_TYPE_EXECUTION, ErrorType_ERROR_TYPE_INTERNAL)),
+		validation.Field(&f.LogsAddress, validation.When(f.ErrorType == ErrorType_ERROR_TYPE_EXECUTION, validation.Required).Else(validation.Nil)),
 	)
 }

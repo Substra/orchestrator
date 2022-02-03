@@ -408,6 +408,7 @@ func (c *TestClient) QueryPlans(filter *asset.PlanQueryFilter, pageToken string,
 func (c *TestClient) RegisterFailureReport(taskRef string) *asset.FailureReport {
 	newFailureReport := &asset.NewFailureReport{
 		ComputeTaskKey: c.ks.GetKey(taskRef),
+		ErrorType:      asset.ErrorType_ERROR_TYPE_EXECUTION,
 		LogsAddress: &asset.Addressable{
 			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
 			StorageAddress: "http://somewhere.online/model",

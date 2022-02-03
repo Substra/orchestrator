@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - timestamp comparison when performing event sorting and filtering in PostgreSQL (#491)
 - ComputePlan query now uses correct SQL indexes (#500)
 
+### Changed
+- store the error type of a failed compute task in a failure report instead of an event (#487)
+
 ## [0.5.0] - 2022-01-16
 
 ### Added

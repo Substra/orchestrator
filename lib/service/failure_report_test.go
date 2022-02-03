@@ -29,6 +29,7 @@ func TestRegisterFailureReport(t *testing.T) {
 
 	newFailureReport := &asset.NewFailureReport{
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ErrorType:      asset.ErrorType_ERROR_TYPE_EXECUTION,
 		LogsAddress: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -36,12 +37,16 @@ func TestRegisterFailureReport(t *testing.T) {
 	}
 
 	taskService.On("GetTask", newFailureReport.ComputeTaskKey).Once().Return(&asset.ComputeTask{
-		Status: asset.ComputeTaskStatus_STATUS_FAILED,
+		Key:    newFailureReport.ComputeTaskKey,
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
 		Worker: "test",
 	}, nil)
 
+	taskService.On("ApplyTaskAction", newFailureReport.ComputeTaskKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, "failure report registered", "test").Once().Return(nil)
+
 	storedFailureReport := &asset.FailureReport{
 		ComputeTaskKey: newFailureReport.ComputeTaskKey,
+		ErrorType:      newFailureReport.ErrorType,
 		LogsAddress:    newFailureReport.LogsAddress,
 		CreationDate:   timestamppb.New(transactionTime),
 	}
@@ -55,8 +60,8 @@ func TestRegisterFailureReport(t *testing.T) {
 	eventService.On("RegisterEvents", event).Once().Return(nil)
 
 	failureReport, err := service.RegisterFailureReport(newFailureReport, "test")
-	assert.Equal(t, failureReport.ComputeTaskKey, newFailureReport.ComputeTaskKey)
 	assert.NoError(t, err)
+	assert.Equal(t, failureReport.ComputeTaskKey, newFailureReport.ComputeTaskKey)
 
 	taskService.AssertExpectations(t)
 	failureReportDBAL.AssertExpectations(t)
@@ -65,32 +70,33 @@ func TestRegisterFailureReport(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
-func TestRegisterFailureOnNonFailedTask(t *testing.T) {
-	cts := new(MockComputeTaskAPI)
+func TestRegisterFailureOnFailedTask(t *testing.T) {
+	taskService := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetComputeTaskService").Return(taskService)
 	service := NewFailureReportService(provider)
 
-	failureReport := &asset.NewFailureReport{
+	newFailureReport := &asset.NewFailureReport{
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ErrorType:      asset.ErrorType_ERROR_TYPE_EXECUTION,
 		LogsAddress: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		},
 	}
 
-	cts.On("GetTask", failureReport.ComputeTaskKey).Once().Return(&asset.ComputeTask{
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+	taskService.On("GetTask", newFailureReport.ComputeTaskKey).Once().Return(&asset.ComputeTask{
+		Status: asset.ComputeTaskStatus_STATUS_FAILED,
 		Worker: "test",
 	}, nil)
 
-	_, err := service.RegisterFailureReport(failureReport, "test")
+	_, err := service.RegisterFailureReport(newFailureReport, "test")
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)
 
-	cts.AssertExpectations(t)
+	taskService.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
