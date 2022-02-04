@@ -114,9 +114,9 @@ message RegisterTasksParam {
   repeated NewComputeTask tasks = 1;
 }
 
-
-// Do not returns anything on multiple tasks registration
-message RegisterTasksResponse {}
+message RegisterTasksResponse {
+    repeated ComputeTask tasks = 1;
+}
 
 message TaskQueryFilter {
   string worker = 1;

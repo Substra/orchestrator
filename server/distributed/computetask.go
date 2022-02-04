@@ -21,7 +21,7 @@ func NewComputeTaskAdapter() *ComputeTaskAdapter {
 
 // RegisterTasks processes a batch of new tasks to add them to a compute plan
 func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
-	Invocator, err := ExtractInvocator(ctx)
+	invocator, err := ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -29,13 +29,20 @@ func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.Reg
 
 	response := &asset.RegisterTasksResponse{}
 
-	err = Invocator.Call(ctx, method, input, nil)
+	err = invocator.Call(ctx, method, input, response)
 
 	if err != nil && isFabricTimeoutRetry(ctx) && len(input.Tasks) == 1 && strings.Contains(err.Error(), errors.ErrConflict) {
 		// In this very specific case we are in a retry context after a timeout and the batch only contains a single task.
 		// We can assume that the previous request succeeded and created the asset.
 		// So we convert the error in a success response.
-		return response, nil
+		task := &asset.ComputeTask{}
+		err = invocator.Call(ctx, "orchestrator.computetask:GetTask", &asset.GetTaskParam{Key: input.Tasks[0].Key}, task)
+
+		return &asset.RegisterTasksResponse{Tasks: []*asset.ComputeTask{task}}, err
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return response, err

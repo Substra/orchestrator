@@ -13,7 +13,7 @@ import (
 
 // ComputeTaskAPI defines the methods to act on ComputeTasks
 type ComputeTaskAPI interface {
-	RegisterTasks(tasks []*asset.NewComputeTask, owner string) error
+	RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error)
 	GetTask(key string) (*asset.ComputeTask, error)
 	QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
@@ -78,19 +78,19 @@ func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
 }
 
 // RegisterTasks creates multiple compute tasks
-func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) error {
+func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error) {
 	s.GetLogger().WithField("numTasks", len(tasks)).WithField("owner", owner).Debug("Registering new compute tasks")
 	if len(tasks) == 0 {
-		return orcerrors.NewBadRequest("no task to register")
+		return nil, orcerrors.NewBadRequest("no task to register")
 	}
 
 	existingKeys, err := s.getExistingKeys(tasks)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	sortedTasks, err := s.SortTasks(tasks, existingKeys)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	registeredTasks := []*asset.ComputeTask{}
@@ -99,7 +99,7 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	for _, newTask := range sortedTasks {
 		task, err := s.createTask(newTask, owner)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		registeredTasks = append(registeredTasks, task)
 
@@ -118,14 +118,14 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 
 	err = s.GetComputeTaskDBAL().AddComputeTasks(registeredTasks...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = s.GetEventService().RegisterEvents(events...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return registeredTasks, nil
 }
 
 // SortTasks is a function to sort a list of tasks in a valid order for their registration.

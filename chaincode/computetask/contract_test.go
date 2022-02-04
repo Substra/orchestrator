@@ -30,6 +30,7 @@ func TestRegistration(t *testing.T) {
 
 	org := "TestOrg"
 	tasks := []*asset.NewComputeTask{{}, {}}
+	registeredTasks := []*asset.ComputeTask{{}, {}}
 	input := &asset.RegisterTasksParam{Tasks: tasks}
 	wrapper, err := communication.Wrap(context.Background(), input)
 	assert.NoError(t, err)
@@ -41,7 +42,7 @@ func TestRegistration(t *testing.T) {
 	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterTasks", tasks, org).Return(nil).Once()
+	service.On("RegisterTasks", tasks, org).Return(registeredTasks, nil).Once()
 
 	ctx.On("GetStub").Return(stub).Once()
 

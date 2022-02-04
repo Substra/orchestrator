@@ -30,12 +30,13 @@ func (s *ComputeTaskServer) RegisterTasks(ctx context.Context, input *asset.Regi
 		return nil, err
 	}
 
-	err = provider.GetComputeTaskService().RegisterTasks(input.GetTasks(), owner)
+	tasks, err := provider.GetComputeTaskService().RegisterTasks(input.GetTasks(), owner)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.RegisterTasksResponse{}, nil
+	return &asset.RegisterTasksResponse{Tasks: tasks}, nil
 }
 
 func (s *ComputeTaskServer) QueryTasks(ctx context.Context, in *asset.QueryTasksParam) (*asset.QueryTasksResponse, error) {

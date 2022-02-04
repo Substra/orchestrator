@@ -49,13 +49,15 @@ func (s *SmartContract) RegisterTasks(ctx ledger.TransactionContext, wrapper *co
 		return nil, err
 	}
 
-	err = service.RegisterTasks(newTasks.GetTasks(), owner)
+	tasks, err := service.RegisterTasks(newTasks.GetTasks(), owner)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to register tasks")
 		return nil, err
 	}
 
-	resp := &asset.RegisterTasksResponse{}
+	resp := &asset.RegisterTasksResponse{
+		Tasks: tasks,
+	}
 
 	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {

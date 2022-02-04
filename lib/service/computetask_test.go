@@ -84,7 +84,7 @@ func TestRegisterTaskConflict(t *testing.T) {
 	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(true, nil)
 
-	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
@@ -195,7 +195,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	}
 	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
 
-	err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "testOwner")
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "testOwner")
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
@@ -358,7 +358,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	}
 	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
 
-	err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
@@ -410,7 +410,7 @@ func TestRegisterFailedTask(t *testing.T) {
 	dbal.On("GetComputeTasks", []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}).Once().
 		Return([]*asset.ComputeTask{parentTask}, nil)
 
-	err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -468,7 +468,7 @@ func TestRegisterDeletedModel(t *testing.T) {
 		{Key: "disabled"},
 	}, nil)
 
-	err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -1386,7 +1386,7 @@ func TestRegisterTasksEmptyList(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	err := service.RegisterTasks([]*asset.NewComputeTask{}, "test")
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{}, "test")
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)

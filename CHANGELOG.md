@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add migration logs (#501)
 
 ### Changed
-- Return `datasamples` list in `RegisterDataSamplesResponse` (#486)
+- return `datasamples` list in `RegisterDataSamplesResponse` (#486)
+- return `tasks` list in `RegisterTasksResponse` (#493)
 
 ### Fixed
 - set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)

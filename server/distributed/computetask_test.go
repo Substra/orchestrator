@@ -23,7 +23,7 @@ func TestRegisterTasks(t *testing.T) {
 
 	param := &asset.RegisterTasksParam{}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, nil).Return(nil)
+	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -56,10 +56,16 @@ func TestHandleTasksConflictAfterTimeout(t *testing.T) {
 	invocator := &mockedInvocator{}
 
 	param := &asset.RegisterTasksParam{
-		Tasks: []*asset.NewComputeTask{{}},
+		Tasks: []*asset.NewComputeTask{
+			{
+				Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+			},
+		},
 	}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, nil).Return(errors.NewError(errors.ErrConflict, "test"))
+	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(errors.NewError(errors.ErrConflict, "test"))
+	invocator.On("Call", AnyContext, "orchestrator.computetask:GetTask", &asset.GetTaskParam{Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"}, &asset.ComputeTask{}).
+		Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -78,7 +84,7 @@ func TestHandleTasksBatchConflictAfterTimeout(t *testing.T) {
 		Tasks: []*asset.NewComputeTask{{}, {}, {}},
 	}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, nil).Return(errors.NewError(errors.ErrConflict, "test"))
+	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(errors.NewError(errors.ErrConflict, "test"))
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
