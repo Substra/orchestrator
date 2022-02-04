@@ -659,26 +659,37 @@ func (s *ComputeTaskService) checkCompositeCanProcessParents(worker string, pare
 	return nil
 }
 
-// getRegisteredTask will return the task from the current batch or the database if not found.
+// getRegisteredTask will return the tasks from the current batch or the database if not found.
+// The tasks are returned in the same order as the keys.
 func (s *ComputeTaskService) getRegisteredTasks(keys ...string) ([]*asset.ComputeTask, error) {
-	result := []*asset.ComputeTask{}
+	bag := make(map[string]*asset.ComputeTask)
 	notInStore := []string{}
 
-	for _, k := range keys {
-		if task, ok := s.taskStore[k]; ok {
-			result = append(result, task)
+	for _, key := range keys {
+		if task, ok := s.taskStore[key]; ok {
+			bag[key] = task
 		} else {
-			notInStore = append(notInStore, k)
+			notInStore = append(notInStore, key)
 		}
 	}
 
 	if len(notInStore) > 0 {
-		prevTasks, err := s.GetComputeTaskDBAL().GetComputeTasks(notInStore)
+		tasks, err := s.GetComputeTaskDBAL().GetComputeTasks(notInStore)
 
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, prevTasks...)
+
+		for _, task := range tasks {
+			bag[task.Key] = task
+		}
+	}
+
+	result := make([]*asset.ComputeTask, len(keys))
+
+	// Add the tasks in order
+	for i, k := range keys {
+		result[i] = bag[k]
 	}
 
 	return result, nil

@@ -1399,18 +1399,26 @@ func TestGetRegisteredTask(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	// simulate a task in store
+	// simulate tasks in store
 	service.taskStore["uuid1"] = &asset.ComputeTask{Key: "uuid1"}
-	// Then, there should be only one task to retrieve from DB
-	dbal.On("GetComputeTasks", []string{"uuid2"}).Once().Return(
-		[]*asset.ComputeTask{{Key: "uuid2"}},
+	service.taskStore["uuid3"] = &asset.ComputeTask{Key: "uuid3"}
+
+	// simulate tasks in DB
+	dbal.On("GetComputeTasks", []string{"uuid2", "uuid4"}).Once().Return(
+		[]*asset.ComputeTask{{Key: "uuid4"}, {Key: "uuid2"}}, // intentionally return them out-of-order because that's what the DB might do
 		nil,
 	)
 
-	tasks, err := service.getRegisteredTasks("uuid1", "uuid2")
+	tasks, err := service.getRegisteredTasks("uuid1", "uuid2", "uuid3", "uuid4")
 	assert.NoError(t, err)
 
-	assert.Len(t, tasks, 2)
+	assert.Len(t, tasks, 4)
+
+	// The tasks should be returned in the order they were requested
+	assert.Equal(t, tasks[0].Key, "uuid1")
+	assert.Equal(t, tasks[1].Key, "uuid2")
+	assert.Equal(t, tasks[2].Key, "uuid3")
+	assert.Equal(t, tasks[3].Key, "uuid4")
 
 	dbal.AssertExpectations(t)
 }

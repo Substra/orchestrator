@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Return the correct models in `GetComputeTaskInputModels` for composite tasks (#499)
 - timestamp comparison when performing event sorting and filtering in PostgreSQL (#491)
 - ComputePlan query now uses correct SQL indexes (#500)
+- Incorrect sort order when checking parent task compatibility (#507)
 
 ### Changed
 - store the error type of a failed compute task in a failure report instead of an event (#487)
