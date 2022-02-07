@@ -35,8 +35,13 @@ func (d *DBAL) AddComputeTasks(tasks ...*asset.ComputeTask) error {
 }
 
 func (d *DBAL) addTask(t *asset.ComputeTask) error {
-	stmt := `insert into "compute_tasks" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(d.ctx, stmt, t.GetKey(), t, d.channel)
+	stmt := `insert into "compute_tasks" ("id", "channel", "category", "compute_plan_key", "status", "worker", "asset") values ($1, $2, $3, $4, $5, $6, $7)`
+	_, err := d.tx.Exec(d.ctx, stmt, t.GetKey(), d.channel, t.Category, t.ComputePlanKey, t.Status, t.Worker, t)
+	if err != nil {
+		return err
+	}
+
+	err = d.insertParentTasks(t)
 	return err
 }
 
@@ -44,28 +49,97 @@ func (d *DBAL) addTasks(tasks []*asset.ComputeTask) error {
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"compute_tasks"},
-		[]string{"id", "asset", "channel"},
+		[]string{"id", "channel", "category", "compute_plan_key", "status", "worker", "asset"},
 		pgx.CopyFromSlice(len(tasks), func(i int) ([]interface{}, error) {
-			v, err := protojson.Marshal(tasks[i])
+			task := tasks[i]
+			v, err := protojson.Marshal(task)
 			if err != nil {
 				return nil, err
 			}
+
 			// expect binary representation, not string
-			id, err := uuid.Parse(tasks[i].Key)
+			id, err := uuid.Parse(task.Key)
 			if err != nil {
 				return nil, err
 			}
-			return []interface{}{id, v, d.channel}, nil
+			computePlanKey, err := uuid.Parse(task.ComputePlanKey)
+			if err != nil {
+				return nil, err
+			}
+
+			return []interface{}{id, d.channel, task.Category, computePlanKey, task.Status, task.Worker, v}, nil
 		}),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Add compute_task_parents rows
+	parentRows := make([][]interface{}, 0)
+	for _, t := range tasks {
+		if t.ParentTaskKeys != nil {
+			childTask, err := uuid.Parse(t.GetKey())
+			if err != nil {
+				return err
+			}
+			position := 1
+			for _, parentTaskKey := range t.ParentTaskKeys {
+				parentTask, err := uuid.Parse(parentTaskKey)
+				if err != nil {
+					return err
+				}
+				parentRows = append(parentRows, []interface{}{parentTask, childTask, position})
+				position++
+			}
+		}
+	}
+
+	_, err = d.tx.CopyFrom(
+		d.ctx,
+		pgx.Identifier{"compute_task_parents"},
+		[]string{"parent_task_id", "child_task_id", "position"},
+		pgx.CopyFromRows(parentRows),
 	)
 
 	return err
 }
 
+// deleteParentTasks deletes all parent tasks for a given task
+func (d *DBAL) deleteParentTasks(taskKey string) error {
+	stmt := `delete from compute_task_parents where child_task_id = $1`
+	_, err := d.tx.Exec(d.ctx, stmt, taskKey)
+	return err
+}
+
+// insertParentTasks inserts all the parents tasks of a compute task, one by one
+func (d *DBAL) insertParentTasks(t *asset.ComputeTask) error {
+	position := 1
+	for _, parentTaskKey := range t.ParentTaskKeys {
+		stmt := `insert into compute_task_parents(parent_task_id, child_task_id, position) values ($1, $2, $3)`
+		_, err := d.tx.Exec(d.ctx, stmt, parentTaskKey, t.GetKey(), position)
+		if err != nil {
+			return err
+		}
+		position++
+	}
+	return nil
+}
+
 // UpdateComputeTask updates an existing task
 func (d *DBAL) UpdateComputeTask(t *asset.ComputeTask) error {
-	stmt := `update "compute_tasks" set asset=$3 where id=$1 and channel=$2`
-	_, err := d.tx.Exec(d.ctx, stmt, t.GetKey(), d.channel, t)
+	err := d.deleteParentTasks(t.GetKey())
+	if err != nil {
+		return err
+	}
+
+	err = d.insertParentTasks(t)
+	if err != nil {
+		return err
+	}
+
+	stmt := `update "compute_tasks" set category=$3, compute_plan_key=$4, status=$5, worker=$6, asset=$7 where id=$1 and channel=$2`
+	_, err = d.tx.Exec(d.ctx, stmt, t.GetKey(), d.channel, t.Category, t.ComputePlanKey, t.Status, t.Worker, t)
 	return err
 }
 
@@ -170,7 +244,13 @@ func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 
 // GetComputeTaskChildren returns the children of the task identified by the given key
 func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
-	rows, err := d.tx.Query(d.ctx, `select asset from "compute_tasks" where asset->'parentTaskKeys' ? $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `
+	select ct.asset
+	from compute_tasks ct
+	join compute_task_parents ctp on ct.id = ctp.child_task_id
+	 where ctp.parent_task_id = $1
+	 and ct.channel = $2
+	order by ctp.position asc;`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +274,7 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 
 // GetComputePlanTasksKeys returns the list of task keys from the provided compute plan
 func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
-	rows, err := d.tx.Query(d.ctx, `select id from "compute_tasks" where asset->>'computePlanKey' = $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select id from "compute_tasks" where compute_plan_key = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +298,7 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 
 // GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
-	rows, err := d.tx.Query(d.ctx, `select asset from "compute_tasks" where asset->>'computePlanKey' = $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select asset from "compute_tasks" where compute_plan_key = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -310,16 +390,16 @@ func taskFilterToQuery(filter *asset.TaskQueryFilter, builder squirrel.SelectBui
 	}
 
 	if filter.Worker != "" {
-		builder = builder.Where(squirrel.Eq{"asset->>'worker'": filter.Worker})
+		builder = builder.Where(squirrel.Eq{"worker": filter.Worker})
 	}
 	if filter.Status != 0 {
-		builder = builder.Where(squirrel.Eq{"asset->>'status'": filter.Status.String()})
+		builder = builder.Where(squirrel.Eq{"status": filter.Status.String()})
 	}
 	if filter.Category != 0 {
-		builder = builder.Where(squirrel.Eq{"asset->>'category'": filter.Category.String()})
+		builder = builder.Where(squirrel.Eq{"category": filter.Category.String()})
 	}
 	if filter.ComputePlanKey != "" {
-		builder = builder.Where(squirrel.Eq{"asset->>'computePlanKey'": filter.ComputePlanKey})
+		builder = builder.Where(squirrel.Eq{"compute_plan_key": filter.ComputePlanKey})
 	}
 	if filter.AlgoKey != "" {
 		builder = builder.Where(squirrel.Eq{"asset->'algo'->>'key'": filter.AlgoKey})

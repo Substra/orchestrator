@@ -22,9 +22,9 @@ func TestTaskFilterToQuery(t *testing.T) {
 		params        []interface{}
 	}{
 		"empty":         {&asset.TaskQueryFilter{}, "", nil},
-		"single filter": {&asset.TaskQueryFilter{Worker: "mynode"}, "asset->>'worker' = $1", []interface{}{"mynode"}},
-		"two filter":    {&asset.TaskQueryFilter{Worker: "mynode", Status: asset.ComputeTaskStatus_STATUS_DONE}, "asset->>'worker' = $1 AND asset->>'status' = $2", []interface{}{"mynode", asset.ComputeTaskStatus_STATUS_DONE.String()}},
-		"three filter":  {&asset.TaskQueryFilter{Worker: "mynode", Status: asset.ComputeTaskStatus_STATUS_DONE, Category: asset.ComputeTaskCategory_TASK_TRAIN}, "asset->>'worker' = $1 AND asset->>'status' = $2 AND asset->>'category' = $3", []interface{}{"mynode", asset.ComputeTaskStatus_STATUS_DONE.String(), asset.ComputeTaskCategory_TASK_TRAIN.String()}},
+		"single filter": {&asset.TaskQueryFilter{Worker: "mynode"}, "worker = $1", []interface{}{"mynode"}},
+		"two filter":    {&asset.TaskQueryFilter{Worker: "mynode", Status: asset.ComputeTaskStatus_STATUS_DONE}, "worker = $1 AND status = $2", []interface{}{"mynode", asset.ComputeTaskStatus_STATUS_DONE.String()}},
+		"three filter":  {&asset.TaskQueryFilter{Worker: "mynode", Status: asset.ComputeTaskStatus_STATUS_DONE, Category: asset.ComputeTaskCategory_TASK_TRAIN}, "worker = $1 AND status = $2 AND category = $3", []interface{}{"mynode", asset.ComputeTaskStatus_STATUS_DONE.String(), asset.ComputeTaskCategory_TASK_TRAIN.String()}},
 	}
 
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
@@ -127,6 +127,90 @@ func TestQueryComputeTasks(t *testing.T) {
 	)
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestAddComputeTask(t *testing.T) {
+	newTask := &asset.ComputeTask{
+		Key:            "testTask",
+		Category:       asset.ComputeTaskCategory_TASK_TEST,
+		ComputePlanKey: "cpKey",
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+		Worker:         "testOrg",
+		ParentTaskKeys: []string{"parent1", "parent2"},
+	}
+
+	mock, err := pgxmock.NewConn()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	// Insert task
+	mock.ExpectExec(`insert into "compute_tasks"`).WithArgs(newTask.Key, testChannel, newTask.Category, newTask.ComputePlanKey, newTask.Status, newTask.Worker, newTask).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	// Insert parents
+	mock.ExpectExec(`insert into compute_task_parents`).WithArgs("parent1", newTask.Key, 1).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectExec(`insert into compute_task_parents`).WithArgs("parent2", newTask.Key, 2).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	err = dbal.addTask(newTask)
+	assert.NoError(t, err)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestAddComputeTasks(t *testing.T) {
+	newTasks := []*asset.ComputeTask{
+		{
+			Key:            "8d9fc421-15a6-4c3d-9082-3337a5436e83",
+			Category:       asset.ComputeTaskCategory_TASK_TRAIN,
+			ComputePlanKey: "899e7403-7e23-4c95-bb3f-7eb9e6d86b04",
+			Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+			Worker:         "testOrg",
+			ParentTaskKeys: []string{"46830c5b-5a42-4cd8-8c29-6b66cc1ef348", "46830c5b-5a42-4cd8-8c29-6b66cc1ef349"},
+		},
+		{
+			Key:            "99d44ec9-d642-4afa-bad0-00dda84a6b9d",
+			Category:       asset.ComputeTaskCategory_TASK_TEST,
+			ComputePlanKey: "899e7403-7e23-4c95-bb3f-7eb9e6d86b04",
+			Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+			Worker:         "testOrg",
+			ParentTaskKeys: []string{"8d9fc421-15a6-4c3d-9082-3337a5436e83"},
+		},
+	}
+
+	mock, err := pgxmock.NewConn()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	// Insert task
+	mock.ExpectCopyFrom(`"compute_tasks"`, []string{"id", "channel", "category", "compute_plan_key", "status", "worker", "asset"}).WillReturnResult(2)
+	// Insert parents relationships
+	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_id", "child_task_id", "position"}).WillReturnResult(3)
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	err = dbal.addTasks(newTasks)
+	assert.NoError(t, err)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)

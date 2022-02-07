@@ -60,7 +60,7 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 
 	if filter.ComputePlanKey != "" {
 		builder = builder.Where(squirrel.Expr(
-			"id IN (SELECT DISTINCT(asset->'algo'->>'key')::uuid FROM compute_tasks WHERE asset->>'computePlanKey' = ?)",
+			"id IN (SELECT DISTINCT(asset->'algo'->>'key')::uuid FROM compute_tasks WHERE compute_plan_key = ?)",
 			filter.ComputePlanKey,
 		))
 	}
