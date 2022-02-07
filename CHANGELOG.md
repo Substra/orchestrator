@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - return `datasamples` list in `RegisterDataSamplesResponse` (#486)
 - return `tasks` list in `RegisterTasksResponse` (#493)
+- store the error type of a failed compute task in a failure report instead of an event (#487)
 
 ### Fixed
 - set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)
@@ -21,9 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - timestamp comparison when performing event sorting and filtering in PostgreSQL (#491)
 - ComputePlan query now uses correct SQL indexes (#500)
 - Incorrect sort order when checking parent task compatibility (#507)
-
-### Changed
-- store the error type of a failed compute task in a failure report instead of an event (#487)
 
 ## [0.5.0] - 2022-01-16
 
