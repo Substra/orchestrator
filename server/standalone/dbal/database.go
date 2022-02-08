@@ -16,6 +16,11 @@ import (
 	"github.com/owkin/orchestrator/utils"
 )
 
+type PgPool interface {
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
+	Close()
+}
+
 // TransactionalDBALProvider describe an object able to return a TransactionalDBAL
 type TransactionalDBALProvider interface {
 	GetTransactionalDBAL(ctx context.Context, channel string, readOnly bool) (TransactionDBAL, error)
@@ -24,7 +29,7 @@ type TransactionalDBALProvider interface {
 // Database is a thin wrapper around sql.DB.
 // It handles the orchestrator specifics, such as migrations and DBAL creation.
 type Database struct {
-	pool *pgxpool.Pool
+	pool PgPool
 }
 
 type SQLLogger struct {
@@ -135,6 +140,7 @@ func (d *Database) GetTransactionalDBAL(ctx context.Context, channel string, rea
 	}
 	if readOnly {
 		txOpts.AccessMode = pgx.ReadOnly
+		txOpts.IsoLevel = pgx.ReadCommitted
 	}
 	tx, err := d.pool.BeginTx(ctx, txOpts)
 	if err != nil {
