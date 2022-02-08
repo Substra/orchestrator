@@ -34,13 +34,13 @@ func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	builder := pgDialect.Select().
 		Column("cp.asset").
-		Column(squirrel.Expr("COUNT(t.id)")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_WAITING')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_TODO')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_DOING')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_CANCELED')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_FAILED')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_DONE')")).
+		Column(squirrel.Expr("COUNT(1)")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_WAITING')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_TODO')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DOING')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_CANCELED')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_FAILED')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DONE')")).
 		From("compute_plans AS cp").
 		LeftJoin("compute_tasks AS t ON t.compute_plan_key = cp.id").
 		Where(squirrel.Eq{"cp.id": key}).
@@ -105,13 +105,13 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 	builder := pgDialect.Select().
 		Column("cp.asset").
-		Column(squirrel.Expr("COUNT(t.id)")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_WAITING')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_TODO')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_DOING')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_CANCELED')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_FAILED')")).
-		Column(squirrel.Expr("COUNT(t.id) FILTER (WHERE t.status = 'STATUS_DONE')")).
+		Column(squirrel.Expr("COUNT(1)")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_WAITING')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_TODO')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DOING')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_CANCELED')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_FAILED')")).
+		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DONE')")).
 		From("compute_plans AS cp").
 		LeftJoin("compute_tasks AS t ON t.compute_plan_key = cp.id").
 		Where(squirrel.Eq{"cp.channel": d.channel}).

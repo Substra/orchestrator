@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS ix_compute_tasks_compute_plan_key_status;

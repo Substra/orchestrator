@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - return `tasks` list in `RegisterTasksResponse` (#493)
 - store the error type of a failed compute task in a failure report instead of an event (#487)
 - improve performance of `compute_tasks` SQL indexes by using dedicated columns instead of JSONB (#503)
+- improve performance of compute plan queries by leveraging a specific index for status count (#509)
 
 ### Fixed
 - set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)

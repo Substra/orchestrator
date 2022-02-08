@@ -23,3 +23,13 @@ Example: the function named `QueryComputeTask` takes a `QueryComputeTaskParam` a
 Feature flags passed through environment variables should follow the pattern `FEATURE_ENABLED` and accept a boolean value.
 
 Example: `METRICS_ENABLED`.
+
+## Database index
+
+Indexes should be prefixed with `ix_` and follow the rule of `ix_<table>_<colums>` where there can be several `<columns>` separated by underscores (`_`).
+
+Example:
+
+```sql
+CREATE INDEX IF NOT EXISTS ix_compute_tasks_compute_plan_key_status ON compute_tasks (compute_plan_key, status);
+```
