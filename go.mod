@@ -17,7 +17,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/looplab/fsm v0.3.0
-	github.com/pashagolub/pgxmock v1.4.3
+	github.com/pashagolub/pgxmock v1.4.4
 	github.com/prometheus/client_golang v1.12.1
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
