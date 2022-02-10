@@ -122,7 +122,7 @@ this is done through the `mspid` request header.
 
 This header can be freely set by the caller, so we should assume that this is insecure.
 
-To adress an adversarial user in the network, we can enable `ORCHESTRATOR_VERIFY_CLIENT_MSP_ID`.
+To address an adversarial user in the network, we can enable `ORCHESTRATOR_VERIFY_CLIENT_MSP_ID`.
 This will add several checks to the header
 
 **Certificate's organization check**: the given mspid header will be checked against the client certificate's organizations.

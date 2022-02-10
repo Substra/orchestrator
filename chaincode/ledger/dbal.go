@@ -24,7 +24,7 @@ const CouchDBSortAsc = "asc"
 const CouchDBSortDesc = "desc"
 
 // DB is the distributed ledger persistence layer implementing persistence.DBAL
-// This backend does not allow to read the current writes, they will only be commited after a successful response.
+// This backend does not allow to read the current writes, they will only be committed after a successful response.
 type DB struct {
 	context          context.Context
 	ccStub           shim.ChaincodeStubInterface
@@ -225,11 +225,11 @@ func (db *DB) deleteIndex(index string, attributes []string) error {
 	return db.ccStub.DelState(compositeKey)
 }
 
-func (db *DB) updateIndex(index string, oldAttributes []string, newAttribues []string) error {
+func (db *DB) updateIndex(index string, oldAttributes []string, newAttributes []string) error {
 	if err := db.deleteIndex(index, oldAttributes); err != nil {
 		return err
 	}
-	return db.createIndex(index, newAttribues)
+	return db.createIndex(index, newAttributes)
 }
 
 func (db *DB) getIndexKeys(index string, attributes []string) ([]string, error) {

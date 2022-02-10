@@ -140,7 +140,7 @@ func (s *ComputeTaskService) SortTasks(newTasks []*asset.NewComputeTask, existin
 	copy(unsortedTasks, newTasks)
 
 	unsortedParentsCount := make(map[string]int, len(unsortedTasks))
-	tasksWitoutUnsortedDependency := []*asset.NewComputeTask{}
+	tasksWithoutUnsortedDependency := []*asset.NewComputeTask{}
 
 	for i := 0; i < len(unsortedTasks); i++ {
 		unsortedParentsCount[unsortedTasks[i].Key] = 0
@@ -152,16 +152,16 @@ func (s *ComputeTaskService) SortTasks(newTasks []*asset.NewComputeTask, existin
 		}
 
 		if unsortedParentsCount[unsortedTasks[i].Key] == 0 {
-			tasksWitoutUnsortedDependency = append(tasksWitoutUnsortedDependency, unsortedTasks[i])
+			tasksWithoutUnsortedDependency = append(tasksWithoutUnsortedDependency, unsortedTasks[i])
 			unsortedTasks = append(unsortedTasks[:i], unsortedTasks[i+1:]...)
 			i-- // We go back one index as we removed the element at position i
 		}
 	}
 
 	sortedTasksCount := 0
-	for len(tasksWitoutUnsortedDependency) > 0 {
-		currentTask := tasksWitoutUnsortedDependency[0]
-		tasksWitoutUnsortedDependency = tasksWitoutUnsortedDependency[1:]
+	for len(tasksWithoutUnsortedDependency) > 0 {
+		currentTask := tasksWithoutUnsortedDependency[0]
+		tasksWithoutUnsortedDependency = tasksWithoutUnsortedDependency[1:]
 
 		sortedTasks[sortedTasksCount] = currentTask
 		sortedTasksCount++
@@ -174,7 +174,7 @@ func (s *ComputeTaskService) SortTasks(newTasks []*asset.NewComputeTask, existin
 						// As it has no remaining dependency the task is ready to be added to the sorted list.
 						// We remove the task from the unsorted list to make our slice length decrease over time
 						// and avoid going through all the tasks that are already sorted an have no remaining dependencies.
-						tasksWitoutUnsortedDependency = append(tasksWitoutUnsortedDependency, unsortedTasks[i])
+						tasksWithoutUnsortedDependency = append(tasksWithoutUnsortedDependency, unsortedTasks[i])
 						unsortedTasks = append(unsortedTasks[:i], unsortedTasks[i+1:]...)
 						i-- // We go back one index as we removed the element at position i
 					}

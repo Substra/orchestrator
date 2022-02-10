@@ -21,7 +21,7 @@ func NewAlgoServer() *AlgoServer {
 	return &AlgoServer{}
 }
 
-// RegisterAlgo will persiste a new algo
+// RegisterAlgo will persist a new algo
 func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset.Algo, error) {
 	logger.Get(ctx).WithField("algo", a).Debug("Register Algo")
 

@@ -1,4 +1,4 @@
-// Package performance containce the smartcontract related to training performance management.
+// Package performance contains the smartcontract related to training performance management.
 package performance
 
 import (

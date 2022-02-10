@@ -1,6 +1,6 @@
 // Package persistence holds everything related to data persistence.
 // Each asset has its own database abstraction layer (DBAL).
-// Each request is a transaction which is only commited once a successful response is returned.
+// Each request is a transaction which is only committed once a successful response is returned.
 package persistence
 
 import (
@@ -54,7 +54,7 @@ type DataManagerDBAL interface {
 	DataManagerExists(key string) (bool, error)
 }
 
-// NodeDBALProvider representes an object capable of providing a NodeDBAL
+// NodeDBALProvider represents an object capable of providing a NodeDBAL
 type NodeDBALProvider interface {
 	GetNodeDBAL() NodeDBAL
 }

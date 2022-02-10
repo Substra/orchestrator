@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.0.0] - 2021-11-30
 
 ### Changed
-- Client CA certs volumes are kebabcase
+- Client CA certs volumes are kebab-case
 - BREAKING: `orchestrator.tls.mtls.clientCACerts` now takes a list of secrets
 
 ## [4.0.1] - 2021-11-25
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.0.0] - 2021-11-04
 
 ### Added
-- Create a _[Certificate](https://cert-manager.io/docs/concepts/certificate/)_ ressource as part of the chart
+- Create a _[Certificate](https://cert-manager.io/docs/concepts/certificate/)_ resource as part of the chart
 
 ### Changed
 

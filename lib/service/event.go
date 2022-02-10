@@ -10,7 +10,7 @@ import (
 )
 
 type EventAPI interface {
-	// RegisterEvents allow to register multiple events at once.
+	// RegisterEvents allows registering multiple events at once.
 	RegisterEvents(...*asset.Event) error
 	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error)
 }

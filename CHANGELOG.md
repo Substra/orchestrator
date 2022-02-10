@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Incorrect sort order when checking parent task compatibility (#507)
 
 ### Changed
-- isolation level of read-only queries in standalone mode is now [READ COMMITED](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED) (#492)
+- isolation level of read-only queries in standalone mode is now [READ COMMITTED](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED) (#492)
 
 ## [0.5.0] - 2022-01-16
 

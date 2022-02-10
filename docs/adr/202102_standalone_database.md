@@ -8,12 +8,12 @@
 
 The orchestrator must be able to persist its state.
 Depending on execution mode (standalone or chaincode), the persistence layer should be different.
-While we don't have much alternatives in chaincode mode -- where the ledger is mandatory --
+While we don't have many alternatives in chaincode mode -- where the ledger is mandatory --
 we have many possibilities for the standalone persistence.
 
 The purpose of this ADR is to settle on a database.
 
-Couchdb is the current implemented backend and we use it in a pretty basic key:value way.
+Couchdb is the currently implemented backend, and we use it in a pretty basic key:value way.
 This is a behavior inherited from the existing chaincode, where we store assets as serialized json (byte[]) identified by a key.
 
 ## Decision Drivers
@@ -39,8 +39,8 @@ We can imagine things like `GetComputePlan(id string)`, `GetTrainTuplesByCompute
 
 ### Negative Consequences
 
-The main concern regarding the postgres solution was the maintainance of the database schema and migrations.
-As first approach, we will implement a minimalist schema whith one table shared by all serialized assets.
+The main concern regarding the postgres solution was the maintenance of the database schema and migrations.
+As first approach, we will implement a minimalist schema with one table shared by all serialized assets.
 
 Even with that reduced schema, we have to manage a basic migration, but this is hopefully mitigated by leverage existing database libraries.
 
@@ -67,7 +67,7 @@ Not only this feels like reinventing the wheel, but we also should be extra care
 
 [postgresql](https://www.postgresql.org/) is The World's Most Advanced Open Source Relational Database.
 
-Postgres is transactional so we can easily rollback changed at the end of a failed (gRPC) transaction.
+Postgres is transactional, so we can easily roll back changes at the end of a failed (gRPC) transaction.
 It can handle unstructured data if need be: we can rely on the existing []byte state model.
 
 An additional cost of postgres is that we have to deal with a schema and maintain it (migrations).
