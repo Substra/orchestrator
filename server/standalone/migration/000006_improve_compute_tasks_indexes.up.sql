@@ -10,9 +10,9 @@ SELECT execute($$ /* This makes the migration idempotent (see WHERE condition at
 
     UPDATE compute_tasks SET
         compute_plan_key = (asset->>'computePlanKey')::uuid,
-        status = (asset->'status'),
-        category = (asset->'category'),
-        worker = (asset->'worker');
+        status = (asset->>'status'),
+        category = (asset->>'category'),
+        worker = (asset->>'worker');
 
     ALTER TABLE compute_tasks ALTER COLUMN compute_plan_key SET NOT NULL;
     ALTER TABLE compute_tasks ALTER COLUMN status SET NOT NULL;
