@@ -21,7 +21,7 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.0
-	github.com/yoheimuta/go-protoparser/v4 v4.5.2
+	github.com/yoheimuta/go-protoparser/v4 v4.5.3
 	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
