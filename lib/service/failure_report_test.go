@@ -49,6 +49,7 @@ func TestRegisterFailureReport(t *testing.T) {
 		ErrorType:      newFailureReport.ErrorType,
 		LogsAddress:    newFailureReport.LogsAddress,
 		CreationDate:   timestamppb.New(transactionTime),
+		Owner:          "test",
 	}
 	failureReportDBAL.On("AddFailureReport", storedFailureReport).Once().Return(nil)
 

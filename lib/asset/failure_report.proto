@@ -30,6 +30,7 @@ message FailureReport {
   ErrorType error_type = 2;
   Addressable logs_address = 3;
   google.protobuf.Timestamp creation_date = 4;
+  string owner = 5;
 }
 
 // NewFailureReport is used to register a FailureReport.

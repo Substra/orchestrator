@@ -64,6 +64,7 @@ func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.New
 		ErrorType:      newFailureReport.ErrorType,
 		LogsAddress:    newFailureReport.LogsAddress,
 		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
+		Owner:          requester,
 	}
 
 	err = s.GetFailureReportDBAL().AddFailureReport(failureReport)
