@@ -271,9 +271,31 @@ func (c *TestClient) RegisterModel(o *ModelOptions) {
 		},
 	}
 	log.WithField("model", newModel).Debug("registering model")
+	//nolint: staticcheck //This method is deprecated but still needs to be tested
 	_, err := c.modelService.RegisterModel(c.ctx, newModel)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterModel failed")
+	}
+}
+
+func (c *TestClient) RegisterModels(o []*ModelOptions) {
+	newModels := make([]*asset.NewModel, len(o))
+	for i, modelOpt := range o {
+		newModel := &asset.NewModel{
+			ComputeTaskKey: c.ks.GetKey(modelOpt.TaskRef),
+			Key:            c.ks.GetKey(modelOpt.KeyRef),
+			Category:       modelOpt.Category,
+			Address: &asset.Addressable{
+				Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
+				StorageAddress: "http://somewhere.online/model",
+			},
+		}
+		log.WithField("model", newModel).Debug("registering model")
+		newModels[i] = newModel
+	}
+	_, err := c.modelService.RegisterModels(c.ctx, &asset.RegisterModelsParam{Models: newModels})
+	if err != nil {
+		log.WithError(err).Fatal("RegisterModels failed")
 	}
 }
 

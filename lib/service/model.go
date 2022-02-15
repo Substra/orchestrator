@@ -12,7 +12,6 @@ import (
 )
 
 type ModelAPI interface {
-	RegisterModel(model *asset.NewModel, owner string) (*asset.Model, error)
 	GetComputeTaskOutputModels(key string) ([]*asset.Model, error)
 	GetComputeTaskInputModels(key string) ([]*asset.Model, error)
 	CanDisableModel(key, requester string) (bool, error)
@@ -20,6 +19,7 @@ type ModelAPI interface {
 	DisableModel(key string, requester string) error
 	GetModel(key string) (*asset.Model, error)
 	QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error)
+	RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error)
 }
 
 type ModelServiceProvider interface {
@@ -117,7 +117,7 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 	return inputs, nil
 }
 
-func (s *ModelService) RegisterModel(newModel *asset.NewModel, requester string) (*asset.Model, error) {
+func (s *ModelService) registerModel(newModel *asset.NewModel, requester string) (*asset.Model, error) {
 	s.GetLogger().WithField("model", newModel).WithField("requester", requester).Debug("Registering new model")
 
 	err := newModel.Validate()
@@ -323,6 +323,22 @@ func (s *ModelService) AreAllOutputsRegistered(task *asset.ComputeTask, existing
 		s.GetLogger().WithField("taskKey", task.Key).WithField("category", task.Category).Warn("unexpected output model check")
 		return false
 	}
+}
+
+func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error) {
+	s.GetLogger().WithField("owner", owner).WithField("nbModels", len(models)).Debug("Registering models")
+
+	registeredModels := make([]*asset.Model, len(models))
+
+	for modelIndex, newModel := range models {
+		model, err := s.registerModel(newModel, owner)
+		if err != nil {
+			return nil, err
+		}
+		registeredModels[modelIndex] = model
+	}
+
+	return registeredModels, nil
 }
 
 type modelCount struct {

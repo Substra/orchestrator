@@ -79,7 +79,7 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 		},
 	}
 
-	_, err := service.RegisterModel(model, "test")
+	_, err := service.registerModel(model, "test")
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -110,7 +110,7 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 		},
 	}
 
-	_, err := service.RegisterModel(model, "test") // "test" is not "owner" of the task
+	_, err := service.registerModel(model, "test") // "test" is not "owner" of the task
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -200,7 +200,7 @@ func TestRegisterTrainModel(t *testing.T) {
 	// Model registration will initiate a task transition to done
 	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
 
-	_, err := service.RegisterModel(model, "test")
+	_, err := service.registerModel(model, "test")
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
@@ -285,7 +285,7 @@ func TestRegisterAggregateModel(t *testing.T) {
 	// Model registration will initiate a task transition to done
 	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
 
-	_, err := service.RegisterModel(model, "test")
+	_, err := service.registerModel(model, "test")
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
@@ -328,7 +328,7 @@ func TestRegisterDuplicateModel(t *testing.T) {
 		},
 	}
 
-	_, err := service.RegisterModel(model, "test")
+	_, err := service.registerModel(model, "test")
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -430,7 +430,7 @@ func TestRegisterHeadModel(t *testing.T) {
 	// Model registration will initiate a task transition to done
 	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
 
-	_, err := service.RegisterModel(model, "test")
+	_, err := service.registerModel(model, "test")
 	assert.NoError(t, err)
 
 	cts.AssertExpectations(t)
@@ -469,7 +469,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 		},
 	}
 
-	_, err := service.RegisterModel(model, "test")
+	_, err := service.registerModel(model, "test")
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -512,7 +512,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 		},
 	}
 
-	_, err := service.RegisterModel(model, "test")
+	_, err := service.registerModel(model, "test")
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -900,4 +900,232 @@ func TestCheckDuplicateModel(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRegisterModelsTrainTask(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	cts := new(MockComputeTaskAPI)
+	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
+	provider := newMockedProvider()
+	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
+	service := NewModelService(provider)
+
+	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
+
+	task := &asset.ComputeTask{
+		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status:   asset.ComputeTaskStatus_STATUS_DOING,
+		Category: asset.ComputeTaskCategory_TASK_TRAIN,
+		Worker:   "test",
+		Data: &asset.ComputeTask_Train{
+			Train: &asset.TrainTaskData{
+				ModelPermissions: &asset.Permissions{
+					Process: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+					Download: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+				},
+			},
+		},
+	}
+
+	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
+	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
+
+	models := []*asset.NewModel{
+		{
+			Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
+			Category:       asset.ModelCategory_MODEL_SIMPLE,
+			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Address: &asset.Addressable{
+				StorageAddress: "https://somewhere",
+				Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+			},
+		},
+	}
+
+	storedModel := &asset.Model{
+		Key:            models[0].Key,
+		Category:       models[0].Category,
+		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Address:        models[0].Address,
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+			Download: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+		},
+		Owner:        "test",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+	}
+	dbal.On("AddModel", storedModel).Once().Return(nil)
+
+	event := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_MODEL,
+		AssetKey:  models[0].Key,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}
+	es.On("RegisterEvents", event).Once().Return(nil)
+
+	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
+
+	_, err := service.RegisterModels(models, "test")
+	assert.NoError(t, err)
+
+	dbal.AssertExpectations(t)
+	cts.AssertExpectations(t)
+	provider.AssertExpectations(t)
+	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
+}
+
+func TestRegisterHeadAndTrunkModel(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	cts := new(MockComputeTaskAPI)
+	es := new(MockEventAPI)
+	ts := new(MockTimeAPI)
+	provider := newMockedProvider()
+	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetEventService").Return(es)
+	provider.On("GetTimeService").Return(ts)
+	service := NewModelService(provider)
+
+	ts.On("GetTransactionTime").Times(2).Return(time.Unix(1337, 0))
+
+	task := &asset.ComputeTask{
+		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status:   asset.ComputeTaskStatus_STATUS_DOING,
+		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
+		Worker:   "test",
+		Data: &asset.ComputeTask_Composite{
+			Composite: &asset.CompositeTrainTaskData{
+				HeadPermissions: &asset.Permissions{
+					Process: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+					Download: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+				},
+				TrunkPermissions: &asset.Permissions{
+					Process: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+					Download: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+				},
+			},
+		},
+	}
+	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Times(2).Return(task, nil)
+
+	models := []*asset.NewModel{
+		{
+			Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
+			Category:       asset.ModelCategory_MODEL_HEAD,
+			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Address: &asset.Addressable{
+				StorageAddress: "https://somewhere",
+				Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+			},
+		},
+		{
+			Key:            "7d2c6aa1-18b9-4ffd-a6e3-dfdc740d64dd",
+			Category:       asset.ModelCategory_MODEL_SIMPLE,
+			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Address: &asset.Addressable{
+				StorageAddress: "https://somewhere",
+				Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+			},
+		},
+	}
+
+	storedHead := &asset.Model{
+		Key:            models[0].Key,
+		Category:       models[0].Category,
+		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Address:        models[0].Address,
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+			Download: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+		},
+		Owner:        "test",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+	}
+	dbal.On("AddModel", storedHead).Once().Return(nil)
+
+	storedSimple := &asset.Model{
+		Key:            models[1].Key,
+		Category:       models[1].Category,
+		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Address:        models[0].Address,
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+			Download: &asset.Permission{
+				Public:        true,
+				AuthorizedIds: []string{},
+			},
+		},
+		Owner:        "test",
+		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+	}
+	dbal.On("AddModel", storedSimple).Once().Return(nil)
+
+	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
+	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{
+		storedHead,
+	}, nil)
+
+	event := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_MODEL,
+		AssetKey:  models[0].Key,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}
+	es.On("RegisterEvents", event).Once().Return(nil)
+
+	eventSimple := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_MODEL,
+		AssetKey:  models[1].Key,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}
+	es.On("RegisterEvents", eventSimple).Once().Return(nil)
+
+	// Model registration will initiate a task transition to done
+	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
+
+	_, err := service.RegisterModels(models, "test")
+	assert.NoError(t, err)
+
+	cts.AssertExpectations(t)
+	dbal.AssertExpectations(t)
+	provider.AssertExpectations(t)
+	es.AssertExpectations(t)
+	ts.AssertExpectations(t)
 }

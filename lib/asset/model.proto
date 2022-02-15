@@ -30,6 +30,14 @@ message NewModel {
   Addressable address = 4;
 }
 
+message RegisterModelsParam {
+  repeated NewModel models = 1;
+}
+
+message RegisterModelsResponse {
+  repeated Model models = 1;
+}
+
 message GetComputeTaskModelsParam {
   string compute_task_key = 1;
 }
@@ -68,7 +76,10 @@ message QueryModelsResponse {
 message DisableModelResponse {}
 
 service ModelService {
-  rpc RegisterModel(NewModel) returns (Model);
+  rpc RegisterModel(NewModel) returns (Model) {
+    option deprecated = true;
+  };
+  rpc RegisterModels(RegisterModelsParam) returns (RegisterModelsResponse);
   rpc GetModel(GetModelParam) returns (Model);
   rpc QueryModels(QueryModelsParam) returns (QueryModelsResponse);
   rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse);

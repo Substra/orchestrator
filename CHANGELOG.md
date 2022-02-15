@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support composite tasks with two composite parents (#464)
 - Add migration logs (#501)
 - add owner field to failure report asset (#531)
+- Add a new endpoint to register multiple models at the same time (#530)
 
 ### Changed
 - return `datasamples` list in `RegisterDataSamplesResponse` (#486)
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - store the error type of a failed compute task in a failure report instead of an event (#487)
 - improve performance of `compute_tasks` SQL indexes by using dedicated columns instead of JSONB (#503)
 - improve performance of compute plan queries by leveraging a specific index for status count (#509)
+- isolation level of read-only queries in standalone mode is now [READ COMMITTED](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED) (#492)
 
 ### Fixed
 - set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)
@@ -26,8 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ComputePlan query now uses correct SQL indexes (#500)
 - Incorrect sort order when checking parent task compatibility (#507)
 
-### Changed
-- isolation level of read-only queries in standalone mode is now [READ COMMITTED](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED) (#492)
+### Deprecated
+
+- `RegisterModel` gRPC method (#530)
 
 ## [0.5.0] - 2022-01-16
 

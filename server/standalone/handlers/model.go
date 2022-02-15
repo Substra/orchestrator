@@ -30,7 +30,12 @@ func (s *ModelServer) RegisterModel(ctx context.Context, newModel *asset.NewMode
 		return nil, err
 	}
 
-	return services.GetModelService().RegisterModel(newModel, mspid)
+	models, err := services.GetModelService().RegisterModels([]*asset.NewModel{newModel}, mspid)
+	if err != nil {
+		return nil, err
+	}
+
+	return models[0], err
 }
 
 func (s *ModelServer) GetModel(ctx context.Context, in *asset.GetModelParam) (*asset.Model, error) {
@@ -127,4 +132,24 @@ func (s *ModelServer) DisableModel(ctx context.Context, param *asset.DisableMode
 	}
 
 	return &asset.DisableModelResponse{}, nil
+}
+
+func (s *ModelServer) RegisterModels(ctx context.Context, param *asset.RegisterModelsParam) (*asset.RegisterModelsResponse, error) {
+	mspid, err := common.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	services, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	models, err := services.GetModelService().RegisterModels(param.Models, mspid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.RegisterModelsResponse{
+		Models: models,
+	}, nil
 }

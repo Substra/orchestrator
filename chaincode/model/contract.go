@@ -50,12 +50,12 @@ func (s *SmartContract) RegisterModel(ctx ledger.TransactionContext, wrapper *co
 		return nil, err
 	}
 
-	obj, err := service.RegisterModel(params, requester)
+	obj, err := service.RegisterModels([]*asset.NewModel{params}, requester)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to register model")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(ctx.GetContext(), obj)
+	wrapped, err := communication.Wrap(ctx.GetContext(), obj[0])
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -247,6 +247,44 @@ func (s *SmartContract) DisableModel(ctx ledger.TransactionContext, wrapper *com
 	}
 
 	return nil
+}
+
+func (s *SmartContract) RegisterModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+	service := provider.GetModelService()
+
+	params := new(asset.RegisterModelsParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return nil, err
+	}
+
+	owner, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
+		return nil, err
+	}
+
+	models, err := service.RegisterModels(params.Models, owner)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to register models")
+		return nil, err
+	}
+
+	resp := &asset.RegisterModelsResponse{
+		Models: models,
+	}
+
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit

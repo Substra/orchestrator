@@ -35,7 +35,7 @@ func TestRegisterModel(t *testing.T) {
 	newModel := &asset.NewModel{Key: "uuid"}
 
 	p.On("GetModelService").Return(ms)
-	ms.On("RegisterModel", newModel, "requester").Once().Return(&asset.Model{Key: "uuid"}, nil)
+	ms.On("RegisterModels", []*asset.NewModel{newModel}, "requester").Once().Return([]*asset.Model{{Key: "uuid"}}, nil)
 
 	_, err := server.RegisterModel(ctx, newModel)
 	assert.NoError(t, err)

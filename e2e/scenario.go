@@ -793,8 +793,11 @@ func testAggregateComposite(conn *grpc.ClientConn) {
 	)
 
 	appClient.StartTask("c1")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	models := []*client.ModelOptions{
+		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1H").WithCategory(asset.ModelCategory_MODEL_HEAD),
+		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE),
+	}
+	appClient.RegisterModels(models)
 
 	appClient.StartTask("c2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2H").WithCategory(asset.ModelCategory_MODEL_HEAD))

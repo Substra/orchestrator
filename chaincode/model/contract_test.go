@@ -92,7 +92,7 @@ func TestRegisterModel(t *testing.T) {
 	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterModel", newModel, mspid).Return(model, nil).Once()
+	service.On("RegisterModels", []*asset.NewModel{newModel}, mspid).Return([]*asset.Model{model}, nil).Once()
 
 	stub := new(testHelper.MockedStub)
 	ctx.On("GetStub").Return(stub).Once()

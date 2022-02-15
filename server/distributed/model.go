@@ -135,3 +135,21 @@ func (a *ModelAdapter) DisableModel(ctx context.Context, param *asset.DisableMod
 
 	return &asset.DisableModelResponse{}, nil
 }
+
+func (a *ModelAdapter) RegisterModels(ctx context.Context, param *asset.RegisterModelsParam) (*asset.RegisterModelsResponse, error) {
+	Invocator, err := ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	method := "orchestrator.model:RegisterModels"
+
+	response := &asset.RegisterModelsResponse{}
+
+	err = Invocator.Call(ctx, method, param, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
