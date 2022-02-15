@@ -62,7 +62,7 @@ A task can have several status (see *States* below for available transitions):
 - DOING: the task is being processed by a worker.
 - DONE: task has been successfully completed.
 - FAILED: task execution has failed.
-- CANCELED: task execution has been interrupted or stopped before completion.
+- CANCELED: task execution has been canceled before completion.
 
 ## State
 
