@@ -33,8 +33,8 @@ func (db *DB) ModelExists(key string) (bool, error) {
 	return exists, nil
 }
 
-func (db *DB) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
-	elementKeys, err := db.getIndexKeys(modelTaskKeyIndex, []string{asset.ModelKind, key})
+func (db *DB) GetComputeTaskOutputModels(computeTaskKey string) ([]*asset.Model, error) {
+	elementKeys, err := db.getIndexKeys(modelTaskKeyIndex, []string{asset.ModelKind, computeTaskKey})
 	if err != nil {
 		return nil, err
 	}

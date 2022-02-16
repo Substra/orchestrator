@@ -278,7 +278,7 @@ func (c *TestClient) RegisterModel(o *ModelOptions) {
 	}
 }
 
-func (c *TestClient) RegisterModels(o []*ModelOptions) {
+func (c *TestClient) FailableRegisterModels(o ...*ModelOptions) error {
 	newModels := make([]*asset.NewModel, len(o))
 	for i, modelOpt := range o {
 		newModel := &asset.NewModel{
@@ -294,6 +294,12 @@ func (c *TestClient) RegisterModels(o []*ModelOptions) {
 		newModels[i] = newModel
 	}
 	_, err := c.modelService.RegisterModels(c.ctx, &asset.RegisterModelsParam{Models: newModels})
+
+	return err
+}
+
+func (c *TestClient) RegisterModels(o ...*ModelOptions) {
+	err := c.FailableRegisterModels(o...)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterModels failed")
 	}

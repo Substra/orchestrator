@@ -27,6 +27,14 @@ var testScenarios = map[string]scenario{
 		testRegisterModel,
 		[]string{"short", "model"},
 	},
+	"RegisterTwoSimpleModelsOnTrainTask": {
+		testRegisterTwoSimpleModelsForTrainTask,
+		[]string{"short", "model"},
+	},
+	"RegisterAllModelsOnCompositeTask": {
+		testRegisterAllModelsForCompositeTask,
+		[]string{"short", "model", "composite"},
+	},
 	"CascadeCancel": {
 		testCascadeCancel,
 		[]string{"short", "task"},
@@ -797,7 +805,7 @@ func testAggregateComposite(conn *grpc.ClientConn) {
 		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1H").WithCategory(asset.ModelCategory_MODEL_HEAD),
 		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE),
 	}
-	appClient.RegisterModels(models)
+	appClient.RegisterModels(models...)
 
 	appClient.StartTask("c2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2H").WithCategory(asset.ModelCategory_MODEL_HEAD))
@@ -1131,4 +1139,52 @@ func testEventTSFilter(conn *grpc.ClientConn) {
 		log.Fatalf("Unexpected number of events. Expected %d, got %d", len(events.Events), len(allEvents.Events))
 	}
 
+}
+
+func testRegisterTwoSimpleModelsForTrainTask(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+
+	appClient.StartTask(client.DefaultTaskRef)
+	err = appClient.FailableRegisterModels(
+		client.DefaultModelOptions().WithKeyRef("mod1"),
+		client.DefaultModelOptions().WithKeyRef("mod2"),
+	)
+
+	if err == nil {
+		log.Fatal("Model registration should have failed")
+	}
+	log.WithError(err).Debug("Failed to register models, as expected")
+}
+
+func testRegisterAllModelsForCompositeTask(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultCompositeTaskOptions())
+
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.RegisterModels(
+		client.DefaultModelOptions().WithCategory(asset.ModelCategory_MODEL_HEAD).WithKeyRef("mod1"),
+		client.DefaultModelOptions().WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithKeyRef("mod2"),
+	)
+
+	task := appClient.GetComputeTask(client.DefaultTaskRef)
+	if task.Status != asset.ComputeTaskStatus_STATUS_DONE {
+		log.WithField("task", task).Fatal("Task should be DONE")
+	}
 }

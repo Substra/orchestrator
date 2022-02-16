@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support composite tasks with two composite parents (#464)
 - Add migration logs (#501)
 - add owner field to failure report asset (#531)
-- Add a new endpoint to register multiple models at the same time (#530)
+- Add a new endpoint to register multiple models at the same time (#530,#541)
 
 ### Changed
 - return `datasamples` list in `RegisterDataSamplesResponse` (#486)

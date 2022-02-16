@@ -61,13 +61,7 @@ func TestGetModel(t *testing.T) {
 func TestRegisterOnNonDoingTask(t *testing.T) {
 	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
-
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(&asset.ComputeTask{
-		Status: asset.ComputeTaskStatus_STATUS_DONE,
-		Worker: "test",
-	}, nil)
 
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -79,7 +73,19 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 		},
 	}
 
-	_, err := service.registerModel(model, "test")
+	_, err := service.registerModel(
+		model,
+		"test",
+		[]*asset.Model{
+			{
+				Key:      "model1",
+				Category: asset.ModelCategory_MODEL_SIMPLE,
+			},
+		},
+		&asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "test",
+		})
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -90,15 +96,8 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 }
 
 func TestRegisterModelWrongPermissions(t *testing.T) {
-	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
-
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(&asset.ComputeTask{
-		Status: asset.ComputeTaskStatus_STATUS_DONE,
-		Worker: "owner",
-	}, nil)
 
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -110,23 +109,27 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 		},
 	}
 
-	_, err := service.registerModel(model, "test") // "test" is not "owner" of the task
+	_, err := service.registerModel(
+		model,
+		"test",
+		[]*asset.Model{},
+		&asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "owner",
+		}) // "test" is not "owner" of the task
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrPermissionDenied, orcError.Kind)
 
-	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
 func TestRegisterTrainModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
@@ -154,11 +157,6 @@ func TestRegisterTrainModel(t *testing.T) {
 			},
 		},
 	}
-
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
-
-	// No models registered
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
 
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -197,14 +195,10 @@ func TestRegisterTrainModel(t *testing.T) {
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
-	// Model registration will initiate a task transition to done
-	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
-
-	_, err := service.registerModel(model, "test")
+	_, err := service.registerModel(model, "test", []*asset.Model{}, task)
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
-	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
@@ -212,11 +206,9 @@ func TestRegisterTrainModel(t *testing.T) {
 
 func TestRegisterAggregateModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
@@ -244,11 +236,6 @@ func TestRegisterAggregateModel(t *testing.T) {
 			},
 		},
 	}
-
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
-
-	// No models registered
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
 
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -282,41 +269,18 @@ func TestRegisterAggregateModel(t *testing.T) {
 
 	es.On("RegisterEvents", mock.AnythingOfType("*asset.Event")).Once().Return(nil)
 
-	// Model registration will initiate a task transition to done
-	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
-
-	_, err := service.registerModel(model, "test")
+	_, err := service.registerModel(model, "test", []*asset.Model{}, task)
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
-	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
 }
 
 func TestRegisterDuplicateModel(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
-	provider.On("GetModelDBAL").Return(dbal)
 	service := NewModelService(provider)
-
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(
-		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_TRAIN,
-			Worker:   "test",
-		},
-		nil,
-	)
-
-	// Already one model, cannot register another one
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{
-		{Category: asset.ModelCategory_MODEL_SIMPLE},
-	}, nil)
 
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -328,24 +292,34 @@ func TestRegisterDuplicateModel(t *testing.T) {
 		},
 	}
 
-	_, err := service.registerModel(model, "test")
+	_, err := service.registerModel(
+		model,
+		"test",
+		[]*asset.Model{
+			{
+				Category: asset.ModelCategory_MODEL_SIMPLE,
+			},
+		},
+		&asset.ComputeTask{
+			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Status:   asset.ComputeTaskStatus_STATUS_DOING,
+			Category: asset.ComputeTaskCategory_TASK_TRAIN,
+			Worker:   "test",
+		},
+	)
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
 
-	cts.AssertExpectations(t)
-	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
 func TestRegisterHeadModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
@@ -383,12 +357,6 @@ func TestRegisterHeadModel(t *testing.T) {
 			},
 		},
 	}
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
-
-	// Trunk already known
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{
-		{Category: asset.ModelCategory_MODEL_SIMPLE},
-	}, nil)
 
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -427,13 +395,17 @@ func TestRegisterHeadModel(t *testing.T) {
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
-	// Model registration will initiate a task transition to done
-	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
-
-	_, err := service.registerModel(model, "test")
+	_, err := service.registerModel(
+		model,
+		"test",
+		[]*asset.Model{
+			{
+				Category: asset.ModelCategory_MODEL_SIMPLE,
+			},
+		},
+		task)
 	assert.NoError(t, err)
 
-	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
@@ -441,24 +413,9 @@ func TestRegisterHeadModel(t *testing.T) {
 }
 
 func TestRegisterWrongModelType(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
-	provider.On("GetModelDBAL").Return(dbal)
 	service := NewModelService(provider)
 
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(
-		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
-			Worker:   "test",
-		},
-		nil,
-	)
-
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
 		Category:       asset.ModelCategory_MODEL_HEAD, // cannot register a HEAD model on composite task
@@ -469,38 +426,27 @@ func TestRegisterWrongModelType(t *testing.T) {
 		},
 	}
 
-	_, err := service.registerModel(model, "test")
+	_, err := service.registerModel(
+		model,
+		"test",
+		[]*asset.Model{},
+		&asset.ComputeTask{
+			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Status:   asset.ComputeTaskStatus_STATUS_DOING,
+			Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
+			Worker:   "test",
+		})
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)
 
-	dbal.AssertExpectations(t)
-	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
 func TestRegisterMultipleHeads(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetComputeTaskService").Return(cts)
-	provider.On("GetModelDBAL").Return(dbal)
 	service := NewModelService(provider)
-
-	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(
-		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
-			Worker:   "test",
-		},
-		nil,
-	)
-
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{
-		{Category: asset.ModelCategory_MODEL_HEAD},
-	}, nil)
 
 	model := &asset.NewModel{
 		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -512,14 +458,24 @@ func TestRegisterMultipleHeads(t *testing.T) {
 		},
 	}
 
-	_, err := service.registerModel(model, "test")
+	_, err := service.registerModel(
+		model,
+		"test",
+		[]*asset.Model{
+			{
+				Category: asset.ModelCategory_MODEL_HEAD,
+			}},
+		&asset.ComputeTask{
+			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Status:   asset.ComputeTaskStatus_STATUS_DOING,
+			Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
+			Worker:   "test",
+		})
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
 
-	cts.AssertExpectations(t)
-	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
@@ -1099,9 +1055,6 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 	dbal.On("AddModel", storedSimple).Once().Return(nil)
 
 	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{
-		storedHead,
-	}, nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_MODEL,

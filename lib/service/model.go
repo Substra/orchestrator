@@ -117,17 +117,12 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 	return inputs, nil
 }
 
-func (s *ModelService) registerModel(newModel *asset.NewModel, requester string) (*asset.Model, error) {
+func (s *ModelService) registerModel(newModel *asset.NewModel, requester string, existingModels []*asset.Model, task *asset.ComputeTask) (*asset.Model, error) {
 	s.GetLogger().WithField("model", newModel).WithField("requester", requester).Debug("Registering new model")
 
 	err := newModel.Validate()
 	if err != nil {
 		return nil, errors.FromValidationError(asset.ModelKind, err)
-	}
-
-	task, err := s.GetComputeTaskService().GetTask(newModel.ComputeTaskKey)
-	if err != nil {
-		return nil, err
 	}
 
 	if task.Worker != requester {
@@ -138,10 +133,6 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string)
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register model for task with status %q", task.Status.String()))
 	}
 
-	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(task.Key)
-	if err != nil {
-		return nil, err
-	}
 	if err = checkDuplicateModel(existingModels, newModel); err != nil {
 		return nil, err
 	}
@@ -180,16 +171,6 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string)
 	if err != nil {
 		return nil, err
 	}
-
-	existingModels = append(existingModels, model)
-	if s.AreAllOutputsRegistered(task, existingModels) {
-		reason := fmt.Sprintf("Last model %s registered by %s", model.Key, requester)
-		err = s.GetComputeTaskService().applyTaskAction(task, transitionDone, reason)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return model, nil
 }
 
@@ -309,7 +290,6 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 // AreAllOutputsRegistered is based on the cardinality of existingModels to return whether all
 // expected outputs are registered or not.
 func (s *ModelService) AreAllOutputsRegistered(task *asset.ComputeTask, existingModels []*asset.Model) bool {
-	// TOOD: unit test
 	count := countModels(existingModels)
 
 	switch task.Category {
@@ -330,12 +310,35 @@ func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([
 
 	registeredModels := make([]*asset.Model, len(models))
 
+	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(models[0].ComputeTaskKey)
+	if err != nil {
+		return nil, err
+	}
+
 	for modelIndex, newModel := range models {
-		model, err := s.registerModel(newModel, owner)
+		computeTask, err := s.GetComputeTaskService().GetTask(models[0].ComputeTaskKey)
+		if err != nil {
+			return nil, err
+		}
+
+		if newModel.ComputeTaskKey != computeTask.Key {
+			return nil, errors.NewBadRequest("All models should be part of the same task")
+		}
+
+		model, err := s.registerModel(newModel, owner, existingModels, computeTask)
 		if err != nil {
 			return nil, err
 		}
 		registeredModels[modelIndex] = model
+
+		existingModels = append(existingModels, model)
+		if s.AreAllOutputsRegistered(computeTask, existingModels) {
+			reason := fmt.Sprintf("Last model %s registered by %s", model.Key, owner)
+			err = s.GetComputeTaskService().applyTaskAction(computeTask, transitionDone, reason)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return registeredModels, nil
