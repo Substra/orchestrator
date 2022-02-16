@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - improve performance of `compute_tasks` SQL indexes by using dedicated columns instead of JSONB (#503)
 - improve performance of compute plan queries by leveraging a specific index for status count (#509)
 - isolation level of read-only queries in standalone mode is now [READ COMMITTED](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED) (#492)
+- improve performance of model SQL indexes by using dedicated columns instead of JSONB (#539)
 
 ### Fixed
 - set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)

@@ -101,7 +101,7 @@ func (d *DBAL) ModelExists(key string) (bool, error) {
 }
 
 func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
-	rows, err := d.tx.Query(d.ctx, `select asset from "models" where asset->>'computeTaskKey' = $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select asset from "models" where compute_task_id = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -125,13 +125,13 @@ func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 }
 
 func (d *DBAL) AddModel(model *asset.Model) error {
-	stmt := `insert into "models" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(d.ctx, stmt, model.GetKey(), model, d.channel)
+	stmt := `insert into "models" ("id", "asset", "channel", "compute_task_id") values ($1, $2, $3, $4)`
+	_, err := d.tx.Exec(d.ctx, stmt, model.GetKey(), model, d.channel, model.ComputeTaskKey)
 	return err
 }
 
 func (d *DBAL) UpdateModel(model *asset.Model) error {
-	stmt := `update "models" set asset = $2 where id = $1 and channel = $3`
-	_, err := d.tx.Exec(d.ctx, stmt, model.GetKey(), model, d.channel)
+	stmt := `update "models" set asset = $2, compute_task_id = $3 where id = $1 and channel = $4`
+	_, err := d.tx.Exec(d.ctx, stmt, model.GetKey(), model, model.ComputeTaskKey, d.channel)
 	return err
 }
