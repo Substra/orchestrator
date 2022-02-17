@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -337,6 +338,9 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 	err = appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTaskRef))
 	if err == nil {
 		log.Fatal("registering a task with disabled input models should fail")
+		if !strings.Contains(err.Error(), "OE0003") {
+			log.WithError(err).Fatal("Unexpected error code")
+		}
 	}
 	log.WithError(err).Debug("Failed to register task, as expected")
 }
@@ -594,6 +598,9 @@ func testRegisterMultiplePerformancesForSameMetric(conn *grpc.ClientConn) {
 	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
 	if err == nil {
 		log.Fatal("RegisterPerformance should have failed.")
+		if !strings.Contains(err.Error(), "OE0003") {
+			log.WithError(err).Fatal("Unexpected error code")
+		}
 	}
 	task = appClient.GetComputeTask("testTask")
 	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
@@ -1161,6 +1168,9 @@ func testRegisterTwoSimpleModelsForTrainTask(conn *grpc.ClientConn) {
 
 	if err == nil {
 		log.Fatal("Model registration should have failed")
+		if !strings.Contains(err.Error(), "OE0003") {
+			log.WithError(err).Fatal("Unexpected error code")
+		}
 	}
 	log.WithError(err).Debug("Failed to register models, as expected")
 }
