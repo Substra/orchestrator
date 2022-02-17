@@ -64,10 +64,11 @@ If you are interested in adding a new asset there is a [step by step documentati
 A good entry point to get an overview of the codebase is to launch `godoc -http=:6060` and [open module documentation](http://localhost:6060/pkg/github.com/owkin/orchestrator/).
 
 
-If you want to run the orchestrator with Skaffold you will need to add the jetstack helm repo:
+If you want to run the orchestrator with Skaffold you will need to add the jetstack and bitnami helm repo:
 
 ```sh
 helm repo add jetstack https://charts.jetstack.io
+helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
 ### Standalone mode
