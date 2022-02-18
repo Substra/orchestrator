@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2022-02-18
+
 ### Added
 - add `Start` and `End` timestamp filters for `EventQueryFilter` (#482)
 - support composite tasks with two composite parents (#464)
