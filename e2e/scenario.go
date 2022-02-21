@@ -36,6 +36,10 @@ var testScenarios = map[string]scenario{
 		testRegisterAllModelsForCompositeTask,
 		[]string{"short", "model", "composite"},
 	},
+	"CancelComputePlan": {
+		testCancelComputePlan,
+		[]string{"short", "plan"},
+	},
 	"CascadeCancel": {
 		testCascadeCancel,
 		[]string{"short", "task"},
@@ -182,6 +186,40 @@ func testRegisterModel(conn *grpc.ClientConn) {
 	if len(taskEvents.Events) != 3 {
 		// 3 events: creation, start, done
 		log.WithField("events", taskEvents.Events).Fatal("Unexpected number of events")
+	}
+}
+
+func testCancelComputePlan(conn *grpc.ClientConn) {
+	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
+	if err != nil {
+		log.WithError(err).Fatal("could not create TestClient")
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("compAlgo").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("aggAlgo").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp1").WithAlgoRef("compAlgo"))
+	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp2").WithAlgoRef("compAlgo"))
+
+	appClient.RegisterTasks(client.DefaultAggregateTaskOptions().WithKeyRef("agg1").WithAlgoRef("aggAlgo").WithParentsRef("cmp1", "cmp2"))
+
+	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp3").WithAlgoRef("compAlgo").WithParentsRef("cmp1", "agg1"))
+	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp4").WithAlgoRef("compAlgo").WithParentsRef("cmp2", "agg1"))
+
+	// We start processsing the compute plan
+	appClient.StartTask("cmp1")
+	appClient.StartTask("cmp2")
+
+	appClient.CancelComputePlan(client.DefaultPlanRef)
+
+	for _, tasKey := range []string{"cmp1", "cmp2", "cmp3", "cmp4", "agg1"} {
+		task := appClient.GetComputeTask(tasKey)
+		if task.Status != asset.ComputeTaskStatus_STATUS_CANCELED {
+			log.WithField("status", task.Status).WithField("compute task key", tasKey).Fatal("compute task has not the CANCELED status")
+		}
 	}
 }
 

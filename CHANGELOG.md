@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Cancel all tasks when cancelling a compute plan (#546)
+
 ## [0.6.0] - 2022-02-18
 
 ### Added

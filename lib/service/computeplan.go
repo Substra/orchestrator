@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/looplab/fsm"
@@ -121,9 +122,10 @@ func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
 
 	for _, task := range tasks {
 		err := s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_CANCELED, fmt.Sprintf("compute plan %s is cancelled", plan.Key), plan.Owner)
-		if _, isInvalidEvent := err.(fsm.InvalidEventError); isInvalidEvent {
+		expectedError := &fsm.InvalidEventError{}
+		if errors.As(err, &expectedError) {
 			s.GetLogger().WithError(err).WithField("taskKey", task.Key).WithField("taskStatus", task.Status).Debug("skipping task cancellation: expected error")
-		} else {
+		} else if err != nil {
 			return err
 		}
 	}

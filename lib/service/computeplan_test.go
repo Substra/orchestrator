@@ -92,8 +92,8 @@ func TestCancelPlan(t *testing.T) {
 		Owner: "owner",
 	}
 
-	task1 := &asset.ComputeTask{Key: "uuid1"}
-	task2 := &asset.ComputeTask{Key: "uuid2"}
+	task1 := &asset.ComputeTask{Key: "uuid1", Status: asset.ComputeTaskStatus_STATUS_DOING}
+	task2 := &asset.ComputeTask{Key: "uuid2", Status: asset.ComputeTaskStatus_STATUS_TODO}
 
 	tasks := []*asset.ComputeTask{task1, task2}
 
@@ -118,6 +118,7 @@ func TestCancelPlan(t *testing.T) {
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
+	cts.AssertExpectations(t)
 }
 
 func TestComputePlanAllowIntermediaryModelDeletion(t *testing.T) {
