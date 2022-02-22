@@ -9,4 +9,4 @@ $(imgs): %.png: %.plantuml
 	plantuml -png $<
 
 $(mermaids): %.svg: %.mmd
-	mmdc -i $< -o $@ -b #f7f7f7
+	npx -p @mermaid-js/mermaid-cli mmdc -i $< -o $@ -b #f7f7f7
