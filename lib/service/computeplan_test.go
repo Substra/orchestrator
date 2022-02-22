@@ -93,7 +93,7 @@ func TestCancelPlan(t *testing.T) {
 	}
 
 	task1 := &asset.ComputeTask{Key: "uuid1", Status: asset.ComputeTaskStatus_STATUS_DOING}
-	task2 := &asset.ComputeTask{Key: "uuid2", Status: asset.ComputeTaskStatus_STATUS_TODO}
+	task2 := &asset.ComputeTask{Key: "uuid2", Status: asset.ComputeTaskStatus_STATUS_DONE}
 
 	tasks := []*asset.ComputeTask{task1, task2}
 
@@ -112,7 +112,7 @@ func TestCancelPlan(t *testing.T) {
 		asset.ComputeTaskAction_TASK_ACTION_CANCELED,
 		"compute plan b9b3ecda-0a90-41da-a2e3-945eeafb06d8 is cancelled",
 		plan.Owner,
-	).Once().Return(&fsm.InvalidEventError{})
+	).Once().Return(fsm.InvalidEventError{})
 
 	err := service.cancelPlan(plan)
 	assert.NoError(t, err)

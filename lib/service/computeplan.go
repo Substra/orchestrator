@@ -122,8 +122,7 @@ func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
 
 	for _, task := range tasks {
 		err := s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_CANCELED, fmt.Sprintf("compute plan %s is cancelled", plan.Key), plan.Owner)
-		expectedError := &fsm.InvalidEventError{}
-		if errors.As(err, &expectedError) {
+		if errors.As(err, &fsm.InvalidEventError{}) {
 			s.GetLogger().WithError(err).WithField("taskKey", task.Key).WithField("taskStatus", task.Status).Debug("skipping task cancellation: expected error")
 		} else if err != nil {
 			return err

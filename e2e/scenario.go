@@ -213,13 +213,20 @@ func testCancelComputePlan(conn *grpc.ClientConn) {
 	appClient.StartTask("cmp1")
 	appClient.StartTask("cmp2")
 
+	appClient.RegisterModels(client.DefaultModelOptions().WithTaskRef("cmp1").WithKeyRef("cmp1h").WithCategory(asset.ModelCategory_MODEL_HEAD), client.DefaultModelOptions().WithTaskRef("cmp1").WithKeyRef("cmp1s").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+
 	appClient.CancelComputePlan(client.DefaultPlanRef)
 
-	for _, tasKey := range []string{"cmp1", "cmp2", "cmp3", "cmp4", "agg1"} {
+	for _, tasKey := range []string{"cmp2", "cmp3", "cmp4", "agg1"} {
 		task := appClient.GetComputeTask(tasKey)
 		if task.Status != asset.ComputeTaskStatus_STATUS_CANCELED {
 			log.WithField("status", task.Status).WithField("compute task key", tasKey).Fatal("compute task has not the CANCELED status")
 		}
+	}
+
+	cmp1 := appClient.GetComputeTask("cmp1")
+	if cmp1.Status != asset.ComputeTaskStatus_STATUS_DONE {
+		log.WithField("status", cmp1.Status).Fatal("compute task has not the DONE status")
 	}
 }
 
