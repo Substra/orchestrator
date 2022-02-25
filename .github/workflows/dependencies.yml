@@ -1,0 +1,36 @@
+name: Dependencies
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  updates:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dockerfile: 
+          - orchestrator-server
+          - orchestrator-chaincode
+          - orchestrator-forwarder
+          - orchestrator-rabbitmq-operator
+          - orchestrator-chaincode-init
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: owkin/docker-dependency-updater@v1
+        with:
+          dockerfile: ./docker/${{matrix.dockerfile }}/Dockerfile
+          dependencies: ./docker/${{matrix.dockerfile}}/dependencies.json
+          apply: true
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: "chore(deps): update dependencies ${{ matrix.dockerfile }}"
+          branch: chore/update-dependencies-${{ matrix.dockerfile }}
+          title: "chore(deps): update dependencies ${{ matrix.dockerfile }}"
+          body: Updated dependencies.json
+          labels: dependencies
+          delete-branch: true

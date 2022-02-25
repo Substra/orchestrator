@@ -1,7 +1,7 @@
 /bin
 .git
 skaffold.yaml
-/docker
+/docker/*/Dockerfile
 /charts
 /examples
 /docs

@@ -1,6 +1,13 @@
 FROM alpine:3.15
 
-RUN apk add --no-cache curl=7.80.0-r0 bash=5.1.16-r0
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+
+COPY ./docker/orchestrator-chaincode-init/dependencies.json /tmp/dependencies.json
+
+# hadolint ignore=DL3018
+RUN apk update && apk add --no-cache jq \
+	&& jq -r '.[] | "\(.name)=\(.version)"' /tmp/dependencies.json | xargs apk add --no-cache \
+	&& rm /tmp/dependencies.json
 
 COPY ./scripts/create-indexes.sh /usr/bin/create-indexes
 

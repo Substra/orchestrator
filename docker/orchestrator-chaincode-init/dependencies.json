@@ -1,0 +1,11 @@
+[
+	{
+		"name":"curl",
+		"version":"7.80.0-r0"
+	},
+	{
+		"name": "bash",
+		"version":"5.1.16-r0"
+	}
+]
+		
