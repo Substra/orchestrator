@@ -4,10 +4,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	// #nosec: profiling tool is exposed on a separate port
 	_ "net/http/pprof"
@@ -18,6 +23,7 @@ import (
 	"github.com/owkin/orchestrator/server/standalone"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -54,6 +60,8 @@ func getStandaloneServer(params common.AppParameters, healthcheck *health.Server
 }
 
 func main() {
+	var app common.Runnable
+	var httpServer *http.Server
 	var standaloneMode = false
 
 	utils.InitLogging()
@@ -88,15 +96,21 @@ func main() {
 		RetryBudget: retryBudget,
 	}
 
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, syscall.SIGTERM)
+	defer signal.Stop(interrupt)
+
 	healthcheck := health.NewServer()
 
-	var app common.Runnable
 	if standaloneMode {
 		app = getStandaloneServer(params, healthcheck)
 	} else {
 		app = getDistributedServer(params)
 	}
-	defer app.Stop()
 
 	// Register reflection service
 	reflection.Register(app.GetGrpcServer())
@@ -108,21 +122,58 @@ func main() {
 		http.Handle("/metrics", promhttp.Handler())
 	}
 
-	// Expose HTTP endpoints
-	go func() {
-		err := http.ListenAndServe(fmt.Sprintf(":%s", httpPort), nil)
-		if err != nil {
-			log.WithError(err).WithField("port", httpPort).Error("failed to serve HTTP endpoints")
-		}
-	}()
-
-	listen, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
-	if err != nil {
-		log.WithError(err).WithField("port", grpcPort).Fatal("failed to listen")
+	httpServer = &http.Server{
+		Addr: fmt.Sprintf(":%s", httpPort),
 	}
 
-	log.WithField("address", listen.Addr().String()).Info("gRPC server listening")
-	if err := app.GetGrpcServer().Serve(listen); err != nil {
-		log.WithError(err).WithField("port", grpcPort).Fatal("failed to serve gRPC endpoints")
+	g, ctx := errgroup.WithContext(ctx)
+
+	// Expose HTTP endpoints
+	g.Go(func() error {
+		err := httpServer.ListenAndServe()
+		log.WithField("port", httpPort).Info("HTTP server serving")
+		if err != http.ErrServerClosed {
+			log.WithError(err).WithField("port", httpPort).Error("failed to serve HTTP endpoints")
+			return err
+		}
+		return nil
+	})
+
+	// Expose GRPC endpoints
+	g.Go(func() error {
+		listen, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
+		if err != nil {
+			log.WithError(err).WithField("port", grpcPort).Fatal("failed to listen")
+		}
+		log.WithField("address", listen.Addr().String()).Info("gRPC server listening")
+		return app.GetGrpcServer().Serve(listen)
+	})
+
+	select {
+	case <-interrupt:
+		log.Info("Received interruption signal")
+		break
+	case <-ctx.Done():
+		break
+	}
+
+	log.Warn("Server shutting down")
+
+	healthcheck.Shutdown()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer shutdownCancel()
+
+	err := httpServer.Shutdown(shutdownCtx)
+	if err != nil {
+		log.WithError(err).Warn("error during graceful shutdown of the HTTP server")
+	}
+
+	app.GetGrpcServer().GracefulStop()
+	app.Stop()
+
+	err = g.Wait()
+	if err != nil {
+		log.WithError(err).Fatal("Server returned an error")
 	}
 }

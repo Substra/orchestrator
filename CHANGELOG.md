@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- add support for graceful shutdown on `SIGTERM` signal (#557)
+
 ### Fixed
 - Cancel all tasks when cancelling a compute plan (#546)
 
