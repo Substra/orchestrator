@@ -166,3 +166,18 @@ func TestQueryPlans(t *testing.T) {
 
 	assert.Len(t, plans, 2)
 }
+
+func TestComputePlanExists(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	provider := newMockedProvider()
+
+	provider.On("GetComputePlanDBAL").Return(dbal)
+
+	service := NewComputePlanService(provider)
+
+	dbal.On("ComputePlanExists", "uuid").Once().Return(false, nil)
+
+	exist, err := service.computePlanExists("uuid")
+	assert.NoError(t, err)
+	assert.False(t, exist)
+}

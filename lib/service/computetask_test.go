@@ -73,13 +73,40 @@ func TestQueryTasks(t *testing.T) {
 	assert.Len(t, tasks, 2)
 }
 
-func TestRegisterTaskConflict(t *testing.T) {
+func TestRegisterMissingComputePlan(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
+	cps := new(MockComputePlanAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
+	provider.On("GetComputePlanService").Return(cps)
 
 	service := NewComputeTaskService(provider)
+
+	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
+	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(false, nil)
+
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrNotFound, orcError.Kind)
+
+	dbal.AssertExpectations(t)
+	cps.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
+func TestRegisterTaskConflict(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	cps := new(MockComputePlanAPI)
+	provider := newMockedProvider()
+
+	provider.On("GetComputeTaskDBAL").Return(dbal)
+	provider.On("GetComputePlanService").Return(cps)
+
+	service := NewComputeTaskService(provider)
+
+	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(true, nil)
 
 	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(true, nil)
@@ -98,12 +125,14 @@ func TestRegisterTrainTask(t *testing.T) {
 	es := new(MockEventAPI)
 	provider := newMockedProvider()
 
+	cps := new(MockComputePlanAPI)
 	dms := new(MockDataManagerAPI)
 	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
 
+	provider.On("GetComputePlanService").Return(cps)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
@@ -112,6 +141,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
 
+	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(true, nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewComputeTaskService(provider)
@@ -198,6 +228,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "testOwner")
 	assert.NoError(t, err)
 
+	cps.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
@@ -249,12 +280,14 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	es := new(MockEventAPI)
 	provider := newMockedProvider()
 
+	cps := new(MockComputePlanAPI)
 	dms := new(MockDataManagerAPI)
 	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
 
+	provider.On("GetComputePlanService").Return(cps)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
@@ -263,6 +296,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
 
+	cps.On("computePlanExists", newTask.ComputePlanKey).Once().Return(true, nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewComputeTaskService(provider)
@@ -368,10 +402,12 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	ps.AssertExpectations(t)
 	dss.AssertExpectations(t)
 	dms.AssertExpectations(t)
+	cps.AssertExpectations(t)
 }
 
 func TestRegisterFailedTask(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
+	cps := new(MockComputePlanAPI)
 	provider := newMockedProvider()
 
 	newTask := &asset.NewComputeTask{
@@ -389,6 +425,9 @@ func TestRegisterFailedTask(t *testing.T) {
 	}
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
+	provider.On("GetComputePlanService").Return(cps)
+
+	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(true, nil)
 
 	service := NewComputeTaskService(provider)
 
@@ -417,12 +456,14 @@ func TestRegisterFailedTask(t *testing.T) {
 	assert.Equal(t, orcerrors.ErrIncompatibleTaskStatus, orcError.Kind)
 
 	dbal.AssertExpectations(t)
+	cps.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
 func TestRegisterDeletedModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	ms := new(MockModelAPI)
+	cps := new(MockComputePlanAPI)
 	provider := newMockedProvider()
 
 	newTask := &asset.NewComputeTask{
@@ -441,8 +482,11 @@ func TestRegisterDeletedModel(t *testing.T) {
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetModelService").Return(ms)
+	provider.On("GetComputePlanService").Return(cps)
 
 	service := NewComputeTaskService(provider)
+
+	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(true, nil)
 
 	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 	// Checking existing task
@@ -475,6 +519,7 @@ func TestRegisterDeletedModel(t *testing.T) {
 	assert.Equal(t, orcerrors.ErrInvalidAsset, orcError.Kind)
 
 	dbal.AssertExpectations(t)
+	cps.AssertExpectations(t)
 	ms.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
@@ -1421,4 +1466,27 @@ func TestGetRegisteredTask(t *testing.T) {
 	assert.Equal(t, tasks[3].Key, "uuid4")
 
 	dbal.AssertExpectations(t)
+}
+
+func TestGetCachedCPExistence(t *testing.T) {
+	cps := new(MockComputePlanAPI)
+	provider := newMockedProvider()
+
+	provider.On("GetComputePlanService").Return(cps)
+
+	cps.On("computePlanExists", "uuid").Once().Return(true, nil)
+
+	service := NewComputeTaskService(provider)
+
+	exist, err := service.getCachedCPExistence("uuid")
+	assert.NoError(t, err)
+	assert.True(t, exist)
+
+	// Second call, notice that cps only expects 1 call
+	exist, err = service.getCachedCPExistence("uuid")
+	assert.NoError(t, err)
+	assert.True(t, exist)
+
+	cps.AssertExpectations(t)
+	provider.AssertExpectations(t)
 }

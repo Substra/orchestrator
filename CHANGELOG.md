@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Cancel all tasks when cancelling a compute plan (#546)
+- Check for compute plan existence on task registration (#554)
 
 ## [0.6.0] - 2022-02-18
 

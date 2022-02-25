@@ -19,6 +19,7 @@ type ComputePlanAPI interface {
 	QueryPlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error)
 	ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error
 	canDeleteModels(key string) (bool, error)
+	computePlanExists(key string) (bool, error)
 }
 
 // ComputePlanServiceProvider defines an object able to provide a ComputePlanAPI instance
@@ -140,4 +141,8 @@ func (s *ComputePlanService) canDeleteModels(key string) (bool, error) {
 	}
 
 	return plan.DeleteIntermediaryModels, nil
+}
+
+func (s *ComputePlanService) computePlanExists(key string) (bool, error) {
+	return s.GetComputePlanDBAL().ComputePlanExists(key)
 }

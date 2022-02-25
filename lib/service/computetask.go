@@ -49,9 +49,11 @@ type ComputeTaskDependencyProvider interface {
 // ComputeTaskService is the compute task manipulation entry point
 type ComputeTaskService struct {
 	ComputeTaskDependencyProvider
-	// Keep a local cache of algos and plans to be used in batch import
+	// Keep a local cache of algos, plans' existence and tasks to be used in batch import
 	algoStore map[string]*asset.Algo
 	taskStore map[string]*asset.ComputeTask
+	// TODO when checking for plan ownership we will probably cache the whole plan
+	planExist map[string]bool
 }
 
 // NewComputeTaskService creates a new service
@@ -60,6 +62,7 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 		ComputeTaskDependencyProvider: provider,
 		algoStore:                     make(map[string]*asset.Algo),
 		taskStore:                     make(map[string]*asset.ComputeTask),
+		planExist:                     make(map[string]bool),
 	}
 }
 
@@ -200,6 +203,14 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	err := input.Validate()
 	if err != nil {
 		return nil, orcerrors.FromValidationError(asset.ComputeTaskKind, err)
+	}
+
+	exist, err := s.getCachedCPExistence(input.ComputePlanKey)
+	if err != nil {
+		return nil, err
+	}
+	if !exist {
+		return nil, orcerrors.NewNotFound(asset.ComputePlanKind, input.ComputePlanKey)
 	}
 
 	taskExist, err := s.GetComputeTaskDBAL().ComputeTaskExists(input.Key)
@@ -761,6 +772,20 @@ func (s *ComputeTaskService) allModelsAvailable(parents []*asset.ComputeTask) er
 	}
 
 	return nil
+}
+
+// getCachedCPExistence returns true if a CP with given key exists.
+// It cached the result to avoid multiple DBAL queries on batch registration.
+func (s *ComputeTaskService) getCachedCPExistence(key string) (bool, error) {
+	if _, ok := s.planExist[key]; !ok {
+		exist, err := s.GetComputePlanService().computePlanExists(key)
+		if err != nil {
+			return false, err
+		}
+		s.planExist[key] = exist
+	}
+	return s.planExist[key], nil
+
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory
