@@ -102,4 +102,4 @@ require (
 )
 
 // Temporary fork pending https://github.com/hyperledger/fabric-sdk-go/pull/195
-replace github.com/hyperledger/fabric-sdk-go => github.com/mblottiere/fabric-sdk-go v1.0.1-0.20211206140729-01275ccd8f71
+replace github.com/hyperledger/fabric-sdk-go => github.com/owkin/fabric-sdk-go v1.0.1-0.20211206140729-01275ccd8f71
