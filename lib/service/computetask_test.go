@@ -84,12 +84,35 @@ func TestRegisterMissingComputePlan(t *testing.T) {
 	service := NewComputeTaskService(provider)
 
 	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
-	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(false, nil)
+	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(nil, orcerrors.NewNotFound("compute plan", newTrainTask.ComputePlanKey))
 
 	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrNotFound, orcError.Kind)
+
+	dbal.AssertExpectations(t)
+	cps.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
+func TestRegisterTasksComputePlanOwnedBySomeoneElse(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	cps := new(MockComputePlanAPI)
+	provider := newMockedProvider()
+
+	provider.On("GetComputeTaskDBAL").Return(dbal)
+	provider.On("GetComputePlanService").Return(cps)
+
+	service := NewComputeTaskService(provider)
+
+	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
+	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "not test"}, nil)
+
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrPermissionDenied, orcError.Kind)
 
 	dbal.AssertExpectations(t)
 	cps.AssertExpectations(t)
@@ -106,7 +129,7 @@ func TestRegisterTaskConflict(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(true, nil)
+	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "test"}, nil)
 
 	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(true, nil)
@@ -141,7 +164,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
 
-	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(true, nil)
+	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.Key, Owner: "testOwner"}, nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewComputeTaskService(provider)
@@ -296,7 +319,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
 
-	cps.On("computePlanExists", newTask.ComputePlanKey).Once().Return(true, nil)
+	cps.On("GetPlan", newTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTask.ComputePlanKey, Owner: "testOwner"}, nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	service := NewComputeTaskService(provider)
@@ -427,7 +450,7 @@ func TestRegisterFailedTask(t *testing.T) {
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetComputePlanService").Return(cps)
 
-	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(true, nil)
+	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "testOwner"}, nil)
 
 	service := NewComputeTaskService(provider)
 
@@ -486,7 +509,7 @@ func TestRegisterDeletedModel(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	cps.On("computePlanExists", newTrainTask.ComputePlanKey).Once().Return(true, nil)
+	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "testOwner"}, nil)
 
 	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 	// Checking existing task
@@ -1468,25 +1491,26 @@ func TestGetRegisteredTask(t *testing.T) {
 	dbal.AssertExpectations(t)
 }
 
-func TestGetCachedCPExistence(t *testing.T) {
-	cps := new(MockComputePlanAPI)
+func TestGetCachedPlan(t *testing.T) {
 	provider := newMockedProvider()
-
+	cps := new(MockComputePlanAPI)
 	provider.On("GetComputePlanService").Return(cps)
 
-	cps.On("computePlanExists", "uuid").Once().Return(true, nil)
+	computePlan := &asset.ComputePlan{
+		Key: "uuid1",
+	}
+
+	cps.On("GetPlan", "uuid1").Return(computePlan, nil).Once()
 
 	service := NewComputeTaskService(provider)
 
-	exist, err := service.getCachedCPExistence("uuid")
+	cp, err := service.getCachedCP("uuid1")
 	assert.NoError(t, err)
-	assert.True(t, exist)
+	assert.Equal(t, computePlan.Key, cp.Key)
 
-	// Second call, notice that cps only expects 1 call
-	exist, err = service.getCachedCPExistence("uuid")
+	cp, err = service.getCachedCP("uuid1")
 	assert.NoError(t, err)
-	assert.True(t, exist)
+	assert.Equal(t, computePlan.Key, cp.Key)
 
 	cps.AssertExpectations(t)
-	provider.AssertExpectations(t)
 }

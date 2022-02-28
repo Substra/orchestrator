@@ -49,11 +49,10 @@ type ComputeTaskDependencyProvider interface {
 // ComputeTaskService is the compute task manipulation entry point
 type ComputeTaskService struct {
 	ComputeTaskDependencyProvider
-	// Keep a local cache of algos, plans' existence and tasks to be used in batch import
+	// Keep a local cache of algos, plans and tasks to be used in batch import
 	algoStore map[string]*asset.Algo
 	taskStore map[string]*asset.ComputeTask
-	// TODO when checking for plan ownership we will probably cache the whole plan
-	planExist map[string]bool
+	planStore map[string]*asset.ComputePlan
 }
 
 // NewComputeTaskService creates a new service
@@ -62,7 +61,7 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 		ComputeTaskDependencyProvider: provider,
 		algoStore:                     make(map[string]*asset.Algo),
 		taskStore:                     make(map[string]*asset.ComputeTask),
-		planExist:                     make(map[string]bool),
+		planStore:                     make(map[string]*asset.ComputePlan),
 	}
 }
 
@@ -205,12 +204,13 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, orcerrors.FromValidationError(asset.ComputeTaskKind, err)
 	}
 
-	exist, err := s.getCachedCPExistence(input.ComputePlanKey)
+	computePlan, err := s.getCachedCP(input.ComputePlanKey)
 	if err != nil {
 		return nil, err
 	}
-	if !exist {
-		return nil, orcerrors.NewNotFound(asset.ComputePlanKind, input.ComputePlanKey)
+
+	if computePlan.Owner != owner {
+		return nil, orcerrors.NewPermissionDenied("Cannot register tasks to a compute plan you don't own")
 	}
 
 	taskExist, err := s.GetComputeTaskDBAL().ComputeTaskExists(input.Key)
@@ -774,18 +774,17 @@ func (s *ComputeTaskService) allModelsAvailable(parents []*asset.ComputeTask) er
 	return nil
 }
 
-// getCachedCPExistence returns true if a CP with given key exists.
-// It cached the result to avoid multiple DBAL queries on batch registration.
-func (s *ComputeTaskService) getCachedCPExistence(key string) (bool, error) {
-	if _, ok := s.planExist[key]; !ok {
-		exist, err := s.GetComputePlanService().computePlanExists(key)
+// getCachedCP returns a cached version of a compute plan
+// we cache the result to avoid multiple dbal queries on batch registration
+func (s *ComputeTaskService) getCachedCP(key string) (*asset.ComputePlan, error) {
+	if _, ok := s.planStore[key]; !ok {
+		plan, err := s.GetComputePlanService().GetPlan(key)
 		if err != nil {
-			return false, err
+			return nil, err
 		}
-		s.planExist[key] = exist
+		s.planStore[key] = plan
 	}
-	return s.planExist[key], nil
-
+	return s.planStore[key], nil
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory
