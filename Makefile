@@ -98,6 +98,10 @@ clean-migrations-binpack:  ## Remove generated migration file
 clean-generated:  ## Remove codegen tool
 	-rm $(lib_generated)
 
+.PHONY: docs-charts
+docs-charts: ## Generate Helm chart documentation
+	$(MAKE) -C charts doc
+
 ### Makefile
 
 .PHONY: help
