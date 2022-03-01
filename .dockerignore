@@ -12,4 +12,3 @@ skaffold.yaml
 /lib/persistence/mocks
 /chaincode/mocks
 /forwarder/event/mock_*.go
-/server/standalone/migration/bindata.go

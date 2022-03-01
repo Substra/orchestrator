@@ -10,7 +10,6 @@ VERSION = dirty-$(shell git rev-parse --short HEAD)
 protos = $(PROJECT_ROOT)/lib/asset
 go_src = $(shell find . -type f -name '*.go')
 sql_migrations = $(wildcard $(MIGRATIONS_DIR)/*.sql)
-migrations_binpack = $(MIGRATIONS_DIR)/bindata.go
 lib_generated = $(PROJECT_ROOT)/lib/asset/json.go
 
 protobufs = $(wildcard $(protos)/*.proto)
@@ -35,7 +34,7 @@ codegen: $(pbgo) $(migrations_binpack) $(lib_generated)  ## Build codegen tool
 lint: codegen mocks  ## Analyze the codebase
 	golangci-lint run
 
-$(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(migrations_binpack) $(lib_generated)
+$(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 	go build -o $(ORCHESTRATOR_BIN) -ldflags="-X 'github.com/owkin/orchestrator/server/common.Version=$(VERSION)'" ./server
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
@@ -61,9 +60,6 @@ $(pbgo): %.pb.go: %.proto
 	--go_out=$(protos) \
 	$<
 
-$(migrations_binpack): $(sql_migrations)
-	go-bindata -pkg migration -prefix $(MIGRATIONS_DIR) -o $(migrations_binpack) $(MIGRATIONS_DIR)
-
 $(lib_generated): $(LIBCODEGEN_BIN) $(pbgo)
 	$(LIBCODEGEN_BIN) -path $(protos) > $(lib_generated)
 
@@ -75,7 +71,7 @@ mocks:  ## Generate mocks for public interfaces
 	mockery --dir $(PROJECT_ROOT) --all --inpackage --quiet
 
 .PHONY: clean
-clean: clean-protos clean-migrations-binpack clean-generated clean-mocks  ## Remove all generated code
+clean: clean-protos clean-generated clean-mocks  ## Remove all generated code
 	rm -rf $(OUTPUT_DIR)
 
 .PHONY: test
@@ -89,10 +85,6 @@ clean-mocks:  ## Remove generated mocks
 .PHONY: clean-protos
 clean-protos:  ## Remove go code generated from proto files
 	-rm $(wildcard $(protos)/*.pb.go)
-
-.PHONY: clean-migrations-binpack
-clean-migrations-binpack:  ## Remove generated migration file
-	-rm  $(migrations_binpack)
 
 .PHONY: clean-generated
 clean-generated:  ## Remove codegen tool

@@ -18,8 +18,7 @@ RUN wget -q https://github.com/grpc-ecosystem/grpc-health-probe/releases/downloa
 
 # Install protobuf codegen dependencies
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 && \
-    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0 && \
-    go install github.com/go-bindata/go-bindata/...@v3.1.2
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
 
 WORKDIR ${SRC_DIR}
 

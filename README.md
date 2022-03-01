@@ -22,7 +22,6 @@ Make sure you have these requirements fulfilled before trying to build the orche
 - [go](https://golang.org/): v1.17
 - [protoc](https://github.com/protocolbuffers/protobuf): v3.18.0
 - [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.27.1
-- [go-bindata](https://github.com/go-bindata/go-bindata): v3.1.2
 - [golang-migrate](https://github.com/golang-migrate/migrate): optional, used to create migration files
 - [skaffold](https://skaffold.dev/): used to run the orchestrator locally
 - [mockery](https://github.com/vektra/mockery#installation): used to generate mocks

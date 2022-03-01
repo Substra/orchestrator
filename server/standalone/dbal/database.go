@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/golang-migrate/migrate/v4"
-	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/owkin/orchestrator/server/common/logger"
@@ -100,18 +100,13 @@ func InitDatabase(databaseURL string) (*Database, error) {
 }
 
 func executeMigrations(databaseURL string) error {
-	s := bindata.Resource(migration.AssetNames(),
-		func(name string) ([]byte, error) {
-			return migration.Asset(name)
-		})
-
-	d, err := bindata.WithInstance(s)
+	d, err := iofs.New(migration.EmbeddedMigrations, ".")
 	if err != nil {
 		return err
 	}
 	// Prevent running migrations twice
 	url := databaseURL + "&search_path=public"
-	m, err := migrate.NewWithSourceInstance("go-bindata", d, url)
+	m, err := migrate.NewWithSourceInstance("iofs", d, url)
 	if err != nil {
 		return err
 	}

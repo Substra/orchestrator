@@ -6,6 +6,5 @@
 lib/asset/json.go
 lib/asset/*.pb.go
 mock_*.go
-server/standalone/migration/bindata.go
 examples/tools/client-org-1.crt
 examples/tools/client-org-1.key
