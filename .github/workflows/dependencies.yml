@@ -34,3 +34,4 @@ jobs:
           body: Updated dependencies.json
           labels: dependencies
           delete-branch: true
+          token: ${{ secrets.PAT_DOCKER_DEP_UPDATER }}
