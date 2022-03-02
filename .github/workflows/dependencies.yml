@@ -17,7 +17,7 @@ jobs:
           - orchestrator-rabbitmq-operator
           - orchestrator-chaincode-init
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: owkin/docker-dependency-updater@v1
         with:
