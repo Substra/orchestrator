@@ -203,3 +203,16 @@ Usage:
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
 {{- end -}}
+
+
+{{/*
+Return the proper image name
+{{ include "common.images.name" .Values.path.to.the.image }}
+*/}}
+{{- define "common.images.name" -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository .tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository .tag -}}
+{{- end -}}
+{{- end -}}

@@ -28,6 +28,7 @@ orchestrator:
           - orchestrator-tls-cacert
   txRetryBudget: 90s
   fabricGatewayTimeout: 40s
+  verifyClientMSPID: true
 
 metrics:
   enabled: true

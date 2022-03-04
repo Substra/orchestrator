@@ -19,14 +19,15 @@ deploy:
         createNamespace: true
         version: v1.6.0
       - name: owkin-orchestrator-org-1
+        imageStrategy:
+          helm:
+            explicitRegistry: true
         chartPath: charts/orchestrator
         namespace: org-1
         createNamespace: true
         artifactOverrides:
           orchestrator.image: substrafoundation/orchestrator-server
           rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
-        imageStrategy:
-          helm: {}
         valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
     hooks:
       before:
@@ -72,7 +73,8 @@ profiles:
         forwarder.image: substrafoundation/orchestrator-forwarder
         rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
       imageStrategy:
-        helm: {}
+        helm:
+          explicitRegistry: true
       valuesFiles: [ examples/values/orchestrator-org-2-distributed.yaml ]
       skipBuildDependencies: true # deps already built by other release (org-1)
 - name: nodeps

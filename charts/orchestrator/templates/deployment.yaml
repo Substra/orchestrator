@@ -38,7 +38,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.orchestrator.image.repository }}:{{ .Values.orchestrator.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "common.images.name" .Values.orchestrator.image }}
           imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy }}
           ports:
             - name: grpc
@@ -93,6 +93,17 @@ spec:
            - name: METRICS_ENABLED
              value: "true"
            {{- end }}
+           - name: ORCHESTRATOR_AMQP_PASSWORD
+             valueFrom:
+               secretKeyRef:
+                 {{- if not .Values.rabbitmq.auth.existingPasswordSecret }}
+                 name: {{ template "rabbitmq.serviceName" . }}
+                 {{- else }}
+                 name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
+                 {{- end}}
+                 key: rabbitmq-password
+           - name: ORCHESTRATOR_AMQP_DSN
+             value: amqp://{{.Values.rabbitmq.auth.username}}:$(ORCHESTRATOR_AMQP_PASSWORD)@{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
           volumeMounts:
             - name: orchestrator-config
               mountPath: /var/orchestrator/config.yaml

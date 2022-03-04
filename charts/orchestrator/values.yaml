@@ -155,8 +155,6 @@ postgresql:
 ## @skip rabbitmq
 ##
 rabbitmq:
-  image:
-    pullPolicy: IfNotPresent
   enabled: true
   auth:
     erlangCookie: rabbitmqErlangCookie
@@ -236,15 +234,18 @@ fabric:
 ##
 orchestrator:
   image:
+    ## @param orchestrator.image.registry `orchestrator` image repository
+    ##
+    registry: gcr.io
     ## @param orchestrator.image.repository `orchestrator` image repository
     ##
-    repository: owkin/orchestrator
+    repository: connect-314908/orchestrator-server
     ## @param orchestrator.image.pullPolicy `orchestrator` image pull policy
     ##
     pullPolicy: IfNotPresent
     ## @param orchestrator.image.tag `orchestrator` image tag
     ##
-    tag: ""
+    tag: 0.6.1
 
   ## @param orchestrator.logLevel Orchestrator log level
   ##
@@ -257,7 +258,7 @@ orchestrator:
   mode: standalone 
   ## @param orchestrator.verifyClientMSPID If true, validates incoming gRPC requests by checking the `mspid` header matches the subject organization of the client SSL certificate. See [MSPID check](#MSPID-check)
   ##
-  verifyClientMSPID: true
+  verifyClientMSPID: false
   ## @param orchestrator.txRetryBudget Duration ([go format](https://golang.org/pkg/time/#ParseDuration)) during which the transaction can be retried in case of conflicting writes 
   ##
   txRetryBudget: 500ms
@@ -319,15 +320,18 @@ channels: []
 ## @section Forwarder settings
 forwarder:
   image:
+    ## @param forwarder.image.registry Event forwarder image registry
+    ##
+    registry: gcr.io
     ## @param forwarder.image.repository Event forwarder image repository
     ##
-    repository: owkin/forwarder
+    repository: connect-314908/orchestrator-forwarder
     ## @param forwarder.image.pullPolicy Event forwarder image pull policy
     ##
     pullPolicy: IfNotPresent
     ## @param forwarder.image.tag Event forwarder image tag
     ##
-    tag: ""
+    tag: 0.6.1
   persistence:
     ## @param forwarder.persistence.enabled Whether to enable persistent storage (required to properly keep track of processed events)
     ## Without it, the forwarder will ALWAYS process ALL events (from block 0).
@@ -340,12 +344,18 @@ forwarder:
 ## @section RabbitMQ operator settings
 rabbitmqOperator:
   image:
+    ## @param rabbitmqOperator.image.registry RabbitMQ operator image registry
+    ##
+    registry: gcr.io
     ## @param rabbitmqOperator.image.repository RabbitMQ operator image repository
     ##
-    repository: owkin/rabbitmq-operator
+    repository: connect-314908/orchestrator-rabbitmq-operator
     ## @param rabbitmqOperator.image.pullPolicy RabbitMQ operator image pull policy
     ##
     pullPolicy: IfNotPresent
+    ## @param rabbitmqOperator.image.tag
+    ##
+    tag: 0.6.1
   ## @param rabbitmqOperator.credentials Couples of username:password
   ## e.g:
   ## MyOrg1MSP: password1

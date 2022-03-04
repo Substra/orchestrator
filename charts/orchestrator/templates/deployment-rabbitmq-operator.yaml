@@ -32,7 +32,7 @@ spec:
         - name: rabbitmq-operator
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.rabbitmqOperator.image.repository }}:{{ .Values.rabbitmqOperator.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "common.images.name" .Values.rabbitmqOperator.image }}
           imagePullPolicy: {{ .Values.rabbitmq.image.pullPolicy }}
           command: ['bash', '-c']
           args:
@@ -157,7 +157,7 @@ spec:
             - name: RABBITMQ_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  {{- if .Values.rabbitmq.auth.password }}
+                  {{- if not .Values.rabbitmq.auth.existingPasswordSecret }}
                   name: {{ template "rabbitmq.serviceName" . }}
                   {{- else }}
                   name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}

@@ -25,6 +25,7 @@ orchestrator:
           - orchestrator-tls-cacert
         MyOrg2MSP:
           - orchestrator-tls-cacert
+  verifyClientMSPID: true
 
 metrics:
   enabled: true

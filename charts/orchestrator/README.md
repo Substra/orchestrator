@@ -10,6 +10,16 @@ Orchestrator implements the orchestration components used by the [Substra](https
 
 See [CHANGELOG.md](./CHANGELOG.md)
 
+## Installing the chart
+
+### Standalone
+
+to install the chart with the release name `my-release` with one organisation named `MyOrg1MSP`:
+
+```bash
+helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' --set 'channels[0].organizations={MyOrg1MSP}'
+```
+
 ## Parameters
 
 ### Global orchestrator settings
@@ -76,26 +86,27 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ### Orchestrator application specific parameters
 
-| Name                                           | Description                                                                                                                                                              | Value                          |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
-| `orchestrator.image.repository`                | `orchestrator` image repository                                                                                                                                          | `owkin/orchestrator`           |
-| `orchestrator.image.pullPolicy`                | `orchestrator` image pull policy                                                                                                                                         | `IfNotPresent`                 |
-| `orchestrator.image.tag`                       | `orchestrator` image tag                                                                                                                                                 | `""`                           |
-| `orchestrator.logLevel`                        | Orchestrator log level                                                                                                                                                   | `INFO`                         |
-| `orchestrator.logSQL`                          | Log SQL statements                                                                                                                                                       | `false`                        |
-| `orchestrator.mode`                            | Orchestrator mode, either "standalone" or "distributed"                                                                                                                  | `standalone`                   |
-| `orchestrator.verifyClientMSPID`               | If true, validates incoming gRPC requests by checking the `mspid` header matches the subject organization of the client SSL certificate. See [MSPID check](#MSPID-check) | `true`                         |
-| `orchestrator.txRetryBudget`                   | Duration ([go format](https://golang.org/pkg/time/#ParseDuration)) during which the transaction can be retried in case of conflicting writes                             | `500ms`                        |
-| `orchestrator.fabricGatewayTimeout`            | Commit timeout ([go format](https://golang.org/pkg/time/#ParseDuration)) for all transaction submissions for the gateway (only used in distributed mode)                 | `20s`                          |
-| `orchestrator.tls.createCertificates.enabled`  | If true creates a cert-manager _Certificate_ resource for the Orchestrator                                                                                               | `false`                        |
-| `orchestrator.tls.createCertificates.domains`  | A list of domains to be covered by the generated certificate                                                                                                             | `[]`                           |
-| `orchestrator.tls.createCertificates.duration` | TTL of the Orchestrator certificate                                                                                                                                      | `2160h`                        |
-| `orchestrator.tls.createCertificates.issuer`   | _ClusterIssuer_ responsible fir the creation of tis _Certificate_                                                                                                        | `""`                           |
-| `orchestrator.tls.enabled`                     | If true, enable TLS for the orchestrator gRPC endpoint                                                                                                                   | `false`                        |
-| `orchestrator.tls.secrets.pair`                | A secret containing the server TLS cert/key pair `tls.crt` and `tls.key`                                                                                                 | `orchestrator-tls-server-pair` |
-| `orchestrator.tls.cacert`                      | A ConfigMap containing the server TLS CA cert `cat.crt`                                                                                                                  | `orchestrator-tls-cacert`      |
-| `orchestrator.tls.mtls.enabled`                | If true, enable TLS client verification                                                                                                                                  | `false`                        |
-| `orchestrator.tls.mtls.clientCACerts`          | A map whose keys are names of the CAs, and values are a list of secrets containing CA certificates                                                                       | `{}`                           |
+| Name                                           | Description                                                                                                                                                              | Value                                |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+| `orchestrator.image.registry`                  | `orchestrator` image repository                                                                                                                                          | `gcr.io`                             |
+| `orchestrator.image.repository`                | `orchestrator` image repository                                                                                                                                          | `connect-314908/orchestrator-server` |
+| `orchestrator.image.pullPolicy`                | `orchestrator` image pull policy                                                                                                                                         | `IfNotPresent`                       |
+| `orchestrator.image.tag`                       | `orchestrator` image tag                                                                                                                                                 | `0.6.1`                              |
+| `orchestrator.logLevel`                        | Orchestrator log level                                                                                                                                                   | `INFO`                               |
+| `orchestrator.logSQL`                          | Log SQL statements                                                                                                                                                       | `false`                              |
+| `orchestrator.mode`                            | Orchestrator mode, either "standalone" or "distributed"                                                                                                                  | `standalone`                         |
+| `orchestrator.verifyClientMSPID`               | If true, validates incoming gRPC requests by checking the `mspid` header matches the subject organization of the client SSL certificate. See [MSPID check](#MSPID-check) | `false`                              |
+| `orchestrator.txRetryBudget`                   | Duration ([go format](https://golang.org/pkg/time/#ParseDuration)) during which the transaction can be retried in case of conflicting writes                             | `500ms`                              |
+| `orchestrator.fabricGatewayTimeout`            | Commit timeout ([go format](https://golang.org/pkg/time/#ParseDuration)) for all transaction submissions for the gateway (only used in distributed mode)                 | `20s`                                |
+| `orchestrator.tls.createCertificates.enabled`  | If true creates a cert-manager _Certificate_ resource for the Orchestrator                                                                                               | `false`                              |
+| `orchestrator.tls.createCertificates.domains`  | A list of domains to be covered by the generated certificate                                                                                                             | `[]`                                 |
+| `orchestrator.tls.createCertificates.duration` | TTL of the Orchestrator certificate                                                                                                                                      | `2160h`                              |
+| `orchestrator.tls.createCertificates.issuer`   | _ClusterIssuer_ responsible fir the creation of tis _Certificate_                                                                                                        | `""`                                 |
+| `orchestrator.tls.enabled`                     | If true, enable TLS for the orchestrator gRPC endpoint                                                                                                                   | `false`                              |
+| `orchestrator.tls.secrets.pair`                | A secret containing the server TLS cert/key pair `tls.crt` and `tls.key`                                                                                                 | `orchestrator-tls-server-pair`       |
+| `orchestrator.tls.cacert`                      | A ConfigMap containing the server TLS CA cert `cat.crt`                                                                                                                  | `orchestrator-tls-cacert`            |
+| `orchestrator.tls.mtls.enabled`                | If true, enable TLS client verification                                                                                                                                  | `false`                              |
+| `orchestrator.tls.mtls.clientCACerts`          | A map whose keys are names of the CAs, and values are a list of secrets containing CA certificates                                                                       | `{}`                                 |
 
 
 ### Channels settings
@@ -107,22 +118,25 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ### Forwarder settings
 
-| Name                            | Description                                                                                | Value             |
-| ------------------------------- | ------------------------------------------------------------------------------------------ | ----------------- |
-| `forwarder.image.repository`    | Event forwarder image repository                                                           | `owkin/forwarder` |
-| `forwarder.image.pullPolicy`    | Event forwarder image pull policy                                                          | `IfNotPresent`    |
-| `forwarder.image.tag`           | Event forwarder image tag                                                                  | `""`              |
-| `forwarder.persistence.enabled` | Whether to enable persistent storage (required to properly keep track of processed events) | `false`           |
-| `forwarder.persistence.size`    | Storage class size, there is not need for more, the forwarder only store a small JSON      | `100Mi`           |
+| Name                            | Description                                                                                | Value                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------- |
+| `forwarder.image.registry`      | Event forwarder image registry                                                             | `gcr.io`                                |
+| `forwarder.image.repository`    | Event forwarder image repository                                                           | `connect-314908/orchestrator-forwarder` |
+| `forwarder.image.pullPolicy`    | Event forwarder image pull policy                                                          | `IfNotPresent`                          |
+| `forwarder.image.tag`           | Event forwarder image tag                                                                  | `0.6.1`                                 |
+| `forwarder.persistence.enabled` | Whether to enable persistent storage (required to properly keep track of processed events) | `false`                                 |
+| `forwarder.persistence.size`    | Storage class size, there is not need for more, the forwarder only store a small JSON      | `100Mi`                                 |
 
 
 ### RabbitMQ operator settings
 
-| Name                                | Description                         | Value                     |
-| ----------------------------------- | ----------------------------------- | ------------------------- |
-| `rabbitmqOperator.image.repository` | RabbitMQ operator image repository  | `owkin/rabbitmq-operator` |
-| `rabbitmqOperator.image.pullPolicy` | RabbitMQ operator image pull policy | `IfNotPresent`            |
-| `rabbitmqOperator.credentials`      | Couples of username:password        | `{}`                      |
+| Name                                | Description                         | Value                                           |
+| ----------------------------------- | ----------------------------------- | ----------------------------------------------- |
+| `rabbitmqOperator.image.registry`   | RabbitMQ operator image registry    | `gcr.io`                                        |
+| `rabbitmqOperator.image.repository` | RabbitMQ operator image repository  | `connect-314908/orchestrator-rabbitmq-operator` |
+| `rabbitmqOperator.image.pullPolicy` | RabbitMQ operator image pull policy | `IfNotPresent`                                  |
+| `rabbitmqOperator.image.tag`        |                                     | `0.6.1`                                         |
+| `rabbitmqOperator.credentials`      | Couples of username:password        | `{}`                                            |
 
 
 ## Usage

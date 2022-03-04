@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.4] - 2022-03-02
+
+### Fixed
+
+- Rabbitmq settings when installing the chart without a password specified
+
+### Changed
+
+- Switch to explicit registry for images name
+- Point to existing images
+- bump appVersion to `0.6.1`
+- default value for `verifyClientMSPID` is now `false`
+
 ## [5.0.3] - 2022-02-28
 
 ### Added
