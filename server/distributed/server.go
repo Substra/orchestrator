@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -35,6 +36,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 
 	interceptor := grpc.ChainUnaryInterceptor(
 		trace.InterceptRequestID,
+		grpc_prometheus.UnaryServerInterceptor,
 		logger.AddLogger,
 		common.LogRequest,
 		common.InterceptDistributedErrors,

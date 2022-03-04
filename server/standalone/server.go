@@ -3,6 +3,7 @@ package standalone
 import (
 	"errors"
 
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -44,6 +45,7 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 
 	interceptor := grpc.ChainUnaryInterceptor(
 		trace.InterceptRequestID,
+		grpc_prometheus.UnaryServerInterceptor,
 		logger.AddLogger,
 		common.LogRequest,
 		common.InterceptStandaloneErrors,

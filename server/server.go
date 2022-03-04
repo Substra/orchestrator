@@ -18,6 +18,7 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/go-playground/log/v7"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/distributed"
 	"github.com/owkin/orchestrator/server/standalone"
@@ -114,6 +115,10 @@ func main() {
 
 	// Register reflection service
 	reflection.Register(app.GetGrpcServer())
+
+	// Register metrics
+	grpc_prometheus.Register(app.GetGrpcServer())
+	grpc_prometheus.EnableHandlingTimeHistogram()
 
 	// Register healthcheck service
 	healthpb.RegisterHealthServer(app.GetGrpcServer(), healthcheck)
