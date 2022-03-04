@@ -51,8 +51,8 @@ func TestGetTasks(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.ComputeTask{}).
-		AddRow(&asset.ComputeTask{})
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	keys := []string{"uuid1", "uuid2"}
 
@@ -111,8 +111,8 @@ func TestQueryComputeTasks(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.ComputeTask{}).
-		AddRow(&asset.ComputeTask{})
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`SELECT asset FROM compute_tasks`).WithArgs(testChannel, "testWorker", asset.ComputeTaskStatus_STATUS_DONE.String()).WillReturnRows(rows)
 

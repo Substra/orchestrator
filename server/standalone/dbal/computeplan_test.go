@@ -21,7 +21,7 @@ func TestGetComputeTasks(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset", "total", "waiting", "todo", "doing", "canceled", "failed", "done"}).
-		AddRow(asset.ComputePlan{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+		AddRow([]byte("{}"), uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
 	mock.ExpectQuery(`SELECT cp.asset`).
 		WithArgs("uuid", testChannel).
@@ -59,7 +59,7 @@ func TestGetRawComputePlan(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(asset.ComputePlan{})
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`select asset from compute_plans`).
 		WithArgs("uuid", testChannel).
@@ -92,7 +92,7 @@ func TestQueryComputePlans(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset", "total", "waiting", "todo", "doing", "canceled", "failed", "done"}).
-		AddRow(asset.ComputePlan{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+		AddRow([]byte("{}"), uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
 	mock.ExpectQuery(`SELECT cp.asset,.* FROM compute_plans .* ORDER BY cp.asset->>'creationDate' ASC, cp.id`).
 		WithArgs(testChannel, "owner").

@@ -62,8 +62,8 @@ func TestEventQuery(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.Event{}).
-		AddRow(&asset.Event{})
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`SELECT event FROM events .* ORDER BY cast\(event->>'timestamp' as timestamptz\) ASC, id ASC`).WithArgs(testChannel).WillReturnRows(rows)
 

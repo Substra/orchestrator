@@ -3,11 +3,11 @@ package event
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,13 +21,12 @@ func TestEventChannel(t *testing.T) {
 	require.NoError(t, err)
 
 	// Channel should be set on dispatch
-	eventWithChannel := &asset.Event{AssetKind: asset.AssetKind_ASSET_NODE, AssetKey: "test", EventKind: asset.EventKind_EVENT_ASSET_CREATED, Channel: "testChannel"}
+	data := []byte(`{"id":"","asset_key":"test","asset_kind":"ASSET_NODE","event_kind":"EVENT_ASSET_CREATED","channel":"testChannel","timestamp":null,"metadata":{}}`)
 
-	data, err := json.Marshal(eventWithChannel)
-	require.NoError(t, err)
-
-	amqp.On("Publish", context.TODO(), "testChannel", data).Once().Return(nil)
+	amqp.On("Publish", utils.AnyContext, "testChannel", data).Once().Return(nil)
 
 	err = dispatcher.Dispatch(context.Background())
 	assert.NoError(t, err)
+
+	amqp.AssertExpectations(t)
 }

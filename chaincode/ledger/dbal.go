@@ -13,6 +13,7 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/utils"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // CouchDBSortAsc represents the ascending sort order value used by CouchDB
@@ -22,6 +23,12 @@ const CouchDBSortAsc = "asc"
 // CouchDBSortDesc represents the descending sort order value used by CouchDB
 // as defined in https://docs.couchdb.org/en/stable/api/database/find.html#sort-syntax
 const CouchDBSortDesc = "desc"
+
+var marshaller protojson.MarshalOptions
+
+func init() {
+	marshaller = protojson.MarshalOptions{EmitUnpopulated: true, UseProtoNames: true}
+}
 
 // DB is the distributed ledger persistence layer implementing persistence.DBAL
 // This backend does not allow to read the current writes, they will only be committed after a successful response.
@@ -259,7 +266,7 @@ func getFullKey(resource string, key string) string {
 
 // AddNode stores a new Node
 func (db *DB) AddNode(node *asset.Node) error {
-	nodeBytes, err := json.Marshal(node)
+	nodeBytes, err := marshaller.Marshal(node)
 	if err != nil {
 		return err
 	}
@@ -269,7 +276,6 @@ func (db *DB) AddNode(node *asset.Node) error {
 	}
 
 	return db.createIndex(allNodesIndex, []string{asset.NodeKind, node.Id})
-
 }
 
 // GetAllNodes returns all known Nodes
@@ -302,7 +308,7 @@ func (db *DB) GetNode(id string) (*asset.Node, error) {
 		return &n, err
 	}
 
-	err = json.Unmarshal(b, &n)
+	err = protojson.Unmarshal(b, &n)
 	return &n, err
 }
 

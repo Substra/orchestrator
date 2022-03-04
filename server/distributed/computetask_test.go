@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +24,7 @@ func TestRegisterTasks(t *testing.T) {
 
 	param := &asset.RegisterTasksParam{}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -40,7 +41,7 @@ func TestQueryTasks(t *testing.T) {
 
 	param := &asset.QueryTasksParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -63,8 +64,8 @@ func TestHandleTasksConflictAfterTimeout(t *testing.T) {
 		},
 	}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(errors.NewError(errors.ErrConflict, "test"))
-	invocator.On("Call", AnyContext, "orchestrator.computetask:GetTask", &asset.GetTaskParam{Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"}, &asset.ComputeTask{}).
+	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(errors.NewError(errors.ErrConflict, "test"))
+	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:GetTask", &asset.GetTaskParam{Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"}, &asset.ComputeTask{}).
 		Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
@@ -84,7 +85,7 @@ func TestHandleTasksBatchConflictAfterTimeout(t *testing.T) {
 		Tasks: []*asset.NewComputeTask{{}, {}, {}},
 	}
 
-	invocator.On("Call", AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(errors.NewError(errors.ErrConflict, "test"))
+	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(errors.NewError(errors.ErrConflict, "test"))
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

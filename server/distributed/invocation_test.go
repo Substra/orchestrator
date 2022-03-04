@@ -7,6 +7,7 @@ import (
 
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -56,7 +57,7 @@ func TestParamWrapping(t *testing.T) {
 		resChan <- serializedResponse
 	}()
 
-	requester.On("Request", AnyContext, "channel", "chaincode", "orchestrator.metric:QueryMetrics", serializedInput).
+	requester.On("Request", utils.AnyContext, "channel", "chaincode", "orchestrator.metric:QueryMetrics", serializedInput).
 		Once().
 		Return((<-chan []byte)(resChan), (<-chan error)(errChan))
 
@@ -80,7 +81,7 @@ func TestNoOutput(t *testing.T) {
 		resChan <- nil
 	}()
 
-	requester.On("Request", AnyContext, "channel", "chaincode", "org.test:NoOutput", expectedInput).
+	requester.On("Request", utils.AnyContext, "channel", "chaincode", "org.test:NoOutput", expectedInput).
 		Once().
 		Return((<-chan []byte)(resChan), (<-chan error)(errChan))
 

@@ -73,7 +73,7 @@ func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
 	for rows.Next() {
 		node := new(asset.Node)
 
-		err = rows.Scan(&node)
+		err = rows.Scan(node)
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +92,7 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 	row := d.tx.QueryRow(d.ctx, `select "asset" from "nodes" where id=$1 and channel=$2`, id, d.channel)
 
 	node := new(asset.Node)
-	err := row.Scan(&node)
+	err := row.Scan(node)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

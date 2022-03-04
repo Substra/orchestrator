@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +24,7 @@ func TestRegisterMetric(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", AnyContext, "orchestrator.metric:RegisterMetric", newObj, &asset.Metric{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.metric:RegisterMetric", newObj, &asset.Metric{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -40,7 +41,7 @@ func TestGetMetric(t *testing.T) {
 
 	param := &asset.GetMetricParam{Key: "uuid"}
 
-	invocator.On("Call", AnyContext, "orchestrator.metric:GetMetric", param, &asset.Metric{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.metric:GetMetric", param, &asset.Metric{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -57,7 +58,7 @@ func TestQueryMetrics(t *testing.T) {
 
 	param := &asset.QueryMetricsParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", AnyContext, "orchestrator.metric:QueryMetrics", param, &asset.QueryMetricsResponse{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.metric:QueryMetrics", param, &asset.QueryMetricsResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

@@ -1,7 +1,6 @@
 OUTPUT_DIR = ./bin
 CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
 ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
-LIBCODEGEN_BIN = $(OUTPUT_DIR)/libcodegen
 FORWARDER_BIN = $(OUTPUT_DIR)/forwarder
 E2E_BIN = $(OUTPUT_DIR)/e2e-tests
 PROJECT_ROOT = .
@@ -10,7 +9,6 @@ VERSION = dirty-$(shell git rev-parse --short HEAD)
 protos = $(PROJECT_ROOT)/lib/asset
 go_src = $(shell find . -type f -name '*.go')
 sql_migrations = $(wildcard $(MIGRATIONS_DIR)/*.sql)
-lib_generated = $(PROJECT_ROOT)/lib/asset/json.go
 
 protobufs = $(wildcard $(protos)/*.proto)
 pbgo = $(protobufs:.proto=.pb.go)
@@ -28,7 +26,7 @@ orchestrator: $(ORCHESTRATOR_BIN)  ## Build server binary
 forwarder: $(FORWARDER_BIN)  ## Build event-forwarded binary
 
 .PHONY: codegen
-codegen: $(pbgo) $(migrations_binpack) $(lib_generated)  ## Build codegen tool
+codegen: $(pbgo) $(migrations_binpack)  ## Build codegen tool
 
 .PHONY: lint
 lint: codegen mocks  ## Analyze the codebase
@@ -39,9 +37,6 @@ $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 	go build -o $(CHAINCODE_BIN) -ldflags="-X 'github.com/owkin/orchestrator/chaincode/info.Version=$(VERSION)'" ./chaincode
-
-$(LIBCODEGEN_BIN): $(PROJECT_ROOT)/lib/codegen/main.go
-	go build -o $(LIBCODEGEN_BIN) $(PROJECT_ROOT)/lib/codegen
 
 $(FORWARDER_BIN): ${go_src} $(OUTPUT_DIR) $(pbgo) $(lib_generated)
 	go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/forwarder
@@ -60,9 +55,6 @@ $(pbgo): %.pb.go: %.proto
 	--go_out=$(protos) \
 	$<
 
-$(lib_generated): $(LIBCODEGEN_BIN) $(pbgo)
-	$(LIBCODEGEN_BIN) -path $(protos) > $(lib_generated)
-
 .PHONY: proto-codegen
 proto-codegen: $(pbgo)  ## Generate go code from proto files
 
@@ -71,7 +63,7 @@ mocks:  ## Generate mocks for public interfaces
 	mockery --dir $(PROJECT_ROOT) --all --inpackage --quiet
 
 .PHONY: clean
-clean: clean-protos clean-generated clean-mocks  ## Remove all generated code
+clean: clean-protos clean-mocks  ## Remove all generated code
 	rm -rf $(OUTPUT_DIR)
 
 .PHONY: test
@@ -85,10 +77,6 @@ clean-mocks:  ## Remove generated mocks
 .PHONY: clean-protos
 clean-protos:  ## Remove go code generated from proto files
 	-rm $(wildcard $(protos)/*.pb.go)
-
-.PHONY: clean-generated
-clean-generated:  ## Remove codegen tool
-	-rm $(lib_generated)
 
 .PHONY: docs-charts
 docs-charts: ## Generate Helm chart documentation

@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -21,7 +22,7 @@ func TestRegisterDatamanager(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
+	invocator.On("Call", utils.AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
 		Once().
 		Run(func(args mock.Arguments) {
 			dm := args.Get(3).(*asset.DataManager)
@@ -49,10 +50,10 @@ func TestHandleDatamanagerConflictAfterTimeout(t *testing.T) {
 	newCtx := common.WithLastError(context.Background(), fabricTimeout)
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
+	invocator.On("Call", utils.AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
 		Once().
 		Return(errors.NewError(errors.ErrConflict, "test"))
-	invocator.On("Call", AnyContext, "orchestrator.datamanager:GetDataManager", &asset.GetDataManagerParam{Key: newObj.Key}, &asset.DataManager{}).
+	invocator.On("Call", utils.AnyContext, "orchestrator.datamanager:GetDataManager", &asset.GetDataManagerParam{Key: newObj.Key}, &asset.DataManager{}).
 		Once().
 		Return(nil)
 

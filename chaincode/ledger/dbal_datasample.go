@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // DataSampleExists implements persistence.DataSampleDBAL
@@ -33,7 +34,7 @@ func (db *DB) addDataSample(dataSample *asset.DataSample) error {
 		return errors.NewConflict(asset.DataSampleKind, dataSample.Key)
 	}
 
-	dataSampleBytes, err := json.Marshal(dataSample)
+	dataSampleBytes, err := marshaller.Marshal(dataSample)
 	if err != nil {
 		return err
 	}
@@ -43,7 +44,7 @@ func (db *DB) addDataSample(dataSample *asset.DataSample) error {
 
 // UpdateDataSample implements persistence.DataSampleDBAL
 func (db *DB) UpdateDataSample(dataSample *asset.DataSample) error {
-	dataSampleBytes, err := json.Marshal(dataSample)
+	dataSampleBytes, err := marshaller.Marshal(dataSample)
 	if err != nil {
 		return err
 	}
@@ -61,7 +62,7 @@ func (db *DB) GetDataSample(key string) (*asset.DataSample, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(b, &o)
+	err = protojson.Unmarshal(b, &o)
 	return &o, err
 }
 
@@ -99,7 +100,7 @@ func (db *DB) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, commo
 			return nil, "", err
 		}
 		ds := &asset.DataSample{}
-		err = json.Unmarshal(storedAsset.Asset, ds)
+		err = protojson.Unmarshal(storedAsset.Asset, ds)
 		if err != nil {
 			return nil, "", err
 		}
@@ -155,7 +156,7 @@ func (db *DB) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) (
 			return nil, err
 		}
 		ds := &asset.DataSample{}
-		err = json.Unmarshal(storedAsset.Asset, ds)
+		err = protojson.Unmarshal(storedAsset.Asset, ds)
 		if err != nil {
 			return nil, err
 		}

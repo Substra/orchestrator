@@ -21,8 +21,8 @@ func TestQueryAlgos(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.Algo{}).
-		AddRow(&asset.Algo{})
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`SELECT asset FROM algos`).WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(rows)
 
@@ -51,8 +51,8 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.Algo{}).
-		AddRow(&asset.Algo{})
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`SELECT asset FROM algos`).WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(rows)
 
@@ -103,8 +103,8 @@ func TestQueryAlgosByComputePlan(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.Algo{}).
-		AddRow(&asset.Algo{})
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`SELECT asset FROM algos .* id IN \(SELECT DISTINCT`).WithArgs(testChannel, "CPKey").WillReturnRows(rows)
 

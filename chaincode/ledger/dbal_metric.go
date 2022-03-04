@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // AddMetric stores a new metric
@@ -18,7 +19,7 @@ func (db *DB) AddMetric(obj *asset.Metric) error {
 		return errors.NewConflict(asset.MetricKind, obj.Key)
 	}
 
-	objBytes, err := json.Marshal(obj)
+	objBytes, err := marshaller.Marshal(obj)
 	if err != nil {
 		return err
 	}
@@ -35,7 +36,7 @@ func (db *DB) GetMetric(key string) (*asset.Metric, error) {
 		return &o, err
 	}
 
-	err = json.Unmarshal(b, &o)
+	err = protojson.Unmarshal(b, &o)
 	return &o, err
 }
 
@@ -77,7 +78,7 @@ func (db *DB) QueryMetrics(p *common.Pagination) ([]*asset.Metric, common.Pagina
 			return nil, "", err
 		}
 		metric := &asset.Metric{}
-		err = json.Unmarshal(storedAsset.Asset, metric)
+		err = protojson.Unmarshal(storedAsset.Asset, metric)
 		if err != nil {
 			return nil, "", err
 		}

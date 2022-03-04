@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // AddDataManager stores a new DataManager
@@ -18,7 +19,7 @@ func (db *DB) AddDataManager(datamanager *asset.DataManager) error {
 		return errors.NewConflict(asset.DataManagerKind, datamanager.Key)
 	}
 
-	dataManagerBytes, err := json.Marshal(datamanager)
+	dataManagerBytes, err := marshaller.Marshal(datamanager)
 	if err != nil {
 		return err
 	}
@@ -33,7 +34,7 @@ func (db *DB) AddDataManager(datamanager *asset.DataManager) error {
 
 // UpdateDataManager implements persistence.DataManagerDBAL
 func (db *DB) UpdateDataManager(datamanager *asset.DataManager) error {
-	dataManagerBytes, err := json.Marshal(datamanager)
+	dataManagerBytes, err := marshaller.Marshal(datamanager)
 	if err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (db *DB) GetDataManager(key string) (*asset.DataManager, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(b, &d)
+	err = protojson.Unmarshal(b, &d)
 	return &d, err
 }
 
@@ -98,7 +99,7 @@ func (db *DB) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, com
 			return nil, "", err
 		}
 		dm := &asset.DataManager{}
-		err = json.Unmarshal(storedAsset.Asset, dm)
+		err = protojson.Unmarshal(storedAsset.Asset, dm)
 		if err != nil {
 			return nil, "", err
 		}

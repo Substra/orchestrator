@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,7 +25,7 @@ func TestRegisterPerformance(t *testing.T) {
 
 	param := &asset.NewPerformance{}
 
-	invocator.On("Call", AnyContext, "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -41,7 +42,7 @@ func TestQueryPerformances(t *testing.T) {
 
 	param := &asset.QueryPerformancesParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", AnyContext, "orchestrator.performance:QueryPerformances", param, &asset.QueryPerformancesResponse{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.performance:QueryPerformances", param, &asset.QueryPerformancesResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -64,7 +65,7 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 	// register fail
 	invocator.On(
 		"Call",
-		AnyContext,
+		utils.AnyContext,
 		"orchestrator.performance:RegisterPerformance",
 		newPerf,
 		&asset.Performance{},
@@ -81,7 +82,7 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 	}
 	invocator.On(
 		"Call",
-		AnyContext,
+		utils.AnyContext,
 		"orchestrator.performance:QueryPerformances",
 		param,
 		&asset.QueryPerformancesResponse{},

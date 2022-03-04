@@ -10,6 +10,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // addComputeTask stores a new ComputeTask in DB
@@ -22,7 +23,7 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 		return errors.NewConflict(asset.ComputeTaskKind, t.Key)
 	}
 
-	bytes, err := json.Marshal(t)
+	bytes, err := marshaller.Marshal(t)
 	if err != nil {
 		return err
 	}
@@ -74,7 +75,7 @@ func (db *DB) UpdateComputeTask(task *asset.ComputeTask) error {
 	}
 	prevTask.Status = prevStatus
 
-	b, err := json.Marshal(task)
+	b, err := marshaller.Marshal(task)
 	if err != nil {
 		return err
 	}
@@ -138,7 +139,7 @@ func (db *DB) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 		}
 		task := &asset.ComputeTask{}
 
-		err = json.Unmarshal(bytes, task)
+		err = protojson.Unmarshal(bytes, task)
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +158,7 @@ func (db *DB) GetComputeTask(key string) (*asset.ComputeTask, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(b, task)
+	err = protojson.Unmarshal(b, task)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +280,7 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 			return nil, "", err
 		}
 		task := &asset.ComputeTask{}
-		err = json.Unmarshal(storedAsset.Asset, task)
+		err = protojson.Unmarshal(storedAsset.Asset, task)
 		if err != nil {
 			return nil, "", err
 		}

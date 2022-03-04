@@ -109,7 +109,7 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter,
 	for rows.Next() {
 		event := new(asset.Event)
 
-		err = rows.Scan(&event)
+		err = rows.Scan(event)
 		if err != nil {
 			return nil, "", err
 		}

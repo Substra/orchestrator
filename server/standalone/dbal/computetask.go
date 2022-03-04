@@ -228,7 +228,7 @@ func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 	for rows.Next() {
 		task := new(asset.ComputeTask)
 
-		err = rows.Scan(&task)
+		err = rows.Scan(task)
 		if err != nil {
 			return nil, err
 		}
@@ -358,7 +358,7 @@ func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFi
 	for rows.Next() {
 		task := new(asset.ComputeTask)
 
-		err = rows.Scan(&task)
+		err = rows.Scan(task)
 		if err != nil {
 			return nil, "", err
 		}

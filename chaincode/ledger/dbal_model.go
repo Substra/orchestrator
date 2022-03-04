@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func (db *DB) GetModel(key string) (*asset.Model, error) {
@@ -17,7 +18,7 @@ func (db *DB) GetModel(key string) (*asset.Model, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(b, model)
+	err = protojson.Unmarshal(b, model)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +62,7 @@ func (db *DB) AddModel(model *asset.Model) error {
 	if exists {
 		return errors.NewConflict(asset.ModelKind, model.Key)
 	}
-	bytes, err := json.Marshal(model)
+	bytes, err := marshaller.Marshal(model)
 	if err != nil {
 		return err
 	}
@@ -123,7 +124,7 @@ func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset
 			return nil, "", err
 		}
 		model := &asset.Model{}
-		err = json.Unmarshal(storedAsset.Asset, model)
+		err = protojson.Unmarshal(storedAsset.Asset, model)
 		if err != nil {
 			return nil, "", err
 		}
@@ -135,7 +136,7 @@ func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset
 }
 
 func (db *DB) UpdateModel(model *asset.Model) error {
-	bytes, err := json.Marshal(model)
+	bytes, err := marshaller.Marshal(model)
 	if err != nil {
 		return err
 	}

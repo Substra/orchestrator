@@ -23,7 +23,7 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 	row := d.tx.QueryRow(d.ctx, `select "asset" from "algos" where id=$1 and channel=$2`, key, d.channel)
 
 	algo := new(asset.Algo)
-	err := row.Scan(&algo)
+	err := row.Scan(algo)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -82,7 +82,7 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	for rows.Next() {
 		algo := new(asset.Algo)
 
-		err = rows.Scan(&algo)
+		err = rows.Scan(algo)
 		if err != nil {
 			return nil, "", err
 		}

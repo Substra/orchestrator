@@ -8,6 +8,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const eventResource = "event"
@@ -20,7 +21,7 @@ func (db *DB) addSingleEvent(event *asset.Event) error {
 	if exists {
 		return errors.NewConflict("event", event.Id)
 	}
-	bytes, err := json.Marshal(event)
+	bytes, err := marshaller.Marshal(event)
 	if err != nil {
 		return err
 	}
@@ -117,7 +118,7 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, 
 			return nil, "", err
 		}
 		event := &asset.Event{}
-		err = json.Unmarshal(storedAsset.Asset, event)
+		err = protojson.Unmarshal(storedAsset.Asset, event)
 		if err != nil {
 			return nil, "", err
 		}

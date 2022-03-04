@@ -39,7 +39,7 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 	row := d.tx.QueryRow(d.ctx, `select "asset" from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
 
 	datamanager := new(asset.DataManager)
-	err := row.Scan(&datamanager)
+	err := row.Scan(datamanager)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -74,7 +74,7 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 	for rows.Next() {
 		datamanager := new(asset.DataManager)
 
-		err = rows.Scan(&datamanager)
+		err = rows.Scan(datamanager)
 		if err != nil {
 			return nil, "", err
 		}

@@ -3,7 +3,6 @@
 .vscode/
 /wallet
 # Generated files
-lib/asset/json.go
 lib/asset/*.pb.go
 mock_*.go
 examples/tools/client-org-1.crt

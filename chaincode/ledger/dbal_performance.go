@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func (db *DB) AddPerformance(perf *asset.Performance) error {
@@ -16,7 +17,7 @@ func (db *DB) AddPerformance(perf *asset.Performance) error {
 	if exists {
 		return errors.NewConflict(asset.PerformanceKind, perf.GetKey())
 	}
-	bytes, err := json.Marshal(perf)
+	bytes, err := marshaller.Marshal(perf)
 	if err != nil {
 		return err
 	}
@@ -81,7 +82,7 @@ func (db *DB) QueryPerformances(p *common.Pagination, filter *asset.PerformanceQ
 			return nil, "", err
 		}
 		performance := &asset.Performance{}
-		err = json.Unmarshal(storedAsset.Asset, performance)
+		err = protojson.Unmarshal(storedAsset.Asset, performance)
 		if err != nil {
 			return nil, "", err
 		}

@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +26,7 @@ func TestRegisterAlgo(t *testing.T) {
 	newCtx := context.TODO()
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", AnyContext, "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -42,7 +43,7 @@ func TestGetAlgo(t *testing.T) {
 
 	param := &asset.GetAlgoParam{Key: "uuid"}
 
-	invocator.On("Call", AnyContext, "orchestrator.algo:GetAlgo", param, &asset.Algo{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.algo:GetAlgo", param, &asset.Algo{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -59,7 +60,7 @@ func TestQueryAlgos(t *testing.T) {
 
 	param := &asset.QueryAlgosParam{PageToken: "uuid", PageSize: 20}
 
-	invocator.On("Call", AnyContext, "orchestrator.algo:QueryAlgos", param, &asset.QueryAlgosResponse{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.algo:QueryAlgos", param, &asset.QueryAlgosResponse{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 
@@ -78,9 +79,9 @@ func TestHandleAlgoConflictAfterTimeout(t *testing.T) {
 	newCtx := common.WithLastError(context.Background(), fabricTimeout)
 	invocator := &mockedInvocator{}
 
-	invocator.On("Call", AnyContext, "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(errors.NewError(errors.ErrConflict, "test"))
+	invocator.On("Call", utils.AnyContext, "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(errors.NewError(errors.ErrConflict, "test"))
 
-	invocator.On("Call", AnyContext, "orchestrator.algo:GetAlgo", &asset.GetAlgoParam{Key: newObj.Key}, &asset.Algo{}).Return(nil)
+	invocator.On("Call", utils.AnyContext, "orchestrator.algo:GetAlgo", &asset.GetAlgoParam{Key: newObj.Key}, &asset.Algo{}).Return(nil)
 
 	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
 

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
-	mock "github.com/stretchr/testify/mock"
 )
 
 func TestTransactionIsolation(t *testing.T) {
@@ -35,7 +35,7 @@ func TestTransactionIsolation(t *testing.T) {
 			db := Database{pool: pool}
 
 			var tx pgx.Tx
-			pool.On("BeginTx", mock.MatchedBy(func(ctx context.Context) bool { return true }), tc.txOpts).Return(tx, nil)
+			pool.On("BeginTx", utils.AnyContext, tc.txOpts).Return(tx, nil)
 
 			_, err := db.GetTransactionalDBAL(context.Background(), "test", tc.readOnly)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // AddComputePlan stores a new ComputePlan in DB
@@ -19,7 +20,7 @@ func (db *DB) AddComputePlan(cp *asset.ComputePlan) error {
 		return errors.NewConflict(asset.ComputePlanKind, cp.Key)
 	}
 
-	bytes, err := json.Marshal(cp)
+	bytes, err := marshaller.Marshal(cp)
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,7 @@ func (db *DB) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(b, plan)
+	err = protojson.Unmarshal(b, plan)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +132,7 @@ func (db *DB) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFil
 			return nil, "", err
 		}
 		plan := &asset.ComputePlan{}
-		err = json.Unmarshal(storedAsset.Asset, plan)
+		err = protojson.Unmarshal(storedAsset.Asset, plan)
 		if err != nil {
 			return nil, "", err
 		}

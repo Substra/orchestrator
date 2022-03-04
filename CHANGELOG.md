@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - add support for graceful shutdown on `SIGTERM` signal (#557)
 
+### Changed
+- removed codegen layer and implicit protojson serialization (#535)
+
 ### Fixed
 - Cancel all tasks when cancelling a compute plan (#546)
 - Check for compute plan existence on task registration (#554)

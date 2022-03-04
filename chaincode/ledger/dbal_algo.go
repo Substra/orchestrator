@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // AddAlgo stores a new algo
@@ -19,7 +20,7 @@ func (db *DB) AddAlgo(algo *asset.Algo) error {
 		return errors.NewConflict(asset.AlgoKind, algo.Key)
 	}
 
-	algoBytes, err := json.Marshal(algo)
+	algoBytes, err := marshaller.Marshal(algo)
 	if err != nil {
 		return err
 	}
@@ -40,7 +41,7 @@ func (db *DB) GetAlgo(key string) (*asset.Algo, error) {
 		return &a, err
 	}
 
-	err = json.Unmarshal(b, &a)
+	err = protojson.Unmarshal(b, &a)
 	return &a, err
 }
 
@@ -103,7 +104,7 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 			return nil, "", err
 		}
 		algo := &asset.Algo{}
-		err = json.Unmarshal(storedAsset.Asset, algo)
+		err = protojson.Unmarshal(storedAsset.Asset, algo)
 		if err != nil {
 			return nil, "", err
 		}
@@ -161,7 +162,7 @@ func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
 			return nil, err
 		}
 		task := &asset.ComputeTask{}
-		err = json.Unmarshal(storedAsset.Asset, task)
+		err = protojson.Unmarshal(storedAsset.Asset, task)
 		if err != nil {
 			return nil, err
 		}

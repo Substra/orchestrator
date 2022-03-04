@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +20,8 @@ func TestQueryDataManagers(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.DataManager{}).
-		AddRow(&asset.DataManager{})
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`select "asset" from "datamanagers"`).WithArgs(uint32(13), 0, testChannel).WillReturnRows(rows)
 
@@ -51,8 +50,8 @@ func TestPaginatedQueryDataManagers(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow(&asset.DataManager{}).
-		AddRow(&asset.DataManager{})
+		AddRow([]byte("{}")).
+		AddRow([]byte("{}"))
 
 	mock.ExpectQuery(`select "asset" from "datamanagers"`).WithArgs(uint32(2), 0, testChannel).WillReturnRows(rows)
 

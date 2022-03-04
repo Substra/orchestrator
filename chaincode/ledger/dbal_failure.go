@@ -1,9 +1,9 @@
 package ledger
 
 import (
-	"encoding/json"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func (db *DB) GetFailureReport(computeTaskKey string) (*asset.FailureReport, error) {
@@ -14,7 +14,7 @@ func (db *DB) GetFailureReport(computeTaskKey string) (*asset.FailureReport, err
 		return nil, err
 	}
 
-	err = json.Unmarshal(b, failureReport)
+	err = protojson.Unmarshal(b, failureReport)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func (db *DB) AddFailureReport(failureReport *asset.FailureReport) error {
 	if exists {
 		return errors.NewConflict(asset.FailureReportKind, failureReport.GetComputeTaskKey())
 	}
-	bytes, err := json.Marshal(failureReport)
+	bytes, err := marshaller.Marshal(failureReport)
 	if err != nil {
 		return err
 	}

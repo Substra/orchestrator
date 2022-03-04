@@ -66,7 +66,7 @@ func (d *DBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asse
 	for rows.Next() {
 		model := new(asset.Model)
 
-		err = rows.Scan(&model)
+		err = rows.Scan(model)
 		if err != nil {
 			return nil, "", err
 		}

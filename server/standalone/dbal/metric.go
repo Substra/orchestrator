@@ -23,7 +23,7 @@ func (d *DBAL) GetMetric(key string) (*asset.Metric, error) {
 	row := d.tx.QueryRow(d.ctx, `select "asset" from "metrics" where id=$1 and channel=$2`, key, d.channel)
 
 	metric := new(asset.Metric)
-	err := row.Scan(&metric)
+	err := row.Scan(metric)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -55,7 +55,7 @@ func (d *DBAL) QueryMetrics(p *common.Pagination) ([]*asset.Metric, common.Pagin
 	for rows.Next() {
 		metric := new(asset.Metric)
 
-		err = rows.Scan(&metric)
+		err = rows.Scan(metric)
 		if err != nil {
 			return nil, "", err
 		}

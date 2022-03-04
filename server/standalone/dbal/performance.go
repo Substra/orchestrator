@@ -77,7 +77,7 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 	for rows.Next() {
 		performance := new(asset.Performance)
 
-		err = rows.Scan(&performance)
+		err = rows.Scan(performance)
 		if err != nil {
 			return nil, "", err
 		}

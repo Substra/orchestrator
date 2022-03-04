@@ -82,7 +82,7 @@ func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
 	row := d.tx.QueryRow(d.ctx, `select "asset" from "datasamples" where id=$1 and channel=$2`, key, d.channel)
 
 	datasample := new(asset.DataSample)
-	err := row.Scan(&datasample)
+	err := row.Scan(datasample)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -117,7 +117,7 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, comm
 	for rows.Next() {
 		datasample := new(asset.DataSample)
 
-		err = rows.Scan(&datasample)
+		err = rows.Scan(datasample)
 		if err != nil {
 			return nil, "", err
 		}
