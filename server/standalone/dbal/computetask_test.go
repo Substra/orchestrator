@@ -200,7 +200,7 @@ func TestAddComputeTasks(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Insert task
-	mock.ExpectCopyFrom(`"compute_tasks"`, []string{"id", "channel", "category", "compute_plan_key", "status", "worker", "asset"}).WillReturnResult(2)
+	mock.ExpectCopyFrom(`"compute_tasks"`, []string{"id", "channel", "category", "compute_plan_id", "status", "worker", "asset"}).WillReturnResult(2)
 	// Insert parents relationships
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_id", "child_task_id", "position"}).WillReturnResult(3)
 

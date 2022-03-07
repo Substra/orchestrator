@@ -35,7 +35,7 @@ func (d *DBAL) AddComputeTasks(tasks ...*asset.ComputeTask) error {
 }
 
 func (d *DBAL) addTask(t *asset.ComputeTask) error {
-	stmt := `insert into "compute_tasks" ("id", "channel", "category", "compute_plan_key", "status", "worker", "asset") values ($1, $2, $3, $4, $5, $6, $7)`
+	stmt := `insert into "compute_tasks" ("id", "channel", "category", "compute_plan_id", "status", "worker", "asset") values ($1, $2, $3, $4, $5, $6, $7)`
 	_, err := d.tx.Exec(d.ctx, stmt, t.GetKey(), d.channel, t.Category, t.ComputePlanKey, t.Status, t.Worker, t)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func (d *DBAL) addTasks(tasks []*asset.ComputeTask) error {
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"compute_tasks"},
-		[]string{"id", "channel", "category", "compute_plan_key", "status", "worker", "asset"},
+		[]string{"id", "channel", "category", "compute_plan_id", "status", "worker", "asset"},
 		pgx.CopyFromSlice(len(tasks), func(i int) ([]interface{}, error) {
 			task := tasks[i]
 			v, err := protojson.Marshal(task)
@@ -138,7 +138,7 @@ func (d *DBAL) UpdateComputeTask(t *asset.ComputeTask) error {
 		return err
 	}
 
-	stmt := `update "compute_tasks" set category=$3, compute_plan_key=$4, status=$5, worker=$6, asset=$7 where id=$1 and channel=$2`
+	stmt := `update "compute_tasks" set category=$3, compute_plan_id=$4, status=$5, worker=$6, asset=$7 where id=$1 and channel=$2`
 	_, err = d.tx.Exec(d.ctx, stmt, t.GetKey(), d.channel, t.Category, t.ComputePlanKey, t.Status, t.Worker, t)
 	return err
 }
@@ -274,7 +274,7 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 
 // GetComputePlanTasksKeys returns the list of task keys from the provided compute plan
 func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
-	rows, err := d.tx.Query(d.ctx, `select id from "compute_tasks" where compute_plan_key = $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select id from "compute_tasks" where compute_plan_id = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +298,7 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 
 // GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
-	rows, err := d.tx.Query(d.ctx, `select asset from "compute_tasks" where compute_plan_key = $1 and channel=$2`, key, d.channel)
+	rows, err := d.tx.Query(d.ctx, `select asset from "compute_tasks" where compute_plan_id = $1 and channel=$2`, key, d.channel)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +399,7 @@ func taskFilterToQuery(filter *asset.TaskQueryFilter, builder squirrel.SelectBui
 		builder = builder.Where(squirrel.Eq{"category": filter.Category.String()})
 	}
 	if filter.ComputePlanKey != "" {
-		builder = builder.Where(squirrel.Eq{"compute_plan_key": filter.ComputePlanKey})
+		builder = builder.Where(squirrel.Eq{"compute_plan_id": filter.ComputePlanKey})
 	}
 	if filter.AlgoKey != "" {
 		builder = builder.Where(squirrel.Eq{"asset->'algo'->>'key'": filter.AlgoKey})

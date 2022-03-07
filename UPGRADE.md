@@ -2,7 +2,12 @@
 
 This document details operations required to update from a version to another.
 
-## 0.5.0 -> Unreleased
+## 0.6.1 -> Unreleased
+
+The SQL migration `server/standalone/migration/000009_rename_compute_plan_key.up.sql` might fail if the database contains compute tasks which are not bound to any compute plan.
+If that is the case, create a new compute plan in the DB for each orphan compute task. This is a very unlikely scenario which shouldn't happen in practice.
+
+## 0.5.0 -> 0.6.0
 
 ### Manually run migration
 

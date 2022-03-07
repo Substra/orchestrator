@@ -11,6 +11,8 @@ erDiagram
                 jsonb 		asset
         }
 
+	compute_plans ||--o{ compute_tasks : contains
+
         compute_task_parents {
                 uuid 	child_task_id
                 uuid 	parent_task_id
@@ -24,7 +26,7 @@ erDiagram
                 uuid 		id
                 varchar-100 	channel
                 jsonb 		asset
-                uuid 		compute_plan_key
+                uuid 		compute_plan_id
                 varchar-100 	status
                 varchar-100 	category
                 varchar-100 	worker

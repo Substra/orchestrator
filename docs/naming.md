@@ -31,5 +31,5 @@ Indexes should be prefixed with `ix_` and follow the rule of `ix_<table>_<colums
 Example:
 
 ```sql
-CREATE INDEX IF NOT EXISTS ix_compute_tasks_compute_plan_key_status ON compute_tasks (compute_plan_key, status);
+CREATE INDEX IF NOT EXISTS ix_compute_tasks_compute_plan_id_status ON compute_tasks (compute_plan_id, status);
 ```
