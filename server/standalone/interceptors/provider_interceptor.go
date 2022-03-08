@@ -13,6 +13,7 @@ import (
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/event"
+	"github.com/owkin/orchestrator/server/standalone/metrics"
 	"google.golang.org/grpc"
 )
 
@@ -90,6 +91,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 
 	// Events should be dispatched only on successful transactions
 	if err != nil {
+		metrics.DBTransactionTotal.WithLabelValues(info.FullMethod, "rollback").Inc()
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			return nil, fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
@@ -98,11 +100,13 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		if !pi.amqp.IsReady() {
 			return nil, orcerrors.NewInternal("Message broker not ready")
 		}
+		metrics.DBTransactionTotal.WithLabelValues(info.FullMethod, "commit").Inc()
 		commitErr := tx.Commit()
 		if commitErr != nil {
 			return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
 		}
 		go func() {
+			metrics.EventDispatchedTotal.Add(float64(dispatcher.Len()))
 			dispatchErr := dispatcher.Dispatch(ctx)
 			if dispatchErr != nil {
 				pi.statusReporter.Shutdown()
