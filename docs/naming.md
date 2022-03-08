@@ -24,7 +24,17 @@ Feature flags passed through environment variables should follow the pattern `FE
 
 Example: `METRICS_ENABLED`.
 
-## Database index
+## Database
+
+### Tables
+
+Table names are snake_cased and plural
+
+### Columns
+
+- Surrogate keys are named `key` (and not `id`, see [related discussions](https://github.com/owkin/orchestrator/issues/538) on this topic).
+
+### Indexes
 
 Indexes should be prefixed with `ix_` and follow the rule of `ix_<table>_<colums>` where there can be several `<columns>` separated by underscores (`_`).
 
