@@ -13,9 +13,7 @@ data:
 
   # Standalone settings
   {{- if .Values.postgresql.enabled }}
-  {{- if .Values.orchestrator.logSQL }}
-  LOG_SQL: "true"
-  {{- end }}
+  LOG_SQL_VERBOSE: "{{ .Values.orchestrator.logSQLVerbose }}"
   {{- end }}
 
   # Distributed settings

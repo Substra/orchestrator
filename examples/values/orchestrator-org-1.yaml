@@ -2,7 +2,7 @@
 orchestrator:
   mode: standalone
   logLevel: DEBUG
-  logSQL: true
+  logSQLVerbose: true
   tls:
     createCertificates:
       enabled: true

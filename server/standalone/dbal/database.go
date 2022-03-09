@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/go-playground/log/v7"
 	"github.com/golang-migrate/migrate/v4"
@@ -33,20 +32,28 @@ type Database struct {
 }
 
 type SQLLogger struct {
-	debug bool
+	verbose bool
 }
 
 func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
-	if !l.debug && level <= pgx.LogLevelDebug {
+
+	sqlErr, hasError := data["err"]
+
+	if hasError {
+		// SQL errors should be logged at error level
+		level = pgx.LogLevelError
+	}
+
+	if !(l.verbose || level == pgx.LogLevelError) {
 		return
 	}
+
 	log := logger.Get(ctx).
 		WithField("msg", msg).
 		WithField("level", level)
 		// Other available fields (omitted to keep logs readable):
 		// - data["args"]: the query arguments (truncated if too long)
 		// - data["time"]: the query execution time
-		// - data["err"]: the SQL error text, if any
 		// - data["rowCount"]: number of rows returned, for SELECT statements
 		// - data["pid"]
 
@@ -54,7 +61,20 @@ func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, dat
 		log = log.WithField("sql", query)
 	}
 
-	log.Debug("SQL")
+	if hasError {
+		log = log.WithField("err", sqlErr)
+	}
+
+	switch level {
+	case pgx.LogLevelTrace, pgx.LogLevelDebug:
+		log.Debug("SQL")
+	case pgx.LogLevelInfo:
+		log.Info("SQL")
+	case pgx.LogLevelWarn:
+		log.Warn("SQL")
+	case pgx.LogLevelError:
+		log.Error("SQL")
+	}
 }
 
 type MigrationsLogger struct {
@@ -83,8 +103,8 @@ func InitDatabase(databaseURL string) (*Database, error) {
 		return nil, err
 	}
 
-	_, logSQL := os.LookupEnv("LOG_SQL")
-	config.ConnConfig.Logger = &SQLLogger{debug: logSQL}
+	verbose, _ := utils.GetenvBool("METRICS_ENABLED")
+	config.ConnConfig.Logger = &SQLLogger{verbose: verbose}
 
 	pool, err := pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {

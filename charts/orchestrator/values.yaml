@@ -74,7 +74,7 @@ ingress:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
   ## @param ingress.path path of the deault host
-  ##  
+  ##
   path: /
   ## @param ingress.hostname hostname of the default host
   hostname: orchestrator.node-1.com
@@ -99,7 +99,7 @@ ingress:
   ##   - name: chart-example.local
   ##     path: /
   ##     pathType: ImplementationSpecific
-  ##  
+  ##
   extraHosts: []
   ## @param ingress.extraTls The tls configuration for hostnames to be coverred by the ingress
   ## e.g:
@@ -124,7 +124,7 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-## @param nodeSelector Node labels used for pod assignment 
+## @param nodeSelector Node labels used for pod assignment
 ##
 nodeSelector: {}
 
@@ -194,7 +194,7 @@ fabric:
   ## @param fabric.logLevel Log level for `fabric-sdk-go`
   ##
   logLevel: INFO
-  ## @param fabric.strategy.invoke Chaincode invocation endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers) 
+  ## @param fabric.strategy.invoke Chaincode invocation endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers)
   ## @param fabric.strategy.query Chaincode query endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers)
   ##
   strategy:
@@ -250,16 +250,16 @@ orchestrator:
   ## @param orchestrator.logLevel Orchestrator log level
   ##
   logLevel: INFO
-  ## @param orchestrator.logSQL Log SQL statements
+  ## @param orchestrator.logSQLVerbose Log SQL statements with debug verbosity
   ##
-  logSQL: false
+  logSQLVerbose: false
   ## @param orchestrator.mode Orchestrator mode, either "standalone" or "distributed"
   ##
-  mode: standalone 
+  mode: standalone
   ## @param orchestrator.verifyClientMSPID If true, validates incoming gRPC requests by checking the `mspid` header matches the subject organization of the client SSL certificate. See [MSPID check](#MSPID-check)
   ##
   verifyClientMSPID: false
-  ## @param orchestrator.txRetryBudget Duration ([go format](https://golang.org/pkg/time/#ParseDuration)) during which the transaction can be retried in case of conflicting writes 
+  ## @param orchestrator.txRetryBudget Duration ([go format](https://golang.org/pkg/time/#ParseDuration)) during which the transaction can be retried in case of conflicting writes
   ##
   txRetryBudget: 500ms
   ## @param orchestrator.fabricGatewayTimeout Commit timeout ([go format](https://golang.org/pkg/time/#ParseDuration)) for all transaction submissions for the gateway (only used in distributed mode)

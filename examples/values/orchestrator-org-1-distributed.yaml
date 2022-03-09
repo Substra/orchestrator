@@ -3,7 +3,6 @@ orchestrator:
   mode: distributed
   channel: mychannel
   logLevel: DEBUG
-  logSQL: true
   tls:
     createCertificates:
       enabled: true

@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.1.0] - 2022-03-04
+
+### Changed
+- Renamed `logSQL` to `logSQLVerbose` (#587)
+
 ## [5.0.4] - 2022-03-02
 
 ### Fixed
