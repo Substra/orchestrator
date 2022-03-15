@@ -12,12 +12,12 @@ import (
 
 func TestEnqueue(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	dispatcher := new(event.MockDispatcher)
+	queue := new(event.MockQueue)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetEventDBAL").Return(dbal)
-	provider.On("GetEventQueue").Return(dispatcher)
+	provider.On("GetEventQueue").Return(queue)
 	provider.On("GetTimeService").Return(ts)
 
 	service := NewEventService(provider)
@@ -28,7 +28,7 @@ func TestEnqueue(t *testing.T) {
 	}
 
 	dbal.On("AddEvents", event).Once().Return(nil)
-	dispatcher.On("Enqueue", event).Once().Return(nil)
+	queue.On("Enqueue", event).Once().Return(nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	err := service.RegisterEvents(event)
@@ -37,6 +37,6 @@ func TestEnqueue(t *testing.T) {
 	assert.NotEqual(t, "", event.Id, "RegisterEvents should assign an ID to the event")
 
 	provider.AssertExpectations(t)
-	dispatcher.AssertExpectations(t)
+	queue.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 }

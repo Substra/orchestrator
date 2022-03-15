@@ -10,6 +10,7 @@ import (
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/common/trace"
 	"github.com/owkin/orchestrator/utils"
@@ -29,6 +30,7 @@ type TransactionContext interface {
 type Context struct {
 	context.Context
 	contractapi.TransactionContext
+	queue      event.Queue
 	dispatcher event.Dispatcher
 }
 
@@ -57,7 +59,6 @@ func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 
 	ctx := c.GetContext()
 	db := NewDB(ctx, stub)
-	dispatcher := c.GetDispatcher()
 	logger := logger.Get(ctx)
 
 	txTimestamp, err := stub.GetTxTimestamp()
@@ -67,14 +68,21 @@ func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 
 	ts := service.NewTimeService(txTimestamp.AsTime())
 
-	return service.NewProvider(logger, db, dispatcher, ts, stub.GetChannelID()), nil
+	return service.NewProvider(logger, db, c.getQueue(), ts, stub.GetChannelID()), nil
+}
+
+func (c *Context) getQueue() event.Queue {
+	if c.queue == nil {
+		c.queue = new(common.MemoryQueue)
+	}
+	return c.queue
 }
 
 // GetDispatcher returns inner event.Dispatcher
 func (c *Context) GetDispatcher() event.Dispatcher {
 	if c.dispatcher == nil {
 		stub := c.GetStub()
-		c.dispatcher = newEventDispatcher(stub, logger.Get(c.Context))
+		c.dispatcher = newEventDispatcher(stub, c.getQueue(), logger.Get(c.Context))
 	}
 	return c.dispatcher
 }

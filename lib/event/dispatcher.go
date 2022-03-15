@@ -16,7 +16,6 @@ type Queue interface {
 // Dispatcher is responsible for broadcasting events
 // Events are added via Push and dispatched with Dispatch
 type Dispatcher interface {
-	Queue
 	Dispatch() error
 }
 

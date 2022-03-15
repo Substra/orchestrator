@@ -21,9 +21,9 @@ func newMockedProvider() *MockDependenciesProvider {
 
 func TestServiceProviderInit(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	dispatcher := new(event.MockDispatcher)
+	queue := new(event.MockQueue)
 	time := new(MockTimeAPI)
-	provider := NewProvider(log.Entry{}, dbal, dispatcher, time, "testChannel")
+	provider := NewProvider(log.Entry{}, dbal, queue, time, "testChannel")
 
 	assert.Implements(t, (*NodeServiceProvider)(nil), provider, "service provider should provide NodeService")
 	assert.Implements(t, (*MetricServiceProvider)(nil), provider, "service provider should provide MetricService")
@@ -38,9 +38,9 @@ func TestServiceProviderInit(t *testing.T) {
 
 func TestLazyInstanciation(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	dispatcher := new(event.MockDispatcher)
+	queue := new(event.MockQueue)
 	time := new(MockTimeAPI)
-	provider := NewProvider(log.Entry{}, dbal, dispatcher, time, "testChannel")
+	provider := NewProvider(log.Entry{}, dbal, queue, time, "testChannel")
 
 	assert.Nil(t, provider.node, "service should be instanciated when needed")
 
