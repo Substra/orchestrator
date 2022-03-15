@@ -15,7 +15,7 @@ const EventName = "chaincode-updates"
 // Once contract processing is done, emitted events are aggregated into a single chaincode event
 // and pushed with the transaction.
 type eventDispatcher struct {
-	event.Queue
+	queue  event.Queue
 	stub   shim.ChaincodeStubInterface
 	logger log.Entry
 }
@@ -23,7 +23,7 @@ type eventDispatcher struct {
 // newEventDispatcher returns an eventDispatcher instance
 func newEventDispatcher(stub shim.ChaincodeStubInterface, queue event.Queue, logger log.Entry) *eventDispatcher {
 	return &eventDispatcher{
-		Queue:  queue,
+		queue:  queue,
 		stub:   stub,
 		logger: logger,
 	}
@@ -32,13 +32,13 @@ func newEventDispatcher(stub shim.ChaincodeStubInterface, queue event.Queue, log
 // Dispatch aggregates events from the queue into a single chaincode event
 // and assigns it to the transaction.
 func (ed *eventDispatcher) Dispatch() error {
-	if ed.Queue.Len() == 0 {
+	if ed.queue.Len() == 0 {
 		ed.logger.Debug("No event to return with transaction")
 		return nil
 	}
 
-	events := make([]json.RawMessage, ed.Queue.Len())
-	for i, event := range ed.Queue.GetEvents() {
+	events := make([]json.RawMessage, ed.queue.Len())
+	for i, event := range ed.queue.GetEvents() {
 		b, err := marshaller.Marshal(event)
 		if err != nil {
 			return err
