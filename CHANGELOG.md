@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Expose gRPC metrics (#584)
 - Expose database transaction and events metrics (#589)
+- Expose task metrics (#590)
 
 ### Changed
 - Log SQL errors regardless of log level (#587)

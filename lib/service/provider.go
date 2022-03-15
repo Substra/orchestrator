@@ -11,6 +11,10 @@ type LoggerProvider interface {
 	GetLogger() log.Entry
 }
 
+type ChannelProvider interface {
+	GetChannel() string
+}
+
 // DependenciesProvider describes a Provider exposing all orchestration services.
 type DependenciesProvider interface {
 	persistence.DBALProvider
@@ -30,6 +34,7 @@ type DependenciesProvider interface {
 	LoggerProvider
 	TimeServiceProvider
 	FailureReportServiceProvider
+	ChannelProvider
 }
 
 // Provider is the central part of the dependency injection pattern.
@@ -39,6 +44,7 @@ type DependenciesProvider interface {
 // Since the Provider implements every Provider interface, it can fit all service dependencies.
 type Provider struct {
 	logger        log.Entry
+	channel       string
 	dbal          persistence.DBAL
 	eventQueue    event.Queue
 	node          NodeAPI
@@ -66,13 +72,18 @@ func (sc *Provider) GetTimeService() TimeAPI {
 	return sc.time
 }
 
+func (sc *Provider) GetChannel() string {
+	return sc.channel
+}
+
 // NewProvider return an instance of Provider based on given persistence layer.
-func NewProvider(logger log.Entry, dbal persistence.DBAL, queue event.Queue, time TimeAPI) *Provider {
+func NewProvider(logger log.Entry, dbal persistence.DBAL, queue event.Queue, time TimeAPI, channel string) *Provider {
 	return &Provider{
 		logger:     logger,
 		dbal:       dbal,
 		eventQueue: queue,
 		time:       time,
+		channel:    channel,
 	}
 }
 

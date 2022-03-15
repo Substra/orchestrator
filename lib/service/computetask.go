@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/lib/metrics"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -32,6 +33,7 @@ type ComputeTaskServiceProvider interface {
 // ComputeTaskDependencyProvider defines what the ComputeTaskService needs to perform its duty
 type ComputeTaskDependencyProvider interface {
 	LoggerProvider
+	ChannelProvider
 	persistence.ComputeTaskDBALProvider
 	EventServiceProvider
 	AlgoServiceProvider
@@ -103,6 +105,7 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 		if err != nil {
 			return nil, err
 		}
+		metrics.TaskRegisteredTotal.WithLabelValues(s.GetChannel(), task.Category.String()).Inc()
 		registeredTasks = append(registeredTasks, task)
 
 		event := &asset.Event{
@@ -126,6 +129,8 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	if err != nil {
 		return nil, err
 	}
+
+	metrics.TaskRegistrationBatchSize.WithLabelValues(s.GetChannel()).Observe(float64(len(registeredTasks)))
 
 	return registeredTasks, nil
 }

@@ -67,7 +67,7 @@ func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 
 	ts := service.NewTimeService(txTimestamp.AsTime())
 
-	return service.NewProvider(logger, db, dispatcher, ts), nil
+	return service.NewProvider(logger, db, dispatcher, ts, stub.GetChannelID()), nil
 }
 
 // GetDispatcher returns inner event.Dispatcher

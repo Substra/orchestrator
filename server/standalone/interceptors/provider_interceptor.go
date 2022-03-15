@@ -84,7 +84,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 	}
 
 	ts := service.NewTimeService(time.Now())
-	provider := service.NewProvider(logger.Get(ctx), tx, dispatcher, ts)
+	provider := service.NewProvider(logger.Get(ctx), tx, dispatcher, ts, channel)
 
 	ctx = WithProvider(ctx, provider)
 	res, err := handler(ctx, req)

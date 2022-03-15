@@ -19,6 +19,7 @@ func TestGetProvider(t *testing.T) {
 	ctx.SetStub(stub)
 
 	stub.On("GetTxTimestamp").Once().Return(timestamppb.Now(), nil)
+	stub.On("GetChannelID").Once().Return("testChannel", nil)
 
 	provider, err := ctx.GetProvider()
 	assert.NoError(t, err)

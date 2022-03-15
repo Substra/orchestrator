@@ -7,6 +7,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/lib/metrics"
 )
 
 type taskTransition string
@@ -115,7 +116,13 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
 	s.GetLogger().WithField("taskKey", task.Key).WithField("action", action).WithField("reason", reason).Debug("Applying task action")
 	state := newState(s, task)
-	return state.Event(string(action), task, reason)
+	err := state.Event(string(action), task, reason)
+
+	if err == nil {
+		metrics.TaskUpdatedTotal.WithLabelValues(s.GetChannel(), state.Current()).Inc()
+	}
+
+	return err
 }
 
 // onDone will iterate over task children to update their statuses
@@ -149,6 +156,8 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 			return
 		}
 	}
+
+	metrics.TaskUpdateCascadeSize.WithLabelValues(s.GetChannel(), string(transitionTodo)).Observe(float64(len(children)))
 }
 
 // propagateDone propagates the DONE status of a parent to the task.

@@ -13,6 +13,8 @@ func newMockedProvider() *MockDependenciesProvider {
 	provider := new(MockDependenciesProvider)
 	// Unconditionally mock logger
 	provider.On("GetLogger").Maybe().Return(log.Entry{})
+	// And channel
+	provider.On("GetChannel").Maybe().Return("testChannel")
 
 	return provider
 }
@@ -21,7 +23,7 @@ func TestServiceProviderInit(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	dispatcher := new(event.MockDispatcher)
 	time := new(MockTimeAPI)
-	provider := NewProvider(log.Entry{}, dbal, dispatcher, time)
+	provider := NewProvider(log.Entry{}, dbal, dispatcher, time, "testChannel")
 
 	assert.Implements(t, (*NodeServiceProvider)(nil), provider, "service provider should provide NodeService")
 	assert.Implements(t, (*MetricServiceProvider)(nil), provider, "service provider should provide MetricService")
@@ -38,7 +40,7 @@ func TestLazyInstanciation(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	dispatcher := new(event.MockDispatcher)
 	time := new(MockTimeAPI)
-	provider := NewProvider(log.Entry{}, dbal, dispatcher, time)
+	provider := NewProvider(log.Entry{}, dbal, dispatcher, time, "testChannel")
 
 	assert.Nil(t, provider.node, "service should be instanciated when needed")
 
