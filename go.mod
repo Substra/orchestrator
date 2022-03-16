@@ -21,7 +21,7 @@ require (
 	github.com/pashagolub/pgxmock v1.4.4
 	github.com/prometheus/client_golang v1.12.1
 	github.com/streadway/amqp v1.0.0
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
