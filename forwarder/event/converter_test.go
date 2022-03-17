@@ -68,7 +68,7 @@ func TestForwardCCEvent(t *testing.T) {
 
 	ccEvent := &fab.CCEvent{Payload: payload}
 
-	publisher := new(common.MockPublisher)
+	publisher := new(common.MockAMQPPublisher)
 	forwarder := NewForwarder("testChannel", publisher)
 
 	bytes1, err := marshaller.Marshal(&publishedEvents[0])
@@ -76,8 +76,7 @@ func TestForwardCCEvent(t *testing.T) {
 	bytes2, err := marshaller.Marshal(&publishedEvents[1])
 	require.NoError(t, err)
 
-	publisher.On("Publish", utils.AnyContext, "testChannel", bytes1).Once().Return(nil)
-	publisher.On("Publish", utils.AnyContext, "testChannel", bytes2).Once().Return(nil)
+	publisher.On("Publish", utils.AnyContext, "testChannel", [][]byte{bytes1, bytes2}).Once().Return(nil)
 
 	forwarder.Forward(ccEvent)
 

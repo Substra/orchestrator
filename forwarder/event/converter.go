@@ -42,7 +42,9 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 
 	log.WithField("num_events", len(rawEvents)).Debug("Pushing chaincode events")
 
-	for _, rawEvent := range rawEvents {
+	messages := make([][]byte, len(rawEvents))
+
+	for i, rawEvent := range rawEvents {
 		event := new(asset.Event)
 		err := protojson.Unmarshal(rawEvent, event)
 		if err != nil {
@@ -58,11 +60,9 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 			logger.WithError(err).Error("Failed to serialize")
 			continue
 		}
-		err = f.publisher.Publish(context.Background(), f.channel, data)
-		if err != nil {
-			logger.WithError(err).Error("Failed to push event")
-			continue
-		}
-		logger.Debug("successfully pushed event to broker")
+
+		messages[i] = data
+		logger.Debug("successfully converted event")
 	}
+	f.publisher.Publish(context.Background(), f.channel, messages)
 }

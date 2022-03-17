@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
+	"github.com/owkin/orchestrator/server/standalone/metrics"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -33,7 +34,11 @@ func NewAMQPDispatcher(amqp common.AMQPPublisher, channel string) *AMQPDispatche
 // Dispatch sends events one by one to the AMQP channel
 func (d *AMQPDispatcher) Dispatch(ctx context.Context) error {
 	logger.Get(ctx).WithField("num_events", d.Len()).WithField("channel", d.channel).Debug("Dispatching events")
-	for _, event := range d.GetEvents() {
+	metrics.EventDispatchedTotal.Add(float64(d.Len()))
+
+	messages := make([][]byte, d.Len())
+
+	for i, event := range d.GetEvents() {
 		// Contextualize the event in a channel
 		event.Channel = d.channel
 
@@ -42,11 +47,10 @@ func (d *AMQPDispatcher) Dispatch(ctx context.Context) error {
 			return err
 		}
 
-		err = d.amqp.Publish(ctx, d.channel, data)
-		if err != nil {
-			return err
-		}
+		messages[i] = data
 	}
+
+	d.amqp.Publish(ctx, d.channel, messages)
 
 	return nil
 }

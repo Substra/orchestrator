@@ -48,7 +48,7 @@ func main() {
 	}
 
 	rabbitDSN := mustGetEnv("AMQP_DSN")
-	session := common.NewSession("orchestrator", rabbitDSN)
+	session := common.NewSession(rabbitDSN)
 	defer session.Close()
 
 	wallet := wallet.New(mustGetEnv("FABRIC_CERT"), mustGetEnv("FABRIC_KEY"))

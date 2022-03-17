@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Log SQL errors regardless of log level (#587)
 
+### Fixed
+- Publish events sequentially, preserving the order (#600)
+
 ## [0.6.1] - 2022-03-01
 
 ### Added

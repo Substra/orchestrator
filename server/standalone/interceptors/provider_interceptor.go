@@ -105,16 +105,13 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		if commitErr != nil {
 			return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
 		}
-		go func() {
-			metrics.EventDispatchedTotal.Add(float64(dispatcher.Len()))
-			dispatchErr := dispatcher.Dispatch(ctx)
-			if dispatchErr != nil {
-				pi.statusReporter.Shutdown()
-				logger.Get(ctx).WithError(dispatchErr).
-					WithField("events", dispatcher.GetEvents()).
-					Error("failed to dispatch events after successful transaction commit")
-			}
-		}()
+		dispatchErr := dispatcher.Dispatch(ctx)
+		if dispatchErr != nil {
+			pi.statusReporter.Shutdown()
+			logger.Get(ctx).WithError(dispatchErr).
+				WithField("events", dispatcher.GetEvents()).
+				Error("failed to dispatch events after successful transaction commit")
+		}
 
 	}
 

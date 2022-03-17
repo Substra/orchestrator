@@ -6,34 +6,45 @@ import (
 	"time"
 
 	"github.com/go-playground/log/v7"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // AMQPPublisher represent the ability to push a message to a broker.
 type AMQPPublisher interface {
-	Publish(ctx context.Context, routingKey string, data []byte) error
+	Publish(ctx context.Context, routingKey string, messages [][]byte)
 	// IsReady should return false if the publisher cannot handle message dispatch
 	IsReady() bool
+}
+
+type message struct {
+	routingKey string
+	data       []byte
 }
 
 // Session object wraps amqp library.
 // It automatically reconnects when the connection fails,
 // and blocks all pushes until the connection succeeds.
 // It also confirms every outgoing message, so none are lost.
-// Implementation is adapted from https://github.com/streadway/amqp/blob/master/example_client_test.go
+// Implementation is adapted from https://github.com/rabbitmq/amqp091-go/blob/main/example_client_test.go
 type Session struct {
-	name            string
-	connection      *amqp.Connection
-	channel         *amqp.Channel
-	done            chan bool
-	notifyConnClose chan *amqp.Error
-	notifyChanClose chan *amqp.Error
-	notifyConfirm   chan amqp.Confirmation
-	isReady         bool
+	connection        *amqp.Connection
+	channel           *amqp.Channel
+	done              chan bool
+	notifyConnClose   chan *amqp.Error
+	notifyChanClose   chan *amqp.Error
+	notifyConfirm     chan amqp.Confirmation
+	isReady           bool
+	messagesToPublish chan message
+	stopPublishing    chan bool
+	donePublishing    chan bool
 }
 
 const (
+	// Exchange on which to publish messages
+	exchangeName = "orchestrator"
+
+	messageBufferSize = 1000
+
 	// When reconnecting to the server after connection failure
 	reconnectDelay = 5 * time.Second
 
@@ -53,12 +64,15 @@ var (
 // NewSession creates a new consumer state instance, and automatically
 // attempts to connect to the server.
 // Session's name will be used to define the exchange on which events are published.
-func NewSession(name string, addr string) *Session {
+func NewSession(addr string) *Session {
 	session := Session{
-		name: name,
-		done: make(chan bool),
+		done:              make(chan bool),
+		messagesToPublish: make(chan message, messageBufferSize),
+		stopPublishing:    make(chan bool),
+		donePublishing:    make(chan bool, 1),
 	}
 	go session.handleReconnect(addr)
+	go session.sendToBroker()
 
 	for !session.isReady {
 		log.WithField("delay", reconnectDelay).Info("AMQP session not yet ready, waiting")
@@ -152,7 +166,7 @@ func (session *Session) init(conn *amqp.Connection) error {
 	}
 
 	err = ch.ExchangeDeclare(
-		session.name, // name
+		exchangeName, // name
 		"topic",      // type
 		true,         // durable
 		false,        // auto-deleted
@@ -166,7 +180,7 @@ func (session *Session) init(conn *amqp.Connection) error {
 
 	session.changeChannel(ch)
 	session.isReady = true
-	log.WithField("queue", session.name).Debug("AMQP session ready")
+	log.WithField("exchange", exchangeName).Debug("AMQP session ready")
 
 	return nil
 }
@@ -189,19 +203,17 @@ func (session *Session) changeChannel(channel *amqp.Channel) {
 	session.channel.NotifyPublish(session.notifyConfirm)
 }
 
-// Publish will push data onto the queue, and wait for a confirm.
+// publish will push data onto the queue, and wait for a confirm.
 // If no confirms are received until within the resendTimeout,
 // it continuously re-sends messages until a confirm is received.
 // This will block until the server sends a confirm. Errors are
 // only returned if the push action itself fails, see UnsafePush.
-func (session *Session) Publish(ctx context.Context, routingKey string, data []byte) error {
-	log := logger.Get(ctx).WithField("numBytes", len(data))
-
+func (session *Session) publish(routingKey string, data []byte) error {
 	if !session.isReady {
 		return errNotConnected
 	}
 	for {
-		err := session.UnsafePush(ctx, (routingKey), data)
+		err := session.unsafePush((routingKey), data)
 		if err != nil {
 			log.WithError(err).Warn("Push failed. Retrying...")
 			select {
@@ -222,24 +234,50 @@ func (session *Session) Publish(ctx context.Context, routingKey string, data []b
 	}
 }
 
-// UnsafePush will push to the queue without checking for
+// unsafePush will push to the queue without checking for
 // confirmation. It returns an error if it fails to connect.
 // No guarantees are provided for whether the server will
 // receive the message.
-func (session *Session) UnsafePush(ctx context.Context, routingKey string, data []byte) error {
+func (session *Session) unsafePush(routingKey string, data []byte) error {
 	if !session.isReady {
 		return errNotConnected
 	}
 	return session.channel.Publish(
-		session.name, // Exchange
+		exchangeName, // Exchange
 		routingKey,   // Routing key
 		false,        // Mandatory
 		false,        // Immediate
 		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        data,
+			ContentType:  "application/json",
+			Body:         data,
+			DeliveryMode: amqp.Persistent,
 		},
 	)
+}
+
+// sendToBroker will loop over the pending messages to publish and push them to the broker.
+func (session *Session) sendToBroker() {
+	log.Info("Starting event publication")
+	for {
+		select {
+		case msg := <-session.messagesToPublish:
+			err := session.publish(msg.routingKey, msg.data)
+			if err != nil {
+				log.WithError(err).WithField("event", string(msg.data)).WithField("routingKey", msg.routingKey).Error("failed to publish event")
+			}
+		case <-session.stopPublishing:
+			log.Info("Stopping event publication")
+			session.donePublishing <- true
+			close(session.donePublishing)
+			return
+		}
+	}
+}
+
+func (session *Session) Publish(ctx context.Context, routingKey string, messages [][]byte) {
+	for _, msg := range messages {
+		session.messagesToPublish <- message{routingKey: routingKey, data: msg}
+	}
 }
 
 // Close will cleanly shutdown the channel and connection.
@@ -247,6 +285,13 @@ func (session *Session) Close() error {
 	if !session.isReady {
 		return errAlreadyClosed
 	}
+
+	session.stopPublishing <- true
+	close(session.stopPublishing)
+	close(session.messagesToPublish)
+	// Wait for pending messages to be published
+	<-session.donePublishing
+
 	err := session.channel.Close()
 	if err != nil {
 		return err

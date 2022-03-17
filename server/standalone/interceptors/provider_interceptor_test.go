@@ -64,8 +64,9 @@ func TestExtractProvider(t *testing.T) {
 }
 
 func TestInjectProvider(t *testing.T) {
-	publisher := new(common.MockPublisher)
+	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
+	publisher.On("Publish", mock.Anything, "testChannel", [][]byte{}).Once().Return(nil)
 
 	db := new(mockedTransactionDBAL)
 	db.On("Commit").Once().Return(nil)
@@ -93,7 +94,7 @@ func TestInjectProvider(t *testing.T) {
 }
 
 func TestOnSuccess(t *testing.T) {
-	publisher := new(common.MockPublisher)
+	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
 	db := new(mockedTransactionDBAL)
 	dbProvider := &mockTransactionalDBALProvider{db}
@@ -135,7 +136,7 @@ func TestOnSuccess(t *testing.T) {
 }
 
 func TestOnError(t *testing.T) {
-	publisher := new(common.MockPublisher)
+	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
 	db := new(mockedTransactionDBAL)
 	dbProvider := &mockTransactionalDBALProvider{db}
@@ -168,7 +169,7 @@ func TestOnError(t *testing.T) {
 }
 
 func TestStopServingOnBrokerNotReady(t *testing.T) {
-	publisher := new(common.MockPublisher)
+	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(false)
 	db := new(mockedTransactionDBAL)
 	dbProvider := &mockTransactionalDBALProvider{db}

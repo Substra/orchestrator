@@ -29,7 +29,7 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 		return nil, err
 	}
 
-	session := common.NewSession("orchestrator", rabbitDSN)
+	session := common.NewSession(rabbitDSN)
 
 	channelInterceptor := common.NewChannelInterceptor(params.Config)
 
