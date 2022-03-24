@@ -17,6 +17,7 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/console"
 	"github.com/owkin/orchestrator/e2e/client"
+	"github.com/owkin/orchestrator/e2e/scenarios"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -121,13 +122,13 @@ func main() {
 	testClientFactory := client.NewTestClientFactory(conn, *mspid, *channel, *chaincode)
 
 scenario:
-	for name, sc := range testScenarios {
+	for name, sc := range scenarios.GatherTestScenarios() {
 		if *nameFilter != "" && *nameFilter != name {
 			// skip non matching test
 			continue
 		}
 		for _, tag := range tagFilter.list {
-			if utils.StringInSlice(sc.tags, tag) {
+			if utils.StringInSlice(sc.Tags, tag) {
 				break
 			}
 			// No match
@@ -138,7 +139,7 @@ scenario:
 		logger.Debug("starting scenario")
 		func() {
 			defer logger.WithTrace().Info("test succeeded")
-			sc.exec(testClientFactory)
+			sc.Exec(testClientFactory)
 		}()
 
 	}
@@ -150,8 +151,8 @@ func listTests() {
 	fmt.Fprintln(w, "name\ttags")
 	fmt.Fprintln(w, "----\t----")
 
-	for name, sc := range testScenarios {
-		fmt.Fprintf(w, "%s\t%s\n", name, sc.tags)
+	for name, sc := range scenarios.GatherTestScenarios() {
+		fmt.Fprintf(w, "%s\t%s\n", name, sc.Tags)
 	}
 	w.Flush()
 }

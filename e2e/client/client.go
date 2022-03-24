@@ -58,6 +58,7 @@ func (ks *KeyStore) GetKey(id string) string {
 
 // TestClient is a client for the tested app
 type TestClient struct {
+	MSPID                string
 	ctx                  context.Context
 	ks                   *KeyStore
 	logger               log.Entry
@@ -107,6 +108,7 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", f.mspid, "channel", f.channel, "chaincode", f.chaincode)
 
 	client := &TestClient{
+		MSPID:                f.mspid,
 		ctx:                  ctx,
 		ks:                   NewKeyStore(),
 		logger:               logger,
