@@ -26,7 +26,7 @@ jobs:
           apply: true
 
       - name: Create PR
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v4
         with:
           commit-message: "chore(deps): update apt/apk dependencies in Dockerfile ${{ matrix.dockerfile }}"
           branch: chore/update-dockerfile-dependencies-${{ matrix.dockerfile }}
