@@ -9,13 +9,12 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
-	"google.golang.org/grpc"
 )
 
 var defaultParent = []string{client.DefaultTaskRef}
 
 type scenario struct {
-	exec func(*grpc.ClientConn)
+	exec func(*client.TestClientFactory)
 	tags []string
 }
 
@@ -139,11 +138,8 @@ var testScenarios = map[string]scenario{
 }
 
 // Register a task and its dependencies, then start the task.
-func testTrainTaskLifecycle(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testTrainTaskLifecycle(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -161,11 +157,8 @@ func testTrainTaskLifecycle(conn *grpc.ClientConn) {
 }
 
 // register a task, start it, and register a model on it.
-func testRegisterModel(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testRegisterModel(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -189,11 +182,8 @@ func testRegisterModel(conn *grpc.ClientConn) {
 	}
 }
 
-func testCancelComputePlan(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testCancelComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("compAlgo").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("aggAlgo").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
@@ -232,11 +222,8 @@ func testCancelComputePlan(conn *grpc.ClientConn) {
 
 // Register 10 children tasks and cancel their parent
 // Only the parent should be canceled
-func testCascadeCancel(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testCascadeCancel(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -265,11 +252,8 @@ func testCascadeCancel(conn *grpc.ClientConn) {
 }
 
 // Register 10 tasks and set their parent as done
-func testCascadeTodo(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testCascadeTodo(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -299,11 +283,8 @@ func testCascadeTodo(conn *grpc.ClientConn) {
 
 // Register 10 tasks and set their parent as failed
 // Only the parent should be FAILED
-func testCascadeFailure(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testCascadeFailure(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -332,11 +313,8 @@ func testCascadeFailure(conn *grpc.ClientConn) {
 }
 
 // register 3 successive tasks, start and register models then check for model deletion
-func testDeleteIntermediary(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testDeleteIntermediary(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -380,7 +358,7 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 		log.Fatal("model has not been disabled")
 	}
 
-	err = appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTaskRef))
+	err := appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTaskRef))
 	if err == nil {
 		log.Fatal("registering a task with disabled input models should fail")
 		if !strings.Contains(err.Error(), "OE0003") {
@@ -426,11 +404,8 @@ func testDeleteIntermediary(conn *grpc.ClientConn) {
 //             ----------------
 //
 //
-func testMultiStageComputePlan(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testMultiStageComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
@@ -501,11 +476,8 @@ func testMultiStageComputePlan(conn *grpc.ClientConn) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 }
 
-func testPropagateLogsPermission(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testPropagateLogsPermission(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 
@@ -523,11 +495,8 @@ func testPropagateLogsPermission(conn *grpc.ClientConn) {
 	}
 }
 
-func testQueryTasks(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testQueryTasks(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -543,11 +512,8 @@ func testQueryTasks(conn *grpc.ClientConn) {
 }
 
 // register a test task, start it, and register its performance.
-func testRegisterPerformance(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testRegisterPerformance(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -562,7 +528,7 @@ func testRegisterPerformance(conn *grpc.ClientConn) {
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(defaultParent...).WithMetricsRef("testmetric"))
 	appClient.StartTask("testTask")
 
-	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
+	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
 	if err != nil {
 		log.WithError(err).Fatal("RegisterPerformance failed")
 	}
@@ -572,11 +538,8 @@ func testRegisterPerformance(conn *grpc.ClientConn) {
 	}
 }
 
-func testRegisterMultiplePerformances(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testRegisterMultiplePerformances(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -592,7 +555,7 @@ func testRegisterMultiplePerformances(conn *grpc.ClientConn) {
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(defaultParent...).WithMetricsRef("testmetric1", "testmetric2"))
 	appClient.StartTask("testTask")
 
-	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
+	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
 	if err != nil {
 		log.WithError(err).Fatal("RegisterPerformance failed")
 	}
@@ -611,11 +574,8 @@ func testRegisterMultiplePerformances(conn *grpc.ClientConn) {
 	}
 }
 
-func testRegisterMultiplePerformancesForSameMetric(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testRegisterMultiplePerformancesForSameMetric(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -631,7 +591,7 @@ func testRegisterMultiplePerformancesForSameMetric(conn *grpc.ClientConn) {
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(defaultParent...).WithMetricsRef("testmetric1", "testmetric2"))
 	appClient.StartTask("testTask")
 
-	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
+	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
 	if err != nil {
 		log.WithError(err).Fatal("RegisterPerformance failed")
 	}
@@ -653,11 +613,8 @@ func testRegisterMultiplePerformancesForSameMetric(conn *grpc.ClientConn) {
 	}
 }
 
-func testCompositeParentChild(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testCompositeParentChild(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -697,15 +654,10 @@ func testCompositeParentChild(conn *grpc.ClientConn) {
 	}
 }
 
-func testConcurrency(conn *grpc.ClientConn) {
-	client1, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create client1")
-	}
-	client2, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create client2")
-	}
+func testConcurrency(factory *client.TestClientFactory) {
+	client1 := factory.NewTestClient()
+	client2 := factory.NewTestClient()
+
 	// Share the same key store for both clients
 	client2.WithKeyStore(client1.GetKeyStore())
 
@@ -734,11 +686,8 @@ func testConcurrency(conn *grpc.ClientConn) {
 	wg.Wait()
 }
 
-func testLargeComputePlan(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testLargeComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	nbTasks := 10000
 	nbQuery := 5000 // 10k exceed max response size
@@ -764,11 +713,8 @@ func testLargeComputePlan(conn *grpc.ClientConn) {
 	}
 }
 
-func testBatchLargeComputePlan(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testBatchLargeComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	nbTasks := 10000
 	batchSize := 1000
@@ -802,11 +748,8 @@ func testBatchLargeComputePlan(conn *grpc.ClientConn) {
 	}
 }
 
-func testSmallComputePlan(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testSmallComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -831,11 +774,8 @@ func testSmallComputePlan(conn *grpc.ClientConn) {
 	}
 }
 
-func testAggregateComposite(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testAggregateComposite(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_AGGREGATE).WithKeyRef("aggAlgo"))
@@ -874,11 +814,8 @@ func testAggregateComposite(conn *grpc.ClientConn) {
 	}
 }
 
-func testDatasetSampleKeys(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testDatasetSampleKeys(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("ds1"))
@@ -898,11 +835,8 @@ func testDatasetSampleKeys(conn *grpc.ClientConn) {
 	}
 }
 
-func testQueryAlgos(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testQueryAlgos(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -939,11 +873,8 @@ func testQueryAlgos(conn *grpc.ClientConn) {
 	}
 }
 
-func testFailLargeComputePlan(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testFailLargeComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	nbRounds := 1000
 	nbPharma := 11
@@ -1001,11 +932,8 @@ func testFailLargeComputePlan(conn *grpc.ClientConn) {
 }
 
 // testStableTaskSort will register several hundreds of tasks and query them all multiple time, failing if there are duplicates.
-func testStableTaskSort(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testStableTaskSort(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	nbTasks := 1000
 	nbQuery := 10
@@ -1046,11 +974,8 @@ func testStableTaskSort(conn *grpc.ClientConn) {
 	}
 }
 
-func testQueryComputePlan(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testQueryComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp1"))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp2"))
@@ -1063,11 +988,8 @@ func testQueryComputePlan(conn *grpc.ClientConn) {
 	}
 }
 
-func testGetComputePlan(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testGetComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -1106,11 +1028,8 @@ func testGetComputePlan(conn *grpc.ClientConn) {
 }
 
 // Register a task, start it, fail it, and register a failure report on it.
-func testRegisterFailureReport(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testRegisterFailureReport(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -1142,11 +1061,8 @@ func testRegisterFailureReport(conn *grpc.ClientConn) {
 }
 
 // testEventTSFilter will register some assets to generate events and filter event by timestamp.
-func testEventTSFilter(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testEventTSFilter(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	nbTasks := 10
 
@@ -1193,11 +1109,8 @@ func testEventTSFilter(conn *grpc.ClientConn) {
 
 }
 
-func testRegisterTwoSimpleModelsForTrainTask(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testRegisterTwoSimpleModelsForTrainTask(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -1206,7 +1119,7 @@ func testRegisterTwoSimpleModelsForTrainTask(conn *grpc.ClientConn) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	appClient.StartTask(client.DefaultTaskRef)
-	err = appClient.FailableRegisterModels(
+	err := appClient.FailableRegisterModels(
 		client.DefaultModelOptions().WithKeyRef("mod1"),
 		client.DefaultModelOptions().WithKeyRef("mod2"),
 	)
@@ -1220,11 +1133,8 @@ func testRegisterTwoSimpleModelsForTrainTask(conn *grpc.ClientConn) {
 	log.WithError(err).Debug("Failed to register models, as expected")
 }
 
-func testRegisterAllModelsForCompositeTask(conn *grpc.ClientConn) {
-	appClient, err := client.NewTestClient(conn, *mspid, *channel, *chaincode)
-	if err != nil {
-		log.WithError(err).Fatal("could not create TestClient")
-	}
+func testRegisterAllModelsForCompositeTask(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())

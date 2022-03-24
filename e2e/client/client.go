@@ -75,11 +75,24 @@ type TestClient struct {
 	failureReportService asset.FailureReportServiceClient
 }
 
-func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*TestClient, error) {
+type TestClientFactory struct {
+	conn      *grpc.ClientConn
+	mspid     string
+	channel   string
+	chaincode string
+}
+
+func NewTestClientFactory(conn *grpc.ClientConn, mspid, channel, chaincode string) *TestClientFactory {
+	return &TestClientFactory{
+		conn: conn, mspid: mspid, channel: channel, chaincode: chaincode,
+	}
+}
+
+func (f *TestClientFactory) NewTestClient() *TestClient {
 	logger := log.WithFields(
-		log.F("mspid", mspid),
-		log.F("channel", channel),
-		log.F("chaincode", chaincode),
+		log.F("mspid", f.mspid),
+		log.F("channel", f.channel),
+		log.F("chaincode", f.chaincode),
 	)
 
 	pc, _, _, ok := runtime.Caller(1)
@@ -91,29 +104,28 @@ func NewTestClient(conn *grpc.ClientConn, mspid, channel, chaincode string) (*Te
 	}
 
 	ctx := context.Background()
-	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", mspid, "channel", channel, "chaincode", chaincode)
+	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", f.mspid, "channel", f.channel, "chaincode", f.chaincode)
 
 	client := &TestClient{
 		ctx:                  ctx,
 		ks:                   NewKeyStore(),
 		logger:               logger,
-		nodeService:          asset.NewNodeServiceClient(conn),
-		algoService:          asset.NewAlgoServiceClient(conn),
-		metricService:        asset.NewMetricServiceClient(conn),
-		dataManagerService:   asset.NewDataManagerServiceClient(conn),
-		dataSampleService:    asset.NewDataSampleServiceClient(conn),
-		modelService:         asset.NewModelServiceClient(conn),
-		computeTaskService:   asset.NewComputeTaskServiceClient(conn),
-		computePlanService:   asset.NewComputePlanServiceClient(conn),
-		performanceService:   asset.NewPerformanceServiceClient(conn),
-		datasetService:       asset.NewDatasetServiceClient(conn),
-		eventService:         asset.NewEventServiceClient(conn),
-		failureReportService: asset.NewFailureReportServiceClient(conn),
+		nodeService:          asset.NewNodeServiceClient(f.conn),
+		algoService:          asset.NewAlgoServiceClient(f.conn),
+		metricService:        asset.NewMetricServiceClient(f.conn),
+		dataManagerService:   asset.NewDataManagerServiceClient(f.conn),
+		dataSampleService:    asset.NewDataSampleServiceClient(f.conn),
+		modelService:         asset.NewModelServiceClient(f.conn),
+		computeTaskService:   asset.NewComputeTaskServiceClient(f.conn),
+		computePlanService:   asset.NewComputePlanServiceClient(f.conn),
+		performanceService:   asset.NewPerformanceServiceClient(f.conn),
+		datasetService:       asset.NewDatasetServiceClient(f.conn),
+		eventService:         asset.NewEventServiceClient(f.conn),
+		failureReportService: asset.NewFailureReportServiceClient(f.conn),
 	}
 
 	client.EnsureNode()
-
-	return client, nil
+	return client
 }
 
 func (c *TestClient) WithKeyStore(ks *KeyStore) *TestClient {

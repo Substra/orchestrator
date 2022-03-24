@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/console"
+	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -117,6 +118,8 @@ func main() {
 		tagFilter.list = append(tagFilter.list, "short")
 	}
 
+	testClientFactory := client.NewTestClientFactory(conn, *mspid, *channel, *chaincode)
+
 scenario:
 	for name, sc := range testScenarios {
 		if *nameFilter != "" && *nameFilter != name {
@@ -135,7 +138,7 @@ scenario:
 		logger.Debug("starting scenario")
 		func() {
 			defer logger.WithTrace().Info("test succeeded")
-			sc.exec(conn)
+			sc.exec(testClientFactory)
 		}()
 
 	}
