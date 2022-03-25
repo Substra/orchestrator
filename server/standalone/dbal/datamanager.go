@@ -53,16 +53,13 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 
 // QueryDataManagers implements persistence.DataManagerDBAL
 func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error) {
-	var rows pgx.Rows
-	var err error
-
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
 	query := `select "asset" from "datamanagers" where channel=$3 order by asset->>'creationDate' asc, id limit $1 offset $2`
-	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
+	rows, err := d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}

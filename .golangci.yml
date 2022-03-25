@@ -12,3 +12,4 @@ linters-settings:
   importas:
     "orcerrors": github.com/owkin/orchestrator/lib/errors
     "commonserv": github.com/owkin/orchestrator/server/common
+    "sq": github.com/Masterminds/squirrel

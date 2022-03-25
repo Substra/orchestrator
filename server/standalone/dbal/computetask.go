@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
@@ -158,16 +158,12 @@ func (d *DBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
 	existingKeys := []string{}
 
 	uniqueKeys := utils.UniqueString(keys)
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
-	query, args, err := pgDialect.Select("id").
+	stmt := getStatementBuilder().Select("id").
 		From("compute_tasks").
-		Where(squirrel.Eq{"channel": d.channel, "id": uniqueKeys}).ToSql()
-	if err != nil {
-		return nil, err
-	}
+		Where(sq.Eq{"channel": d.channel, "id": uniqueKeys})
 
-	rows, err := d.tx.Query(d.ctx, query, args...)
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, err
 	}
@@ -208,16 +204,11 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 // GetComputeTasks returns the list of unique compute tasks identified by the provided keys.
 // It should not be used where pagination is expected!
 func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-
-	query, args, err := pgDialect.Select("asset").
+	stmt := getStatementBuilder().Select("asset").
 		From("compute_tasks").
-		Where(squirrel.Eq{"channel": d.channel, "id": keys}).ToSql()
-	if err != nil {
-		return nil, err
-	}
+		Where(sq.Eq{"channel": d.channel, "id": keys})
 
-	rows, err := d.tx.Query(d.ctx, query, args...)
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, err
 	}
@@ -322,31 +313,22 @@ func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
 
 // QueryComputeTasks returns a paginated and filtered list of tasks.
 func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
-	var rows pgx.Rows
-	var err error
-
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	builder := pgDialect.Select("asset").
+	stmt := getStatementBuilder().Select("asset").
 		From("compute_tasks").
-		Where(squirrel.Eq{"channel": d.channel}).
+		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("asset->>'creationDate' ASC, id").
 		Offset(uint64(offset)).
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
-	builder = taskFilterToQuery(filter, builder)
+	stmt = taskFilterToQuery(filter, stmt)
 
-	query, args, err := builder.ToSql()
-	if err != nil {
-		return nil, "", err
-	}
-
-	rows, err = d.tx.Query(d.ctx, query, args...)
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, "", err
 	}
@@ -384,25 +366,25 @@ func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFi
 }
 
 // taskFilterToQuery convert as filter into query string and param list
-func taskFilterToQuery(filter *asset.TaskQueryFilter, builder squirrel.SelectBuilder) squirrel.SelectBuilder {
+func taskFilterToQuery(filter *asset.TaskQueryFilter, builder sq.SelectBuilder) sq.SelectBuilder {
 	if filter == nil {
 		return builder
 	}
 
 	if filter.Worker != "" {
-		builder = builder.Where(squirrel.Eq{"worker": filter.Worker})
+		builder = builder.Where(sq.Eq{"worker": filter.Worker})
 	}
 	if filter.Status != 0 {
-		builder = builder.Where(squirrel.Eq{"status": filter.Status.String()})
+		builder = builder.Where(sq.Eq{"status": filter.Status.String()})
 	}
 	if filter.Category != 0 {
-		builder = builder.Where(squirrel.Eq{"category": filter.Category.String()})
+		builder = builder.Where(sq.Eq{"category": filter.Category.String()})
 	}
 	if filter.ComputePlanKey != "" {
-		builder = builder.Where(squirrel.Eq{"compute_plan_id": filter.ComputePlanKey})
+		builder = builder.Where(sq.Eq{"compute_plan_id": filter.ComputePlanKey})
 	}
 	if filter.AlgoKey != "" {
-		builder = builder.Where(squirrel.Eq{"asset->'algo'->>'key'": filter.AlgoKey})
+		builder = builder.Where(sq.Eq{"asset->'algo'->>'key'": filter.AlgoKey})
 	}
 
 	return builder

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -28,33 +28,25 @@ func (d *DBAL) GetModel(key string) (*asset.Model, error) {
 }
 
 func (d *DBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
-	var rows pgx.Rows
-	var err error
-
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	builder := pgDialect.Select("asset").
+	pgDialect := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+	stmt := pgDialect.Select("asset").
 		From("models").
-		Where(squirrel.Eq{"channel": d.channel}).
+		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("asset->>'creationDate' ASC, id").
 		Offset(uint64(offset)).
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	if c != asset.ModelCategory_MODEL_UNKNOWN {
-		builder = builder.Where(squirrel.Eq{"asset->>'category'": c.String()})
+		stmt = stmt.Where(sq.Eq{"asset->>'category'": c.String()})
 	}
 
-	query, args, err := builder.ToSql()
-	if err != nil {
-		return nil, "", err
-	}
-
-	rows, err = d.tx.Query(d.ctx, query, args...)
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, "", err
 	}

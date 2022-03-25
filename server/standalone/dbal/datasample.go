@@ -96,16 +96,13 @@ func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
 
 // QueryDataSamples implements persistence.DataSample
 func (d *DBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
-	var rows pgx.Rows
-	var err error
-
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
 	query := `select "asset" from "datasamples" where channel=$3 order by asset->>'creationDate' asc, id limit $1 offset $2`
-	rows, err = d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
+	rows, err := d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
 	if err != nil {
 		return nil, "", err
 	}
@@ -144,9 +141,6 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, comm
 
 // GetDataSampleKeysByManager returns sample keys linked to given manager.
 func (d *DBAL) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) ([]string, error) {
-	var rows pgx.Rows
-	var err error
-
 	testOnlyFilter := `not`
 	if testOnly {
 		testOnlyFilter = ``
@@ -156,7 +150,7 @@ func (d *DBAL) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) 
 		testOnlyFilter +
 		` (asset ? 'testOnly' and (asset->'testOnly')::boolean) order by asset->>'creationDate' asc, id`
 
-	rows, err = d.tx.Query(d.ctx, query, d.channel, dataManagerKey)
+	rows, err := d.tx.Query(d.ctx, query, d.channel, dataManagerKey)
 
 	if err != nil {
 		return nil, err

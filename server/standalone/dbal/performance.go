@@ -3,8 +3,7 @@ package dbal
 import (
 	"strconv"
 
-	"github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v4"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 )
@@ -35,37 +34,28 @@ func (d *DBAL) PerformanceExists(perf *asset.Performance) (bool, error) {
 }
 
 func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.PerformanceQueryFilter) ([]*asset.Performance, common.PaginationToken, error) {
-	var rows pgx.Rows
-	var err error
-
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	builder := pgDialect.Select("asset").
+	stmt := getStatementBuilder().Select("asset").
 		From("performances").
-		Where(squirrel.Eq{"channel": d.channel}).
+		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("asset->>'creationDate' ASC, metric_id DESC, compute_task_id DESC").
 		Offset(uint64(offset)).
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	if filter.ComputeTaskKey != "" {
-		builder = builder.Where(squirrel.Eq{"compute_task_id": filter.ComputeTaskKey})
+		stmt = stmt.Where(sq.Eq{"compute_task_id": filter.ComputeTaskKey})
 	}
 
 	if filter.MetricKey != "" {
-		builder = builder.Where(squirrel.Eq{"metric_id": filter.MetricKey})
+		stmt = stmt.Where(sq.Eq{"metric_id": filter.MetricKey})
 	}
 
-	query, args, err := builder.ToSql()
-	if err != nil {
-		return nil, "", err
-	}
-
-	rows, err = d.tx.Query(d.ctx, query, args...)
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, "", err
 	}

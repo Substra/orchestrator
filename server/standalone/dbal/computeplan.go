@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -31,28 +31,25 @@ func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 
 // GetComputePlan returns a ComputePlan by its key
 func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	builder := pgDialect.Select().
+	stmt := getStatementBuilder().Select().
 		Column("cp.asset").
-		Column(squirrel.Expr("COUNT(1)")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_WAITING')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_TODO')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DOING')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_CANCELED')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_FAILED')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DONE')")).
+		Column(sq.Expr("COUNT(1)")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_WAITING')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_TODO')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DOING')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_CANCELED')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_FAILED')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DONE')")).
 		From("compute_plans AS cp").
 		LeftJoin("compute_tasks AS t ON t.compute_plan_id = cp.id").
-		Where(squirrel.Eq{"cp.id": key}).
-		Where(squirrel.Eq{"cp.channel": d.channel}).
+		Where(sq.Eq{"cp.id": key}).
+		Where(sq.Eq{"cp.channel": d.channel}).
 		GroupBy("cp.id")
 
-	query, args, err := builder.ToSql()
+	row, err := d.queryRow(stmt)
 	if err != nil {
 		return nil, err
 	}
-
-	row := d.tx.QueryRow(d.ctx, query, args...)
 
 	plan := new(asset.ComputePlan)
 	var total, waiting, todo, doing, canceled, failed, done uint32
@@ -95,26 +92,23 @@ func (d *DBAL) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
 }
 
 func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error) {
-	var rows pgx.Rows
-	var err error
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	builder := pgDialect.Select().
+	stmt := getStatementBuilder().Select().
 		Column("cp.asset").
-		Column(squirrel.Expr("COUNT(1)")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_WAITING')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_TODO')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DOING')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_CANCELED')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_FAILED')")).
-		Column(squirrel.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DONE')")).
+		Column(sq.Expr("COUNT(1)")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_WAITING')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_TODO')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DOING')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_CANCELED')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_FAILED')")).
+		Column(sq.Expr("COUNT(1) FILTER (WHERE t.status = 'STATUS_DONE')")).
 		From("compute_plans AS cp").
 		LeftJoin("compute_tasks AS t ON t.compute_plan_id = cp.id").
-		Where(squirrel.Eq{"cp.channel": d.channel}).
+		Where(sq.Eq{"cp.channel": d.channel}).
 		GroupBy("cp.id").
 		OrderBy("cp.asset->>'creationDate' ASC", "cp.id ASC").
 		Offset(uint64(offset)).
@@ -122,15 +116,10 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 		Limit(uint64(p.Size + 1))
 
 	if filter.Owner != "" {
-		builder = builder.Where(squirrel.Eq{"asset->>'owner'": filter.Owner})
+		stmt = stmt.Where(sq.Eq{"asset->>'owner'": filter.Owner})
 	}
 
-	query, args, err := builder.ToSql()
-	if err != nil {
-		return nil, "", err
-	}
-
-	rows, err = d.tx.Query(d.ctx, query, args...)
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, "", err
 	}

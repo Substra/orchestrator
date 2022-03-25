@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -37,40 +37,31 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 
 // QueryAlgos implements persistence.AlgoDBAL
 func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
-	var rows pgx.Rows
-	var err error
-
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	builder := pgDialect.Select("asset").
+	stmt := getStatementBuilder().Select("asset").
 		From("algos").
-		Where(squirrel.Eq{"channel": d.channel}).
+		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("asset->>'creationDate' ASC, id").
 		Offset(uint64(offset)).
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {
-		builder = builder.Where(squirrel.Eq{"asset->>'category'": filter.Category.String()})
+		stmt = stmt.Where(sq.Eq{"asset->>'category'": filter.Category.String()})
 	}
 
 	if filter.ComputePlanKey != "" {
-		builder = builder.Where(squirrel.Expr(
+		stmt = stmt.Where(sq.Expr(
 			"id IN (SELECT DISTINCT(asset->'algo'->>'key')::uuid FROM compute_tasks WHERE compute_plan_id = ?)",
 			filter.ComputePlanKey,
 		))
 	}
 
-	query, args, err := builder.ToSql()
-	if err != nil {
-		return nil, "", err
-	}
-
-	rows, err = d.tx.Query(d.ctx, query, args...)
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, "", err
 	}
