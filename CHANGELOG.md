@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Log SQL errors regardless of log level (#587)
+- Remove `asset` column of `nodes` table (#604)
 
 ### Fixed
 - Publish events sequentially, preserving the order (#600)

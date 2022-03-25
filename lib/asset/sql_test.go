@@ -6,21 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNodeValue(t *testing.T) {
-	node := &Node{
-		Id: "test",
-	}
-
-	value, err := node.Value()
-	assert.NoError(t, err, "node serialization should not fail")
-
-	scanned := new(Node)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "node scan should not fail")
-
-	assert.Equal(t, node, scanned)
-}
-
 func TestMetricValue(t *testing.T) {
 	metric := &Metric{
 		Name:  "test",

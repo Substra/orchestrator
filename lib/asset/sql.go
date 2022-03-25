@@ -8,23 +8,6 @@ import (
 )
 
 // Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the Node.
-func (n *Node) Value() (driver.Value, error) {
-	return protojson.Marshal(n)
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes JSON into Node.
-func (n *Node) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan node")
-	}
-
-	return protojson.Unmarshal(b, n)
-}
-
-// Value implements the driver.Valuer interface.
 // Simply returns the JSON-encoded representation of the Metric.
 func (o *Metric) Value() (driver.Value, error) {
 	return protojson.Marshal(o)
