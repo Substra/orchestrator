@@ -5,7 +5,7 @@ SELECT execute($$
     ADD COLUMN asset JSONB;
 
     UPDATE nodes
-    SET asset = json_build_object(
+    SET asset = JSONB_BUILD_OBJECT(
         'id', id,
         'creationDate', to_rfc_3339(creation_date)
     );
