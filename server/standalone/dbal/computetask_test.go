@@ -135,12 +135,12 @@ func TestQueryComputeTasks(t *testing.T) {
 
 func TestAddComputeTask(t *testing.T) {
 	newTask := &asset.ComputeTask{
-		Key:            "testTask",
+		Key:            "8d9fc421-15a6-4c3d-9082-3337a5436e83",
 		Category:       asset.ComputeTaskCategory_TASK_TEST,
-		ComputePlanKey: "cpKey",
+		ComputePlanKey: "b16dcd88-32ca-4971-89a7-734b4ad1d778",
 		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 		Worker:         "testOrg",
-		ParentTaskKeys: []string{"parent1", "parent2"},
+		ParentTaskKeys: []string{"f7743332-17f5-4d20-9e29-55312a081c9d", "b09c3fbf-9f92-460b-a87c-37f7f3bd4c63"},
 	}
 
 	mock, err := pgxmock.NewConn()
@@ -152,18 +152,16 @@ func TestAddComputeTask(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Insert task
-	mock.ExpectExec(`insert into "compute_tasks"`).WithArgs(newTask.Key, testChannel, newTask.Category, newTask.ComputePlanKey, newTask.Status, newTask.Worker, newTask).WillReturnResult(pgxmock.NewResult("INSERT", 1))
-
-	// Insert parents
-	mock.ExpectExec(`insert into compute_task_parents`).WithArgs("parent1", newTask.Key, 1).WillReturnResult(pgxmock.NewResult("INSERT", 1))
-	mock.ExpectExec(`insert into compute_task_parents`).WithArgs("parent2", newTask.Key, 2).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectCopyFrom(`"compute_tasks"`, []string{"id", "channel", "category", "compute_plan_id", "status", "worker", "asset"}).WillReturnResult(1)
+	// Insert parents relationships
+	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_id", "child_task_id", "position"}).WillReturnResult(2)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	err = dbal.addTask(newTask)
+	err = dbal.AddComputeTasks(newTask)
 	assert.NoError(t, err)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -209,7 +207,7 @@ func TestAddComputeTasks(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	err = dbal.addTasks(newTasks)
+	err = dbal.AddComputeTasks(newTasks...)
 	assert.NoError(t, err)
 
 	if err := mock.ExpectationsWereMet(); err != nil {

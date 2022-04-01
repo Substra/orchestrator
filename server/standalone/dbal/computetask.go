@@ -15,37 +15,19 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-// AddComputeTasks insert tasks in storage according to the most efficient way.
-// Up to 5 tasks, they will be inserted one by one.
-// For more than 5 tasks they will be processed in batch.
+// AddComputeTasks add one or multiple tasks to storage.
 func (d *DBAL) AddComputeTasks(tasks ...*asset.ComputeTask) error {
-	if len(tasks) >= 5 {
-		log.WithField("numTasks", len(tasks)).Debug("dbal: adding multiple tasks in batch mode")
-		return d.addTasks(tasks)
-	}
-
-	for _, t := range tasks {
-		err := d.addTask(t)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (d *DBAL) addTask(t *asset.ComputeTask) error {
-	stmt := `insert into "compute_tasks" ("id", "channel", "category", "compute_plan_id", "status", "worker", "asset") values ($1, $2, $3, $4, $5, $6, $7)`
-	_, err := d.tx.Exec(d.ctx, stmt, t.GetKey(), d.channel, t.Category, t.ComputePlanKey, t.Status, t.Worker, t)
+	log.WithField("numTasks", len(tasks)).Debug("dbal: adding tasks in batch mode")
+	err := d.insertTasks(tasks)
 	if err != nil {
 		return err
 	}
 
-	err = d.insertParentTasks(t)
-	return err
+	return d.insertParentTasks(tasks...)
 }
 
-func (d *DBAL) addTasks(tasks []*asset.ComputeTask) error {
+// insertTasks insert tasks in database in batch mode.
+func (d *DBAL) insertTasks(tasks []*asset.ComputeTask) error {
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"compute_tasks"},
@@ -71,11 +53,11 @@ func (d *DBAL) addTasks(tasks []*asset.ComputeTask) error {
 		}),
 	)
 
-	if err != nil {
-		return err
-	}
+	return err
+}
 
-	// Add compute_task_parents rows
+// insertParentTasks insert the parents of tasks in database in batch mode.
+func (d *DBAL) insertParentTasks(tasks ...*asset.ComputeTask) error {
 	parentRows := make([][]interface{}, 0)
 	for _, t := range tasks {
 		if t.ParentTaskKeys != nil {
@@ -83,19 +65,18 @@ func (d *DBAL) addTasks(tasks []*asset.ComputeTask) error {
 			if err != nil {
 				return err
 			}
-			position := 1
-			for _, parentTaskKey := range t.ParentTaskKeys {
+
+			for idx, parentTaskKey := range t.ParentTaskKeys {
 				parentTask, err := uuid.Parse(parentTaskKey)
 				if err != nil {
 					return err
 				}
-				parentRows = append(parentRows, []interface{}{parentTask, childTask, position})
-				position++
+				parentRows = append(parentRows, []interface{}{parentTask, childTask, idx + 1})
 			}
 		}
 	}
 
-	_, err = d.tx.CopyFrom(
+	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"compute_task_parents"},
 		[]string{"parent_task_id", "child_task_id", "position"},
@@ -110,20 +91,6 @@ func (d *DBAL) deleteParentTasks(taskKey string) error {
 	stmt := `delete from compute_task_parents where child_task_id = $1`
 	_, err := d.tx.Exec(d.ctx, stmt, taskKey)
 	return err
-}
-
-// insertParentTasks inserts all the parents tasks of a compute task, one by one
-func (d *DBAL) insertParentTasks(t *asset.ComputeTask) error {
-	position := 1
-	for _, parentTaskKey := range t.ParentTaskKeys {
-		stmt := `insert into compute_task_parents(parent_task_id, child_task_id, position) values ($1, $2, $3)`
-		_, err := d.tx.Exec(d.ctx, stmt, parentTaskKey, t.GetKey(), position)
-		if err != nil {
-			return err
-		}
-		position++
-	}
-	return nil
 }
 
 // UpdateComputeTask updates an existing task
