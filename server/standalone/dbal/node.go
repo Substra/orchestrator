@@ -67,14 +67,14 @@ func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
 	var nodes []*asset.Node
 
 	for rows.Next() {
-		retrieved := new(sqlNode)
+		scanned := sqlNode{}
 
-		err = rows.Scan(&retrieved.ID, &retrieved.CreationDate)
+		err = rows.Scan(&scanned.ID, &scanned.CreationDate)
 		if err != nil {
 			return nil, err
 		}
 
-		nodes = append(nodes, retrieved.toNode())
+		nodes = append(nodes, scanned.toNode())
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -95,8 +95,8 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 		return nil, err
 	}
 
-	retrieved := new(sqlNode)
-	err = row.Scan(&retrieved.ID, &retrieved.CreationDate)
+	scanned := sqlNode{}
+	err = row.Scan(&scanned.ID, &scanned.CreationDate)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -105,5 +105,5 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 		return nil, err
 	}
 
-	return retrieved.toNode(), nil
+	return scanned.toNode(), nil
 }

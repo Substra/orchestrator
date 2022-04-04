@@ -3,27 +3,76 @@ package dbal
 import (
 	"errors"
 	"strconv"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+type sqlAlgo struct {
+	Key          string
+	Name         string
+	Category     asset.AlgoCategory
+	Description  asset.Addressable
+	Algorithm    asset.Addressable
+	Permissions  asset.Permissions
+	Owner        string
+	CreationDate time.Time
+	Metadata     map[string]string
+}
+
+func (a *sqlAlgo) toAlgo() *asset.Algo {
+	return &asset.Algo{
+		Key:          a.Key,
+		Name:         a.Name,
+		Category:     a.Category,
+		Description:  &a.Description,
+		Algorithm:    &a.Algorithm,
+		Permissions:  &a.Permissions,
+		Owner:        a.Owner,
+		CreationDate: timestamppb.New(a.CreationDate),
+		Metadata:     a.Metadata,
+	}
+}
 
 // AddAlgo implements persistence.AlgoDBAL
 func (d *DBAL) AddAlgo(algo *asset.Algo) error {
-	stmt := `insert into "algos" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(d.ctx, stmt, algo.GetKey(), algo, d.channel)
-	return err
+	err := d.addAddressable(algo.Description)
+	if err != nil {
+		return err
+	}
+
+	err = d.addAddressable(algo.Algorithm)
+	if err != nil {
+		return err
+	}
+
+	stmt := getStatementBuilder().
+		Insert("algos").
+		Columns("key", "channel", "name", "category", "description", "algorithm", "permissions", "owner", "creation_date", "metadata").
+		Values(algo.Key, d.channel, algo.Name, algo.Category, algo.Description.StorageAddress, algo.Algorithm.StorageAddress, algo.Permissions, algo.Owner, algo.CreationDate.AsTime(), algo.Metadata)
+
+	return d.exec(stmt)
 }
 
 // GetAlgo implements persistence.AlgoDBAL
 func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
-	row := d.tx.QueryRow(d.ctx, `select "asset" from "algos" where id=$1 and channel=$2`, key, d.channel)
+	stmt := getStatementBuilder().
+		Select("key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		From("expanded_algos").
+		Where(sq.Eq{"key": key, "channel": d.channel})
 
-	algo := new(asset.Algo)
-	err := row.Scan(algo)
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	al := sqlAlgo{}
+	err = row.Scan(&al.Key, &al.Name, &al.Category, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -32,7 +81,7 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 		return nil, err
 	}
 
-	return algo, nil
+	return al.toAlgo(), nil
 }
 
 // QueryAlgos implements persistence.AlgoDBAL
@@ -42,21 +91,22 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 		return nil, "", err
 	}
 
-	stmt := getStatementBuilder().Select("asset").
-		From("algos").
+	stmt := getStatementBuilder().
+		Select("key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		From("expanded_algos").
 		Where(sq.Eq{"channel": d.channel}).
-		OrderByClause("asset->>'creationDate' ASC, id").
+		OrderByClause("creation_date ASC, key").
 		Offset(uint64(offset)).
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {
-		stmt = stmt.Where(sq.Eq{"asset->>'category'": filter.Category.String()})
+		stmt = stmt.Where(sq.Eq{"category": filter.Category.String()})
 	}
 
 	if filter.ComputePlanKey != "" {
 		stmt = stmt.Where(sq.Expr(
-			"id IN (SELECT DISTINCT(asset->'algo'->>'key')::uuid FROM compute_tasks WHERE compute_plan_id = ?)",
+			"key IN (SELECT DISTINCT(asset->'algo'->>'key')::uuid FROM compute_tasks WHERE compute_plan_id = ?)",
 			filter.ComputePlanKey,
 		))
 	}
@@ -71,14 +121,14 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	var count int
 
 	for rows.Next() {
-		algo := new(asset.Algo)
+		al := sqlAlgo{}
 
-		err = rows.Scan(algo)
+		err = rows.Scan(&al.Key, &al.Name, &al.Category, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
 		if err != nil {
 			return nil, "", err
 		}
 
-		algos = append(algos, algo)
+		algos = append(algos, al.toAlgo())
 		count++
 
 		if count == int(p.Size) {
@@ -100,10 +150,18 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 
 // AlgoExists implements persistence.AlgoDBAL
 func (d *DBAL) AlgoExists(key string) (bool, error) {
-	row := d.tx.QueryRow(d.ctx, `select count(id) from "algos" where id=$1 and channel=$2`, key, d.channel)
+	stmt := getStatementBuilder().
+		Select("COUNT(key)").
+		From("algos").
+		Where(sq.Eq{"key": key, "channel": d.channel})
+
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return false, err
+	}
 
 	var count int
-	err := row.Scan(&count)
+	err = row.Scan(&count)
 
 	return count == 1, err
 }

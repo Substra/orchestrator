@@ -3,6 +3,7 @@ package dbal
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -10,6 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func makeRows() *pgxmock.Rows {
+	permissions := []byte(`{"process": {"public": true}, "download": {"public": true}}`)
+	return pgxmock.NewRows([]string{"key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata"}).
+		AddRow("key1", "name", "ALGO_COMPOSITE", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{}).
+		AddRow("key2", "name", "ALGO_COMPOSITE", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{})
+}
 
 func TestQueryAlgos(t *testing.T) {
 	mock, err := pgxmock.NewConn()
@@ -19,12 +27,8 @@ func TestQueryAlgos(t *testing.T) {
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
-
-	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
-
-	mock.ExpectQuery(`SELECT asset FROM algos`).WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
+		WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(makeRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -49,12 +53,8 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
-
-	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
-
-	mock.ExpectQuery(`SELECT asset FROM algos`).WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
+		WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(makeRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -80,7 +80,7 @@ func TestGetAlgoFail(t *testing.T) {
 	mock.ExpectBegin()
 
 	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`select "asset" from "algos" where id=`).WithArgs(uid, testChannel)
+	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -101,12 +101,8 @@ func TestQueryAlgosByComputePlan(t *testing.T) {
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
-
-	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
-
-	mock.ExpectQuery(`SELECT asset FROM algos .* id IN \(SELECT DISTINCT`).WithArgs(testChannel, "CPKey").WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos .* key IN \(SELECT DISTINCT`).
+		WithArgs(testChannel, "CPKey").WillReturnRows(makeRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)

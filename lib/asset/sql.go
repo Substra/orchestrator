@@ -8,6 +8,46 @@ import (
 )
 
 // Value implements the driver.Valuer interface.
+// Simply returns the JSON-encoded representation of the Permissions.
+func (p *Permissions) Value() (driver.Value, error) {
+	return protojson.Marshal(p)
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes JSON into the Permissions.
+func (p *Permissions) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.NewError(errors.ErrByteArray, "cannot scan permissions")
+	}
+
+	return protojson.Unmarshal(b, p)
+}
+
+// Value implements the driver.Valuer interface.
+// Simply returns the string representation of the AlgoCategory.
+func (c *AlgoCategory) Value() (driver.Value, error) {
+	return c.String(), nil
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes a string into the AlgoCategory.
+func (c *AlgoCategory) Scan(value interface{}) error {
+	s, ok := value.(string)
+	if !ok {
+		return errors.NewError(errors.ErrInternal, "cannot scan algo category")
+	}
+
+	v, ok := AlgoCategory_value[s]
+	if !ok {
+		return errors.NewError(errors.ErrInternal, "cannot scan algo category")
+	}
+	*c = AlgoCategory(v)
+
+	return nil
+}
+
+// Value implements the driver.Valuer interface.
 // Simply returns the JSON-encoded representation of the Metric.
 func (o *Metric) Value() (driver.Value, error) {
 	return protojson.Marshal(o)
@@ -45,23 +85,6 @@ func (d *DataSample) Scan(value interface{}) error {
 	}
 
 	return protojson.Unmarshal(b, d)
-}
-
-// Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the Algo.
-func (a *Algo) Value() (driver.Value, error) {
-	return protojson.Marshal(a)
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the Algo.
-func (a *Algo) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan algo")
-	}
-
-	return protojson.Unmarshal(b, a)
 }
 
 // Scan implements the sql.Scanner interface.

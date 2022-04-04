@@ -43,3 +43,10 @@ Example:
 ```sql
 CREATE INDEX IF NOT EXISTS ix_compute_tasks_compute_plan_id_status ON compute_tasks (compute_plan_id, status);
 ```
+
+### Views
+
+Views that join together multiple assets by expanding relationships should be named `expanded_<table>`, where `<table>`
+refers to the main asset.
+
+Example: Prefer `expanded_algos` to `algos_with_addressables`.

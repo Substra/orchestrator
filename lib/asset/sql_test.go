@@ -6,6 +6,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestPermissionsValue(t *testing.T) {
+	permissions := &Permissions{
+		Process:  &Permission{Public: true, AuthorizedIds: []string{"1", "2"}},
+		Download: &Permission{Public: false, AuthorizedIds: []string{"4", "5"}},
+	}
+
+	value, err := permissions.Value()
+	assert.NoError(t, err, "permissions serialization should not fail")
+
+	scanned := new(Permissions)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "permissions scan should not fail")
+
+	assert.Equal(t, permissions, scanned)
+}
+
+func TestAlgoCategoryValue(t *testing.T) {
+	cat := AlgoCategory_ALGO_SIMPLE
+	category := &cat
+
+	value, err := category.Value()
+	assert.NoError(t, err, "algo category serialization should not fail")
+
+	scanned := new(AlgoCategory)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "algo category scan should not fail")
+
+	assert.Equal(t, category, scanned)
+}
+
 func TestMetricValue(t *testing.T) {
 	metric := &Metric{
 		Name:  "test",
@@ -38,22 +68,6 @@ func TestDataSampleValue(t *testing.T) {
 	assert.NoError(t, err, "datasample scan should not fail")
 
 	assert.Equal(t, datasample, scanned)
-}
-
-func TestAlgoValue(t *testing.T) {
-	algo := &Algo{
-		Name:  "test",
-		Owner: "testOwner",
-	}
-
-	value, err := algo.Value()
-	assert.NoError(t, err, "algo serialization should not fail")
-
-	scanned := new(Algo)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "algo scan should not fail")
-
-	assert.Equal(t, algo, scanned)
 }
 
 func TestDataManagerValue(t *testing.T) {
