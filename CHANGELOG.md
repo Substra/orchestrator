@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Remove node asset column (#604)
+- Remove algo asset column (#612)
 - Remove compute plan asset column (#618)
 
 ## [0.7.0] - 2022-03-29
