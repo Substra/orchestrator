@@ -256,42 +256,32 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 
 // GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
-	rows, err := d.tx.Query(d.ctx, `select asset from "compute_tasks" where compute_plan_id = $1 and channel=$2`, key, d.channel)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	tasks := []*asset.ComputeTask{}
-	for rows.Next() {
-		task := new(asset.ComputeTask)
-		err := rows.Scan(task)
-		if err != nil {
-			return nil, err
-		}
-		tasks = append(tasks, task)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
+	filter := &asset.TaskQueryFilter{ComputePlanKey: key}
+	tasks, _, err := d.QueryComputeTasks(nil, filter)
+	return tasks, err
 }
 
 // QueryComputeTasks returns a paginated and filtered list of tasks.
-func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
-	offset, err := getOffset(p.Token)
-	if err != nil {
-		return nil, "", err
-	}
-
-	stmt := getStatementBuilder().Select("asset").
+func (d *DBAL) QueryComputeTasks(pagination *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
+	stmt := getStatementBuilder().
+		Select("asset").
 		From("compute_tasks").
 		Where(sq.Eq{"channel": d.channel}).
-		OrderByClause("asset->>'creationDate' ASC, id").
-		Offset(uint64(offset)).
-		// Fetch page size + 1 elements to determine whether there is a next page
-		Limit(uint64(p.Size + 1))
+		OrderByClause("asset->>'creationDate' ASC, id")
+
+	var offset int
+	var err error
+
+	if pagination != nil {
+		offset, err = getOffset(pagination.Token)
+		if err != nil {
+			return nil, "", err
+		}
+
+		stmt = stmt.Offset(uint64(offset)).
+			// Fetch page size + 1 elements to determine whether there is a next page
+			Limit(uint64(pagination.Size + 1))
+	}
 
 	stmt = taskFilterToQuery(filter, stmt)
 
@@ -315,16 +305,16 @@ func (d *DBAL) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFi
 		tasks = append(tasks, task)
 		count++
 
-		if count == int(p.Size) {
+		if pagination != nil && count == int(pagination.Size) {
 			break
 		}
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, "", err
 	}
 
 	bookmark := ""
-	if count == int(p.Size) && rows.Next() {
+	if pagination != nil && count == int(pagination.Size) && rows.Next() {
 		// there is more to fetch
 		bookmark = strconv.Itoa(offset + count)
 	}
