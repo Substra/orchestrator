@@ -59,13 +59,13 @@ func (db *DB) computePlanProperties(plan *asset.ComputePlan) error {
 		return err
 	}
 
-	plan.TaskCount = uint32(count.Total)
-	plan.WaitingCount = uint32(count.Waiting)
-	plan.TodoCount = uint32(count.Todo)
-	plan.DoingCount = uint32(count.Doing)
-	plan.CanceledCount = uint32(count.Canceled)
-	plan.FailedCount = uint32(count.Failed)
-	plan.DoneCount = uint32(count.Done)
+	plan.TaskCount = count.Total
+	plan.WaitingCount = count.Waiting
+	plan.TodoCount = count.Todo
+	plan.DoingCount = count.Doing
+	plan.CanceledCount = count.Canceled
+	plan.FailedCount = count.Failed
+	plan.DoneCount = count.Done
 	plan.Status = count.GetPlanStatus()
 
 	return nil

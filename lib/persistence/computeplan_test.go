@@ -9,12 +9,12 @@ import (
 
 func TestGetPlanStatus(t *testing.T) {
 	cases := map[string]struct {
-		total    int
-		done     int
-		doing    int
-		waiting  int
-		failed   int
-		canceled int
+		total    uint32
+		done     uint32
+		doing    uint32
+		waiting  uint32
+		failed   uint32
+		canceled uint32
 		outcome  asset.ComputePlanStatus
 	}{
 		"done": {

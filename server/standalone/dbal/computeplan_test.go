@@ -3,6 +3,7 @@ package dbal
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetComputeTasks(t *testing.T) {
+func TestGetComputePlan(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -20,11 +21,11 @@ func TestGetComputeTasks(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"asset", "total", "waiting", "todo", "doing", "canceled", "failed", "done"}).
-		AddRow([]byte("{}"), uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
+		AddRow("uuid", "owner", false, time.Now(), "", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
-	mock.ExpectQuery(`SELECT cp.asset`).
-		WithArgs("uuid", testChannel).
+	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, tag, metadata, task_count, waiting_count, todo_count, doing_count, canceled_count, failed_count, done_count`).
+		WithArgs(testChannel, "uuid").
 		WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
@@ -58,11 +59,11 @@ func TestGetRawComputePlan(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}"))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "metadata"}).
+		AddRow("uuid", "owner", false, time.Now(), "", map[string]string{})
 
-	mock.ExpectQuery(`select asset from compute_plans`).
-		WithArgs("uuid", testChannel).
+	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, tag, metadata FROM compute_plans`).
+		WithArgs(testChannel, "uuid").
 		WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
@@ -91,10 +92,10 @@ func TestQueryComputePlans(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"asset", "total", "waiting", "todo", "doing", "canceled", "failed", "done"}).
-		AddRow([]byte("{}"), uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
+		AddRow("uuid", "owner", false, time.Now(), "", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
-	mock.ExpectQuery(`SELECT cp.asset,.* FROM compute_plans .* ORDER BY cp.asset->>'creationDate' ASC, cp.id`).
+	mock.ExpectQuery(`SELECT key,.* FROM expanded_compute_plans .* ORDER BY creation_date ASC, key ASC`).
 		WithArgs(testChannel, "owner").
 		WillReturnRows(rows)
 

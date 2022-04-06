@@ -19,13 +19,13 @@ type ComputePlanDBALProvider interface {
 }
 
 type ComputePlanTaskCount struct {
-	Total    int
-	Waiting  int
-	Todo     int
-	Doing    int
-	Canceled int
-	Failed   int
-	Done     int
+	Total    uint32
+	Waiting  uint32
+	Todo     uint32
+	Doing    uint32
+	Canceled uint32
+	Failed   uint32
+	Done     uint32
 }
 
 // GetPlanStatus returns the compute plan's status based on its tasks statuses
