@@ -168,38 +168,6 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	return task, nil
 }
 
-// GetComputeTasks returns the list of unique compute tasks identified by the provided keys.
-// It should not be used where pagination is expected!
-func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
-	stmt := getStatementBuilder().Select("asset").
-		From("compute_tasks").
-		Where(sq.Eq{"channel": d.channel, "id": keys})
-
-	rows, err := d.query(stmt)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var tasks []*asset.ComputeTask
-
-	for rows.Next() {
-		task := new(asset.ComputeTask)
-
-		err = rows.Scan(task)
-		if err != nil {
-			return nil, err
-		}
-
-		tasks = append(tasks, task)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return tasks, nil
-}
-
 // GetComputeTaskChildren returns the children of the task identified by the given key
 func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 	rows, err := d.tx.Query(d.ctx, `
@@ -254,15 +222,7 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 	return keys, nil
 }
 
-// GetComputePlanTasks returns the tasks of the compute plan identified by the given key
-func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
-	filter := &asset.TaskQueryFilter{ComputePlanKey: key}
-	tasks, _, err := d.QueryComputeTasks(nil, filter)
-	return tasks, err
-}
-
-// QueryComputeTasks returns a paginated and filtered list of tasks.
-func (d *DBAL) QueryComputeTasks(pagination *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
+func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	stmt := getStatementBuilder().
 		Select("asset").
 		From("compute_tasks").
@@ -283,7 +243,7 @@ func (d *DBAL) QueryComputeTasks(pagination *common.Pagination, filter *asset.Ta
 			Limit(uint64(pagination.Size + 1))
 	}
 
-	stmt = taskFilterToQuery(filter, stmt)
+	stmt = filterer(stmt)
 
 	rows, err := d.query(stmt)
 	if err != nil {
@@ -345,4 +305,28 @@ func taskFilterToQuery(filter *asset.TaskQueryFilter, builder sq.SelectBuilder) 
 	}
 
 	return builder
+}
+
+// QueryComputeTasks returns a paginated and filtered list of tasks.
+func (d *DBAL) QueryComputeTasks(pagination *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
+	return d.queryComputeTasks(pagination, func(builder sq.SelectBuilder) sq.SelectBuilder {
+		return taskFilterToQuery(filter, builder)
+	})
+}
+
+// GetComputePlanTasks returns the tasks of the compute plan identified by the given key
+func (d *DBAL) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
+	tasks, _, err := d.queryComputeTasks(nil, func(builder sq.SelectBuilder) sq.SelectBuilder {
+		return builder.Where(sq.Eq{"compute_plan_id": key})
+	})
+	return tasks, err
+}
+
+// GetComputeTasks returns the list of unique compute tasks identified by the provided keys.
+// It should not be used where pagination is expected!
+func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
+	tasks, _, err := d.queryComputeTasks(nil, func(builder sq.SelectBuilder) sq.SelectBuilder {
+		return builder.Where(sq.Eq{"id": keys})
+	})
+	return tasks, err
 }
