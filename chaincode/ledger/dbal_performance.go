@@ -49,14 +49,18 @@ func (db *DB) QueryPerformances(p *common.Pagination, filter *asset.PerformanceQ
 			DocType: asset.PerformanceKind,
 		},
 	}
-	assetFilter := map[string]interface{}{}
-	if filter.ComputeTaskKey != "" {
-		assetFilter["compute_task_key"] = filter.ComputeTaskKey
+
+	if filter != nil {
+		assetFilter := map[string]interface{}{}
+		if filter.ComputeTaskKey != "" {
+			assetFilter["compute_task_key"] = filter.ComputeTaskKey
+		}
+		if filter.MetricKey != "" {
+			assetFilter["metric_key"] = filter.MetricKey
+		}
+		query.Selector.Asset = assetFilter
 	}
-	if filter.MetricKey != "" {
-		assetFilter["metric_key"] = filter.MetricKey
-	}
-	query.Selector.Asset = assetFilter
+
 	b, err := json.Marshal(query)
 	if err != nil {
 		return nil, "", err

@@ -47,3 +47,25 @@ func TestQueryComputePlans(t *testing.T) {
 
 	stub.AssertExpectations(t)
 }
+
+func TestQueryComputePlansNilFilter(t *testing.T) {
+	stub := new(testHelper.MockedStub)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+
+	// ComputePlan iterator
+	resp := &testHelper.MockedStateQueryIterator{}
+	resp.On("Close").Return(nil)
+	resp.On("HasNext").Once().Return(false)
+
+	queryString := `{"selector":{"doc_type":"computeplan"}}`
+	stub.On("GetQueryResultWithPagination", queryString, int32(1), "").
+		Return(resp, &peer.QueryResponseMetadata{Bookmark: "", FetchedRecordsCount: 0}, nil)
+
+	_, _, err := db.QueryComputePlans(
+		common.NewPagination("", 1),
+		nil,
+	)
+	assert.NoError(t, err)
+
+	stub.AssertExpectations(t)
+}

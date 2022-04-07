@@ -133,3 +133,23 @@ func TestEventAssetFilterBuilder(t *testing.T) {
 		})
 	}
 }
+
+func TestQueryEventsNilFilter(t *testing.T) {
+	stub := new(testHelper.MockedStub)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	stub.On("GetChannelID").Return("eventTestChannel")
+
+	iter := &testHelper.MockedStateQueryIterator{}
+	iter.On("Close").Return(nil)
+	iter.On("HasNext").Once().Return(false)
+	iter.On("Next").Once().Return(&queryresult.KV{}, nil)
+
+	queryString := `{"selector":{"doc_type":"event"},"sort":[{"asset.timestamp":"asc"},{"asset.id":"asc"}]}`
+	stub.On("GetQueryResultWithPagination", queryString, int32(10), "").
+		Return(iter, &peer.QueryResponseMetadata{Bookmark: "", FetchedRecordsCount: 0}, nil)
+
+	pagination := common.NewPagination("", 10)
+
+	_, _, err := db.QueryEvents(pagination, nil, asset.SortOrder_ASCENDING)
+	assert.NoError(t, err)
+}

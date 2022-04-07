@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove algo asset column (#612)
 - Remove compute plan asset column (#618)
 
+### Fixed
+- Do not panic on nil filter (#510)
+
 ## [0.7.0] - 2022-03-29
 
 ### Added

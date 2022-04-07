@@ -214,3 +214,32 @@ func TestAddComputeTasks(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
+
+func TestQueryComputeTasksNilFilter(t *testing.T) {
+	mock, err := pgxmock.NewConn()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	rows := pgxmock.NewRows([]string{"asset"})
+
+	mock.ExpectQuery(`SELECT asset FROM compute_tasks`).WithArgs(testChannel).WillReturnRows(rows)
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	_, _, err = dbal.QueryComputeTasks(
+		common.NewPagination("", 1),
+		nil,
+	)
+	assert.NoError(t, err)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}

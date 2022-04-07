@@ -34,7 +34,29 @@ func TestPerformanceNotFound(t *testing.T) {
 		ComputeTaskKey: taskKey,
 		MetricKey:      metricKey,
 	})
-	assert.Equal(t, len(performances), 0)
-	assert.Equal(t, err, nil)
+	assert.Len(t, performances, 0)
+	assert.NoError(t, err)
 
+}
+
+func TestQueryPerformancesNilFilter(t *testing.T) {
+	mock, err := pgxmock.NewConn()
+	require.NoError(t, err)
+
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	rows := pgxmock.NewRows([]string{"asset"})
+
+	mock.ExpectQuery(`SELECT asset FROM performances`).WithArgs(testChannel).WillReturnRows(rows)
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	pagination := common.NewPagination("", 100)
+	_, _, err = dbal.QueryPerformances(pagination, nil)
+	assert.NoError(t, err)
 }

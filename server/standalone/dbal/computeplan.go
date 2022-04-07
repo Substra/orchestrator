@@ -142,7 +142,7 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
-	if filter.Owner != "" {
+	if filter != nil && filter.Owner != "" {
 		stmt = stmt.Where(sq.Eq{"owner": filter.Owner})
 	}
 

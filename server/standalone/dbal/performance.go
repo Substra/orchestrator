@@ -47,12 +47,14 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
-	if filter.ComputeTaskKey != "" {
-		stmt = stmt.Where(sq.Eq{"compute_task_id": filter.ComputeTaskKey})
-	}
+	if filter != nil {
+		if filter.ComputeTaskKey != "" {
+			stmt = stmt.Where(sq.Eq{"compute_task_id": filter.ComputeTaskKey})
+		}
 
-	if filter.MetricKey != "" {
-		stmt = stmt.Where(sq.Eq{"metric_id": filter.MetricKey})
+		if filter.MetricKey != "" {
+			stmt = stmt.Where(sq.Eq{"metric_id": filter.MetricKey})
+		}
 	}
 
 	rows, err := d.query(stmt)

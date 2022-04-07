@@ -59,21 +59,23 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 		},
 	}
 
-	assetFilter := map[string]interface{}{}
-	if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {
-		assetFilter["category"] = filter.Category.String()
-	}
-	if filter.ComputePlanKey != "" {
-		algoKeys, err := db.getComputePlanAlgoKeys(filter.ComputePlanKey)
-		if err != nil {
-			return nil, "", err
+	if filter != nil {
+		assetFilter := map[string]interface{}{}
+		if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {
+			assetFilter["category"] = filter.Category.String()
 		}
-		assetFilter["key"] = map[string]interface{}{
-			"$in": algoKeys,
+		if filter.ComputePlanKey != "" {
+			algoKeys, err := db.getComputePlanAlgoKeys(filter.ComputePlanKey)
+			if err != nil {
+				return nil, "", err
+			}
+			assetFilter["key"] = map[string]interface{}{
+				"$in": algoKeys,
+			}
 		}
-	}
-	if len(assetFilter) > 0 {
-		query.Selector.Asset = assetFilter
+		if len(assetFilter) > 0 {
+			query.Selector.Asset = assetFilter
+		}
 	}
 
 	b, err := json.Marshal(query)

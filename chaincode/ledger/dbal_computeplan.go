@@ -98,7 +98,7 @@ func (db *DB) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFil
 
 	assetFilter := map[string]interface{}{}
 
-	if filter.Owner != "" {
+	if filter != nil && filter.Owner != "" {
 		assetFilter["owner"] = filter.Owner
 	}
 

@@ -230,26 +230,28 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 		},
 	}
 
-	assetFilter := map[string]interface{}{}
+	if filter != nil {
+		assetFilter := map[string]interface{}{}
 
-	if filter.Category != asset.ComputeTaskCategory_TASK_UNKNOWN {
-		assetFilter["category"] = filter.Category.String()
-	}
-	if filter.Status != asset.ComputeTaskStatus_STATUS_UNKNOWN {
-		assetFilter["status"] = filter.Status.String()
-	}
-	if filter.Worker != "" {
-		assetFilter["worker"] = filter.Worker
-	}
-	if filter.ComputePlanKey != "" {
-		assetFilter["compute_plan_key"] = filter.ComputePlanKey
-	}
-	if filter.AlgoKey != "" {
-		assetFilter["algo"] = json.RawMessage(fmt.Sprintf(`{"key": "%s"}`, filter.AlgoKey))
-	}
+		if filter.Category != asset.ComputeTaskCategory_TASK_UNKNOWN {
+			assetFilter["category"] = filter.Category.String()
+		}
+		if filter.Status != asset.ComputeTaskStatus_STATUS_UNKNOWN {
+			assetFilter["status"] = filter.Status.String()
+		}
+		if filter.Worker != "" {
+			assetFilter["worker"] = filter.Worker
+		}
+		if filter.ComputePlanKey != "" {
+			assetFilter["compute_plan_key"] = filter.ComputePlanKey
+		}
+		if filter.AlgoKey != "" {
+			assetFilter["algo"] = json.RawMessage(fmt.Sprintf(`{"key": "%s"}`, filter.AlgoKey))
+		}
 
-	if len(assetFilter) > 0 {
-		query.Selector.Asset = assetFilter
+		if len(assetFilter) > 0 {
+			query.Selector.Asset = assetFilter
+		}
 	}
 
 	b, err := json.Marshal(query)

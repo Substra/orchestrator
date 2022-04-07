@@ -100,15 +100,17 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
-	if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {
-		stmt = stmt.Where(sq.Eq{"category": filter.Category.String()})
-	}
+	if filter != nil {
+		if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {
+			stmt = stmt.Where(sq.Eq{"category": filter.Category.String()})
+		}
 
-	if filter.ComputePlanKey != "" {
-		stmt = stmt.Where(sq.Expr(
-			"key IN (SELECT DISTINCT(asset->'algo'->>'key')::uuid FROM compute_tasks WHERE compute_plan_id = ?)",
-			filter.ComputePlanKey,
-		))
+		if filter.ComputePlanKey != "" {
+			stmt = stmt.Where(sq.Expr(
+				"key IN (SELECT DISTINCT(asset->'algo'->>'key')::uuid FROM compute_tasks WHERE compute_plan_id = ?)",
+				filter.ComputePlanKey,
+			))
+		}
 	}
 
 	rows, err := d.query(stmt)
