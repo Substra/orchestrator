@@ -14,7 +14,7 @@ import (
 type DataSampleAPI interface {
 	RegisterDataSamples(datasamples []*asset.NewDataSample, owner string) ([]*asset.DataSample, error)
 	UpdateDataSamples(datasample *asset.UpdateDataSamplesParam, owner string) error
-	QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
+	QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQueryFilter) ([]*asset.DataSample, common.PaginationToken, error)
 	CheckSameManager(managerKey string, sampleKeys []string) error
 	IsTestOnly(sampleKeys []string) (bool, error)
 	ContainsTestSample(sampleKeys []string) (bool, error)
@@ -158,8 +158,8 @@ func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, o
 }
 
 // QueryDataSamples returns all stored datasamples
-func (s *DataSampleService) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
-	return s.GetDataSampleDBAL().QueryDataSamples(p)
+func (s *DataSampleService) QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQueryFilter) ([]*asset.DataSample, common.PaginationToken, error) {
+	return s.GetDataSampleDBAL().QueryDataSamples(p, filter)
 }
 
 // CheckSameManager validates that samples all have in common the given manager.

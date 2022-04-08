@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
@@ -95,14 +96,26 @@ func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
 }
 
 // QueryDataSamples implements persistence.DataSample
-func (d *DBAL) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+func (d *DBAL) QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQueryFilter) ([]*asset.DataSample, common.PaginationToken, error) {
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
-	query := `select "asset" from "datasamples" where channel=$3 order by asset->>'creationDate' asc, id limit $1 offset $2`
-	rows, err := d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
+	stmt := getStatementBuilder().
+		Select("asset").
+		From("datasamples").
+		Where(sq.Eq{"channel": d.channel}).
+		OrderByClause("asset->>'creationDate' asc, id").
+		Offset(uint64(offset)).
+		// Fetch page size + 1 elements to determine whether there is a next page
+		Limit(uint64(p.Size + 1))
+
+	if filter != nil && len(filter.Keys) > 0 {
+		stmt = stmt.Where(sq.Eq{"id": filter.Keys})
+	}
+
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, "", err
 	}

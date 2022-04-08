@@ -71,7 +71,7 @@ func (s *DataSampleServer) QueryDataSamples(ctx context.Context, params *asset.Q
 		return nil, err
 	}
 
-	datasamples, paginationToken, err := services.GetDataSampleService().QueryDataSamples(libCommon.NewPagination(params.PageToken, params.PageSize))
+	datasamples, paginationToken, err := services.GetDataSampleService().QueryDataSamples(libCommon.NewPagination(params.PageToken, params.PageSize), params.Filter)
 	if err != nil {
 		return nil, err
 	}

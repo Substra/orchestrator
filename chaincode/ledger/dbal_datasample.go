@@ -67,11 +67,15 @@ func (db *DB) GetDataSample(key string) (*asset.DataSample, error) {
 }
 
 // QueryDataSamples implements persistence.DataSampleDBAL
-func (db *DB) QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error) {
+func (db *DB) QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQueryFilter) ([]*asset.DataSample, common.PaginationToken, error) {
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
 			DocType: asset.DataSampleKind,
 		},
+	}
+
+	if filter != nil && len(filter.Keys) > 0 {
+		query.Selector.Asset = map[string]interface{}{"key": map[string]interface{}{"$in": filter.Keys}}
 	}
 
 	b, err := json.Marshal(query)

@@ -39,9 +39,14 @@ message UpdateDataSamplesParam {
 
 message UpdateDataSamplesResponse {}
 
+message DataSampleQueryFilter {
+  repeated string keys = 1;
+}
+
 message QueryDataSamplesParam {
   string page_token = 1;
   uint32 page_size = 2;
+  DataSampleQueryFilter filter = 3;
 }
 
 message QueryDataSamplesResponse {

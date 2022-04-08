@@ -99,7 +99,7 @@ You can also deploy [connect-backend](https://github.com/owkin/connect-backend) 
 
 In distributed mode, the orchestrator only requires a matching chaincode.
 So you need to build the chaincode image (from this repo) to be used in `hlf-k8s` in your k8s cluster.
-Choose a tag (example uses `dev`) and update hlf-k8s' values accordingly.
+Choose a tag (example uses `dev`).
 
 ```bash
 # If you use minikube, run `eval $(minikube -p minikube docker-env)` before the `docker build` command
@@ -109,12 +109,18 @@ docker build -f docker/orchestrator-chaincode/Dockerfile -t gcr.io/connect-31490
 docker build -f docker/orchestrator-chaincode-init/Dockerfile -t gcr.io/connect-314908/orchestrator-chaincode-init:dev .
 ```
 
-Make sure you deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s) with a `skaffold dev` or `skaffold run`.
+Update hlf-k8s' values so that it uses your `dev` image instead of `latest`.
+
+Deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s) with a `skaffold dev` or `skaffold run`.
 
 Then, in the orchestrator repo:
 
 ```bash
 skaffold dev -p distributed --status-check=false
+```
+
+or
+```bash
 skaffold run -p distributed --status-check=false
 ```
 

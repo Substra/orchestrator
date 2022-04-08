@@ -33,7 +33,7 @@ type DataSampleDBAL interface {
 	AddDataSamples(dataSample ...*asset.DataSample) error
 	UpdateDataSample(dataSample *asset.DataSample) error
 	GetDataSample(key string) (*asset.DataSample, error)
-	QueryDataSamples(p *common.Pagination) ([]*asset.DataSample, common.PaginationToken, error)
+	QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQueryFilter) ([]*asset.DataSample, common.PaginationToken, error)
 	DataSampleExists(key string) (bool, error)
 	GetDataSampleKeysByManager(managerKey string, testOnly bool) ([]string, error)
 }

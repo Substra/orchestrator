@@ -6,8 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+### Added
+- Allow querying datasamples by keys (#627)
 
+### Changed
 - Remove node asset column (#604)
 - Remove algo asset column (#612)
 - Remove compute plan asset column (#618)

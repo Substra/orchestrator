@@ -142,7 +142,7 @@ func (s *SmartContract) QueryDataSamples(ctx ledger.TransactionContext, wrapper 
 		return nil, err
 	}
 
-	datasamples, paginationToken, err := service.QueryDataSamples(&common.Pagination{Token: params.PageToken, Size: params.GetPageSize()})
+	datasamples, paginationToken, err := service.QueryDataSamples(&common.Pagination{Token: params.PageToken, Size: params.GetPageSize()}, params.Filter)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to query datasamples")
 		return nil, err

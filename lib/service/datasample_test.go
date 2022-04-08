@@ -297,9 +297,11 @@ func TestQueryDataSamples(t *testing.T) {
 
 	pagination := common.NewPagination("", 10)
 
-	dbal.On("QueryDataSamples", pagination).Return([]*asset.DataSample{&ds1, &ds2}, "nextPage", nil).Once()
+	filter := (*asset.DataSampleQueryFilter)(nil)
 
-	r, token, err := service.QueryDataSamples(pagination)
+	dbal.On("QueryDataSamples", pagination, filter).Return([]*asset.DataSample{&ds1, &ds2}, "nextPage", nil).Once()
+
+	r, token, err := service.QueryDataSamples(pagination, filter)
 
 	require.Nil(t, err)
 

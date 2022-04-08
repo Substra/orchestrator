@@ -88,11 +88,12 @@ func TestQueryDataSamples(t *testing.T) {
 		{Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"},
 		{Key: "9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 	}
+	filter := (*asset.DataSampleQueryFilter)(nil)
 
 	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
-	service.On("QueryDataSamples", &common.Pagination{Token: "", Size: 10}).Return(datasamples, "", nil).Once()
+	service.On("QueryDataSamples", &common.Pagination{Token: "", Size: 10}, filter).Return(datasamples, "", nil).Once()
 
 	param := &asset.QueryDataSamplesParam{PageToken: "", PageSize: 10}
 	wrapper, err := communication.Wrap(context.Background(), param)

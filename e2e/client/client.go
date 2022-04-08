@@ -228,6 +228,25 @@ func (c *TestClient) GetDataSample(dataSampleRef string) *asset.DataSample {
 	return resp
 }
 
+func (c *TestClient) QueryDataSamples(pageToken string, pageSize uint32, filter *asset.DataSampleQueryFilter) *asset.QueryDataSamplesResponse {
+	param := &asset.QueryDataSamplesParam{
+		PageToken: pageToken,
+		PageSize:  pageSize,
+		Filter:    filter,
+	}
+	c.logger.
+		WithField("pageToken", pageToken).
+		WithField("pageSize", pageSize).
+		WithField("filter", filter).
+		Debug("QueryDataSamples")
+
+	resp, err := c.dataSampleService.QueryDataSamples(c.ctx, param)
+	if err != nil {
+		c.logger.WithError(err).Fatal("QueryDataSamples failed")
+	}
+	return resp
+}
+
 func (c *TestClient) RegisterMetric(o *MetricOptions) {
 	newObj := &asset.NewMetric{
 		Key:  c.ks.GetKey(o.KeyRef),
