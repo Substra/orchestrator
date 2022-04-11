@@ -60,7 +60,7 @@ func (d *DBAL) queryRow(builder squirrel.Sqlizer) (pgx.Row, error) {
 	return d.tx.QueryRow(d.ctx, query, args...), nil
 }
 
-func (d *DBAL) exec(builder squirrel.Sqlizer) error { //nolint:golint,unused
+func (d *DBAL) exec(builder squirrel.Sqlizer) error {
 	query, args, err := builder.ToSql()
 	if err != nil {
 		return err

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func makeRows() *pgxmock.Rows {
+func makeAlgoRows() *pgxmock.Rows {
 	permissions := []byte(`{"process": {"public": true}, "download": {"public": true}}`)
 	return pgxmock.NewRows([]string{"key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata"}).
 		AddRow("key1", "name", "ALGO_COMPOSITE", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{}).
@@ -28,7 +28,7 @@ func TestQueryAlgos(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
-		WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(makeRows())
+		WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(makeAlgoRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
-		WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(makeRows())
+		WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(makeAlgoRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -102,7 +102,7 @@ func TestQueryAlgosByComputePlan(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos .* key IN \(SELECT DISTINCT`).
-		WithArgs(testChannel, "CPKey").WillReturnRows(makeRows())
+		WithArgs(testChannel, "CPKey").WillReturnRows(makeAlgoRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -127,7 +127,9 @@ func TestQueryAlgosNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).WithArgs(testChannel).WillReturnRows(makeRows())
+	mock.ExpectQuery(`key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
+		WithArgs(testChannel).
+		WillReturnRows(makeAlgoRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)

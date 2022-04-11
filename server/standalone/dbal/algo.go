@@ -107,7 +107,7 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 
 		if filter.ComputePlanKey != "" {
 			stmt = stmt.Where(sq.Expr(
-				"key IN (SELECT DISTINCT(asset->'algo'->>'key')::uuid FROM compute_tasks WHERE compute_plan_id = ?)",
+				"key IN (SELECT DISTINCT(algo_key) FROM compute_tasks WHERE compute_plan_key = ?)",
 				filter.ComputePlanKey,
 			))
 		}

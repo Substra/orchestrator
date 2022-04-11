@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
@@ -13,7 +14,88 @@ import (
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
 )
+
+func TestToComputeTask(t *testing.T) {
+	taskData := &asset.ComputeTask_Test{
+		Test: &asset.TestTaskData{
+			DataManagerKey: "dmkey",
+			DataSampleKeys: []string{"dskey1", "dskey2"},
+			MetricKeys:     []string{"mkey"},
+		},
+	}
+
+	marshalledTaskData, err := protojson.Marshal(&asset.ComputeTask{
+		Data: taskData,
+	})
+
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when marshalling task data", err)
+	}
+
+	ct := sqlComputeTask{
+		Key:      "task_key",
+		Category: asset.ComputeTaskCategory_TASK_TRAIN,
+		Algo: sqlAlgo{
+			Key:         "algo_key",
+			Name:        "algo_name",
+			Category:    asset.AlgoCategory_ALGO_COMPOSITE,
+			Description: asset.Addressable{},
+			Algorithm:   asset.Addressable{},
+			Permissions: asset.Permissions{
+				Download: &asset.Permission{},
+				Process:  &asset.Permission{},
+			},
+			Owner:        "algo_owner",
+			CreationDate: time.Unix(111, 12).UTC(),
+			Metadata:     map[string]string{},
+		},
+		Owner:          "owner",
+		ComputePlanKey: "cp_key",
+		ParentTaskKeys: []string{},
+		Rank:           0,
+		Status:         asset.ComputeTaskStatus_STATUS_DOING,
+		Worker:         "worker",
+		CreationDate:   time.Unix(100, 10).UTC(),
+		LogsPermission: asset.Permission{
+			Public:        false,
+			AuthorizedIds: []string{},
+		},
+		Data:     marshalledTaskData,
+		Metadata: map[string]string{},
+	}
+
+	res, err := ct.toComputeTask()
+	assert.NoError(t, err)
+	assert.Equal(t, ct.Key, res.Key)
+	assert.Equal(t, ct.Category, res.Category)
+	assert.Equal(t, ct.Algo.Key, res.Algo.Key)
+	assert.Equal(t, ct.Owner, res.Owner)
+	assert.Equal(t, ct.ComputePlanKey, res.ComputePlanKey)
+	assert.Equal(t, ct.ParentTaskKeys, res.ParentTaskKeys)
+	assert.Equal(t, ct.Rank, res.Rank)
+	assert.Equal(t, ct.Status, res.Status)
+	assert.Equal(t, ct.Worker, res.Worker)
+	assert.Equal(t, ct.CreationDate, res.CreationDate.AsTime())
+	assert.Equal(t, &ct.LogsPermission, res.LogsPermission)
+	assert.Equal(t, ct.Metadata, res.Metadata)
+	assert.Equal(t, taskData, res.Data)
+}
+
+func makeTaskRows() *pgxmock.Rows {
+	permissions := []byte(`{"process": {"public": true}, "download": {"public": true}}`)
+	return pgxmock.NewRows([]string{"key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
+		"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_category", "algo_description_address",
+		"algo_description_checksum", "algo_algorithm_address", "algo_algorithm_checksum", "algo_permissions", "algo_owner",
+		"algo_creation_date", "algo_metadata", "parent_task_keys"}).
+		AddRow("key1", "cp_key", "STATUS_WAITING", "TASK_TRAIN", "worker", "owner", int32(0), time.Unix(0, 100),
+			[]byte("{}"), []byte("{}"), map[string]string{}, "algo_key", "algo_name", "ALGO_SIMPLE", "https://description.foo",
+			"d3ef77a", "https://algo.foo", "f3ed5a9", permissions, "owner", time.Unix(0, 100), map[string]string{}, []string{}).
+		AddRow("key2", "cp_key", "STATUS_WAITING", "TASK_TRAIN", "worker", "owner", int32(0), time.Unix(0, 100),
+			[]byte("{}"), []byte("{}"), map[string]string{}, "algo_key", "algo_name", "ALGO_SIMPLE", "https://description.foo",
+			"d3ef77a", "https://algo.foo", "f3ed5a9", permissions, "owner", time.Unix(0, 100), map[string]string{}, []string{})
+}
 
 func TestTaskFilterToQuery(t *testing.T) {
 	cases := map[string]struct {
@@ -50,13 +132,10 @@ func TestGetTasks(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
-
 	keys := []string{"uuid1", "uuid2"}
-
-	mock.ExpectQuery(`SELECT asset FROM compute_tasks`).WithArgs(testChannel, "uuid1", "uuid2").WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+		WithArgs(testChannel, keys[0], keys[1]).
+		WillReturnRows(makeTaskRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -81,8 +160,8 @@ func TestGetNoTask(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`select asset from "compute_tasks"`).
-		WithArgs("uuid", testChannel).
+	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+		WithArgs(testChannel, "uuid").
 		WillReturnError(pgx.ErrNoRows)
 
 	tx, err := mock.Begin(context.Background())
@@ -110,11 +189,9 @@ func TestQueryComputeTasks(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
-
-	mock.ExpectQuery(`SELECT asset FROM compute_tasks`).WithArgs(testChannel, "testWorker", asset.ComputeTaskStatus_STATUS_DONE.String()).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+		WithArgs(testChannel, "testWorker", asset.ComputeTaskStatus_STATUS_DONE.String()).
+		WillReturnRows(makeTaskRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -152,9 +229,11 @@ func TestAddComputeTask(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Insert task
-	mock.ExpectCopyFrom(`"compute_tasks"`, []string{"id", "channel", "category", "compute_plan_id", "status", "worker", "asset"}).WillReturnResult(1)
+	mock.ExpectCopyFrom(`"compute_tasks"`,
+		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"}).
+		WillReturnResult(1)
 	// Insert parents relationships
-	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_id", "child_task_id", "position"}).WillReturnResult(2)
+	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(2)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -198,9 +277,11 @@ func TestAddComputeTasks(t *testing.T) {
 	mock.ExpectBegin()
 
 	// Insert task
-	mock.ExpectCopyFrom(`"compute_tasks"`, []string{"id", "channel", "category", "compute_plan_id", "status", "worker", "asset"}).WillReturnResult(2)
+	mock.ExpectCopyFrom(`"compute_tasks"`,
+		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"}).
+		WillReturnResult(2)
 	// Insert parents relationships
-	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_id", "child_task_id", "position"}).WillReturnResult(3)
+	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(3)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -224,9 +305,9 @@ func TestQueryComputeTasksNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"asset"})
-
-	mock.ExpectQuery(`SELECT asset FROM compute_tasks`).WithArgs(testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+		WithArgs(testChannel).
+		WillReturnRows(makeTaskRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
