@@ -111,23 +111,6 @@ func (c *ComputeTaskCategory) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the Metric.
-func (o *Metric) Value() (driver.Value, error) {
-	return protojson.Marshal(o)
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the Metric.
-func (o *Metric) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan metric")
-	}
-
-	return protojson.Unmarshal(b, o)
-}
-
-// Value implements the driver.Valuer interface.
 // Returns the JSON-encoded representation of the DataSample.
 func (d *DataSample) Value() (driver.Value, error) {
 	return protojson.Marshal(d)

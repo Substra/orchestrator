@@ -36,7 +36,7 @@ func testRegisterPerformance(factory *client.TestClientFactory) {
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
-	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric"))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric"))
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTaskRef).WithMetricsRef("testmetric"))
 	appClient.StartTask("testTask")
 
@@ -62,8 +62,8 @@ func testRegisterMultiplePerformances(factory *client.TestClientFactory) {
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
-	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric1"))
-	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric2"))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric1"))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric2"))
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTaskRef).WithMetricsRef("testmetric1", "testmetric2"))
 	appClient.StartTask("testTask")
 
@@ -98,8 +98,8 @@ func testRegisterMultiplePerformancesForSameMetric(factory *client.TestClientFac
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
-	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric1"))
-	appClient.RegisterMetric(client.DefaultMetricOptions().WithKeyRef("testmetric2"))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric1"))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric2"))
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTaskRef).WithMetricsRef("testmetric1", "testmetric2"))
 	appClient.StartTask("testTask")
 

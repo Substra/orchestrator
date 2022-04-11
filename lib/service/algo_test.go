@@ -122,13 +122,44 @@ func TestQueryAlgos(t *testing.T) {
 
 	pagination := common.NewPagination("", 12)
 
-	dbal.On("QueryAlgos", pagination, &asset.AlgoQueryFilter{Category: asset.AlgoCategory_ALGO_SIMPLE}).
+	dbal.On("QueryAlgos", pagination, &asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_SIMPLE}}).
 		Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
 
-	r, token, err := service.QueryAlgos(pagination, &asset.AlgoQueryFilter{Category: asset.AlgoCategory_ALGO_SIMPLE})
+	r, token, err := service.QueryAlgos(pagination, &asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_SIMPLE}})
 	require.Nil(t, err)
 
 	assert.Len(t, r, 2)
 	assert.Equal(t, r[0].Key, algo1.Key)
 	assert.Equal(t, "nextPage", token, "next page token should be returned")
+}
+
+func TestCanDownload(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	provider := newMockedProvider()
+	provider.On("GetAlgoDBAL").Return(dbal)
+	service := NewAlgoService(provider)
+
+	perms := &asset.Permissions{
+		Process: &asset.Permission{Public: true},
+		Download: &asset.Permission{
+			Public:        false,
+			AuthorizedIds: []string{"org-2"},
+		},
+	}
+
+	algo := &asset.Algo{
+		Key:         "837B2E87-35CA-48F9-B83C-B40FB3FBA4E6",
+		Category:    asset.AlgoCategory_ALGO_SIMPLE,
+		Name:        "Test",
+		Permissions: perms,
+	}
+
+	dbal.On("GetAlgo", "obj1").Return(algo, nil).Once()
+
+	ok, err := service.CanDownload("obj1", "org-2")
+
+	assert.Equal(t, ok, true)
+	assert.NoError(t, err)
+
+	dbal.AssertExpectations(t)
 }

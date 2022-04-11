@@ -61,9 +61,17 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 
 	if filter != nil {
 		assetFilter := map[string]interface{}{}
-		if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {
-			assetFilter["category"] = filter.Category.String()
+
+		if len(filter.Categories) > 0 {
+			categories := make([]string, len(filter.Categories))
+			for i, c := range filter.Categories {
+				categories[i] = c.String()
+			}
+			assetFilter["category"] = map[string]interface{}{
+				"$in": categories,
+			}
 		}
+
 		if filter.ComputePlanKey != "" {
 			algoKeys, err := db.getComputePlanAlgoKeys(filter.ComputePlanKey)
 			if err != nil {
@@ -73,6 +81,7 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 				"$in": algoKeys,
 			}
 		}
+
 		if len(assetFilter) > 0 {
 			query.Selector.Asset = assetFilter
 		}

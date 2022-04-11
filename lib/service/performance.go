@@ -23,7 +23,7 @@ type PerformanceDependencyProvider interface {
 	LoggerProvider
 	persistence.PerformanceDBALProvider
 	ComputeTaskServiceProvider
-	persistence.MetricDBALProvider
+	AlgoServiceProvider
 	EventServiceProvider
 	TimeServiceProvider
 }
@@ -62,12 +62,13 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register performance for task with status %q", task.Status.String()))
 	}
 
-	metricExists, err := s.GetMetricDBAL().MetricExists(newPerf.MetricKey)
+	algo, err := s.GetAlgoService().GetAlgo(newPerf.MetricKey)
 	if err != nil {
 		return nil, err
 	}
-	if !metricExists {
-		return nil, errors.NewNotFound(asset.MetricKind, newPerf.MetricKey)
+
+	if algo.Category != asset.AlgoCategory_ALGO_METRIC {
+		return nil, errors.NewInvalidAsset(fmt.Sprintf("MetricKey should point to an Algo with category %s", asset.AlgoCategory_ALGO_METRIC.String()))
 	}
 
 	perf := &asset.Performance{

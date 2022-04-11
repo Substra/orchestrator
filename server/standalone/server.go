@@ -61,7 +61,6 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 
 	// Register application services
 	asset.RegisterNodeServiceServer(server, handlers.NewNodeServer())
-	asset.RegisterMetricServiceServer(server, handlers.NewMetricServer())
 	asset.RegisterDataSampleServiceServer(server, handlers.NewDataSampleServer())
 	asset.RegisterAlgoServiceServer(server, handlers.NewAlgoServer())
 	asset.RegisterDataManagerServiceServer(server, handlers.NewDataManagerServer())

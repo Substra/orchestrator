@@ -36,22 +36,6 @@ func TestAlgoCategoryValue(t *testing.T) {
 	assert.Equal(t, category, scanned)
 }
 
-func TestMetricValue(t *testing.T) {
-	metric := &Metric{
-		Name:  "test",
-		Owner: "testOwner",
-	}
-
-	value, err := metric.Value()
-	assert.NoError(t, err, "metric serialization should not fail")
-
-	scanned := new(Metric)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "metric scan should not fail")
-
-	assert.Equal(t, metric, scanned)
-}
-
 func TestDataSampleValue(t *testing.T) {
 	datasample := &DataSample{
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",

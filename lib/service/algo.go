@@ -5,6 +5,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
+	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -13,6 +14,8 @@ type AlgoAPI interface {
 	RegisterAlgo(algo *asset.NewAlgo, owner string) (*asset.Algo, error)
 	GetAlgo(string) (*asset.Algo, error)
 	QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error)
+	CanDownload(key string, requester string) (bool, error)
+	AlgoExists(key string) (bool, error)
 }
 
 // AlgoServiceProvider defines an object able to provide an AlgoAPI instance
@@ -100,4 +103,20 @@ func (s *AlgoService) GetAlgo(key string) (*asset.Algo, error) {
 // QueryAlgos returns all stored algos
 func (s *AlgoService) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
 	return s.GetAlgoDBAL().QueryAlgos(p, filter)
+}
+
+// CanDownload checks if the requester can download the algo corresponding to the provided key
+func (s *AlgoService) CanDownload(key string, requester string) (bool, error) {
+	obj, err := s.GetAlgo(key)
+
+	if err != nil {
+		return false, err
+	}
+
+	return obj.Permissions.Download.Public || utils.StringInSlice(obj.Permissions.Download.AuthorizedIds, requester), nil
+}
+
+// AlgoExists returns true if the algo exists
+func (s *AlgoService) AlgoExists(key string) (bool, error) {
+	return s.GetAlgoDBAL().AlgoExists(key)
 }

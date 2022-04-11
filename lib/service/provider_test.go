@@ -26,7 +26,6 @@ func TestServiceProviderInit(t *testing.T) {
 	provider := NewProvider(log.Entry{}, dbal, queue, time, "testChannel")
 
 	assert.Implements(t, (*NodeServiceProvider)(nil), provider, "service provider should provide NodeService")
-	assert.Implements(t, (*MetricServiceProvider)(nil), provider, "service provider should provide MetricService")
 	assert.Implements(t, (*DataSampleServiceProvider)(nil), provider, "service provider should provide DataSampleService")
 	assert.Implements(t, (*DataManagerDependencyProvider)(nil), provider, "service provider should provide DataManagerService")
 	assert.Implements(t, (*DatasetDependencyProvider)(nil), provider, "service provider should provide DatasetService")

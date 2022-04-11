@@ -63,7 +63,6 @@ type TestClient struct {
 	ks                   *KeyStore
 	logger               log.Entry
 	nodeService          asset.NodeServiceClient
-	metricService        asset.MetricServiceClient
 	algoService          asset.AlgoServiceClient
 	dataManagerService   asset.DataManagerServiceClient
 	dataSampleService    asset.DataSampleServiceClient
@@ -114,7 +113,6 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 		logger:               logger,
 		nodeService:          asset.NewNodeServiceClient(f.conn),
 		algoService:          asset.NewAlgoServiceClient(f.conn),
-		metricService:        asset.NewMetricServiceClient(f.conn),
 		dataManagerService:   asset.NewDataManagerServiceClient(f.conn),
 		dataSampleService:    asset.NewDataSampleServiceClient(f.conn),
 		modelService:         asset.NewModelServiceClient(f.conn),
@@ -245,28 +243,6 @@ func (c *TestClient) QueryDataSamples(pageToken string, pageSize uint32, filter 
 		c.logger.WithError(err).Fatal("QueryDataSamples failed")
 	}
 	return resp
-}
-
-func (c *TestClient) RegisterMetric(o *MetricOptions) {
-	newObj := &asset.NewMetric{
-		Key:  c.ks.GetKey(o.KeyRef),
-		Name: "test metric",
-		Description: &asset.Addressable{
-			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
-			StorageAddress: "http://somewhere.local/desc",
-		},
-		Address: &asset.Addressable{
-			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
-			StorageAddress: "http://somewhere.local/metrics",
-		},
-		NewPermissions: &asset.NewPermissions{Public: true},
-	}
-
-	c.logger.WithField("metric", newObj).Debug("registering metric")
-	_, err := c.metricService.RegisterMetric(c.ctx, newObj)
-	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterMetric failed")
-	}
 }
 
 func (c *TestClient) RegisterTasks(optList ...Taskable) {

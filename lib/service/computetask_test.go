@@ -709,21 +709,19 @@ func TestSetTestData(t *testing.T) {
 			},
 		}
 
-		dbal := new(persistence.MockDBAL)
-		ms := new(MockMetricAPI)
+		as := new(MockAlgoAPI)
 		dms := new(MockDataManagerAPI)
 		dss := new(MockDataSampleAPI)
 		provider := newMockedProvider()
-		provider.On("GetMetricDBAL").Return(dbal)
-		provider.On("GetMetricService").Return(ms)
+		provider.On("GetAlgoService").Return(as)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
 		provider.On("GetPermissionService").Return(NewPermissionService(provider))
 		service := NewComputeTaskService(provider)
 
 		// single metric
-		dbal.On("MetricExists", "metric").Return(true, nil)
-		ms.On("CanDownload", "metric", "dmowner").Return(true, nil)
+		as.On("AlgoExists", "metric").Return(true, nil)
+		as.On("CanDownload", "metric", "dmowner").Return(true, nil)
 		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
 		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
 
@@ -736,8 +734,7 @@ func TestSetTestData(t *testing.T) {
 		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
 		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.MetricKeys, specificInput.MetricKeys)
 
-		dbal.AssertExpectations(t)
-		ms.AssertExpectations(t)
+		as.AssertExpectations(t)
 		provider.AssertExpectations(t)
 	})
 	t.Run("multiple metrics", func(t *testing.T) {
@@ -758,23 +755,21 @@ func TestSetTestData(t *testing.T) {
 			},
 		}
 
-		dbal := new(persistence.MockDBAL)
-		ms := new(MockMetricAPI)
+		as := new(MockAlgoAPI)
 		dms := new(MockDataManagerAPI)
 		dss := new(MockDataSampleAPI)
 		provider := newMockedProvider()
-		provider.On("GetMetricDBAL").Return(dbal)
-		provider.On("GetMetricService").Return(ms)
+		provider.On("GetAlgoService").Return(as)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
 		provider.On("GetPermissionService").Return(NewPermissionService(provider))
 		service := NewComputeTaskService(provider)
 
 		// multiple metrics
-		dbal.On("MetricExists", "metric1").Return(true, nil)
-		dbal.On("MetricExists", "metric2").Return(true, nil)
-		ms.On("CanDownload", "metric1", "dmowner").Return(true, nil)
-		ms.On("CanDownload", "metric2", "dmowner").Return(true, nil)
+		as.On("AlgoExists", "metric1").Return(true, nil)
+		as.On("AlgoExists", "metric2").Return(true, nil)
+		as.On("CanDownload", "metric1", "dmowner").Return(true, nil)
+		as.On("CanDownload", "metric2", "dmowner").Return(true, nil)
 		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
 		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
 
@@ -787,8 +782,7 @@ func TestSetTestData(t *testing.T) {
 		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
 		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.MetricKeys, specificInput.MetricKeys)
 
-		dbal.AssertExpectations(t)
-		ms.AssertExpectations(t)
+		as.AssertExpectations(t)
 		provider.AssertExpectations(t)
 	})
 	t.Run("invalid metric", func(t *testing.T) {
@@ -809,13 +803,11 @@ func TestSetTestData(t *testing.T) {
 			},
 		}
 
-		dbal := new(persistence.MockDBAL)
-		ms := new(MockMetricAPI)
+		as := new(MockAlgoAPI)
 		dms := new(MockDataManagerAPI)
 		dss := new(MockDataSampleAPI)
 		provider := newMockedProvider()
-		provider.On("GetMetricDBAL").Return(dbal)
-		provider.On("GetMetricService").Return(ms)
+		provider.On("GetAlgoService").Return(as)
 		provider.On("GetDataManagerService").Return(dms)
 		provider.On("GetDataSampleService").Return(dss)
 		// Use the real permission service
@@ -823,16 +815,15 @@ func TestSetTestData(t *testing.T) {
 		service := NewComputeTaskService(provider)
 
 		// can not download metric
-		dbal.On("MetricExists", "metric").Return(true, nil)
-		ms.On("CanDownload", "metric", "dmowner").Return(false, nil)
+		as.On("AlgoExists", "metric").Return(true, nil)
+		as.On("CanDownload", "metric", "dmowner").Return(false, nil)
 		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
 		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
 
 		err := service.setTestData(specificInput, task, parents)
 		assert.Error(t, err)
 
-		dbal.AssertExpectations(t)
-		ms.AssertExpectations(t)
+		as.AssertExpectations(t)
 		provider.AssertExpectations(t)
 	})
 }

@@ -35,7 +35,9 @@ func TestQueryAlgos(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	res, bookmark, err := dbal.QueryAlgos(common.NewPagination("", 12), &asset.AlgoQueryFilter{Category: asset.AlgoCategory_ALGO_COMPOSITE})
+	filter := &asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_COMPOSITE}}
+
+	res, bookmark, err := dbal.QueryAlgos(common.NewPagination("", 12), filter)
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 	assert.Equal(t, "", bookmark, "last page should be reached")
@@ -61,7 +63,9 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	res, bookmark, err := dbal.QueryAlgos(common.NewPagination("", 1), &asset.AlgoQueryFilter{Category: asset.AlgoCategory_ALGO_COMPOSITE})
+	filter := &asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_COMPOSITE}}
+
+	res, bookmark, err := dbal.QueryAlgos(common.NewPagination("", 1), filter)
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 	assert.Equal(t, "1", bookmark, "There should be another page")

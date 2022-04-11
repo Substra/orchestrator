@@ -8,7 +8,7 @@ import (
 
 func TestIsEvaluateMethod(t *testing.T) {
 	p := NewContractCollection()
-	assert.Equal(t, true, p.IsEvaluateMethod("orchestrator.metric:QueryMetrics"))
-	assert.Equal(t, false, p.IsEvaluateMethod("orchestrator.metric:RegisterMetric"))
-	assert.Equal(t, false, p.IsEvaluateMethod("orchestrator.metric:DoesntExist"))
+	assert.True(t, p.IsEvaluateMethod("orchestrator.algo:QueryAlgos"))
+	assert.False(t, p.IsEvaluateMethod("orchestrator.algo:RegisterAlgo"))
+	assert.False(t, p.IsEvaluateMethod("orchestrator.algo:DoesntExist"))
 }

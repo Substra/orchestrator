@@ -17,10 +17,6 @@ type DataSampleOptions struct {
 	TestOnly bool
 }
 
-type MetricOptions struct {
-	KeyRef string
-}
-
 type TestTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
@@ -71,17 +67,6 @@ type PerformanceOptions struct {
 
 type DataManagerOptions struct {
 	LogsPermission *asset.NewPermissions
-}
-
-func DefaultMetricOptions() *MetricOptions {
-	return &MetricOptions{
-		KeyRef: DefaultMetricRef,
-	}
-}
-
-func (o *MetricOptions) WithKeyRef(ref string) *MetricOptions {
-	o.KeyRef = ref
-	return o
 }
 
 func DefaultTestTaskOptions() *TestTaskOptions {

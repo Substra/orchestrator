@@ -70,16 +70,16 @@ func TestGetPagination(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestAddExistingMetric(t *testing.T) {
+func TestAddExistingAlgo(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 
 	db := NewDB(context.TODO(), stub)
 
-	metric := &asset.Metric{Key: "test"}
+	algo := &asset.Algo{Key: "test"}
 
-	stub.On("GetState", "metric:test").Return([]byte("{}"), nil).Once()
+	stub.On("GetState", "algo:test").Return([]byte("{}"), nil).Once()
 
-	err := db.AddMetric(metric)
+	err := db.AddAlgo(algo)
 	orcErr := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcErr))
 	assert.Equal(t, orcerrors.ErrConflict, orcErr.Kind)

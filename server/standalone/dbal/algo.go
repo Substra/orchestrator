@@ -76,7 +76,7 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, orcerrors.NewNotFound("algo", key)
+			return nil, orcerrors.NewNotFound(asset.AlgoKind, key)
 		}
 		return nil, err
 	}
@@ -101,8 +101,12 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 		Limit(uint64(p.Size + 1))
 
 	if filter != nil {
-		if filter.Category != asset.AlgoCategory_ALGO_UNKNOWN {
-			stmt = stmt.Where(sq.Eq{"category": filter.Category.String()})
+		if len(filter.Categories) > 0 {
+			categories := make([]string, len(filter.Categories))
+			for i, c := range filter.Categories {
+				categories[i] = c.String()
+			}
+			stmt = stmt.Where(sq.Eq{"category": categories})
 		}
 
 		if filter.ComputePlanKey != "" {

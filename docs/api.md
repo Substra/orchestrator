@@ -24,7 +24,7 @@ gRPC reflection is enabled, and protobuf definitions are in [lib/assets](../lib/
 
 ## Consuming chaincode API
 
-From a peer node:
+From a peer node ("toolbox" pod):
 ```bash
 peer chaincode invoke \
         -C mychannel \
@@ -34,6 +34,7 @@ peer chaincode invoke \
         --cafile /var/hyperledger/tls/ord/cert/cacert.pem \
         --certfile /var/hyperledger/tls/server/pair/tls.crt \
         --keyfile /var/hyperledger/tls/server/pair/tls.key \
-        -o network-orderer-hlf-ord.orderer:7050 \
-        -c '{"Args":["orchestrator.metric:RegisterMetric", "test", "Test", "{\"checksum\":\"669831a3180f1e77e9e3c904b76d625403924303118ff97acff2d8599b9dc91b\",\"storage_address\":\"Qsdf\"}", "TestMetrics", "{\"checksum\":\"669831a3180f1e77e9e3c904b76d625403924303118ff97acff2d8599b9dc91b\",\"storage_address\":\"Test\"}", "{\"key\":\"Test\",\"sample_keys\":[\"1\",\"2\"]}", "{\"test\":\"True\"}", "{\"public\":true,\"authorized_ids\":[\"1\"]}"]}'
+        -o network-orderer-hlf-ord.orderer.svc.cluster.local:7050 \
+        -c '{"Args":["orchestrator.node:RegisterNode", "{\"msg\":\"\",\"request_id\":\"\"}"]}' \
+        --tlsRootCertFiles /var/hyperledger/tls/ord/cert/cacert.pem
 ```

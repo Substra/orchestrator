@@ -73,7 +73,7 @@ func TestQueryAlgos(t *testing.T) {
 	}
 
 	filter := &asset.AlgoQueryFilter{
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_SIMPLE},
 	}
 
 	ctx := new(ledger.MockTransactionContext)

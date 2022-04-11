@@ -12,6 +12,7 @@ enum AlgoCategory {
   ALGO_SIMPLE = 1;
   ALGO_AGGREGATE = 2;
   ALGO_COMPOSITE = 3;
+  ALGO_METRIC = 4;
 }
 
 // Algo represents the algorithm code which will be used
@@ -50,7 +51,7 @@ message QueryAlgosResponse {
 }
 
 message AlgoQueryFilter {
-  AlgoCategory category = 1;
+  repeated AlgoCategory categories = 1;
   string compute_plan_key = 2;
 }
 

@@ -20,14 +20,6 @@ type NodeDBAL interface {
 	GetNode(id string) (*asset.Node, error)
 }
 
-// MetricDBAL is the database abstraction layer for Metrics
-type MetricDBAL interface {
-	AddMetric(obj *asset.Metric) error
-	GetMetric(key string) (*asset.Metric, error)
-	QueryMetrics(p *common.Pagination) ([]*asset.Metric, common.PaginationToken, error)
-	MetricExists(key string) (bool, error)
-}
-
 // DataSampleDBAL is the database abstraction layer for DataSamples
 type DataSampleDBAL interface {
 	AddDataSamples(dataSample ...*asset.DataSample) error
@@ -59,11 +51,6 @@ type NodeDBALProvider interface {
 	GetNodeDBAL() NodeDBAL
 }
 
-// MetricDBALProvider represents an object capable of providing an MetricDBAL
-type MetricDBALProvider interface {
-	GetMetricDBAL() MetricDBAL
-}
-
 // DataSampleDBALProvider represents an object capable of providing a DataSampleDBAL
 type DataSampleDBALProvider interface {
 	GetDataSampleDBAL() DataSampleDBAL
@@ -82,7 +69,6 @@ type DataManagerDBALProvider interface {
 // DBAL stands for Database Abstraction Layer, it exposes methods to interact with asset storage.
 type DBAL interface {
 	NodeDBAL
-	MetricDBAL
 	DataSampleDBAL
 	AlgoDBAL
 	DataManagerDBAL
@@ -97,7 +83,6 @@ type DBAL interface {
 // DBALProvider exposes all available DBAL.
 type DBALProvider interface {
 	NodeDBALProvider
-	MetricDBALProvider
 	DataSampleDBALProvider
 	AlgoDBALProvider
 	DataManagerDBALProvider

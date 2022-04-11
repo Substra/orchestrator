@@ -40,8 +40,6 @@ type ComputeTaskDependencyProvider interface {
 	DataManagerServiceProvider
 	DataSampleServiceProvider
 	PermissionServiceProvider
-	MetricServiceProvider
-	persistence.MetricDBALProvider
 	NodeServiceProvider
 	ComputePlanServiceProvider
 	ModelServiceProvider
@@ -525,7 +523,7 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 	}
 
 	for _, metricKey := range input.MetricKeys {
-		metricExists, err := s.GetMetricDBAL().MetricExists(metricKey)
+		metricExists, err := s.GetAlgoService().AlgoExists(metricKey)
 		if err != nil {
 			return err
 		}
@@ -533,7 +531,7 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 			return orcerrors.NewNotFound(asset.MetricKind, metricKey)
 		}
 		// ensure the task will be able to download the metric
-		ok, err := s.GetMetricService().CanDownload(metricKey, datamanager.Owner)
+		ok, err := s.GetAlgoService().CanDownload(metricKey, datamanager.Owner)
 		if err != nil {
 			return err
 		}
