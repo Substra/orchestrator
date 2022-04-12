@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added ALGO_METRICS Algo category (#628)
+
 ### Changed
 - Remove compute task asset column (#619)
 - QueryAlgos filter "Category" is now "Categories" (#628)
+- Remove failure report asset column (#631)
 
 ### Removed
 - Metrics gRPC routes. Use Algo gRPC routes and ALGO_METRICS category instead. (#628)

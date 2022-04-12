@@ -2,17 +2,56 @@ package dbal
 
 import (
 	"errors"
+	"time"
 
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (d *DBAL) GetFailureReport(computeTaskKey string) (*asset.FailureReport, error) {
-	row := d.tx.QueryRow(d.ctx, `select asset from "failure_reports" where compute_task_id=$1 and channel=$2`, computeTaskKey, d.channel)
+type sqlFailureReport struct {
+	ComputeTaskKey string
+	ErrorType      asset.ErrorType
+	CreationDate   time.Time
+	Owner          string
+	LogsChecksum   pgtype.Text
+	LogsAddress    pgtype.Text
+}
 
-	failureReport := new(asset.FailureReport)
-	err := row.Scan(failureReport)
+func (r sqlFailureReport) toFailureReport() *asset.FailureReport {
+	failureReport := &asset.FailureReport{
+		ComputeTaskKey: r.ComputeTaskKey,
+		ErrorType:      r.ErrorType,
+		CreationDate:   timestamppb.New(r.CreationDate),
+		Owner:          r.Owner,
+	}
+
+	if r.LogsAddress.Status == pgtype.Present {
+		failureReport.LogsAddress = &asset.Addressable{
+			StorageAddress: r.LogsAddress.String,
+			Checksum:       r.LogsChecksum.String,
+		}
+	}
+
+	return failureReport
+}
+
+func (d *DBAL) GetFailureReport(computeTaskKey string) (*asset.FailureReport, error) {
+	stmt := getStatementBuilder().
+		Select("compute_task_key", "error_type", "creation_date", "owner", "logs_address", "logs_checksum").
+		From("expanded_failure_reports").
+		Where(sq.Eq{"channel": d.channel, "compute_task_key": computeTaskKey})
+
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	r := new(sqlFailureReport)
+	err = row.Scan(&r.ComputeTaskKey, &r.ErrorType, &r.CreationDate, &r.Owner, &r.LogsAddress, &r.LogsChecksum)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -21,11 +60,29 @@ func (d *DBAL) GetFailureReport(computeTaskKey string) (*asset.FailureReport, er
 		return nil, err
 	}
 
-	return failureReport, nil
+	return r.toFailureReport(), nil
 }
 
 func (d *DBAL) AddFailureReport(failureReport *asset.FailureReport) error {
-	stmt := `insert into "failure_reports" ("compute_task_id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(d.ctx, stmt, failureReport.GetComputeTaskKey(), failureReport, d.channel)
-	return err
+	var logsAddress pgtype.Text
+	if failureReport.LogsAddress != nil {
+		err := d.addAddressable(failureReport.LogsAddress)
+		if err != nil {
+			return err
+		}
+
+		logsAddress = pgtype.Text{
+			String: failureReport.LogsAddress.StorageAddress,
+			Status: pgtype.Present,
+		}
+	} else {
+		logsAddress = pgtype.Text{Status: pgtype.Null}
+	}
+
+	stmt := getStatementBuilder().
+		Insert("failure_reports").
+		Columns("compute_task_key", "channel", "error_type", "creation_date", "owner", "logs_address").
+		Values(failureReport.ComputeTaskKey, d.channel, failureReport.ErrorType, failureReport.CreationDate.AsTime(), failureReport.Owner, logsAddress)
+
+	return d.exec(stmt)
 }

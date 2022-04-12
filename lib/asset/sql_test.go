@@ -22,6 +22,19 @@ func TestPermissionsValue(t *testing.T) {
 	assert.Equal(t, permissions, scanned)
 }
 
+func TestPermissionValue(t *testing.T) {
+	permission := &Permission{Public: true, AuthorizedIds: []string{"1", "2"}}
+
+	value, err := permission.Value()
+	assert.NoError(t, err, "permission serialization should not fail")
+
+	scanned := new(Permission)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "permission scan should not fail")
+
+	assert.Equal(t, permission, scanned)
+}
+
 func TestAlgoCategoryValue(t *testing.T) {
 	cat := AlgoCategory_ALGO_SIMPLE
 	category := &cat
@@ -34,6 +47,48 @@ func TestAlgoCategoryValue(t *testing.T) {
 	assert.NoError(t, err, "algo category scan should not fail")
 
 	assert.Equal(t, category, scanned)
+}
+
+func TestComputeTaskStatusValue(t *testing.T) {
+	s := ComputeTaskStatus_STATUS_DOING
+	status := &s
+
+	value, err := status.Value()
+	assert.NoError(t, err, "task status serialization should not fail")
+
+	scanned := new(ComputeTaskStatus)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "task status scan should not fail")
+
+	assert.Equal(t, status, scanned)
+}
+
+func TestComputeTaskCategoryValue(t *testing.T) {
+	cat := ComputeTaskCategory_TASK_TRAIN
+	category := &cat
+
+	value, err := category.Value()
+	assert.NoError(t, err, "task category serialization should not fail")
+
+	scanned := new(ComputeTaskCategory)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "task category scan should not fail")
+
+	assert.Equal(t, category, scanned)
+}
+
+func TestErrorTypeValue(t *testing.T) {
+	e := ErrorType_ERROR_TYPE_EXECUTION
+	errorType := &e
+
+	value, err := errorType.Value()
+	assert.NoError(t, err, "error type serialization should not fail")
+
+	scanned := new(ErrorType)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "error type scan should not fail")
+
+	assert.Equal(t, errorType, scanned)
 }
 
 func TestDataSampleValue(t *testing.T) {
@@ -89,24 +144,6 @@ func TestModelValue(t *testing.T) {
 	assert.NoError(t, err, "model scan should not fail")
 
 	assert.Equal(t, model, scanned)
-}
-
-func TestComputePlanValue(t *testing.T) {
-	computeplan := &ComputePlan{
-		Key: "08bcb3b9-015c-4b6a-a9b5-033b3b324a7c",
-		Metadata: map[string]string{
-			"test": "true",
-		},
-	}
-
-	value, err := computeplan.Value()
-	assert.NoError(t, err, "compute plan serialization should not fail")
-
-	scanned := new(ComputePlan)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "compute plan scan should not fail")
-
-	assert.Equal(t, computeplan, scanned)
 }
 
 func TestPerformanceValue(t *testing.T) {

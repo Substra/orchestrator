@@ -111,6 +111,29 @@ func (c *ComputeTaskCategory) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer interface.
+// Simply returns the string representation of the ErrorType.
+func (e *ErrorType) Value() (driver.Value, error) {
+	return e.String(), nil
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes a string into the ErrorType.
+func (e *ErrorType) Scan(value interface{}) error {
+	s, ok := value.(string)
+	if !ok {
+		return errors.NewError(errors.ErrInternal, "cannot scan error type")
+	}
+
+	v, ok := ErrorType_value[s]
+	if !ok {
+		return errors.NewError(errors.ErrInternal, "cannot scan error type")
+	}
+	*e = ErrorType(v)
+
+	return nil
+}
+
+// Value implements the driver.Valuer interface.
 // Returns the JSON-encoded representation of the DataSample.
 func (d *DataSample) Value() (driver.Value, error) {
 	return protojson.Marshal(d)
@@ -162,23 +185,6 @@ func (a *Model) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the ComputePlan.
-func (cp *ComputePlan) Value() (driver.Value, error) {
-	return protojson.Marshal(cp)
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the ComputePlan.
-func (cp *ComputePlan) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan compute plan")
-	}
-
-	return protojson.Unmarshal(b, cp)
-}
-
-// Value implements the driver.Valuer interface.
 // Simply returns the JSON-encoded representation of the Performance.
 func (p *Performance) Value() (driver.Value, error) {
 	return protojson.Marshal(p)
@@ -209,21 +215,4 @@ func (e *Event) Scan(value interface{}) error {
 	}
 
 	return protojson.Unmarshal(b, e)
-}
-
-// Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the FailureReport.
-func (f *FailureReport) Value() (driver.Value, error) {
-	return protojson.Marshal(f)
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the FailureReport.
-func (f *FailureReport) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan failure report")
-	}
-
-	return protojson.Unmarshal(b, f)
 }

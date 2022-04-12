@@ -21,7 +21,9 @@ func TestGetFailureReportNotFound(t *testing.T) {
 	mock.ExpectBegin()
 
 	computeTaskKey := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`select asset from "failure_reports" where compute_task_id=`).WithArgs(computeTaskKey, testChannel).WillReturnError(pgx.ErrNoRows)
+	mock.ExpectQuery(`SELECT .* FROM expanded_failure_reports`).
+		WithArgs(testChannel, computeTaskKey).
+		WillReturnError(pgx.ErrNoRows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
