@@ -50,6 +50,10 @@ var computeTaskTestScenarios = []Scenario{
 		testStableTaskSort,
 		[]string{"task", "query"},
 	},
+	{
+		testGetSortedParentTaskKeys,
+		[]string{"task", "query"},
+	},
 }
 
 // Register a task and its dependencies, then start the task.
@@ -310,6 +314,45 @@ func testStableTaskSort(factory *client.TestClientFactory) {
 				keys[task.Key] = struct{}{}
 			}
 			resp = getPage(resp.NextPageToken)
+		}
+	}
+}
+
+// testGetSortedParentTaskKeys will check that parent task keys are returned in the same order they were registered
+func testGetSortedParentTaskKeys(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("trainAlgo"))
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	const nbParents int = 10
+	parentTaskRefs := make([]string, nbParents)
+	for i := 0; i < nbParents; i++ {
+		parentTaskRefs[i] = fmt.Sprint("parent", i)
+		appClient.RegisterTasks(
+			client.DefaultTrainTaskOptions().WithKeyRef(parentTaskRefs[i]).WithAlgoRef("trainAlgo"),
+		)
+	}
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_AGGREGATE).WithKeyRef("aggAlgo"))
+	appClient.RegisterTasks(
+		client.DefaultAggregateTaskOptions().
+			WithAlgoRef("aggAlgo").
+			WithKeyRef("aggTask").
+			WithParentsRef(parentTaskRefs...),
+	)
+
+	task := appClient.GetComputeTask("aggTask")
+
+	if len(task.ParentTaskKeys) != len(parentTaskRefs) {
+		log.Fatal("Unexpected ParentTaskKeys length")
+	}
+
+	for i, taskRef := range parentTaskRefs {
+		if task.ParentTaskKeys[i] != appClient.GetKeyStore().GetKey(taskRef) {
+			log.Fatal("Unexpected ParentTaskKeys ordering")
 		}
 	}
 }
