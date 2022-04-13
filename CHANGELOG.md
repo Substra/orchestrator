@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-# Fixed
+## [0.9.1] - 2022-04-13
+
+### Fixed
 - Order parent tasks keys by task position (#649)
 
 ## [0.9.0] - 2022-04-13
