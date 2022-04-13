@@ -1,13 +1,13 @@
 # Build stage
-FROM golang:1.17-alpine3.15 AS build
+FROM golang:1.18-alpine3.15 AS build
 COPY ./docker/orchestrator-chaincode/dependencies.json /tmp/dependencies.json
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # hadolint ignore=DL3018
 RUN apk update && apk add --no-cache jq \
-	&& jq -r '.[] | "\(.name)=\(.version)"' /tmp/dependencies.json | xargs apk add --no-cache \
-	&& rm /tmp/dependencies.json
+    && jq -r '.[] | "\(.name)=\(.version)"' /tmp/dependencies.json | xargs apk add --no-cache \
+    && rm /tmp/dependencies.json
 
 ARG VERSION=dev
 ENV GO111MODULE=on

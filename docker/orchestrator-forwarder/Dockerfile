@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.17-alpine3.15 AS build
+FROM golang:1.18-alpine3.15 AS build
 
 COPY ./docker/orchestrator-forwarder/dependencies.json /tmp/dependencies.json
 
