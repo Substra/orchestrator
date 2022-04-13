@@ -35,16 +35,8 @@ var computeTaskTestScenarios = []Scenario{
 		[]string{"short", "task", "query"},
 	},
 	{
-		testCompositeParentChild,
-		[]string{"short", "plan", "composite"},
-	},
-	{
 		testConcurrency,
 		[]string{"short", "concurrency"},
-	},
-	{
-		testAggregateComposite,
-		[]string{"short", "plan", "aggregate", "composite"},
 	},
 	{
 		testStableTaskSort,
@@ -199,47 +191,6 @@ func testQueryTasks(factory *client.TestClientFactory) {
 
 	if len(resp.Tasks) != 1 {
 		log.WithField("num_tasks", len(resp.Tasks)).Fatal("unexpected task result")
-	}
-}
-
-func testCompositeParentChild(factory *client.TestClientFactory) {
-	appClient := factory.NewTestClient()
-
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
-	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
-	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
-	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-
-	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("comp1").WithAlgoRef("algoComp"),
-	)
-	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("comp2").WithAlgoRef("algoComp").WithParentsRef("comp1", "comp1"),
-	)
-
-	appClient.StartTask("comp1")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
-
-	appClient.StartTask("comp2")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2H").WithCategory(asset.ModelCategory_MODEL_HEAD))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
-
-	// Register a composite task with 2 composite parents
-	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("comp3").WithAlgoRef("algoComp").WithParentsRef("comp1", "comp2"),
-	)
-
-	inputs := appClient.GetInputModels("comp3")
-	if len(inputs) != 2 {
-		log.Fatal("composite task should have 2 input models")
-	}
-
-	if inputs[0].Key != appClient.GetKeyStore().GetKey("model1H") {
-		log.Fatal("first model should be HEAD from comp1")
-	}
-	if inputs[1].Key != appClient.GetKeyStore().GetKey("model2T") {
-		log.Fatal("second model should be TRUNK from comp2")
 	}
 }
 
