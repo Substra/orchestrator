@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Build with go 1.18 (#639)
 
+### Fixed
+- Update failure report asset column migration to prevent null value error when migrating a populated database (#658)
+
 ## [0.9.1] - 2022-04-13
 
 ### Fixed
