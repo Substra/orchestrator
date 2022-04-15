@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Update failure report asset column migration to prevent null value error when migrating a populated database (#658)
+- Parent tasks keys format validation (#662)
 
 ## [0.9.1] - 2022-04-13
 

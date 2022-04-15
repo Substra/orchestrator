@@ -67,6 +67,19 @@ func TestNewComputeTaskValidation(t *testing.T) {
 		Metadata:       map[string]string{"test": "indeed"},
 		ParentTaskKeys: []string{"7ae86bc1-aa4a-492f-90a6-ad5e686afb8f"},
 	}
+	invalidParent := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		ParentTaskKeys: []string{"7ae86bc1-aa4a-492f-90a6-ad5e686afb8f", "3fd0f5d823fc459e8316da46d2f6dbaa"},
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+	}
 
 	cases := map[string]struct {
 		valid   bool
@@ -77,6 +90,7 @@ func TestNewComputeTaskValidation(t *testing.T) {
 		"missing algokey":      {valid: false, newTask: missingAlgo},
 		"missing compute plan": {valid: false, newTask: missingComputePlan},
 		"missing train data":   {valid: false, newTask: missingData},
+		"invalid parent":       {valid: false, newTask: invalidParent},
 	}
 
 	for name, c := range cases {

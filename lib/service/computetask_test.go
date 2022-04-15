@@ -143,6 +143,32 @@ func TestRegisterTaskConflict(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
+func TestRegisterTaskInvalidParents(t *testing.T) {
+	invalidTrainTask := &asset.NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		ParentTaskKeys: []string{"3fd0f5d823fc459e8316da46d2f6dbaa"},
+		Data: &asset.NewComputeTask_Train{
+			Train: &asset.NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+	}
+
+	provider := newMockedProvider()
+	service := NewComputeTaskService(provider)
+
+	_, err := service.RegisterTasks([]*asset.NewComputeTask{invalidTrainTask}, "test")
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrInvalidAsset, orcError.Kind)
+
+	provider.AssertExpectations(t)
+}
+
 func TestRegisterTrainTask(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)

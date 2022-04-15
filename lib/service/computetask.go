@@ -86,6 +86,13 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 		return nil, orcerrors.NewBadRequest("no task to register")
 	}
 
+	for _, newTask := range tasks {
+		err := newTask.Validate()
+		if err != nil {
+			return nil, orcerrors.FromValidationError(asset.ComputeTaskKind, err)
+		}
+	}
+
 	existingKeys, err := s.getExistingKeys(tasks)
 	if err != nil {
 		return nil, err
@@ -202,11 +209,6 @@ func (s *ComputeTaskService) SortTasks(newTasks []*asset.NewComputeTask, existin
 // createTask converts a NewComputeTask into a ComputeTask.
 // It does not persist nor dispatch events.
 func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner string) (*asset.ComputeTask, error) {
-	err := input.Validate()
-	if err != nil {
-		return nil, orcerrors.FromValidationError(asset.ComputeTaskKind, err)
-	}
-
 	computePlan, err := s.getCachedCP(input.ComputePlanKey)
 	if err != nil {
 		return nil, err
