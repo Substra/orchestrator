@@ -22,7 +22,8 @@ SELECT execute($$
     INSERT INTO addressables(storage_address, checksum)
     SELECT asset -> 'logsAddress' ->> 'storageAddress',
            asset -> 'logsAddress' ->> 'checksum'
-    FROM failure_reports;
+    FROM failure_reports
+    WHERE (asset -> 'logsAddress') IS NOT NULL;
 
     UPDATE failure_reports
     SET error_type    = asset ->> 'errorType',
