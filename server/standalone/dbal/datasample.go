@@ -24,43 +24,21 @@ func (d *DBAL) DataSampleExists(key string) (bool, error) {
 	return count == 1, err
 }
 
-// AddDataSamples insert samples in storage according to the most efficient way.
-// Up to 5 samples, they will be inserted one by one.
-// For more than 5 samples they will be processed in batch.
+// AddDataSamples insert samples in storage in batch mode.
 func (d *DBAL) AddDataSamples(datasamples ...*asset.DataSample) error {
-	if len(datasamples) >= 5 {
-		log.WithField("numSamples", len(datasamples)).Debug("dbal: adding multiple datasamples in batch mode")
-		return d.addDataSamples(datasamples)
-	}
+	log.WithField("numSamples", len(datasamples)).Debug("dbal: adding multiple datasamples in batch mode")
 
-	for _, ds := range datasamples {
-		err := d.addDataSample(ds)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (d *DBAL) addDataSample(dataSample *asset.DataSample) error {
-	stmt := `insert into "datasamples" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(d.ctx, stmt, dataSample.GetKey(), dataSample, d.channel)
-	return err
-}
-
-func (d *DBAL) addDataSamples(samples []*asset.DataSample) error {
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"datasamples"},
 		[]string{"id", "asset", "channel"},
-		pgx.CopyFromSlice(len(samples), func(i int) ([]interface{}, error) {
-			v, err := protojson.Marshal(samples[i])
+		pgx.CopyFromSlice(len(datasamples), func(i int) ([]interface{}, error) {
+			v, err := protojson.Marshal(datasamples[i])
 			if err != nil {
 				return nil, err
 			}
 			// expect binary representation, not string
-			id, err := uuid.Parse(samples[i].Key)
+			id, err := uuid.Parse(datasamples[i].Key)
 			if err != nil {
 				return nil, err
 			}
