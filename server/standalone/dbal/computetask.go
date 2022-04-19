@@ -194,7 +194,6 @@ func (d *DBAL) UpdateComputeTask(t *asset.ComputeTask) error {
 		Set("rank", t.Rank).
 		Set("status", t.Status).
 		Set("worker", t.Worker).
-		Set("creation_date", t.CreationDate.AsTime()).
 		Set("logs_permission", t.LogsPermission).
 		Set("task_data", taskData).
 		Set("metadata", t.Metadata).
