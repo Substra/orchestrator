@@ -91,6 +91,20 @@ func TestErrorTypeValue(t *testing.T) {
 	assert.Equal(t, errorType, scanned)
 }
 
+func TestModelCategoryValue(t *testing.T) {
+	cat := ModelCategory_MODEL_SIMPLE
+	category := &cat
+
+	value, err := category.Value()
+	assert.NoError(t, err, "model category serialization should not fail")
+
+	scanned := new(ModelCategory)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "model category scan should not fail")
+
+	assert.Equal(t, category, scanned)
+}
+
 func TestDataSampleValue(t *testing.T) {
 	datasample := &DataSample{
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
@@ -123,27 +137,6 @@ func TestDataManagerValue(t *testing.T) {
 	assert.NoError(t, err, "datamanager scan should not fail")
 
 	assert.Equal(t, datamanager, scanned)
-}
-
-func TestModelValue(t *testing.T) {
-	model := &Model{
-		Key:            "08bcb3b9-015c-4b6a-a9b5-033b3b324a7c",
-		Category:       ModelCategory_MODEL_SIMPLE,
-		ComputeTaskKey: "08bcb3b9-015c-4b6a-a9b5-033b3b324a7d",
-		Address: &Addressable{
-			Checksum:       "c15918f80d920769904e92bae59cf4b926b362201ad686c2834403a08a19de16",
-			StorageAddress: "http://somewhere.online",
-		},
-	}
-
-	value, err := model.Value()
-	assert.NoError(t, err, "model serialization should not fail")
-
-	scanned := new(Model)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "model scan should not fail")
-
-	assert.Equal(t, model, scanned)
 }
 
 func TestPerformanceValue(t *testing.T) {

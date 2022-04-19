@@ -134,6 +134,29 @@ func (e *ErrorType) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer interface.
+// Simply returns the string representation of the ModelCategory.
+func (c *ModelCategory) Value() (driver.Value, error) {
+	return c.String(), nil
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes a string into the ModelCategory.
+func (c *ModelCategory) Scan(value interface{}) error {
+	s, ok := value.(string)
+	if !ok {
+		return errors.NewInternal("cannot scan model category: invalid string")
+	}
+
+	v, ok := ModelCategory_value[s]
+	if !ok {
+		return errors.NewInternal("cannot scan model category: unknown value")
+	}
+	*c = ModelCategory(v)
+
+	return nil
+}
+
+// Value implements the driver.Valuer interface.
 // Returns the JSON-encoded representation of the DataSample.
 func (d *DataSample) Value() (driver.Value, error) {
 	return protojson.Marshal(d)
@@ -165,23 +188,6 @@ func (d *DataManager) Scan(value interface{}) error {
 	}
 
 	return protojson.Unmarshal(b, d)
-}
-
-// Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the Model.
-func (a *Model) Value() (driver.Value, error) {
-	return protojson.Marshal(a)
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the Model.
-func (a *Model) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan model")
-	}
-
-	return protojson.Unmarshal(b, a)
 }
 
 // Value implements the driver.Valuer interface.

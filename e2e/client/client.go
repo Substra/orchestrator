@@ -293,7 +293,7 @@ func (c *TestClient) RegisterModel(o *ModelOptions) {
 		Category:       o.Category,
 		Address: &asset.Addressable{
 			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
-			StorageAddress: "http://somewhere.online/model",
+			StorageAddress: "http://somewhere.online/model/" + uuid.NewString(),
 		},
 	}
 	c.logger.WithField("model", newModel).Debug("registering model")
@@ -313,7 +313,7 @@ func (c *TestClient) FailableRegisterModels(o ...*ModelOptions) error {
 			Category:       modelOpt.Category,
 			Address: &asset.Addressable{
 				Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
-				StorageAddress: "http://somewhere.online/model",
+				StorageAddress: "http://somewhere.online/model/" + uuid.NewString(),
 			},
 		}
 		c.logger.WithField("model", newModel).Debug("registering model")

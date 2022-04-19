@@ -21,7 +21,9 @@ func TestModelNotFound(t *testing.T) {
 	mock.ExpectBegin()
 
 	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`select asset from "models" where id=`).WithArgs(uid, testChannel).WillReturnError(pgx.ErrNoRows)
+	mock.ExpectQuery(`SELECT .* FROM expanded_models`).
+		WithArgs(testChannel, uid).
+		WillReturnError(pgx.ErrNoRows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
