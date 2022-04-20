@@ -122,19 +122,3 @@ func TestDataSampleValue(t *testing.T) {
 
 	assert.Equal(t, datasample, scanned)
 }
-
-func TestDataManagerValue(t *testing.T) {
-	datamanager := &DataManager{
-		Name:  "test",
-		Owner: "testOwner",
-	}
-
-	value, err := datamanager.Value()
-	assert.NoError(t, err, "datamanager serialization should not fail")
-
-	scanned := new(DataManager)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "datamanager scan should not fail")
-
-	assert.Equal(t, datamanager, scanned)
-}

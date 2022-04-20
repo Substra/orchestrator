@@ -3,43 +3,96 @@ package dbal
 import (
 	"errors"
 	"strconv"
+	"time"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+type sqlDataManager struct {
+	Key            string
+	Name           string
+	Owner          string
+	Permissions    asset.Permissions
+	Description    asset.Addressable
+	Opener         asset.Addressable
+	Type           string
+	CreationDate   time.Time
+	LogsPermission asset.Permission
+	Metadata       map[string]string
+}
+
+func (dm *sqlDataManager) toDataManager() *asset.DataManager {
+	return &asset.DataManager{
+		Key:            dm.Key,
+		Name:           dm.Name,
+		Owner:          dm.Owner,
+		Permissions:    &dm.Permissions,
+		Description:    &dm.Description,
+		Opener:         &dm.Opener,
+		Type:           dm.Type,
+		CreationDate:   timestamppb.New(dm.CreationDate),
+		LogsPermission: &dm.LogsPermission,
+		Metadata:       dm.Metadata,
+	}
+}
 
 // AddDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) AddDataManager(datamanager *asset.DataManager) error {
-	stmt := `insert into "datamanagers" ("id", "asset", "channel") values ($1, $2, $3)`
-	_, err := d.tx.Exec(d.ctx, stmt, datamanager.GetKey(), datamanager, d.channel)
-	return err
-}
+	err := d.addAddressable(datamanager.Description)
+	if err != nil {
+		return err
+	}
 
-// UpdateDataManager implements persistence.DataManagerDBAL
-func (d *DBAL) UpdateDataManager(datamanager *asset.DataManager) error {
-	stmt := `update "datamanagers" set asset=$3 where id=$1 and channel=$2`
-	_, err := d.tx.Exec(d.ctx, stmt, datamanager.GetKey(), d.channel, datamanager)
-	return err
+	err = d.addAddressable(datamanager.Opener)
+	if err != nil {
+		return err
+	}
+
+	stmt := getStatementBuilder().
+		Insert("datamanagers").
+		Columns("key", "channel", "name", "owner", "permissions", "description", "opener", "type", "creation_date", "logs_permission", "metadata").
+		Values(datamanager.Key, d.channel, datamanager.Name, datamanager.Owner, datamanager.Permissions, datamanager.Description.StorageAddress, datamanager.Opener.StorageAddress, datamanager.Type, datamanager.CreationDate.AsTime(), datamanager.LogsPermission, datamanager.Metadata)
+
+	return d.exec(stmt)
 }
 
 // DataManagerExists implements persistence.DataManagerDBAL
 func (d *DBAL) DataManagerExists(key string) (bool, error) {
-	row := d.tx.QueryRow(d.ctx, `select count(id) from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
+	stmt := getStatementBuilder().
+		Select("COUNT(key)").
+		From("datamanagers").
+		Where(sq.Eq{"channel": d.channel, "key": key})
+
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return false, err
+	}
 
 	var count int
-	err := row.Scan(&count)
+	err = row.Scan(&count)
 
 	return count == 1, err
 }
 
 // GetDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
-	row := d.tx.QueryRow(d.ctx, `select "asset" from "datamanagers" where id=$1 and channel=$2`, key, d.channel)
+	stmt := getStatementBuilder().
+		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata").
+		From("expanded_datamanagers").
+		Where(sq.Eq{"channel": d.channel, "key": key})
 
-	datamanager := new(asset.DataManager)
-	err := row.Scan(datamanager)
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	dm := new(sqlDataManager)
+	err = row.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.Type, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -48,7 +101,7 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 		return nil, err
 	}
 
-	return datamanager, nil
+	return dm.toDataManager(), nil
 }
 
 // QueryDataManagers implements persistence.DataManagerDBAL
@@ -58,8 +111,16 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 		return nil, "", err
 	}
 
-	query := `select "asset" from "datamanagers" where channel=$3 order by asset->>'creationDate' asc, id limit $1 offset $2`
-	rows, err := d.tx.Query(d.ctx, query, p.Size+1, offset, d.channel)
+	stmt := getStatementBuilder().
+		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata").
+		From("expanded_datamanagers").
+		Where(sq.Eq{"channel": d.channel}).
+		OrderByClause("creation_date ASC, key").
+		Offset(uint64(offset)).
+		// Fetch page size + 1 elements to determine whether there is a next page
+		Limit(uint64(p.Size + 1))
+
+	rows, err := d.query(stmt)
 	if err != nil {
 		return nil, "", err
 	}
@@ -69,21 +130,21 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 	var count int
 
 	for rows.Next() {
-		datamanager := new(asset.DataManager)
+		dm := new(sqlDataManager)
 
-		err = rows.Scan(datamanager)
+		err = rows.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.Type, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata)
 		if err != nil {
 			return nil, "", err
 		}
 
-		datamanagers = append(datamanagers, datamanager)
+		datamanagers = append(datamanagers, dm.toDataManager())
 		count++
 
 		if count == int(p.Size) {
 			break
 		}
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, "", err
 	}
 

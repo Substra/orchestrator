@@ -32,21 +32,6 @@ func (db *DB) AddDataManager(datamanager *asset.DataManager) error {
 	return nil
 }
 
-// UpdateDataManager implements persistence.DataManagerDBAL
-func (db *DB) UpdateDataManager(datamanager *asset.DataManager) error {
-	dataManagerBytes, err := marshaller.Marshal(datamanager)
-	if err != nil {
-		return err
-	}
-
-	err = db.putState(asset.DataManagerKind, datamanager.GetKey(), dataManagerBytes)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // DataManagerExists implements persistence.DataManagerDBAL
 func (db *DB) DataManagerExists(key string) (bool, error) {
 	return db.hasKey(asset.DataManagerKind, key)
