@@ -15,6 +15,17 @@ enum AlgoCategory {
   ALGO_METRIC = 4;
 }
 
+message AlgoInput {
+  AssetKind kind = 1;
+  bool multiple = 2;
+  bool optional = 3;
+}
+
+message AlgoOutput {
+  AssetKind kind = 1;
+  bool multiple = 2;
+}
+
 // Algo represents the algorithm code which will be used
 // to produce or test a model.
 message Algo {
@@ -27,6 +38,8 @@ message Algo {
   string owner = 7;
   google.protobuf.Timestamp creation_date = 8;
   map<string, string> metadata = 16;
+  map<string, AlgoInput> inputs = 17;
+  map<string, AlgoOutput> outputs = 18;
 }
 
 // NewAlgo is used to register an Algo.
@@ -39,6 +52,8 @@ message NewAlgo {
   Addressable algorithm = 5;
   NewPermissions new_permissions = 6;
   map<string, string> metadata = 17;
+  map<string, AlgoInput> inputs = 18;
+  map<string, AlgoOutput> outputs = 19;
 }
 
 message GetAlgoParam {

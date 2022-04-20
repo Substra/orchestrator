@@ -68,6 +68,8 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		Metadata:     a.Metadata,
 		Owner:        owner,
 		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
+		Inputs:       a.Inputs,
+		Outputs:      a.Outputs,
 	}
 
 	algo.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)

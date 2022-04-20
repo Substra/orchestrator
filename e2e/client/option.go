@@ -10,6 +10,8 @@ type ComputePlanOptions struct {
 type AlgoOptions struct {
 	KeyRef   string
 	Category asset.AlgoCategory
+	Inputs   map[string]*asset.AlgoInput
+	Outputs  map[string]*asset.AlgoOutput
 }
 
 type DataSampleOptions struct {

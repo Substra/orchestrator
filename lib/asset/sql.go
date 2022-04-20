@@ -171,3 +171,26 @@ func (e *Event) Scan(value interface{}) error {
 
 	return protojson.Unmarshal(b, e)
 }
+
+// Value implements the driver.Valuer interface.
+// Simply returns the string representation of the AssetKind.
+func (k *AssetKind) Value() (driver.Value, error) {
+	return k.String(), nil
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes a string into the AssetKind.
+func (k *AssetKind) Scan(value interface{}) error {
+	s, ok := value.(string)
+	if !ok {
+		return errors.NewError(errors.ErrInternal, "cannot scan asset kind")
+	}
+
+	v, ok := AssetKind_value[s]
+	if !ok {
+		return errors.NewError(errors.ErrInternal, "cannot scan asset kind")
+	}
+	*k = AssetKind(v)
+
+	return nil
+}

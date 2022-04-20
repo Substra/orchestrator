@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"github.com/go-playground/log/v7"
+	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
@@ -13,6 +14,10 @@ var algoTestScenarios = []Scenario{
 	},
 	{
 		testQueryAlgosFilterCategories,
+		[]string{"short", "algo"},
+	},
+	{
+		testQueryAlgosInputOutputs,
 		[]string{"short", "algo"},
 	},
 }
@@ -86,6 +91,78 @@ func testQueryAlgosFilterCategories(factory *client.TestClientFactory) {
 	assertContainsAlgo(false, appClient, resp.Algos, "algo_filter_composite")
 	assertContainsAlgo(false, appClient, resp.Algos, "algo_filter_aggregate")
 	assertContainsAlgo(true, appClient, resp.Algos, "algo_filter_metric")
+}
+
+func testQueryAlgosInputOutputs(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+
+	keyRef := "test-algos-input-outputs"
+	key := appClient.GetKeyStore().GetKey(keyRef)
+
+	algoOptions := client.DefaultAlgoOptions().WithKeyRef(keyRef)
+	algoOptions.Inputs = map[string]*asset.AlgoInput{
+		"data manager": {
+			Kind: asset.AssetKind_ASSET_DATA_MANAGER,
+		},
+		"data samples": {
+			Kind:     asset.AssetKind_ASSET_DATA_SAMPLE,
+			Multiple: true,
+		},
+		"model": {
+			Kind:     asset.AssetKind_ASSET_MODEL,
+			Optional: true,
+		},
+	}
+	algoOptions.Outputs = map[string]*asset.AlgoOutput{
+		"model": {
+			Kind:     asset.AssetKind_ASSET_MODEL,
+			Multiple: true,
+		},
+		"performance": {
+			Kind: asset.AssetKind_ASSET_PERFORMANCE,
+		},
+	}
+	appClient.RegisterAlgo(algoOptions)
+
+	// test QueryAlgos
+	resp := appClient.QueryAlgos(nil, "", 10000)
+	found := false
+	for _, algo := range resp.Algos {
+		if algo.Key == key {
+			found = true
+			if !ResourcesEqual(algo.Inputs, algoOptions.Inputs) {
+				log.WithField("actual", algo.Inputs).WithField("expected", algoOptions.Inputs).Fatal("Unexpected algo inputs")
+			}
+			if !ResourcesEqual(algo.Outputs, algoOptions.Outputs) {
+				log.WithField("actual", algo.Outputs).WithField("expected", algoOptions.Outputs).Fatal("Unexpected algo outputs")
+			}
+		}
+	}
+	if !found {
+		log.Fatal("Could not find expected algo with key ref " + keyRef)
+	}
+
+	// test GetAlgo
+	respAlgo := appClient.GetAlgo(keyRef)
+
+	if !ResourcesEqual(respAlgo.Inputs, algoOptions.Inputs) {
+		log.WithField("actual", respAlgo.Inputs).WithField("expected", algoOptions.Inputs).Fatal("Unexpected algo inputs")
+	}
+	if !ResourcesEqual(respAlgo.Outputs, algoOptions.Outputs) {
+		log.WithField("actual", respAlgo.Outputs).WithField("expected", algoOptions.Outputs).Fatal("Unexpected algo outputs")
+	}
+}
+
+func ResourcesEqual[T proto.Message](a, b map[string]T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, v := range a {
+		if v2, ok := b[k]; !ok || !proto.Equal(v, v2) {
+			return false
+		}
+	}
+	return true
 }
 
 func assertContainsAlgo(shouldContain bool, appClient *client.TestClient, algos []*asset.Algo, keyRef string) {

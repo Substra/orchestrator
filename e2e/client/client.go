@@ -164,6 +164,8 @@ func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 			StorageAddress: "http://somewhere.local/algo/" + uuid.NewString(),
 		},
 		NewPermissions: &asset.NewPermissions{Public: true},
+		Inputs:         o.Inputs,
+		Outputs:        o.Outputs,
 	}
 	c.logger.WithField("algo", newAlgo).Debug("registering algo")
 	_, err := c.algoService.RegisterAlgo(c.ctx, newAlgo)
@@ -450,6 +452,18 @@ func (c *TestClient) QueryAlgos(filter *asset.AlgoQueryFilter, pageToken string,
 		c.logger.WithError(err).Fatal("QueryAlgos failed")
 	}
 
+	return resp
+}
+
+func (c *TestClient) GetAlgo(algoRef string) *asset.Algo {
+	param := &asset.GetAlgoParam{
+		Key: c.ks.GetKey(algoRef),
+	}
+	c.logger.WithField("algo key", c.ks.GetKey(algoRef)).Debug("GetAlgo")
+	resp, err := c.algoService.GetAlgo(c.ctx, param)
+	if err != nil {
+		c.logger.WithError(err).Fatal("GetAlgo failed")
+	}
 	return resp
 }
 

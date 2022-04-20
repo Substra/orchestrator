@@ -56,7 +56,22 @@ func (d *DBAL) AddAlgo(algo *asset.Algo) error {
 		Columns("key", "channel", "name", "category", "description", "algorithm", "permissions", "owner", "creation_date", "metadata").
 		Values(algo.Key, d.channel, algo.Name, algo.Category, algo.Description.StorageAddress, algo.Algorithm.StorageAddress, algo.Permissions, algo.Owner, algo.CreationDate.AsTime(), algo.Metadata)
 
-	return d.exec(stmt)
+	err = d.exec(stmt)
+	if err != nil {
+		return err
+	}
+
+	err = d.insertAlgoInputs(algo.Key, algo.Inputs)
+	if err != nil {
+		return err
+	}
+
+	err = d.insertAlgoOutputs(algo.Key, algo.Outputs)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetAlgo implements persistence.AlgoDBAL
@@ -81,7 +96,23 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 		return nil, err
 	}
 
-	return al.toAlgo(), nil
+	res := al.toAlgo()
+
+	inputs, err := d.getAlgoInputs(key)
+	if err != nil {
+		return nil, err
+	}
+
+	res.Inputs = inputs[key]
+
+	outputs, err := d.getAlgoOutputs(key)
+	if err != nil {
+		return nil, err
+	}
+
+	res.Outputs = outputs[key]
+
+	return res, nil
 }
 
 // QueryAlgos implements persistence.AlgoDBAL
@@ -123,7 +154,8 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	}
 	defer rows.Close()
 
-	var algos []*asset.Algo
+	algos := make(map[string]*asset.Algo, p.Size)
+	keys := make([]string, 0)
 	var count int
 
 	for rows.Next() {
@@ -134,8 +166,10 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 			return nil, "", err
 		}
 
-		algos = append(algos, al.toAlgo())
+		algos[al.Key] = al.toAlgo()
 		count++
+
+		keys = append(keys, al.Key)
 
 		if count == int(p.Size) {
 			break
@@ -151,7 +185,30 @@ func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 		bookmark = strconv.Itoa(offset + count)
 	}
 
-	return algos, bookmark, nil
+	inputs, err := d.getAlgoInputs(keys...)
+	if err != nil {
+		return nil, "", err
+	}
+
+	for key, inputs := range inputs {
+		algos[key].Inputs = inputs
+	}
+
+	outputs, err := d.getAlgoOutputs(keys...)
+	if err != nil {
+		return nil, "", err
+	}
+
+	for key, outputs := range outputs {
+		algos[key].Outputs = outputs
+	}
+
+	res := make([]*asset.Algo, 0, len(algos))
+	for _, algo := range algos {
+		res = append(res, algo)
+	}
+
+	return res, bookmark, nil
 }
 
 // AlgoExists implements persistence.AlgoDBAL

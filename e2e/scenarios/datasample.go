@@ -1,8 +1,6 @@
 package scenarios
 
 import (
-	"fmt"
-
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -51,7 +49,6 @@ func testQueryDatasamplesFiltered(factory *client.TestClientFactory) {
 
 	resp := appClient.QueryDataSamples("", 10, &asset.DataSampleQueryFilter{Keys: targetKeys})
 
-	fmt.Println(resp.DataSamples)
 	if len(resp.DataSamples) != 2 {
 		log.Fatal("QueryDataSamples response should contain 2 datasamples")
 	}
