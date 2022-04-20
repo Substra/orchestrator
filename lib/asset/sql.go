@@ -156,23 +156,6 @@ func (c *ModelCategory) Scan(value interface{}) error {
 	return nil
 }
 
-// Value implements the driver.Valuer interface.
-// Returns the JSON-encoded representation of the DataSample.
-func (d *DataSample) Value() (driver.Value, error) {
-	return protojson.Marshal(d)
-}
-
-// Scan implements the sql.Scanner interface.
-// Decodes JSON into a DataSample.
-func (d *DataSample) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan datasample")
-	}
-
-	return protojson.Unmarshal(b, d)
-}
-
 // Value simply returns the JSON-encoded representation of the Event.
 func (e *Event) Value() (driver.Value, error) {
 	return protojson.Marshal(e)

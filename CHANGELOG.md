@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove model asset column (#636)
 - Remove performance asset column (#640)
 - Remove datamanager asset column (#652)
+- Remove datasample asset column (#666)
 
 ## [0.9.2] - 2022-04-15
 
