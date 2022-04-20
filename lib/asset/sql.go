@@ -190,23 +190,6 @@ func (d *DataManager) Scan(value interface{}) error {
 	return protojson.Unmarshal(b, d)
 }
 
-// Value implements the driver.Valuer interface.
-// Simply returns the JSON-encoded representation of the Performance.
-func (p *Performance) Value() (driver.Value, error) {
-	return protojson.Marshal(p)
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the Performance.
-func (p *Performance) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan performance")
-	}
-
-	return protojson.Unmarshal(b, p)
-}
-
 // Value simply returns the JSON-encoded representation of the Event.
 func (e *Event) Value() (driver.Value, error) {
 	return protojson.Marshal(e)

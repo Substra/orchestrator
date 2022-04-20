@@ -138,19 +138,3 @@ func TestDataManagerValue(t *testing.T) {
 
 	assert.Equal(t, datamanager, scanned)
 }
-
-func TestPerformanceValue(t *testing.T) {
-	perf := &Performance{
-		ComputeTaskKey:   "08bcb3b9-015c-4b6a-a9b5-033b3b324a7c",
-		PerformanceValue: 0.43368,
-	}
-
-	value, err := perf.Value()
-	assert.NoError(t, err, "performance serialization should not fail")
-
-	scanned := new(Performance)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "performance scan should not fail")
-
-	assert.Equal(t, perf, scanned)
-}

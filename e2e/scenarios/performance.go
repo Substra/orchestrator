@@ -1,6 +1,7 @@
 package scenarios
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/go-playground/log/v7"
@@ -20,6 +21,10 @@ var performanceTestScenarios = []Scenario{
 	{
 		testRegisterMultiplePerformancesForSameMetric,
 		[]string{"short", "perf"},
+	},
+	{
+		testQueryPerformances,
+		[]string{"query", "perf"},
 	},
 }
 
@@ -122,5 +127,49 @@ func testRegisterMultiplePerformancesForSameMetric(factory *client.TestClientFac
 	task = appClient.GetComputeTask("testTask")
 	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
 		log.Fatal("test task should be DOING")
+	}
+}
+
+func testQueryPerformances(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+	appClient.StartTask(client.DefaultTaskRef)
+	appClient.RegisterModel(client.DefaultModelOptions())
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric"))
+
+	const nbPerformances = 2
+	for i := 0; i < nbPerformances; i++ {
+		testTaskRef := fmt.Sprint("testTask", i)
+		appClient.RegisterTasks(client.DefaultTestTaskOptions().
+			WithKeyRef(testTaskRef).
+			WithDataSampleRef("testds").
+			WithParentsRef(client.DefaultTaskRef).
+			WithMetricsRef("testmetric"))
+		appClient.StartTask(testTaskRef)
+
+		_, err := appClient.RegisterPerformance(
+			client.DefaultPerformanceOptions().WithTaskRef(testTaskRef).WithMetricRef("testmetric"),
+		)
+		if err != nil {
+			log.WithError(err).Fatal("RegisterPerformance failed")
+		}
+	}
+
+	res := appClient.QueryPerformances(nil, "", 10)
+	performances := res.Performances
+
+	if len(performances) != nbPerformances {
+		log.WithField("performances", performances).
+			Fatal(fmt.Sprintf("Expected %d performance items, got %d", nbPerformances, len(performances)))
+	}
+
+	if performances[0].CreationDate.AsTime().After(performances[1].CreationDate.AsTime()) {
+		log.Fatal("Unexpected performance ordering")
 	}
 }

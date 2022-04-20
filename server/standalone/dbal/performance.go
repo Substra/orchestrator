@@ -2,33 +2,70 @@ package dbal
 
 import (
 	"strconv"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+type sqlPerformance struct {
+	ComputeTaskKey   string
+	AlgoKey          string
+	PerformanceValue float32
+	CreationDate     time.Time
+}
+
+func (p *sqlPerformance) toPerformance() *asset.Performance {
+	return &asset.Performance{
+		ComputeTaskKey:   p.ComputeTaskKey,
+		MetricKey:        p.AlgoKey,
+		PerformanceValue: p.PerformanceValue,
+		CreationDate:     timestamppb.New(p.CreationDate),
+	}
+}
+
 func (d *DBAL) AddPerformance(perf *asset.Performance) error {
-	stmt := `insert into "performances" ("compute_task_id", "metric_id", "asset", "channel") values ($1, $2, $3, $4)`
-	_, err := d.tx.Exec(d.ctx, stmt, perf.GetComputeTaskKey(), perf.GetMetricKey(), perf, d.channel)
-	return err
+	stmt := getStatementBuilder().
+		Insert("performances").
+		Columns("channel", "compute_task_key", "algo_key", "performance_value", "creation_date").
+		Values(d.channel, perf.ComputeTaskKey, perf.MetricKey, perf.PerformanceValue, perf.CreationDate.AsTime())
+
+	return d.exec(stmt)
 }
 
 func (d *DBAL) CountComputeTaskPerformances(computeTaskKey string) (int, error) {
-	row := d.tx.QueryRow(d.ctx, `select count(*) from "performances" where compute_task_id=$1 and channel=$2`, computeTaskKey, d.channel)
+	stmt := getStatementBuilder().
+		Select("COUNT(*)").
+		From("performances").
+		Where(sq.Eq{"channel": d.channel, "compute_task_key": computeTaskKey})
+
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return 0, err
+	}
 
 	var count int
-	err := row.Scan(&count)
+	err = row.Scan(&count)
 
 	return count, err
 }
 
 // PerformanceExists implements persistence.PerformanceDBAL
 func (d *DBAL) PerformanceExists(perf *asset.Performance) (bool, error) {
-	row := d.tx.QueryRow(d.ctx, `select count(*) from "performances" where compute_task_id=$1 and metric_id=$2 and channel=$3`, perf.GetComputeTaskKey(), perf.GetMetricKey(), d.channel)
+	stmt := getStatementBuilder().
+		Select("COUNT(*)").
+		From("performances").
+		Where(sq.Eq{"channel": d.channel, "compute_task_key": perf.ComputeTaskKey, "algo_key": perf.MetricKey})
+
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return false, err
+	}
 
 	var count int
-	err := row.Scan(&count)
+	err = row.Scan(&count)
 
 	return count >= 1, err
 }
@@ -39,21 +76,22 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 		return nil, "", err
 	}
 
-	stmt := getStatementBuilder().Select("asset").
+	stmt := getStatementBuilder().
+		Select("compute_task_key", "algo_key", "performance_value", "creation_date").
 		From("performances").
 		Where(sq.Eq{"channel": d.channel}).
-		OrderByClause("asset->>'creationDate' ASC, metric_id DESC, compute_task_id DESC").
+		OrderByClause("creation_date ASC, algo_key DESC, compute_task_key DESC").
 		Offset(uint64(offset)).
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
 
 	if filter != nil {
 		if filter.ComputeTaskKey != "" {
-			stmt = stmt.Where(sq.Eq{"compute_task_id": filter.ComputeTaskKey})
+			stmt = stmt.Where(sq.Eq{"compute_task_key": filter.ComputeTaskKey})
 		}
 
 		if filter.MetricKey != "" {
-			stmt = stmt.Where(sq.Eq{"metric_id": filter.MetricKey})
+			stmt = stmt.Where(sq.Eq{"algo_key": filter.MetricKey})
 		}
 	}
 
@@ -67,21 +105,21 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 	var count int
 
 	for rows.Next() {
-		performance := new(asset.Performance)
+		perf := new(sqlPerformance)
 
-		err = rows.Scan(performance)
+		err = rows.Scan(&perf.ComputeTaskKey, &perf.AlgoKey, &perf.PerformanceValue, &perf.CreationDate)
 		if err != nil {
 			return nil, "", err
 		}
 
-		performances = append(performances, performance)
+		performances = append(performances, perf.toPerformance())
 		count++
 
 		if count == int(p.Size) {
 			break
 		}
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, "", err
 	}
 

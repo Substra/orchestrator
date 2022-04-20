@@ -408,6 +408,18 @@ func (c *TestClient) RegisterPerformance(o *PerformanceOptions) (*asset.Performa
 	return c.performanceService.RegisterPerformance(c.ctx, newPerf)
 }
 
+func (c *TestClient) QueryPerformances(filter *asset.PerformanceQueryFilter, pageToken string, pageSize int) *asset.QueryPerformancesResponse {
+	resp, err := c.performanceService.QueryPerformances(c.ctx, &asset.QueryPerformancesParam{
+		Filter:    filter,
+		PageToken: pageToken,
+		PageSize:  uint32(pageSize),
+	})
+	if err != nil {
+		c.logger.WithError(err).Fatal("QueryPerformances failed")
+	}
+	return resp
+}
+
 func (c *TestClient) GetInputModels(taskRef string) []*asset.Model {
 	param := &asset.GetComputeTaskModelsParam{
 		ComputeTaskKey: c.ks.GetKey(taskRef),
