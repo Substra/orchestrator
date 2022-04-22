@@ -31,9 +31,7 @@ func testQueryDatasamplesUnfiltered(factory *client.TestClientFactory) {
 		log.Fatal("QueryDataSamples response should contain at least 3 datasamples")
 	}
 
-	assertContainsDatasample(appClient, resp.DataSamples, "ds1")
-	assertContainsDatasample(appClient, resp.DataSamples, "ds2")
-	assertContainsDatasample(appClient, resp.DataSamples, "ds3")
+	assertContainsKeys(true, appClient, resp.DataSamples, "ds1", "ds2", "ds3")
 }
 
 func testQueryDatasamplesFiltered(factory *client.TestClientFactory) {
@@ -53,16 +51,5 @@ func testQueryDatasamplesFiltered(factory *client.TestClientFactory) {
 		log.Fatal("QueryDataSamples response should contain 2 datasamples")
 	}
 
-	assertContainsDatasample(appClient, resp.DataSamples, "filtered_ds1")
-	assertContainsDatasample(appClient, resp.DataSamples, "filtered_ds3")
-}
-
-func assertContainsDatasample(appClient *client.TestClient, datasamples []*asset.DataSample, keyRef string) {
-	key := appClient.GetKeyStore().GetKey(keyRef)
-	for _, ds := range datasamples {
-		if ds.Key == key {
-			return
-		}
-	}
-	log.Fatal("QueryDataSamples response should contain key ref " + keyRef)
+	assertContainsKeys(true, appClient, resp.DataSamples, "filtered_ds1", "filtered_ds3")
 }

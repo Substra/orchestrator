@@ -2,7 +2,6 @@ package scenarios
 
 import (
 	"github.com/go-playground/log/v7"
-	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
@@ -74,10 +73,7 @@ func testQueryAlgosFilterCategories(factory *client.TestClientFactory) {
 		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected number of algos")
 	}
 
-	assertContainsAlgo(true, appClient, resp.Algos, "algo_filter_simple")
-	assertContainsAlgo(true, appClient, resp.Algos, "algo_filter_composite")
-	assertContainsAlgo(true, appClient, resp.Algos, "algo_filter_aggregate")
-	assertContainsAlgo(true, appClient, resp.Algos, "algo_filter_metric")
+	assertContainsKeys(true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_composite", "algo_filter_aggregate", "algo_filter_metric")
 
 	filter := &asset.AlgoQueryFilter{
 		Categories: []asset.AlgoCategory{
@@ -87,10 +83,8 @@ func testQueryAlgosFilterCategories(factory *client.TestClientFactory) {
 
 	resp = appClient.QueryAlgos(filter, "", 100)
 
-	assertContainsAlgo(true, appClient, resp.Algos, "algo_filter_simple")
-	assertContainsAlgo(false, appClient, resp.Algos, "algo_filter_composite")
-	assertContainsAlgo(false, appClient, resp.Algos, "algo_filter_aggregate")
-	assertContainsAlgo(true, appClient, resp.Algos, "algo_filter_metric")
+	assertContainsKeys(true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_metric")
+	assertContainsKeys(false, appClient, resp.Algos, "algo_filter_composite", "algo_filter_aggregate")
 }
 
 func testQueryAlgosInputOutputs(factory *client.TestClientFactory) {
@@ -130,12 +124,9 @@ func testQueryAlgosInputOutputs(factory *client.TestClientFactory) {
 	for _, algo := range resp.Algos {
 		if algo.Key == key {
 			found = true
-			if !ResourcesEqual(algo.Inputs, algoOptions.Inputs) {
-				log.WithField("actual", algo.Inputs).WithField("expected", algoOptions.Inputs).Fatal("Unexpected algo inputs")
-			}
-			if !ResourcesEqual(algo.Outputs, algoOptions.Outputs) {
-				log.WithField("actual", algo.Outputs).WithField("expected", algoOptions.Outputs).Fatal("Unexpected algo outputs")
-			}
+
+			assertProtoMapEqual(algo.Inputs, algoOptions.Inputs)
+			assertProtoMapEqual(algo.Outputs, algoOptions.Outputs)
 		}
 	}
 	if !found {
@@ -145,37 +136,6 @@ func testQueryAlgosInputOutputs(factory *client.TestClientFactory) {
 	// test GetAlgo
 	respAlgo := appClient.GetAlgo(keyRef)
 
-	if !ResourcesEqual(respAlgo.Inputs, algoOptions.Inputs) {
-		log.WithField("actual", respAlgo.Inputs).WithField("expected", algoOptions.Inputs).Fatal("Unexpected algo inputs")
-	}
-	if !ResourcesEqual(respAlgo.Outputs, algoOptions.Outputs) {
-		log.WithField("actual", respAlgo.Outputs).WithField("expected", algoOptions.Outputs).Fatal("Unexpected algo outputs")
-	}
-}
-
-func ResourcesEqual[T proto.Message](a, b map[string]T) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for k, v := range a {
-		if v2, ok := b[k]; !ok || !proto.Equal(v, v2) {
-			return false
-		}
-	}
-	return true
-}
-
-func assertContainsAlgo(shouldContain bool, appClient *client.TestClient, algos []*asset.Algo, keyRef string) {
-	key := appClient.GetKeyStore().GetKey(keyRef)
-	for _, ds := range algos {
-		if ds.Key == key {
-			if shouldContain {
-				return
-			}
-			log.Fatal("QueryAlgos response should NOT contain key ref " + keyRef)
-		}
-	}
-	if shouldContain {
-		log.Fatal("QueryAlgos response should contain key ref " + keyRef)
-	}
+	assertProtoMapEqual(respAlgo.Inputs, algoOptions.Inputs)
+	assertProtoMapEqual(respAlgo.Outputs, algoOptions.Outputs)
 }
