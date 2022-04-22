@@ -16,7 +16,7 @@ erDiagram
     TrainTaskData }o--|{ DataSample: uses
 
     TestTaskData |o--|| ComputeTask: specializes
-    TestTaskData }o--|| Metric : evaluates
+    TestTaskData }o--|| Algo : evaluates
     TestTaskData ||--|| Performance: produces
     TestTaskData }o--|| DataManager: uses
     TestTaskData }o--|{ DataSample: uses
