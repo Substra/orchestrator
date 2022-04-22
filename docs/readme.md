@@ -7,3 +7,7 @@ A client may also be interested in listening to relevant [orchestration events](
 
 When contributing a new asset, refer to the [tutorial-like](./asset-dev.md) document.
 Make sure to follow the [naming conventions](./naming.md).
+
+## [Schemas](./schemas)
+
+[The database diagram](./schemas/standalone-database.png) is generated [using IntelliJ IDEA](https://www.jetbrains.com/help/idea/creating-diagrams.html).
