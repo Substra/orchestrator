@@ -1,0 +1,25 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "orchestrator.migrations.fullname" . }}
+  labels:
+    {{- include "orchestrator.migrations.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    metadata:
+      name: {{ include "orchestrator.migrations.fullname" . }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: db-migrations
+        image: {{ include "common.images.name" .Values.orchestrator.image }}
+        command: ['sh', '-c',  'migrate -source file:///migrations/ -database "${ORCHESTRATOR_DATABASE_URL}" up']
+        envFrom:
+        - secretRef:
+            name: {{ template "orchestrator.server.fullname" . }}-secret
+
+{{- end }}

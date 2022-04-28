@@ -2,16 +2,10 @@ package dbal
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
-	"github.com/go-playground/log/v7"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/standalone/migration"
 	"github.com/owkin/orchestrator/utils"
 )
 
@@ -26,7 +20,7 @@ type TransactionalDBALProvider interface {
 }
 
 // Database is a thin wrapper around sql.DB.
-// It handles the orchestrator specifics, such as migrations and DBAL creation.
+// It handles the orchestrator specifics, such as DBAL creation.
 type Database struct {
 	pool PgPool
 }
@@ -77,26 +71,7 @@ func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, dat
 	}
 }
 
-type MigrationsLogger struct {
-}
-
-func (ml *MigrationsLogger) Printf(format string, v ...interface{}) {
-	msg := fmt.Sprintf(format, v...)
-
-	// remove final newline
-	if msg[len(msg)-1] == '\n' {
-		msg = msg[:len(msg)-1]
-	}
-
-	log.WithField("context", "migrations").Info(msg)
-}
-
-func (ml *MigrationsLogger) Verbose() bool {
-	return utils.GetLogLevelFromEnv() == log.DebugLevel
-}
-
 // InitDatabase opens a database connexion from given url.
-// It make sure the database has a usable schema by running migrations if there are any.
 func InitDatabase(databaseURL string) (*Database, error) {
 	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
@@ -111,33 +86,7 @@ func InitDatabase(databaseURL string) (*Database, error) {
 		return nil, err
 	}
 
-	err = executeMigrations(databaseURL)
-	if err != nil {
-		return nil, err
-	}
-
 	return &Database{pool}, nil
-}
-
-func executeMigrations(databaseURL string) error {
-	d, err := iofs.New(migration.EmbeddedMigrations, ".")
-	if err != nil {
-		return err
-	}
-	// Prevent running migrations twice
-	url := databaseURL + "&search_path=public"
-	m, err := migrate.NewWithSourceInstance("iofs", d, url)
-	if err != nil {
-		return err
-	}
-
-	m.Log = &MigrationsLogger{}
-	err = m.Up()
-	// Treat no change as normal behavior
-	if err != nil && errors.Is(err, migrate.ErrNoChange) {
-		return nil
-	}
-	return err
 }
 
 // Close the connexion

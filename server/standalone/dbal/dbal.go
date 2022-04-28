@@ -5,8 +5,6 @@ import (
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
-	// migration driver
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	// Database driver
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/persistence"

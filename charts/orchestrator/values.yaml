@@ -247,6 +247,9 @@ orchestrator:
     ##
     tag: 0.6.1
 
+  ## @param orchestrator.fullnameOverride String to fully override the `orchestrator.server.fullname`
+  ##
+  fullnameOverride: ""
   ## @param orchestrator.logLevel Orchestrator log level
   ##
   logLevel: INFO
@@ -332,6 +335,9 @@ forwarder:
     ## @param forwarder.image.tag Event forwarder image tag
     ##
     tag: 0.6.1
+  ## @param forwarder.fullnameOverride String to fully override the `forwarder.server.fullname`
+  ##
+  fullnameOverride: ""
   persistence:
     ## @param forwarder.persistence.enabled Whether to enable persistent storage (required to properly keep track of processed events)
     ## Without it, the forwarder will ALWAYS process ALL events (from block 0).
@@ -353,11 +359,20 @@ rabbitmqOperator:
     ## @param rabbitmqOperator.image.pullPolicy RabbitMQ operator image pull policy
     ##
     pullPolicy: IfNotPresent
-    ## @param rabbitmqOperator.image.tag
+    ## @param rabbitmqOperator.image.tag RabbitMQ operator image tag
     ##
     tag: 0.6.1
+  ## @param rabbitmqOperator.fullnameOverride String to fully override the `rabbitmqOperator.server.fullname`
+  ##
+  fullnameOverride: ""
   ## @param rabbitmqOperator.credentials Couples of username:password
   ## e.g:
   ## MyOrg1MSP: password1
   ##
   credentials: {}
+
+## @section migration job settings
+migrations:
+  ## @param migrations.fullnameOverride String to fully override the `migrations.server.fullname`
+  ##
+  fullnameOverride: ""

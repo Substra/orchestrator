@@ -55,6 +55,10 @@ app.kubernetes.io/component: "rabbitmq-operator"
 {{ include "orchestrator.common.labels" . }}
 {{- end -}}
 
+{{- define "orchestrator.migrations.labels" -}}
+app.kubernetes.io/component: "migrations"
+{{ include "orchestrator.common.labels" . }}
+{{- end -}}
 
 {{/*
 Create a default fully qualified app name.
@@ -93,7 +97,7 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{/*
-Create a fully qualified orchestrator server name
+Create a fully qualified eventForwarder name
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
@@ -111,7 +115,7 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{/*
-Create a fully qualified orchestrator server name
+Create a fully qualified rabbitmqOperator name
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
@@ -127,6 +131,26 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 {{- end }}
 {{- end }}
+
+
+{{/*
+Create a fully qualified migration job name
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "orchestrator.migrations.fullname" -}}
+{{- if .Values.migrations.fullnameOverride }}
+{{- .Values.migrations.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- printf "%s-migrations" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s-migrations" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 
 {{/*
 Create the name of the service account to use

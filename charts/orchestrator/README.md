@@ -92,6 +92,7 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `orchestrator.image.repository`                | `orchestrator` image repository                                                                                                                                          | `connect-314908/orchestrator-server` |
 | `orchestrator.image.pullPolicy`                | `orchestrator` image pull policy                                                                                                                                         | `IfNotPresent`                       |
 | `orchestrator.image.tag`                       | `orchestrator` image tag                                                                                                                                                 | `0.6.1`                              |
+| `orchestrator.fullnameOverride`                | String to fully override the `orchestrator.server.fullname`                                                                                                              | `""`                                 |
 | `orchestrator.logLevel`                        | Orchestrator log level                                                                                                                                                   | `INFO`                               |
 | `orchestrator.logSQLVerbose`                   | Log SQL statements with debug verbosity                                                                                                                                  | `false`                              |
 | `orchestrator.mode`                            | Orchestrator mode, either "standalone" or "distributed"                                                                                                                  | `standalone`                         |
@@ -124,19 +125,28 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `forwarder.image.repository`    | Event forwarder image repository                                                           | `connect-314908/orchestrator-forwarder` |
 | `forwarder.image.pullPolicy`    | Event forwarder image pull policy                                                          | `IfNotPresent`                          |
 | `forwarder.image.tag`           | Event forwarder image tag                                                                  | `0.6.1`                                 |
+| `forwarder.fullnameOverride`    | String to fully override the `forwarder.server.fullname`                                   | `""`                                    |
 | `forwarder.persistence.enabled` | Whether to enable persistent storage (required to properly keep track of processed events) | `false`                                 |
 | `forwarder.persistence.size`    | Storage class size, there is not need for more, the forwarder only store a small JSON      | `100Mi`                                 |
 
 
 ### RabbitMQ operator settings
 
-| Name                                | Description                         | Value                                           |
-| ----------------------------------- | ----------------------------------- | ----------------------------------------------- |
-| `rabbitmqOperator.image.registry`   | RabbitMQ operator image registry    | `gcr.io`                                        |
-| `rabbitmqOperator.image.repository` | RabbitMQ operator image repository  | `connect-314908/orchestrator-rabbitmq-operator` |
-| `rabbitmqOperator.image.pullPolicy` | RabbitMQ operator image pull policy | `IfNotPresent`                                  |
-| `rabbitmqOperator.image.tag`        |                                     | `0.6.1`                                         |
-| `rabbitmqOperator.credentials`      | Couples of username:password        | `{}`                                            |
+| Name                                | Description                                                     | Value                                           |
+| ----------------------------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| `rabbitmqOperator.image.registry`   | RabbitMQ operator image registry                                | `gcr.io`                                        |
+| `rabbitmqOperator.image.repository` | RabbitMQ operator image repository                              | `connect-314908/orchestrator-rabbitmq-operator` |
+| `rabbitmqOperator.image.pullPolicy` | RabbitMQ operator image pull policy                             | `IfNotPresent`                                  |
+| `rabbitmqOperator.image.tag`        | RabbitMQ operator image tag                                     | `0.6.1`                                         |
+| `rabbitmqOperator.fullnameOverride` | String to fully override the `rabbitmqOperator.server.fullname` | `""`                                            |
+| `rabbitmqOperator.credentials`      | Couples of username:password                                    | `{}`                                            |
+
+
+### migration job settings
+
+| Name                          | Description                                               | Value |
+| ----------------------------- | --------------------------------------------------------- | ----- |
+| `migrations.fullnameOverride` | String to fully override the `migrations.server.fullname` | `""`  |
 
 
 ## Usage

@@ -8,7 +8,6 @@ on:
   pull_request:
 jobs:
   e2e:
-    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres
@@ -25,7 +24,9 @@ jobs:
         image: rabbitmq
         ports:
           - 5672:5672
-
+    runs-on: ubuntu-latest
+    env:
+      ORCHESTRATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
@@ -49,6 +50,9 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
           go install github.com/go-bindata/go-bindata/...@v3.1.2
+      - name: Install db migration tool
+        run: |
+          wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.15.1/migrate.linux-amd64.tar.gz | tar xzf - -C $HOME/.local/bin
       - name: build orchestrator
         run: make orchestrator
       - name: build end2end tests
@@ -60,6 +64,9 @@ jobs:
             sleep 2
           done
         timeout-minutes: 1
+      - name: migrate db
+        run: |
+          migrate -source file://./server/standalone/migration/ -database "${ORCHESTRATOR_DATABASE_URL}" up
       - name: setup channel configuration
         run: |
           cat << EOF > ${{runner.temp}}/config.yaml
@@ -81,7 +88,6 @@ jobs:
           NO_COLOR: true
           ORCHESTRATOR_TLS_ENABLED: false
           ORCHESTRATOR_MODE: standalone
-          ORCHESTRATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
           ORCHESTRATOR_AMQP_DSN: amqp://guest:guest@localhost:5672/
           ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
           ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml

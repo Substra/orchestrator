@@ -43,7 +43,7 @@ Converting the other way around, from an asset into a database value can be done
 Examples of such implementations are available in `lib/asset/sql.go` file, it boils down to serializing/deserializing the assets in JSON.
 
 Now, implement the DBAL interface for both storage backends: postgres in `server/standalone` module and the ledger in `chaincode/ledger` module.
-You may have to create a new table for postgres, this can be done by adding a migration in `server/standalone/migration` module.
+You may have to create a new table for postgres, this can be done by adding a migration in the `server/standalone/migration` module.
 
 Mocks are automatically generated when running `make test`.
 

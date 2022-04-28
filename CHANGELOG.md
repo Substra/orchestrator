@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove datamanager asset column (#652)
 - Remove datasample asset column (#666)
 - Algos now have Inputs and Outputs (#641)
+- The orchestrator-server doesn't run DB migrations on startup anymore (#670)
 
 ### Removed
 - `ASSET_METRIC` kind

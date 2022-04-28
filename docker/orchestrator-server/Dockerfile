@@ -16,6 +16,9 @@ ENV SRC_DIR=/usr/src/orchestrator
 
 RUN wget -q https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.3.6/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe && chmod +x /bin/grpc_health_probe
 
+# Install migration tool
+RUN wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.15.1/migrate.linux-amd64.tar.gz | tar xzf - -C /bin/
+
 # Install protobuf codegen dependencies
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
@@ -40,6 +43,10 @@ FROM alpine:3.15 as prod
 
 COPY --from=build /bin/orchestrator /app/orchestrator
 COPY --from=build /bin/grpc_health_probe /bin/grpc_health_probe
+COPY --from=build /bin/migrate /bin/migrate
+
+COPY ./server/standalone/migration /migrations
+
 USER 1000
 WORKDIR /app
 
