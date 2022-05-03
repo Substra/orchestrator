@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2022-05-03
+
 ### Changed
 - Remove model asset column (#636)
 - Remove performance asset column (#640)
@@ -15,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The orchestrator-server doesn't run DB migrations on startup anymore (#670)
 
 ### Removed
-- `ASSET_METRIC` kind
+- `ASSET_METRIC` kind (#672)
 
 ## [0.9.2] - 2022-04-15
 
