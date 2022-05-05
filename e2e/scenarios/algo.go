@@ -19,6 +19,22 @@ var algoTestScenarios = []Scenario{
 		testQueryAlgosInputOutputs,
 		[]string{"short", "algo"},
 	},
+	{
+		testPredictAlgo,
+		[]string{"short", "algo"},
+	},
+}
+
+func testPredictAlgo(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_PREDICT))
+
+	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_PREDICT}}, "", 100)
+
+	if len(resp.Algos) != 1 {
+		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected total number of predict algo")
+	}
 }
 
 func testQueryAlgos(factory *client.TestClientFactory) {

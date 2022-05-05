@@ -13,6 +13,7 @@ enum AlgoCategory {
   ALGO_AGGREGATE = 2;
   ALGO_COMPOSITE = 3;
   ALGO_METRIC = 4;
+  ALGO_PREDICT = 5;
 }
 
 message AlgoInput {
