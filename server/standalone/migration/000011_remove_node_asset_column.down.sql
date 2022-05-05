@@ -10,6 +10,9 @@ SELECT execute($$
         'creationDate', to_rfc_3339(creation_date)
     );
 
+    ALTER TABLE nodes
+    ALTER COLUMN asset SET NOT NULL;
+
     CREATE INDEX ix_nodes_creation ON nodes ((asset->>'creationDate'));
 
     ALTER TABLE nodes

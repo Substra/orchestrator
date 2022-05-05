@@ -32,6 +32,9 @@ SELECT execute($$
     FROM expanded_compute_tasks e
     WHERE t.key = e.key;
 
+    ALTER TABLE compute_tasks
+    ALTER COLUMN asset SET NOT NULL;
+
     DROP VIEW expanded_compute_tasks;
 
     ALTER INDEX ix_compute_task_parents_child_task_key RENAME TO ix_compute_task_parents_child_task_id;

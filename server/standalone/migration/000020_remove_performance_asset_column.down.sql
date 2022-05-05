@@ -11,6 +11,9 @@ SELECT execute($$
     );
 
     ALTER TABLE performances
+    ALTER COLUMN asset SET NOT NULL;
+
+    ALTER TABLE performances
     RENAME COLUMN compute_task_key TO compute_task_id;
 
     ALTER TABLE performances

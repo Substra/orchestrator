@@ -21,6 +21,9 @@ SELECT execute($$
     FROM addressables a
     WHERE models.address = a.storage_address;
 
+    ALTER TABLE models
+    ALTER COLUMN asset SET NOT NULL;
+
     DROP INDEX ix_models_category;
     DROP INDEX ix_models_creation_date;
 

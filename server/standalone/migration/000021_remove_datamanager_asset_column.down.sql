@@ -18,6 +18,9 @@ SELECT execute($$
     FROM expanded_datamanagers e
     WHERE d.key = e.key;
 
+    ALTER TABLE datamanagers
+    ALTER COLUMN asset SET NOT NULL;
+
     DROP VIEW expanded_datamanagers;
 
     DROP INDEX ix_datamanagers_creation_date;

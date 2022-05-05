@@ -14,6 +14,9 @@ SELECT execute($$
     FROM expanded_datasamples e
     WHERE d.key = e.key;
 
+    ALTER TABLE datasamples
+    ALTER COLUMN asset SET NOT NULL;
+
     DROP VIEW expanded_datasamples;
 
     DROP TABLE datasample_datamanagers;
