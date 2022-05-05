@@ -13,34 +13,11 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 )
 
-// AddEvents insert events in storage according to the most efficient way.
-// Up to 5 events, they will be inserted one by one.
-// For more than 5 events they will be processed in batch.
+// AddEvents insert events in storage in batch mode.
 func (d *DBAL) AddEvents(events ...*asset.Event) error {
-	if len(events) >= 5 {
-		log.WithField("numEvents", len(events)).Debug("dbal: adding multiple events in batch mode")
-		return d.addEvents(events)
-	}
+	log.WithField("numEvents", len(events)).Debug("dbal: adding multiple events in batch mode")
 
-	for _, e := range events {
-		err := d.addEvent(e)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (d *DBAL) addEvent(event *asset.Event) error {
-	stmt := `insert into "events" ("id", "asset_key", "event", "channel") values ($1, $2, $3, $4)`
-	_, err := d.tx.Exec(d.ctx, stmt, event.Id, event.AssetKey, event, d.channel)
-	return err
-}
-
-// addEvents rely on COPY FROM directive a is faster for large number of items.
-// According to the doc, it might even be faster for as few as 5 rows.
-func (d *DBAL) addEvents(events []*asset.Event) error {
+	// Relying on COPY FROM directive is faster for a large number of items.
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"events"},
@@ -50,16 +27,14 @@ func (d *DBAL) addEvents(events []*asset.Event) error {
 			if err != nil {
 				return nil, err
 			}
+
 			// expect binary representation, not string
 			id, err := uuid.Parse(events[i].Id)
 			if err != nil {
 				return nil, err
 			}
-			assetKey, err := uuid.Parse(events[i].AssetKey)
-			if err != nil {
-				return nil, err
-			}
-			return []interface{}{id, assetKey, v, d.channel}, nil
+
+			return []interface{}{id, events[i].AssetKey, v, d.channel}, nil
 		}),
 	)
 
