@@ -48,6 +48,17 @@ func TestAlgoValidate(t *testing.T) {
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 		}, true},
+		"invalid_input_kind": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Category:       AlgoCategory_ALGO_SIMPLE,
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Inputs: map[string]*AlgoInput{
+				"test": {Kind: AssetKind_ASSET_COMPUTE_PLAN, Optional: false, Multiple: false},
+			},
+		}, false},
 	}
 
 	for name, tc := range cases {
