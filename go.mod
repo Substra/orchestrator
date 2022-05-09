@@ -13,7 +13,7 @@ require (
 	github.com/hyperledger/fabric-contract-api-go v1.1.2-0.20210104111150-d852efd3f6af
 	github.com/hyperledger/fabric-protos-go v0.0.0-20211118165945-23d738fc3553
 	github.com/hyperledger/fabric-sdk-go v1.0.1-0.20220428154727-e8663655affa
-	github.com/jackc/pgconn v1.12.0
+	github.com/jackc/pgconn v1.12.1
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgtype v1.11.0
 	github.com/jackc/pgx/v4 v4.16.0
