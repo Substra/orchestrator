@@ -16,7 +16,7 @@ require (
 	github.com/jackc/pgconn v1.12.1
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgtype v1.11.0
-	github.com/jackc/pgx/v4 v4.16.0
+	github.com/jackc/pgx/v4 v4.16.1
 	github.com/looplab/fsm v0.3.0
 	github.com/pashagolub/pgxmock v1.5.0
 	github.com/prometheus/client_golang v1.12.1
