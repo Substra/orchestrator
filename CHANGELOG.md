@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2022-05-09
+
 ### Added
 - Add a new `ALGO_PREDICT` algo category (#693)
 
