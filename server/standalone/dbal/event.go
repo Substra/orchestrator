@@ -11,7 +11,30 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+type sqlEvent struct {
+	ID        string
+	AssetKey  string
+	AssetKind asset.AssetKind
+	EventKind asset.EventKind
+	Channel   string
+	Timestamp time.Time
+	Metadata  map[string]string
+}
+
+func (e *sqlEvent) toEvent() *asset.Event {
+	return &asset.Event{
+		Id:        e.ID,
+		AssetKey:  e.AssetKey,
+		AssetKind: e.AssetKind,
+		EventKind: e.EventKind,
+		Channel:   e.Channel,
+		Timestamp: timestamppb.New(e.Timestamp),
+		Metadata:  e.Metadata,
+	}
+}
 
 // AddEvents insert events in storage in batch mode.
 func (d *DBAL) AddEvents(events ...*asset.Event) error {
@@ -21,20 +44,25 @@ func (d *DBAL) AddEvents(events ...*asset.Event) error {
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"events"},
-		[]string{"id", "asset_key", "event", "channel"},
+		[]string{"id", "asset_key", "asset_kind", "event_kind", "channel", "timestamp", "metadata"},
 		pgx.CopyFromSlice(len(events), func(i int) ([]interface{}, error) {
-			v, err := events[i].Value()
-			if err != nil {
-				return nil, err
-			}
+			event := events[i]
 
 			// expect binary representation, not string
-			id, err := uuid.Parse(events[i].Id)
+			id, err := uuid.Parse(event.Id)
 			if err != nil {
 				return nil, err
 			}
 
-			return []interface{}{id, events[i].AssetKey, v, d.channel}, nil
+			return []interface{}{
+				id,
+				event.AssetKey,
+				event.AssetKind.String(),
+				event.EventKind.String(),
+				d.channel,
+				event.Timestamp.AsTime(),
+				event.Metadata,
+			}, nil
 		}),
 	)
 
@@ -51,9 +79,10 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter,
 	if sortOrder == asset.SortOrder_DESCENDING {
 		order = PgSortDesc
 	}
-	orderBy := fmt.Sprintf("cast(event->>'timestamp' as timestamptz) %s, id %s", order, order)
+	orderBy := fmt.Sprintf("timestamp %s, id %s", order, order)
 
-	stmt := getStatementBuilder().Select("event").
+	stmt := getStatementBuilder().
+		Select("id", "asset_key", "asset_kind", "event_kind", "timestamp", "metadata").
 		From("events").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause(orderBy).
@@ -73,22 +102,21 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter,
 	var count int
 
 	for rows.Next() {
-		event := new(asset.Event)
+		event := sqlEvent{Channel: d.channel}
 
-		err = rows.Scan(event)
+		err = rows.Scan(&event.ID, &event.AssetKey, &event.AssetKind, &event.EventKind, &event.Timestamp, &event.Metadata)
 		if err != nil {
 			return nil, "", err
 		}
-		event.Channel = d.channel
 
-		events = append(events, event)
+		events = append(events, event.toEvent())
 		count++
 
 		if count == int(p.Size) {
 			break
 		}
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, "", err
 	}
 
@@ -111,19 +139,19 @@ func eventFilterToQuery(filter *asset.EventQueryFilter, builder sq.SelectBuilder
 		builder = builder.Where(sq.Eq{"asset_key": filter.AssetKey})
 	}
 	if filter.AssetKind != asset.AssetKind_ASSET_UNKNOWN {
-		builder = builder.Where(sq.Eq{"event->>'assetKind'": filter.AssetKind.String()})
+		builder = builder.Where(sq.Eq{"asset_kind": filter.AssetKind.String()})
 	}
 	if filter.EventKind != asset.EventKind_EVENT_UNKNOWN {
-		builder = builder.Where(sq.Eq{"event->>'eventKind'": filter.EventKind.String()})
+		builder = builder.Where(sq.Eq{"event_kind": filter.EventKind.String()})
 	}
 	if filter.Metadata != nil {
-		builder = builder.Where(sq.Expr("event->'metadata' @> ?", filter.Metadata))
+		builder = builder.Where(sq.Expr("metadata @> ?", filter.Metadata))
 	}
 	if filter.Start != nil {
-		builder = builder.Where(sq.Expr("cast(event->>'timestamp' as timestamptz) >= cast(? as timestamptz)", filter.Start.AsTime().Format(time.RFC3339Nano)))
+		builder = builder.Where(sq.GtOrEq{"timestamp": filter.Start.AsTime()})
 	}
 	if filter.End != nil {
-		builder = builder.Where(sq.Expr("cast(event->>'timestamp' as timestamptz) <= cast(? as timestamptz)", filter.End.AsTime().Format(time.RFC3339Nano)))
+		builder = builder.Where(sq.LtOrEq{"timestamp": filter.End.AsTime()})
 	}
 
 	return builder

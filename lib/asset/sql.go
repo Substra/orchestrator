@@ -156,22 +156,6 @@ func (c *ModelCategory) Scan(value interface{}) error {
 	return nil
 }
 
-// Value simply returns the JSON-encoded representation of the Event.
-func (e *Event) Value() (driver.Value, error) {
-	return protojson.Marshal(e)
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes JSON into the Event.
-func (e *Event) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.NewError(errors.ErrByteArray, "cannot scan event")
-	}
-
-	return protojson.Unmarshal(b, e)
-}
-
 // Value implements the driver.Valuer interface.
 // Simply returns the string representation of the AssetKind.
 func (k *AssetKind) Value() (driver.Value, error) {
@@ -191,6 +175,29 @@ func (k *AssetKind) Scan(value interface{}) error {
 		return errors.NewError(errors.ErrInternal, "cannot scan asset kind")
 	}
 	*k = AssetKind(v)
+
+	return nil
+}
+
+// Value implements the driver.Valuer interface.
+// Simply returns the string representation of the EventKind.
+func (k *EventKind) Value() (driver.Value, error) {
+	return k.String(), nil
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes a string into the EventKind.
+func (k *EventKind) Scan(value interface{}) error {
+	s, ok := value.(string)
+	if !ok {
+		return errors.NewError(errors.ErrInternal, "cannot scan event kind")
+	}
+
+	v, ok := EventKind_value[s]
+	if !ok {
+		return errors.NewError(errors.ErrInternal, "cannot scan event kind")
+	}
+	*k = EventKind(v)
 
 	return nil
 }

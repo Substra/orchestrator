@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Remove event column (#695)
+
 ## [0.11.0] - 2022-05-09
 
 ### Added

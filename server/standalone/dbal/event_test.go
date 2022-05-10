@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/pashagolub/pgxmock"
@@ -24,25 +23,23 @@ func TestEventFilterToQuery(t *testing.T) {
 		"single filter": {&asset.EventQueryFilter{AssetKey: "uuid"}, "asset_key = $1", []interface{}{"uuid"}},
 		"two filter": {
 			&asset.EventQueryFilter{AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK, EventKind: asset.EventKind_EVENT_ASSET_CREATED},
-			"event->>'assetKind' = $1 AND event->>'eventKind' = $2",
+			"asset_kind = $1 AND event_kind = $2",
 			[]interface{}{asset.AssetKind_ASSET_COMPUTE_TASK.String(), asset.EventKind_EVENT_ASSET_CREATED.String()}},
 		"three filter": {
 			&asset.EventQueryFilter{AssetKey: "uuid", AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN, EventKind: asset.EventKind_EVENT_ASSET_UPDATED},
-			"asset_key = $1 AND event->>'assetKind' = $2 AND event->>'eventKind' = $3",
+			"asset_key = $1 AND asset_kind = $2 AND event_kind = $3",
 			[]interface{}{"uuid", asset.AssetKind_ASSET_COMPUTE_PLAN.String(), asset.EventKind_EVENT_ASSET_UPDATED.String()},
 		},
 		"time filter": {
 			&asset.EventQueryFilter{Start: timestamppb.New(time.Unix(1337, 0)), End: timestamppb.New(time.Unix(7331, 0))},
-			"cast(event->>'timestamp' as timestamptz) >= cast($1 as timestamptz) AND cast(event->>'timestamp' as timestamptz) <= cast($2 as timestamptz)",
-			[]interface{}{time.Unix(1337, 0).UTC().Format(time.RFC3339Nano), time.Unix(7331, 0).UTC().Format(time.RFC3339Nano)},
+			"timestamp >= $1 AND timestamp <= $2",
+			[]interface{}{time.Unix(1337, 0).UTC(), time.Unix(7331, 0).UTC()},
 		},
 	}
 
-	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			builder := pgDialect.Select("event").From("events")
+			builder := getStatementBuilder().Select("id").From("events")
 			builder = eventFilterToQuery(c.filter, builder)
 			query, params, err := builder.ToSql()
 			assert.NoError(t, err)
@@ -50,6 +47,12 @@ func TestEventFilterToQuery(t *testing.T) {
 			assert.Equal(t, c.params, params)
 		})
 	}
+}
+
+func makeEventRows() *pgxmock.Rows {
+	return pgxmock.NewRows([]string{"id", "asset_key", "asset_kind", "event_kind", "timestamp", "metadata"}).
+		AddRow("id1", "13e88e4f-a287-4e8f-a96e-ea0c03f91e86", "ASSET_ALGO", "EVENT_ASSET_CREATED", time.Unix(1, 0).UTC(), map[string]string{}).
+		AddRow("id2", "7623fc2d-33fd-4b00-a6a0-65f5ec2eee20", "ASSET_MODEL", "EVENT_ASSET_UPDATED", time.Unix(2, 0).UTC(), map[string]string{})
 }
 
 func TestEventQuery(t *testing.T) {
@@ -60,12 +63,9 @@ func TestEventQuery(t *testing.T) {
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
-
-	rows := pgxmock.NewRows([]string{"asset"}).
-		AddRow([]byte("{}")).
-		AddRow([]byte("{}"))
-
-	mock.ExpectQuery(`SELECT event FROM events .* ORDER BY cast\(event->>'timestamp' as timestamptz\) ASC, id ASC`).WithArgs(testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT id, asset_key, asset_kind, event_kind, timestamp, metadata FROM events .* ORDER BY timestamp ASC, id ASC`).
+		WithArgs(testChannel).
+		WillReturnRows(makeEventRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -75,7 +75,7 @@ func TestEventQuery(t *testing.T) {
 	res, _, err := dbal.QueryEvents(common.NewPagination("", 10), &asset.EventQueryFilter{}, asset.SortOrder_ASCENDING)
 	assert.NoError(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
+	if err = mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 
@@ -92,10 +92,9 @@ func TestQueryEventsNilFilter(t *testing.T) {
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
-
-	rows := pgxmock.NewRows([]string{"asset"})
-
-	mock.ExpectQuery(`SELECT event FROM events`).WithArgs(testChannel).WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT id, asset_key, asset_kind, event_kind, timestamp, metadata FROM events`).
+		WithArgs(testChannel).
+		WillReturnRows(makeEventRows())
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)

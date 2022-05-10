@@ -104,3 +104,31 @@ func TestModelCategoryValue(t *testing.T) {
 
 	assert.Equal(t, category, scanned)
 }
+
+func TestAssetKindValue(t *testing.T) {
+	k := AssetKind_ASSET_NODE
+	kind := &k
+
+	value, err := kind.Value()
+	assert.NoError(t, err, "asset kind serialization should not fail")
+
+	scanned := new(AssetKind)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "asset kind scan should not fail")
+
+	assert.Equal(t, kind, scanned)
+}
+
+func TestEventKindValue(t *testing.T) {
+	k := EventKind_EVENT_ASSET_CREATED
+	kind := &k
+
+	value, err := kind.Value()
+	assert.NoError(t, err, "event kind serialization should not fail")
+
+	scanned := new(EventKind)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "event kind scan should not fail")
+
+	assert.Equal(t, kind, scanned)
+}
