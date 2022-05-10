@@ -82,3 +82,8 @@ profiles:
     - op: add
       path: /deploy/helm/releases/1/skipBuildDependencies
       value: true
+- name: arm64
+  patches:
+    - op: replace
+      path: /deploy/helm/releases/1/valuesFiles
+      value: [ examples/values/orchestrator-org-1.yaml, examples/values/rabbitmq-arm64.yaml ]

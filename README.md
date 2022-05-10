@@ -172,3 +172,15 @@ echo '{}' | evans \
 
 Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress).
 Refer to [the wiki](https://github.com/owkin/orchestrator/wiki/Enabling-ssl-passthrough-for-ingress-in-minikube) for detailed instructions.
+
+
+### Running the backend on arm64 architecture (apple M1)
+
+Bitnami does not yet provide a rabbitmq docker image for the arm64 processor. We are using the original rabbitmq image from dockerhub directly. Compatible image should be released in the future. (see [github issue](https://github.com/bitnami/charts/issues/7305))
+The following patches are necessary as the bitnami charts used to install the rabbitmq image are not fully compatible.
+
+1. Deploy with `skaffold run -p arm64 --status-check=false`
+
+2. After deploying run the patch 
+`./examples/tools/patch-rabbitmq-statefulset-arm64.sh`
+
