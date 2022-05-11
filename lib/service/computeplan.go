@@ -66,6 +66,7 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		Key:                      input.Key,
 		Owner:                    owner,
 		Tag:                      input.Tag,
+		Name:                     input.Name,
 		Metadata:                 input.Metadata,
 		DeleteIntermediaryModels: input.DeleteIntermediaryModels,
 		CreationDate:             timestamppb.New(s.GetTimeService().GetTransactionTime()),

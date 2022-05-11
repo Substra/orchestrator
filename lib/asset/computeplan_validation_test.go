@@ -11,12 +11,14 @@ func TestValidateNewComputePlan(t *testing.T) {
 		newComputePlan *NewComputePlan
 		valid          bool
 	}{
-		"emtpy": {&NewComputePlan{}, false},
+		"empty": {&NewComputePlan{}, false},
 		"invalidKey": {&NewComputePlan{
-			Key: "not36chars",
+			Key:  "not36chars",
+			Name: "The name of my compute plan",
 		}, false},
 		"valid": {&NewComputePlan{
-			Key: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Key:  "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name: "The name of my compute plan",
 		}, true},
 	}
 

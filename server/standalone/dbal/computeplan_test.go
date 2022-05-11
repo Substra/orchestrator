@@ -21,10 +21,10 @@ func TestGetComputePlan(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
-		AddRow("uuid", "owner", false, time.Now(), "", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
+		AddRow("uuid", "owner", false, time.Now(), "", "My compute plan", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
-	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, tag, metadata, task_count, waiting_count, todo_count, doing_count, canceled_count, failed_count, done_count`).
+	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, tag, name, metadata, task_count, waiting_count, todo_count, doing_count, canceled_count, failed_count, done_count`).
 		WithArgs(testChannel, "uuid").
 		WillReturnRows(rows)
 
@@ -59,10 +59,10 @@ func TestGetRawComputePlan(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "metadata"}).
-		AddRow("uuid", "owner", false, time.Now(), "", map[string]string{})
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata"}).
+		AddRow("uuid", "owner", false, time.Now(), "", "My compute plan", map[string]string{})
 
-	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, tag, metadata FROM compute_plans`).
+	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, tag, name, metadata FROM compute_plans`).
 		WithArgs(testChannel, "uuid").
 		WillReturnRows(rows)
 
@@ -92,8 +92,8 @@ func TestQueryComputePlans(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
-		AddRow("uuid", "owner", false, time.Now(), "", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
+		AddRow("uuid", "owner", false, time.Now(), "", "My compute plan", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
 	mock.ExpectQuery(`SELECT key,.* FROM expanded_compute_plans .* ORDER BY creation_date ASC, key ASC`).
 		WithArgs(testChannel, "owner").
@@ -134,7 +134,7 @@ func TestQueryComputePlansNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"})
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"})
 
 	mock.ExpectQuery(`SELECT key,.* FROM expanded_compute_plans .* ORDER BY creation_date ASC, key`).
 		WithArgs(testChannel).

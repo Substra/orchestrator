@@ -363,6 +363,7 @@ func (c *TestClient) DisableModel(modelRef string) {
 func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) {
 	newCp := &asset.NewComputePlan{
 		Key:                      c.ks.GetKey(o.KeyRef),
+		Name:                     "Compute plan test",
 		DeleteIntermediaryModels: o.DeleteIntermediaryModels,
 	}
 	c.logger.WithField("plan", newCp).Debug("registering compute plan")

@@ -30,12 +30,14 @@ message ComputePlan {
   bool delete_intermediary_models = 6;
   google.protobuf.Timestamp creation_date = 7;
   string tag = 16;
+  string name = 19;
   map<string, string> metadata = 17;
 }
 
 message NewComputePlan {
   string key = 1;
   string tag = 16;
+  string name = 19;
   map<string, string> metadata = 17;
   bool delete_intermediary_models = 18;
 }

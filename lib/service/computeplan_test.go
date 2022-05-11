@@ -20,7 +20,7 @@ func TestGetPlan(t *testing.T) {
 
 	service := NewComputePlanService(provider)
 
-	cp := &asset.ComputePlan{Key: "uuid", Owner: "org1", Tag: "test", TaskCount: 243, DoneCount: 223}
+	cp := &asset.ComputePlan{Key: "uuid", Owner: "org1", Tag: "test", Name: "My Test", TaskCount: 243, DoneCount: 223}
 
 	dbal.On("GetComputePlan", "uuid").Once().Return(cp, nil)
 
@@ -45,11 +45,12 @@ func TestRegisterPlan(t *testing.T) {
 
 	service := NewComputePlanService(provider)
 
-	newPlan := &asset.NewComputePlan{Key: "b9b3ecda-0a90-41da-a2e3-945eeafb06d8", Tag: "test"}
+	newPlan := &asset.NewComputePlan{Key: "b9b3ecda-0a90-41da-a2e3-945eeafb06d8", Tag: "test", Name: "My Test"}
 
 	expected := &asset.ComputePlan{
 		Key:          "b9b3ecda-0a90-41da-a2e3-945eeafb06d8",
 		Tag:          "test",
+		Name:         "My Test",
 		Owner:        "org1",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
@@ -89,6 +90,7 @@ func TestCancelPlan(t *testing.T) {
 	plan := &asset.ComputePlan{
 		Key:   "b9b3ecda-0a90-41da-a2e3-945eeafb06d8",
 		Tag:   "test",
+		Name:  "My Test",
 		Owner: "owner",
 	}
 
