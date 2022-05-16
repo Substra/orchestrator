@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/log/v7"
+	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
@@ -43,13 +44,19 @@ func testRegisterModel(factory *client.TestClientFactory) {
 	}
 
 	appClient.StartTask(client.DefaultTaskRef)
-	appClient.RegisterModel(client.DefaultModelOptions())
+	registeredModel := appClient.RegisterModel(client.DefaultModelOptions())
 
 	taskEvents := appClient.QueryEvents(&asset.EventQueryFilter{AssetKey: appClient.GetKeyStore().GetKey(client.DefaultTaskRef)}, "", 10)
 
 	if len(taskEvents.Events) != 3 {
 		// 3 events: creation, start, done
 		log.WithField("events", taskEvents.Events).Fatal("Unexpected number of events")
+	}
+
+	retrievedModel := appClient.GetModel(client.DefaultModelRef)
+	if !proto.Equal(registeredModel, retrievedModel) {
+		log.WithField("registeredModel", registeredModel).WithField("retrievedModel", retrievedModel).
+			Fatal("The retrieved model differs from the registered model")
 	}
 }
 
@@ -99,7 +106,7 @@ func testDeleteIntermediary(factory *client.TestClientFactory) {
 		log.Fatal("model has not been disabled")
 	}
 
-	err := appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTaskRef))
+	_, err := appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTaskRef))
 	if err == nil {
 		log.Fatal("registering a task with disabled input models should fail")
 	}
@@ -119,7 +126,7 @@ func testRegisterTwoSimpleModelsForTrainTask(factory *client.TestClientFactory) 
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	appClient.StartTask(client.DefaultTaskRef)
-	err := appClient.FailableRegisterModels(
+	_, err := appClient.FailableRegisterModels(
 		client.DefaultModelOptions().WithKeyRef("mod1"),
 		client.DefaultModelOptions().WithKeyRef("mod2"),
 	)

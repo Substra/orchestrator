@@ -17,6 +17,7 @@ var testScenarios = [][]Scenario{
 	algoTestScenarios,
 	computePlanTestScenarios,
 	computeTaskTestScenarios,
+	datamanagerTestScenarios,
 	datasampleTestsScenarios,
 	datasetTestScenarios,
 	eventTestScenarios,

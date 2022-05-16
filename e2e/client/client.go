@@ -20,6 +20,7 @@ const DefaultAlgoRef = "algo"
 const DefaultMetricRef = "metric"
 const DefaultDataManagerRef = "dm"
 const DefaultDataSampleRef = "ds"
+const DefaultModelRef = "model"
 
 // Taskable represent the ability to create a new task
 type Taskable interface {
@@ -150,7 +151,7 @@ func (c *TestClient) EnsureNode() {
 	}
 }
 
-func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
+func (c *TestClient) RegisterAlgo(o *AlgoOptions) *asset.Algo {
 	newAlgo := &asset.NewAlgo{
 		Key:      c.ks.GetKey(o.KeyRef),
 		Name:     "Algo test",
@@ -168,14 +169,14 @@ func (c *TestClient) RegisterAlgo(o *AlgoOptions) {
 		Outputs:        o.Outputs,
 	}
 	c.logger.WithField("algo", newAlgo).Debug("registering algo")
-	_, err := c.algoService.RegisterAlgo(c.ctx, newAlgo)
+	algo, err := c.algoService.RegisterAlgo(c.ctx, newAlgo)
 	if err != nil {
 		c.logger.WithError(err).Fatal("RegisterAlgo failed")
 	}
-
+	return algo
 }
 
-func (c *TestClient) RegisterDataManager(o *DataManagerOptions) {
+func (c *TestClient) RegisterDataManager(o *DataManagerOptions) *asset.DataManager {
 	newDm := &asset.NewDataManager{
 		Key:            c.ks.GetKey(DefaultDataManagerRef),
 		Name:           "Test datamanager",
@@ -192,14 +193,26 @@ func (c *TestClient) RegisterDataManager(o *DataManagerOptions) {
 		LogsPermission: o.LogsPermission,
 	}
 	c.logger.WithField("datamanager", newDm).Debug("registering datamanager")
-	_, err := c.dataManagerService.RegisterDataManager(c.ctx, newDm)
+	dataManager, err := c.dataManagerService.RegisterDataManager(c.ctx, newDm)
 	if err != nil {
 		c.logger.WithError(err).Fatal("RegisterDataManager failed")
 	}
-
+	return dataManager
 }
 
-func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
+func (c *TestClient) GetDataManager(dataManagerRef string) *asset.DataManager {
+	param := &asset.GetDataManagerParam{
+		Key: c.ks.GetKey(dataManagerRef),
+	}
+	c.logger.WithField("datamanager key", c.ks.GetKey(dataManagerRef)).Debug("GetDataManager")
+	resp, err := c.dataManagerService.GetDataManager(c.ctx, param)
+	if err != nil {
+		c.logger.WithError(err).Fatal("GetDataManager failed")
+	}
+	return resp
+}
+
+func (c *TestClient) RegisterDataSample(o *DataSampleOptions) *asset.DataSample {
 	newDs := &asset.NewDataSample{
 		Key:             c.ks.GetKey(o.KeyRef),
 		DataManagerKeys: []string{c.ks.GetKey(DefaultDataManagerRef)},
@@ -210,10 +223,11 @@ func (c *TestClient) RegisterDataSample(o *DataSampleOptions) {
 	input := &asset.RegisterDataSamplesParam{
 		Samples: []*asset.NewDataSample{newDs},
 	}
-	_, err := c.dataSampleService.RegisterDataSamples(c.ctx, input)
+	res, err := c.dataSampleService.RegisterDataSamples(c.ctx, input)
 	if err != nil {
 		c.logger.WithError(err).Fatal("RegisterDataSample failed")
 	}
+	return res.DataSamples[0]
 }
 
 func (c *TestClient) GetDataSample(dataSampleRef string) *asset.DataSample {
@@ -247,21 +261,21 @@ func (c *TestClient) QueryDataSamples(pageToken string, pageSize uint32, filter 
 	return resp
 }
 
-func (c *TestClient) RegisterTasks(optList ...Taskable) {
-	err := c.FailableRegisterTasks(optList...)
+func (c *TestClient) RegisterTasks(optList ...Taskable) []*asset.ComputeTask {
+	res, err := c.FailableRegisterTasks(optList...)
 	if err != nil {
 		c.logger.WithError(err).Fatal("RegisterTasks failed")
 	}
+	return res.Tasks
 }
 
-func (c *TestClient) FailableRegisterTasks(optList ...Taskable) error {
+func (c *TestClient) FailableRegisterTasks(optList ...Taskable) (*asset.RegisterTasksResponse, error) {
 	newTasks := make([]*asset.NewComputeTask, len(optList))
 	for i, o := range optList {
 		newTasks[i] = o.GetNewTask(c.ks)
 	}
 	c.logger.WithField("nbTasks", len(newTasks)).Debug("registering tasks")
-	_, err := c.computeTaskService.RegisterTasks(c.ctx, &asset.RegisterTasksParam{Tasks: newTasks})
-	return err
+	return c.computeTaskService.RegisterTasks(c.ctx, &asset.RegisterTasksParam{Tasks: newTasks})
 }
 
 func (c *TestClient) StartTask(keyRef string) {
@@ -288,7 +302,7 @@ func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskActi
 	}
 }
 
-func (c *TestClient) RegisterModel(o *ModelOptions) {
+func (c *TestClient) RegisterModel(o *ModelOptions) *asset.Model {
 	newModel := &asset.NewModel{
 		ComputeTaskKey: c.ks.GetKey(o.TaskRef),
 		Key:            c.ks.GetKey(o.KeyRef),
@@ -300,13 +314,26 @@ func (c *TestClient) RegisterModel(o *ModelOptions) {
 	}
 	c.logger.WithField("model", newModel).Debug("registering model")
 	//nolint: staticcheck //This method is deprecated but still needs to be tested
-	_, err := c.modelService.RegisterModel(c.ctx, newModel)
+	model, err := c.modelService.RegisterModel(c.ctx, newModel)
 	if err != nil {
 		c.logger.WithError(err).Fatal("RegisterModel failed")
 	}
+	return model
 }
 
-func (c *TestClient) FailableRegisterModels(o ...*ModelOptions) error {
+func (c *TestClient) GetModel(modelRef string) *asset.Model {
+	param := &asset.GetModelParam{
+		Key: c.ks.GetKey(modelRef),
+	}
+	c.logger.WithField("model key", c.ks.GetKey(modelRef)).Debug("GetModel")
+	resp, err := c.modelService.GetModel(c.ctx, param)
+	if err != nil {
+		c.logger.WithError(err).Fatal("GetModel failed")
+	}
+	return resp
+}
+
+func (c *TestClient) FailableRegisterModels(o ...*ModelOptions) (*asset.RegisterModelsResponse, error) {
 	newModels := make([]*asset.NewModel, len(o))
 	for i, modelOpt := range o {
 		newModel := &asset.NewModel{
@@ -321,16 +348,15 @@ func (c *TestClient) FailableRegisterModels(o ...*ModelOptions) error {
 		c.logger.WithField("model", newModel).Debug("registering model")
 		newModels[i] = newModel
 	}
-	_, err := c.modelService.RegisterModels(c.ctx, &asset.RegisterModelsParam{Models: newModels})
-
-	return err
+	return c.modelService.RegisterModels(c.ctx, &asset.RegisterModelsParam{Models: newModels})
 }
 
-func (c *TestClient) RegisterModels(o ...*ModelOptions) {
-	err := c.FailableRegisterModels(o...)
+func (c *TestClient) RegisterModels(o ...*ModelOptions) []*asset.Model {
+	res, err := c.FailableRegisterModels(o...)
 	if err != nil {
 		log.WithError(err).Fatal("RegisterModels failed")
 	}
+	return res.Models
 }
 
 func (c *TestClient) GetTaskOutputModels(taskRef string) []*asset.Model {
@@ -360,17 +386,18 @@ func (c *TestClient) DisableModel(modelRef string) {
 	}
 }
 
-func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) {
+func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) *asset.ComputePlan {
 	newCp := &asset.NewComputePlan{
 		Key:                      c.ks.GetKey(o.KeyRef),
 		Name:                     "Compute plan test",
 		DeleteIntermediaryModels: o.DeleteIntermediaryModels,
 	}
 	c.logger.WithField("plan", newCp).Debug("registering compute plan")
-	_, err := c.computePlanService.RegisterPlan(c.ctx, newCp)
+	plan, err := c.computePlanService.RegisterPlan(c.ctx, newCp)
 	if err != nil {
 		c.logger.WithError(err).Fatal("RegisterPlan failed")
 	}
+	return plan
 }
 
 func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {

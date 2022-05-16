@@ -2,11 +2,16 @@ package scenarios
 
 import (
 	"github.com/go-playground/log/v7"
+	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
 
 var datasampleTestsScenarios = []Scenario{
+	{
+		testRegisterDataSample,
+		[]string{"short", "datasample"},
+	},
 	{
 		testQueryDatasamplesUnfiltered,
 		[]string{"short", "datasample"},
@@ -15,6 +20,19 @@ var datasampleTestsScenarios = []Scenario{
 		testQueryDatasamplesFiltered,
 		[]string{"short", "datasample"},
 	},
+}
+
+func testRegisterDataSample(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	registeredSample := appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	retrievedSample := appClient.GetDataSample(client.DefaultDataSampleRef)
+
+	if !proto.Equal(registeredSample, retrievedSample) {
+		log.WithField("registeredSample", registeredSample).WithField("retrievedSample", retrievedSample).
+			Fatal("The retrieved datasample differs from the registered datasample")
+	}
 }
 
 func testQueryDatasamplesUnfiltered(factory *client.TestClientFactory) {

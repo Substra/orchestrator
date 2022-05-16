@@ -5,11 +5,16 @@ import (
 	"time"
 
 	"github.com/go-playground/log/v7"
+	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
 
 var computePlanTestScenarios = []Scenario{
+	{
+		testRegisterComputePlan,
+		[]string{"short", "plan"},
+	},
 	{
 		testCancelComputePlan,
 		[]string{"short", "plan"},
@@ -50,6 +55,28 @@ var computePlanTestScenarios = []Scenario{
 		testCompositeParentChild,
 		[]string{"short", "plan", "composite"},
 	},
+}
+
+func testRegisterComputePlan(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+	registeredPlan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	retrievedPlan := appClient.GetComputePlan(client.DefaultPlanRef)
+
+	// Ignore dynamic fields
+	retrievedPlan.WaitingCount = 0
+	retrievedPlan.TodoCount = 0
+	retrievedPlan.DoingCount = 0
+	retrievedPlan.CanceledCount = 0
+	retrievedPlan.FailedCount = 0
+	retrievedPlan.DoneCount = 0
+	retrievedPlan.TaskCount = 0
+	retrievedPlan.Status = asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN
+
+	if !proto.Equal(registeredPlan, retrievedPlan) {
+		log.WithField("registeredPlan", registeredPlan).WithField("retrievedPlan", retrievedPlan).
+			Fatal("The retrieved compute plan differs from the registered compute plan")
+	}
 }
 
 func testCancelComputePlan(factory *client.TestClientFactory) {

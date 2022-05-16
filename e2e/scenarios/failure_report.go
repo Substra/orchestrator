@@ -2,6 +2,7 @@ package scenarios
 
 import (
 	"github.com/go-playground/log/v7"
+	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
@@ -30,18 +31,19 @@ func testRegisterFailureReport(factory *client.TestClientFactory) {
 
 	appClient.StartTask(client.DefaultTaskRef)
 
-	resp := appClient.RegisterFailureReport(client.DefaultTaskRef)
+	registeredFailureReport := appClient.RegisterFailureReport(client.DefaultTaskRef)
 	task := appClient.GetComputeTask(client.DefaultTaskRef)
 
-	if resp.ComputeTaskKey != task.Key {
-		log.WithField("task key", client.DefaultTaskRef).WithField("failureReport", resp).Fatal("Task keys don't match")
+	if registeredFailureReport.ComputeTaskKey != task.Key {
+		log.WithField("task key", client.DefaultTaskRef).WithField("registeredFailureReport", registeredFailureReport).Fatal("Task keys don't match")
 	}
 	if task.Status != asset.ComputeTaskStatus_STATUS_FAILED {
 		log.Fatal("compute task should be FAILED")
 	}
 
-	failureReport := appClient.GetFailureReport(client.DefaultTaskRef)
-	if failureReport.ComputeTaskKey != task.Key {
-		log.WithField("task key", client.DefaultTaskRef).WithField("failureReport", failureReport).Fatal("Task keys don't match")
+	retrievedFailureReport := appClient.GetFailureReport(client.DefaultTaskRef)
+	if !proto.Equal(registeredFailureReport, retrievedFailureReport) {
+		log.WithField("registeredFailureReport", registeredFailureReport).WithField("retrievedFailureReport", retrievedFailureReport).
+			Fatal("The retrieved failure report differs from the retrieved failure report")
 	}
 }

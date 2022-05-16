@@ -5,11 +5,16 @@ import (
 	"sync"
 
 	"github.com/go-playground/log/v7"
+	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
 
 var computeTaskTestScenarios = []Scenario{
+	{
+		testRegisterComputeTask,
+		[]string{"short", "task"},
+	},
 	{
 		testTrainTaskLifecycle,
 		[]string{"short", "task"},
@@ -46,6 +51,23 @@ var computeTaskTestScenarios = []Scenario{
 		testGetSortedParentTaskKeys,
 		[]string{"task", "query"},
 	},
+}
+
+func testRegisterComputeTask(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	registeredTask := appClient.RegisterTasks(client.DefaultTrainTaskOptions())[0]
+	retrievedTask := appClient.GetComputeTask(client.DefaultTaskRef)
+
+	if !proto.Equal(registeredTask, retrievedTask) {
+		log.WithField("registeredTask", registeredTask).WithField("retrievedTask", retrievedTask).
+			Fatal("The retrieved compute task differs from the registered compute task")
+	}
 }
 
 // Register a task and its dependencies, then start the task.

@@ -312,7 +312,7 @@ func (o *ComputePlanOptions) WithDeleteIntermediaryModels(flag bool) *ComputePla
 
 func DefaultModelOptions() *ModelOptions {
 	return &ModelOptions{
-		KeyRef:   "model",
+		KeyRef:   DefaultModelRef,
 		TaskRef:  DefaultTaskRef,
 		Category: asset.ModelCategory_MODEL_SIMPLE,
 	}

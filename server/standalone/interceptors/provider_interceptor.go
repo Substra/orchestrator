@@ -83,7 +83,9 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	ts := service.NewTimeService(time.Now())
+	// Truncate time to microsecond resolution to match PostgreSQL timestamp resolution.
+	// https://www.postgresql.org/docs/current/datatype-datetime.html
+	ts := service.NewTimeService(time.Now().Truncate(time.Microsecond))
 	provider := service.NewProvider(logger.Get(ctx), tx, dispatcher, ts, channel)
 
 	ctx = WithProvider(ctx, provider)

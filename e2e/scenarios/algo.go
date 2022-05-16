@@ -2,11 +2,16 @@ package scenarios
 
 import (
 	"github.com/go-playground/log/v7"
+	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
 
 var algoTestScenarios = []Scenario{
+	{
+		testRegisterAlgo,
+		[]string{"short", "algo"},
+	},
 	{
 		testQueryAlgos,
 		[]string{"short", "algo"},
@@ -23,6 +28,17 @@ var algoTestScenarios = []Scenario{
 		testPredictAlgo,
 		[]string{"short", "algo"},
 	},
+}
+
+func testRegisterAlgo(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+	registeredAlgo := appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	retrievedAlgo := appClient.GetAlgo(client.DefaultAlgoRef)
+
+	if !proto.Equal(registeredAlgo, retrievedAlgo) {
+		log.WithField("registeredAlgo", registeredAlgo).WithField("retrievedAlgo", retrievedAlgo).
+			Fatal("The retrieved algo differs from the registered algo")
+	}
 }
 
 func testPredictAlgo(factory *client.TestClientFactory) {

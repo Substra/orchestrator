@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/log/v7"
+	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
 )
@@ -45,13 +46,28 @@ func testRegisterPerformance(factory *client.TestClientFactory) {
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTaskRef).WithMetricsRef("testmetric"))
 	appClient.StartTask("testTask")
 
-	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
+	registeredPerf, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
 	if err != nil {
 		log.WithError(err).Fatal("RegisterPerformance failed")
 	}
+
 	task := appClient.GetComputeTask("testTask")
 	if task.Status != asset.ComputeTaskStatus_STATUS_DONE {
 		log.Fatal("test task should be DONE")
+	}
+
+	resp := appClient.QueryPerformances(&asset.PerformanceQueryFilter{
+		ComputeTaskKey: task.Key,
+	}, "", 100)
+
+	if len(resp.Performances) != 1 {
+		log.Fatalf("Unexpected number of performances. Expected 1, got %d", len(resp.Performances))
+	}
+
+	retrievedPerf := resp.Performances[0]
+	if !proto.Equal(registeredPerf, retrievedPerf) {
+		log.WithField("registeredPerf", registeredPerf).WithField("retrievedPerf", retrievedPerf).
+			Fatal("The retrieved performance differs from the registered performance")
 	}
 }
 
