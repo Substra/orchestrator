@@ -19,7 +19,7 @@ require (
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/looplab/fsm v0.3.0
 	github.com/pashagolub/pgxmock v1.5.0
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/rabbitmq/amqp091-go v1.3.4
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
