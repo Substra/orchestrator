@@ -102,9 +102,9 @@ func testDeleteIntermediary(factory *client.TestClientFactory) {
 	err := appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTaskRef))
 	if err == nil {
 		log.Fatal("registering a task with disabled input models should fail")
-		if !strings.Contains(err.Error(), "OE0003") {
-			log.WithError(err).Fatal("Unexpected error code")
-		}
+	}
+	if !strings.Contains(err.Error(), "OE0101") {
+		log.WithError(err).Fatal("Unexpected error code")
 	}
 	log.WithError(err).Debug("Failed to register task, as expected")
 }
@@ -126,9 +126,9 @@ func testRegisterTwoSimpleModelsForTrainTask(factory *client.TestClientFactory) 
 
 	if err == nil {
 		log.Fatal("Model registration should have failed")
-		if !strings.Contains(err.Error(), "OE0003") {
-			log.WithError(err).Fatal("Unexpected error code")
-		}
+	}
+	if !strings.Contains(err.Error(), "OE0003") {
+		log.WithError(err).Fatal("Unexpected error code")
 	}
 	log.WithError(err).Debug("Failed to register models, as expected")
 }
