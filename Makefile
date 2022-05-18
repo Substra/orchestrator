@@ -13,6 +13,9 @@ sql_migrations = $(wildcard $(MIGRATIONS_DIR)/*.sql)
 protobufs = $(wildcard $(protos)/*.proto)
 pbgo = $(protobufs:.proto=.pb.go)
 
+# Disable cgo since we don't use it and linking is broken with some version of go1.18 on macos
+build_env = CGO_ENABLED=0
+
 .PHONY: all
 all: chaincode orchestrator forwarder  ## Build all binaries
 
@@ -33,16 +36,16 @@ lint: codegen mocks  ## Analyze the codebase
 	golangci-lint run
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
-	go build -o $(ORCHESTRATOR_BIN) -ldflags="-X 'github.com/owkin/orchestrator/server/common.Version=$(VERSION)'" ./server
+	$(build_env) go build -o $(ORCHESTRATOR_BIN) -ldflags="-X 'github.com/owkin/orchestrator/server/common.Version=$(VERSION)'" ./server
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
-	go build -o $(CHAINCODE_BIN) -ldflags="-X 'github.com/owkin/orchestrator/chaincode/info.Version=$(VERSION)'" ./chaincode
+	$(build_env) go build -o $(CHAINCODE_BIN) -ldflags="-X 'github.com/owkin/orchestrator/chaincode/info.Version=$(VERSION)'" ./chaincode
 
 $(FORWARDER_BIN): ${go_src} $(OUTPUT_DIR) $(pbgo) $(lib_generated)
-	go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/forwarder
+	$(build_env) go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/forwarder
 
 $(E2E_BIN): $(go_src) $(OUTPUT_DIR) $(pbgo)
-	go build -o $(E2E_BIN) $(PROJECT_ROOT)/e2e
+	$(build_env) go build -o $(E2E_BIN) $(PROJECT_ROOT)/e2e
 
 $(OUTPUT_DIR):
 	mkdir $(OUTPUT_DIR)

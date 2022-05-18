@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In standalone mode, truncate TimeService time to microsecond resolution to match
   PostgreSQL timestamp resolution (#718).
 
+### Changed
+- Disable CGO
+
 ## [0.12.0] - 2022-05-16
 
 ### Added
