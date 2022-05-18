@@ -151,7 +151,7 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 			return nil, err
 		}
 	default:
-		return nil, errors.NewError(errors.ErrUnimplemented, "unhandled model category")
+		return nil, errors.NewUnimplemented("unhandled model category")
 	}
 
 	model.Owner = requester

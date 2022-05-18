@@ -244,6 +244,8 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
+	// TODO: validate inputs
+
 	task := &asset.ComputeTask{
 		Key:            input.Key,
 		Category:       input.Category,
@@ -254,6 +256,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		Rank:           getRank(parentTasks),
 		ParentTaskKeys: input.ParentTaskKeys,
 		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
+		Inputs:         input.Inputs,
 	}
 
 	switch x := input.Data.(type) {
@@ -575,7 +578,7 @@ func (s *ComputeTaskService) checkCanProcessParents(worker string, parentTasks [
 	case asset.ComputeTaskCategory_TASK_COMPOSITE:
 		return s.checkCompositeCanProcessParents(worker, parentTasks)
 	default:
-		return orcerrors.NewError(orcerrors.ErrUnimplemented, "invalid task category")
+		return orcerrors.NewUnimplemented("invalid task category")
 	}
 }
 
@@ -611,7 +614,7 @@ func (s *ComputeTaskService) checkGenericCanProcessParents(worker string, parent
 				))
 			}
 		default:
-			return orcerrors.NewError(orcerrors.ErrUnimplemented, "invalid parent category")
+			return orcerrors.NewUnimplemented("invalid parent category")
 		}
 	}
 
@@ -668,7 +671,7 @@ func (s *ComputeTaskService) checkCompositeCanProcessParents(worker string, pare
 				))
 			}
 		default:
-			return orcerrors.NewError(orcerrors.ErrUnimplemented, "invalid parent category")
+			return orcerrors.NewUnimplemented("invalid parent category")
 		}
 	}
 

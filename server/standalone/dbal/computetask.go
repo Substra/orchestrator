@@ -66,11 +66,17 @@ func (d *DBAL) AddComputeTasks(tasks ...*asset.ComputeTask) error {
 		return err
 	}
 
-	return d.insertParentTasks(tasks...)
+	err = d.insertParentTasks(tasks...)
+	if err != nil {
+		return err
+	}
+
+	return d.insertTaskInputs(tasks)
 }
 
 // insertTasks insert tasks in database in batch mode.
 func (d *DBAL) insertTasks(tasks []*asset.ComputeTask) error {
+	// insert tasks
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"compute_tasks"},
@@ -79,7 +85,6 @@ func (d *DBAL) insertTasks(tasks []*asset.ComputeTask) error {
 			return getCopyableComputeTaskValues(d.channel, tasks[i])
 		}),
 	)
-
 	return err
 }
 
@@ -279,7 +284,19 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 		return nil, err
 	}
 
-	return ct.toComputeTask()
+	res, err := ct.toComputeTask()
+	if err != nil {
+		return nil, err
+	}
+
+	inputs, err := d.getTaskInputs(key)
+	if err != nil {
+		return nil, err
+	}
+
+	res.Inputs = inputs[key]
+
+	return res, nil
 }
 
 // GetComputeTaskChildren returns the children of the task identified by the given key
@@ -388,7 +405,9 @@ func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq
 	}
 	defer rows.Close()
 
-	var tasks []*asset.ComputeTask
+	tasks := make(map[string]*asset.ComputeTask)
+	keys := make([]string, 0)
+
 	var count int
 
 	for rows.Next() {
@@ -408,8 +427,10 @@ func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq
 			return nil, "", err
 		}
 
-		tasks = append(tasks, task)
+		tasks[task.Key] = task
 		count++
+
+		keys = append(keys, task.Key)
 
 		if pagination != nil && count == int(pagination.Size) {
 			break
@@ -425,7 +446,21 @@ func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq
 		bookmark = strconv.Itoa(offset + count)
 	}
 
-	return tasks, bookmark, nil
+	inputs, err := d.getTaskInputs(keys...)
+	if err != nil {
+		return nil, "", err
+	}
+
+	for key, inputs := range inputs {
+		tasks[key].Inputs = inputs
+	}
+
+	res := make([]*asset.ComputeTask, 0, len(tasks))
+	for _, task := range tasks {
+		res = append(res, task)
+	}
+
+	return res, bookmark, nil
 }
 
 // taskFilterToQuery convert as filter into query string and param list

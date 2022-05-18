@@ -71,7 +71,7 @@ func (db *DB) UpdateComputeTask(task *asset.ComputeTask) error {
 	prevTask.Status = task.Status
 	if !reflect.DeepEqual(prevTask, task) {
 		// We only implement status update, so prevent any other update as it would require full index update
-		return errors.NewError(errors.ErrUnimplemented, "only task status update is implemented")
+		return errors.NewUnimplemented("only task status update is implemented")
 	}
 	prevTask.Status = prevStatus
 

@@ -154,6 +154,11 @@ func NewInternal(msg string) *OrcError {
 	return newErrorWithSource(ErrInternal, msg)
 }
 
+// NewNotImplemented returns an ErrUnimplemented kind of OrcError with given message
+func NewUnimplemented(msg string) *OrcError {
+	return newErrorWithSource(ErrUnimplemented, msg)
+}
+
 // FromValidationError returns an OrcError with ErrInvalidAsset kind wrapping the underlying validation error
 func FromValidationError(resource string, err error) *OrcError {
 	return newErrorWithSource(ErrInvalidAsset, fmt.Sprintf("%s is not valid", resource)).Wrap(err)

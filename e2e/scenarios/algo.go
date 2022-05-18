@@ -156,9 +156,9 @@ func testQueryAlgosInputOutputs(factory *client.TestClientFactory) {
 	for _, algo := range resp.Algos {
 		if algo.Key == key {
 			found = true
-
 			assertProtoMapEqual(algo.Inputs, algoOptions.Inputs)
 			assertProtoMapEqual(algo.Outputs, algoOptions.Outputs)
+			break
 		}
 	}
 	if !found {

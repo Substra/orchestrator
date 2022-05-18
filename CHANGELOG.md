@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Disable CGO
 
+### Added
+- Introduce compute task inputs (#691) **existing tasks won't have any inputs**
+
 ## [0.12.0] - 2022-05-16
 
 ### Added

@@ -104,7 +104,7 @@ func (s *ComputePlanService) ApplyPlanAction(key string, action asset.ComputePla
 	case asset.ComputePlanAction_PLAN_ACTION_CANCELED:
 		return s.cancelPlan(plan)
 	default:
-		return orcerrors.NewError(orcerrors.ErrUnimplemented, "plan action unimplemented")
+		return orcerrors.NewUnimplemented("plan action unimplemented")
 	}
 }
 

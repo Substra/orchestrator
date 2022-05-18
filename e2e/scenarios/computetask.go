@@ -51,6 +51,10 @@ var computeTaskTestScenarios = []Scenario{
 		testGetSortedParentTaskKeys,
 		[]string{"task", "query"},
 	},
+	{
+		testQueryTaskInputs,
+		[]string{"short", "task", "query"},
+	},
 }
 
 func testRegisterComputeTask(factory *client.TestClientFactory) {
@@ -327,5 +331,85 @@ func testGetSortedParentTaskKeys(factory *client.TestClientFactory) {
 		if task.ParentTaskKeys[i] != appClient.GetKeyStore().GetKey(taskRef) {
 			log.Fatal("Unexpected ParentTaskKeys ordering")
 		}
+	}
+}
+
+func testQueryTaskInputs(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+	ks := appClient.GetKeyStore()
+
+	taskRef := "taskWithInputs"
+	cpRef := "taskWithInputs"
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef(cpRef))
+
+	parentTaskOptions := client.
+		DefaultTrainTaskOptions().
+		WithKeyRef("parentTaskRef").
+		WithPlanRef(cpRef)
+
+	appClient.RegisterTasks(parentTaskOptions)
+
+	taskOptions := client.
+		DefaultTrainTaskOptions().
+		WithKeyRef(taskRef).
+		WithPlanRef(cpRef).
+		WithAssetInputRef("models", "inputModelRef").
+		WithParentTaskInputRef("models", "parentTaskRef", "output model")
+
+	expectedInputs := []*asset.ComputeTaskInput{
+		{
+			Identifier: "opener",
+			Ref: &asset.ComputeTaskInput_AssetKey{
+				AssetKey: ks.GetKey(client.DefaultDataManagerRef),
+			},
+		},
+		{
+			Identifier: "datasamples",
+			Ref: &asset.ComputeTaskInput_AssetKey{
+				AssetKey: ks.GetKey(client.DefaultDataSampleRef),
+			},
+		},
+		{
+			Identifier: "models",
+			Ref: &asset.ComputeTaskInput_AssetKey{
+				AssetKey: ks.GetKey("inputModelRef"),
+			},
+		},
+		{
+			Identifier: "models",
+			Ref: &asset.ComputeTaskInput_ParentTaskOutput{
+				ParentTaskOutput: &asset.ParentTaskOutputRef{
+					ParentTaskKey:    ks.GetKey("parentTaskRef"),
+					OutputIdentifier: "output model",
+				},
+			},
+		},
+	}
+
+	// test RegisterTasks
+	tasks := appClient.RegisterTasks(taskOptions)
+	task := tasks[0]
+	assertProtoArrayEqual(task.Inputs, expectedInputs)
+
+	// test GetComputeTask
+	respTask := appClient.GetComputeTask(taskRef)
+	assertProtoArrayEqual(respTask.Inputs, expectedInputs)
+
+	// test QueryTasks
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{ComputePlanKey: ks.GetKey(cpRef)}, "", 2)
+	found := false
+	for _, task := range resp.Tasks {
+		if task.Key == ks.GetKey(taskRef) {
+			found = true
+			assertProtoArrayEqual(task.Inputs, expectedInputs)
+			break
+		}
+	}
+	if !found {
+		log.Fatal("Could not find expected task with key ref " + taskRef)
 	}
 }

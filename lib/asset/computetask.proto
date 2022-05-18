@@ -26,6 +26,19 @@ enum ComputeTaskStatus {
   STATUS_FAILED = 6;
 }
 
+message ParentTaskOutputRef {
+  string parent_task_key = 1;
+  string output_identifier = 2;
+}
+
+message ComputeTaskInput {
+  string identifier = 1;
+  oneof ref {
+    string asset_key = 2;
+    ParentTaskOutputRef parent_task_output = 3;
+  }
+}
+
 // ComputeTask is a computation step in a ComputePlan.
 // It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
 message ComputeTask {
@@ -48,6 +61,7 @@ message ComputeTask {
     AggregateTrainTaskData aggregate = 15;
   }
   map<string, string> metadata = 16;
+  repeated ComputeTaskInput inputs = 17;
 }
 
 message NewComputeTask {
@@ -64,6 +78,7 @@ message NewComputeTask {
     NewAggregateTrainTaskData aggregate = 15;
   }
   map<string, string> metadata = 16;
+  repeated ComputeTaskInput inputs = 17;
 }
 
 message TrainTaskData {

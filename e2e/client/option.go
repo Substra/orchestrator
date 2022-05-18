@@ -1,6 +1,10 @@
 package client
 
-import "github.com/owkin/orchestrator/lib/asset"
+import (
+	"github.com/go-playground/log/v7"
+
+	"github.com/owkin/orchestrator/lib/asset"
+)
 
 type ComputePlanOptions struct {
 	KeyRef                   string
@@ -19,6 +23,13 @@ type DataSampleOptions struct {
 	TestOnly bool
 }
 
+type TaskInputOptions struct {
+	Identifier                 string
+	AssetRef                   string
+	ParentTaskRef              string
+	ParentTaskOutputIdentifier string
+}
+
 type TestTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
@@ -27,6 +38,7 @@ type TestTaskOptions struct {
 	MetricsRef     []string
 	DataManagerRef string
 	DataSampleRef  string
+	Inputs         []*TaskInputOptions
 }
 
 type TrainTaskOptions struct {
@@ -36,6 +48,7 @@ type TrainTaskOptions struct {
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
+	Inputs         []*TaskInputOptions
 }
 
 type CompositeTaskOptions struct {
@@ -45,6 +58,7 @@ type CompositeTaskOptions struct {
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
+	Inputs         []*TaskInputOptions
 }
 
 type AggregateTaskOptions struct {
@@ -53,6 +67,7 @@ type AggregateTaskOptions struct {
 	ParentsRef []string
 	PlanRef    string
 	Worker     string
+	Inputs     []*TaskInputOptions
 }
 
 type ModelOptions struct {
@@ -141,11 +156,26 @@ func DefaultTrainTaskOptions() *TrainTaskOptions {
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
+		Inputs: []*TaskInputOptions{
+			{
+				Identifier: "opener",
+				AssetRef:   DefaultDataManagerRef,
+			},
+			{
+				Identifier: "datasamples",
+				AssetRef:   DefaultDataSampleRef,
+			},
+		},
 	}
 }
 
 func (o *TrainTaskOptions) WithKeyRef(ref string) *TrainTaskOptions {
 	o.KeyRef = ref
+	return o
+}
+
+func (o *TrainTaskOptions) WithPlanRef(ref string) *TrainTaskOptions {
+	o.PlanRef = ref
 	return o
 }
 
@@ -160,9 +190,35 @@ func (o *TrainTaskOptions) WithAlgoRef(ref string) *TrainTaskOptions {
 }
 
 func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
+
 	parentKeys := make([]string, len(o.ParentsRef))
 	for i, ref := range o.ParentsRef {
 		parentKeys[i] = ks.GetKey(ref)
+	}
+
+	inputs := make([]*asset.ComputeTaskInput, len(o.Inputs))
+	for i, in := range o.Inputs {
+
+		inputs[i] = &asset.ComputeTaskInput{
+			Identifier: in.Identifier,
+		}
+
+		if (in.AssetRef != "") && (in.ParentTaskRef != "" || in.ParentTaskOutputIdentifier != "") {
+			log.Fatal("Cannot have AssetRef and (ParentTaskRef or OutputIdentifier) at the same time.")
+		}
+
+		if in.AssetRef != "" {
+			inputs[i].Ref = &asset.ComputeTaskInput_AssetKey{
+				AssetKey: ks.GetKey(in.AssetRef),
+			}
+		} else if in.ParentTaskRef != "" {
+			inputs[i].Ref = &asset.ComputeTaskInput_ParentTaskOutput{
+				ParentTaskOutput: &asset.ParentTaskOutputRef{
+					ParentTaskKey:    ks.GetKey(in.ParentTaskRef),
+					OutputIdentifier: in.ParentTaskOutputIdentifier,
+				},
+			}
+		}
 	}
 
 	return &asset.NewComputeTask{
@@ -177,6 +233,7 @@ func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
 			},
 		},
+		Inputs: inputs,
 	}
 }
 
@@ -244,6 +301,23 @@ func (o *AggregateTaskOptions) WithKeyRef(ref string) *AggregateTaskOptions {
 
 func (o *AggregateTaskOptions) WithParentsRef(p ...string) *AggregateTaskOptions {
 	o.ParentsRef = p
+	return o
+}
+
+func (o *TrainTaskOptions) WithParentTaskInputRef(identifier string, parentTaskRef string, parentTaskOutputIdentifier string) *TrainTaskOptions {
+	o.Inputs = append(o.Inputs, &TaskInputOptions{
+		Identifier:                 identifier,
+		ParentTaskRef:              parentTaskRef,
+		ParentTaskOutputIdentifier: parentTaskOutputIdentifier,
+	})
+	return o
+}
+
+func (o *TrainTaskOptions) WithAssetInputRef(identifier string, assetRef string) *TrainTaskOptions {
+	o.Inputs = append(o.Inputs, &TaskInputOptions{
+		Identifier: identifier,
+		AssetRef:   assetRef,
+	})
 	return o
 }
 

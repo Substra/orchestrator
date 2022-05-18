@@ -37,3 +37,15 @@ func assertProtoMapEqual[T proto.Message](a, b map[string]T) {
 		}
 	}
 }
+
+func assertProtoArrayEqual[T proto.Message](a, b []T) {
+	if len(a) != len(b) {
+		log.Fatalf("Arrays have mismatching length: %d vs %d", len(a), len(b))
+	}
+	for idx, itemA := range a {
+		itemB := b[idx]
+		if !proto.Equal(itemA, itemB) {
+			log.Fatalf("Arrays have mismatching content at index %q: %s vs %s", idx, itemA, itemB)
+		}
+	}
+}
