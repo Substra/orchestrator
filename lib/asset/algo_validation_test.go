@@ -59,6 +59,50 @@ func TestAlgoValidate(t *testing.T) {
 				"test": {Kind: AssetKind_ASSET_COMPUTE_PLAN, Optional: false, Multiple: false},
 			},
 		}, false},
+		"invalid_output_kind": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Category:       AlgoCategory_ALGO_SIMPLE,
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Outputs: map[string]*AlgoOutput{
+				"test": {Kind: AssetKind_ASSET_COMPUTE_PLAN, Multiple: false},
+			},
+		}, false},
+		"invalid_input: data manager + optional": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Category:       AlgoCategory_ALGO_SIMPLE,
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Inputs: map[string]*AlgoInput{
+				"test": {Kind: AssetKind_ASSET_DATA_MANAGER, Optional: true, Multiple: false},
+			},
+		}, false},
+		"invalid_input: data manager + multiple": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Category:       AlgoCategory_ALGO_SIMPLE,
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Inputs: map[string]*AlgoInput{
+				"test": {Kind: AssetKind_ASSET_DATA_MANAGER, Optional: false, Multiple: true},
+			},
+		}, false},
+		"invalid_output: performance + multiple": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Category:       AlgoCategory_ALGO_SIMPLE,
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Outputs: map[string]*AlgoOutput{
+				"test": {Kind: AssetKind_ASSET_PERFORMANCE, Multiple: true},
+			},
+		}, false},
 	}
 
 	for name, tc := range cases {

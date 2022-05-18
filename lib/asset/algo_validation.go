@@ -1,6 +1,8 @@
 package asset
 
 import (
+	"fmt"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	is "github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/owkin/orchestrator/lib/errors"
@@ -28,8 +30,8 @@ func validateInputs(input interface{}) error {
 		return errors.NewInvalidAsset("inputs is not a proper map")
 	}
 
-	for name, input := range algoInputs {
-		err := validation.Validate(name, validation.Required, validation.Length(1, 100))
+	for identifier, input := range algoInputs {
+		err := validation.Validate(identifier, validation.Required, validation.Length(1, 100))
 		if err != nil {
 			return err
 		}
@@ -38,6 +40,12 @@ func validateInputs(input interface{}) error {
 			validation.Field(&input.Kind, validation.In(AssetKind_ASSET_MODEL, AssetKind_ASSET_DATA_SAMPLE, AssetKind_ASSET_DATA_MANAGER)))
 		if err != nil {
 			return err
+		}
+
+		if input.Kind == AssetKind_ASSET_DATA_MANAGER {
+			if input.Multiple || input.Optional {
+				return errors.NewInvalidAsset(fmt.Sprintf("Algo input of kind DATA_MANAGER cannot be Multiple or Optional. Invalid input: %v", identifier))
+			}
 		}
 	}
 
@@ -50,8 +58,8 @@ func validateOutputs(input interface{}) error {
 		return errors.NewInvalidAsset("outputs is not a proper map")
 	}
 
-	for name, output := range algoOutputs {
-		err := validation.Validate(name, validation.Required, validation.Length(1, 100))
+	for identifier, output := range algoOutputs {
+		err := validation.Validate(identifier, validation.Required, validation.Length(1, 100))
 		if err != nil {
 			return err
 		}
@@ -60,6 +68,12 @@ func validateOutputs(input interface{}) error {
 			validation.Field(&output.Kind, validation.In(AssetKind_ASSET_MODEL, AssetKind_ASSET_PERFORMANCE)))
 		if err != nil {
 			return err
+		}
+
+		if output.Kind == AssetKind_ASSET_PERFORMANCE {
+			if output.Multiple {
+				return errors.NewInvalidAsset(fmt.Sprintf("Algo output of kind PERFORMANCE cannot be Multiple. Invalid output: %v", identifier))
+			}
 		}
 	}
 

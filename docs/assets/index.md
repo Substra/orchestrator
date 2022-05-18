@@ -4,6 +4,7 @@ Here we describe the assets and how they are manipulated by the orchestrator.
 
 Asset list:
 
+- [Algo](./algo.md)
 - [ComputeTask](./computetask.md)
 - [DataManager](./datamanager.md)
 - [DataSamples](./datasamples.md)
@@ -23,7 +24,7 @@ Then, **[DataSamples](./datasamples.md)** are attached to the **DataManager**.
 These samples can be either used during both training and testing or restricted to be only used for testing.
 
 Algorithms (named **Algos**) are then created and embed: the actual python algorithm, a Dockerfile to build it and a description file.
-**Algos** can produce models (train), or evaluate performances of such models (eval).
+**[Algos](./algo.md)** can produce models (train), or evaluate performances of such models (eval).
 
 Once all those basic assets are defined, a **ComputePlan** can be registered.
 A ComputePlan is a way to group tasks [ComputeTasks](./computetask.md) related to a common project.
