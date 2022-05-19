@@ -54,6 +54,8 @@ postgresql:
 ingress:
   enabled: true
   hostname: "orchestrator.node-2.com"
+  annotations:
+    kubernetes.io/ingress.class: nginx
 
 channels:
   - name: mychannel

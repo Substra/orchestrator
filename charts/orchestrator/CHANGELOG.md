@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.0] - 2022-05-19
+
+### Removed
+- Ingress annotation `kubernetes.io/ingress.class: nginx`, you will now need to set this annotation manually in your own values.
+
 ## [5.2.0] - 2022-04-21
 
 ### Added

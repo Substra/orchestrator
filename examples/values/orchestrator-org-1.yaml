@@ -48,6 +48,8 @@ rabbitmq:
 ingress:
   enabled: true
   hostname: "orchestrator.node-1.com"
+  annotations:
+    kubernetes.io/ingress.class: nginx
 
 channels:
   - name: mychannel
