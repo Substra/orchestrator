@@ -27,6 +27,8 @@ Algo inputs must verify the following constraints:
 
 - An input `kind` must be one of the following: `MODEL`, `DATA_SAMPLE`, `DATA_MANAGER`
 - An input of kind `DATA_MANAGER` cannot be `Optional` nor `Multiple`
+- It is not allowed to have multiple inputs of kind `DATA_MANAGER`
+- If there is an input of kind `DATA_MANAGER`, there must be an input of kind `DATA_SAMPLES`, and vice versa
 
 #### Outputs
 

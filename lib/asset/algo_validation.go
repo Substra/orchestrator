@@ -30,6 +30,9 @@ func validateInputs(input interface{}) error {
 		return errors.NewInvalidAsset("inputs is not a proper map")
 	}
 
+	foundDataManager := false
+	foundDatasample := false
+
 	for identifier, input := range algoInputs {
 		err := validation.Validate(identifier, validation.Required, validation.Length(1, 100))
 		if err != nil {
@@ -44,9 +47,21 @@ func validateInputs(input interface{}) error {
 
 		if input.Kind == AssetKind_ASSET_DATA_MANAGER {
 			if input.Multiple || input.Optional {
-				return errors.NewInvalidAsset(fmt.Sprintf("Algo input of kind DATA_MANAGER cannot be Multiple or Optional. Invalid input: %v", identifier))
+				return errors.NewInvalidAsset(fmt.Sprintf("algo input \"%v\" of kind DATA_MANAGER cannot be Multiple or Optional", identifier))
 			}
+			if foundDataManager {
+				return errors.NewInvalidAsset(fmt.Sprintf("cannot have multiple inputs of type %v", AssetKind_ASSET_DATA_MANAGER))
+			}
+			foundDataManager = true
 		}
+
+		if input.Kind == AssetKind_ASSET_DATA_SAMPLE {
+			foundDatasample = true
+		}
+	}
+
+	if foundDataManager != foundDatasample {
+		return errors.NewInvalidAsset(fmt.Sprintf("cannot have an input of type %v without an input of type %v, and vice versa", AssetKind_ASSET_DATA_MANAGER, AssetKind_ASSET_DATA_SAMPLE))
 	}
 
 	return nil

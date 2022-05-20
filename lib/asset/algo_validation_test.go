@@ -103,6 +103,40 @@ func TestAlgoValidate(t *testing.T) {
 				"test": {Kind: AssetKind_ASSET_PERFORMANCE, Multiple: true},
 			},
 		}, false},
+		"invalid inputs: multiple data managers": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Category:       AlgoCategory_ALGO_SIMPLE,
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Inputs: map[string]*AlgoInput{
+				"datamanager":  {Kind: AssetKind_ASSET_DATA_MANAGER},
+				"datamanager2": {Kind: AssetKind_ASSET_DATA_MANAGER},
+			},
+		}, false},
+		"invalid inputs: data manager without data sample": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Category:       AlgoCategory_ALGO_SIMPLE,
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Inputs: map[string]*AlgoInput{
+				"datamanager": {Kind: AssetKind_ASSET_DATA_MANAGER},
+			},
+		}, false},
+		"invalid inputs: data sample without data manager": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Category:       AlgoCategory_ALGO_SIMPLE,
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Inputs: map[string]*AlgoInput{
+				"datasamples": {Kind: AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			},
+		}, false},
 	}
 
 	for name, tc := range cases {

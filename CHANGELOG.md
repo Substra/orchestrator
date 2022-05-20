@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Disable CGO (#724).
+- More validation of Algo inputs (data managers / data samples) (#736)
 
 ### Added
 - Introduce compute task inputs (#691) **existing tasks won't have any inputs**
