@@ -22,10 +22,16 @@ type storableEvent struct {
 	Channel   string            `json:"channel"`
 	Timestamp int64             `json:"timestamp"`
 	Metadata  map[string]string `json:"metadata"`
+	Asset     json.RawMessage   `json:"asset"`
 }
 
 // newStorableEvent creates a storableEvent object from asset.Event
-func newStorableEvent(e *asset.Event) *storableEvent {
+func newStorableEvent(e *asset.Event) (*storableEvent, error) {
+	eventAsset, err := asset.MarshalEventAsset(e)
+	if err != nil {
+		return nil, err
+	}
+
 	proxy := &storableEvent{
 		ID:        e.Id,
 		AssetKey:  e.AssetKey,
@@ -34,39 +40,48 @@ func newStorableEvent(e *asset.Event) *storableEvent {
 		Channel:   e.Channel,
 		Timestamp: e.Timestamp.AsTime().UnixNano(),
 		Metadata:  e.Metadata,
+		Asset:     eventAsset,
 	}
 
 	if e.Metadata == nil {
 		proxy.Metadata = map[string]string{}
 	}
 
-	return proxy
+	return proxy, nil
 }
 
 // newEventFromStorable converts a storableEvent back into an asset.Event
-func (db *DB) newEventFromStorable(p *storableEvent) *asset.Event {
-	logger := db.logger.WithField("event", p.ID)
+func (db *DB) newEventFromStorable(s *storableEvent) (*asset.Event, error) {
+	logger := db.logger.WithField("event", s.ID)
 
-	eventKind, ok := asset.EventKind_value[p.EventKind]
+	eventKind, ok := asset.EventKind_value[s.EventKind]
 	if !ok {
-		logger.WithField("eventKind", p.EventKind).Warn("unable to convert event kind into proto value")
+		logger.WithField("eventKind", s.EventKind).Warn("unable to convert event kind into proto value")
 		eventKind = int32(asset.EventKind_EVENT_UNKNOWN)
 	}
-	assetKind, ok := asset.AssetKind_value[p.AssetKind]
+
+	assetKind, ok := asset.AssetKind_value[s.AssetKind]
 	if !ok {
-		logger.WithField("assetKind", p.AssetKind).Warn("unable to convert asset kind into proto value")
+		logger.WithField("assetKind", s.AssetKind).Warn("unable to convert asset kind into proto value")
 		assetKind = int32(asset.AssetKind_ASSET_UNKNOWN)
 	}
 
-	return &asset.Event{
-		Id:        p.ID,
-		AssetKey:  p.AssetKey,
+	event := &asset.Event{
+		Id:        s.ID,
+		AssetKey:  s.AssetKey,
 		EventKind: asset.EventKind(eventKind),
 		AssetKind: asset.AssetKind(assetKind),
-		Channel:   p.Channel,
-		Timestamp: timestamppb.New(time.Unix(0, p.Timestamp)),
-		Metadata:  p.Metadata,
+		Channel:   s.Channel,
+		Timestamp: timestamppb.New(time.Unix(0, s.Timestamp)),
+		Metadata:  s.Metadata,
 	}
+
+	err := asset.UnmarshalEventAsset(s.Asset, event, event.AssetKind)
+	if err != nil {
+		return nil, err
+	}
+
+	return event, nil
 }
 
 func (db *DB) addSingleEvent(event *asset.Event) error {
@@ -77,7 +92,12 @@ func (db *DB) addSingleEvent(event *asset.Event) error {
 	if exists {
 		return errors.NewConflict("event", event.Id)
 	}
-	proxy := newStorableEvent(event)
+
+	proxy, err := newStorableEvent(event)
+	if err != nil {
+		return err
+	}
+
 	bytes, err := json.Marshal(proxy)
 	if err != nil {
 		return err
@@ -147,17 +167,24 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, 
 		if err != nil {
 			return nil, "", err
 		}
-		var storedAsset storedAsset
-		err = json.Unmarshal(queryResult.Value, &storedAsset)
+
+		var stored storedAsset
+		err = json.Unmarshal(queryResult.Value, &stored)
 		if err != nil {
 			return nil, "", err
 		}
+
 		proxy := new(storableEvent)
-		err = json.Unmarshal(storedAsset.Asset, proxy)
+		err = json.Unmarshal(stored.Asset, proxy)
 		if err != nil {
 			return nil, "", err
 		}
-		event := db.newEventFromStorable(proxy)
+
+		event, err := db.newEventFromStorable(proxy)
+		if err != nil {
+			return nil, "", err
+		}
+
 		event.Channel = db.ccStub.GetChannelID()
 
 		events = append(events, event)

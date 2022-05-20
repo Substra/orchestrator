@@ -51,6 +51,7 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
 		AssetKey:  storedDataSample.Key,
+		Asset:     &asset.Event_DataSample{DataSample: storedDataSample},
 	}
 	es.On("RegisterEvents", e).Once().Return(nil)
 
@@ -187,6 +188,7 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
 		AssetKey:  storedDataSample.Key,
+		Asset:     &asset.Event_DataSample{DataSample: storedDataSample},
 	}
 	es.On("RegisterEvents", e).Once().Return(nil)
 

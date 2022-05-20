@@ -57,6 +57,7 @@ var computePlanTestScenarios = []Scenario{
 	},
 }
 
+// Register a compute plan and ensure an event containing the compute plan is recorded.
 func testRegisterComputePlan(factory *client.TestClientFactory) {
 	appClient := factory.NewTestClient()
 	registeredPlan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -77,6 +78,22 @@ func testRegisterComputePlan(factory *client.TestClientFactory) {
 		log.WithField("registeredPlan", registeredPlan).WithField("retrievedPlan", retrievedPlan).
 			Fatal("The retrieved compute plan differs from the registered compute plan")
 	}
+
+	resp := appClient.QueryEvents(&asset.EventQueryFilter{
+		AssetKey:  registeredPlan.Key,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}, "", 100)
+
+	if len(resp.Events) != 1 {
+		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(resp.Events))
+	}
+
+	eventPlan := resp.Events[0].GetComputePlan()
+	if !proto.Equal(registeredPlan, eventPlan) {
+		log.WithField("registeredPlan", registeredPlan).WithField("eventPlan", eventPlan).
+			Fatal("The compute plan in the event differs from the registered compute plan")
+	}
 }
 
 func testCancelComputePlan(factory *client.TestClientFactory) {
@@ -96,7 +113,7 @@ func testCancelComputePlan(factory *client.TestClientFactory) {
 	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp3").WithAlgoRef("compAlgo").WithParentsRef("cmp1", "agg1"))
 	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp4").WithAlgoRef("compAlgo").WithParentsRef("cmp2", "agg1"))
 
-	// We start processsing the compute plan
+	// We start processing the compute plan
 	appClient.StartTask("cmp1")
 	appClient.StartTask("cmp2")
 

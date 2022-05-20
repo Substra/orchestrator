@@ -87,8 +87,9 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-		AssetKey:  d.Key,
+		AssetKey:  datamanager.Key,
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
+		Asset:     &asset.Event_DataManager{DataManager: datamanager},
 	}
 	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {

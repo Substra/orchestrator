@@ -29,7 +29,8 @@ var performanceTestScenarios = []Scenario{
 	},
 }
 
-// register a test task, start it, and register its performance.
+// Register a test task, start it, register its performance,
+// and ensure an event containing the performance is recorded.
 func testRegisterPerformance(factory *client.TestClientFactory) {
 	appClient := factory.NewTestClient()
 
@@ -56,18 +57,34 @@ func testRegisterPerformance(factory *client.TestClientFactory) {
 		log.Fatal("test task should be DONE")
 	}
 
-	resp := appClient.QueryPerformances(&asset.PerformanceQueryFilter{
+	perfResp := appClient.QueryPerformances(&asset.PerformanceQueryFilter{
 		ComputeTaskKey: task.Key,
 	}, "", 100)
 
-	if len(resp.Performances) != 1 {
-		log.Fatalf("Unexpected number of performances. Expected 1, got %d", len(resp.Performances))
+	if len(perfResp.Performances) != 1 {
+		log.Fatalf("Unexpected number of performances. Expected 1, got %d", len(perfResp.Performances))
 	}
 
-	retrievedPerf := resp.Performances[0]
+	retrievedPerf := perfResp.Performances[0]
 	if !proto.Equal(registeredPerf, retrievedPerf) {
 		log.WithField("registeredPerf", registeredPerf).WithField("retrievedPerf", retrievedPerf).
 			Fatal("The retrieved performance differs from the registered performance")
+	}
+
+	eventResp := appClient.QueryEvents(&asset.EventQueryFilter{
+		AssetKey:  registeredPerf.GetKey(),
+		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}, "", 100)
+
+	if len(eventResp.Events) != 1 {
+		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(eventResp.Events))
+	}
+
+	eventPerf := eventResp.Events[0].GetPerformance()
+	if !proto.Equal(registeredPerf, eventPerf) {
+		log.WithField("registeredPerf", registeredPerf).WithField("eventPerf", eventPerf).
+			Fatal("The performance in the event differs from the registered performance")
 	}
 }
 

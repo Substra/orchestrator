@@ -55,6 +55,10 @@ var computeTaskTestScenarios = []Scenario{
 		testQueryTaskInputs,
 		[]string{"short", "task", "query"},
 	},
+	{
+		testEventsDuringComputeTaskLifecycle,
+		[]string{"task", "event"},
+	},
 }
 
 func testRegisterComputeTask(factory *client.TestClientFactory) {
@@ -411,5 +415,44 @@ func testQueryTaskInputs(factory *client.TestClientFactory) {
 	}
 	if !found {
 		log.Fatal("Could not find expected task with key ref " + taskRef)
+	}
+}
+
+func testEventsDuringComputeTaskLifecycle(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	registeredTask := appClient.RegisterTasks(client.DefaultTrainTaskOptions())[0]
+
+	getEventTask := func(eventKind asset.EventKind) *asset.ComputeTask {
+		res := appClient.QueryEvents(&asset.EventQueryFilter{
+			AssetKey:  registeredTask.Key,
+			AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+			EventKind: eventKind,
+		}, "", 100)
+
+		if len(res.Events) != 1 {
+			log.Fatalf("Unexpected number of events. Expected 1, got %d", len(res.Events))
+		}
+
+		return res.Events[0].GetComputeTask()
+	}
+
+	registrationEventTask := getEventTask(asset.EventKind_EVENT_ASSET_CREATED)
+	if !proto.Equal(registeredTask, registrationEventTask) {
+		log.WithField("registeredTask", registeredTask).WithField("registrationEventTask", registrationEventTask).
+			Fatal("The compute task in the event should not differ from the registered compute task")
+	}
+
+	appClient.StartTask(client.DefaultTaskRef)
+	startedTask := appClient.GetComputeTask(client.DefaultTaskRef)
+
+	startEventTask := getEventTask(asset.EventKind_EVENT_ASSET_UPDATED)
+	if !proto.Equal(startedTask, startEventTask) {
+		log.WithField("startedTask", startedTask).WithField("startEventTask", startEventTask).
+			Fatal("The compute task in the start event should not differ from the started compute task")
 	}
 }

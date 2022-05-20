@@ -50,9 +50,9 @@ func TestEventFilterToQuery(t *testing.T) {
 }
 
 func makeEventRows() *pgxmock.Rows {
-	return pgxmock.NewRows([]string{"id", "asset_key", "asset_kind", "event_kind", "timestamp", "metadata"}).
-		AddRow("id1", "13e88e4f-a287-4e8f-a96e-ea0c03f91e86", "ASSET_ALGO", "EVENT_ASSET_CREATED", time.Unix(1, 0).UTC(), map[string]string{}).
-		AddRow("id2", "7623fc2d-33fd-4b00-a6a0-65f5ec2eee20", "ASSET_MODEL", "EVENT_ASSET_UPDATED", time.Unix(2, 0).UTC(), map[string]string{})
+	return pgxmock.NewRows([]string{"id", "asset_key", "asset_kind", "event_kind", "timestamp", "asset", "metadata"}).
+		AddRow("id1", "13e88e4f-a287-4e8f-a96e-ea0c03f91e86", "ASSET_ALGO", "EVENT_ASSET_CREATED", time.Unix(1, 0).UTC(), []byte(`{}`), map[string]string{}).
+		AddRow("id2", "7623fc2d-33fd-4b00-a6a0-65f5ec2eee20", "ASSET_MODEL", "EVENT_ASSET_UPDATED", time.Unix(2, 0).UTC(), []byte(`{}`), map[string]string{})
 }
 
 func TestEventQuery(t *testing.T) {
@@ -63,7 +63,7 @@ func TestEventQuery(t *testing.T) {
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
-	mock.ExpectQuery(`SELECT id, asset_key, asset_kind, event_kind, timestamp, metadata FROM events .* ORDER BY timestamp ASC, id ASC`).
+	mock.ExpectQuery(`SELECT id, asset_key, asset_kind, event_kind, timestamp, asset, metadata FROM events .* ORDER BY timestamp ASC, id ASC`).
 		WithArgs(testChannel).
 		WillReturnRows(makeEventRows())
 
@@ -92,7 +92,7 @@ func TestQueryEventsNilFilter(t *testing.T) {
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
-	mock.ExpectQuery(`SELECT id, asset_key, asset_kind, event_kind, timestamp, metadata FROM events`).
+	mock.ExpectQuery(`SELECT id, asset_key, asset_kind, event_kind, timestamp, asset, metadata FROM events`).
 		WithArgs(testChannel).
 		WillReturnRows(makeEventRows())
 

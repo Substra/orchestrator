@@ -11,10 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   PostgreSQL timestamp resolution (#718).
 
 ### Changed
-- Disable CGO
+- Disable CGO (#724).
 
 ### Added
 - Introduce compute task inputs (#691) **existing tasks won't have any inputs**
+- Embed historical assets in the event messages (#715).
 
 ## [0.12.0] - 2022-05-16
 

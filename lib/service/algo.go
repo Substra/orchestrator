@@ -81,6 +81,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  a.Key,
 		AssetKind: asset.AssetKind_ASSET_ALGO,
+		Asset:     &asset.Event_Algo{Algo: algo},
 	}
 	err = s.GetEventService().RegisterEvents(event)
 

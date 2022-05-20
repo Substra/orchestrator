@@ -22,10 +22,11 @@ type sqlEvent struct {
 	Channel   string
 	Timestamp time.Time
 	Metadata  map[string]string
+	Asset     []byte
 }
 
-func (e *sqlEvent) toEvent() *asset.Event {
-	return &asset.Event{
+func (e *sqlEvent) toEvent() (*asset.Event, error) {
+	event := &asset.Event{
 		Id:        e.ID,
 		AssetKey:  e.AssetKey,
 		AssetKind: e.AssetKind,
@@ -34,6 +35,13 @@ func (e *sqlEvent) toEvent() *asset.Event {
 		Timestamp: timestamppb.New(e.Timestamp),
 		Metadata:  e.Metadata,
 	}
+
+	err := asset.UnmarshalEventAsset(e.Asset, event, event.AssetKind)
+	if err != nil {
+		return nil, err
+	}
+
+	return event, nil
 }
 
 // AddEvents insert events in storage in batch mode.
@@ -44,12 +52,17 @@ func (d *DBAL) AddEvents(events ...*asset.Event) error {
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"events"},
-		[]string{"id", "asset_key", "asset_kind", "event_kind", "channel", "timestamp", "metadata"},
+		[]string{"id", "asset_key", "asset_kind", "event_kind", "channel", "timestamp", "asset", "metadata"},
 		pgx.CopyFromSlice(len(events), func(i int) ([]interface{}, error) {
 			event := events[i]
 
 			// expect binary representation, not string
 			id, err := uuid.Parse(event.Id)
+			if err != nil {
+				return nil, err
+			}
+
+			eventAsset, err := asset.MarshalEventAsset(event)
 			if err != nil {
 				return nil, err
 			}
@@ -61,6 +74,7 @@ func (d *DBAL) AddEvents(events ...*asset.Event) error {
 				event.EventKind.String(),
 				d.channel,
 				event.Timestamp.AsTime(),
+				eventAsset,
 				event.Metadata,
 			}, nil
 		}),
@@ -82,7 +96,7 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter,
 	orderBy := fmt.Sprintf("timestamp %s, id %s", order, order)
 
 	stmt := getStatementBuilder().
-		Select("id", "asset_key", "asset_kind", "event_kind", "timestamp", "metadata").
+		Select("id", "asset_key", "asset_kind", "event_kind", "timestamp", "asset", "metadata").
 		From("events").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause(orderBy).
@@ -102,14 +116,19 @@ func (d *DBAL) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter,
 	var count int
 
 	for rows.Next() {
-		event := sqlEvent{Channel: d.channel}
+		ev := sqlEvent{Channel: d.channel}
 
-		err = rows.Scan(&event.ID, &event.AssetKey, &event.AssetKind, &event.EventKind, &event.Timestamp, &event.Metadata)
+		err = rows.Scan(&ev.ID, &ev.AssetKey, &ev.AssetKind, &ev.EventKind, &ev.Timestamp, &ev.Asset, &ev.Metadata)
 		if err != nil {
 			return nil, "", err
 		}
 
-		events = append(events, event.toEvent())
+		event, err := ev.toEvent()
+		if err != nil {
+			return nil, "", err
+		}
+
+		events = append(events, event)
 		count++
 
 		if count == int(p.Size) {

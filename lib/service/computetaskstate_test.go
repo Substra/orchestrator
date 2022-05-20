@@ -117,6 +117,7 @@ func TestDispatchOnTransition(t *testing.T) {
 		AssetKey:  "uuid",
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		Asset:     &asset.Event_ComputeTask{ComputeTask: expectedTask},
 		Metadata: map[string]string{
 			"status":           expectedTask.Status.String(),
 			"reason":           "User action",

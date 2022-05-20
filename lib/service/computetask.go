@@ -117,6 +117,7 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 			AssetKey:  task.Key,
 			EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 			AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+			Asset:     &asset.Event_ComputeTask{ComputeTask: task},
 			Metadata: map[string]string{
 				"status": task.Status.String(),
 				"worker": task.Worker,

@@ -267,6 +267,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 		AssetKey:  newTrainTask.Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		Asset:     &asset.Event_ComputeTask{ComputeTask: storedTask},
 		Metadata: map[string]string{
 			"status": storedTask.Status.String(),
 			"worker": dataManager.Owner,
@@ -434,6 +435,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
 		AssetKey:  newTask.Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		Asset:     &asset.Event_ComputeTask{ComputeTask: storedTask},
 		Metadata: map[string]string{
 			"status": storedTask.Status.String(),
 			"worker": dataManager.Owner,

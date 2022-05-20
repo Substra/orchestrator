@@ -75,6 +75,7 @@ func TestRegisterDataManager(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
 		AssetKey:  storedDataManager.Key,
+		Asset:     &asset.Event_DataManager{DataManager: storedDataManager},
 	}
 	es.On("RegisterEvents", e).Once().Return(nil)
 

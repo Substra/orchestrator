@@ -2,7 +2,16 @@ syntax = "proto3";
 
 package orchestrator;
 
+import "algo.proto";
 import "common.proto";
+import "computeplan.proto";
+import "computetask.proto";
+import "datamanager.proto";
+import "datasample.proto";
+import "failure_report.proto";
+import "model.proto";
+import "node.proto";
+import "performance.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
@@ -14,7 +23,7 @@ enum EventKind {
   EVENT_ASSET_DISABLED = 3;
 }
 
-// Event is an occurence of an orchestration event.
+// Event is an occurrence of an orchestration event.
 // It is triggered during orchestration and allows a consumer to react to the orchestration process.
 message Event {
   string id = 1;
@@ -23,6 +32,17 @@ message Event {
   EventKind event_kind = 4;
   string channel = 5;
   google.protobuf.Timestamp timestamp = 6;
+  oneof asset {
+    Algo algo = 7;
+    ComputePlan compute_plan = 8;
+    ComputeTask compute_task = 9;
+    DataManager data_manager = 10;
+    DataSample data_sample = 11;
+    FailureReport failure_report = 12;
+    Model model = 13;
+    Node node = 14;
+    Performance performance = 15;
+  }
   map<string, string> metadata = 18;
 }
 

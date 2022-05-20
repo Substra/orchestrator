@@ -76,6 +76,7 @@ func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.New
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  failureReport.ComputeTaskKey,
 		AssetKind: asset.AssetKind_ASSET_FAILURE_REPORT,
+		Asset:     &asset.Event_FailureReport{FailureReport: failureReport},
 	}
 	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {

@@ -192,6 +192,7 @@ func TestRegisterTrainModel(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  model.Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		Asset:     &asset.Event_Model{Model: storedModel},
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
@@ -392,6 +393,7 @@ func TestRegisterHeadModel(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  model.Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		Asset:     &asset.Event_Model{Model: storedModel},
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
@@ -710,18 +712,21 @@ func TestDisableModel(t *testing.T) {
 
 	cts.On("canDisableModels", "taskKey", "requester").Return(true, nil)
 
-	dbal.On("GetModel", "modelUuid").Return(&asset.Model{
+	model := &asset.Model{
 		Key:            "modelUuid",
 		ComputeTaskKey: "taskKey",
 		Address:        &asset.Addressable{Checksum: "sha", StorageAddress: "http://there"},
-	}, nil)
+	}
+	dbal.On("GetModel", "modelUuid").Return(model, nil)
 
-	dbal.On("UpdateModel", &asset.Model{Key: "modelUuid", ComputeTaskKey: "taskKey"}).Return(nil)
+	updatedModel := &asset.Model{Key: "modelUuid", ComputeTaskKey: "taskKey"}
+	dbal.On("UpdateModel", updatedModel).Return(nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  "modelUuid",
 		EventKind: asset.EventKind_EVENT_ASSET_DISABLED,
+		Asset:     &asset.Event_Model{Model: updatedModel},
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
@@ -932,6 +937,7 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  models[0].Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		Asset:     &asset.Event_Model{Model: storedModel},
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
@@ -1060,6 +1066,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  models[0].Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		Asset:     &asset.Event_Model{Model: storedHead},
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
@@ -1067,6 +1074,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 		AssetKind: asset.AssetKind_ASSET_MODEL,
 		AssetKey:  models[1].Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		Asset:     &asset.Event_Model{Model: storedSimple},
 	}
 	es.On("RegisterEvents", eventSimple).Once().Return(nil)
 

@@ -64,10 +64,11 @@ func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, 
 			EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 			AssetKey:  sample.Key,
 			AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
+			Asset:     &asset.Event_DataSample{DataSample: sample},
 		}
 		events = append(events, event)
-
 	}
+
 	err := s.GetEventService().RegisterEvents(events...)
 	if err != nil {
 		return nil, err
@@ -142,6 +143,7 @@ func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, o
 			EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 			AssetKey:  dataSampleKey,
 			AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
+			Asset:     &asset.Event_DataSample{DataSample: datasample},
 		}
 		err = s.GetEventService().RegisterEvents(event)
 		if err != nil {

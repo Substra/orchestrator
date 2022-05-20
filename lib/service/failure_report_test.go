@@ -57,6 +57,7 @@ func TestRegisterFailureReport(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  newFailureReport.ComputeTaskKey,
 		AssetKind: asset.AssetKind_ASSET_FAILURE_REPORT,
+		Asset:     &asset.Event_FailureReport{FailureReport: storedFailureReport},
 	}
 	eventService.On("RegisterEvents", event).Once().Return(nil)
 

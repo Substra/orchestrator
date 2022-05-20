@@ -14,7 +14,8 @@ var failureReportScenarios = []Scenario{
 	},
 }
 
-// Register a task, start it, fail it, and register a failure report on it.
+// Register a task, start it, fail it, register a failure report on it,
+// and ensure an event containing the failure report is recorded.
 func testRegisterFailureReport(factory *client.TestClientFactory) {
 	appClient := factory.NewTestClient()
 
@@ -45,5 +46,22 @@ func testRegisterFailureReport(factory *client.TestClientFactory) {
 	if !proto.Equal(registeredFailureReport, retrievedFailureReport) {
 		log.WithField("registeredFailureReport", registeredFailureReport).WithField("retrievedFailureReport", retrievedFailureReport).
 			Fatal("The retrieved failure report differs from the retrieved failure report")
+	}
+
+	eventResp := appClient.QueryEvents(&asset.EventQueryFilter{
+		AssetKey:  registeredFailureReport.ComputeTaskKey,
+		AssetKind: asset.AssetKind_ASSET_FAILURE_REPORT,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}, "", 100)
+
+	if len(eventResp.Events) != 1 {
+		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(eventResp.Events))
+	}
+
+	eventFailureReport := eventResp.Events[0].GetFailureReport()
+	if !proto.Equal(registeredFailureReport, eventFailureReport) {
+		log.WithField("registeredFailureReport", registeredFailureReport).
+			WithField("eventFailureReport", eventFailureReport).
+			Fatal("The failure report in the event differs from the registered failure report")
 	}
 }

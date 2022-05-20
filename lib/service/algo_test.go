@@ -47,14 +47,10 @@ func TestRegisterAlgo(t *testing.T) {
 		NewPermissions: newPerms,
 	}
 
-	e := &asset.Event{
-		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
-		AssetKey:  algo.Key,
-	}
-	es.On("RegisterEvents", e).Return(nil)
-
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
+	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
+
+	dbal.On("AlgoExists", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(false, nil).Once()
 
 	storedAlgo := &asset.Algo{
 		Key:          "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -66,13 +62,15 @@ func TestRegisterAlgo(t *testing.T) {
 		Owner:        "owner",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
+	dbal.On("AddAlgo", storedAlgo).Return(nil).Once()
 
-	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
-	dbal.On("AlgoExists", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(false, nil).Once()
-	dbal.On(
-		"AddAlgo",
-		storedAlgo,
-	).Return(nil).Once()
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKey:  algo.Key,
+		Asset:     &asset.Event_Algo{Algo: storedAlgo},
+	}
+	es.On("RegisterEvents", e).Return(nil)
 
 	o, err := service.RegisterAlgo(algo, "owner")
 

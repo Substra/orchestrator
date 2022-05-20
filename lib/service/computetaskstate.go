@@ -245,6 +245,7 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 		AssetKey:  task.Key,
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK,
+		Asset:     &asset.Event_ComputeTask{ComputeTask: task},
 		Metadata: map[string]string{
 			"status":           task.Status.String(),
 			"reason":           reason,

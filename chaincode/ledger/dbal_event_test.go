@@ -12,6 +12,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -75,17 +76,19 @@ func TestProxyConversion(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   "testChannel",
 		Timestamp: timestamppb.New(time.Unix(1337, 1234)),
+		Asset:     &asset.Event_Algo{Algo: new(asset.Algo)},
 		Metadata:  map[string]string{"test": "true"},
 	}
 
-	proxy := newStorableEvent(event)
+	proxy, err := newStorableEvent(event)
+	require.NoError(t, err)
 	assert.Equal(t, int64(1337000001234), proxy.Timestamp, "proxy object should store TS as unix time")
 
 	stub := new(testHelper.MockedStub)
 	db := NewDB(context.Background(), stub)
 
-	converted := db.newEventFromStorable(proxy)
-
+	converted, err := db.newEventFromStorable(proxy)
+	require.NoError(t, err)
 	assert.Equal(t, event, converted)
 }
 

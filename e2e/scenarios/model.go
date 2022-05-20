@@ -28,7 +28,8 @@ var modelTestScenarios = []Scenario{
 	},
 }
 
-// register a task, start it, and register a model on it.
+// Register a task, start it, register a model on it,
+// and ensure an event containing the model is recorded.
 func testRegisterModel(factory *client.TestClientFactory) {
 	appClient := factory.NewTestClient()
 
@@ -57,6 +58,22 @@ func testRegisterModel(factory *client.TestClientFactory) {
 	if !proto.Equal(registeredModel, retrievedModel) {
 		log.WithField("registeredModel", registeredModel).WithField("retrievedModel", retrievedModel).
 			Fatal("The retrieved model differs from the registered model")
+	}
+
+	resp := appClient.QueryEvents(&asset.EventQueryFilter{
+		AssetKey:  registeredModel.Key,
+		AssetKind: asset.AssetKind_ASSET_MODEL,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}, "", 100)
+
+	if len(resp.Events) != 1 {
+		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(resp.Events))
+	}
+
+	eventModel := resp.Events[0].GetModel()
+	if !proto.Equal(registeredModel, eventModel) {
+		log.WithField("registeredModel", registeredModel).WithField("eventModel", eventModel).
+			Fatal("The model in the event differs from the registered model")
 	}
 }
 

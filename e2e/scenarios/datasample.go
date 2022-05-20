@@ -22,16 +22,33 @@ var datasampleTestsScenarios = []Scenario{
 	},
 }
 
+// Register a datasample and ensure an event containing the datasample is recorded.
 func testRegisterDataSample(factory *client.TestClientFactory) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	registeredSample := appClient.RegisterDataSample(client.DefaultDataSampleOptions())
-	retrievedSample := appClient.GetDataSample(client.DefaultDataSampleRef)
 
+	retrievedSample := appClient.GetDataSample(client.DefaultDataSampleRef)
 	if !proto.Equal(registeredSample, retrievedSample) {
 		log.WithField("registeredSample", registeredSample).WithField("retrievedSample", retrievedSample).
 			Fatal("The retrieved datasample differs from the registered datasample")
+	}
+
+	resp := appClient.QueryEvents(&asset.EventQueryFilter{
+		AssetKey:  registeredSample.Key,
+		AssetKind: asset.AssetKind_ASSET_DATA_SAMPLE,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}, "", 100)
+
+	if len(resp.Events) != 1 {
+		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(resp.Events))
+	}
+
+	eventSample := resp.Events[0].GetDataSample()
+	if !proto.Equal(registeredSample, eventSample) {
+		log.WithField("registeredSample", registeredSample).WithField("eventSample", eventSample).
+			Fatal("The datasample in the event differs from the registered datasample")
 	}
 }
 

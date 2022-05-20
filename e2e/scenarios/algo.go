@@ -30,14 +30,31 @@ var algoTestScenarios = []Scenario{
 	},
 }
 
+// Register an algo and ensure an event containing the algo is recorded.
 func testRegisterAlgo(factory *client.TestClientFactory) {
 	appClient := factory.NewTestClient()
 	registeredAlgo := appClient.RegisterAlgo(client.DefaultAlgoOptions())
-	retrievedAlgo := appClient.GetAlgo(client.DefaultAlgoRef)
 
+	retrievedAlgo := appClient.GetAlgo(client.DefaultAlgoRef)
 	if !proto.Equal(registeredAlgo, retrievedAlgo) {
 		log.WithField("registeredAlgo", registeredAlgo).WithField("retrievedAlgo", retrievedAlgo).
 			Fatal("The retrieved algo differs from the registered algo")
+	}
+
+	resp := appClient.QueryEvents(&asset.EventQueryFilter{
+		AssetKey:  registeredAlgo.Key,
+		AssetKind: asset.AssetKind_ASSET_ALGO,
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+	}, "", 100)
+
+	if len(resp.Events) != 1 {
+		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(resp.Events))
+	}
+
+	eventAlgo := resp.Events[0].GetAlgo()
+	if !proto.Equal(registeredAlgo, eventAlgo) {
+		log.WithField("registeredAlgo", registeredAlgo).WithField("eventAlgo", eventAlgo).
+			Fatal("The algo in the event differs from the registered algo")
 	}
 }
 

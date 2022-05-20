@@ -15,6 +15,7 @@ An event will hold the following fields:
 - asset_key: the key (UUID) of the relevant asset;
 - event_kind: kind of event (see below);
 - channel: the channel for which the event has been dispatched;
+- asset: a snapshot of the asset referenced by the event in JSON format;
 - metadata: a map of keys (string) to values (string);
 
 ## Asset Kind

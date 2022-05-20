@@ -102,6 +102,7 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  perf.GetKey(),
 		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,
+		Asset:     &asset.Event_Performance{Performance: perf},
 	}
 	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
