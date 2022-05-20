@@ -18,7 +18,7 @@ require (
 	github.com/jackc/pgtype v1.11.0
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/looplab/fsm v0.3.0
-	github.com/pashagolub/pgxmock v1.5.0
+	github.com/pashagolub/pgxmock v1.6.0
 	github.com/prometheus/client_golang v1.12.2
 	github.com/rabbitmq/amqp091-go v1.3.4
 	github.com/stretchr/testify v1.7.1
