@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2022-05-23
+
 ### Fixed
 - In standalone mode, truncate TimeService time to microsecond resolution to match
   PostgreSQL timestamp resolution (#718).
