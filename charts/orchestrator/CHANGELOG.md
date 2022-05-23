@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.2.0] - 2022-05-23
+
+### Added
+- Support for ServiceMonitor resource creation directly from the chart
+
 ## [6.1.0] - 2022-05-20
 
 ### Added

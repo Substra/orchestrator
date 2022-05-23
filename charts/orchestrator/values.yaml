@@ -57,10 +57,35 @@ service:
   ##
   nodePort: ""
 
+
 metrics:
   ## @param metrics.enabled Expose Prometheus metrics
   ##
   enabled: false
+  
+  serviceMonitor:
+    ## @param metrics.serviceMonitor.enabled Create ServiceMonitor resource for scraping metrics using Prometheus Operator
+    ##
+    enabled: false
+    ## @param metrics.serviceMonitor.namespace Namespace for the ServiceMonitor resource (defaults to the Release Namespace)
+    ##
+    namespace: ""
+    ## @param metrics.serviceMonitor.interval Interval at which metrics should be scraped
+    ##
+    interval: ""
+    ## @param metrics.serviceMonitor.scrapeTimeout Timeout after which the scrape is ended
+    ##
+    scrapeTimeout: ""
+    ## @param metrics.serviceMonitor.relabelings RelabelConfigs to apply to samples before scraping
+    ##
+    relabelings: []
+    ## @param metrics.serviceMonitor.metricRelabelings MetricRelabelConfigs to apply to samples before insertion
+    ##
+    metricRelabelings: []
+    ## @param metrics.serviceMonitor.honorLabels Specify honorLabels parameter of the scrape endpoint
+    ##
+    honorLabels: false
+
 
 ingress:
   ## @param ingress.enabled Enable ingress for Orchestrator service
