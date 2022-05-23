@@ -280,9 +280,12 @@ orchestrator:
       ## Default 90 days
       ##
       duration: 2160h
-      ## @param orchestrator.tls.createCertificates.issuer _ClusterIssuer_ responsible fir the creation of tis _Certificate_
+      ## @param orchestrator.tls.createCertificates.issuer _Issuer_ or _ClusterIssuer_ responsible for the creation of this _Certificate_
       ##
       issuer: ""
+      ## @param orchestrator.tls.createCertificates.issuerKind Certificate issuer kind (`Issuer` or `ClusterIssuer`)
+      ##
+      issuerKind: ClusterIssuer
     ## @param orchestrator.tls.enabled If true, enable TLS for the orchestrator gRPC endpoint
     ##
     enabled: false

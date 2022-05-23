@@ -30,5 +30,5 @@ spec:
   {{- end }}
   issuerRef:
     name: {{ .Values.orchestrator.tls.createCertificates.issuer }}
-    kind: ClusterIssuer
+    kind: {{ .Values.orchestrator.tls.createCertificates.issuerKind }}
 {{- end }}

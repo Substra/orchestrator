@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.1.0] - 2022-05-20
+
+### Added
+- Possibility to use an _Issuer_ instead of a _ClusterIssuer_ for certificate generation.
+
 ## [6.0.0] - 2022-05-19
 
 ### Removed
