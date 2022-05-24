@@ -18,7 +18,7 @@ SELECT execute($$
             a.metadata
         )
     FROM expanded_algos a
-    WHERE e.asset_key = a.key::text;
+    WHERE e.asset_key = a.key::text AND e.asset_kind = 'ASSET_ALGO';
 
     -- Compute plans
     UPDATE events e
@@ -32,7 +32,7 @@ SELECT execute($$
             'metadata', cp.metadata
         )
     FROM compute_plans cp
-    WHERE e.asset_key = cp.key::text;
+    WHERE e.asset_key = cp.key::text AND e.asset_kind = 'ASSET_COMPUTE_PLAN';
 
     -- Compute tasks
     UPDATE events e
@@ -63,7 +63,7 @@ SELECT execute($$
                 'metadata', t.metadata
             ) || t.task_data
     FROM expanded_compute_tasks t
-    WHERE e.asset_key = t.key::text;
+    WHERE e.asset_key = t.key::text AND e.asset_kind = 'ASSET_COMPUTE_TASK';
 
     -- Datamanagers
     UPDATE events e
@@ -80,7 +80,7 @@ SELECT execute($$
             'metadata', dm.metadata
         )
     FROM expanded_datamanagers dm
-    WHERE e.asset_key = dm.key::text;
+    WHERE e.asset_key = dm.key::text AND e.asset_kind = 'ASSET_DATA_MANAGER';
 
     -- Datasamples
     UPDATE events e
@@ -93,7 +93,7 @@ SELECT execute($$
             'creationDate', to_rfc_3339(ds.creation_date)
         )
     FROM expanded_datasamples ds
-    WHERE e.asset_key = ds.key::text;
+    WHERE e.asset_key = ds.key::text AND e.asset_kind = 'ASSET_DATA_SAMPLE';
 
     -- Failure reports
     UPDATE events e
@@ -105,7 +105,7 @@ SELECT execute($$
             'owner', r.owner
         )
     FROM expanded_failure_reports r
-    WHERE e.asset_key = r.compute_task_key::text;
+    WHERE e.asset_key = r.compute_task_key::text AND e.asset_kind = 'ASSET_FAILURE_REPORT';
 
     -- Models
     UPDATE events e
@@ -119,7 +119,7 @@ SELECT execute($$
             'creationDate', to_rfc_3339(m.creation_date)
         )
     FROM expanded_models m
-    WHERE e.asset_key = m.key::text;
+    WHERE e.asset_key = m.key::text AND e.asset_kind = 'ASSET_MODEL';
 
     -- Nodes
     UPDATE events e
@@ -128,7 +128,7 @@ SELECT execute($$
             'creationDate', to_rfc_3339(n.creation_date)
         )
     FROM nodes n
-    WHERE e.asset_key = n.id;
+    WHERE e.asset_key = n.id AND e.asset_kind = 'ASSET_NODE';
 
     -- Performances
     UPDATE events e
@@ -139,7 +139,7 @@ SELECT execute($$
             'creationDate', to_rfc_3339(p.creation_date)
         )
     FROM performances p
-    WHERE e.asset_key = p.compute_task_key || '|' || p.algo_key;
+    WHERE e.asset_key = p.compute_task_key || '|' || p.algo_key AND e.asset_kind = 'ASSET_PERFORMANCE';
 
     ALTER TABLE events
     ALTER COLUMN asset SET NOT NULL;
