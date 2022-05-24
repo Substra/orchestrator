@@ -373,7 +373,8 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 	return keys, nil
 }
 
-func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) ([]*asset.ComputeTask, common.PaginationToken, error) {
+// queryBaseComputeTasks will return tasks without inputs/outputs, their keys and pagination token
+func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) (map[string]*asset.ComputeTask, []string, common.PaginationToken, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
 			"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_category", "algo_description_address",
@@ -389,7 +390,7 @@ func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq
 	if pagination != nil {
 		offset, err = getOffset(pagination.Token)
 		if err != nil {
-			return nil, "", err
+			return nil, nil, "", err
 		}
 
 		stmt = stmt.Offset(uint64(offset)).
@@ -401,7 +402,7 @@ func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq
 
 	rows, err := d.query(stmt)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, "", err
 	}
 	defer rows.Close()
 
@@ -419,12 +420,12 @@ func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq
 			&ct.Algo.Description.Checksum, &ct.Algo.Algorithm.StorageAddress, &ct.Algo.Algorithm.Checksum, &ct.Algo.Permissions, &ct.Algo.Owner,
 			&ct.Algo.CreationDate, &ct.Algo.Metadata, &ct.ParentTaskKeys)
 		if err != nil {
-			return nil, "", err
+			return nil, nil, "", err
 		}
 
 		task, err := ct.toComputeTask()
 		if err != nil {
-			return nil, "", err
+			return nil, nil, "", err
 		}
 
 		tasks[task.Key] = task
@@ -437,13 +438,22 @@ func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq
 		}
 	}
 	if err = rows.Err(); err != nil {
-		return nil, "", err
+		return nil, nil, "", err
 	}
 
 	bookmark := ""
 	if pagination != nil && count == int(pagination.Size) && rows.Next() {
 		// there is more to fetch
 		bookmark = strconv.Itoa(offset + count)
+	}
+
+	return tasks, keys, bookmark, nil
+}
+
+func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) ([]*asset.ComputeTask, common.PaginationToken, error) {
+	tasks, keys, bookmark, err := d.queryBaseComputeTasks(pagination, filterer)
+	if err != nil {
+		return nil, "", err
 	}
 
 	inputs, err := d.getTaskInputs(keys...)
