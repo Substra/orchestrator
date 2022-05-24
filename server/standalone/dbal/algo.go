@@ -117,72 +117,9 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 
 // QueryAlgos implements persistence.AlgoDBAL
 func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
-	offset, err := getOffset(p.Token)
+	algos, keys, bookmark, err := d.queryAlgos(p, filter)
 	if err != nil {
 		return nil, "", err
-	}
-
-	stmt := getStatementBuilder().
-		Select("key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
-		From("expanded_algos").
-		Where(sq.Eq{"channel": d.channel}).
-		OrderByClause("creation_date ASC, key").
-		Offset(uint64(offset)).
-		// Fetch page size + 1 elements to determine whether there is a next page
-		Limit(uint64(p.Size + 1))
-
-	if filter != nil {
-		if len(filter.Categories) > 0 {
-			categories := make([]string, len(filter.Categories))
-			for i, c := range filter.Categories {
-				categories[i] = c.String()
-			}
-			stmt = stmt.Where(sq.Eq{"category": categories})
-		}
-
-		if filter.ComputePlanKey != "" {
-			stmt = stmt.Where(sq.Expr(
-				"key IN (SELECT DISTINCT(algo_key) FROM compute_tasks WHERE compute_plan_key = ?)",
-				filter.ComputePlanKey,
-			))
-		}
-	}
-
-	rows, err := d.query(stmt)
-	if err != nil {
-		return nil, "", err
-	}
-	defer rows.Close()
-
-	algos := make(map[string]*asset.Algo, p.Size)
-	keys := make([]string, 0)
-	var count int
-
-	for rows.Next() {
-		al := sqlAlgo{}
-
-		err = rows.Scan(&al.Key, &al.Name, &al.Category, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
-		if err != nil {
-			return nil, "", err
-		}
-
-		algos[al.Key] = al.toAlgo()
-		count++
-
-		keys = append(keys, al.Key)
-
-		if count == int(p.Size) {
-			break
-		}
-	}
-	if err := rows.Err(); err != nil {
-		return nil, "", err
-	}
-
-	bookmark := ""
-	if count == int(p.Size) && rows.Next() {
-		// there is more to fetch
-		bookmark = strconv.Itoa(offset + count)
 	}
 
 	inputs, err := d.getAlgoInputs(keys...)
@@ -227,4 +164,76 @@ func (d *DBAL) AlgoExists(key string) (bool, error) {
 	err = row.Scan(&count)
 
 	return count == 1, err
+}
+
+func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (map[string]*asset.Algo, []string, common.PaginationToken, error) {
+	offset, err := getOffset(p.Token)
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	stmt := getStatementBuilder().
+		Select("key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		From("expanded_algos").
+		Where(sq.Eq{"channel": d.channel}).
+		OrderByClause("creation_date ASC, key").
+		Offset(uint64(offset)).
+		// Fetch page size + 1 elements to determine whether there is a next page
+		Limit(uint64(p.Size + 1))
+
+	if filter != nil {
+		if len(filter.Categories) > 0 {
+			categories := make([]string, len(filter.Categories))
+			for i, c := range filter.Categories {
+				categories[i] = c.String()
+			}
+			stmt = stmt.Where(sq.Eq{"category": categories})
+		}
+
+		if filter.ComputePlanKey != "" {
+			stmt = stmt.Where(sq.Expr(
+				"key IN (SELECT DISTINCT(algo_key) FROM compute_tasks WHERE compute_plan_key = ?)",
+				filter.ComputePlanKey,
+			))
+		}
+	}
+
+	rows, err := d.query(stmt)
+	if err != nil {
+		return nil, nil, "", err
+	}
+	defer rows.Close()
+
+	algos := make(map[string]*asset.Algo, p.Size)
+	keys := make([]string, 0)
+	var count int
+
+	for rows.Next() {
+		al := sqlAlgo{}
+
+		err = rows.Scan(&al.Key, &al.Name, &al.Category, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
+		if err != nil {
+			return nil, nil, "", err
+		}
+
+		algos[al.Key] = al.toAlgo()
+		count++
+
+		keys = append(keys, al.Key)
+
+		if count == int(p.Size) {
+			break
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, nil, "", err
+	}
+
+	bookmark := ""
+	if count == int(p.Size) && rows.Next() {
+		// there is more to fetch
+		bookmark = strconv.Itoa(offset + count)
+	}
+
+	return algos, keys, bookmark, nil
 }

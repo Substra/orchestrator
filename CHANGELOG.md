@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2022-05-24
+
+### Fixed
+- `conn busy` error when querying Algos (#748)
+
 ## [0.13.0] - 2022-05-23
 
 ### Fixed
