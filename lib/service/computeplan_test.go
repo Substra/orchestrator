@@ -53,6 +53,7 @@ func TestRegisterPlan(t *testing.T) {
 		Name:         "My Test",
 		Owner:        "org1",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+		Status:       asset.ComputePlanStatus_PLAN_STATUS_EMPTY,
 	}
 
 	dbal.On("AddComputePlan", expected).Once().Return(nil)

@@ -14,6 +14,7 @@ enum ComputePlanStatus {
   PLAN_STATUS_DONE = 4;
   PLAN_STATUS_CANCELED = 5;
   PLAN_STATUS_FAILED = 6;
+  PLAN_STATUS_EMPTY = 7;
 }
 
 message ComputePlan {

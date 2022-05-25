@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Introduce empty compute plan status (#726)
+
 ### Fixed
 - event asset migration (#750)
 

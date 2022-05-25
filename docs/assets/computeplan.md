@@ -8,7 +8,8 @@ eg: cancelling a compute plan will cancel all its cancellable (not DOING/FAILED/
 
 ## Statuses
 
-ComputePlan status is determined from its tasks and follow the rules below (by order of evaluation):
+ComputePlans are created with an EMPTY status.
+Then, compute plan's status is determined from its tasks and follow the rules below (by order of evaluation):
 
 - if any task is FAILED, the compute plan is FAILED
 - if any task is CANCELED, the compute plan is CANCELED

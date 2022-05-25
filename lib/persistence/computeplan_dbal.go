@@ -31,7 +31,7 @@ type ComputePlanTaskCount struct {
 // GetPlanStatus returns the compute plan's status based on its tasks statuses
 func (c *ComputePlanTaskCount) GetPlanStatus() asset.ComputePlanStatus {
 	if c.Total == 0 {
-		return asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN
+		return asset.ComputePlanStatus_PLAN_STATUS_EMPTY
 	}
 
 	if c.Done == c.Total {

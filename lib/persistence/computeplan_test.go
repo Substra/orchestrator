@@ -78,7 +78,7 @@ func TestGetPlanStatus(t *testing.T) {
 			waiting:  0,
 			failed:   0,
 			canceled: 0,
-			outcome:  asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN,
+			outcome:  asset.ComputePlanStatus_PLAN_STATUS_EMPTY,
 		},
 	}
 

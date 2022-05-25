@@ -72,7 +72,7 @@ func testRegisterComputePlan(factory *client.TestClientFactory) {
 	retrievedPlan.FailedCount = 0
 	retrievedPlan.DoneCount = 0
 	retrievedPlan.TaskCount = 0
-	retrievedPlan.Status = asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN
+	retrievedPlan.Status = asset.ComputePlanStatus_PLAN_STATUS_EMPTY
 
 	if !proto.Equal(registeredPlan, retrievedPlan) {
 		log.WithField("registeredPlan", registeredPlan).WithField("retrievedPlan", retrievedPlan).

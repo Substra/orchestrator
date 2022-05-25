@@ -70,6 +70,7 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		Metadata:                 input.Metadata,
 		DeleteIntermediaryModels: input.DeleteIntermediaryModels,
 		CreationDate:             timestamppb.New(s.GetTimeService().GetTransactionTime()),
+		Status:                   asset.ComputePlanStatus_PLAN_STATUS_EMPTY,
 	}
 
 	err = s.GetComputePlanDBAL().AddComputePlan(plan)
