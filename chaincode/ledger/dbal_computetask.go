@@ -3,7 +3,6 @@ package ledger
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/asset"
@@ -11,6 +10,7 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // addComputeTask stores a new ComputeTask in DB
@@ -57,40 +57,34 @@ func (db *DB) AddComputeTasks(tasks ...*asset.ComputeTask) error {
 	return nil
 }
 
-// UpdateComputeTask updates an existing task.
-func (db *DB) UpdateComputeTask(task *asset.ComputeTask) error {
+// UpdateComputeTaskStatus updates the status of an existing task.
+// We only implement status update, as any other update would require full index update.
+func (db *DB) UpdateComputeTaskStatus(taskKey string, taskStatus asset.ComputeTaskStatus) error {
 	// We need the current task to be able to update its indexes
-	prevTask, err := db.GetComputeTask(task.Key)
+	prevTask, err := db.GetComputeTask(taskKey)
 	if err != nil {
 		return err
 	}
 
-	// We only handle status update for now
-	prevStatus := prevTask.Status
-	// Ignore status in comparison
-	prevTask.Status = task.Status
-	if !reflect.DeepEqual(prevTask, task) {
-		// We only implement status update, so prevent any other update as it would require full index update
-		return errors.NewUnimplemented("only task status update is implemented")
-	}
-	prevTask.Status = prevStatus
+	updatedTask := proto.Clone(prevTask).(*asset.ComputeTask)
+	updatedTask.Status = taskStatus
 
-	b, err := marshaller.Marshal(task)
+	b, err := marshaller.Marshal(updatedTask)
 	if err != nil {
 		return err
 	}
 
-	err = db.putState(asset.ComputeTaskKind, task.Key, b)
+	err = db.putState(asset.ComputeTaskKind, taskKey, b)
 	if err != nil {
 		return err
 	}
 
 	// Update status indexes
-	if prevTask.Status != task.Status {
+	if prevTask.Status != updatedTask.Status {
 		err = db.updateIndex(
 			computePlanTaskStatusIndex,
 			[]string{asset.ComputePlanKind, prevTask.ComputePlanKey, prevTask.Status.String(), prevTask.Key},
-			[]string{asset.ComputePlanKind, task.ComputePlanKey, task.Status.String(), task.Key},
+			[]string{asset.ComputePlanKind, updatedTask.ComputePlanKey, updatedTask.Status.String(), taskKey},
 		)
 		if err != nil {
 			return err

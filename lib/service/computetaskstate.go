@@ -235,7 +235,7 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 		log.F("reason", reason),
 	).Debug("Updating task status")
 
-	err := s.GetComputeTaskDBAL().UpdateComputeTask(task)
+	err := s.GetComputeTaskDBAL().UpdateComputeTaskStatus(task.Key, task.Status)
 	if err != nil {
 		e.Err = err
 		return

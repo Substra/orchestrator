@@ -163,46 +163,12 @@ func (d *DBAL) insertParentTasks(tasks ...*asset.ComputeTask) error {
 	return err
 }
 
-// deleteParentTasks deletes all parent tasks for a given task
-func (d *DBAL) deleteParentTasks(taskKey string) error {
-	stmt := getStatementBuilder().
-		Delete("compute_task_parents").
-		Where(sq.Eq{"child_task_key": taskKey})
-
-	return d.exec(stmt)
-}
-
-// UpdateComputeTask updates an existing task
-func (d *DBAL) UpdateComputeTask(t *asset.ComputeTask) error {
-	err := d.deleteParentTasks(t.Key)
-	if err != nil {
-		return err
-	}
-
-	err = d.insertParentTasks(t)
-	if err != nil {
-		return err
-	}
-
-	// store task data in a marshalled task object, empty fields will be omitted
-	taskData, err := protojson.Marshal(&asset.ComputeTask{Data: t.Data})
-	if err != nil {
-		return err
-	}
-
+// UpdateComputeTaskStatus updates the status of an existing task.
+func (d *DBAL) UpdateComputeTaskStatus(taskKey string, taskStatus asset.ComputeTaskStatus) error {
 	stmt := getStatementBuilder().
 		Update("compute_tasks").
-		Set("category", t.Category).
-		Set("algo_key", t.Algo.Key).
-		Set("owner", t.Owner).
-		Set("compute_plan_key", t.ComputePlanKey).
-		Set("rank", t.Rank).
-		Set("status", t.Status).
-		Set("worker", t.Worker).
-		Set("logs_permission", t.LogsPermission).
-		Set("task_data", taskData).
-		Set("metadata", t.Metadata).
-		Where(sq.Eq{"channel": d.channel, "key": t.Key})
+		Set("status", taskStatus).
+		Where(sq.Eq{"channel": d.channel, "key": taskKey})
 
 	return d.exec(stmt)
 }

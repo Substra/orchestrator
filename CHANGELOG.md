@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - event asset migration (#750)
 
+### Changed
+- only update status on task update (#753).
+
 ## [0.13.2] - 2022-05-24
 
 ### Fixed

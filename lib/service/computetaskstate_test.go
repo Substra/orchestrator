@@ -111,7 +111,7 @@ func TestDispatchOnTransition(t *testing.T) {
 		Worker:         "worker",
 		ComputePlanKey: "uuidcp",
 	}
-	dbal.On("UpdateComputeTask", expectedTask).Once().Return(nil)
+	dbal.On("UpdateComputeTaskStatus", expectedTask.Key, expectedTask.Status).Once().Return(nil)
 
 	expectedEvent := &asset.Event{
 		AssetKey:  "uuid",
@@ -151,7 +151,7 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 	es.On("RegisterEvents", mock.Anything).Return(nil)
 	// Updated task should be saved
 	updatedTask := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_CANCELED, Owner: "owner"}
-	dbal.On("UpdateComputeTask", updatedTask).Return(nil)
+	dbal.On("UpdateComputeTaskStatus", updatedTask.Key, updatedTask.Status).Return(nil)
 
 	service := NewComputeTaskService(provider)
 
@@ -186,8 +186,8 @@ func TestCascadeStatusDone(t *testing.T) {
 	// Updated task should be saved
 	updatedParent := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE, Owner: "owner", Worker: "worker"}
 	updatedChild := &asset.ComputeTask{Key: "child", Status: asset.ComputeTaskStatus_STATUS_TODO}
-	dbal.On("UpdateComputeTask", updatedParent).Return(nil)
-	dbal.On("UpdateComputeTask", updatedChild).Return(nil)
+	dbal.On("UpdateComputeTaskStatus", updatedParent.Key, updatedParent.Status).Return(nil)
+	dbal.On("UpdateComputeTaskStatus", updatedChild.Key, updatedChild.Status).Return(nil)
 
 	service := NewComputeTaskService(provider)
 

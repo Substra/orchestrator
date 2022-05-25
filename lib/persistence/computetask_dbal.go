@@ -13,7 +13,7 @@ type ComputeTaskDBAL interface {
 	GetComputeTask(key string) (*asset.ComputeTask, error)
 	GetComputeTasks(keys []string) ([]*asset.ComputeTask, error)
 	AddComputeTasks(task ...*asset.ComputeTask) error
-	UpdateComputeTask(task *asset.ComputeTask) error
+	UpdateComputeTaskStatus(taskKey string, taskStatus asset.ComputeTaskStatus) error
 	QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error)
 	// GetComputePlanTasks returns the tasks of the compute plan identified by the given key
