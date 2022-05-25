@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.2.1] - 2022-05-25
+
+### Fixed
+- Issue with the namespace declaration in the ServiceMonitor resource
+
 ## [6.2.0] - 2022-05-23
 
 ### Added
