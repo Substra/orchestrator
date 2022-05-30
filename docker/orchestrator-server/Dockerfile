@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.18-alpine3.15 AS build
+FROM golang:1.18-alpine3.16 AS build
 
 COPY ./docker/orchestrator-server/dependencies.json /tmp/dependencies.json
 
@@ -39,7 +39,7 @@ RUN make ./bin/orchestrator VERSION=$VERSION && mv ./bin/orchestrator /bin/orche
 
 
 # Expose the binary
-FROM alpine:3.15 as prod
+FROM alpine:3.16 as prod
 
 COPY --from=build /bin/orchestrator /app/orchestrator
 COPY --from=build /bin/grpc_health_probe /bin/grpc_health_probe

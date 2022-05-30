@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.18-alpine3.15 AS build
+FROM golang:1.18-alpine3.16 AS build
 
 COPY ./docker/orchestrator-forwarder/dependencies.json /tmp/dependencies.json
 
@@ -34,7 +34,7 @@ RUN make ./bin/forwarder && mv ./bin/forwarder /bin/forwarder
 
 
 # Expose the binary
-FROM alpine:3.15 as prod
+FROM alpine:3.16 as prod
 
 COPY --from=build /bin/forwarder /app/forwarder
 USER 1000
