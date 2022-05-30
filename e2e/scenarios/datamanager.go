@@ -2,8 +2,8 @@ package scenarios
 
 import (
 	"github.com/go-playground/log/v7"
-	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
+	"google.golang.org/protobuf/proto"
 )
 
 var datamanagerTestScenarios = []Scenario{

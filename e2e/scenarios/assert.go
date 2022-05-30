@@ -2,8 +2,8 @@ package scenarios
 
 import (
 	"github.com/go-playground/log/v7"
-	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
+	"google.golang.org/protobuf/proto"
 )
 
 type keyable interface {
@@ -33,7 +33,7 @@ func assertProtoMapEqual[T proto.Message](a, b map[string]T) {
 	}
 	for k, va := range a {
 		if vb, ok := b[k]; !ok || !proto.Equal(va, vb) {
-			log.Fatalf("Maps have mismatching content for key %q: %s vs %s", k, va, vb)
+			log.Fatalf("Maps have mismatching content for key %q: %v vs %v", k, va, vb)
 		}
 	}
 }
@@ -45,7 +45,7 @@ func assertProtoArrayEqual[T proto.Message](a, b []T) {
 	for idx, itemA := range a {
 		itemB := b[idx]
 		if !proto.Equal(itemA, itemB) {
-			log.Fatalf("Arrays have mismatching content at index %q: %s vs %s", idx, itemA, itemB)
+			log.Fatalf("Arrays have mismatching content at index %q: %v vs %v", idx, itemA, itemB)
 		}
 	}
 }

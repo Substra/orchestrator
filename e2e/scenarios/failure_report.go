@@ -2,9 +2,9 @@ package scenarios
 
 import (
 	"github.com/go-playground/log/v7"
-	"github.com/golang/protobuf/proto"
 	"github.com/owkin/orchestrator/e2e/client"
 	"github.com/owkin/orchestrator/lib/asset"
+	"google.golang.org/protobuf/proto"
 )
 
 var failureReportScenarios = []Scenario{
