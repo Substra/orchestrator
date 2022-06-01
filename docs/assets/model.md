@@ -17,10 +17,10 @@ Only the task's worker can register models.
 
 A model has a category, and it can only be registered for a compatible task (y):
 
-| model category ↓ / task category → | Train | Test | Aggregate | Composite |
-|------------------------------------|-------|------|-----------|-----------|
-| Simple                             | y     | n    | y         | y         |
-| Head                               | n     | n    | n         | y         |
+| model category ↓ / task category → | Train | Test | Aggregate | Composite | Predict |
+|------------------------------------|-------|------|-----------|-----------|---------|
+| Simple                             | y     | n    | y         | y         | y       |
+| Head                               | n     | n    | n         | y         | n       |
 
 As stated before, a task may produce several models, but can only have one of each category.
 i.e. composite task can only have one *head* AND one *simple*.

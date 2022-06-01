@@ -13,7 +13,7 @@ import (
 func (t *NewComputeTask) Validate() error {
 	baseTaskErr := validation.ValidateStruct(t,
 		validation.Field(&t.Key, validation.Required, is.UUID),
-		validation.Field(&t.Category, validation.Required, validation.In(ComputeTaskCategory_TASK_TRAIN, ComputeTaskCategory_TASK_COMPOSITE, ComputeTaskCategory_TASK_AGGREGATE, ComputeTaskCategory_TASK_TEST)),
+		validation.Field(&t.Category, validation.Required, validation.In(ComputeTaskCategory_TASK_TRAIN, ComputeTaskCategory_TASK_COMPOSITE, ComputeTaskCategory_TASK_AGGREGATE, ComputeTaskCategory_TASK_TEST, ComputeTaskCategory_TASK_PREDICT)),
 		validation.Field(&t.AlgoKey, validation.Required, is.UUID),
 		validation.Field(&t.ComputePlanKey, validation.Required, is.UUID),
 		validation.Field(&t.Metadata, validation.By(validateMetadata)),
@@ -34,6 +34,8 @@ func (t *NewComputeTask) Validate() error {
 		return t.Data.(*NewComputeTask_Test).Test.Validate()
 	case *NewComputeTask_Train:
 		return t.Data.(*NewComputeTask_Train).Train.Validate()
+	case *NewComputeTask_Predict:
+		return t.Data.(*NewComputeTask_Predict).Predict.Validate()
 	default:
 		return errors.NewInvalidAsset(fmt.Sprintf("unknown task data %T", x))
 	}
@@ -60,6 +62,13 @@ func (t *NewCompositeTrainTaskData) Validate() error {
 		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)),
 		validation.Field(&t.TrunkPermissions, validation.Required),
 	)
+}
+
+func (t *NewPredictTaskData) Validate() error {
+	return validation.ValidateStruct(t,
+		validation.Field(&t.DataManagerKey, validation.Required, is.UUID),
+		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)))
+
 }
 
 func (t *NewAggregateTrainTaskData) Validate() error {

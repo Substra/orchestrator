@@ -51,6 +51,15 @@ type TrainTaskOptions struct {
 	Inputs         []*TaskInputOptions
 }
 
+type PredictTaskOptions struct {
+	KeyRef         string
+	AlgoRef        string
+	ParentsRef     []string
+	PlanRef        string
+	DataManagerRef string
+	DataSampleRef  string
+}
+
 type CompositeTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
@@ -234,6 +243,53 @@ func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 			},
 		},
 		Inputs: inputs,
+	}
+}
+
+func DefaultPredictTaskOptions() *PredictTaskOptions {
+	return &PredictTaskOptions{
+		KeyRef:         DefaultTaskRef,
+		AlgoRef:        DefaultAlgoRef,
+		ParentsRef:     []string{},
+		PlanRef:        DefaultPlanRef,
+		DataManagerRef: DefaultDataManagerRef,
+		DataSampleRef:  DefaultDataSampleRef,
+	}
+}
+
+func (o *PredictTaskOptions) WithParentsRef(p ...string) *PredictTaskOptions {
+	o.ParentsRef = p
+	return o
+}
+
+func (o *PredictTaskOptions) WithAlgoRef(ref string) *PredictTaskOptions {
+	o.AlgoRef = ref
+	return o
+}
+
+func (o *PredictTaskOptions) WithKeyRef(ref string) *PredictTaskOptions {
+	o.KeyRef = ref
+	return o
+}
+
+func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
+	parentKeys := make([]string, len(o.ParentsRef))
+	for i, ref := range o.ParentsRef {
+		parentKeys[i] = ks.GetKey(ref)
+	}
+
+	return &asset.NewComputeTask{
+		Key:            ks.GetKey(o.KeyRef),
+		Category:       asset.ComputeTaskCategory_TASK_PREDICT,
+		AlgoKey:        ks.GetKey(o.AlgoRef),
+		ParentTaskKeys: parentKeys,
+		ComputePlanKey: ks.GetKey(o.PlanRef),
+		Data: &asset.NewComputeTask_Predict{
+			Predict: &asset.NewPredictTaskData{
+				DataManagerKey: ks.GetKey(o.DataManagerRef),
+				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
+			},
+		},
 	}
 }
 

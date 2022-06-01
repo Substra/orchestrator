@@ -1,16 +1,17 @@
 # Compute Task
 
 A compute task is a generic structure representing a step in a [compute plan](./computeplan.md).
-There are 4 different kind of tasks:
+There are 5 different kind of tasks:
 
 - Train
 - Test
 - Aggregate
 - Composite
+- Predict
 
 While the `ComputeTask` structure holds common fields, type-specific fields are held by dedicated substructures.
 
-Train, Aggregate and Composite tasks can produce one or more [models](./model.md) as output.
+Train, Aggregate, Composite and Predict tasks can produce one or more [models](./model.md) as output.
 Those models will have different [permissions](./permissions.md), which will be determined on task creation.
 
 ## Compatibility
@@ -26,12 +27,13 @@ Here is the expected cardinality for each task category:
 - parenthesis denotes optional dependencies
 - no parents may be a valid input
 
-| children ↓ / parent → | Train | Test | Aggregate | Composite |
-|-----------------------|-------|------|-----------|-----------|
-| Train                 | n     | 0    | n         | 0         |
-| Test                  | 1*    | 0    | 1*        | 1*        |
-| Aggregate             | n     | 0    | n         | n         |
-| Composite             | 0     | 0    | (1)       | 1, (2)    |
+| children ↓ / parent → | Train | Test | Aggregate | Composite | Predict |
+|-----------------------|-------|------|-----------|-----------|---------|
+| Train                 | n     | 0    | n         | 0         | 0       |
+| Test                  | 1*    | 0    | 1*        | 1*        | 1*      |
+| Aggregate             | n     | 0    | n         | n         | 0       |
+| Composite             | 0     | 0    | (1)       | 1, (2)    | 0       |
+| Predict               | 1*    | 0    | 1*        | 1*        | 0       |
 
 A Composite task may have:
 - no parents

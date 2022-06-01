@@ -575,6 +575,52 @@ func TestRegisterDeletedModel(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
+func TestSetPredictData(t *testing.T) {
+	taskInput := &asset.NewComputeTask{
+		AlgoKey: "algoUuid",
+	}
+	specificInput := &asset.NewPredictTaskData{
+		DataManagerKey: "dmUuid",
+		DataSampleKeys: []string{"ds1", "ds2", "ds3"},
+	}
+	task := &asset.ComputeTask{
+		Owner:    "org1",
+		Category: asset.ComputeTaskCategory_TASK_PREDICT,
+	}
+
+	dms := new(MockDataManagerAPI)
+	dss := new(MockDataSampleAPI)
+	ps := new(MockPermissionAPI)
+	as := new(MockAlgoAPI)
+	provider := newMockedProvider()
+	provider.On("GetDataManagerService").Return(dms)
+	provider.On("GetDataSampleService").Return(dss)
+	provider.On("GetPermissionService").Return(ps)
+	provider.On("GetAlgoService").Return(as)
+	dataManager := &asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}
+	dms.On("GetDataManager", "dmUuid").Once().Return(dataManager, nil)
+	ps.On("CanProcess", mock.Anything, "org1").Return(true)
+	dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+
+	modelPerms := &asset.Permissions{
+		Process:  &asset.Permission{AuthorizedIds: []string{"testOwner"}},
+		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
+	}
+	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_PREDICT}
+	as.On("GetAlgo", taskInput.AlgoKey).Once().Return(algo, nil)
+	ps.On("IntersectPermissions", algo.Permissions, dataManager.Permissions).Return(modelPerms)
+
+	service := NewComputeTaskService(provider)
+
+	err := service.setPredictData(taskInput, specificInput, task)
+	assert.NoError(t, err)
+	provider.AssertExpectations(t)
+	dms.AssertExpectations(t)
+	dss.AssertExpectations(t)
+	ps.AssertExpectations(t)
+	as.AssertExpectations(t)
+}
+
 func TestSetCompositeData(t *testing.T) {
 	taskInput := &asset.NewComputeTask{
 		AlgoKey: "algoUuid",
@@ -1186,6 +1232,16 @@ func TestCheckCanProcessParent(t *testing.T) {
 			},
 		},
 	}
+	predict := &asset.ComputeTask{
+		Key: "predict",
+		Data: &asset.ComputeTask_Predict{
+			Predict: &asset.PredictTaskData{
+				PredictionPermissions: &asset.Permissions{
+					Process: &asset.Permission{Public: true},
+				},
+			},
+		},
+	}
 
 	cases := map[string]struct {
 		requester    string
@@ -1204,6 +1260,18 @@ func TestCheckCanProcessParent(t *testing.T) {
 			asset.ComputeTaskCategory_TASK_TEST,
 			[]*asset.ComputeTask{composite1, aggregate},
 			false, // cannot test head from parent composite
+		},
+		"predict task": {
+			"orgTest",
+			asset.ComputeTaskCategory_TASK_PREDICT,
+			[]*asset.ComputeTask{train},
+			true,
+		},
+		"test after predict": {
+			"orgTest",
+			asset.ComputeTaskCategory_TASK_TEST,
+			[]*asset.ComputeTask{predict},
+			true,
 		},
 		"aggregate task": {
 			"org2",

@@ -14,6 +14,7 @@ enum ComputeTaskCategory {
   TASK_AGGREGATE = 2;
   TASK_COMPOSITE = 3;
   TASK_TEST = 4;
+  TASK_PREDICT = 5;
 }
 
 enum ComputeTaskStatus {
@@ -59,6 +60,7 @@ message ComputeTask {
     TrainTaskData train = 13;
     CompositeTrainTaskData composite = 14;
     AggregateTrainTaskData aggregate = 15;
+    PredictTaskData predict = 18;
   }
   map<string, string> metadata = 16;
   repeated ComputeTaskInput inputs = 17;
@@ -76,6 +78,7 @@ message NewComputeTask {
     NewTrainTaskData train = 13;
     NewCompositeTrainTaskData composite = 14;
     NewAggregateTrainTaskData aggregate = 15;
+    NewPredictTaskData predict = 18;
   }
   map<string, string> metadata = 16;
   repeated ComputeTaskInput inputs = 17;
@@ -88,6 +91,17 @@ message TrainTaskData {
 }
 
 message NewTrainTaskData {
+  string data_manager_key = 1;
+  repeated string data_sample_keys = 2;
+}
+
+message PredictTaskData {
+  string data_manager_key = 1;
+  repeated string data_sample_keys = 2;
+  Permissions prediction_permissions = 3;
+}
+
+message NewPredictTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
 }

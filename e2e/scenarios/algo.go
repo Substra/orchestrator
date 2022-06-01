@@ -65,7 +65,7 @@ func testPredictAlgo(factory *client.TestClientFactory) {
 
 	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_PREDICT}}, "", 100)
 
-	if len(resp.Algos) != 1 {
+	if len(resp.Algos) < 1 {
 		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected total number of predict algo")
 	}
 }

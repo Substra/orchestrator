@@ -269,6 +269,8 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		err = s.setTestData(input.Data.(*asset.NewComputeTask_Test).Test, task, parentTasks)
 	case *asset.NewComputeTask_Train:
 		err = s.setTrainData(input, input.Data.(*asset.NewComputeTask_Train).Train, task)
+	case *asset.NewComputeTask_Predict:
+		err = s.setPredictData(input, input.Data.(*asset.NewComputeTask_Predict).Predict, task)
 	default:
 		// Should never happen, validated above
 		err = orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task data %T", x))
@@ -521,6 +523,35 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 	return nil
 }
 
+func (s *ComputeTaskService) setPredictData(taskInput *asset.NewComputeTask, specificInput *asset.NewPredictTaskData, task *asset.ComputeTask) error {
+	datamanager, err := s.getCheckedDataManager(specificInput.DataManagerKey, specificInput.DataSampleKeys, task.Owner)
+	if err != nil {
+		return err
+	}
+
+	algo, err := s.getCheckedAlgo(taskInput.AlgoKey, task.Owner, task.Category)
+	if err != nil {
+		return err
+	}
+
+	permissions := s.GetPermissionService().IntersectPermissions(algo.Permissions, datamanager.Permissions)
+
+	taskData := &asset.PredictTaskData{
+		DataManagerKey:        datamanager.Key,
+		DataSampleKeys:        specificInput.DataSampleKeys,
+		PredictionPermissions: permissions,
+	}
+
+	task.Data = &asset.ComputeTask_Predict{
+		Predict: taskData,
+	}
+	task.Worker = datamanager.Owner
+	task.Algo = algo
+	task.LogsPermission = datamanager.LogsPermission
+
+	return nil
+}
+
 // setTestData hydrates task specific TestTaskData from input
 func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
 	datamanager, err := s.getCheckedDataManager(input.DataManagerKey, input.DataSampleKeys, task.Owner)
@@ -574,7 +605,7 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 // checkCanProcessParents raises an error if one of the parent is not processable
 func (s *ComputeTaskService) checkCanProcessParents(worker string, parentTasks []*asset.ComputeTask, category asset.ComputeTaskCategory) error {
 	switch category {
-	case asset.ComputeTaskCategory_TASK_AGGREGATE, asset.ComputeTaskCategory_TASK_TEST, asset.ComputeTaskCategory_TASK_TRAIN:
+	case asset.ComputeTaskCategory_TASK_AGGREGATE, asset.ComputeTaskCategory_TASK_TEST, asset.ComputeTaskCategory_TASK_TRAIN, asset.ComputeTaskCategory_TASK_PREDICT:
 		return s.checkGenericCanProcessParents(worker, parentTasks, category)
 	case asset.ComputeTaskCategory_TASK_COMPOSITE:
 		return s.checkCompositeCanProcessParents(worker, parentTasks)
@@ -612,6 +643,13 @@ func (s *ComputeTaskService) checkGenericCanProcessParents(worker string, parent
 			if !s.GetPermissionService().CanProcess(permissions, worker) {
 				return orcerrors.NewPermissionDenied(fmt.Sprintf(
 					"cannot process train parent task %q, worker %q is not allowed to process model by permissions %v", p.Key, worker, permissions,
+				))
+			}
+		case *asset.ComputeTask_Predict:
+			permissions := p.Data.(*asset.ComputeTask_Predict).Predict.PredictionPermissions
+			if !s.GetPermissionService().CanProcess(permissions, worker) {
+				return orcerrors.NewPermissionDenied(fmt.Sprintf(
+					"cannot process predict parent task %q, worker %q is not allowed to process predictions by permissions %v", p.Key, worker, permissions,
 				))
 			}
 		default:
@@ -753,11 +791,13 @@ func (s *ComputeTaskService) isCompatibleWithParents(category asset.ComputeTaskC
 	case asset.ComputeTaskCategory_TASK_TRAIN:
 		return noTest && noComposite
 	case asset.ComputeTaskCategory_TASK_TEST:
-		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 1
+		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN]+inputs[asset.ComputeTaskCategory_TASK_PREDICT] == 1
 	case asset.ComputeTaskCategory_TASK_AGGREGATE:
 		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] >= 1
 	case asset.ComputeTaskCategory_TASK_COMPOSITE:
 		return noTest && noTrain && (noParent || compositeOnly || compositeAndAggregate || twoComposites)
+	case asset.ComputeTaskCategory_TASK_PREDICT:
+		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 1
 	default:
 		return false
 	}
@@ -807,6 +847,8 @@ func isAlgoCompatible(taskCategory asset.ComputeTaskCategory, algoCategory asset
 		return true
 	case asset.ComputeTaskCategory_TASK_TRAIN:
 		return algoCategory == asset.AlgoCategory_ALGO_SIMPLE
+	case asset.ComputeTaskCategory_TASK_PREDICT:
+		return algoCategory == asset.AlgoCategory_ALGO_PREDICT
 	default:
 		// should not happen, that means we probably don't known how to deal with task/algo couple
 		return false

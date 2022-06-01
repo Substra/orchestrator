@@ -20,6 +20,10 @@ var computeTaskTestScenarios = []Scenario{
 		[]string{"short", "task"},
 	},
 	{
+		testPredictTaskLifecycle,
+		[]string{"short", "task"},
+	},
+	{
 		testCascadeCancel,
 		[]string{"short", "task"},
 	},
@@ -95,6 +99,37 @@ func testTrainTaskLifecycle(factory *client.TestClientFactory) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(client.DefaultTaskRef))
 	appClient.StartTask(client.DefaultTaskRef)
+}
+
+func testPredictTaskLifecycle(factory *client.TestClientFactory) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_PREDICT).WithKeyRef("predict_algo"))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_SIMPLE).WithKeyRef("train_algo"))
+	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("metric"))
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("train").WithAlgoRef("train_algo"))
+	appClient.RegisterTasks(client.DefaultPredictTaskOptions().WithParentsRef("train").WithAlgoRef("predict_algo").WithKeyRef("predict"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("test").WithParentsRef("predict").WithAlgoRef("train_algo").WithMetricsRef("metric"))
+
+	appClient.StartTask("train")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_end"))
+
+	appClient.StartTask("predict")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predict").WithKeyRef("pred_end"))
+
+	predictTask := appClient.GetComputeTask("predict")
+	if predictTask.Status != asset.ComputeTaskStatus_STATUS_DONE {
+		log.WithField("task status", predictTask.Status).Fatal("predict task should be DONE")
+	}
+
+	testTask := appClient.GetComputeTask("test")
+	if testTask.Status != asset.ComputeTaskStatus_STATUS_TODO {
+		log.WithField("task status", testTask.Status).Fatal("test task should be WAITING")
+	}
 }
 
 // Register 10 children tasks and cancel their parent

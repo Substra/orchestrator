@@ -140,7 +140,7 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 	var model *asset.Model
 
 	switch task.Category {
-	case asset.ComputeTaskCategory_TASK_TRAIN, asset.ComputeTaskCategory_TASK_AGGREGATE:
+	case asset.ComputeTaskCategory_TASK_TRAIN, asset.ComputeTaskCategory_TASK_AGGREGATE, asset.ComputeTaskCategory_TASK_PREDICT:
 		model, err = s.registerSimpleModel(newModel, requester, task)
 		if err != nil {
 			return nil, err
@@ -177,7 +177,7 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 
 func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester string, task *asset.ComputeTask) (*asset.Model, error) {
 	// This should be checked by caller, but better safe than sorry
-	if !(task.Category == asset.ComputeTaskCategory_TASK_TRAIN || task.Category == asset.ComputeTaskCategory_TASK_AGGREGATE) {
+	if !(task.Category == asset.ComputeTaskCategory_TASK_TRAIN || task.Category == asset.ComputeTaskCategory_TASK_AGGREGATE || task.Category == asset.ComputeTaskCategory_TASK_PREDICT) {
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register train model for %q task", task.Category.String()))
 	}
 	if newModel.Category != asset.ModelCategory_MODEL_SIMPLE {
@@ -191,6 +191,8 @@ func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester s
 		permissions = task.GetTrain().ModelPermissions
 	case asset.ComputeTaskCategory_TASK_AGGREGATE:
 		permissions = task.GetAggregate().ModelPermissions
+	case asset.ComputeTaskCategory_TASK_PREDICT:
+		permissions = task.GetPredict().PredictionPermissions
 	default:
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot set model permissions for %q task", task.Category.String()))
 	}
@@ -300,6 +302,8 @@ func (s *ModelService) AreAllOutputsRegistered(task *asset.ComputeTask, existing
 	case asset.ComputeTaskCategory_TASK_COMPOSITE:
 		return count.head == 1 && count.simple == 1
 	case asset.ComputeTaskCategory_TASK_AGGREGATE:
+		return count.simple == 1
+	case asset.ComputeTaskCategory_TASK_PREDICT:
 		return count.simple == 1
 	default:
 		s.GetLogger().WithField("taskKey", task.Key).WithField("category", task.Category).Warn("unexpected output model check")
