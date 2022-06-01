@@ -1,45 +1,24 @@
-package scenarios
+//go:build e2e
+// +build e2e
+
+package e2e
 
 import (
-	"github.com/go-playground/log/v7"
+	"testing"
+
 	"github.com/owkin/orchestrator/e2e/client"
+	e2erequire "github.com/owkin/orchestrator/e2e/require"
 	"github.com/owkin/orchestrator/lib/asset"
-	"google.golang.org/protobuf/proto"
+	"github.com/stretchr/testify/require"
 )
 
-var algoTestScenarios = []Scenario{
-	{
-		testRegisterAlgo,
-		[]string{"short", "algo"},
-	},
-	{
-		testQueryAlgos,
-		[]string{"short", "algo"},
-	},
-	{
-		testQueryAlgosFilterCategories,
-		[]string{"short", "algo"},
-	},
-	{
-		testQueryAlgosInputOutputs,
-		[]string{"short", "algo"},
-	},
-	{
-		testPredictAlgo,
-		[]string{"short", "algo"},
-	},
-}
-
-// Register an algo and ensure an event containing the algo is recorded.
-func testRegisterAlgo(factory *client.TestClientFactory) {
+// TestRegisterAlgo registers an algo and ensure an event containing the algo is recorded.
+func TestRegisterAlgo(t *testing.T) {
 	appClient := factory.NewTestClient()
 	registeredAlgo := appClient.RegisterAlgo(client.DefaultAlgoOptions())
 
 	retrievedAlgo := appClient.GetAlgo(client.DefaultAlgoRef)
-	if !proto.Equal(registeredAlgo, retrievedAlgo) {
-		log.WithField("registeredAlgo", registeredAlgo).WithField("retrievedAlgo", retrievedAlgo).
-			Fatal("The retrieved algo differs from the registered algo")
-	}
+	e2erequire.ProtoEqual(t, registeredAlgo, retrievedAlgo)
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
 		AssetKey:  registeredAlgo.Key,
@@ -47,30 +26,23 @@ func testRegisterAlgo(factory *client.TestClientFactory) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}, "", 100)
 
-	if len(resp.Events) != 1 {
-		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(resp.Events))
-	}
+	require.Len(t, resp.Events, 1, "Unexpected number of events")
 
 	eventAlgo := resp.Events[0].GetAlgo()
-	if !proto.Equal(registeredAlgo, eventAlgo) {
-		log.WithField("registeredAlgo", registeredAlgo).WithField("eventAlgo", eventAlgo).
-			Fatal("The algo in the event differs from the registered algo")
-	}
+	e2erequire.ProtoEqual(t, registeredAlgo, eventAlgo)
 }
 
-func testPredictAlgo(factory *client.TestClientFactory) {
+func TestPredictAlgo(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_PREDICT))
 
 	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_PREDICT}}, "", 100)
 
-	if len(resp.Algos) < 1 {
-		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected total number of predict algo")
-	}
+	require.GreaterOrEqual(t, len(resp.Algos), 1, "Unexpected total number of predict algo")
 }
 
-func testQueryAlgos(factory *client.TestClientFactory) {
+func TestQueryAlgos(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -83,17 +55,14 @@ func testQueryAlgos(factory *client.TestClientFactory) {
 
 	// We cannot check for equality since this test may run after others,
 	// we will probably have more than the registered algo above.
-	if len(resp.Algos) < 1 {
-		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected total number of algo")
-	}
+	require.GreaterOrEqual(t, len(resp.Algos), 1, "Unexpected total number of algo")
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	planKey := appClient.GetKeyStore().GetKey(client.DefaultPlanRef)
 
 	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)
-	if len(resp.Algos) != 0 {
-		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected number algo used in compute plan without tasks")
-	}
+
+	require.Equal(t, 0, len(resp.Algos), "Unexpected number algo used in compute plan without tasks")
 
 	appClient.RegisterTasks(
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
@@ -103,12 +72,10 @@ func testQueryAlgos(factory *client.TestClientFactory) {
 	)
 
 	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)
-	if len(resp.Algos) != 1 {
-		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected number of algo used in compute plan with tasks")
-	}
+	require.Equal(t, 1, len(resp.Algos), "Unexpected number of algo used in compute plan with tasks")
 }
 
-func testQueryAlgosFilterCategories(factory *client.TestClientFactory) {
+func TestQueryAlgosFilterCategories(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_SIMPLE).WithKeyRef("algo_filter_simple"))
@@ -118,11 +85,8 @@ func testQueryAlgosFilterCategories(factory *client.TestClientFactory) {
 
 	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{}, "", 10000)
 
-	if len(resp.Algos) < 4 {
-		log.WithField("numAlgos", len(resp.Algos)).Fatal("Unexpected number of algos")
-	}
-
-	assertContainsKeys(true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_composite", "algo_filter_aggregate", "algo_filter_metric")
+	require.GreaterOrEqual(t, len(resp.Algos), 4, "Unexpected number of algos")
+	e2erequire.ContainsKeys(t, true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_composite", "algo_filter_aggregate", "algo_filter_metric")
 
 	filter := &asset.AlgoQueryFilter{
 		Categories: []asset.AlgoCategory{
@@ -132,11 +96,11 @@ func testQueryAlgosFilterCategories(factory *client.TestClientFactory) {
 
 	resp = appClient.QueryAlgos(filter, "", 100)
 
-	assertContainsKeys(true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_metric")
-	assertContainsKeys(false, appClient, resp.Algos, "algo_filter_composite", "algo_filter_aggregate")
+	e2erequire.ContainsKeys(t, true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_metric")
+	e2erequire.ContainsKeys(t, false, appClient, resp.Algos, "algo_filter_composite", "algo_filter_aggregate")
 }
 
-func testQueryAlgosInputOutputs(factory *client.TestClientFactory) {
+func TestQueryAlgosInputOutputs(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	keyRef := "test-algos-input-outputs"
@@ -173,18 +137,16 @@ func testQueryAlgosInputOutputs(factory *client.TestClientFactory) {
 	for _, algo := range resp.Algos {
 		if algo.Key == key {
 			found = true
-			assertProtoMapEqual(algo.Inputs, algoOptions.Inputs)
-			assertProtoMapEqual(algo.Outputs, algoOptions.Outputs)
+			e2erequire.ProtoMapEqual(t, algo.Inputs, algoOptions.Inputs)
+			e2erequire.ProtoMapEqual(t, algo.Outputs, algoOptions.Outputs)
 			break
 		}
 	}
-	if !found {
-		log.Fatal("Could not find expected algo with key ref " + keyRef)
-	}
+	require.True(t, found, "Could not find expected algo with key ref "+keyRef)
 
 	// test GetAlgo
 	respAlgo := appClient.GetAlgo(keyRef)
 
-	assertProtoMapEqual(respAlgo.Inputs, algoOptions.Inputs)
-	assertProtoMapEqual(respAlgo.Outputs, algoOptions.Outputs)
+	e2erequire.ProtoMapEqual(t, respAlgo.Inputs, algoOptions.Inputs)
+	e2erequire.ProtoMapEqual(t, respAlgo.Outputs, algoOptions.Outputs)
 }

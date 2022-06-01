@@ -2,7 +2,6 @@ OUTPUT_DIR = ./bin
 CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
 ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
 FORWARDER_BIN = $(OUTPUT_DIR)/forwarder
-E2E_BIN = $(OUTPUT_DIR)/e2e-tests
 PROJECT_ROOT = .
 MIGRATIONS_DIR = $(PROJECT_ROOT)/server/standalone/migration
 VERSION = dirty-$(shell git rev-parse --short HEAD)
@@ -43,9 +42,6 @@ $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 
 $(FORWARDER_BIN): ${go_src} $(OUTPUT_DIR) $(pbgo) $(lib_generated)
 	$(build_env) go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/forwarder
-
-$(E2E_BIN): $(go_src) $(OUTPUT_DIR) $(pbgo)
-	$(build_env) go build -o $(E2E_BIN) $(PROJECT_ROOT)/e2e
 
 $(OUTPUT_DIR):
 	mkdir $(OUTPUT_DIR)

@@ -1,71 +1,20 @@
-package scenarios
+//go:build e2e
+// +build e2e
+
+package e2e
 
 import (
 	"fmt"
 	"sync"
+	"testing"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/e2e/client"
+	e2erequire "github.com/owkin/orchestrator/e2e/require"
 	"github.com/owkin/orchestrator/lib/asset"
-	"google.golang.org/protobuf/proto"
+	"github.com/stretchr/testify/require"
 )
 
-var computeTaskTestScenarios = []Scenario{
-	{
-		testRegisterComputeTask,
-		[]string{"short", "task"},
-	},
-	{
-		testTrainTaskLifecycle,
-		[]string{"short", "task"},
-	},
-	{
-		testPredictTaskLifecycle,
-		[]string{"short", "task"},
-	},
-	{
-		testCascadeCancel,
-		[]string{"short", "task"},
-	},
-	{
-		testCascadeTodo,
-		[]string{"short", "task"},
-	},
-	{
-		testCascadeFailure,
-		[]string{"short", "task"},
-	},
-	{
-		testPropagateLogsPermission,
-		[]string{"short", "task", "query"},
-	},
-	{
-		testQueryTasks,
-		[]string{"short", "task", "query"},
-	},
-	{
-		testConcurrency,
-		[]string{"short", "concurrency"},
-	},
-	{
-		testStableTaskSort,
-		[]string{"task", "query"},
-	},
-	{
-		testGetSortedParentTaskKeys,
-		[]string{"task", "query"},
-	},
-	{
-		testQueryTaskInputs,
-		[]string{"short", "task", "query"},
-	},
-	{
-		testEventsDuringComputeTaskLifecycle,
-		[]string{"task", "event"},
-	},
-}
-
-func testRegisterComputeTask(factory *client.TestClientFactory) {
+func TestRegisterComputeTask(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -76,14 +25,11 @@ func testRegisterComputeTask(factory *client.TestClientFactory) {
 	registeredTask := appClient.RegisterTasks(client.DefaultTrainTaskOptions())[0]
 	retrievedTask := appClient.GetComputeTask(client.DefaultTaskRef)
 
-	if !proto.Equal(registeredTask, retrievedTask) {
-		log.WithField("registeredTask", registeredTask).WithField("retrievedTask", retrievedTask).
-			Fatal("The retrieved compute task differs from the registered compute task")
-	}
+	e2erequire.ProtoEqual(t, registeredTask, retrievedTask)
 }
 
-// Register a task and its dependencies, then start the task.
-func testTrainTaskLifecycle(factory *client.TestClientFactory) {
+// TestTrainTaskLifecycle registers a task and its dependencies, then start the task.
+func TestTrainTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -91,9 +37,7 @@ func testTrainTaskLifecycle(factory *client.TestClientFactory) {
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
 	ds := appClient.GetDataSample(client.DefaultDataSampleRef)
-	if ds.Key != appClient.GetKeyStore().GetKey(client.DefaultDataSampleRef) {
-		log.WithField("datasample key", ds.Key).Fatal("datasample could not be properly retrived")
-	}
+	require.Equal(t, appClient.GetKeyStore().GetKey(client.DefaultDataSampleRef), ds.Key, "datasample could not be properly retrieved")
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
@@ -101,7 +45,7 @@ func testTrainTaskLifecycle(factory *client.TestClientFactory) {
 	appClient.StartTask(client.DefaultTaskRef)
 }
 
-func testPredictTaskLifecycle(factory *client.TestClientFactory) {
+func TestPredictTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_PREDICT).WithKeyRef("predict_algo"))
@@ -122,19 +66,15 @@ func testPredictTaskLifecycle(factory *client.TestClientFactory) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predict").WithKeyRef("pred_end"))
 
 	predictTask := appClient.GetComputeTask("predict")
-	if predictTask.Status != asset.ComputeTaskStatus_STATUS_DONE {
-		log.WithField("task status", predictTask.Status).Fatal("predict task should be DONE")
-	}
+	require.Equal(t, predictTask.Status, asset.ComputeTaskStatus_STATUS_DONE)
 
 	testTask := appClient.GetComputeTask("test")
-	if testTask.Status != asset.ComputeTaskStatus_STATUS_TODO {
-		log.WithField("task status", testTask.Status).Fatal("test task should be WAITING")
-	}
+	require.Equal(t, testTask.Status, asset.ComputeTaskStatus_STATUS_TODO)
 }
 
-// Register 10 children tasks and cancel their parent
+// TestCascadeCancel registers 10 children tasks and cancel their parent
 // Only the parent should be canceled
-func testCascadeCancel(factory *client.TestClientFactory) {
+func TestCascadeCancel(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -152,19 +92,15 @@ func testCascadeCancel(factory *client.TestClientFactory) {
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
-		if task.Status != asset.ComputeTaskStatus_STATUS_WAITING {
-			log.Fatal("child task should be WAITING")
-		}
+		require.Equal(t, asset.ComputeTaskStatus_STATUS_WAITING, task.Status, "child task should be WAITING")
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	if plan.Status != asset.ComputePlanStatus_PLAN_STATUS_CANCELED {
-		log.WithField("status", plan.Status).Fatal("compute plan has not the CANCELED status")
-	}
+	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_CANCELED, plan.Status)
 }
 
-// Register 10 tasks and set their parent as done
-func testCascadeTodo(factory *client.TestClientFactory) {
+// TestCascadeTodo registers 10 tasks and set their parent as done
+func TestCascadeTodo(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -182,20 +118,16 @@ func testCascadeTodo(factory *client.TestClientFactory) {
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
-		if task.Status != asset.ComputeTaskStatus_STATUS_TODO {
-			log.Fatal("child task should be TODO")
-		}
+		require.Equal(t, asset.ComputeTaskStatus_STATUS_TODO, task.Status, "child task should be TODO")
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	if plan.Status != asset.ComputePlanStatus_PLAN_STATUS_DOING {
-		log.WithField("status", plan.Status).Fatal("compute plan has not the DOING status")
-	}
+	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DOING, plan.Status)
 }
 
-// Register 10 tasks and set their parent as failed
+// TestCascadeFailure registers 10 tasks and set their parent as failed
 // Only the parent should be FAILED
-func testCascadeFailure(factory *client.TestClientFactory) {
+func TestCascadeFailure(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -213,18 +145,14 @@ func testCascadeFailure(factory *client.TestClientFactory) {
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
-		if task.Status != asset.ComputeTaskStatus_STATUS_WAITING {
-			log.Fatal("child task should be WAITING")
-		}
+		require.Equal(t, asset.ComputeTaskStatus_STATUS_WAITING, task.Status, "child task should be WAITING")
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	if plan.Status != asset.ComputePlanStatus_PLAN_STATUS_FAILED {
-		log.WithField("status", plan.Status).Fatal("compute plan has not the FAILED status")
-	}
+	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plan.Status)
 }
 
-func testPropagateLogsPermission(factory *client.TestClientFactory) {
+func TestPropagateLogsPermission(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -238,12 +166,11 @@ func testPropagateLogsPermission(factory *client.TestClientFactory) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	task := appClient.GetComputeTask(client.DefaultTaskRef)
-	if !(len(task.LogsPermission.AuthorizedIds) == 1 && task.LogsPermission.AuthorizedIds[0] == appClient.MSPID) {
-		log.Fatal("Unexpected task.LogsPermission.")
-	}
+	require.Equal(t, 1, len(task.LogsPermission.AuthorizedIds))
+	require.Equal(t, appClient.MSPID, task.LogsPermission.AuthorizedIds[0])
 }
 
-func testQueryTasks(factory *client.TestClientFactory) {
+func TestQueryTasks(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -253,13 +180,10 @@ func testQueryTasks(factory *client.TestClientFactory) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", 10)
-
-	if len(resp.Tasks) != 1 {
-		log.WithField("num_tasks", len(resp.Tasks)).Fatal("unexpected task result")
-	}
+	require.Equal(t, 1, len(resp.Tasks))
 }
 
-func testConcurrency(factory *client.TestClientFactory) {
+func TestConcurrency(t *testing.T) {
 	client1 := factory.NewTestClient()
 	client2 := factory.NewTestClient()
 
@@ -291,8 +215,8 @@ func testConcurrency(factory *client.TestClientFactory) {
 	wg.Wait()
 }
 
-// testStableTaskSort will register several hundreds of tasks and query them all multiple time, failing if there are duplicates.
-func testStableTaskSort(factory *client.TestClientFactory) {
+// TestStableTaskSort will register several hundreds of tasks and query them all multiple time, failing if there are duplicates.
+func TestStableTaskSort(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	nbTasks := 1000
@@ -325,7 +249,7 @@ func testStableTaskSort(factory *client.TestClientFactory) {
 		for resp.NextPageToken != "" {
 			for _, task := range resp.Tasks {
 				if _, ok := keys[task.Key]; ok {
-					log.WithField("iteration", i+1).Fatal("Unstable task sorting: duplicate task found")
+					require.FailNow(t, fmt.Sprintf("unstable task sorting: duplicate task found (iteration %d)", i+1))
 				}
 				keys[task.Key] = struct{}{}
 			}
@@ -334,8 +258,8 @@ func testStableTaskSort(factory *client.TestClientFactory) {
 	}
 }
 
-// testGetSortedParentTaskKeys will check that parent task keys are returned in the same order they were registered
-func testGetSortedParentTaskKeys(factory *client.TestClientFactory) {
+// TestGetSortedParentTaskKeys will check that parent task keys are returned in the same order they were registered
+func TestGetSortedParentTaskKeys(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("trainAlgo"))
@@ -361,19 +285,14 @@ func testGetSortedParentTaskKeys(factory *client.TestClientFactory) {
 	)
 
 	task := appClient.GetComputeTask("aggTask")
-
-	if len(task.ParentTaskKeys) != len(parentTaskRefs) {
-		log.Fatal("Unexpected ParentTaskKeys length")
-	}
+	require.Equal(t, len(parentTaskRefs), len(task.ParentTaskKeys))
 
 	for i, taskRef := range parentTaskRefs {
-		if task.ParentTaskKeys[i] != appClient.GetKeyStore().GetKey(taskRef) {
-			log.Fatal("Unexpected ParentTaskKeys ordering")
-		}
+		require.Equal(t, task.ParentTaskKeys[i], appClient.GetKeyStore().GetKey(taskRef), "unexpected ParentTaskKeys ordering")
 	}
 }
 
-func testQueryTaskInputs(factory *client.TestClientFactory) {
+func TestQueryTaskInputs(t *testing.T) {
 	appClient := factory.NewTestClient()
 	ks := appClient.GetKeyStore()
 
@@ -432,11 +351,11 @@ func testQueryTaskInputs(factory *client.TestClientFactory) {
 	// test RegisterTasks
 	tasks := appClient.RegisterTasks(taskOptions)
 	task := tasks[0]
-	assertProtoArrayEqual(task.Inputs, expectedInputs)
+	e2erequire.ProtoArrayEqual(t, task.Inputs, expectedInputs)
 
 	// test GetComputeTask
 	respTask := appClient.GetComputeTask(taskRef)
-	assertProtoArrayEqual(respTask.Inputs, expectedInputs)
+	e2erequire.ProtoArrayEqual(t, respTask.Inputs, expectedInputs)
 
 	// test QueryTasks
 	resp := appClient.QueryTasks(&asset.TaskQueryFilter{ComputePlanKey: ks.GetKey(cpRef)}, "", 2)
@@ -444,16 +363,15 @@ func testQueryTaskInputs(factory *client.TestClientFactory) {
 	for _, task := range resp.Tasks {
 		if task.Key == ks.GetKey(taskRef) {
 			found = true
-			assertProtoArrayEqual(task.Inputs, expectedInputs)
+			e2erequire.ProtoArrayEqual(t, task.Inputs, expectedInputs)
 			break
 		}
 	}
-	if !found {
-		log.Fatal("Could not find expected task with key ref " + taskRef)
-	}
+
+	require.True(t, found, "Could not find expected task with key ref "+taskRef)
 }
 
-func testEventsDuringComputeTaskLifecycle(factory *client.TestClientFactory) {
+func TestEventsDuringComputeTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -469,25 +387,16 @@ func testEventsDuringComputeTaskLifecycle(factory *client.TestClientFactory) {
 			EventKind: eventKind,
 		}, "", 100)
 
-		if len(res.Events) != 1 {
-			log.Fatalf("Unexpected number of events. Expected 1, got %d", len(res.Events))
-		}
-
+		require.Len(t, res.Events, 1)
 		return res.Events[0].GetComputeTask()
 	}
 
 	registrationEventTask := getEventTask(asset.EventKind_EVENT_ASSET_CREATED)
-	if !proto.Equal(registeredTask, registrationEventTask) {
-		log.WithField("registeredTask", registeredTask).WithField("registrationEventTask", registrationEventTask).
-			Fatal("The compute task in the event should not differ from the registered compute task")
-	}
+	e2erequire.ProtoEqual(t, registeredTask, registrationEventTask)
 
 	appClient.StartTask(client.DefaultTaskRef)
 	startedTask := appClient.GetComputeTask(client.DefaultTaskRef)
 
 	startEventTask := getEventTask(asset.EventKind_EVENT_ASSET_UPDATED)
-	if !proto.Equal(startedTask, startEventTask) {
-		log.WithField("startedTask", startedTask).WithField("startEventTask", startEventTask).
-			Fatal("The compute task in the start event should not differ from the started compute task")
-	}
+	e2erequire.ProtoEqual(t, startedTask, startEventTask)
 }

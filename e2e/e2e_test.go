@@ -1,5 +1,7 @@
-// Package main implements end to end testing client.
-package main
+//go:build e2e
+// +build e2e
+
+package e2e
 
 import (
 	"context"
@@ -8,34 +10,15 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
-	"strings"
-	"text/tabwriter"
+	"testing"
 	"time"
-
-	"fmt"
 
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/console"
-	"github.com/owkin/orchestrator/e2e/client"
-	"github.com/owkin/orchestrator/e2e/scenarios"
-	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-type tagList struct {
-	list []string
-}
-
-func (l *tagList) String() string {
-	return strings.Join(l.list, "-")
-}
-
-func (l *tagList) Set(value string) error {
-	l.list = append(l.list, value)
-	return nil
-}
 
 var (
 	debugEnabled = flag.Bool("debug", false, "Debug mode (very verbose)")
@@ -47,20 +30,40 @@ var (
 	mspid        = flag.String("mspid", "MyOrg1MSP", "MSP ID")
 	channel      = flag.String("channel", "mychannel", "Channel to use")
 	chaincode    = flag.String("chaincode", "mycc", "Chaincode to use (only relevant in distributed mode)")
-	list         = flag.Bool("list", false, "List available tests and their tags")
-	nameFilter   = flag.String("name", "", "Filter test by name")
-	tagFilter    = tagList{list: []string{}}
+
+	conn *grpc.ClientConn
 )
 
-func main() {
-	flag.Var(&tagFilter, "tag", "Filter test by tags")
+func TestMain(m *testing.M) {
 	flag.Parse()
 
-	if *list {
-		listTests()
+	if flag.Lookup("test.list").Value.String() == "" {
+		// Set up test environment when not listing test cases
+		setUp()
+	}
+	exitCode := m.Run()
+	tearDown()
+	os.Exit(exitCode)
+}
+
+func setUp() {
+	setUpLogging()
+	initGrpcConn()
+	initTestClientFactory(conn, *mspid, *channel, *chaincode)
+}
+
+func tearDown() {
+	if conn == nil {
 		return
 	}
 
+	err := conn.Close()
+	if err != nil {
+		log.Fatalf("fail to close gRPC connection: %v", err)
+	}
+}
+
+func setUpLogging() {
 	cLog := console.New(true)
 	levels := make([]log.Level, 0)
 	for _, lvl := range log.AllLevels {
@@ -73,6 +76,9 @@ func main() {
 
 	log.AddHandler(cLog, levels...)
 
+}
+
+func initGrpcConn() {
 	var opts []grpc.DialOption
 	if *tlsEnabled {
 		b, err := ioutil.ReadFile(*caFile)
@@ -107,52 +113,10 @@ func main() {
 
 	dialCtx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
-	conn, err := grpc.DialContext(dialCtx, *serverAddr, opts...)
+
+	var err error
+	conn, err = grpc.DialContext(dialCtx, *serverAddr, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
-	defer conn.Close()
-
-	log.Debug("Starting testing")
-
-	if len(tagFilter.list) == 0 && *nameFilter == "" {
-		tagFilter.list = append(tagFilter.list, "short")
-	}
-
-	testClientFactory := client.NewTestClientFactory(conn, *mspid, *channel, *chaincode)
-
-scenario:
-	for name, sc := range scenarios.GatherTestScenarios() {
-		if *nameFilter != "" && *nameFilter != name {
-			// skip non matching test
-			continue
-		}
-		for _, tag := range tagFilter.list {
-			if utils.StringInSlice(sc.Tags, tag) {
-				break
-			}
-			// No match
-			continue scenario
-		}
-
-		logger := log.WithField("name", name)
-		logger.Debug("starting scenario")
-		func() {
-			defer logger.WithTrace().Info("test succeeded")
-			sc.Exec(testClientFactory)
-		}()
-
-	}
-}
-
-// listTests will output the list of available scenario and their associated tags.
-func listTests() {
-	w := tabwriter.NewWriter(os.Stdout, 0, 1, 8, ' ', tabwriter.TabIndent)
-	fmt.Fprintln(w, "name\ttags")
-	fmt.Fprintln(w, "----\t----")
-
-	for name, sc := range scenarios.GatherTestScenarios() {
-		fmt.Fprintf(w, "%s\t%s\n", name, sc.Tags)
-	}
-	w.Flush()
 }

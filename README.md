@@ -45,15 +45,14 @@ End-to-end testing requires a running orchestrator.
 Assuming you have one up and ready on orchestrator.node-1.com port 443, here is how to launch the tests:
 
 ```bash
-make ./bin/e2e-tests
-./bin/e2e-tests -tls \
-    -cafile ./examples/tools/ca.crt \
-    -keyfile ./examples/tools/client-org-1.key \
-    -certfile ./examples/tools/client-org-1.crt \
+go test -tags=e2e ./e2e -short -tls \
+    -cafile ../examples/tools/ca.crt \
+    -keyfile ../examples/tools/client-org-1.key \
+    -certfile ../examples/tools/client-org-1.crt \
     -server_addr orchestrator.node-1.com:443
 ```
 
-Refer to `./bin/e2e-tests --help` for more options (you can run tests by name or tag).
+Refer to `go test -tags=e2e ./e2e -args --help` for more options.
 
 ## Developing the orchestrator
 
@@ -181,6 +180,5 @@ The following patches are necessary as the bitnami charts used to install the ra
 
 1. Deploy with `skaffold run -p arm64 --status-check=false`
 
-2. After deploying run the patch 
+2. After deploying run the patch
 `./examples/tools/patch-rabbitmq-statefulset-arm64.sh`
-

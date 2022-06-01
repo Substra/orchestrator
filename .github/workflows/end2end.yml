@@ -55,8 +55,6 @@ jobs:
           wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.15.1/migrate.linux-amd64.tar.gz | tar xzf - -C $HOME/.local/bin
       - name: build orchestrator
         run: make orchestrator
-      - name: build end2end tests
-        run: make ./bin/e2e-tests
       - name: wait for rabbitmq
         # We don't explicitly wait for postgres since it will almost certainly come up before rabbit
         run: |
@@ -82,7 +80,7 @@ jobs:
       - name: run e2e tests
         run: |
           ./bin/orchestrator > server.log 2>&1 &
-          ./bin/e2e-tests -server_addr localhost:9000
+          go test -tags=e2e ./e2e -v -short --failfast -server_addr localhost:9000
         env:
           LOG_LEVEL: DEBUG
           NO_COLOR: true

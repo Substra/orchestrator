@@ -1,64 +1,22 @@
-package scenarios
+//go:build e2e
+// +build e2e
+
+package e2e
 
 import (
 	"fmt"
+	"testing"
 	"time"
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/e2e/client"
+	e2erequire "github.com/owkin/orchestrator/e2e/require"
 	"github.com/owkin/orchestrator/lib/asset"
-	"google.golang.org/protobuf/proto"
+	"github.com/stretchr/testify/require"
 )
 
-var computePlanTestScenarios = []Scenario{
-	{
-		testRegisterComputePlan,
-		[]string{"short", "plan"},
-	},
-	{
-		testCancelComputePlan,
-		[]string{"short", "plan"},
-	},
-	{
-		testMultiStageComputePlan,
-		[]string{"short", "plan"},
-	},
-	{
-		testLargeComputePlan,
-		[]string{"long", "plan"},
-	},
-	{
-		testBatchLargeComputePlan,
-		[]string{"long", "plan"},
-	},
-	{
-		testSmallComputePlan,
-		[]string{"short", "plan"},
-	},
-	{
-		testAggregateComposite,
-		[]string{"short", "plan", "aggregate", "composite"},
-	},
-	{
-		testFailLargeComputePlan,
-		[]string{"long", "plan"},
-	},
-	{
-		testQueryComputePlan,
-		[]string{"short", "plan", "query"},
-	},
-	{
-		testGetComputePlan,
-		[]string{"short", "plan", "query"},
-	},
-	{
-		testCompositeParentChild,
-		[]string{"short", "plan", "composite"},
-	},
-}
-
-// Register a compute plan and ensure an event containing the compute plan is recorded.
-func testRegisterComputePlan(factory *client.TestClientFactory) {
+// TestRegisterComputePlan registers a compute plan and ensure an event containing the compute plan is recorded.
+func TestRegisterComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 	registeredPlan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
@@ -74,10 +32,7 @@ func testRegisterComputePlan(factory *client.TestClientFactory) {
 	retrievedPlan.TaskCount = 0
 	retrievedPlan.Status = asset.ComputePlanStatus_PLAN_STATUS_EMPTY
 
-	if !proto.Equal(registeredPlan, retrievedPlan) {
-		log.WithField("registeredPlan", registeredPlan).WithField("retrievedPlan", retrievedPlan).
-			Fatal("The retrieved compute plan differs from the registered compute plan")
-	}
+	e2erequire.ProtoEqual(t, registeredPlan, retrievedPlan)
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
 		AssetKey:  registeredPlan.Key,
@@ -85,18 +40,13 @@ func testRegisterComputePlan(factory *client.TestClientFactory) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}, "", 100)
 
-	if len(resp.Events) != 1 {
-		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(resp.Events))
-	}
+	require.Equal(t, len(resp.Events), 1, "Unexpected number of events")
 
 	eventPlan := resp.Events[0].GetComputePlan()
-	if !proto.Equal(registeredPlan, eventPlan) {
-		log.WithField("registeredPlan", registeredPlan).WithField("eventPlan", eventPlan).
-			Fatal("The compute plan in the event differs from the registered compute plan")
-	}
+	e2erequire.ProtoEqual(t, registeredPlan, eventPlan)
 }
 
-func testCancelComputePlan(factory *client.TestClientFactory) {
+func TestCancelComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("compAlgo").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
@@ -123,18 +73,14 @@ func testCancelComputePlan(factory *client.TestClientFactory) {
 
 	for _, tasKey := range []string{"cmp2", "cmp3", "cmp4", "agg1"} {
 		task := appClient.GetComputeTask(tasKey)
-		if task.Status != asset.ComputeTaskStatus_STATUS_CANCELED {
-			log.WithField("status", task.Status).WithField("compute task key", tasKey).Fatal("compute task has not the CANCELED status")
-		}
+		require.Equal(t, asset.ComputeTaskStatus_STATUS_CANCELED, task.Status)
 	}
 
 	cmp1 := appClient.GetComputeTask("cmp1")
-	if cmp1.Status != asset.ComputeTaskStatus_STATUS_DONE {
-		log.WithField("status", cmp1.Status).Fatal("compute task has not the DONE status")
-	}
+	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, cmp1.Status)
 }
 
-// This is the "canonical" example of FL with 2 nodes aggregating their trunks
+// TestMultiStageComputePlan is the "canonical" example of FL with 2 nodes aggregating their trunks
 // This does not check multi-organization setup though!
 //
 //   ,========,                ,========,
@@ -170,7 +116,7 @@ func testCancelComputePlan(factory *client.TestClientFactory) {
 //             ----------------
 //
 //
-func testMultiStageComputePlan(factory *client.TestClientFactory) {
+func TestMultiStageComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
@@ -217,12 +163,8 @@ func testMultiStageComputePlan(factory *client.TestClientFactory) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 
 	cp := appClient.GetComputePlan(client.DefaultPlanRef)
-	if cp.Status != asset.ComputePlanStatus_PLAN_STATUS_DOING {
-		log.WithField("status", cp.Status).Fatal("unexpected compute plan status")
-	}
-	if cp.DoneCount != 2 {
-		log.WithField("doneCount", cp.DoneCount).Fatal("invalid task count")
-	}
+	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DOING, cp.Status)
+	require.EqualValues(t, 2, cp.DoneCount)
 
 	// Start step 2
 	appClient.StartTask("aggC2")
@@ -242,7 +184,11 @@ func testMultiStageComputePlan(factory *client.TestClientFactory) {
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 }
 
-func testLargeComputePlan(factory *client.TestClientFactory) {
+func TestLargeComputePlan(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long test")
+	}
+
 	appClient := factory.NewTestClient()
 
 	nbTasks := 10000
@@ -264,12 +210,14 @@ func testLargeComputePlan(factory *client.TestClientFactory) {
 	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", nbQuery)
 	log.WithField("queryDuration", time.Since(start)).WithField("nbTasks", nbQuery).Info("query done")
 
-	if len(resp.Tasks) != nbQuery {
-		log.WithField("nbTasks", len(resp.Tasks)).Fatal("unexpected task count")
-	}
+	require.Equal(t, nbQuery, len(resp.Tasks), "unexpected task count")
 }
 
-func testBatchLargeComputePlan(factory *client.TestClientFactory) {
+func TestBatchLargeComputePlan(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long test")
+	}
+
 	appClient := factory.NewTestClient()
 
 	nbTasks := 10000
@@ -299,12 +247,10 @@ func testBatchLargeComputePlan(factory *client.TestClientFactory) {
 	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", nbQuery)
 	log.WithField("queryDuration", time.Since(start)).WithField("nbTasks", nbQuery).Info("query done")
 
-	if len(resp.Tasks) != nbQuery {
-		log.WithField("nbTasks", len(resp.Tasks)).Fatal("unexpected task count")
-	}
+	require.Equal(t, nbQuery, len(resp.Tasks), "unexpected task count")
 }
 
-func testSmallComputePlan(factory *client.TestClientFactory) {
+func TestSmallComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -322,15 +268,11 @@ func testSmallComputePlan(factory *client.TestClientFactory) {
 	)
 
 	cp := appClient.GetComputePlan(client.DefaultPlanRef)
-	if cp.Status != asset.ComputePlanStatus_PLAN_STATUS_TODO {
-		log.WithField("status", cp.Status).Fatal("unexpected plan status")
-	}
-	if cp.TaskCount != 4 {
-		log.WithField("taskCount", cp.TaskCount).Fatal("invalid task count")
-	}
+	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_TODO, cp.Status, "unexpected plan status")
+	require.EqualValues(t, 4, cp.TaskCount, "invalid task count")
 }
 
-func testAggregateComposite(factory *client.TestClientFactory) {
+func TestAggregateComposite(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
@@ -365,12 +307,14 @@ func testAggregateComposite(factory *client.TestClientFactory) {
 	appClient.StartTask("c3")
 
 	inputs := appClient.GetInputModels("c3")
-	if len(inputs) != 2 {
-		log.Fatal("composite should have 2 input models")
-	}
+	require.Equal(t, 2, len(inputs), "composite should have 2 input models")
 }
 
-func testFailLargeComputePlan(factory *client.TestClientFactory) {
+func TestFailLargeComputePlan(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long test")
+	}
+
 	appClient := factory.NewTestClient()
 
 	nbRounds := 1000
@@ -428,7 +372,7 @@ func testFailLargeComputePlan(factory *client.TestClientFactory) {
 	log.WithField("duration", time.Since(start)).WithField("nbTasks", nbTasks).Info("canceled compute plan")
 }
 
-func testQueryComputePlan(factory *client.TestClientFactory) {
+func TestQueryComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp1"))
@@ -436,13 +380,10 @@ func testQueryComputePlan(factory *client.TestClientFactory) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp3"))
 
 	resp := appClient.QueryPlans(&asset.PlanQueryFilter{}, "", 3)
-
-	if len(resp.Plans) != 3 {
-		log.WithField("nbPlans", len(resp.Plans)).Fatal("Unexpected number of compute plans")
-	}
+	require.Equal(t, 3, len(resp.Plans), "unexpected number of compute plans")
 }
 
-func testGetComputePlan(factory *client.TestClientFactory) {
+func TestGetComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -458,9 +399,7 @@ func testGetComputePlan(factory *client.TestClientFactory) {
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts := [7]uint32{3, 2, 1, 0, 0, 0, 0}
 	actualCounts := [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	if expectedCounts != actualCounts {
-		log.WithField("taskCounts", actualCounts).WithField("expected", expectedCounts).Fatal("Unexpected Values")
-	}
+	require.Equal(t, expectedCounts, actualCounts)
 
 	appClient.StartTask(client.DefaultTaskRef)
 	appClient.CancelTask("task#1")
@@ -468,20 +407,16 @@ func testGetComputePlan(factory *client.TestClientFactory) {
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts = [7]uint32{3, 0, 0, 1, 1, 1, 0}
 	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	if expectedCounts != actualCounts {
-		log.WithField("taskCounts", actualCounts).WithField("expected", expectedCounts).Fatal("Unexpected Values")
-	}
+	require.Equal(t, expectedCounts, actualCounts)
 
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef(client.DefaultTaskRef))
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts = [7]uint32{3, 0, 0, 0, 1, 1, 1}
 	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	if expectedCounts != actualCounts {
-		log.WithField("taskCounts", actualCounts).WithField("expected", expectedCounts).Fatal("Unexpected Values")
-	}
+	require.Equal(t, expectedCounts, actualCounts)
 }
 
-func testCompositeParentChild(factory *client.TestClientFactory) {
+func TestCompositeParentChild(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
@@ -510,14 +445,7 @@ func testCompositeParentChild(factory *client.TestClientFactory) {
 	)
 
 	inputs := appClient.GetInputModels("comp3")
-	if len(inputs) != 2 {
-		log.Fatal("composite task should have 2 input models")
-	}
-
-	if inputs[0].Key != appClient.GetKeyStore().GetKey("model1H") {
-		log.Fatal("first model should be HEAD from comp1")
-	}
-	if inputs[1].Key != appClient.GetKeyStore().GetKey("model2T") {
-		log.Fatal("second model should be TRUNK from comp2")
-	}
+	require.Len(t, inputs, 2, "composite task should have 2 input models")
+	require.Equal(t, appClient.GetKeyStore().GetKey("model1H"), inputs[0].Key, "first model should be HEAD from comp1")
+	require.Equal(t, appClient.GetKeyStore().GetKey("model2T"), inputs[1].Key, "second model should be TRUNK from comp2")
 }

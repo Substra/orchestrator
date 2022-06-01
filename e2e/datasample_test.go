@@ -1,39 +1,26 @@
-package scenarios
+//go:build e2e
+// +build e2e
+
+package e2e
 
 import (
-	"github.com/go-playground/log/v7"
+	"testing"
+
 	"github.com/owkin/orchestrator/e2e/client"
+	e2erequire "github.com/owkin/orchestrator/e2e/require"
 	"github.com/owkin/orchestrator/lib/asset"
-	"google.golang.org/protobuf/proto"
+	"github.com/stretchr/testify/require"
 )
 
-var datasampleTestsScenarios = []Scenario{
-	{
-		testRegisterDataSample,
-		[]string{"short", "datasample"},
-	},
-	{
-		testQueryDatasamplesUnfiltered,
-		[]string{"short", "datasample"},
-	},
-	{
-		testQueryDatasamplesFiltered,
-		[]string{"short", "datasample"},
-	},
-}
-
-// Register a datasample and ensure an event containing the datasample is recorded.
-func testRegisterDataSample(factory *client.TestClientFactory) {
+// TestRegisterDataSample registers a datasample and ensure an event containing the datasample is recorded.
+func TestRegisterDataSample(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	registeredSample := appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
 	retrievedSample := appClient.GetDataSample(client.DefaultDataSampleRef)
-	if !proto.Equal(registeredSample, retrievedSample) {
-		log.WithField("registeredSample", registeredSample).WithField("retrievedSample", retrievedSample).
-			Fatal("The retrieved datasample differs from the registered datasample")
-	}
+	e2erequire.ProtoEqual(t, registeredSample, retrievedSample)
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
 		AssetKey:  registeredSample.Key,
@@ -41,18 +28,13 @@ func testRegisterDataSample(factory *client.TestClientFactory) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}, "", 100)
 
-	if len(resp.Events) != 1 {
-		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(resp.Events))
-	}
+	require.Len(t, resp.Events, 1)
 
 	eventSample := resp.Events[0].GetDataSample()
-	if !proto.Equal(registeredSample, eventSample) {
-		log.WithField("registeredSample", registeredSample).WithField("eventSample", eventSample).
-			Fatal("The datasample in the event differs from the registered datasample")
-	}
+	e2erequire.ProtoEqual(t, registeredSample, eventSample)
 }
 
-func testQueryDatasamplesUnfiltered(factory *client.TestClientFactory) {
+func TestQueryDatasamplesUnfiltered(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -62,14 +44,11 @@ func testQueryDatasamplesUnfiltered(factory *client.TestClientFactory) {
 
 	resp := appClient.QueryDataSamples("", 1000, nil)
 
-	if len(resp.DataSamples) < 3 {
-		log.Fatal("QueryDataSamples response should contain at least 3 datasamples")
-	}
-
-	assertContainsKeys(true, appClient, resp.DataSamples, "ds1", "ds2", "ds3")
+	require.Greater(t, len(resp.DataSamples), 3, "QueryDataSamples response should contain at least 3 datasamples")
+	e2erequire.ContainsKeys(t, true, appClient, resp.DataSamples, "ds1", "ds2", "ds3")
 }
 
-func testQueryDatasamplesFiltered(factory *client.TestClientFactory) {
+func TestQueryDatasamplesFiltered(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -82,9 +61,6 @@ func testQueryDatasamplesFiltered(factory *client.TestClientFactory) {
 
 	resp := appClient.QueryDataSamples("", 10, &asset.DataSampleQueryFilter{Keys: targetKeys})
 
-	if len(resp.DataSamples) != 2 {
-		log.Fatal("QueryDataSamples response should contain 2 datasamples")
-	}
-
-	assertContainsKeys(true, appClient, resp.DataSamples, "filtered_ds1", "filtered_ds3")
+	require.Equal(t, 2, len(resp.DataSamples), "QueryDataSamples response should contain 2 datasamples")
+	e2erequire.ContainsKeys(t, true, appClient, resp.DataSamples, "filtered_ds1", "filtered_ds3")
 }

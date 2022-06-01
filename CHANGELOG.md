@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- use go test to run e2e tests (#754)
+
 ## [0.14.0] - 2022-05-31
 
 ### Added

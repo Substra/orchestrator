@@ -1,37 +1,22 @@
-package scenarios
+//go:build e2e
+// +build e2e
+
+package e2e
 
 import (
 	"fmt"
-	"strings"
+	"testing"
 
-	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/e2e/client"
+	e2erequire "github.com/owkin/orchestrator/e2e/require"
 	"github.com/owkin/orchestrator/lib/asset"
-	"google.golang.org/protobuf/proto"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/stretchr/testify/require"
 )
 
-var performanceTestScenarios = []Scenario{
-	{
-		testRegisterPerformance,
-		[]string{"short", "perf"},
-	},
-	{
-		testRegisterMultiplePerformances,
-		[]string{"short", "perf"},
-	},
-	{
-		testRegisterMultiplePerformancesForSameMetric,
-		[]string{"short", "perf"},
-	},
-	{
-		testQueryPerformances,
-		[]string{"query", "perf"},
-	},
-}
-
-// Register a test task, start it, register its performance,
+// TestRegisterPerformance registers a test task, start it, register its performance,
 // and ensure an event containing the performance is recorded.
-func testRegisterPerformance(factory *client.TestClientFactory) {
+func TestRegisterPerformance(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -48,47 +33,31 @@ func testRegisterPerformance(factory *client.TestClientFactory) {
 	appClient.StartTask("testTask")
 
 	registeredPerf, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
-	if err != nil {
-		log.WithError(err).Fatal("RegisterPerformance failed")
-	}
+	require.NoError(t, err)
 
 	task := appClient.GetComputeTask("testTask")
-	if task.Status != asset.ComputeTaskStatus_STATUS_DONE {
-		log.Fatal("test task should be DONE")
-	}
+	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
 
 	perfResp := appClient.QueryPerformances(&asset.PerformanceQueryFilter{
 		ComputeTaskKey: task.Key,
 	}, "", 100)
-
-	if len(perfResp.Performances) != 1 {
-		log.Fatalf("Unexpected number of performances. Expected 1, got %d", len(perfResp.Performances))
-	}
+	require.Equal(t, 1, len(perfResp.Performances))
 
 	retrievedPerf := perfResp.Performances[0]
-	if !proto.Equal(registeredPerf, retrievedPerf) {
-		log.WithField("registeredPerf", registeredPerf).WithField("retrievedPerf", retrievedPerf).
-			Fatal("The retrieved performance differs from the registered performance")
-	}
+	e2erequire.ProtoEqual(t, registeredPerf, retrievedPerf)
 
 	eventResp := appClient.QueryEvents(&asset.EventQueryFilter{
 		AssetKey:  registeredPerf.GetKey(),
 		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}, "", 100)
-
-	if len(eventResp.Events) != 1 {
-		log.Fatalf("Unexpected number of events. Expected 1, got %d", len(eventResp.Events))
-	}
+	require.Equal(t, 1, len(eventResp.Events))
 
 	eventPerf := eventResp.Events[0].GetPerformance()
-	if !proto.Equal(registeredPerf, eventPerf) {
-		log.WithField("registeredPerf", registeredPerf).WithField("eventPerf", eventPerf).
-			Fatal("The performance in the event differs from the registered performance")
-	}
+	e2erequire.ProtoEqual(t, registeredPerf, eventPerf)
 }
 
-func testRegisterMultiplePerformances(factory *client.TestClientFactory) {
+func TestRegisterMultiplePerformances(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -106,25 +75,19 @@ func testRegisterMultiplePerformances(factory *client.TestClientFactory) {
 	appClient.StartTask("testTask")
 
 	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
-	if err != nil {
-		log.WithError(err).Fatal("RegisterPerformance failed")
-	}
+	require.NoError(t, err)
+
 	task := appClient.GetComputeTask("testTask")
-	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
-		log.Fatal("test task should be DOING")
-	}
+	require.Equal(t, asset.ComputeTaskStatus_STATUS_DOING, task.Status)
 
 	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric2"))
-	if err != nil {
-		log.WithError(err).Fatal("RegisterPerformance failed")
-	}
+	require.NoError(t, err)
+
 	task = appClient.GetComputeTask("testTask")
-	if task.Status != asset.ComputeTaskStatus_STATUS_DONE {
-		log.Fatal("test task should be DONE")
-	}
+	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
 }
 
-func testRegisterMultiplePerformancesForSameMetric(factory *client.TestClientFactory) {
+func TestRegisterMultiplePerformancesForSameMetric(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -142,28 +105,19 @@ func testRegisterMultiplePerformancesForSameMetric(factory *client.TestClientFac
 	appClient.StartTask("testTask")
 
 	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
-	if err != nil {
-		log.WithError(err).Fatal("RegisterPerformance failed")
-	}
+	require.NoError(t, err)
+
 	task := appClient.GetComputeTask("testTask")
-	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
-		log.Fatal("test task should be DOING")
-	}
+	require.Equal(t, asset.ComputeTaskStatus_STATUS_DOING, task.Status)
 
 	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
-	if err == nil {
-		log.Fatal("RegisterPerformance should have failed.")
-		if !strings.Contains(err.Error(), "OE0003") {
-			log.WithError(err).Fatal("Unexpected error code")
-		}
-	}
+	require.ErrorContains(t, err, orcerrors.ErrConflict)
+
 	task = appClient.GetComputeTask("testTask")
-	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
-		log.Fatal("test task should be DOING")
-	}
+	require.Equal(t, asset.ComputeTaskStatus_STATUS_DOING, task.Status)
 }
 
-func testQueryPerformances(factory *client.TestClientFactory) {
+func TestQueryPerformances(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterAlgo(client.DefaultAlgoOptions())
@@ -189,20 +143,12 @@ func testQueryPerformances(factory *client.TestClientFactory) {
 		_, err := appClient.RegisterPerformance(
 			client.DefaultPerformanceOptions().WithTaskRef(testTaskRef).WithMetricRef("testmetric"),
 		)
-		if err != nil {
-			log.WithError(err).Fatal("RegisterPerformance failed")
-		}
+		require.NoError(t, err)
 	}
 
 	res := appClient.QueryPerformances(nil, "", 10)
 	performances := res.Performances
 
-	if len(performances) != nbPerformances {
-		log.WithField("performances", performances).
-			Fatal(fmt.Sprintf("Expected %d performance items, got %d", nbPerformances, len(performances)))
-	}
-
-	if performances[0].CreationDate.AsTime().After(performances[1].CreationDate.AsTime()) {
-		log.Fatal("Unexpected performance ordering")
-	}
+	require.GreaterOrEqual(t, len(performances), nbPerformances)
+	require.LessOrEqual(t, performances[0].CreationDate.AsTime(), performances[1].CreationDate.AsTime())
 }
