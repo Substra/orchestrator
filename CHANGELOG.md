@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Added
+- Introduce Predict task type (#707)
+
 ### Changed
 - use go test to run e2e tests (#754)
 
@@ -13,7 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Introduce empty compute plan status (#726)
-- Introduce Predict task type (#707)
 
 ### Changed
 - base docker image from alpine 3.15 to alpine 3.16 (#751)
