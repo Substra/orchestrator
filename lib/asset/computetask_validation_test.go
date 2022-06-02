@@ -7,6 +7,14 @@ import (
 )
 
 func TestNewComputeTaskValidation(t *testing.T) {
+	validOutputs := map[string]*NewComputeTaskOutput{
+		"model": {
+			Permissions: &NewPermissions{
+				Public: true,
+			},
+		},
+	}
+
 	validTrainTask := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
 		Category:       ComputeTaskCategory_TASK_TRAIN,
@@ -18,6 +26,7 @@ func TestNewComputeTaskValidation(t *testing.T) {
 				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
 			},
 		},
+		Outputs: validOutputs,
 	}
 	invalidCategory := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
@@ -80,17 +89,37 @@ func TestNewComputeTaskValidation(t *testing.T) {
 			},
 		},
 	}
+	invalidOutputPermissionsIdentifier := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+		Outputs: map[string]*NewComputeTaskOutput{
+			"": {
+				Permissions: &NewPermissions{
+					Public: true,
+				},
+			},
+		},
+	}
 
 	cases := map[string]struct {
 		valid   bool
 		newTask *NewComputeTask
 	}{
-		"valid":                {valid: true, newTask: validTrainTask},
-		"invalid category":     {valid: false, newTask: invalidCategory},
-		"missing algokey":      {valid: false, newTask: missingAlgo},
-		"missing compute plan": {valid: false, newTask: missingComputePlan},
-		"missing train data":   {valid: false, newTask: missingData},
-		"invalid parent":       {valid: false, newTask: invalidParent},
+		"valid":                                 {valid: true, newTask: validTrainTask},
+		"invalid category":                      {valid: false, newTask: invalidCategory},
+		"missing algokey":                       {valid: false, newTask: missingAlgo},
+		"missing compute plan":                  {valid: false, newTask: missingComputePlan},
+		"missing train data":                    {valid: false, newTask: missingData},
+		"invalid parent":                        {valid: false, newTask: invalidParent},
+		"invalid output permissions identifier": {valid: false, newTask: invalidOutputPermissionsIdentifier},
 	}
 
 	for name, c := range cases {
@@ -199,22 +228,13 @@ func TestNewAggregateTrainTaskDataValidation(t *testing.T) {
 }
 
 func TestNewCompositeTrainTaskDataValidation(t *testing.T) {
-	perms := &NewPermissions{
-		Public: true,
-	}
 	valid := &NewCompositeTrainTaskData{
-		DataManagerKey:   "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
-		DataSampleKeys:   []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
-		TrunkPermissions: perms,
-	}
-	missingPerms := &NewCompositeTrainTaskData{
 		DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
 		DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
 	}
 	invalidManager := &NewCompositeTrainTaskData{
-		DataManagerKey:   "not a uuid",
-		DataSampleKeys:   []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
-		TrunkPermissions: perms,
+		DataManagerKey: "not a uuid",
+		DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
 	}
 
 	cases := map[string]struct {
@@ -222,7 +242,6 @@ func TestNewCompositeTrainTaskDataValidation(t *testing.T) {
 		data  *NewCompositeTrainTaskData
 	}{
 		"valid":           {valid: true, data: valid},
-		"missing perms":   {valid: false, data: missingPerms},
 		"invalid manager": {valid: false, data: invalidManager},
 	}
 

@@ -5,12 +5,23 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	"github.com/owkin/orchestrator/lib/errors"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/metrics"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// Compatibility constants to support legacy structures (task.data.aggregate, task.data.composite, etc)
+var (
+	taskIOModel       = "model"
+	taskIOShared      = "shared"
+	taskIOLocal       = "local"
+	taskIOPredictions = "predictions"
+)
+
+type NamedAlgoOutputs = map[string]*asset.AlgoOutput
 
 // ComputeTaskAPI defines the methods to act on ComputeTasks
 type ComputeTaskAPI interface {
@@ -247,6 +258,17 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 	// TODO: validate inputs
 
+	outputs := make(map[string]*asset.ComputeTaskOutput, len(input.Outputs))
+	for identifier, output := range input.Outputs {
+		perm, err := s.GetPermissionService().CreatePermissions(owner, output.Permissions)
+		if err != nil {
+			return nil, err
+		}
+		outputs[identifier] = &asset.ComputeTaskOutput{
+			Permissions: perm,
+		}
+	}
+
 	task := &asset.ComputeTask{
 		Key:            input.Key,
 		Category:       input.Category,
@@ -258,6 +280,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		ParentTaskKeys: input.ParentTaskKeys,
 		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
 		Inputs:         input.Inputs,
+		Outputs:        outputs,
 	}
 
 	switch x := input.Data.(type) {
@@ -277,6 +300,34 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	algoOutputs, err := s.getAlgoOutputs(task)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.validateOutputs(task.Key, task.Outputs, algoOutputs); err != nil {
+		return nil, err
+	}
+
+	// Populate legacy permission fields
+	// Linter is silenced since we populate deprecated fields on purpose
+	switch x := task.Data.(type) {
+	case *asset.ComputeTask_Composite:
+		if shared, ok := task.Outputs[taskIOShared]; ok {
+			x.Composite.TrunkPermissions = shared.Permissions //nolint:staticcheck
+		}
+		if local, ok := task.Outputs[taskIOLocal]; ok {
+			x.Composite.HeadPermissions = local.Permissions //nolint:staticcheck
+		}
+	case *asset.ComputeTask_Aggregate:
+		if model, ok := task.Outputs[taskIOModel]; ok {
+			x.Aggregate.ModelPermissions = model.Permissions //nolint:staticcheck
+		}
+	case *asset.ComputeTask_Train:
+		if model, ok := task.Outputs[taskIOModel]; ok {
+			x.Train.ModelPermissions = model.Permissions //nolint:staticcheck
+		}
 	}
 
 	err = s.checkCanProcessParents(task.Worker, parentTasks, input.Category)
@@ -369,6 +420,34 @@ func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string, taskCa
 	return algo, nil
 }
 
+// validateOutputs validates that the task outputs are compatible with the algo outputs
+func (s *ComputeTaskService) validateOutputs(
+	taskKey string,
+	computeTaskOutputs map[string]*asset.ComputeTaskOutput,
+	algoOutputs NamedAlgoOutputs,
+) error {
+	seen := make(map[string]bool, len(algoOutputs))
+
+	for identifier, output := range computeTaskOutputs {
+		algoOutput, ok := algoOutputs[identifier]
+		if !ok {
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, unknown task output: this identifier was not declared in the Algo: \"%v\"", taskKey, identifier))
+		}
+		if algoOutput.Kind == asset.AssetKind_ASSET_PERFORMANCE && !output.Permissions.Process.Public {
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, invalid task output \"%v\": a PERFORMANCE output should be public", taskKey, identifier))
+		}
+		seen[identifier] = true
+	}
+
+	for identifier := range algoOutputs {
+		if _, ok := seen[identifier]; !ok {
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, missing task output: this identifier is required by the Algo: \"%v\"", taskKey, identifier))
+		}
+	}
+
+	return nil
+}
+
 // getCheckedDataManager returns the DataManager identified by the given key,
 // it will return an error if the DataManager is not processable by owner or DataSamples don't share the common manager.
 func (s *ComputeTaskService) getCheckedDataManager(key string, dataSampleKeys []string, owner string) (*asset.DataManager, error) {
@@ -408,20 +487,9 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 		return err
 	}
 
-	headPermissions, err := s.GetPermissionService().CreatePermissions(datamanager.Owner, nil)
-	if err != nil {
-		return err
-	}
-	trunkPermissions, err := s.GetPermissionService().CreatePermissions(datamanager.Owner, specificInput.TrunkPermissions)
-	if err != nil {
-		return err
-	}
-
 	taskData := &asset.CompositeTrainTaskData{
-		DataManagerKey:   datamanager.Key,
-		DataSampleKeys:   specificInput.DataSampleKeys,
-		HeadPermissions:  headPermissions,
-		TrunkPermissions: trunkPermissions,
+		DataManagerKey: datamanager.Key,
+		DataSampleKeys: specificInput.DataSampleKeys,
 	}
 
 	task.Data = &asset.ComputeTask_Composite{
@@ -445,36 +513,16 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 		return err
 	}
 
-	modelPermissions, err := s.GetPermissionService().CreatePermissions(task.Owner, &asset.NewPermissions{Public: false})
-	if err != nil {
-		return err
-	}
-
 	logsPermission, err := s.GetPermissionService().CreatePermission(task.Owner, &asset.NewPermissions{Public: false})
 	if err != nil {
 		return err
 	}
 
 	for _, p := range parentTasks {
-		var modelPerms *asset.Permissions
-		switch p.Data.(type) {
-		case *asset.ComputeTask_Composite:
-			modelPerms = p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
-		case *asset.ComputeTask_Aggregate:
-			modelPerms = p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
-		case *asset.ComputeTask_Train:
-			modelPerms = p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
-		default:
-			return orcerrors.NewPermissionDenied(fmt.Sprintf("cannot process parent task %q", p.Key))
-		}
-		modelPermissions = s.GetPermissionService().UnionPermissions(modelPerms, modelPermissions)
-
 		logsPermission = s.GetPermissionService().UnionPermission(p.LogsPermission, logsPermission)
 	}
 
-	taskData := &asset.AggregateTrainTaskData{
-		ModelPermissions: modelPermissions,
-	}
+	taskData := &asset.AggregateTrainTaskData{}
 	task.Data = &asset.ComputeTask_Aggregate{
 		Aggregate: taskData,
 	}
@@ -505,12 +553,9 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 		return err
 	}
 
-	permissions := s.GetPermissionService().IntersectPermissions(algo.Permissions, datamanager.Permissions)
-
 	taskData := &asset.TrainTaskData{
-		DataManagerKey:   datamanager.Key,
-		DataSampleKeys:   specificInput.DataSampleKeys,
-		ModelPermissions: permissions,
+		DataManagerKey: datamanager.Key,
+		DataSampleKeys: specificInput.DataSampleKeys,
 	}
 
 	task.Data = &asset.ComputeTask_Train{
@@ -619,34 +664,43 @@ func (s *ComputeTaskService) checkGenericCanProcessParents(worker string, parent
 	for _, p := range parentTasks {
 		switch p.Data.(type) {
 		case *asset.ComputeTask_Composite:
-			trunkPerms := p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
-			if !s.GetPermissionService().CanProcess(trunkPerms, worker) {
+			output, ok := p.Outputs[taskIOShared]
+			if !ok {
+				return errors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOShared))
+			}
+			sharedPerms := output.Permissions
+			if !s.GetPermissionService().CanProcess(sharedPerms, worker) {
 				return orcerrors.NewPermissionDenied(fmt.Sprintf(
-					"cannot process composite parent task %q, worker %q is not allowed to process trunk model by permissions %v", p.Key, worker, trunkPerms,
+					"cannot process composite parent task %q, worker %q is not allowed to process trunk model by permissions %v", p.Key, worker, sharedPerms,
 				))
 			}
-			headPerms := p.Data.(*asset.ComputeTask_Composite).Composite.HeadPermissions
-			if category == asset.ComputeTaskCategory_TASK_TEST && !s.GetPermissionService().CanProcess(headPerms, worker) {
+			output, ok = p.Outputs[taskIOLocal]
+			if !ok {
+				return errors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOLocal))
+			}
+			localPerms := output.Permissions
+			if category == asset.ComputeTaskCategory_TASK_TEST && !s.GetPermissionService().CanProcess(localPerms, worker) {
 				return orcerrors.NewPermissionDenied(fmt.Sprintf(
-					"cannot process composite parent task %q, worker %q is not allowed to process head model by permissions %v", p.Key, worker, headPerms,
+					"cannot process composite parent task %q, worker %q is not allowed to process head model by permissions %v", p.Key, worker, localPerms,
 				))
 			}
-		case *asset.ComputeTask_Aggregate:
-			permissions := p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
+		case *asset.ComputeTask_Aggregate, *asset.ComputeTask_Train:
+			output, ok := p.Outputs[taskIOModel]
+			if !ok {
+				return errors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOModel))
+			}
+			permissions := output.Permissions
 			if !s.GetPermissionService().CanProcess(permissions, worker) {
 				return orcerrors.NewPermissionDenied(fmt.Sprintf(
-					"cannot process aggregate parent task %q, worker %q is not allowed to process model by permissions %v", p.Key, worker, permissions,
-				))
-			}
-		case *asset.ComputeTask_Train:
-			permissions := p.Data.(*asset.ComputeTask_Train).Train.ModelPermissions
-			if !s.GetPermissionService().CanProcess(permissions, worker) {
-				return orcerrors.NewPermissionDenied(fmt.Sprintf(
-					"cannot process train parent task %q, worker %q is not allowed to process model by permissions %v", p.Key, worker, permissions,
+					"cannot process parent task %q, worker %q is not allowed to process model by permissions %v", p.Key, worker, permissions,
 				))
 			}
 		case *asset.ComputeTask_Predict:
-			permissions := p.Data.(*asset.ComputeTask_Predict).Predict.PredictionPermissions
+			output, ok := p.Outputs[taskIOPredictions]
+			if !ok {
+				return errors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOModel))
+			}
+			permissions := output.Permissions
 			if !s.GetPermissionService().CanProcess(permissions, worker) {
 				return orcerrors.NewPermissionDenied(fmt.Sprintf(
 					"cannot process predict parent task %q, worker %q is not allowed to process predictions by permissions %v", p.Key, worker, permissions,
@@ -687,23 +741,23 @@ func (s *ComputeTaskService) checkCompositeCanProcessParents(worker string, pare
 			case hasAggregateParent || i == 0:
 				// If there is an aggregate parent, the HEAD come from the composite parent, regardless of parent ordering.
 				// If there is no aggregate parent, the first composite parent should contribute the HEAD model.
-				headPerms := p.Data.(*asset.ComputeTask_Composite).Composite.HeadPermissions
-				if !s.GetPermissionService().CanProcess(headPerms, worker) {
+				localPerms := p.Outputs[taskIOLocal].Permissions
+				if !s.GetPermissionService().CanProcess(localPerms, worker) {
 					return orcerrors.NewPermissionDenied(fmt.Sprintf(
-						"cannot process composite parent task %q, worker %q is not allowed to process head model by permissions %v", p.Key, worker, headPerms,
+						"cannot process composite parent task %q, worker %q is not allowed to process head model by permissions %v", p.Key, worker, localPerms,
 					))
 				}
 			case !hasAggregateParent || i == 1:
 				// Without aggregate parent, the second composite parent should contribute the trunk model.
-				trunkPerms := p.Data.(*asset.ComputeTask_Composite).Composite.TrunkPermissions
-				if !s.GetPermissionService().CanProcess(trunkPerms, worker) {
+				sharedPerms := p.Outputs[taskIOShared].Permissions
+				if !s.GetPermissionService().CanProcess(sharedPerms, worker) {
 					return orcerrors.NewPermissionDenied(fmt.Sprintf(
-						"cannot process composite parent task %q, worker %q is not allowed to process trunk model by permissions %v", p.Key, worker, trunkPerms,
+						"cannot process composite parent task %q, worker %q is not allowed to process trunk model by permissions %v", p.Key, worker, sharedPerms,
 					))
 				}
 			}
 		case *asset.ComputeTask_Aggregate:
-			permissions := p.Data.(*asset.ComputeTask_Aggregate).Aggregate.ModelPermissions
+			permissions := p.Outputs[taskIOModel].Permissions
 			if !s.GetPermissionService().CanProcess(permissions, worker) {
 				return orcerrors.NewPermissionDenied(fmt.Sprintf(
 					"cannot process aggregate parent task %q, worker %q is not allowed to process model by permissions %v", p.Key, worker, permissions,
@@ -834,6 +888,24 @@ func (s *ComputeTaskService) getCachedCP(key string) (*asset.ComputePlan, error)
 		s.planStore[key] = plan
 	}
 	return s.planStore[key], nil
+}
+
+// getAlgoOutputs returns the task's algo output, except for test tasks: the first metric is then used
+func (s *ComputeTaskService) getAlgoOutputs(task *asset.ComputeTask) (NamedAlgoOutputs, error) {
+	algoOutputs := task.Algo.Outputs
+	if task.GetTest() != nil { // testtuple
+		// Use the first metric as the algo for the purpose of task output validation
+		if len(task.GetTest().MetricKeys) == 0 {
+			return nil, orcerrors.NewInvalidAsset("test task must have at least one metric key")
+		}
+		metric, err := s.GetAlgoService().GetAlgo(task.GetTest().MetricKeys[0])
+		if err != nil {
+			return nil, err
+		}
+		algoOutputs = metric.Outputs
+	}
+
+	return algoOutputs, nil
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory

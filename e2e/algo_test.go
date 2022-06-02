@@ -15,9 +15,9 @@ import (
 // TestRegisterAlgo registers an algo and ensure an event containing the algo is recorded.
 func TestRegisterAlgo(t *testing.T) {
 	appClient := factory.NewTestClient()
-	registeredAlgo := appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	registeredAlgo := appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 
-	retrievedAlgo := appClient.GetAlgo(client.DefaultAlgoRef)
+	retrievedAlgo := appClient.GetAlgo(client.DefaultSimpleAlgoRef)
 	e2erequire.ProtoEqual(t, registeredAlgo, retrievedAlgo)
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
@@ -35,7 +35,7 @@ func TestRegisterAlgo(t *testing.T) {
 func TestPredictAlgo(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_PREDICT))
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
 
 	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_PREDICT}}, "", 100)
 
@@ -45,11 +45,11 @@ func TestPredictAlgo(t *testing.T) {
 func TestQueryAlgos(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef(client.DefaultMetricRef).WithCategory(asset.AlgoCategory_ALGO_METRIC))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
 
 	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{}, "", 100)
 
@@ -78,10 +78,10 @@ func TestQueryAlgos(t *testing.T) {
 func TestQueryAlgosFilterCategories(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_SIMPLE).WithKeyRef("algo_filter_simple"))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE).WithKeyRef("algo_filter_composite"))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_AGGREGATE).WithKeyRef("algo_filter_aggregate"))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("algo_filter_metric"))
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("algo_filter_simple"))
+	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions().WithKeyRef("algo_filter_composite"))
+	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("algo_filter_aggregate"))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("algo_filter_metric"))
 
 	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{}, "", 10000)
 
@@ -94,7 +94,7 @@ func TestQueryAlgosFilterCategories(t *testing.T) {
 			asset.AlgoCategory_ALGO_METRIC,
 		}}
 
-	resp = appClient.QueryAlgos(filter, "", 100)
+	resp = appClient.QueryAlgos(filter, "", 10000)
 
 	e2erequire.ContainsKeys(t, true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_metric")
 	e2erequire.ContainsKeys(t, false, appClient, resp.Algos, "algo_filter_composite", "algo_filter_aggregate")
@@ -106,7 +106,7 @@ func TestQueryAlgosInputOutputs(t *testing.T) {
 	keyRef := "test-algos-input-outputs"
 	key := appClient.GetKeyStore().GetKey(keyRef)
 
-	algoOptions := client.DefaultAlgoOptions().WithKeyRef(keyRef)
+	algoOptions := client.DefaultSimpleAlgoOptions().WithKeyRef(keyRef)
 	algoOptions.Inputs = map[string]*asset.AlgoInput{
 		"data manager": {
 			Kind: asset.AssetKind_ASSET_DATA_MANAGER,

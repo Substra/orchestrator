@@ -14,6 +14,10 @@ While the `ComputeTask` structure holds common fields, type-specific fields are 
 Train, Aggregate, Composite and Predict tasks can produce one or more [models](./model.md) as output.
 Those models will have different [permissions](./permissions.md), which will be determined on task creation.
 
+## Compute task outputs
+
+Upon successful execution, compute task should generate *outputs* which correspond to the outputs defined in their [Algo](./algo.md). Each compute task output has a separate set of [Permissions](../permissions.md). The permissions must be set for each output at task creation, with the exception of outputs of kind "performance" which are always public and for which setting specific permissions is not allowed.
+
 ## Compatibility
 
 Since a compute task will receive models from their parents,

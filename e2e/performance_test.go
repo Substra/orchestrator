@@ -19,17 +19,17 @@ import (
 func TestRegisterPerformance(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTaskRef).WithMetricsRef("testmetric"))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef).WithMetricsRef("testmetric"))
 	appClient.StartTask("testTask")
 
 	registeredPerf, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
@@ -60,18 +60,18 @@ func TestRegisterPerformance(t *testing.T) {
 func TestRegisterMultiplePerformances(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric1"))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric2"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTaskRef).WithMetricsRef("testmetric1", "testmetric2"))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric1"))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric2"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef).WithMetricsRef("testmetric1", "testmetric2"))
 	appClient.StartTask("testTask")
 
 	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
@@ -90,18 +90,18 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 func TestRegisterMultiplePerformancesForSameMetric(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric1"))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric2"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTaskRef).WithMetricsRef("testmetric1", "testmetric2"))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric1"))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric2"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef).WithMetricsRef("testmetric1", "testmetric2"))
 	appClient.StartTask("testTask")
 
 	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
@@ -120,15 +120,15 @@ func TestRegisterMultiplePerformancesForSameMetric(t *testing.T) {
 func TestQueryPerformances(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("testmetric"))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric"))
 
 	const nbPerformances = 2
 	for i := 0; i < nbPerformances; i++ {
@@ -136,7 +136,7 @@ func TestQueryPerformances(t *testing.T) {
 		appClient.RegisterTasks(client.DefaultTestTaskOptions().
 			WithKeyRef(testTaskRef).
 			WithDataSampleRef("testds").
-			WithParentsRef(client.DefaultTaskRef).
+			WithParentsRef(client.DefaultTrainTaskRef).
 			WithMetricsRef("testmetric"))
 		appClient.StartTask(testTaskRef)
 

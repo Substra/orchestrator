@@ -49,8 +49,8 @@ func TestRegisterComputePlan(t *testing.T) {
 func TestCancelComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("compAlgo").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("aggAlgo").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
+	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions().WithKeyRef("compAlgo"))
+	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("aggAlgo"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -119,8 +119,8 @@ func TestCancelComputePlan(t *testing.T) {
 func TestMultiStageComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
+	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions().WithKeyRef("algoComp"))
+	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("algoAgg"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -194,7 +194,7 @@ func TestLargeComputePlan(t *testing.T) {
 	nbTasks := 10000
 	nbQuery := 5000 // 10k exceed max response size
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -202,12 +202,12 @@ func TestLargeComputePlan(t *testing.T) {
 
 	start := time.Now()
 	for i := 0; i < nbTasks; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTaskRef))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
 	}
 	log.WithField("registrationDuration", time.Since(start)).WithField("nbTasks", nbTasks).Info("registration done")
 
 	start = time.Now()
-	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", nbQuery)
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultSimpleAlgoRef)}, "", nbQuery)
 	log.WithField("queryDuration", time.Since(start)).WithField("nbTasks", nbQuery).Info("query done")
 
 	require.Equal(t, nbQuery, len(resp.Tasks), "unexpected task count")
@@ -224,7 +224,7 @@ func TestBatchLargeComputePlan(t *testing.T) {
 	batchSize := 1000
 	nbQuery := 5000 // 10k exceed max response size
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -236,7 +236,7 @@ func TestBatchLargeComputePlan(t *testing.T) {
 		newTasks := make([]client.Taskable, 0, batchSize)
 		for c := 0; c < batchSize && i < nbTasks; c++ {
 			i++
-			newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTaskRef))
+			newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
 		}
 		appClient.RegisterTasks(newTasks...)
 		log.WithField("batchDuration", time.Since(batchStart)).WithField("nbTasks", i).Info("batch done")
@@ -244,7 +244,7 @@ func TestBatchLargeComputePlan(t *testing.T) {
 	log.WithField("registrationDuration", time.Since(start)).WithField("nbTasks", nbTasks).Info("registration done")
 
 	start = time.Now()
-	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", nbQuery)
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultSimpleAlgoRef)}, "", nbQuery)
 	log.WithField("queryDuration", time.Since(start)).WithField("nbTasks", nbQuery).Info("query done")
 
 	require.Equal(t, nbQuery, len(resp.Tasks), "unexpected task count")
@@ -253,12 +253,12 @@ func TestBatchLargeComputePlan(t *testing.T) {
 func TestSmallComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef(client.DefaultMetricRef).WithCategory(asset.AlgoCategory_ALGO_METRIC))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
 
 	appClient.RegisterTasks(
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
@@ -275,13 +275,13 @@ func TestSmallComputePlan(t *testing.T) {
 func TestAggregateComposite(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_AGGREGATE).WithKeyRef("aggAlgo"))
+	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("aggAlgo"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef(client.DefaultMetricRef).WithCategory(asset.AlgoCategory_ALGO_METRIC))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
 
 	appClient.RegisterTasks(
 		client.DefaultCompositeTaskOptions().WithKeyRef("c1"),
@@ -321,8 +321,8 @@ func TestFailLargeComputePlan(t *testing.T) {
 	nbPharma := 11
 	var nbTasks int
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoAgg").WithCategory(asset.AlgoCategory_ALGO_AGGREGATE))
+	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions().WithKeyRef("algoComp"))
+	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("algoAgg"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -386,22 +386,22 @@ func TestQueryComputePlan(t *testing.T) {
 func TestGetComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
 	// A CP with 1 parent task and 2 child tasks
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task#1").WithParentsRef(client.DefaultTaskRef))
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task#2").WithParentsRef(client.DefaultTaskRef))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task#1").WithParentsRef(client.DefaultTrainTaskRef))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task#2").WithParentsRef(client.DefaultTrainTaskRef))
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts := [7]uint32{3, 2, 1, 0, 0, 0, 0}
 	actualCounts := [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
 	require.Equal(t, expectedCounts, actualCounts)
 
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.CancelTask("task#1")
 	appClient.FailTask("task#2")
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
@@ -409,7 +409,7 @@ func TestGetComputePlan(t *testing.T) {
 	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
 	require.Equal(t, expectedCounts, actualCounts)
 
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef(client.DefaultTaskRef))
+	appClient.RegisterModel(client.DefaultModelOptions())
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts = [7]uint32{3, 0, 0, 0, 1, 1, 1}
 	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
@@ -419,7 +419,7 @@ func TestGetComputePlan(t *testing.T) {
 func TestCompositeParentChild(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("algoComp").WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
+	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions().WithKeyRef("algoComp"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())

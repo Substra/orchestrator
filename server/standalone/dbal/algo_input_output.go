@@ -177,3 +177,28 @@ func (d *DBAL) getAlgoOutputs(algoKeys ...string) (map[string]map[string]*asset.
 
 	return res, nil
 }
+
+// populateAlgosIO takes multiple algo references and decorate them with their inputs and outputs
+func (d *DBAL) populateAlgosIO(algos ...*asset.Algo) error {
+	keys := make([]string, 0, len(algos))
+	for _, algo := range algos {
+		keys = append(keys, algo.Key)
+	}
+
+	inputs, err := d.getAlgoInputs(keys...)
+	if err != nil {
+		return err
+	}
+
+	outputs, err := d.getAlgoOutputs(keys...)
+	if err != nil {
+		return err
+	}
+
+	for _, algo := range algos {
+		algo.Inputs = inputs[algo.Key]
+		algo.Outputs = outputs[algo.Key]
+	}
+
+	return nil
+}

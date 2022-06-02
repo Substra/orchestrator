@@ -187,12 +187,18 @@ func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester s
 	var permissions *asset.Permissions
 
 	switch task.Category {
-	case asset.ComputeTaskCategory_TASK_TRAIN:
-		permissions = task.GetTrain().ModelPermissions
-	case asset.ComputeTaskCategory_TASK_AGGREGATE:
-		permissions = task.GetAggregate().ModelPermissions
+	case asset.ComputeTaskCategory_TASK_TRAIN, asset.ComputeTaskCategory_TASK_AGGREGATE:
+		output, ok := task.Outputs[taskIOModel]
+		if !ok {
+			return nil, errors.NewInternal(fmt.Sprintf("Task %q has no output %s", task.Key, taskIOModel))
+		}
+		permissions = output.Permissions
 	case asset.ComputeTaskCategory_TASK_PREDICT:
-		permissions = task.GetPredict().PredictionPermissions
+		output, ok := task.Outputs[taskIOPredictions]
+		if !ok {
+			return nil, errors.NewInternal(fmt.Sprintf("Task %q has no output %s", task.Key, taskIOModel))
+		}
+		permissions = output.Permissions
 	default:
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot set model permissions for %q task", task.Category.String()))
 	}
@@ -221,9 +227,17 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 
 	switch newModel.Category {
 	case asset.ModelCategory_MODEL_HEAD:
-		permissions = task.GetComposite().HeadPermissions
+		output, ok := task.Outputs[taskIOLocal]
+		if !ok {
+			return nil, errors.NewInternal(fmt.Sprintf("Task %q has no output %s", task.Key, taskIOModel))
+		}
+		permissions = output.Permissions
 	case asset.ModelCategory_MODEL_SIMPLE:
-		permissions = task.GetComposite().TrunkPermissions
+		output, ok := task.Outputs[taskIOShared]
+		if !ok {
+			return nil, errors.NewInternal(fmt.Sprintf("Task %q has no output %s", task.Key, taskIOModel))
+		}
+		permissions = output.Permissions
 	default:
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot set permissions for %q model", newModel.Category.String()))
 	}

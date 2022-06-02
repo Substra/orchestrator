@@ -3,6 +3,7 @@ package dbal
 import (
 	"context"
 	"errors"
+	"regexp"
 	"testing"
 	"time"
 
@@ -112,6 +113,16 @@ func makeTaskInputRows(taskKeys ...string) *pgxmock.Rows {
 	return res
 }
 
+func makeTaskOutputRows(taskKeys ...string) *pgxmock.Rows {
+	res := pgxmock.NewRows([]string{"compute_task_key", "identifier", "permissions"})
+
+	for _, key := range taskKeys {
+		res.AddRow(key, "model", []byte("{}"))
+	}
+
+	return res
+}
+
 func TestTaskFilterToQuery(t *testing.T) {
 	cases := map[string]struct {
 		filter        *asset.TaskQueryFilter
@@ -153,9 +164,19 @@ func TestGetTasks(t *testing.T) {
 		WithArgs(testChannel, keys[0], keys[1]).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1,$2)`)).
+		WithArgs("algo_key", "algo_key").WillReturnRows(makeAlgoInputRows("algo_key", "algo_key"))
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple FROM algo_outputs WHERE algo_key IN ($1,$2)`)).
+		WithArgs("algo_key", "algo_key").WillReturnRows(makeAlgoOutputRows("algo_key", "algo_key"))
+
 	mock.ExpectQuery(`SELECT .* FROM compute_task_inputs`).
 		WithArgs(keys[0], keys[1]).
 		WillReturnRows(makeTaskInputRows(keys...))
+
+	mock.ExpectQuery(`SELECT .* FROM compute_task_outputs`).
+		WithArgs(keys[0], keys[1]).
+		WillReturnRows(makeTaskOutputRows(keys...))
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -211,9 +232,19 @@ func TestQueryComputeTasks(t *testing.T) {
 		WithArgs(testChannel, "testWorker", asset.ComputeTaskStatus_STATUS_DONE.String()).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1)`)).
+		WithArgs("algo_key").WillReturnRows(makeAlgoInputRows("algo_key"))
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple FROM algo_outputs WHERE algo_key IN ($1)`)).
+		WithArgs("algo_key").WillReturnRows(makeAlgoOutputRows("algo_key"))
+
 	mock.ExpectQuery(`SELECT .* FROM compute_task_inputs`).
 		WithArgs(keys[0]).
 		WillReturnRows(makeTaskInputRows(keys[0]))
+
+	mock.ExpectQuery(`SELECT .* FROM compute_task_outputs`).
+		WithArgs(keys[0]).
+		WillReturnRows(makeTaskOutputRows(keys[0]))
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -252,6 +283,11 @@ func TestAddComputeTask(t *testing.T) {
 				},
 			},
 		},
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"model": {
+				Permissions: &asset.Permissions{},
+			},
+		},
 	}
 
 	mock, err := pgxmock.NewConn()
@@ -270,6 +306,8 @@ func TestAddComputeTask(t *testing.T) {
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(2)
 	// Insert task inputs
 	mock.ExpectCopyFrom(`"compute_task_inputs"`, []string{"compute_task_key", "identifier", "position", "asset_key", "parent_task_key", "parent_task_output_identifier"}).WillReturnResult(2)
+	// Insert task outputs
+	mock.ExpectCopyFrom(`"compute_task_outputs"`, []string{"compute_task_key", "identifier", "permissions"}).WillReturnResult(1)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -305,6 +343,11 @@ func TestAddComputeTasks(t *testing.T) {
 					},
 				},
 			},
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"model": {
+					Permissions: &asset.Permissions{},
+				},
+			},
 		},
 		{
 			Key:            "99d44ec9-d642-4afa-bad0-00dda84a6b9d",
@@ -319,6 +362,14 @@ func TestAddComputeTasks(t *testing.T) {
 					Ref: &asset.ComputeTaskInput_AssetKey{
 						AssetKey: "f16a376b-e896-45f3-bea6-e3388c766335",
 					},
+				},
+			},
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"local": {
+					Permissions: &asset.Permissions{},
+				},
+				"shared": {
+					Permissions: &asset.Permissions{},
 				},
 			},
 		},
@@ -340,6 +391,8 @@ func TestAddComputeTasks(t *testing.T) {
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(3)
 	// Insert task inputs
 	mock.ExpectCopyFrom(`"compute_task_inputs"`, []string{"compute_task_key", "identifier", "position", "asset_key", "parent_task_key", "parent_task_output_identifier"}).WillReturnResult(3)
+	// Insert task outputs
+	mock.ExpectCopyFrom(`"compute_task_outputs"`, []string{"compute_task_key", "identifier", "permissions"}).WillReturnResult(3)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -367,9 +420,19 @@ func TestQueryComputeTasksNilFilter(t *testing.T) {
 		WithArgs(testChannel).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1)`)).
+		WithArgs("algo_key").WillReturnRows(makeAlgoInputRows("algo_key"))
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple FROM algo_outputs WHERE algo_key IN ($1)`)).
+		WithArgs("algo_key").WillReturnRows(makeAlgoOutputRows("algo_key"))
+
 	mock.ExpectQuery(`SELECT .* FROM compute_task_inputs`).
 		WithArgs(keys[0]).
 		WillReturnRows(makeTaskInputRows(keys[0]))
+
+	mock.ExpectQuery(`SELECT .* FROM compute_task_outputs`).
+		WithArgs(keys[0]).
+		WillReturnRows(makeTaskOutputRows(keys[0]))
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)

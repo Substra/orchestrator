@@ -6,8 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## Added
+### Added
 - Introduce Predict task type (#707)
+- Introduce compute task outputs (#747)
 
 ### Changed
 - use go test to run e2e tests (#754)

@@ -17,10 +17,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const DefaultTaskRef = "task"
+const DefaultCompositeTaskRef = "composite task"
+const DefaultAggregateTaskRef = "aggregate task"
+const DefaultTestTaskRef = "test task"
+const DefaultTrainTaskRef = "task"
+
+const DefaultSimpleAlgoRef = "simple algo"
+const DefaultCompositeAlgoRef = "composite algo"
+const DefaultAggregateAlgoRef = "aggregate algo"
+const DefaultPredictAlgoRef = "predict algo"
+const DefaultMetricAlgoRef = "metric algo"
+
 const DefaultPlanRef = "cp"
-const DefaultAlgoRef = "algo"
-const DefaultMetricRef = "metric"
 const DefaultDataManagerRef = "dm"
 const DefaultDataSampleRef = "ds"
 const DefaultModelRef = "model"

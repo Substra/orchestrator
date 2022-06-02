@@ -98,54 +98,27 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 
 	res := al.toAlgo()
 
-	inputs, err := d.getAlgoInputs(key)
+	err = d.populateAlgosIO(res)
 	if err != nil {
 		return nil, err
 	}
-
-	res.Inputs = inputs[key]
-
-	outputs, err := d.getAlgoOutputs(key)
-	if err != nil {
-		return nil, err
-	}
-
-	res.Outputs = outputs[key]
 
 	return res, nil
 }
 
 // QueryAlgos implements persistence.AlgoDBAL
 func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
-	algos, keys, bookmark, err := d.queryAlgos(p, filter)
+	algos, bookmark, err := d.queryAlgos(p, filter)
 	if err != nil {
 		return nil, "", err
 	}
 
-	inputs, err := d.getAlgoInputs(keys...)
+	err = d.populateAlgosIO(algos...)
 	if err != nil {
 		return nil, "", err
 	}
 
-	for key, inputs := range inputs {
-		algos[key].Inputs = inputs
-	}
-
-	outputs, err := d.getAlgoOutputs(keys...)
-	if err != nil {
-		return nil, "", err
-	}
-
-	for key, outputs := range outputs {
-		algos[key].Outputs = outputs
-	}
-
-	res := make([]*asset.Algo, 0, len(algos))
-	for _, algo := range algos {
-		res = append(res, algo)
-	}
-
-	return res, bookmark, nil
+	return algos, bookmark, nil
 }
 
 // AlgoExists implements persistence.AlgoDBAL
@@ -166,10 +139,10 @@ func (d *DBAL) AlgoExists(key string) (bool, error) {
 	return count == 1, err
 }
 
-func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (map[string]*asset.Algo, []string, common.PaginationToken, error) {
+func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
 	offset, err := getOffset(p.Token)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, "", err
 	}
 
 	stmt := getStatementBuilder().
@@ -200,12 +173,11 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 
 	rows, err := d.query(stmt)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, "", err
 	}
 	defer rows.Close()
 
-	algos := make(map[string]*asset.Algo, p.Size)
-	keys := make([]string, 0)
+	algos := make([]*asset.Algo, 0, p.Size)
 	var count int
 
 	for rows.Next() {
@@ -213,20 +185,18 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 
 		err = rows.Scan(&al.Key, &al.Name, &al.Category, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, "", err
 		}
 
-		algos[al.Key] = al.toAlgo()
+		algos = append(algos, al.toAlgo())
 		count++
-
-		keys = append(keys, al.Key)
 
 		if count == int(p.Size) {
 			break
 		}
 	}
 	if err := rows.Err(); err != nil {
-		return nil, nil, "", err
+		return nil, "", err
 	}
 
 	bookmark := ""
@@ -235,5 +205,5 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 		bookmark = strconv.Itoa(offset + count)
 	}
 
-	return algos, keys, bookmark, nil
+	return algos, bookmark, nil
 }

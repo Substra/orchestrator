@@ -40,6 +40,15 @@ message ComputeTaskInput {
   }
 }
 
+message ComputeTaskOutput {
+  Permissions permissions = 1;
+}
+
+message NewComputeTaskOutput {
+  NewPermissions permissions = 1;
+}
+
+
 // ComputeTask is a computation step in a ComputePlan.
 // It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
 message ComputeTask {
@@ -64,6 +73,7 @@ message ComputeTask {
   }
   map<string, string> metadata = 16;
   repeated ComputeTaskInput inputs = 17;
+  map<string, ComputeTaskOutput> outputs = 19;
 }
 
 message NewComputeTask {
@@ -82,12 +92,14 @@ message NewComputeTask {
   }
   map<string, string> metadata = 16;
   repeated ComputeTaskInput inputs = 17;
+  map<string, NewComputeTaskOutput> outputs = 19;
 }
 
 message TrainTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  Permissions model_permissions = 4;
+  // deprecated field, use permissions from task output instead
+  Permissions model_permissions = 4 [deprecated=true];
 }
 
 message NewTrainTaskData {
@@ -98,7 +110,8 @@ message NewTrainTaskData {
 message PredictTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  Permissions prediction_permissions = 3;
+  // deprecated field, use permissions from task output instead
+  Permissions prediction_permissions = 3 [deprecated=true];
 }
 
 message NewPredictTaskData {
@@ -121,18 +134,22 @@ message NewTestTaskData {
 message CompositeTrainTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  Permissions head_permissions = 5;
-  Permissions trunk_permissions = 6;
+  // deprecated field, use permissions from task output instead
+  Permissions head_permissions = 5 [deprecated=true];
+  // deprecated field, use permissions from task output instead
+  Permissions trunk_permissions = 6 [deprecated=true];
 }
 
 message NewCompositeTrainTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  NewPermissions trunk_permissions = 4;
+  reserved "trunk_permissions";
+  reserved 4;
 }
 
 message AggregateTrainTaskData {
-  Permissions model_permissions = 2;
+  // deprecated field, use permissions from task output instead
+  Permissions model_permissions = 2 [deprecated=true];
 }
 
 message NewAggregateTrainTaskData {

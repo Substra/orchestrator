@@ -42,6 +42,7 @@ type TestTaskOptions struct {
 	DataManagerRef string
 	DataSampleRef  string
 	Inputs         []*TaskInputOptions
+	Outputs        map[string]*asset.NewComputeTaskOutput
 }
 
 type TrainTaskOptions struct {
@@ -52,6 +53,7 @@ type TrainTaskOptions struct {
 	DataManagerRef string
 	DataSampleRef  string
 	Inputs         []*TaskInputOptions
+	Outputs        map[string]*asset.NewComputeTaskOutput
 }
 
 type PredictTaskOptions struct {
@@ -61,6 +63,7 @@ type PredictTaskOptions struct {
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
+	Outputs        map[string]*asset.NewComputeTaskOutput
 }
 
 type CompositeTaskOptions struct {
@@ -71,6 +74,7 @@ type CompositeTaskOptions struct {
 	DataManagerRef string
 	DataSampleRef  string
 	Inputs         []*TaskInputOptions
+	Outputs        map[string]*asset.NewComputeTaskOutput
 }
 
 type AggregateTaskOptions struct {
@@ -80,6 +84,7 @@ type AggregateTaskOptions struct {
 	PlanRef    string
 	Worker     string
 	Inputs     []*TaskInputOptions
+	Outputs    map[string]*asset.NewComputeTaskOutput
 }
 
 type ModelOptions struct {
@@ -100,13 +105,18 @@ type DataManagerOptions struct {
 
 func DefaultTestTaskOptions() *TestTaskOptions {
 	return &TestTaskOptions{
-		KeyRef:         DefaultTaskRef,
-		AlgoRef:        DefaultAlgoRef,
+		KeyRef:         DefaultTestTaskRef,
+		AlgoRef:        DefaultSimpleAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
-		MetricsRef:     []string{DefaultMetricRef},
+		MetricsRef:     []string{DefaultMetricAlgoRef},
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
+		Outputs: map[string]*asset.NewComputeTaskOutput{
+			"performance": {
+				Permissions: &asset.NewPermissions{Public: true},
+			},
+		},
 	}
 }
 
@@ -157,13 +167,14 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				MetricKeys:     metricKeys,
 			},
 		},
+		Outputs: o.Outputs,
 	}
 }
 
 func DefaultTrainTaskOptions() *TrainTaskOptions {
 	return &TrainTaskOptions{
-		KeyRef:         DefaultTaskRef,
-		AlgoRef:        DefaultAlgoRef,
+		KeyRef:         DefaultTrainTaskRef,
+		AlgoRef:        DefaultSimpleAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
@@ -177,6 +188,9 @@ func DefaultTrainTaskOptions() *TrainTaskOptions {
 				Identifier: "datasamples",
 				AssetRef:   DefaultDataSampleRef,
 			},
+		},
+		Outputs: map[string]*asset.NewComputeTaskOutput{
+			"model": {Permissions: &asset.NewPermissions{Public: true}},
 		},
 	}
 }
@@ -245,18 +259,22 @@ func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
 			},
 		},
-		Inputs: inputs,
+		Inputs:  inputs,
+		Outputs: o.Outputs,
 	}
 }
 
 func DefaultPredictTaskOptions() *PredictTaskOptions {
 	return &PredictTaskOptions{
-		KeyRef:         DefaultTaskRef,
-		AlgoRef:        DefaultAlgoRef,
+		KeyRef:         DefaultTrainTaskRef,
+		AlgoRef:        DefaultPredictAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
+		Outputs: map[string]*asset.NewComputeTaskOutput{
+			"predictions": {Permissions: &asset.NewPermissions{Public: false}},
+		},
 	}
 }
 
@@ -293,17 +311,22 @@ func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
 			},
 		},
+		Outputs: o.Outputs,
 	}
 }
 
 func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 	return &CompositeTaskOptions{
-		KeyRef:         DefaultTaskRef,
-		AlgoRef:        DefaultAlgoRef,
+		KeyRef:         DefaultCompositeTaskRef,
+		AlgoRef:        DefaultCompositeAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
+		Outputs: map[string]*asset.NewComputeTaskOutput{
+			"shared": {Permissions: &asset.NewPermissions{Public: true}},
+			"local":  {Permissions: &asset.NewPermissions{Public: true}},
+		},
 	}
 }
 
@@ -335,21 +358,24 @@ func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Data: &asset.NewComputeTask_Composite{
 			Composite: &asset.NewCompositeTrainTaskData{
-				DataManagerKey:   ks.GetKey(o.DataManagerRef),
-				DataSampleKeys:   []string{ks.GetKey(o.DataSampleRef)},
-				TrunkPermissions: &asset.NewPermissions{Public: true},
+				DataManagerKey: ks.GetKey(o.DataManagerRef),
+				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
 			},
 		},
+		Outputs: o.Outputs,
 	}
 }
 
 func DefaultAggregateTaskOptions() *AggregateTaskOptions {
 	return &AggregateTaskOptions{
-		KeyRef:     DefaultTaskRef,
-		AlgoRef:    DefaultAlgoRef,
+		KeyRef:     DefaultAggregateTaskRef,
+		AlgoRef:    DefaultAggregateAlgoRef,
 		ParentsRef: []string{},
 		PlanRef:    DefaultPlanRef,
 		Worker:     "MyOrg1MSP",
+		Outputs: map[string]*asset.NewComputeTaskOutput{
+			"model": {Permissions: &asset.NewPermissions{Public: true}},
+		},
 	}
 }
 
@@ -369,6 +395,13 @@ func (o *TrainTaskOptions) WithParentTaskInputRef(identifier string, parentTaskR
 		ParentTaskRef:              parentTaskRef,
 		ParentTaskOutputIdentifier: parentTaskOutputIdentifier,
 	})
+	return o
+}
+
+func (o *TrainTaskOptions) WithOutput(identifier string, permissions *asset.NewPermissions) *TrainTaskOptions {
+	o.Outputs[identifier] = &asset.NewComputeTaskOutput{
+		Permissions: permissions,
+	}
 	return o
 }
 
@@ -406,14 +439,67 @@ func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				Worker: o.Worker,
 			},
 		},
+		Outputs: o.Outputs,
 	}
 }
 
-func DefaultAlgoOptions() *AlgoOptions {
+func DefaultSimpleAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
-		KeyRef:   DefaultAlgoRef,
+		KeyRef:   DefaultSimpleAlgoRef,
 		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Outputs: map[string]*asset.AlgoOutput{
+			"model": {Kind: asset.AssetKind_ASSET_MODEL},
+		},
 	}
+}
+
+func DefaultCompositeAlgoOptions() *AlgoOptions {
+	return &AlgoOptions{
+		KeyRef:   DefaultCompositeAlgoRef,
+		Category: asset.AlgoCategory_ALGO_COMPOSITE,
+		Outputs: map[string]*asset.AlgoOutput{
+			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
+			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
+		},
+	}
+}
+
+func DefaultAggregateAlgoOptions() *AlgoOptions {
+	return &AlgoOptions{
+		KeyRef:   DefaultAggregateAlgoRef,
+		Category: asset.AlgoCategory_ALGO_AGGREGATE,
+		Outputs: map[string]*asset.AlgoOutput{
+			"model": {Kind: asset.AssetKind_ASSET_MODEL},
+		},
+	}
+}
+
+func DefaultPredictAlgoOptions() *AlgoOptions {
+	return &AlgoOptions{
+		KeyRef:   DefaultPredictAlgoRef,
+		Category: asset.AlgoCategory_ALGO_PREDICT,
+		Outputs: map[string]*asset.AlgoOutput{
+			"predictions": {Kind: asset.AssetKind_ASSET_MODEL},
+		},
+	}
+}
+
+func DefaultMetricAlgoOptions() *AlgoOptions {
+	return &AlgoOptions{
+		KeyRef:   DefaultMetricAlgoRef,
+		Category: asset.AlgoCategory_ALGO_METRIC,
+		Outputs: map[string]*asset.AlgoOutput{
+			"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE},
+		},
+	}
+}
+
+func (o *AlgoOptions) WithOutput(identifier string, kind asset.AssetKind, multiple bool) *AlgoOptions {
+	o.Outputs[identifier] = &asset.AlgoOutput{
+		Kind:     kind,
+		Multiple: multiple,
+	}
+	return o
 }
 
 func (o *AlgoOptions) WithKeyRef(ref string) *AlgoOptions {
@@ -446,7 +532,7 @@ func (o *ComputePlanOptions) WithDeleteIntermediaryModels(flag bool) *ComputePla
 func DefaultModelOptions() *ModelOptions {
 	return &ModelOptions{
 		KeyRef:   DefaultModelRef,
-		TaskRef:  DefaultTaskRef,
+		TaskRef:  DefaultTrainTaskRef,
 		Category: asset.ModelCategory_MODEL_SIMPLE,
 	}
 }
@@ -468,8 +554,8 @@ func (o *ModelOptions) WithCategory(category asset.ModelCategory) *ModelOptions 
 
 func DefaultPerformanceOptions() *PerformanceOptions {
 	return &PerformanceOptions{
-		ComputeTaskKeyRef: DefaultTaskRef,
-		MetricKeyRef:      DefaultMetricRef,
+		ComputeTaskKeyRef: DefaultTrainTaskRef,
+		MetricKeyRef:      DefaultMetricAlgoRef,
 		PerformanceValue:  0.5,
 	}
 }

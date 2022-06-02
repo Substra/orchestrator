@@ -18,7 +18,7 @@ import (
 func TestRegisterModel(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -27,10 +27,10 @@ func TestRegisterModel(t *testing.T) {
 	plan := appClient.GetComputePlan("cp")
 	require.EqualValues(t, 1, plan.TaskCount)
 
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	registeredModel := appClient.RegisterModel(client.DefaultModelOptions())
 
-	taskEvents := appClient.QueryEvents(&asset.EventQueryFilter{AssetKey: appClient.GetKeyStore().GetKey(client.DefaultTaskRef)}, "", 10)
+	taskEvents := appClient.QueryEvents(&asset.EventQueryFilter{AssetKey: appClient.GetKeyStore().GetKey(client.DefaultTrainTaskRef)}, "", 10)
 
 	// 3 events: creation, start, done
 	require.Equalf(t, 3, len(taskEvents.Events), "events: %v", taskEvents.Events)
@@ -54,17 +54,17 @@ func TestRegisterModel(t *testing.T) {
 func TestDeleteIntermediary(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithDeleteIntermediaryModels(true))
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithParentsRef(client.DefaultTaskRef))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithParentsRef(client.DefaultTrainTaskRef))
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child2").WithParentsRef("child1"))
 
 	// First task done
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model0"))
 	// second done
 	appClient.StartTask("child1")
@@ -73,17 +73,17 @@ func TestDeleteIntermediary(t *testing.T) {
 	appClient.StartTask("child2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model2").WithTaskRef("child2"))
 
-	models := appClient.GetTaskOutputModels(client.DefaultTaskRef)
+	models := appClient.GetTaskOutputModels(client.DefaultTrainTaskRef)
 	require.Len(t, models, 1, "invalid number of output models")
 	require.NotNil(t, models[0].Address)
 	require.True(t, appClient.CanDisableModel("model0"), "parent model cannot be disabled")
 	require.False(t, appClient.CanDisableModel("model2"), "final model can be disabled")
 
 	appClient.DisableModel("model0")
-	models = appClient.GetTaskOutputModels(client.DefaultTaskRef)
+	models = appClient.GetTaskOutputModels(client.DefaultTrainTaskRef)
 	require.Nil(t, models[0].Address, "model has not been disabled")
 
-	_, err := appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTaskRef))
+	_, err := appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTrainTaskRef))
 	require.ErrorContains(t, err, "OE0101", "registering a task with disabled input models should fail")
 
 	log.WithError(err).Debug("Failed to register task, as expected")
@@ -92,13 +92,13 @@ func TestDeleteIntermediary(t *testing.T) {
 func TestRegisterTwoSimpleModelsForTrainTask(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	_, err := appClient.FailableRegisterModels(
 		client.DefaultModelOptions().WithKeyRef("mod1"),
 		client.DefaultModelOptions().WithKeyRef("mod2"),
@@ -111,18 +111,18 @@ func TestRegisterTwoSimpleModelsForTrainTask(t *testing.T) {
 func TestRegisterAllModelsForCompositeTask(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_COMPOSITE))
+	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultCompositeTaskOptions())
 
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultCompositeTaskRef)
 	appClient.RegisterModels(
-		client.DefaultModelOptions().WithCategory(asset.ModelCategory_MODEL_HEAD).WithKeyRef("mod1"),
-		client.DefaultModelOptions().WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithKeyRef("mod2"),
+		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_HEAD).WithKeyRef("mod1"),
+		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithKeyRef("mod2"),
 	)
 
-	task := appClient.GetComputeTask(client.DefaultTaskRef)
+	task := appClient.GetComputeTask(client.DefaultCompositeTaskRef)
 	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
 }

@@ -16,15 +16,23 @@ import (
 
 func TestRegisterComputeTask(t *testing.T) {
 	appClient := factory.NewTestClient()
+	ks := appClient.GetKeyStore()
+	computePlanRef := "register task cp"
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef(computePlanRef))
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
-	registeredTask := appClient.RegisterTasks(client.DefaultTrainTaskOptions())[0]
-	retrievedTask := appClient.GetComputeTask(client.DefaultTaskRef)
+	registeredTask := appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithPlanRef(computePlanRef))[0]
 
+	// GetTask
+	retrievedTask := appClient.GetComputeTask(client.DefaultTrainTaskRef)
+	e2erequire.ProtoEqual(t, registeredTask, retrievedTask)
+
+	// QueryTasks
+	retrievedTask = appClient.QueryTasks(&asset.TaskQueryFilter{ComputePlanKey: ks.GetKey(computePlanRef)}, "", 10).Tasks[0]
 	e2erequire.ProtoEqual(t, registeredTask, retrievedTask)
 }
 
@@ -32,7 +40,7 @@ func TestRegisterComputeTask(t *testing.T) {
 func TestTrainTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
@@ -41,16 +49,16 @@ func TestTrainTaskLifecycle(t *testing.T) {
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(client.DefaultTaskRef))
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(client.DefaultTrainTaskRef))
+	appClient.StartTask(client.DefaultTrainTaskRef)
 }
 
 func TestPredictTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_PREDICT).WithKeyRef("predict_algo"))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_SIMPLE).WithKeyRef("train_algo"))
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_METRIC).WithKeyRef("metric"))
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions().WithKeyRef("predict_algo"))
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("train_algo"))
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("metric"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
@@ -77,18 +85,18 @@ func TestPredictTaskLifecycle(t *testing.T) {
 func TestCascadeCancel(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTaskRef))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
 	}
 
-	appClient.StartTask(client.DefaultTaskRef)
-	appClient.CancelTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
+	appClient.CancelTask(client.DefaultTrainTaskRef)
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
@@ -103,17 +111,17 @@ func TestCascadeCancel(t *testing.T) {
 func TestCascadeTodo(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTaskRef))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
 	}
 
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
 	for i := 0; i < 10; i++ {
@@ -130,18 +138,18 @@ func TestCascadeTodo(t *testing.T) {
 func TestCascadeFailure(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTaskRef))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
 	}
 
-	appClient.StartTask(client.DefaultTaskRef)
-	appClient.FailTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
+	appClient.FailTask(client.DefaultTrainTaskRef)
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
@@ -155,7 +163,7 @@ func TestCascadeFailure(t *testing.T) {
 func TestPropagateLogsPermission(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 
 	logsPermission := &asset.NewPermissions{Public: false, AuthorizedIds: []string{appClient.MSPID}}
 	datamanager := client.DefaultDataManagerOptions().WithLogsPermission(logsPermission)
@@ -165,7 +173,7 @@ func TestPropagateLogsPermission(t *testing.T) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	task := appClient.GetComputeTask(client.DefaultTaskRef)
+	task := appClient.GetComputeTask(client.DefaultTrainTaskRef)
 	require.Equal(t, 1, len(task.LogsPermission.AuthorizedIds))
 	require.Equal(t, appClient.MSPID, task.LogsPermission.AuthorizedIds[0])
 }
@@ -173,13 +181,13 @@ func TestPropagateLogsPermission(t *testing.T) {
 func TestQueryTasks(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultAlgoRef)}, "", 10)
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultSimpleAlgoRef)}, "", 10)
 	require.Equal(t, 1, len(resp.Tasks))
 }
 
@@ -190,7 +198,7 @@ func TestConcurrency(t *testing.T) {
 	// Share the same key store for both clients
 	client2.WithKeyStore(client1.GetKeyStore())
 
-	client1.RegisterAlgo(client.DefaultAlgoOptions())
+	client1.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	client1.RegisterDataManager(client.DefaultDataManagerOptions())
 	client1.RegisterDataSample(client.DefaultDataSampleOptions())
 	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -222,7 +230,7 @@ func TestStableTaskSort(t *testing.T) {
 	nbTasks := 1000
 	nbQuery := 10
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -230,7 +238,7 @@ func TestStableTaskSort(t *testing.T) {
 
 	newTasks := make([]client.Taskable, 0, nbTasks)
 	for i := 0; i < nbTasks; i++ {
-		newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTaskRef))
+		newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
 	}
 	appClient.RegisterTasks(newTasks...)
 
@@ -262,7 +270,7 @@ func TestStableTaskSort(t *testing.T) {
 func TestGetSortedParentTaskKeys(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithKeyRef("trainAlgo"))
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("trainAlgo"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -276,7 +284,7 @@ func TestGetSortedParentTaskKeys(t *testing.T) {
 		)
 	}
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions().WithCategory(asset.AlgoCategory_ALGO_AGGREGATE).WithKeyRef("aggAlgo"))
+	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("aggAlgo"))
 	appClient.RegisterTasks(
 		client.DefaultAggregateTaskOptions().
 			WithAlgoRef("aggAlgo").
@@ -296,27 +304,51 @@ func TestQueryTaskInputs(t *testing.T) {
 	appClient := factory.NewTestClient()
 	ks := appClient.GetKeyStore()
 
-	taskRef := "taskWithInputs"
-	cpRef := "taskWithInputs"
+	taskRef := "task with inputs"
+	cpRef := "CP with inputs"
+	parentAlgoRef := "parent algo ref"
+	childAlgoRef := "child algo ref"
+	parentTaskRef := "parent task ref"
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	parentAlgoOptions := client.
+		DefaultSimpleAlgoOptions().
+		WithKeyRef(parentAlgoRef).
+		WithOutput("output model", asset.AssetKind_ASSET_MODEL, false)
+
+	childAlgoOptions := client.
+		DefaultSimpleAlgoOptions().
+		WithKeyRef(childAlgoRef).
+		WithOutput("models", asset.AssetKind_ASSET_MODEL, true)
+
+	appClient.RegisterAlgo(parentAlgoOptions)
+	appClient.RegisterAlgo(childAlgoOptions)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef(cpRef))
 
 	parentTaskOptions := client.
 		DefaultTrainTaskOptions().
-		WithKeyRef("parentTaskRef").
-		WithPlanRef(cpRef)
+		WithAlgoRef(parentAlgoRef).
+		WithKeyRef(parentTaskRef).
+		WithPlanRef(cpRef).
+		WithOutput("output model", &asset.NewPermissions{
+			Public:        false,
+			AuthorizedIds: []string{appClient.MSPID},
+		})
 
 	appClient.RegisterTasks(parentTaskOptions)
 
 	taskOptions := client.
 		DefaultTrainTaskOptions().
+		WithAlgoRef(childAlgoRef).
 		WithKeyRef(taskRef).
 		WithPlanRef(cpRef).
 		WithAssetInputRef("models", "inputModelRef").
-		WithParentTaskInputRef("models", "parentTaskRef", "output model")
+		WithParentTaskInputRef("models", parentTaskRef, "output model").
+		WithOutput("models", &asset.NewPermissions{
+			Public:        false,
+			AuthorizedIds: []string{appClient.MSPID},
+		})
 
 	expectedInputs := []*asset.ComputeTaskInput{
 		{
@@ -341,8 +373,35 @@ func TestQueryTaskInputs(t *testing.T) {
 			Identifier: "models",
 			Ref: &asset.ComputeTaskInput_ParentTaskOutput{
 				ParentTaskOutput: &asset.ParentTaskOutputRef{
-					ParentTaskKey:    ks.GetKey("parentTaskRef"),
+					ParentTaskKey:    ks.GetKey(parentTaskRef),
 					OutputIdentifier: "output model",
+				},
+			},
+		},
+	}
+
+	expectedOutputs := map[string]*asset.ComputeTaskOutput{
+		"model": {
+			Permissions: &asset.Permissions{
+				Process: &asset.Permission{
+					Public:        true, // yes, we have public = true + non empty AuthorizedIds. Blame newPermission()'s behavior. :shrug:
+					AuthorizedIds: []string{appClient.MSPID},
+				},
+				Download: &asset.Permission{
+					Public:        true,
+					AuthorizedIds: []string{appClient.MSPID},
+				},
+			},
+		},
+		"models": {
+			Permissions: &asset.Permissions{
+				Process: &asset.Permission{
+					Public:        false,
+					AuthorizedIds: []string{appClient.MSPID},
+				},
+				Download: &asset.Permission{
+					Public:        false,
+					AuthorizedIds: []string{appClient.MSPID},
 				},
 			},
 		},
@@ -352,10 +411,12 @@ func TestQueryTaskInputs(t *testing.T) {
 	tasks := appClient.RegisterTasks(taskOptions)
 	task := tasks[0]
 	e2erequire.ProtoArrayEqual(t, task.Inputs, expectedInputs)
+	e2erequire.ProtoMapEqual(t, task.Outputs, expectedOutputs)
 
 	// test GetComputeTask
 	respTask := appClient.GetComputeTask(taskRef)
 	e2erequire.ProtoArrayEqual(t, respTask.Inputs, expectedInputs)
+	e2erequire.ProtoMapEqual(t, respTask.Outputs, expectedOutputs)
 
 	// test QueryTasks
 	resp := appClient.QueryTasks(&asset.TaskQueryFilter{ComputePlanKey: ks.GetKey(cpRef)}, "", 2)
@@ -364,6 +425,7 @@ func TestQueryTaskInputs(t *testing.T) {
 		if task.Key == ks.GetKey(taskRef) {
 			found = true
 			e2erequire.ProtoArrayEqual(t, task.Inputs, expectedInputs)
+			e2erequire.ProtoMapEqual(t, task.Outputs, expectedOutputs)
 			break
 		}
 	}
@@ -374,7 +436,7 @@ func TestQueryTaskInputs(t *testing.T) {
 func TestEventsDuringComputeTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -394,8 +456,8 @@ func TestEventsDuringComputeTaskLifecycle(t *testing.T) {
 	registrationEventTask := getEventTask(asset.EventKind_EVENT_ASSET_CREATED)
 	e2erequire.ProtoEqual(t, registeredTask, registrationEventTask)
 
-	appClient.StartTask(client.DefaultTaskRef)
-	startedTask := appClient.GetComputeTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
+	startedTask := appClient.GetComputeTask(client.DefaultTrainTaskRef)
 
 	startEventTask := getEventTask(asset.EventKind_EVENT_ASSET_UPDATED)
 	e2erequire.ProtoEqual(t, startedTask, startEventTask)

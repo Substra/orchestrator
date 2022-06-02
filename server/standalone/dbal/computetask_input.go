@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type sqlTaskInput struct {
@@ -16,6 +17,12 @@ type sqlTaskInput struct {
 	AssetKey                   string
 	ParentTaskKey              string
 	ParentTaskOutputIdentifier string
+}
+
+type sqlTaskOutput struct {
+	ComputeTaskKey string
+	Identifier     string
+	Permissions    asset.Permissions
 }
 
 func (i *sqlTaskInput) toComputeTaskInput() (*asset.ComputeTaskInput, error) {
@@ -45,7 +52,7 @@ func (i *sqlTaskInput) toComputeTaskInput() (*asset.ComputeTaskInput, error) {
 
 // insertTaskInputs insert tasks inputs in database in batch mode.
 func (d *DBAL) insertTaskInputs(tasks []*asset.ComputeTask) error {
-	inputRows, err := getTasksInputRows(tasks)
+	rows, err := getTasksInputRows(tasks)
 	if err != nil {
 		return err
 	}
@@ -54,7 +61,7 @@ func (d *DBAL) insertTaskInputs(tasks []*asset.ComputeTask) error {
 		d.ctx,
 		pgx.Identifier{"compute_task_inputs"},
 		[]string{"compute_task_key", "identifier", "position", "asset_key", "parent_task_key", "parent_task_output_identifier"},
-		pgx.CopyFromRows(inputRows),
+		pgx.CopyFromRows(rows),
 	)
 
 	return err
@@ -124,6 +131,64 @@ func getTaskInputRows(taskKey uuid.UUID, inputs []*asset.ComputeTaskInput) ([][]
 	return res, nil
 }
 
+// insertTaskOutputs insert tasks outputs in database in batch mode.
+func (d *DBAL) insertTaskOutputs(tasks []*asset.ComputeTask) error {
+	rows, err := getTasksOutputRows(tasks)
+	if err != nil {
+		return err
+	}
+
+	_, err = d.tx.CopyFrom(
+		d.ctx,
+		pgx.Identifier{"compute_task_outputs"},
+		[]string{"compute_task_key", "identifier", "permissions"},
+		pgx.CopyFromRows(rows),
+	)
+
+	return err
+}
+
+func getTasksOutputRows(tasks []*asset.ComputeTask) ([][]interface{}, error) {
+
+	res := make([][]interface{}, 0)
+
+	for _, task := range tasks {
+		taskKey, err := uuid.Parse(task.Key)
+		if err != nil {
+			return nil, err
+		}
+
+		rows, err := getTaskOutputRows(taskKey, task.Outputs)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, rows...)
+	}
+
+	return res, nil
+}
+
+// getTaskOutputRows returns task output rows.
+func getTaskOutputRows(taskKey uuid.UUID, outputs map[string]*asset.ComputeTaskOutput) ([][]interface{}, error) {
+	res := make([][]interface{}, 0, len(outputs))
+
+	for identifier, output := range outputs {
+		permissions, err := protojson.Marshal(output.Permissions)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, []interface{}{
+			taskKey,
+			identifier,
+			permissions,
+		})
+	}
+
+	return res, nil
+}
+
 // getTaskInputs returns the ComputeTaskInputs for the given compute task keys.
 // The returned map has a key for each input compute task key, e.g.
 // {
@@ -178,4 +243,75 @@ func (d *DBAL) getTaskInputs(taskKeys ...string) (map[string][]*asset.ComputeTas
 	}
 
 	return res, nil
+}
+
+// getTaskOutputs returns the ComputeTaskOutputs for the given compute task keys.
+// The returned map has a key for each input compute task key, e.g.
+// {
+//   "dcab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &ComputeTaskInput, "model2": &ComputeTaskInput },
+//   "abcdef01-2345-6789-abcd-ef0123456789": { "model": &ComputeTaskInput },
+//   "cdab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &ComputeTaskInput, "model2": &ComputeTaskInput, "model3": &ComputeTaskInput },
+// }
+// If a compute task has no outputs, the corresponding entry in the returned map is an empty list of ComputeTaskOutputs.
+func (d *DBAL) getTaskOutputs(taskKeys ...string) (map[string]map[string]*asset.ComputeTaskOutput, error) {
+
+	res := make(map[string]map[string]*asset.ComputeTaskOutput, len(taskKeys))
+
+	for _, key := range taskKeys {
+		res[key] = make(map[string]*asset.ComputeTaskOutput, 0)
+	}
+
+	stmt := getStatementBuilder().
+		Select("compute_task_key", "identifier", "permissions").
+		From("compute_task_outputs").
+		Where(sq.Eq{"compute_task_key": taskKeys}).
+		OrderBy("compute_task_key")
+
+	rows, err := d.query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		o := sqlTaskOutput{}
+		err = rows.Scan(&o.ComputeTaskKey, &o.Identifier, &o.Permissions)
+		if err != nil {
+			return nil, err
+		}
+
+		res[o.ComputeTaskKey][o.Identifier] = &asset.ComputeTaskOutput{
+			Permissions: &o.Permissions,
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (d *DBAL) populateTasksIO(tasks ...*asset.ComputeTask) error {
+	keys := make([]string, 0, len(tasks))
+	for _, task := range tasks {
+		keys = append(keys, task.Key)
+	}
+
+	inputs, err := d.getTaskInputs(keys...)
+	if err != nil {
+		return err
+	}
+
+	outputs, err := d.getTaskOutputs(keys...)
+	if err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		task.Inputs = inputs[task.Key]
+		task.Outputs = outputs[task.Key]
+	}
+
+	return nil
 }

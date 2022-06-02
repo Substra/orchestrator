@@ -17,7 +17,7 @@ import (
 func TestRegisterFailureReport(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -26,15 +26,15 @@ func TestRegisterFailureReport(t *testing.T) {
 	plan := appClient.GetComputePlan("cp")
 	require.EqualValues(t, 1, plan.TaskCount)
 
-	appClient.StartTask(client.DefaultTaskRef)
+	appClient.StartTask(client.DefaultTrainTaskRef)
 
-	registeredFailureReport := appClient.RegisterFailureReport(client.DefaultTaskRef)
-	task := appClient.GetComputeTask(client.DefaultTaskRef)
+	registeredFailureReport := appClient.RegisterFailureReport(client.DefaultTrainTaskRef)
+	task := appClient.GetComputeTask(client.DefaultTrainTaskRef)
 
 	require.Equal(t, task.Key, registeredFailureReport.ComputeTaskKey)
 	require.Equal(t, asset.ComputeTaskStatus_STATUS_FAILED, task.Status)
 
-	retrievedFailureReport := appClient.GetFailureReport(client.DefaultTaskRef)
+	retrievedFailureReport := appClient.GetFailureReport(client.DefaultTrainTaskRef)
 	e2erequire.ProtoEqual(t, registeredFailureReport, retrievedFailureReport)
 
 	eventResp := appClient.QueryEvents(&asset.EventQueryFilter{

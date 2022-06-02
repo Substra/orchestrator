@@ -18,7 +18,7 @@ func TestEventTSFilter(t *testing.T) {
 
 	nbTasks := 10
 
-	appClient.RegisterAlgo(client.DefaultAlgoOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -26,7 +26,7 @@ func TestEventTSFilter(t *testing.T) {
 
 	newTasks := make([]client.Taskable, 0, nbTasks)
 	for i := 0; i < nbTasks; i++ {
-		newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTaskRef))
+		newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
 	}
 	appClient.RegisterTasks(newTasks...)
 

@@ -19,6 +19,7 @@ func (t *NewComputeTask) Validate() error {
 		validation.Field(&t.Metadata, validation.By(validateMetadata)),
 		validation.Field(&t.ParentTaskKeys, validation.Each(is.UUID)),
 		validation.Field(&t.Data, validation.Required),
+		validation.Field(&t.Outputs, validation.By(validateTaskOutputs)),
 	)
 
 	if baseTaskErr != nil {
@@ -60,7 +61,6 @@ func (t *NewCompositeTrainTaskData) Validate() error {
 	return validation.ValidateStruct(t,
 		validation.Field(&t.DataManagerKey, validation.Required, is.UUID),
 		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)),
-		validation.Field(&t.TrunkPermissions, validation.Required),
 	)
 }
 
@@ -85,5 +85,32 @@ func (p *ApplyTaskActionParam) Validate() error {
 			ComputeTaskAction_TASK_ACTION_FAILED,
 			ComputeTaskAction_TASK_ACTION_CANCELED,
 		)),
+	)
+}
+
+func validateTaskOutputs(input interface{}) error {
+	outputs, ok := input.(map[string]*NewComputeTaskOutput)
+	if !ok {
+		return errors.NewInvalidAsset("outputs is not a proper map")
+	}
+
+	for identifier, output := range outputs {
+		err := validation.Validate(identifier, validation.Required)
+		if err != nil {
+			return err
+		}
+
+		err = output.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *NewComputeTaskOutput) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Permissions, validation.Required),
 	)
 }

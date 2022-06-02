@@ -71,7 +71,12 @@ func (d *DBAL) AddComputeTasks(tasks ...*asset.ComputeTask) error {
 		return err
 	}
 
-	return d.insertTaskInputs(tasks)
+	err = d.insertTaskInputs(tasks)
+	if err != nil {
+		return err
+	}
+
+	return d.insertTaskOutputs(tasks)
 }
 
 // insertTasks insert tasks in database in batch mode.
@@ -255,17 +260,21 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 		return nil, err
 	}
 
-	inputs, err := d.getTaskInputs(key)
+	err = d.populateAlgosIO(res.Algo)
 	if err != nil {
 		return nil, err
 	}
 
-	res.Inputs = inputs[key]
+	err = d.populateTasksIO(res)
+	if err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
 
-// GetComputeTaskChildren returns the children of the task identified by the given key
+// GetComputeTaskChildren returns the children of the task identified by the given key.
+// Warning: this function doesn't populate the task input/output fields, not the algo input/output fields.
 func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
@@ -340,7 +349,7 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 }
 
 // queryBaseComputeTasks will return tasks without inputs/outputs, their keys and pagination token
-func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) (map[string]*asset.ComputeTask, []string, common.PaginationToken, error) {
+func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
 			"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_category", "algo_description_address",
@@ -350,30 +359,34 @@ func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer fun
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key")
 
-	var offset int
-	var err error
+	var (
+		offset int
+		err    error
+		tasks  []*asset.ComputeTask
+	)
 
 	if pagination != nil {
 		offset, err = getOffset(pagination.Token)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, "", err
 		}
 
 		stmt = stmt.Offset(uint64(offset)).
 			// Fetch page size + 1 elements to determine whether there is a next page
 			Limit(uint64(pagination.Size + 1))
+
+		tasks = make([]*asset.ComputeTask, 0, pagination.Size)
+	} else {
+		tasks = make([]*asset.ComputeTask, 0)
 	}
 
 	stmt = filterer(stmt)
 
 	rows, err := d.query(stmt)
 	if err != nil {
-		return nil, nil, "", err
+		return nil, "", err
 	}
 	defer rows.Close()
-
-	tasks := make(map[string]*asset.ComputeTask)
-	keys := make([]string, 0)
 
 	var count int
 
@@ -386,25 +399,23 @@ func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer fun
 			&ct.Algo.Description.Checksum, &ct.Algo.Algorithm.StorageAddress, &ct.Algo.Algorithm.Checksum, &ct.Algo.Permissions, &ct.Algo.Owner,
 			&ct.Algo.CreationDate, &ct.Algo.Metadata, &ct.ParentTaskKeys)
 		if err != nil {
-			return nil, nil, "", err
+			return nil, "", err
 		}
 
 		task, err := ct.toComputeTask()
 		if err != nil {
-			return nil, nil, "", err
+			return nil, "", err
 		}
 
-		tasks[task.Key] = task
+		tasks = append(tasks, task)
 		count++
-
-		keys = append(keys, task.Key)
 
 		if pagination != nil && count == int(pagination.Size) {
 			break
 		}
 	}
 	if err = rows.Err(); err != nil {
-		return nil, nil, "", err
+		return nil, "", err
 	}
 
 	bookmark := ""
@@ -413,30 +424,32 @@ func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer fun
 		bookmark = strconv.Itoa(offset + count)
 	}
 
-	return tasks, keys, bookmark, nil
+	return tasks, bookmark, nil
 }
 
 func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) ([]*asset.ComputeTask, common.PaginationToken, error) {
-	tasks, keys, bookmark, err := d.queryBaseComputeTasks(pagination, filterer)
+	tasks, bookmark, err := d.queryBaseComputeTasks(pagination, filterer)
 	if err != nil {
 		return nil, "", err
 	}
 
-	inputs, err := d.getTaskInputs(keys...)
-	if err != nil {
-		return nil, "", err
-	}
-
-	for key, inputs := range inputs {
-		tasks[key].Inputs = inputs
-	}
-
-	res := make([]*asset.ComputeTask, 0, len(tasks))
+	algos := make([]*asset.Algo, 0, len(tasks))
 	for _, task := range tasks {
-		res = append(res, task)
+		log.Debug(algos)
+		algos = append(algos, task.Algo)
 	}
 
-	return res, bookmark, nil
+	err = d.populateAlgosIO(algos...)
+	if err != nil {
+		return nil, "", err
+	}
+
+	err = d.populateTasksIO(tasks...)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return tasks, bookmark, nil
 }
 
 // taskFilterToQuery convert as filter into query string and param list

@@ -142,9 +142,9 @@ func TestRegisterTrainModel(t *testing.T) {
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Category: asset.ComputeTaskCategory_TASK_TRAIN,
 		Worker:   "test",
-		Data: &asset.ComputeTask_Train{
-			Train: &asset.TrainTaskData{
-				ModelPermissions: &asset.Permissions{
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"model": {
+				Permissions: &asset.Permissions{
 					Process: &asset.Permission{
 						Public:        true,
 						AuthorizedIds: []string{},
@@ -222,9 +222,9 @@ func TestRegisterAggregateModel(t *testing.T) {
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
 		Worker:   "test",
-		Data: &asset.ComputeTask_Aggregate{
-			Aggregate: &asset.AggregateTrainTaskData{
-				ModelPermissions: &asset.Permissions{
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"model": {
+				Permissions: &asset.Permissions{
 					Process: &asset.Permission{
 						Public:        true,
 						AuthorizedIds: []string{"org1", "org2"},
@@ -333,9 +333,9 @@ func TestRegisterHeadModel(t *testing.T) {
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
 		Worker:   "test",
-		Data: &asset.ComputeTask_Composite{
-			Composite: &asset.CompositeTrainTaskData{
-				HeadPermissions: &asset.Permissions{
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"shared": {
+				Permissions: &asset.Permissions{
 					Process: &asset.Permission{
 						Public:        true,
 						AuthorizedIds: []string{},
@@ -344,8 +344,9 @@ func TestRegisterHeadModel(t *testing.T) {
 						Public:        true,
 						AuthorizedIds: []string{},
 					},
-				},
-				TrunkPermissions: &asset.Permissions{
+				}},
+			"local": {
+				Permissions: &asset.Permissions{
 					Process: &asset.Permission{
 						Public:        true,
 						AuthorizedIds: []string{},
@@ -354,8 +355,7 @@ func TestRegisterHeadModel(t *testing.T) {
 						Public:        true,
 						AuthorizedIds: []string{},
 					},
-				},
-			},
+				}},
 		},
 	}
 
@@ -882,9 +882,9 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Category: asset.ComputeTaskCategory_TASK_TRAIN,
 		Worker:   "test",
-		Data: &asset.ComputeTask_Train{
-			Train: &asset.TrainTaskData{
-				ModelPermissions: &asset.Permissions{
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"model": {
+				Permissions: &asset.Permissions{
 					Process: &asset.Permission{
 						Public:        true,
 						AuthorizedIds: []string{},
@@ -972,9 +972,9 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
 		Worker:   "test",
-		Data: &asset.ComputeTask_Composite{
-			Composite: &asset.CompositeTrainTaskData{
-				HeadPermissions: &asset.Permissions{
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"shared": {
+				Permissions: &asset.Permissions{
 					Process: &asset.Permission{
 						Public:        true,
 						AuthorizedIds: []string{},
@@ -983,8 +983,9 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 						Public:        true,
 						AuthorizedIds: []string{},
 					},
-				},
-				TrunkPermissions: &asset.Permissions{
+				}},
+			"local": {
+				Permissions: &asset.Permissions{
 					Process: &asset.Permission{
 						Public:        true,
 						AuthorizedIds: []string{},
@@ -993,8 +994,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 						Public:        true,
 						AuthorizedIds: []string{},
 					},
-				},
-			},
+				}},
 		},
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Times(2).Return(task, nil)
@@ -1089,4 +1089,32 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
+}
+
+func TestRegisterMissingOutput(t *testing.T) {
+	provider := newMockedProvider()
+	service := NewModelService(provider)
+
+	task := &asset.ComputeTask{
+		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status:   asset.ComputeTaskStatus_STATUS_DOING,
+		Category: asset.ComputeTaskCategory_TASK_TRAIN,
+		Worker:   "test",
+		Outputs:  map[string]*asset.ComputeTaskOutput{},
+	}
+
+	model := &asset.NewModel{
+		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:       asset.ModelCategory_MODEL_SIMPLE,
+		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Address: &asset.Addressable{
+			StorageAddress: "https://somewhere",
+			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		},
+	}
+
+	_, err := service.registerModel(model, "test", []*asset.Model{}, task)
+	assert.ErrorContains(t, err, "has no output model")
+
+	provider.AssertExpectations(t)
 }
