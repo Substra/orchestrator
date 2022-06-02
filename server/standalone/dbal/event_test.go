@@ -74,10 +74,7 @@ func TestEventQuery(t *testing.T) {
 
 	res, _, err := dbal.QueryEvents(common.NewPagination("", 10), &asset.EventQueryFilter{}, asset.SortOrder_ASCENDING)
 	assert.NoError(t, err)
-
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 
 	for _, event := range res {
 		assert.Equal(t, testChannel, event.Channel)

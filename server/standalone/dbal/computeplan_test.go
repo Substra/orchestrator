@@ -45,9 +45,7 @@ func TestGetComputePlan(t *testing.T) {
 	assert.Equal(t, uint32(6), plan.DoneCount)
 	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plan.Status)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetRawComputePlan(t *testing.T) {
@@ -78,9 +76,7 @@ func TestGetRawComputePlan(t *testing.T) {
 	assert.Equal(t, uint32(0), plan.DoneCount)
 	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, plan.Status)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestQueryComputePlans(t *testing.T) {
@@ -120,9 +116,7 @@ func TestQueryComputePlans(t *testing.T) {
 	assert.Equal(t, uint32(6), plans[0].DoneCount)
 	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plans[0].Status)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestQueryComputePlansNilFilter(t *testing.T) {
@@ -151,7 +145,5 @@ func TestQueryComputePlansNilFilter(t *testing.T) {
 	)
 	assert.NoError(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

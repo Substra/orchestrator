@@ -39,9 +39,7 @@ func TestQueryDataManagers(t *testing.T) {
 	assert.Len(t, res, 2)
 	assert.Equal(t, "", bookmark, "last page should be reached")
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestPaginatedQueryDataManagers(t *testing.T) {
@@ -66,7 +64,5 @@ func TestPaginatedQueryDataManagers(t *testing.T) {
 	assert.Len(t, res, 1)
 	assert.Equal(t, "1", bookmark, "There should be another page")
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

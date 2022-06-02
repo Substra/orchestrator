@@ -84,9 +84,7 @@ func TestQueryAlgos(t *testing.T) {
 	assert.Len(t, res[1].Outputs, 2)
 	assert.Equal(t, "", bookmark, "last page should be reached")
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestPaginatedQueryAlgos(t *testing.T) {
@@ -121,9 +119,7 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 	assert.Len(t, res[0].Outputs, 2)
 	assert.Equal(t, "1", bookmark, "There should be another page")
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetAlgo(t *testing.T) {
@@ -206,9 +202,7 @@ func TestQueryAlgosByComputePlan(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestQueryAlgosNilFilter(t *testing.T) {
@@ -238,7 +232,5 @@ func TestQueryAlgosNilFilter(t *testing.T) {
 	_, _, err = dbal.QueryAlgos(common.NewPagination("", 12), nil)
 	assert.NoError(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -166,9 +166,7 @@ func TestGetTasks(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetNoTask(t *testing.T) {
@@ -195,9 +193,7 @@ func TestGetNoTask(t *testing.T) {
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrNotFound, orcError.Kind)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestQueryComputeTasks(t *testing.T) {
@@ -231,9 +227,7 @@ func TestQueryComputeTasks(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, res, 1)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestAddComputeTask(t *testing.T) {
@@ -285,9 +279,7 @@ func TestAddComputeTask(t *testing.T) {
 	err = dbal.AddComputeTasks(newTask)
 	assert.NoError(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestAddComputeTasks(t *testing.T) {
@@ -357,9 +349,7 @@ func TestAddComputeTasks(t *testing.T) {
 	err = dbal.AddComputeTasks(newTasks...)
 	assert.NoError(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestQueryComputeTasksNilFilter(t *testing.T) {
@@ -392,7 +382,5 @@ func TestQueryComputeTasksNilFilter(t *testing.T) {
 	)
 	assert.NoError(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -33,9 +33,7 @@ func TestAddNode(t *testing.T) {
 	err = dbal.AddNode(node)
 	assert.NoError(t, err)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestNodeExists(t *testing.T) {
@@ -60,9 +58,7 @@ func TestNodeExists(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetAllNodes(t *testing.T) {
@@ -97,9 +93,7 @@ func TestGetAllNodes(t *testing.T) {
 	assert.Equal(t, node1, res[0])
 	assert.Equal(t, node2, res[1])
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestGetNode(t *testing.T) {
@@ -127,7 +121,5 @@ func TestGetNode(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, res, node)
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
