@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "orchestrator.eventForwarder.labels" . | nindent 4 }}
 data:
-  FORWARDER_AMQP_DSN: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.port}}/
+  FORWARDER_AMQP_DSN: amqp://{{.Values.rabbitmq.auth.username}}:{{.Values.rabbitmq.auth.password}}@{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.ports.amqp}}/
   FORWARDER_CONFIG_PATH: /var/hyperledger/forwarder-config.yaml
 
   FORWARDER_FABRIC_CERT: /var/hyperledger/msp/signcerts/cert.pem

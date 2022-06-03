@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.0.0] - 2022-06-03
+
+### Changed
+- Dependencies versions for RabbitMQ and PostgreSQL including major upgrades.
+
 ## [6.2.2] - 2022-06-02
 
 ### Changed

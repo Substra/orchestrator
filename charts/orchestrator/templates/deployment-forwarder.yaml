@@ -29,7 +29,7 @@ spec:
       initContainers:
       - name: wait-rabbitmq
         image: busybox
-        command: ['sh', '-c', 'until nc -vz {{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }} {{ if $.Values.rabbitmq.auth.tls.enabled }}{{.Values.rabbitmq.service.tlsPort}}{{ else }}{{.Values.rabbitmq.service.port}}{{ end }}; do echo "Waiting for rabbitmq service"; sleep 5; done;']
+        command: ['sh', '-c', 'until nc -vz {{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }} {{ if $.Values.rabbitmq.auth.tls.enabled }}{{.Values.rabbitmq.service.ports.amqpTls}}{{ else }}{{.Values.rabbitmq.service.ports.amqp}}{{ end }}; do echo "Waiting for rabbitmq service"; sleep 5; done;']
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

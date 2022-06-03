@@ -32,8 +32,9 @@ metrics:
 
 postgresql:
   enabled: true
-  persistence:
-    enabled: false
+  primary:
+    persistence:
+      enabled: false
 
 rabbitmq:
   auth:

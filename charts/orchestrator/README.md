@@ -62,12 +62,14 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 
 ### PostgreSQL settings
 
-| Name                            | Description                                                                | Value          |
-| ------------------------------- | -------------------------------------------------------------------------- | -------------- |
-| `postgresql.enabled`            | If true, deploy PostgreSQL                                                 | `true`         |
-| `postgresql.postgresqlDatabase` | PostgreSQL database the orchestrator should use                            | `orchestrator` |
-| `postgresql.postgresqlUsername` | PostgreSQL user (creates a non-admin user when username is not `postgres`) | `postgres`     |
-| `postgresql.postgresqlPassword` | PostgreSQL user password                                                   | `postgres`     |
+| Name                                 | Description                                                                | Value          |
+| ------------------------------------ | -------------------------------------------------------------------------- | -------------- |
+| `postgresql.enabled`                 | If true, deploy PostgreSQL                                                 | `true`         |
+| `postgresql.auth.enablePostgresUser` | creates a PostgreSQL user                                                  | `true`         |
+| `postgresql.auth.postgresPassword`   | password for the postgres admin user                                       | `postgres`     |
+| `postgresql.auth.username`           | PostgreSQL user (creates a non-admin user when username is not `postgres`) | `postgres`     |
+| `postgresql.auth.password`           | PostgreSQL user password                                                   | `postgres`     |
+| `postgresql.auth.database`           | PostgreSQL database the orchestrator should use                            | `orchestrator` |
 
 
 ### Hyperledger Fabric settings

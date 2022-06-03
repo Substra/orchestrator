@@ -166,15 +166,23 @@ postgresql:
   ## @param postgresql.enabled If true, deploy PostgreSQL
   ##
   enabled: true
-  ## @param postgresql.postgresqlDatabase PostgreSQL database the orchestrator should use
-  ##
-  postgresqlDatabase: orchestrator
-  ## @param postgresql.postgresqlUsername PostgreSQL user (creates a non-admin user when username is not `postgres`)
-  ##
-  postgresqlUsername: postgres
-  ## @param postgresql.postgresqlPassword PostgreSQL user password
-  ##
-  postgresqlPassword: postgres
+  auth:
+    ## @param postgresql.auth.enablePostgresUser creates a PostgreSQL user
+    ##
+    enablePostgresUser: true
+    ## @param postgresql.auth.postgresPassword password for the postgres admin user
+    ##
+    postgresPassword: postgres
+    ## @param postgresql.auth.username PostgreSQL user (creates a non-admin user when username is not `postgres`)
+    ##
+    username: postgres
+    ## @param postgresql.auth.password PostgreSQL user password
+    ##
+    password: postgres
+    ## @param postgresql.auth.database PostgreSQL database the orchestrator should use
+    ##
+    database: orchestrator
+    
 
 ## @skip rabbitmq
 ##
@@ -185,7 +193,8 @@ rabbitmq:
     tls:
       enabled: false
   service:
-    port: 5672
+    ports:
+      amqp: 5672
 
 ## @section Hyperledger Fabric settings
 ##
