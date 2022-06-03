@@ -15,5 +15,5 @@ func TestGetOffset(t *testing.T) {
 
 	valueOffset, err := getOffset("12")
 	assert.NoError(t, err)
-	assert.Equal(t, 12, valueOffset, "valued token should be parserd as int")
+	assert.Equal(t, 12, valueOffset, "valued token should be parsed as int")
 }

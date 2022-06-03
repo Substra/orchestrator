@@ -62,7 +62,7 @@ type taskStateUpdater interface {
 }
 
 // dumbStateUpdater implements taskStateUpdater but does nothing,
-// it can be used to evaluate a task state without risking to accidentaly update it
+// it can be used to evaluate a task state without risking to accidentally update it
 type dumbStateUpdater struct{}
 
 func (d *dumbStateUpdater) onStateChange(e *fsm.Event) {}

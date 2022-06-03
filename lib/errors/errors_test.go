@@ -10,7 +10,7 @@ import (
 
 var errTest = errors.New("underlying errror")
 
-func TestMessageFormating(t *testing.T) {
+func TestMessageFormatting(t *testing.T) {
 	err := NewError(ErrNotFound, "asset not found")
 	assert.Equal(t, "OE0002: asset not found", err.Error())
 

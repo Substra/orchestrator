@@ -50,7 +50,7 @@ To match the resulting permissions, one has to satisfy both A **and** B permissi
 
 | A                                    | B                                          | A∧B                                  |
 |--------------------------------------|--------------------------------------------|--------------------------------------|
-| Public: true                         | Public: false, AuthorizedIds: [test]       | Public: false, Authorizedids: [test] |
+| Public: true                         | Public: false, AuthorizedIds: [test]       | Public: false, AuthorizedIds: [test] |
 | Public: false, AuthorizedIds: [org1] | Public: false, AuthorizedIds: [org2]       | Public: false, AuthorizedIds: []     |
 | Public: false, AuthorizedIds: [org1] | Public: false, AuthorizedIds: [org1, org2] | Public: false, AuthorizedIds: [org1] |
 

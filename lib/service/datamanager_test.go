@@ -82,7 +82,7 @@ func TestRegisterDataManager(t *testing.T) {
 	dm, err := service.RegisterDataManager(newDataManager, "owner")
 
 	assert.NoError(t, err, "Registration of valid datamanager should not fail")
-	assert.NotNil(t, dm, "Registratrion should return a datamanager asset")
+	assert.NotNil(t, dm, "Registration should return a datamanager asset")
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
