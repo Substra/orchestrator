@@ -216,7 +216,7 @@ func TestUpdateAllowed(t *testing.T) {
 		"worker cancel": {
 			requester: "worker",
 			action:    asset.ComputeTaskAction_TASK_ACTION_CANCELED,
-			outcome:   false,
+			outcome:   true,
 		},
 		"worker fail": {
 			requester: "worker",

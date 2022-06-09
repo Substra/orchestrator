@@ -462,3 +462,34 @@ func TestEventsDuringComputeTaskLifecycle(t *testing.T) {
 	startEventTask := getEventTask(asset.EventKind_EVENT_ASSET_UPDATED)
 	e2erequire.ProtoEqual(t, startedTask, startEventTask)
 }
+
+// TestWorkerCancelTaskInFailedComputePlan ensures that a worker can cancel a task it does not own
+// following the failure of the compute plan.
+func TestWorkerCancelTaskInFailedComputePlan(t *testing.T) {
+	client1 := factory.WithMSPID("MyOrg1MSP").NewTestClient()
+	client2 := factory.WithMSPID("MyOrg2MSP").NewTestClient().WithKeyStore(client1.GetKeyStore())
+
+	client1.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("trainAlgo"))
+	client1.RegisterDataManager(client.DefaultDataManagerOptions())
+	client1.RegisterDataSample(client.DefaultDataSampleOptions())
+	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	client1.RegisterTasks(
+		client.DefaultTrainTaskOptions().WithAlgoRef("trainAlgo").WithKeyRef("trainTask1"),
+		client.DefaultTrainTaskOptions().WithAlgoRef("trainAlgo").WithKeyRef("trainTask2"),
+	)
+
+	client1.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("aggAlgo"))
+	client1.RegisterTasks(client.DefaultAggregateTaskOptions().
+		WithAlgoRef("aggAlgo").
+		WithKeyRef("aggTask").
+		WithParentsRef("trainTask1").
+		WithWorker("MyOrg2MSP"))
+
+	client1.StartTask("trainTask1")
+	client1.RegisterModel(client.DefaultModelOptions().WithTaskRef("trainTask1"))
+
+	client1.StartTask("trainTask2")
+	client1.FailTask("trainTask2")
+	client2.CancelTask("aggTask")
+}

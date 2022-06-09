@@ -140,6 +140,15 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 	return client
 }
 
+func (f *TestClientFactory) WithMSPID(mspid string) *TestClientFactory {
+	return &TestClientFactory{
+		conn:      f.conn,
+		mspid:     mspid,
+		channel:   f.channel,
+		chaincode: f.chaincode,
+	}
+}
+
 func (c *TestClient) WithKeyStore(ks *KeyStore) *TestClient {
 	c.ks = ks
 	return c

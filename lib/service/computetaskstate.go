@@ -296,7 +296,7 @@ func getInitialStatusFromParents(parents []*asset.ComputeTask) asset.ComputeTask
 func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requester string) bool {
 	switch action {
 	case asset.ComputeTaskAction_TASK_ACTION_CANCELED:
-		return requester == task.Owner
+		return requester == task.Owner || requester == task.Worker
 	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_FAILED:
 		return requester == task.Worker
 	default:

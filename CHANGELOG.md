@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - use go test to run e2e tests (#754)
 
+### Fixed
+- allow a worker to cancel a task it does not own (#780)
+
 ## [0.14.0] - 2022-05-31
 
 ### Added

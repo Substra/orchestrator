@@ -10,6 +10,7 @@ spec:
   subject:
     organizations:
       - MyOrg1MSP
+      - MyOrg2MSP
   isCA: false
   privateKey:
     algorithm: RSA
