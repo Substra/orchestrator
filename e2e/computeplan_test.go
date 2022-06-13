@@ -80,7 +80,7 @@ func TestCancelComputePlan(t *testing.T) {
 	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, cmp1.Status)
 }
 
-// TestMultiStageComputePlan is the "canonical" example of FL with 2 nodes aggregating their trunks
+// TestMultiStageComputePlan is the "canonical" example of FL with 2 organizations aggregating their trunks
 // This does not check multi-organization setup though!
 //
 //   ,========,                ,========,

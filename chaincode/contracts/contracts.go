@@ -12,13 +12,13 @@ import (
 	"github.com/owkin/orchestrator/chaincode/failurereport"
 	"github.com/owkin/orchestrator/chaincode/info"
 	"github.com/owkin/orchestrator/chaincode/model"
-	"github.com/owkin/orchestrator/chaincode/node"
+	"github.com/owkin/orchestrator/chaincode/organization"
 	"github.com/owkin/orchestrator/chaincode/performance"
 )
 
 // AllContracts is the list referencing all smartcontracts supported by the chaincode
 var AllContracts []contractapi.ContractInterface = []contractapi.ContractInterface{
-	node.NewSmartContract(),
+	organization.NewSmartContract(),
 	datasample.NewSmartContract(),
 	algo.NewSmartContract(),
 	datamanager.NewSmartContract(),

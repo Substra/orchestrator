@@ -51,7 +51,7 @@ type ComputeTaskDependencyProvider interface {
 	DataManagerServiceProvider
 	DataSampleServiceProvider
 	PermissionServiceProvider
-	NodeServiceProvider
+	OrganizationServiceProvider
 	ComputePlanServiceProvider
 	ModelServiceProvider
 	TimeServiceProvider
@@ -504,7 +504,7 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 
 // setAggregateData hydrates task specific AggregateTrainTaskData from input
 func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, input *asset.NewAggregateTrainTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
-	node, err := s.GetNodeService().GetNode(input.Worker)
+	organization, err := s.GetOrganizationService().GetOrganization(input.Worker)
 	if err != nil {
 		return err
 	}
@@ -526,7 +526,7 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 	task.Data = &asset.ComputeTask_Aggregate{
 		Aggregate: taskData,
 	}
-	task.Worker = node.Id
+	task.Worker = organization.Id
 	task.Algo = algo
 	task.LogsPermission = logsPermission
 

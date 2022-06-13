@@ -14,7 +14,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ### Standalone
 
-to install the chart with the release name `my-release` with one organisation named `MyOrg1MSP`:
+to install the chart with the release name `my-release` with one organization named `MyOrg1MSP`:
 
 ```bash
 helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' --set 'channels[0].organizations={MyOrg1MSP}'
@@ -24,40 +24,40 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 
 ### Global orchestrator settings
 
-| Name                                       | Description                                                                   | Value                     |
-| ------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------- |
-| `imagePullSecrets`                         | Image pull secrets                                                            | `[]`                      |
-| `nameOverride`                             | String to partially override the `orchestrator.fullname`                      | `""`                      |
-| `fullnameOverride`                         | String to fully override the `orchestrator.fullname`                          | `""`                      |
-| `serviceAccount.create`                    | Enable creation of a ServiceAccount for the orchestrator pods                 | `true`                    |
-| `serviceAccount.annotations`               | Annotations to add to the ServiceAccount                                      | `{}`                      |
-| `serviceAccount.name`                      | Name of the created ServiceAccount                                            | `""`                      |
-| `podAnnotations`                           | Orchestrator pod annotations                                                  | `{}`                      |
-| `podSecurityContext`                       | Orchestrator pod security context                                             | `{}`                      |
-| `securityContext`                          | Orchestrator container security context                                       | `{}`                      |
-| `service.type`                             | Orchestrator service type                                                     | `ClusterIP`               |
-| `service.port`                             | Orchestrator service port                                                     | `9000`                    |
-| `service.nodePort`                         | Orchestrator service port on the node if service type is `NodePort`           | `""`                      |
-| `metrics.enabled`                          | Expose Prometheus metrics                                                     | `false`                   |
-| `metrics.serviceMonitor.enabled`           | Create ServiceMonitor resource for scraping metrics using Prometheus Operator | `false`                   |
-| `metrics.serviceMonitor.namespace`         | Namespace for the ServiceMonitor resource (defaults to the Release Namespace) | `""`                      |
-| `metrics.serviceMonitor.interval`          | Interval at which metrics should be scraped                                   | `""`                      |
-| `metrics.serviceMonitor.scrapeTimeout`     | Timeout after which the scrape is ended                                       | `""`                      |
-| `metrics.serviceMonitor.relabelings`       | RelabelConfigs to apply to samples before scraping                            | `[]`                      |
-| `metrics.serviceMonitor.metricRelabelings` | MetricRelabelConfigs to apply to samples before insertion                     | `[]`                      |
-| `metrics.serviceMonitor.honorLabels`       | Specify honorLabels parameter of the scrape endpoint                          | `false`                   |
-| `ingress.enabled`                          | Enable ingress for Orchestrator service                                       | `false`                   |
-| `ingress.ingressClassName`                 | Ingress class name                                                            | `nil`                     |
-| `ingress.path`                             | path of the deault host                                                       | `/`                       |
-| `ingress.hostname`                         | hostname of the default host                                                  | `orchestrator.node-1.com` |
-| `ingress.extraPaths`                       | The list of extra paths to be created for the default host                    | `[]`                      |
-| `ingress.pathType`                         | Ingress path type                                                             | `ImplementationSpecific`  |
-| `ingress.extraHosts`                       | The list of additional hostnames to be covered with this ingress record       | `[]`                      |
-| `ingress.extraTls`                         | The tls configuration for hostnames to be coverred by the ingress             | `[]`                      |
-| `resources`                                | Resource configuration for the `orchestrator` container                       | `{}`                      |
-| `nodeSelector`                             | Node labels used for pod assignment                                           | `{}`                      |
-| `tolerations`                              | Tolerations labels for pod assignment                                         | `[]`                      |
-| `affinity`                                 | Affinity settings for pod assignment                                          | `{}`                      |
+| Name                                       | Description                                                                   | Value                    |
+| ------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------ |
+| `imagePullSecrets`                         | Image pull secrets                                                            | `[]`                     |
+| `nameOverride`                             | String to partially override the `orchestrator.fullname`                      | `""`                     |
+| `fullnameOverride`                         | String to fully override the `orchestrator.fullname`                          | `""`                     |
+| `serviceAccount.create`                    | Enable creation of a ServiceAccount for the orchestrator pods                 | `true`                   |
+| `serviceAccount.annotations`               | Annotations to add to the ServiceAccount                                      | `{}`                     |
+| `serviceAccount.name`                      | Name of the created ServiceAccount                                            | `""`                     |
+| `podAnnotations`                           | Orchestrator pod annotations                                                  | `{}`                     |
+| `podSecurityContext`                       | Orchestrator pod security context                                             | `{}`                     |
+| `securityContext`                          | Orchestrator container security context                                       | `{}`                     |
+| `service.type`                             | Orchestrator service type                                                     | `ClusterIP`              |
+| `service.port`                             | Orchestrator service port                                                     | `9000`                   |
+| `service.nodePort`                         | Orchestrator service port on the node if service type is `NodePort`           | `""`                     |
+| `metrics.enabled`                          | Expose Prometheus metrics                                                     | `false`                  |
+| `metrics.serviceMonitor.enabled`           | Create ServiceMonitor resource for scraping metrics using Prometheus Operator | `false`                  |
+| `metrics.serviceMonitor.namespace`         | Namespace for the ServiceMonitor resource (defaults to the Release Namespace) | `""`                     |
+| `metrics.serviceMonitor.interval`          | Interval at which metrics should be scraped                                   | `""`                     |
+| `metrics.serviceMonitor.scrapeTimeout`     | Timeout after which the scrape is ended                                       | `""`                     |
+| `metrics.serviceMonitor.relabelings`       | RelabelConfigs to apply to samples before scraping                            | `[]`                     |
+| `metrics.serviceMonitor.metricRelabelings` | MetricRelabelConfigs to apply to samples before insertion                     | `[]`                     |
+| `metrics.serviceMonitor.honorLabels`       | Specify honorLabels parameter of the scrape endpoint                          | `false`                  |
+| `ingress.enabled`                          | Enable ingress for Orchestrator service                                       | `false`                  |
+| `ingress.ingressClassName`                 | Ingress class name                                                            | `nil`                    |
+| `ingress.path`                             | path of the deault host                                                       | `/`                      |
+| `ingress.hostname`                         | hostname of the default host                                                  | `orchestrator.org-1.com` |
+| `ingress.extraPaths`                       | The list of extra paths to be created for the default host                    | `[]`                     |
+| `ingress.pathType`                         | Ingress path type                                                             | `ImplementationSpecific` |
+| `ingress.extraHosts`                       | The list of additional hostnames to be covered with this ingress record       | `[]`                     |
+| `ingress.extraTls`                         | The tls configuration for hostnames to be coverred by the ingress             | `[]`                     |
+| `resources`                                | Resource configuration for the `orchestrator` container                       | `{}`                     |
+| `nodeSelector`                             | Node labels used for pod assignment                                           | `{}`                     |
+| `tolerations`                              | Tolerations labels for pod assignment                                         | `[]`                     |
+| `affinity`                                 | Affinity settings for pod assignment                                          | `{}`                     |
 
 
 ### PostgreSQL settings
@@ -194,7 +194,7 @@ ingress:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
   hosts:
-  - host: orchestrator.node-1.com
+  - host: orchestrator.org-1.com
     paths:
       - "/"
 ```

@@ -25,7 +25,7 @@ func TestServiceProviderInit(t *testing.T) {
 	time := new(MockTimeAPI)
 	provider := NewProvider(log.Entry{}, dbal, queue, time, "testChannel")
 
-	assert.Implements(t, (*NodeServiceProvider)(nil), provider, "service provider should provide NodeService")
+	assert.Implements(t, (*OrganizationServiceProvider)(nil), provider, "service provider should provide OrganizationService")
 	assert.Implements(t, (*DataSampleServiceProvider)(nil), provider, "service provider should provide DataSampleService")
 	assert.Implements(t, (*DataManagerDependencyProvider)(nil), provider, "service provider should provide DataManagerService")
 	assert.Implements(t, (*DatasetDependencyProvider)(nil), provider, "service provider should provide DatasetService")
@@ -41,12 +41,12 @@ func TestLazyInstanciation(t *testing.T) {
 	time := new(MockTimeAPI)
 	provider := NewProvider(log.Entry{}, dbal, queue, time, "testChannel")
 
-	assert.Nil(t, provider.node, "service should be instanciated when needed")
+	assert.Nil(t, provider.organization, "service should be instanciated when needed")
 
-	s := provider.GetNodeService()
+	s := provider.GetOrganizationService()
 	assert.NotNil(t, s, "provider should provide an instance")
-	assert.NotNil(t, provider.node, "provider should reuse the service instance")
+	assert.NotNil(t, provider.organization, "provider should reuse the service instance")
 
-	s2 := provider.GetNodeService()
+	s2 := provider.GetOrganizationService()
 	assert.Equal(t, s, s2, "the same instance should be reused")
 }

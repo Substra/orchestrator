@@ -84,7 +84,7 @@ type clientCACertCallback = func(org, filepath string) error
 
 // walkClientCACerts will walk the TLS client directory, stopping at the first error.
 // Expected structure is to have a directory per org, and one or more certificates in it.
-// The callback will receive the parent organisation name along with the file path.
+// The callback will receive the parent organization name along with the file path.
 func walkClientCACerts(root string, callback clientCACertCallback) error {
 	fileInfo, err := ioutil.ReadDir(root)
 	if err != nil {
@@ -153,7 +153,7 @@ func findCACerts(root string) ([]string, error) {
 
 type OrgCACertList = map[string][]string
 
-// GetOrgCACerts returns the valid CA keys per organisation (mspid).
+// GetOrgCACerts returns the valid CA keys per organization (mspid).
 func GetOrgCACerts() (OrgCACertList, error) {
 	orgCACerts := make(OrgCACertList)
 

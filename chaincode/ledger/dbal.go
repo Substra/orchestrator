@@ -64,7 +64,7 @@ const computePlanTaskStatusIndex = "computePlan~computePlanKey~status~task"
 const computeTaskParentIndex = "computeTask~parentTask~key"
 const modelTaskKeyIndex = "model~taskKey~modelKey"
 const performanceIndex = "performance~taskKey~metricKey"
-const allNodesIndex = "nodes~id"
+const allOrganizationsIndex = "organizations~id"
 
 // getTransactionState returns a copy of an object that has been updated or created during the transaction
 func (db *DB) getTransactionState(key string) ([]byte, bool) {
@@ -264,46 +264,46 @@ func getFullKey(resource string, key string) string {
 	return resource + ":" + key
 }
 
-// AddNode stores a new Node
-func (db *DB) AddNode(node *asset.Node) error {
-	nodeBytes, err := marshaller.Marshal(node)
+// AddOrganization stores a new Organization
+func (db *DB) AddOrganization(organization *asset.Organization) error {
+	organizationBytes, err := marshaller.Marshal(organization)
 	if err != nil {
 		return err
 	}
-	err = db.putState(asset.NodeKind, node.GetId(), nodeBytes)
+	err = db.putState(asset.OrganizationKind, organization.GetId(), organizationBytes)
 	if err != nil {
 		return err
 	}
 
-	return db.createIndex(allNodesIndex, []string{asset.NodeKind, node.Id})
+	return db.createIndex(allOrganizationsIndex, []string{asset.OrganizationKind, organization.Id})
 }
 
-// GetAllNodes returns all known Nodes
-func (db *DB) GetAllNodes() ([]*asset.Node, error) {
-	elementKeys, err := db.getIndexKeys(allNodesIndex, []string{asset.NodeKind})
+// GetAllOrganizations returns all known Organizations
+func (db *DB) GetAllOrganizations() ([]*asset.Organization, error) {
+	elementKeys, err := db.getIndexKeys(allOrganizationsIndex, []string{asset.OrganizationKind})
 	if err != nil {
 		return nil, err
 	}
 
-	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetAllNodes")
+	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetAllOrganizations")
 
-	nodes := []*asset.Node{}
+	organizations := []*asset.Organization{}
 	for _, id := range elementKeys {
-		node, err := db.GetNode(id)
+		organization, err := db.GetOrganization(id)
 		if err != nil {
 			return nil, err
 		}
-		nodes = append(nodes, node)
+		organizations = append(organizations, organization)
 	}
 
-	return nodes, nil
+	return organizations, nil
 }
 
-// GetNode returns a node by its ID
-func (db *DB) GetNode(id string) (*asset.Node, error) {
-	n := asset.Node{}
+// GetOrganization returns an organization by its ID
+func (db *DB) GetOrganization(id string) (*asset.Organization, error) {
+	n := asset.Organization{}
 
-	b, err := db.getState(asset.NodeKind, id)
+	b, err := db.getState(asset.OrganizationKind, id)
 	if err != nil {
 		return &n, err
 	}
@@ -312,9 +312,9 @@ func (db *DB) GetNode(id string) (*asset.Node, error) {
 	return &n, err
 }
 
-// NodeExists test if a node with given ID is already stored
-func (db *DB) NodeExists(id string) (bool, error) {
-	return db.hasKey(asset.NodeKind, id)
+// OrganizationExists test if an organization with given ID is already stored
+func (db *DB) OrganizationExists(id string) (bool, error) {
+	return db.hasKey(asset.OrganizationKind, id)
 }
 
 type couchAssetQuery struct {

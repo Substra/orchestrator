@@ -714,10 +714,10 @@ func TestSetCompositeData(t *testing.T) {
 }
 
 func TestSetAggregateData(t *testing.T) {
-	ns := new(MockNodeAPI)
+	ns := new(MockOrganizationAPI)
 	as := new(MockAlgoAPI)
 	provider := newMockedProvider()
-	provider.On("GetNodeService").Return(ns)
+	provider.On("GetOrganizationService").Return(ns)
 	provider.On("GetAlgoService").Return(as)
 	// Use the real permission service
 	provider.On("GetPermissionService").Return(NewPermissionService(provider))
@@ -745,10 +745,10 @@ func TestSetAggregateData(t *testing.T) {
 		},
 	}
 
-	// check node existence
-	ns.On("GetNode", "org3").Once().Return(&asset.Node{Id: "org3"}, nil)
+	// check organization existence
+	ns.On("GetOrganization", "org3").Once().Return(&asset.Organization{Id: "org3"}, nil)
 	// used by permissions service
-	ns.On("GetAllNodes").Once().Return([]*asset.Node{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
+	ns.On("GetAllOrganizations").Once().Return([]*asset.Organization{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
 
 	// getCheckedAlgo
 	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_AGGREGATE, Permissions: &asset.Permissions{

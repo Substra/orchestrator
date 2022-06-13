@@ -11,33 +11,33 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type sqlNode struct {
+type sqlOrganization struct {
 	ID           string
 	CreationDate time.Time
 }
 
-func (s *sqlNode) toNode() *asset.Node {
-	return &asset.Node{
+func (s *sqlOrganization) toOrganization() *asset.Organization {
+	return &asset.Organization{
 		Id:           s.ID,
 		CreationDate: timestamppb.New(s.CreationDate),
 	}
 }
 
-// AddNode implements persistence.NodeDBAL
-func (d *DBAL) AddNode(node *asset.Node) error {
+// AddOrganization implements persistence.OrganizationDBAL
+func (d *DBAL) AddOrganization(organization *asset.Organization) error {
 	stmt := getStatementBuilder().
-		Insert("nodes").
+		Insert("organizations").
 		Columns("id", "channel", "creation_date").
-		Values(node.GetId(), d.channel, node.GetCreationDate().AsTime())
+		Values(organization.GetId(), d.channel, organization.GetCreationDate().AsTime())
 
 	return d.exec(stmt)
 }
 
-// NodeExists implements persistence.NodeDBAL
-func (d *DBAL) NodeExists(id string) (bool, error) {
+// OrganizationExists implements persistence.OrganizationDBAL
+func (d *DBAL) OrganizationExists(id string) (bool, error) {
 	stmt := getStatementBuilder().
 		Select("COUNT(id)").
-		From("nodes").
+		From("organizations").
 		Where(sq.Eq{"id": id, "channel": d.channel})
 
 	row, err := d.queryRow(stmt)
@@ -51,11 +51,11 @@ func (d *DBAL) NodeExists(id string) (bool, error) {
 	return count == 1, err
 }
 
-// GetAllNodes implements persistence.NodeDBAL
-func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
+// GetAllOrganizations implements persistence.OrganizationDBAL
+func (d *DBAL) GetAllOrganizations() ([]*asset.Organization, error) {
 	stmt := getStatementBuilder().
 		Select("id", "creation_date").
-		From("nodes").
+		From("organizations").
 		Where(sq.Eq{"channel": d.channel})
 
 	rows, err := d.query(stmt)
@@ -64,30 +64,30 @@ func (d *DBAL) GetAllNodes() ([]*asset.Node, error) {
 	}
 	defer rows.Close()
 
-	var nodes []*asset.Node
+	var organizations []*asset.Organization
 
 	for rows.Next() {
-		scanned := sqlNode{}
+		scanned := sqlOrganization{}
 
 		err = rows.Scan(&scanned.ID, &scanned.CreationDate)
 		if err != nil {
 			return nil, err
 		}
 
-		nodes = append(nodes, scanned.toNode())
+		organizations = append(organizations, scanned.toOrganization())
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return nodes, nil
+	return organizations, nil
 }
 
-// GetNode implements persistence.NodeDBAL
-func (d *DBAL) GetNode(id string) (*asset.Node, error) {
+// GetOrganization implements persistence.OrganizationDBAL
+func (d *DBAL) GetOrganization(id string) (*asset.Organization, error) {
 	stmt := getStatementBuilder().
 		Select("id", "creation_date").
-		From("nodes").
+		From("organizations").
 		Where(sq.Eq{"id": id, "channel": d.channel})
 
 	row, err := d.queryRow(stmt)
@@ -95,15 +95,15 @@ func (d *DBAL) GetNode(id string) (*asset.Node, error) {
 		return nil, err
 	}
 
-	scanned := sqlNode{}
+	scanned := sqlOrganization{}
 	err = row.Scan(&scanned.ID, &scanned.CreationDate)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, orcerrors.NewNotFound("node", id)
+			return nil, orcerrors.NewNotFound("organization", id)
 		}
 		return nil, err
 	}
 
-	return scanned.toNode(), nil
+	return scanned.toOrganization(), nil
 }

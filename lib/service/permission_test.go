@@ -8,12 +8,12 @@ import (
 )
 
 func TestCreatePermission(t *testing.T) {
-	mockNodeService := new(MockNodeAPI)
+	mockOrganizationService := new(MockOrganizationAPI)
 	provider := newMockedProvider()
-	provider.On("GetNodeService").Once().Return(mockNodeService)
+	provider.On("GetOrganizationService").Once().Return(mockOrganizationService)
 	service := NewPermissionService(provider)
-	nodes := []*asset.Node{{Id: "org"}}
-	mockNodeService.On("GetAllNodes").Once().Return(nodes, nil)
+	organizations := []*asset.Organization{{Id: "org"}}
+	mockOrganizationService.On("GetAllOrganizations").Once().Return(organizations, nil)
 
 	n := asset.NewPermissions{Public: false}
 	owner := "org"
@@ -27,12 +27,12 @@ func TestCreatePermission(t *testing.T) {
 }
 
 func TestCreatePermissions(t *testing.T) {
-	mockNodeService := new(MockNodeAPI)
+	mockOrganizationService := new(MockOrganizationAPI)
 	provider := newMockedProvider()
-	provider.On("GetNodeService").Once().Return(mockNodeService)
+	provider.On("GetOrganizationService").Once().Return(mockOrganizationService)
 	service := NewPermissionService(provider)
-	nodes := []*asset.Node{{Id: "org"}}
-	mockNodeService.On("GetAllNodes").Once().Return(nodes, nil)
+	organizations := []*asset.Organization{{Id: "org"}}
+	mockOrganizationService.On("GetAllOrganizations").Once().Return(organizations, nil)
 
 	n := asset.NewPermissions{Public: false}
 	owner := "org"
@@ -55,19 +55,19 @@ func TestNewPermission(t *testing.T) {
 }
 
 func TestValidateAuthorizedIDs(t *testing.T) {
-	mockNodeService := new(MockNodeAPI)
+	mockOrganizationService := new(MockOrganizationAPI)
 	provider := newMockedProvider()
-	provider.On("GetNodeService").Return(mockNodeService)
+	provider.On("GetOrganizationService").Return(mockOrganizationService)
 	service := NewPermissionService(provider)
 
-	nodes := []*asset.Node{
+	organizations := []*asset.Organization{
 		{Id: "org1"},
 		{Id: "org2"},
 	}
-	mockNodeService.On("GetAllNodes").Return(nodes, nil)
+	mockOrganizationService.On("GetAllOrganizations").Return(organizations, nil)
 
-	assert.Error(t, service.validateAuthorizedIDs([]string{"orgA"}), "orgA is not a valid node")
-	assert.NoError(t, service.validateAuthorizedIDs([]string{"org1"}), "org1 is a valid node")
+	assert.Error(t, service.validateAuthorizedIDs([]string{"orgA"}), "orgA is not a valid organization")
+	assert.NoError(t, service.validateAuthorizedIDs([]string{"org1"}), "org1 is a valid organization")
 }
 
 func TestCanProcess(t *testing.T) {
@@ -109,7 +109,7 @@ func TestMakeIntersection(t *testing.T) {
 		b       *asset.Permissions
 		outcome *asset.Permissions
 	}{
-		"public + node": {
+		"public + organization": {
 			a: &asset.Permissions{
 				Process:  &asset.Permission{Public: true},
 				Download: &asset.Permission{Public: true},
@@ -171,7 +171,7 @@ func TestMakeUnion(t *testing.T) {
 		b       *asset.Permissions
 		outcome *asset.Permissions
 	}{
-		"public + node": {
+		"public + organization": {
 			a: &asset.Permissions{
 				Process:  &asset.Permission{Public: true},
 				Download: &asset.Permission{Public: true},
@@ -185,7 +185,7 @@ func TestMakeUnion(t *testing.T) {
 				Download: &asset.Permission{Public: true},
 			},
 		},
-		"two nodes": {
+		"two organizations": {
 			a: &asset.Permissions{
 				Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"org1"}},
 				Download: &asset.Permission{Public: false, AuthorizedIds: []string{"org1"}},

@@ -4,8 +4,8 @@ package asset
 type Kind = string
 
 var (
-	// NodeKind is the type of Node assets
-	NodeKind Kind = "node"
+	// OrganizationKind is the type of Organization assets
+	OrganizationKind Kind = "organization"
 	// MetricKind is the type of Metric assets
 	MetricKind = "metric"
 	// DataSampleKind is the type of DataSample assets

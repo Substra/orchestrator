@@ -40,11 +40,11 @@ func TestAfterTransactionHook(t *testing.T) {
 }
 
 func TestIsEvaluateTransaction(t *testing.T) {
-	evalFuncs := []string{"GetAllNodes"}
+	evalFuncs := []string{"GetAllOrganizations"}
 
-	assert.True(t, IsEvaluateTransaction("orchestrator.node:GetAllNodes", evalFuncs))
-	assert.True(t, IsEvaluateTransaction("GetAllNodes", evalFuncs))
+	assert.True(t, IsEvaluateTransaction("orchestrator.organization:GetAllOrganizations", evalFuncs))
+	assert.True(t, IsEvaluateTransaction("GetAllOrganizations", evalFuncs))
 
-	assert.False(t, IsEvaluateTransaction("orchestrator.node:RegisterNodes", evalFuncs))
-	assert.False(t, IsEvaluateTransaction("RegisterNodes", evalFuncs))
+	assert.False(t, IsEvaluateTransaction("orchestrator.organization:RegisterOrganization", evalFuncs))
+	assert.False(t, IsEvaluateTransaction("RegisterOrganization", evalFuncs))
 }

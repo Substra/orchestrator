@@ -6,7 +6,7 @@ This repository contains the logic to orchestrate Substra assets.
 
 This component's purpose is to orchestrate task processing in multiple channels of _connect_ partners:
 
-- it is the single source of truth of _connect_ nodes;
+- it is the single source of truth of _connect_ organizations;
 - it exposes necessary data to _connect_ instances to process their tasks and register their assets;
 - its API is aimed to serve backends, not end-users;
 - it works the same way in both standalone and distributed mode;
@@ -42,14 +42,14 @@ cd examples/tools
 ```
 
 End-to-end testing requires a running orchestrator.
-Assuming you have one up and ready on orchestrator.node-1.com port 443, here is how to launch the tests:
+Assuming you have one up and ready on orchestrator.org-1.com port 443, here is how to launch the tests:
 
 ```bash
 go test -tags=e2e ./e2e -short -tls \
     -cafile ../examples/tools/ca.crt \
     -keyfile ../examples/tools/client-org-1.key \
     -certfile ../examples/tools/client-org-1.crt \
-    -server_addr orchestrator.node-1.com:443
+    -server_addr orchestrator.org-1.com:443
 ```
 
 Refer to `go test -tags=e2e ./e2e -args --help` for more options.
@@ -86,10 +86,10 @@ or
 skaffold run --status-check=false
 ```
 
-Assuming `orchestrator.node-1.com` is pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
+Assuming `orchestrator.org-1.com` is pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
 
 ```bash
-grpcurl -insecure orchestrator.node-1.com:443 list
+grpcurl -insecure orchestrator.org-1.com:443 list
 ```
 
 You can also deploy [connect-backend](https://github.com/owkin/connect-backend) with a `skaffold dev` or `skaffold run`
@@ -123,10 +123,10 @@ or
 skaffold run -p distributed --status-check=false
 ```
 
-Assuming `orchestrator.node-1.com` and `orchestrator.node-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
+Assuming `orchestrator.org-1.com` and `orchestrator.org-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
 
 ```bash
-grpcurl --cacert examples/tools/ca.crt --key examples/tools/client-org-1.key --cert examples/tools/client-org-1.crt --rpc-header 'mspid: MyOrg1MSP' --rpc-header 'channel: mychannel' --rpc-header 'chaincode: mycc' orchestrator.node-1.com:443 list
+grpcurl --cacert examples/tools/ca.crt --key examples/tools/client-org-1.key --cert examples/tools/client-org-1.crt --rpc-header 'mspid: MyOrg1MSP' --rpc-header 'channel: mychannel' --rpc-header 'chaincode: mycc' orchestrator.org-1.com:443 list
 ```
 
 You can also deploy [connect-backend](https://github.com/owkin/connect-backend/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev -p distributed` or `skaffold run -p distributed`
@@ -143,30 +143,30 @@ cd examples/tools
 ```
 
 ```bash
-evans --tls --cacert examples/tools/ca.crt --host orchestrator.node-1.com -p 443 -r repl --cert examples/tools/client-org-1.crt --certkey examples/tools/client-org-1.key
+evans --tls --cacert examples/tools/ca.crt --host orchestrator.org-1.com -p 443 -r repl --cert examples/tools/client-org-1.crt --certkey examples/tools/client-org-1.key
 ```
 
 Then you can launch call like this:
 
 ```
 package orchestrator
-service NodeService
+service OrganizationService
 header mspid=MyOrg1MSP channel=mychannel chaincode=mycc
-call GetAllNodes
+call GetAllOrganizations
 ```
 
 or the one-liner
 
 ```sh
 echo '{}' | evans \
-    --host orchestrator.node-1.com -p 443  \
+    --host orchestrator.org-1.com -p 443  \
     --tls \
     --cacert examples/tools/ca.crt \
     --cert examples/tools/client-org-1.crt \
     --certkey examples/tools/client-org-1.key \
     -r cli \
     --header 'mspid=MyOrg1MSP' --header 'channel=mychannel' \
-    call orchestrator.NodeService.RegisterNode
+    call orchestrator.OrganizationService.RegisterOrganization
 ```
 
 Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress).

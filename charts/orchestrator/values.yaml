@@ -62,7 +62,7 @@ metrics:
   ## @param metrics.enabled Expose Prometheus metrics
   ##
   enabled: false
-  
+
   serviceMonitor:
     ## @param metrics.serviceMonitor.enabled Create ServiceMonitor resource for scraping metrics using Prometheus Operator
     ##
@@ -101,7 +101,7 @@ ingress:
   ##
   path: /
   ## @param ingress.hostname hostname of the default host
-  hostname: orchestrator.node-1.com
+  hostname: orchestrator.org-1.com
   ## @param ingress.extraPaths The list of extra paths to be created for the default host
   ## e.g:
   ## extraPaths:
@@ -182,7 +182,7 @@ postgresql:
     ## @param postgresql.auth.database PostgreSQL database the orchestrator should use
     ##
     database: orchestrator
-    
+
 
 ## @skip rabbitmq
 ##

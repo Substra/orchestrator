@@ -1,6 +1,6 @@
 # General architecture
 
-The orchestrator is the core piece handling Substra assets such as Nodes, ComputePlans, TrainTuples, etc.
+The orchestrator is the core piece handling Substra assets such as Organizations, ComputePlans, TrainTuples, etc.
 
 This repository contains two binaries: `orchestrator` and `chaincode`.
 
@@ -128,7 +128,7 @@ This will add several checks to the header
 **Certificate's organization check**: the given mspid header will be checked against the client certificate's organizations.
 If the header is not included in the certificate organizations, the access will be denied.
 
-**CA organisation check**: the orchestrator will make sure that the client certificate has been signed by a CA valid for the given organization.
+**CA organization check**: the orchestrator will make sure that the client certificate has been signed by a CA valid for the given organization.
 Enabling mutual TLS is not enough because we would still be vulnerable to the case where an adversarial organization creates a certificate for another org (`mspid`).
 Since any certificate signed by a trusted CA is considered valid, a client certificate for *org2* signed by CA cert *org1* would be valid.
 To address this issue, we maintain a list of valid CA per organization and make sure that the client certificate has been signed by a CA allowed for the given `mspid`.

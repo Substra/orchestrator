@@ -8,16 +8,16 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 )
 
-// NodeDBAL defines the database abstraction layer to manipulate nodes
-type NodeDBAL interface {
-	// AddNode stores a new node.
-	AddNode(node *asset.Node) error
-	// NodeExists returns whether a node with the given ID is already in store
-	NodeExists(id string) (bool, error)
-	// GetAllNodes returns all known nodes
-	GetAllNodes() ([]*asset.Node, error)
-	// GetNode returns a Node by its ID
-	GetNode(id string) (*asset.Node, error)
+// OrganizationDBAL defines the database abstraction layer to manipulate organizations
+type OrganizationDBAL interface {
+	// AddOrganization stores a new organization.
+	AddOrganization(organization *asset.Organization) error
+	// OrganizationExists returns whether an organization with the given ID is already in store
+	OrganizationExists(id string) (bool, error)
+	// GetAllOrganizations returns all known organizations
+	GetAllOrganizations() ([]*asset.Organization, error)
+	// GetOrganization returns an Organization by its ID
+	GetOrganization(id string) (*asset.Organization, error)
 }
 
 // DataSampleDBAL is the database abstraction layer for DataSamples
@@ -46,9 +46,9 @@ type DataManagerDBAL interface {
 	DataManagerExists(key string) (bool, error)
 }
 
-// NodeDBALProvider represents an object capable of providing a NodeDBAL
-type NodeDBALProvider interface {
-	GetNodeDBAL() NodeDBAL
+// OrganizationDBALProvider represents an object capable of providing an OrganizationDBAL
+type OrganizationDBALProvider interface {
+	GetOrganizationDBAL() OrganizationDBAL
 }
 
 // DataSampleDBALProvider represents an object capable of providing a DataSampleDBAL
@@ -68,7 +68,7 @@ type DataManagerDBALProvider interface {
 
 // DBAL stands for Database Abstraction Layer, it exposes methods to interact with asset storage.
 type DBAL interface {
-	NodeDBAL
+	OrganizationDBAL
 	DataSampleDBAL
 	AlgoDBAL
 	DataManagerDBAL
@@ -82,7 +82,7 @@ type DBAL interface {
 
 // DBALProvider exposes all available DBAL.
 type DBALProvider interface {
-	NodeDBALProvider
+	OrganizationDBALProvider
 	DataSampleDBALProvider
 	AlgoDBALProvider
 	DataManagerDBALProvider

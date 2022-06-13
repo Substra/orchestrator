@@ -24,7 +24,7 @@ gRPC reflection is enabled, and protobuf definitions are in [lib/assets](../lib/
 
 ## Consuming chaincode API
 
-From a peer node ("toolbox" pod):
+From a peer organization ("toolbox" pod):
 ```bash
 peer chaincode invoke \
         -C mychannel \
@@ -35,6 +35,6 @@ peer chaincode invoke \
         --certfile /var/hyperledger/tls/server/pair/tls.crt \
         --keyfile /var/hyperledger/tls/server/pair/tls.key \
         -o network-orderer-hlf-ord.orderer.svc.cluster.local:7050 \
-        -c '{"Args":["orchestrator.node:RegisterNode", "{\"msg\":\"\",\"request_id\":\"\"}"]}' \
+        -c '{"Args":["orchestrator.organization:RegisterOrganization", "{\"msg\":\"\",\"request_id\":\"\"}"]}' \
         --tlsRootCertFiles /var/hyperledger/tls/ord/cert/cacert.pem
 ```

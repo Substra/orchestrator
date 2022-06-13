@@ -11,7 +11,7 @@ import (
 // and in Standalone mode to set transactions as "read only"
 var ReadOnlyMethods = map[string][]string{
 	"Metric":        {"GetMetric", "QueryMetrics"},
-	"Node":          {"GetAllNodes"},
+	"Organization":  {"GetAllOrganizations"},
 	"Algo":          {"GetAlgo", "QueryAlgos"},
 	"Event":         {"QueryEvents"},
 	"Model":         {"GetComputeTaskOutputModels", "GetComputeTaskInputModels", "CanDisableModel", "GetModel", "QueryModels"},

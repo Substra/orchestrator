@@ -130,9 +130,9 @@ func TestTaskFilterToQuery(t *testing.T) {
 		params        []interface{}
 	}{
 		"empty":         {&asset.TaskQueryFilter{}, "", nil},
-		"single filter": {&asset.TaskQueryFilter{Worker: "mynode"}, "worker = $1", []interface{}{"mynode"}},
-		"two filter":    {&asset.TaskQueryFilter{Worker: "mynode", Status: asset.ComputeTaskStatus_STATUS_DONE}, "worker = $1 AND status = $2", []interface{}{"mynode", asset.ComputeTaskStatus_STATUS_DONE.String()}},
-		"three filter":  {&asset.TaskQueryFilter{Worker: "mynode", Status: asset.ComputeTaskStatus_STATUS_DONE, Category: asset.ComputeTaskCategory_TASK_TRAIN}, "worker = $1 AND status = $2 AND category = $3", []interface{}{"mynode", asset.ComputeTaskStatus_STATUS_DONE.String(), asset.ComputeTaskCategory_TASK_TRAIN.String()}},
+		"single filter": {&asset.TaskQueryFilter{Worker: "myorganization"}, "worker = $1", []interface{}{"myorganization"}},
+		"two filter":    {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE}, "worker = $1 AND status = $2", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String()}},
+		"three filter":  {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE, Category: asset.ComputeTaskCategory_TASK_TRAIN}, "worker = $1 AND status = $2 AND category = $3", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String(), asset.ComputeTaskCategory_TASK_TRAIN.String()}},
 	}
 
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

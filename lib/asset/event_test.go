@@ -37,9 +37,9 @@ func TestMarshalUnmarshalEventAsset(t *testing.T) {
 			AssetKind: AssetKind_ASSET_MODEL,
 			Asset:     &Event_Model{Model: &Model{Key: "model"}},
 		},
-		"node": {
-			AssetKind: AssetKind_ASSET_NODE,
-			Asset:     &Event_Node{Node: &Node{Id: "node"}},
+		"organization": {
+			AssetKind: AssetKind_ASSET_ORGANIZATION,
+			Asset:     &Event_Organization{Organization: &Organization{Id: "organization"}},
 		},
 		"performance": {
 			AssetKind: AssetKind_ASSET_PERFORMANCE,

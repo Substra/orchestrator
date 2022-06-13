@@ -26,8 +26,8 @@ func MarshalEventAsset(event *Event) ([]byte, error) {
 		m = event.GetFailureReport()
 	case *Event_Model:
 		m = event.GetModel()
-	case *Event_Node:
-		m = event.GetNode()
+	case *Event_Organization:
+		m = event.GetOrganization()
 	case *Event_Performance:
 		m = event.GetPerformance()
 	default:
@@ -83,12 +83,12 @@ func UnmarshalEventAsset(b []byte, event *Event, assetKind AssetKind) error {
 			return err
 		}
 		event.Asset = &Event_Model{Model: model}
-	case AssetKind_ASSET_NODE:
-		node := new(Node)
-		if err := protojson.Unmarshal(b, node); err != nil {
+	case AssetKind_ASSET_ORGANIZATION:
+		organization := new(Organization)
+		if err := protojson.Unmarshal(b, organization); err != nil {
 			return err
 		}
-		event.Asset = &Event_Node{Node: node}
+		event.Asset = &Event_Organization{Organization: organization}
 	case AssetKind_ASSET_PERFORMANCE:
 		perf := new(Performance)
 		if err := protojson.Unmarshal(b, perf); err != nil {

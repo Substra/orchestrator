@@ -51,7 +51,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 	server := grpc.NewServer(serverOptions...)
 
 	// Register application services
-	asset.RegisterNodeServiceServer(server, NewNodeAdapter())
+	asset.RegisterOrganizationServiceServer(server, NewOrganizationAdapter())
 	asset.RegisterDataSampleServiceServer(server, NewDataSampleAdapter())
 	asset.RegisterAlgoServiceServer(server, NewAlgoAdapter())
 	asset.RegisterDataManagerServiceServer(server, NewDataManagerAdapter())

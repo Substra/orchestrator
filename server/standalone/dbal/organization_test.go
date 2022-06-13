@@ -12,36 +12,36 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestAddNode(t *testing.T) {
+func TestAddOrganization(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 	defer mock.Close(context.Background())
 
-	node := &asset.Node{
+	organization := &asset.Organization{
 		Id:           "1e8c1074-7fc4-4350-afcb-dc2d4849694c",
 		CreationDate: timestamppb.New(time.Unix(900, 0)),
 	}
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`INSERT INTO nodes`).WithArgs(node.Id, testChannel, node.CreationDate.AsTime()).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectExec(`INSERT INTO organizations`).WithArgs(organization.Id, testChannel, organization.CreationDate.AsTime()).WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	err = dbal.AddNode(node)
+	err = dbal.AddOrganization(organization)
 	assert.NoError(t, err)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestNodeExists(t *testing.T) {
+func TestOrganizationExists(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 	defer mock.Close(context.Background())
 
-	nodeID := "45e80360-a9e5-11ec-b909-0242ac120002"
+	organizationID := "45e80360-a9e5-11ec-b909-0242ac120002"
 
 	mock.ExpectBegin()
 
@@ -53,7 +53,7 @@ func TestNodeExists(t *testing.T) {
 	require.NoError(t, err)
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
-	exists, err := dbal.NodeExists(nodeID)
+	exists, err := dbal.OrganizationExists(organizationID)
 
 	assert.NoError(t, err)
 	assert.True(t, exists)
@@ -61,16 +61,16 @@ func TestNodeExists(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGetAllNodes(t *testing.T) {
+func TestGetAllOrganizations(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 	defer mock.Close(context.Background())
 
-	node1 := &asset.Node{
+	organization1 := &asset.Organization{
 		Id:           "45e80360-a9e5-11ec-b909-0242ac120002",
 		CreationDate: timestamppb.New(time.Unix(800, 0)),
 	}
-	node2 := &asset.Node{
+	organization2 := &asset.Organization{
 		Id:           "cb5ca026-a9ca-4bcf-9bdb-01711d5c6862",
 		CreationDate: timestamppb.New(time.Unix(900, 0)),
 	}
@@ -78,30 +78,30 @@ func TestGetAllNodes(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"id", "creation_date"}).
-		AddRow(node1.Id, node1.CreationDate.AsTime()).
-		AddRow(node2.Id, node2.CreationDate.AsTime())
-	mock.ExpectQuery(`SELECT id, creation_date FROM nodes`).WillReturnRows(rows)
+		AddRow(organization1.Id, organization1.CreationDate.AsTime()).
+		AddRow(organization2.Id, organization2.CreationDate.AsTime())
+	mock.ExpectQuery(`SELECT id, creation_date FROM organizations`).WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	res, err := dbal.GetAllNodes()
+	res, err := dbal.GetAllOrganizations()
 	assert.NoError(t, err)
 	assert.Len(t, res, 2)
-	assert.Equal(t, node1, res[0])
-	assert.Equal(t, node2, res[1])
+	assert.Equal(t, organization1, res[0])
+	assert.Equal(t, organization2, res[1])
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGetNode(t *testing.T) {
+func TestGetOrganization(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 	defer mock.Close(context.Background())
 
-	node := &asset.Node{
+	organization := &asset.Organization{
 		Id:           "45e80360-a9e5-11ec-b909-0242ac120002",
 		CreationDate: timestamppb.New(time.Unix(800, 0)),
 	}
@@ -109,17 +109,17 @@ func TestGetNode(t *testing.T) {
 	mock.ExpectBegin()
 
 	rows := pgxmock.NewRows([]string{"id", "creation_date"}).
-		AddRow(node.Id, node.CreationDate.AsTime())
-	mock.ExpectQuery(`SELECT id, creation_date FROM nodes`).WillReturnRows(rows)
+		AddRow(organization.Id, organization.CreationDate.AsTime())
+	mock.ExpectQuery(`SELECT id, creation_date FROM organizations`).WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
-	res, err := dbal.GetNode(node.Id)
+	res, err := dbal.GetOrganization(organization.Id)
 
 	assert.NoError(t, err)
-	assert.Equal(t, res, node)
+	assert.Equal(t, res, organization)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

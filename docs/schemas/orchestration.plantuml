@@ -8,13 +8,13 @@ lib.persistence.Database *-- lib.orchestration.Provider
 interface lib.orchestration.ServiceProvider
 class lib.orchestration.Provider {
   ~DatabaseService
-  ~NodeService
+  ~OrganizationService
   ~MetricService
   ~...
 }
 lib.orchestration.ServiceProvider <|-- lib.orchestration.Provider
 
-lib.orchestration.ServiceProvider *-- lib.orchestration.NodeService
+lib.orchestration.ServiceProvider *-- lib.orchestration.OrganizationService
 lib.orchestration.ServiceProvider *-- lib.orchestration.MetricService
 lib.orchestration.ServiceProvider *-- lib.orchestration.XXXService
 note bottom

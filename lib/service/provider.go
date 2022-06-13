@@ -19,7 +19,7 @@ type ChannelProvider interface {
 type DependenciesProvider interface {
 	persistence.DBALProvider
 	event.QueueProvider
-	NodeServiceProvider
+	OrganizationServiceProvider
 	DataSampleServiceProvider
 	AlgoServiceProvider
 	PermissionServiceProvider
@@ -46,7 +46,7 @@ type Provider struct {
 	channel       string
 	dbal          persistence.DBAL
 	eventQueue    event.Queue
-	node          NodeAPI
+	organization  OrganizationAPI
 	permission    PermissionAPI
 	datasample    DataSampleAPI
 	algo          AlgoAPI
@@ -85,8 +85,8 @@ func NewProvider(logger log.Entry, dbal persistence.DBAL, queue event.Queue, tim
 	}
 }
 
-// GetNodeDBAL returns the database abstraction layer for Nodes
-func (sc *Provider) GetNodeDBAL() persistence.NodeDBAL {
+// GetOrganizationDBAL returns the database abstraction layer for Organizations
+func (sc *Provider) GetOrganizationDBAL() persistence.OrganizationDBAL {
 	return sc.dbal
 }
 
@@ -138,13 +138,13 @@ func (sc *Provider) GetEventQueue() event.Queue {
 	return sc.eventQueue
 }
 
-// GetNodeService returns a NodeAPI instance.
+// GetOrganizationService returns a OrganizationAPI instance.
 // The service will be instanciated if needed.
-func (sc *Provider) GetNodeService() NodeAPI {
-	if sc.node == nil {
-		sc.node = NewNodeService(sc)
+func (sc *Provider) GetOrganizationService() OrganizationAPI {
+	if sc.organization == nil {
+		sc.organization = NewOrganizationService(sc)
 	}
-	return sc.node
+	return sc.organization
 }
 
 // GetDataSampleService returns a DataSampleAPI instance.

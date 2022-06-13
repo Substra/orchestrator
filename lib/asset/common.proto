@@ -8,7 +8,7 @@ enum AssetKind {
   reserved 2;
   reserved "ASSET_METRIC";
   ASSET_UNKNOWN = 0;
-  ASSET_NODE = 1;
+  ASSET_ORGANIZATION = 1;
   ASSET_DATA_SAMPLE = 3;
   ASSET_DATA_MANAGER = 4;
   ASSET_ALGO = 5;

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package orchestrator;
+
+option go_package = "github.com/owkin/orchestrator/lib/asset";
+
+import "google/protobuf/timestamp.proto";
+
+// Organization is a member of the network
+message Organization {
+  string id = 1;
+  google.protobuf.Timestamp creation_date = 2;
+}
+
+message GetAllOrganizationsResponse {
+  repeated Organization organizations = 1;
+}
+
+message RegisterOrganizationParam {}
+message GetAllOrganizationsParam {}
+
+service OrganizationService {
+  rpc RegisterOrganization(RegisterOrganizationParam) returns (Organization);
+  rpc GetAllOrganizations(GetAllOrganizationsParam) returns (GetAllOrganizationsResponse);
+}

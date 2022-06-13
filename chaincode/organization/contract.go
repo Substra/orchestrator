@@ -1,4 +1,4 @@
-package node
+package organization
 
 import (
 	"github.com/go-playground/log/v7"
@@ -9,7 +9,7 @@ import (
 	commonserv "github.com/owkin/orchestrator/server/common"
 )
 
-// SmartContract manages nodes
+// SmartContract manages organizations
 type SmartContract struct {
 	contractapi.Contract
 	logger log.Entry
@@ -18,7 +18,7 @@ type SmartContract struct {
 // NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
 	contract := &SmartContract{}
-	contract.Name = "orchestrator.node"
+	contract.Name = "orchestrator.organization"
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
@@ -30,11 +30,11 @@ func NewSmartContract() *SmartContract {
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return commonserv.ReadOnlyMethods["Node"]
+	return commonserv.ReadOnlyMethods["Organization"]
 }
 
-// RegisterNode creates a new node in world state
-func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// RegisterOrganization creates a new organization in world state
+func (s *SmartContract) RegisterOrganization(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	txCreator, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
 		s.logger.WithError(err).Error("failed to extract tx creator")
@@ -45,14 +45,14 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext, wrapper *com
 	if err != nil {
 		return nil, err
 	}
-	service := provider.GetNodeService()
+	service := provider.GetOrganizationService()
 
-	node, err := service.RegisterNode(txCreator)
+	organization, err := service.RegisterOrganization(txCreator)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to register node")
+		s.logger.WithError(err).Error("failed to register organization")
 		return nil, err
 	}
-	wrapped, err := communication.Wrap(ctx.GetContext(), node)
+	wrapped, err := communication.Wrap(ctx.GetContext(), organization)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to wrap response")
 		return nil, err
@@ -60,22 +60,22 @@ func (s *SmartContract) RegisterNode(ctx ledger.TransactionContext, wrapper *com
 	return wrapped, nil
 }
 
-// GetAllNodes retrieves all known nodes
-func (s *SmartContract) GetAllNodes(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// GetAllOrganizations retrieves all known organizations
+func (s *SmartContract) GetAllOrganizations(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
 	}
-	service := provider.GetNodeService()
+	service := provider.GetOrganizationService()
 
-	nodes, err := service.GetAllNodes()
+	organizations, err := service.GetAllOrganizations()
 	if err != nil {
-		s.logger.WithError(err).Error("failed to query nodes")
+		s.logger.WithError(err).Error("failed to query organizations")
 		return nil, err
 	}
 
-	resp := &asset.GetAllNodesResponse{
-		Nodes: nodes,
+	resp := &asset.GetAllOrganizationsResponse{
+		Organizations: organizations,
 	}
 
 	wrapped, err := communication.Wrap(ctx.GetContext(), resp)

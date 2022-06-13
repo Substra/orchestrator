@@ -25,7 +25,7 @@ type PermissionServiceProvider interface {
 // PermissionDependencyProvider defines what the PermissionService needs to perform its duty
 type PermissionDependencyProvider interface {
 	LoggerProvider
-	NodeServiceProvider
+	OrganizationServiceProvider
 }
 
 // PermissionService is the entry point to manipulate permissions.
@@ -64,7 +64,7 @@ func (s *PermissionService) CreatePermissions(owner string, newPerms *asset.NewP
 		return nil, err
 	}
 
-	// Download permission is not implemented in the node server, so let's use the same permissions for process & download
+	// Download permission is not implemented in the organization server, so let's use the same permissions for process & download
 	permissions := &asset.Permissions{
 		Process:  defaultPerms,
 		Download: defaultPerms,
@@ -73,22 +73,22 @@ func (s *PermissionService) CreatePermissions(owner string, newPerms *asset.NewP
 	return permissions, nil
 }
 
-// validateAuthorizedIds checks that given IDs are valid nodes in the network.
+// validateAuthorizedIds checks that given IDs are valid organizations in the network.
 // Returns nil if all IDs are valid, an Error otherwise
 func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
-	nodes, err := s.GetNodeService().GetAllNodes()
+	organizations, err := s.GetOrganizationService().GetAllOrganizations()
 	if err != nil {
 		return err
 	}
 
-	var nodeIDs []string
+	var organizationIDs []string
 
-	for _, n := range nodes {
-		nodeIDs = append(nodeIDs, n.Id)
+	for _, n := range organizations {
+		organizationIDs = append(organizationIDs, n.Id)
 	}
 
 	for _, authorizedID := range IDs {
-		if !utils.StringInSlice(nodeIDs, authorizedID) {
+		if !utils.StringInSlice(organizationIDs, authorizedID) {
 			return orcerrors.NewBadRequest("invalid permission input values")
 		}
 	}

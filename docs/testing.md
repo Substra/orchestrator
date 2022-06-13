@@ -22,7 +22,7 @@ Then launching the tests would look like this:
 
 ```sh
 make ./bin/e2e-tests
-./bin/e2e-tests -tls -cafile ./examples/tools/ca.crt -keyfile ./examples/tools/client-org-1.key -certfile ./examples/tools/client-org-1.crt -server_addr orchestrator.node-1.com:443
+./bin/e2e-tests -tls -cafile ./examples/tools/ca.crt -keyfile ./examples/tools/client-org-1.key -certfile ./examples/tools/client-org-1.crt -server_addr orchestrator.org-1.com:443
 ```
 
 This way, we can easily test the orchestrator in both standalone and distributed mode.

@@ -1,4 +1,4 @@
-package node
+package organization
 
 import (
 	"context"
@@ -14,11 +14,11 @@ import (
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.
-func getMockedService(ctx *ledger.MockTransactionContext) *service.MockNodeAPI {
-	mockService := new(service.MockNodeAPI)
+func getMockedService(ctx *ledger.MockTransactionContext) *service.MockOrganizationAPI {
+	mockService := new(service.MockOrganizationAPI)
 
 	provider := new(service.MockDependenciesProvider)
-	provider.On("GetNodeService").Return(mockService).Once()
+	provider.On("GetOrganizationService").Return(mockService).Once()
 
 	ctx.On("GetProvider").Return(provider, nil).Once()
 	ctx.On("GetContext").Return(context.Background())
@@ -30,7 +30,7 @@ func TestRegistration(t *testing.T) {
 	contract := &SmartContract{}
 
 	org := "TestOrg"
-	o := &asset.Node{Id: org}
+	o := &asset.Organization{Id: org}
 	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
@@ -39,25 +39,25 @@ func TestRegistration(t *testing.T) {
 	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterNode", org).Return(o, nil).Once()
+	service.On("RegisterOrganization", org).Return(o, nil).Once()
 
 	ctx.On("GetStub").Return(stub).Once()
 
 	wrapper, err := communication.Wrap(context.Background(), nil)
 	require.NoError(t, err)
 
-	wrapped, err := contract.RegisterNode(ctx, wrapper)
-	assert.NoError(t, err, "node registration should not fail")
-	node := new(asset.Node)
-	err = wrapped.Unwrap(node)
+	wrapped, err := contract.RegisterOrganization(ctx, wrapper)
+	assert.NoError(t, err, "organization registration should not fail")
+	organization := new(asset.Organization)
+	err = wrapped.Unwrap(organization)
 	assert.NoError(t, err)
-	assert.Equal(t, node, o)
+	assert.Equal(t, organization, o)
 }
 
-func TestGetAllNodes(t *testing.T) {
+func TestGetAllOrganizations(t *testing.T) {
 	contract := &SmartContract{}
 
-	nodes := []*asset.Node{
+	organizations := []*asset.Organization{
 		{Id: "org1"},
 		{Id: "org2"},
 	}
@@ -65,15 +65,15 @@ func TestGetAllNodes(t *testing.T) {
 	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
-	service.On("GetAllNodes").Return(nodes, nil).Once()
+	service.On("GetAllOrganizations").Return(organizations, nil).Once()
 
 	wrapper, err := communication.Wrap(context.Background(), nil)
 	require.NoError(t, err)
 
-	wrapped, err := contract.GetAllNodes(ctx, wrapper)
-	assert.NoError(t, err, "querying nodes should not fail")
-	queryResult := new(asset.GetAllNodesResponse)
+	wrapped, err := contract.GetAllOrganizations(ctx, wrapper)
+	assert.NoError(t, err, "querying organizations should not fail")
+	queryResult := new(asset.GetAllOrganizationsResponse)
 	err = wrapped.Unwrap(queryResult)
 	assert.NoError(t, err)
-	assert.Len(t, queryResult.Nodes, len(nodes), "query should return all nodes")
+	assert.Len(t, queryResult.Organizations, len(organizations), "query should return all organizations")
 }

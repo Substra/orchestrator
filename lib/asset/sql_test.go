@@ -106,7 +106,7 @@ func TestModelCategoryValue(t *testing.T) {
 }
 
 func TestAssetKindValue(t *testing.T) {
-	k := AssetKind_ASSET_NODE
+	k := AssetKind_ASSET_ORGANIZATION
 	kind := &k
 
 	value, err := kind.Value()

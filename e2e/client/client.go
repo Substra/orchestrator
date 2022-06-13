@@ -74,7 +74,7 @@ type TestClient struct {
 	ctx                  context.Context
 	ks                   *KeyStore
 	logger               log.Entry
-	nodeService          asset.NodeServiceClient
+	organizationService          asset.OrganizationServiceClient
 	algoService          asset.AlgoServiceClient
 	dataManagerService   asset.DataManagerServiceClient
 	dataSampleService    asset.DataSampleServiceClient
@@ -123,7 +123,7 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 		ctx:                  ctx,
 		ks:                   NewKeyStore(),
 		logger:               logger,
-		nodeService:          asset.NewNodeServiceClient(f.conn),
+		organizationService:          asset.NewOrganizationServiceClient(f.conn),
 		algoService:          asset.NewAlgoServiceClient(f.conn),
 		dataManagerService:   asset.NewDataManagerServiceClient(f.conn),
 		dataSampleService:    asset.NewDataSampleServiceClient(f.conn),
@@ -136,7 +136,7 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 		failureReportService: asset.NewFailureReportServiceClient(f.conn),
 	}
 
-	client.EnsureNode()
+	client.EnsureOrganization()
 	return client
 }
 
@@ -158,16 +158,16 @@ func (c *TestClient) GetKeyStore() *KeyStore {
 	return c.ks
 }
 
-// EnsureNode attempts to register the node but won't fail on existing node
-func (c *TestClient) EnsureNode() {
-	_, err := c.nodeService.RegisterNode(c.ctx, &asset.RegisterNodeParam{})
+// EnsureOrganization attempts to register the organization but won't fail on existing organization
+func (c *TestClient) EnsureOrganization() {
+	_, err := c.organizationService.RegisterOrganization(c.ctx, &asset.RegisterOrganizationParam{})
 	if status.Code(err) == codes.AlreadyExists {
-		c.logger.Debug("node already exists")
+		c.logger.Debug("organization already exists")
 		// expected error
 		return
 	}
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterNode failed")
+		c.logger.WithError(err).Fatal("RegisterOrganization failed")
 	}
 }
 

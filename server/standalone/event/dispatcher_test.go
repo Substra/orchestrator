@@ -16,12 +16,12 @@ func TestEventChannel(t *testing.T) {
 	amqp := new(common.MockAMQPPublisher)
 	dispatcher := NewAMQPDispatcher(amqp, "testChannel")
 
-	e := &asset.Event{AssetKind: asset.AssetKind_ASSET_NODE, AssetKey: "test", EventKind: asset.EventKind_EVENT_ASSET_CREATED}
+	e := &asset.Event{AssetKind: asset.AssetKind_ASSET_ORGANIZATION, AssetKey: "test", EventKind: asset.EventKind_EVENT_ASSET_CREATED}
 	err := dispatcher.Enqueue(e)
 	require.NoError(t, err)
 
 	// Channel should be set on dispatch
-	dispatched := &asset.Event{AssetKind: asset.AssetKind_ASSET_NODE, AssetKey: "test", EventKind: asset.EventKind_EVENT_ASSET_CREATED, Channel: "testChannel"}
+	dispatched := &asset.Event{AssetKind: asset.AssetKind_ASSET_ORGANIZATION, AssetKey: "test", EventKind: asset.EventKind_EVENT_ASSET_CREATED, Channel: "testChannel"}
 	data, err := dispatcher.marshaller.Marshal(dispatched)
 	require.NoError(t, err)
 

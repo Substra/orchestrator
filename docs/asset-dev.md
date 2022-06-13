@@ -62,13 +62,13 @@ This is what will be used by the smartcontract and the standalone gRPC service.
 
 Example of a service:
 ```go
-// API defines the methods to act on Nodes
-type NodeAPI interface {
-    RegisterNode(*assets.Node) error
+// API defines the methods to act on Organizations
+type OrganizationAPI interface {
+    RegisterOrganization(*assets.Organization) error
 }
 ```
 
-Here `Node` comes from the protobuf description (in `lib/asset`) and go code was generated during the previous step (`make proto-codegen`).
+Here `Organization` comes from the protobuf description (in `lib/asset`) and go code was generated during the previous step (`make proto-codegen`).
 
 This *AssetAPI* interface is used by both the smartcontract and the grpc server.
 

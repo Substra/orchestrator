@@ -10,7 +10,7 @@ import "datamanager.proto";
 import "datasample.proto";
 import "failure_report.proto";
 import "model.proto";
-import "node.proto";
+import "organization.proto";
 import "performance.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -40,7 +40,7 @@ message Event {
     DataSample data_sample = 11;
     FailureReport failure_report = 12;
     Model model = 13;
-    Node node = 14;
+    Organization organization = 14;
     Performance performance = 15;
   }
   map<string, string> metadata = 18;
