@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.1.1] - 2022-06-15
+
+### Fixed
+- condition for migration job deployment
+
+## [7.1.0] - 2022-06-13
+
 ### Changed
 - rename node to organization
 
