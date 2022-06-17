@@ -35,6 +35,8 @@ postgresql:
   primary:
     persistence:
       enabled: false
+    extendedConfiguration: |
+      log_min_duration_statement = 0
 
 rabbitmq:
   auth:
