@@ -84,6 +84,7 @@ func (p *ApplyTaskActionParam) Validate() error {
 			ComputeTaskAction_TASK_ACTION_DOING,
 			ComputeTaskAction_TASK_ACTION_FAILED,
 			ComputeTaskAction_TASK_ACTION_CANCELED,
+			ComputeTaskAction_TASK_ACTION_DONE,
 		)),
 	)
 }

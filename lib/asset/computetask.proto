@@ -192,6 +192,7 @@ enum ComputeTaskAction {
   TASK_ACTION_DOING = 1;
   TASK_ACTION_CANCELED = 2;
   TASK_ACTION_FAILED = 3;
+  TASK_ACTION_DONE = 4;
 }
 
 message ApplyTaskActionParam {

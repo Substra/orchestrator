@@ -92,6 +92,8 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 		transition = transitionDoing
 	case asset.ComputeTaskAction_TASK_ACTION_FAILED:
 		transition = transitionFailed
+	case asset.ComputeTaskAction_TASK_ACTION_DONE:
+		transition = transitionDone
 	default:
 		return errors.NewBadRequest("unsupported action")
 	}
@@ -297,7 +299,7 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 	switch action {
 	case asset.ComputeTaskAction_TASK_ACTION_CANCELED:
 		return requester == task.Owner || requester == task.Worker
-	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_FAILED:
+	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_FAILED, asset.ComputeTaskAction_TASK_ACTION_DONE:
 		return requester == task.Worker
 	default:
 		return false

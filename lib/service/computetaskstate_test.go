@@ -162,6 +162,38 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 	es.AssertExpectations(t)
 }
 
+func TestUpdateTaskStateDone(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	es := new(MockEventAPI)
+	provider := newMockedProvider()
+
+	provider.On("GetComputeTaskDBAL").Return(dbal)
+	provider.On("GetEventService").Return(es)
+
+	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
+		Key:    "uuid",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Owner:  "owner",
+		Worker: "worker",
+	}, nil)
+
+	es.On("RegisterEvents", mock.Anything).Return(nil)
+
+	updatedTask := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE, Owner: "owner", Worker: "worker"}
+
+	dbal.On("UpdateComputeTaskStatus", updatedTask.Key, updatedTask.Status).Return(nil)
+
+	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{}, nil)
+
+	service := NewComputeTaskService(provider)
+
+	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DONE, "", "worker")
+	assert.NoError(t, err)
+
+	dbal.AssertExpectations(t)
+	es.AssertExpectations(t)
+}
+
 func TestCascadeStatusDone(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
