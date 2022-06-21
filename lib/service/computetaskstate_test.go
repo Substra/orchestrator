@@ -119,10 +119,7 @@ func TestDispatchOnTransition(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 		Asset:     &asset.Event_ComputeTask{ComputeTask: expectedTask},
 		Metadata: map[string]string{
-			"status":           expectedTask.Status.String(),
-			"reason":           "User action",
-			"worker":           "worker",
-			"compute_plan_key": "uuidcp",
+			"reason": "User action",
 		},
 	}
 	es.On("RegisterEvents", expectedEvent).Once().Return(nil)

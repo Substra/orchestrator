@@ -83,7 +83,6 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		AssetKey:  plan.Key,
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
 		Asset:     &asset.Event_ComputePlan{ComputePlan: plan},
-		Metadata:  map[string]string{"creator": plan.Owner},
 	}
 	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {

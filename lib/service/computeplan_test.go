@@ -64,9 +64,6 @@ func TestRegisterPlan(t *testing.T) {
 		AssetKey:  newPlan.Key,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Asset:     &asset.Event_ComputePlan{ComputePlan: expected},
-		Metadata: map[string]string{
-			"creator": "org1",
-		},
 	}
 	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
 
