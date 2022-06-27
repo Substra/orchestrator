@@ -37,8 +37,7 @@ Make sure you have these requirements fulfilled before trying to build the orche
 Before running e2e tests, you may need to generate and retrieve a client certificate.
 
 ```bash
-cd examples/tools
-./download_client_cert.sh
+./examples/tools/download_client_cert.sh
 ```
 
 End-to-end testing requires a running orchestrator.
@@ -138,8 +137,7 @@ You can call the local orchestrator gRPC endpoint using [evans](https://github.c
 Before launching Evans you may need to generate and retrieve a client certificate.
 
 ```bash
-cd examples/tools
-./download_client_cert.sh
+./examples/tools/download_client_cert.sh
 ```
 
 ```bash
