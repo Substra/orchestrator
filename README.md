@@ -76,13 +76,13 @@ database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker 
 To launch the orchestrator:
 
 ```bash
-skaffold dev --status-check=false
+skaffold dev
 ```
 
 or
 
 ```bash
-skaffold run --status-check=false
+skaffold run
 ```
 
 Assuming `orchestrator.org-1.com` is pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
@@ -114,12 +114,12 @@ Deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s) with a `skaff
 Then, in the orchestrator repo:
 
 ```bash
-skaffold dev -p distributed --status-check=false
+skaffold dev -p distributed
 ```
 
 or
 ```bash
-skaffold run -p distributed --status-check=false
+skaffold run -p distributed
 ```
 
 Assuming `orchestrator.org-1.com` and `orchestrator.org-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
@@ -176,7 +176,7 @@ Refer to [the wiki](https://github.com/owkin/orchestrator/wiki/Enabling-ssl-pass
 Bitnami does not yet provide a rabbitmq docker image for the arm64 processor. We are using the original rabbitmq image from dockerhub directly. Compatible image should be released in the future. (see [github issue](https://github.com/bitnami/charts/issues/7305))
 The following patches are necessary as the bitnami charts used to install the rabbitmq image are not fully compatible.
 
-1. Deploy with `skaffold run -p arm64 --status-check=false`
+1. Deploy with `skaffold run -p arm64`
 
 2. After deploying run the patch
 `./examples/tools/patch-rabbitmq-statefulset-arm64.sh`
