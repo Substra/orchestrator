@@ -1,7 +1,5 @@
 apiVersion: skaffold/v2beta24
 kind: Config
-requires:
-  - configs: ["cert_manager"]
 build:
   artifacts:
     - image: substrafoundation/orchestrator-server
@@ -15,6 +13,11 @@ build:
 deploy:
   helm:
     releases:
+      - name: cert-manager
+        remoteChart: jetstack/cert-manager
+        namespace: cert-manager
+        createNamespace: true
+        version: v1.6.0
       - name: owkin-orchestrator-org-1
         imageStrategy:
           helm:
@@ -26,7 +29,19 @@ deploy:
           orchestrator.image: substrafoundation/orchestrator-server
           rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
         valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
-
+    hooks:
+      before:
+        - host:
+            command:
+              - sh
+              - -c
+              - "kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.6.0/cert-manager.crds.yaml"
+  kubectl:
+    manifests:
+      - examples/k8s/cm-tls-org-1-cacert.yaml
+      - examples/k8s/secret-cacert-certmanager.yaml
+      - examples/k8s/certmanagerca.yaml
+      - examples/k8s/cm-tls-org-2-cacert.yaml
 profiles:
 - name: distributed
   patches:
@@ -38,10 +53,10 @@ profiles:
       docker:
         dockerfile: docker/orchestrator-forwarder/Dockerfile
   - op: replace
-    path: /deploy/helm/releases/0/valuesFiles
+    path: /deploy/helm/releases/1/valuesFiles
     value: [ examples/values/orchestrator-org-1-distributed.yaml ]
   - op: replace
-    path: /deploy/helm/releases/0/artifactOverrides
+    path: /deploy/helm/releases/1/artifactOverrides
     value:
       orchestrator.image: substrafoundation/orchestrator-server
       forwarder.image: substrafoundation/orchestrator-forwarder
@@ -65,58 +80,10 @@ profiles:
 - name: nodeps
   patches:
     - op: add
-      path: /deploy/helm/releases/0/skipBuildDependencies
+      path: /deploy/helm/releases/1/skipBuildDependencies
       value: true
 - name: arm64
   patches:
     - op: replace
-      path: /deploy/helm/releases/0/valuesFiles
+      path: /deploy/helm/releases/1/valuesFiles
       value: [ examples/values/orchestrator-org-1.yaml, examples/values/rabbitmq-arm64.yaml ]
-
----
-
-apiVersion: skaffold/v2beta24
-kind: Config
-metadata:
-  name: certificates
-requires:
-  - configs: ["cert_manager"]
-deploy:
-  kubectl:
-    manifests:
-      - examples/k8s/cm-tls-org-1-cacert.yaml
-      - examples/k8s/secret-cacert-certmanager.yaml
-      - examples/k8s/certmanagerca.yaml
-      - examples/k8s/cm-tls-org-2-cacert.yaml
-profiles:
-- name: apponly
-  patches:
-    - op: remove
-      path: /deploy/kubectl
-
----
-
-apiVersion: skaffold/v2beta24
-kind: Config
-metadata:
-  name: cert_manager
-deploy:
-  helm:
-    releases:
-      - name: cert-manager
-        remoteChart: jetstack/cert-manager
-        namespace: cert-manager
-        createNamespace: true
-        version: v1.6.0
-    hooks:
-      before:
-        - host:
-            command:
-              - sh
-              - -c
-              - "kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.6.0/cert-manager.crds.yaml"
-profiles:
-- name: apponly
-  patches:
-    - op: remove
-      path: /deploy/helm
