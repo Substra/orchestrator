@@ -35,4 +35,4 @@ jobs:
           labels: dependencies
           delete-branch: true
           token: ${{ secrets.PAT_DOCKER_DEP_UPDATER }}
-          author: "Owlfred 52070426+Owlfred@users.noreply.github.com"
+          author: "GitHub <noreply@github.com>"
