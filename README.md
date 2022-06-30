@@ -180,3 +180,14 @@ The following patches are necessary as the bitnami charts used to install the ra
 
 2. After deploying run the patch
 `./examples/tools/patch-rabbitmq-statefulset-arm64.sh`
+
+### Go Language Server
+
+If you're running into issues with things like "Go to definition" or "Find references", it could be because of [this gopls bug](https://github.com/golang/go/issues/29202). Try adding build flags to your editor config. Example for VSCode:
+
+```json
+"gopls": {
+    "build.buildFlags": ["-tags=e2e"],
+}
+```
+
