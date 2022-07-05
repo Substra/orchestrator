@@ -47,7 +47,14 @@ func (s *SmartContract) RegisterOrganization(ctx ledger.TransactionContext, wrap
 	}
 	service := provider.GetOrganizationService()
 
-	organization, err := service.RegisterOrganization(txCreator)
+	params := new(asset.RegisterOrganizationParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return nil, err
+	}
+
+	organization, err := service.RegisterOrganization(txCreator, params)
 	if err != nil {
 		s.logger.WithError(err).Error("failed to register organization")
 		return nil, err

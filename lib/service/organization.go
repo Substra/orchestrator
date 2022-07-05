@@ -9,7 +9,7 @@ import (
 
 // OrganizationAPI defines the methods to act on Organizations
 type OrganizationAPI interface {
-	RegisterOrganization(id string) (*asset.Organization, error)
+	RegisterOrganization(id string, newOrganization *asset.RegisterOrganizationParam) (*asset.Organization, error)
 	GetAllOrganizations() ([]*asset.Organization, error)
 	GetOrganization(id string) (*asset.Organization, error)
 }
@@ -38,8 +38,13 @@ func NewOrganizationService(provider OrganizationDependencyProvider) *Organizati
 }
 
 // RegisterOrganization persist a organization
-func (s *OrganizationService) RegisterOrganization(id string) (*asset.Organization, error) {
-	organization := &asset.Organization{Id: id}
+func (s *OrganizationService) RegisterOrganization(id string, newOrganization *asset.RegisterOrganizationParam) (*asset.Organization, error) {
+	err := newOrganization.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	organization := &asset.Organization{Id: id, Address: newOrganization.Address}
 
 	exists, err := s.GetOrganizationDBAL().OrganizationExists(id)
 	if err != nil {

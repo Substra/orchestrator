@@ -26,6 +26,7 @@ func TestRegisterOrganization(t *testing.T) {
 
 	expected := &asset.Organization{
 		Id:           "uuid1",
+		Address:      "org-1.com",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 
@@ -42,7 +43,11 @@ func TestRegisterOrganization(t *testing.T) {
 
 	service := NewOrganizationService(provider)
 
-	organization, err := service.RegisterOrganization("uuid1")
+	newOrganization := &asset.RegisterOrganizationParam{
+		Address: "org-1.com",
+	}
+
+	organization, err := service.RegisterOrganization("uuid1", newOrganization)
 	assert.NoError(t, err, "Organization registration should not fail")
 	assert.Equal(t, expected, organization, "Registration should return a organization")
 
@@ -60,7 +65,11 @@ func TestRegisterExistingOrganization(t *testing.T) {
 
 	service := NewOrganizationService(provider)
 
-	_, err := service.RegisterOrganization("uuid1")
+	newOrganization := &asset.RegisterOrganizationParam{
+		Address: "org-1.com",
+	}
+
+	_, err := service.RegisterOrganization("uuid1", newOrganization)
 	assert.Error(t, err, "Registration should fail for existing organization")
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))

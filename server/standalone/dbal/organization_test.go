@@ -23,7 +23,7 @@ func TestAddOrganization(t *testing.T) {
 	}
 
 	mock.ExpectBegin()
-	mock.ExpectExec(`INSERT INTO organizations`).WithArgs(organization.Id, testChannel, organization.CreationDate.AsTime()).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectExec(`INSERT INTO organizations`).WithArgs(organization.Id, organization.Address, testChannel, organization.CreationDate.AsTime()).WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -68,19 +68,21 @@ func TestGetAllOrganizations(t *testing.T) {
 
 	organization1 := &asset.Organization{
 		Id:           "45e80360-a9e5-11ec-b909-0242ac120002",
+		Address:      "substra-backend.org-1.com",
 		CreationDate: timestamppb.New(time.Unix(800, 0)),
 	}
 	organization2 := &asset.Organization{
 		Id:           "cb5ca026-a9ca-4bcf-9bdb-01711d5c6862",
+		Address:      "substra-backend.org-2.com",
 		CreationDate: timestamppb.New(time.Unix(900, 0)),
 	}
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"id", "creation_date"}).
-		AddRow(organization1.Id, organization1.CreationDate.AsTime()).
-		AddRow(organization2.Id, organization2.CreationDate.AsTime())
-	mock.ExpectQuery(`SELECT id, creation_date FROM organizations`).WillReturnRows(rows)
+	rows := pgxmock.NewRows([]string{"id", "address", "creation_date"}).
+		AddRow(organization1.Id, organization1.Address, organization1.CreationDate.AsTime()).
+		AddRow(organization2.Id, organization2.Address, organization2.CreationDate.AsTime())
+	mock.ExpectQuery(`SELECT id, address, creation_date FROM organizations`).WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -103,14 +105,15 @@ func TestGetOrganization(t *testing.T) {
 
 	organization := &asset.Organization{
 		Id:           "45e80360-a9e5-11ec-b909-0242ac120002",
+		Address:      "substra-backend.org-1.com",
 		CreationDate: timestamppb.New(time.Unix(800, 0)),
 	}
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"id", "creation_date"}).
-		AddRow(organization.Id, organization.CreationDate.AsTime())
-	mock.ExpectQuery(`SELECT id, creation_date FROM organizations`).WillReturnRows(rows)
+	rows := pgxmock.NewRows([]string{"id", "address", "creation_date"}).
+		AddRow(organization.Id, organization.Address, organization.CreationDate.AsTime())
+	mock.ExpectQuery(`SELECT id, address, creation_date FROM organizations`).WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)

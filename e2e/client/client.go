@@ -74,7 +74,7 @@ type TestClient struct {
 	ctx                  context.Context
 	ks                   *KeyStore
 	logger               log.Entry
-	organizationService          asset.OrganizationServiceClient
+	organizationService  asset.OrganizationServiceClient
 	algoService          asset.AlgoServiceClient
 	dataManagerService   asset.DataManagerServiceClient
 	dataSampleService    asset.DataSampleServiceClient
@@ -123,7 +123,7 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 		ctx:                  ctx,
 		ks:                   NewKeyStore(),
 		logger:               logger,
-		organizationService:          asset.NewOrganizationServiceClient(f.conn),
+		organizationService:  asset.NewOrganizationServiceClient(f.conn),
 		algoService:          asset.NewAlgoServiceClient(f.conn),
 		dataManagerService:   asset.NewDataManagerServiceClient(f.conn),
 		dataSampleService:    asset.NewDataSampleServiceClient(f.conn),

@@ -30,7 +30,7 @@ func (s *OrganizationServer) RegisterOrganization(ctx context.Context, in *asset
 		return nil, err
 	}
 
-	organization, err := services.GetOrganizationService().RegisterOrganization(mspid)
+	organization, err := services.GetOrganizationService().RegisterOrganization(mspid, in)
 	if err != nil {
 		return nil, err
 	}

@@ -10,13 +10,16 @@ import "google/protobuf/timestamp.proto";
 message Organization {
   string id = 1;
   google.protobuf.Timestamp creation_date = 2;
+  string address = 3;
 }
 
 message GetAllOrganizationsResponse {
   repeated Organization organizations = 1;
 }
 
-message RegisterOrganizationParam {}
+message RegisterOrganizationParam {
+	string address = 1;
+}
 message GetAllOrganizationsParam {}
 
 service OrganizationService {

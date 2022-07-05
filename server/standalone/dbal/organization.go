@@ -13,12 +13,14 @@ import (
 
 type sqlOrganization struct {
 	ID           string
+	Address      string
 	CreationDate time.Time
 }
 
 func (s *sqlOrganization) toOrganization() *asset.Organization {
 	return &asset.Organization{
 		Id:           s.ID,
+		Address:      s.Address,
 		CreationDate: timestamppb.New(s.CreationDate),
 	}
 }
@@ -27,8 +29,8 @@ func (s *sqlOrganization) toOrganization() *asset.Organization {
 func (d *DBAL) AddOrganization(organization *asset.Organization) error {
 	stmt := getStatementBuilder().
 		Insert("organizations").
-		Columns("id", "channel", "creation_date").
-		Values(organization.GetId(), d.channel, organization.GetCreationDate().AsTime())
+		Columns("id", "address", "channel", "creation_date").
+		Values(organization.GetId(), organization.GetAddress(), d.channel, organization.GetCreationDate().AsTime())
 
 	return d.exec(stmt)
 }
@@ -54,7 +56,7 @@ func (d *DBAL) OrganizationExists(id string) (bool, error) {
 // GetAllOrganizations implements persistence.OrganizationDBAL
 func (d *DBAL) GetAllOrganizations() ([]*asset.Organization, error) {
 	stmt := getStatementBuilder().
-		Select("id", "creation_date").
+		Select("id", "address", "creation_date").
 		From("organizations").
 		Where(sq.Eq{"channel": d.channel})
 
@@ -69,7 +71,7 @@ func (d *DBAL) GetAllOrganizations() ([]*asset.Organization, error) {
 	for rows.Next() {
 		scanned := sqlOrganization{}
 
-		err = rows.Scan(&scanned.ID, &scanned.CreationDate)
+		err = rows.Scan(&scanned.ID, &scanned.Address, &scanned.CreationDate)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +88,7 @@ func (d *DBAL) GetAllOrganizations() ([]*asset.Organization, error) {
 // GetOrganization implements persistence.OrganizationDBAL
 func (d *DBAL) GetOrganization(id string) (*asset.Organization, error) {
 	stmt := getStatementBuilder().
-		Select("id", "creation_date").
+		Select("id", "address", "creation_date").
 		From("organizations").
 		Where(sq.Eq{"id": id, "channel": d.channel})
 
@@ -96,7 +98,7 @@ func (d *DBAL) GetOrganization(id string) (*asset.Organization, error) {
 	}
 
 	scanned := sqlOrganization{}
-	err = row.Scan(&scanned.ID, &scanned.CreationDate)
+	err = row.Scan(&scanned.ID, &scanned.Address, &scanned.CreationDate)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

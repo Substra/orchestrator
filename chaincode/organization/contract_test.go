@@ -30,7 +30,7 @@ func TestRegistration(t *testing.T) {
 	contract := &SmartContract{}
 
 	org := "TestOrg"
-	o := &asset.Organization{Id: org}
+	o := &asset.Organization{Id: org, Address: "org-1.com"}
 	b := testHelper.FakeTxCreator(t, org)
 
 	stub := new(testHelper.MockedStub)
@@ -39,11 +39,14 @@ func TestRegistration(t *testing.T) {
 	ctx := new(ledger.MockTransactionContext)
 
 	service := getMockedService(ctx)
-	service.On("RegisterOrganization", org).Return(o, nil).Once()
+	newOrganization := &asset.RegisterOrganizationParam{
+		Address: "org-1.com",
+	}
+	service.On("RegisterOrganization", org, newOrganization).Return(o, nil).Once()
 
 	ctx.On("GetStub").Return(stub).Once()
 
-	wrapper, err := communication.Wrap(context.Background(), nil)
+	wrapper, err := communication.Wrap(context.Background(), newOrganization)
 	require.NoError(t, err)
 
 	wrapped, err := contract.RegisterOrganization(ctx, wrapper)
