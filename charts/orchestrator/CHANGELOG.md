@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.1.3] - 2022-07-05
+
+### Changed
+- bump app version to `0.18.0`
+
 ## [7.1.2] - 2022-06-20
 
 ### Changed
