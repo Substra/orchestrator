@@ -9,7 +9,6 @@ type PerformanceDBAL interface {
 	AddPerformance(perf *asset.Performance) error
 	QueryPerformances(p *common.Pagination, filter *asset.PerformanceQueryFilter) ([]*asset.Performance, common.PaginationToken, error)
 	PerformanceExists(perf *asset.Performance) (bool, error)
-	CountComputeTaskPerformances(key string) (int, error)
 }
 
 type PerformanceDBALProvider interface {

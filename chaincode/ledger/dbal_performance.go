@@ -35,14 +35,6 @@ func (db *DB) PerformanceExists(perf *asset.Performance) (bool, error) {
 	return db.hasKey(asset.PerformanceKind, perf.GetKey())
 }
 
-func (db *DB) CountComputeTaskPerformances(computeTaskKey string) (int, error) {
-	elementKeys, err := db.getIndexKeys(performanceIndex, []string{asset.PerformanceKind, computeTaskKey})
-	if err != nil {
-		return 0, err
-	}
-	return len(elementKeys), nil
-}
-
 func (db *DB) QueryPerformances(p *common.Pagination, filter *asset.PerformanceQueryFilter) ([]*asset.Performance, common.PaginationToken, error) {
 	query := richQuerySelector{
 		Selector: couchAssetQuery{

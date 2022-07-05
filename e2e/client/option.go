@@ -38,7 +38,6 @@ type TestTaskOptions struct {
 	AlgoRef        string
 	ParentsRef     []string
 	PlanRef        string
-	MetricsRef     []string
 	DataManagerRef string
 	DataSampleRef  string
 	Inputs         []*TaskInputOptions
@@ -106,10 +105,9 @@ type DataManagerOptions struct {
 func DefaultTestTaskOptions() *TestTaskOptions {
 	return &TestTaskOptions{
 		KeyRef:         DefaultTestTaskRef,
-		AlgoRef:        DefaultSimpleAlgoRef,
-		ParentsRef:     []string{},
+		AlgoRef:        DefaultMetricAlgoRef,
+		ParentsRef:     []string{DefaultPredictTaskRef},
 		PlanRef:        DefaultPlanRef,
-		MetricsRef:     []string{DefaultMetricAlgoRef},
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
 		Outputs: map[string]*asset.NewComputeTaskOutput{
@@ -135,11 +133,6 @@ func (o *TestTaskOptions) WithAlgoRef(ref string) *TestTaskOptions {
 	return o
 }
 
-func (o *TestTaskOptions) WithMetricsRef(ref ...string) *TestTaskOptions {
-	o.MetricsRef = ref
-	return o
-}
-
 func (o *TestTaskOptions) WithParentsRef(p ...string) *TestTaskOptions {
 	o.ParentsRef = p
 	return o
@@ -149,10 +142,6 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	parentKeys := make([]string, len(o.ParentsRef))
 	for i, ref := range o.ParentsRef {
 		parentKeys[i] = ks.GetKey(ref)
-	}
-	metricKeys := make([]string, len(o.MetricsRef))
-	for i, ref := range o.MetricsRef {
-		metricKeys[i] = ks.GetKey(ref)
 	}
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
@@ -164,7 +153,6 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 			Test: &asset.NewTestTaskData{
 				DataManagerKey: ks.GetKey(o.DataManagerRef),
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
-				MetricKeys:     metricKeys,
 			},
 		},
 		Outputs: o.Outputs,
@@ -266,7 +254,7 @@ func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 
 func DefaultPredictTaskOptions() *PredictTaskOptions {
 	return &PredictTaskOptions{
-		KeyRef:         DefaultTrainTaskRef,
+		KeyRef:         DefaultPredictTaskRef,
 		AlgoRef:        DefaultPredictAlgoRef,
 		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
@@ -290,6 +278,11 @@ func (o *PredictTaskOptions) WithAlgoRef(ref string) *PredictTaskOptions {
 
 func (o *PredictTaskOptions) WithKeyRef(ref string) *PredictTaskOptions {
 	o.KeyRef = ref
+	return o
+}
+
+func (o *PredictTaskOptions) WithDataSampleRef(ref string) *PredictTaskOptions {
+	o.DataSampleRef = ref
 	return o
 }
 

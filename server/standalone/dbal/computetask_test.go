@@ -23,7 +23,6 @@ func TestToComputeTask(t *testing.T) {
 		Test: &asset.TestTaskData{
 			DataManagerKey: "dmkey",
 			DataSampleKeys: []string{"dskey1", "dskey2"},
-			MetricKeys:     []string{"mkey"},
 		},
 	}
 

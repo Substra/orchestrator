@@ -56,8 +56,8 @@ func TestTrainTaskLifecycle(t *testing.T) {
 func TestPredictTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions().WithKeyRef("predict_algo"))
 	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("train_algo"))
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions().WithKeyRef("predict_algo"))
 	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("metric"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
@@ -65,7 +65,7 @@ func TestPredictTaskLifecycle(t *testing.T) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("train").WithAlgoRef("train_algo"))
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().WithParentsRef("train").WithAlgoRef("predict_algo").WithKeyRef("predict"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("test").WithParentsRef("predict").WithAlgoRef("train_algo").WithMetricsRef("metric"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("test").WithParentsRef("predict").WithAlgoRef("metric"))
 
 	appClient.StartTask("train")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_end"))

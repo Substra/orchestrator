@@ -169,16 +169,10 @@ func TestNewTrainTaskDataValidation(t *testing.T) {
 
 func TestNewTestTaskDataValidation(t *testing.T) {
 	validDataSamples := &NewTestTaskData{
-		MetricKeys:     []string{"2837f0b7-cb0e-4a98-9df2-68c116f65ad6", "9316618d-6b27-4a7a-9518-9c4671cd70b8"},
-		DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
-		DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
-	}
-	missingMetric := &NewTestTaskData{
 		DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
 		DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
 	}
 	missingSamples := &NewTestTaskData{
-		MetricKeys:     []string{"2837f0b7-cb0e-4a98-9df2-68c116f65ad6", "9316618d-6b27-4a7a-9518-9c4671cd70b8"},
 		DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
 	}
 
@@ -187,7 +181,6 @@ func TestNewTestTaskDataValidation(t *testing.T) {
 		data  *NewTestTaskData
 	}{
 		"with samples":    {valid: true, data: validDataSamples},
-		"missing metrics": {valid: false, data: missingMetric},
 		"missing samples": {valid: false, data: missingSamples},
 	}
 

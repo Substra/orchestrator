@@ -35,9 +35,7 @@ func TestRegisterPerformance(t *testing.T) {
 		Worker:   "test",
 		Category: asset.ComputeTaskCategory_TASK_TEST,
 		Data: &asset.ComputeTask_Test{
-			Test: &asset.TestTaskData{
-				MetricKeys: []string{metric.Key},
-			},
+			Test: &asset.TestTaskData{},
 		},
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
@@ -57,7 +55,6 @@ func TestRegisterPerformance(t *testing.T) {
 
 	dbal.On("PerformanceExists", stored).Return(false, nil).Once()
 	dbal.On("AddPerformance", stored).Once().Return(nil)
-	dbal.On("CountComputeTaskPerformances", perf.ComputeTaskKey).Return(0, nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,

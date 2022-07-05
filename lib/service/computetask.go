@@ -252,6 +252,11 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
+	algo, err := s.getCheckedAlgo(input.AlgoKey, owner, input.Category)
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: validate inputs
 
 	outputs := make(map[string]*asset.ComputeTaskOutput, len(input.Outputs))
@@ -267,6 +272,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 	task := &asset.ComputeTask{
 		Key:            input.Key,
+		Algo:           algo,
 		Category:       input.Category,
 		Owner:          owner,
 		ComputePlanKey: input.ComputePlanKey,
@@ -298,11 +304,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
-	algoOutputs, err := s.getAlgoOutputs(task)
-	if err != nil {
-		return nil, err
-	}
-	if err := s.validateOutputs(task.Key, task.Outputs, algoOutputs); err != nil {
+	if err := s.validateOutputs(task.Key, task.Outputs, task.Algo.Outputs); err != nil {
 		return nil, err
 	}
 
@@ -478,11 +480,6 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 		return orcerrors.NewInvalidAsset("cannot create task with test data")
 	}
 
-	algo, err := s.getCheckedAlgo(taskInput.AlgoKey, task.Owner, task.Category)
-	if err != nil {
-		return err
-	}
-
 	taskData := &asset.CompositeTrainTaskData{
 		DataManagerKey: datamanager.Key,
 		DataSampleKeys: specificInput.DataSampleKeys,
@@ -492,7 +489,6 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 		Composite: taskData,
 	}
 	task.Worker = datamanager.Owner
-	task.Algo = algo
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -501,10 +497,6 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 // setAggregateData hydrates task specific AggregateTrainTaskData from input
 func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, input *asset.NewAggregateTrainTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
 	organization, err := s.GetOrganizationService().GetOrganization(input.Worker)
-	if err != nil {
-		return err
-	}
-	algo, err := s.getCheckedAlgo(taskInput.AlgoKey, task.Owner, task.Category)
 	if err != nil {
 		return err
 	}
@@ -523,7 +515,6 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 		Aggregate: taskData,
 	}
 	task.Worker = organization.Id
-	task.Algo = algo
 	task.LogsPermission = logsPermission
 
 	return nil
@@ -544,11 +535,6 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 		return orcerrors.NewInvalidAsset("cannot create task with test data")
 	}
 
-	algo, err := s.getCheckedAlgo(taskInput.AlgoKey, task.Owner, task.Category)
-	if err != nil {
-		return err
-	}
-
 	taskData := &asset.TrainTaskData{
 		DataManagerKey: datamanager.Key,
 		DataSampleKeys: specificInput.DataSampleKeys,
@@ -558,7 +544,6 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 		Train: taskData,
 	}
 	task.Worker = datamanager.Owner
-	task.Algo = algo
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -570,12 +555,7 @@ func (s *ComputeTaskService) setPredictData(taskInput *asset.NewComputeTask, spe
 		return err
 	}
 
-	algo, err := s.getCheckedAlgo(taskInput.AlgoKey, task.Owner, task.Category)
-	if err != nil {
-		return err
-	}
-
-	permissions := s.GetPermissionService().IntersectPermissions(algo.Permissions, datamanager.Permissions)
+	permissions := s.GetPermissionService().IntersectPermissions(task.Algo.Permissions, datamanager.Permissions)
 
 	taskData := &asset.PredictTaskData{
 		DataManagerKey:        datamanager.Key,
@@ -587,7 +567,6 @@ func (s *ComputeTaskService) setPredictData(taskInput *asset.NewComputeTask, spe
 		Predict: taskData,
 	}
 	task.Worker = datamanager.Owner
-	task.Algo = algo
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -600,28 +579,9 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 		return err
 	}
 
-	for _, metricKey := range input.MetricKeys {
-		metricExists, err := s.GetAlgoService().AlgoExists(metricKey)
-		if err != nil {
-			return err
-		}
-		if !metricExists {
-			return orcerrors.NewNotFound(asset.MetricKind, metricKey)
-		}
-		// ensure the task will be able to download the metric
-		ok, err := s.GetAlgoService().CanDownload(metricKey, datamanager.Owner)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return orcerrors.NewPermissionDenied(fmt.Sprintf("datamanager owner cannot download the metric %q", metricKey))
-		}
-	}
-
 	taskData := &asset.TestTaskData{
 		DataManagerKey: input.DataManagerKey,
 		DataSampleKeys: input.DataSampleKeys,
-		MetricKeys:     input.MetricKeys,
 	}
 
 	task.Data = &asset.ComputeTask_Test{
@@ -634,7 +594,6 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 	if len(parentTasks) != 1 {
 		return orcerrors.NewInvalidAsset("invalid number of parents")
 	}
-	task.Algo = parentTasks[0].Algo
 	task.ComputePlanKey = parentTasks[0].ComputePlanKey
 	// In case of test tasks there is only one parent (see isCompatibleWithParents)
 	// and the test task should have the same rank
@@ -884,24 +843,6 @@ func (s *ComputeTaskService) getCachedCP(key string) (*asset.ComputePlan, error)
 		s.planStore[key] = plan
 	}
 	return s.planStore[key], nil
-}
-
-// getAlgoOutputs returns the task's algo output, except for test tasks: the first metric is then used
-func (s *ComputeTaskService) getAlgoOutputs(task *asset.ComputeTask) (NamedAlgoOutputs, error) {
-	algoOutputs := task.Algo.Outputs
-	if task.GetTest() != nil { // testtuple
-		// Use the first metric as the algo for the purpose of task output validation
-		if len(task.GetTest().MetricKeys) == 0 {
-			return nil, orcerrors.NewInvalidAsset("test task must have at least one metric key")
-		}
-		metric, err := s.GetAlgoService().GetAlgo(task.GetTest().MetricKeys[0])
-		if err != nil {
-			return nil, err
-		}
-		algoOutputs = metric.Outputs
-	}
-
-	return algoOutputs, nil
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory

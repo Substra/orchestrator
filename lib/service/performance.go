@@ -86,13 +86,6 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewConflict(asset.PerformanceKind, perf.GetKey())
 	}
 
-	// Performances should be counted before registering a new performance which
-	// could not be fetched in the current transaction in the distributed mode.
-	perfCount, err := s.GetPerformanceDBAL().CountComputeTaskPerformances(perf.ComputeTaskKey)
-	if err != nil {
-		return nil, errors.NewInternal("cannot count performances for task transition")
-	}
-
 	err = s.GetPerformanceDBAL().AddPerformance(perf)
 	if err != nil {
 		return nil, err
@@ -109,15 +102,13 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, err
 	}
 
-	// Verify if all performances has been registered to mark the test task as done
-	metricCount := len(task.Data.(*asset.ComputeTask_Test).Test.MetricKeys)
-	if (perfCount + 1) == metricCount {
-		reason := fmt.Sprintf("All performances registered on %s by %s", task.Key, requester)
-		err = s.GetComputeTaskService().applyTaskAction(task, transitionDone, reason)
-		if err != nil {
-			return nil, err
-		}
+	// Mark the test task as done
+	reason := fmt.Sprintf("Performances registered on %s by %s", task.Key, requester)
+	err = s.GetComputeTaskService().applyTaskAction(task, transitionDone, reason)
+	if err != nil {
+		return nil, err
 	}
+
 	return perf, nil
 }
 

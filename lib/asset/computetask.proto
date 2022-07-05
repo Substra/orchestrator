@@ -122,13 +122,15 @@ message NewPredictTaskData {
 message TestTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  repeated string metric_keys = 3;
+  reserved 3;
+  reserved "metric_keys";
 }
 
 message NewTestTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  repeated string metric_keys = 3;
+  reserved 3;
+  reserved "metric_keys";
 }
 
 message CompositeTrainTaskData {

@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Metadata set in events (#787)
 
+### Changed
+- (BREAKING) Removed the `MetricKeys` property of test tasks in favor of the generic `Algo` field (#776)
+
 ## [0.17.0] - 2022-06-20
 
 ### Added

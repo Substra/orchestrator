@@ -31,7 +31,7 @@ A ComputePlan is a way to group tasks [ComputeTasks](./computetask.md) related t
 Tasks are related to one another in a directed acyclic graph: output models are consumed by tasks of higher rank.
 
 The final step is to define the graph of **ComputeTasks**.
-Tasks are the core asset of the orchestrator, they represent the execution of a model training or prediction (TestTask).
+Tasks are the core asset of the orchestrator, they represent the execution of an Algo to produce Artifacts.
 They glue together the **Algos**, **DataManager** and **DataSamples**.
 
 When a task is processed, it outputs one or more **Model** or **Performance**.

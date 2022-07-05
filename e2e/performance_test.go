@@ -4,7 +4,6 @@
 package e2e
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/owkin/orchestrator/e2e/client"
@@ -28,8 +27,13 @@ func TestRegisterPerformance(t *testing.T) {
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
+	appClient.RegisterTasks(client.DefaultPredictTaskOptions().WithKeyRef("predictTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef))
+	appClient.StartTask("predictTask")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predictTask").WithKeyRef("predictions"))
+
 	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef).WithMetricsRef("testmetric"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithAlgoRef("testmetric").WithDataSampleRef("testds").WithParentsRef("predictTask"))
 	appClient.StartTask("testTask")
 
 	registeredPerf, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
@@ -69,21 +73,19 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
-	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric1"))
-	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric2"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef).WithMetricsRef("testmetric1", "testmetric2"))
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
+	appClient.RegisterTasks(client.DefaultPredictTaskOptions().WithKeyRef("predictTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef))
+	appClient.StartTask("predictTask")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predictTask").WithKeyRef("predictions"))
+
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef("predictTask").WithAlgoRef("testmetric"))
 	appClient.StartTask("testTask")
 
-	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
+	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
 	require.NoError(t, err)
 
 	task := appClient.GetComputeTask("testTask")
-	require.Equal(t, asset.ComputeTaskStatus_STATUS_DOING, task.Status)
-
-	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric2"))
-	require.NoError(t, err)
-
-	task = appClient.GetComputeTask("testTask")
 	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
 }
 
@@ -99,22 +101,26 @@ func TestRegisterMultiplePerformancesForSameMetric(t *testing.T) {
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 
-	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric1"))
-	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric2"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef).WithMetricsRef("testmetric1", "testmetric2"))
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
+	appClient.RegisterTasks(client.DefaultPredictTaskOptions().WithKeyRef("predictTask").WithDataSampleRef("testds").WithParentsRef(client.DefaultTrainTaskRef))
+	appClient.StartTask("predictTask")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predictTask").WithKeyRef("predictions"))
+
+	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("testTask").WithAlgoRef("testmetric").WithDataSampleRef("testds").WithParentsRef("predictTask"))
 	appClient.StartTask("testTask")
 
-	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
+	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
 	require.NoError(t, err)
 
 	task := appClient.GetComputeTask("testTask")
-	require.Equal(t, asset.ComputeTaskStatus_STATUS_DOING, task.Status)
+	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
 
-	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric1"))
-	require.ErrorContains(t, err, orcerrors.ErrConflict)
+	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"))
+	require.ErrorContains(t, err, orcerrors.ErrBadRequest)
 
 	task = appClient.GetComputeTask("testTask")
-	require.Equal(t, asset.ComputeTaskStatus_STATUS_DOING, task.Status)
+	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
 }
 
 func TestQueryPerformances(t *testing.T) {
@@ -128,27 +134,32 @@ func TestQueryPerformances(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
+
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions().WithKeyRef("predictAlgo"))
+	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
+		WithKeyRef("predictTask").
+		WithDataSampleRef("testds").
+		WithParentsRef(client.DefaultTrainTaskRef).
+		WithAlgoRef("predictAlgo"))
+	appClient.StartTask("predictTask")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predictTask").WithKeyRef("predictions"))
+
 	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("testmetric"))
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().
+		WithKeyRef("testTask").
+		WithDataSampleRef("testds").
+		WithParentsRef("predictTask").
+		WithAlgoRef("testmetric"))
+	appClient.StartTask("testTask")
 
-	const nbPerformances = 2
-	for i := 0; i < nbPerformances; i++ {
-		testTaskRef := fmt.Sprint("testTask", i)
-		appClient.RegisterTasks(client.DefaultTestTaskOptions().
-			WithKeyRef(testTaskRef).
-			WithDataSampleRef("testds").
-			WithParentsRef(client.DefaultTrainTaskRef).
-			WithMetricsRef("testmetric"))
-		appClient.StartTask(testTaskRef)
-
-		_, err := appClient.RegisterPerformance(
-			client.DefaultPerformanceOptions().WithTaskRef(testTaskRef).WithMetricRef("testmetric"),
-		)
-		require.NoError(t, err)
-	}
+	_, err := appClient.RegisterPerformance(
+		client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric"),
+	)
+	require.NoError(t, err)
 
 	res := appClient.QueryPerformances(nil, "", 10)
 	performances := res.Performances
 
-	require.GreaterOrEqual(t, len(performances), nbPerformances)
+	require.GreaterOrEqual(t, len(performances), 1)
 	require.LessOrEqual(t, performances[0].CreationDate.AsTime(), performances[1].CreationDate.AsTime())
 }

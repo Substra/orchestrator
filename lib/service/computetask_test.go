@@ -617,7 +617,31 @@ func TestSetPredictData(t *testing.T) {
 		DataManagerKey: "dmUuid",
 		DataSampleKeys: []string{"ds1", "ds2", "ds3"},
 	}
+	dataManager := &asset.DataManager{Key: "dmUuid", Owner: "dmOwner",
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        false,
+				AuthorizedIds: []string{"org1"},
+			},
+			Download: &asset.Permission{
+				Public:        false,
+				AuthorizedIds: []string{"org1"},
+			},
+		}}
+	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_PREDICT,
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        false,
+				AuthorizedIds: []string{"org2"},
+			},
+			Download: &asset.Permission{
+				Public:        false,
+				AuthorizedIds: []string{"org2"},
+			},
+		}}
+
 	task := &asset.ComputeTask{
+		Algo:     algo,
 		Owner:    "org1",
 		Category: asset.ComputeTaskCategory_TASK_PREDICT,
 	}
@@ -625,13 +649,10 @@ func TestSetPredictData(t *testing.T) {
 	dms := new(MockDataManagerAPI)
 	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
-	as := new(MockAlgoAPI)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
-	provider.On("GetAlgoService").Return(as)
-	dataManager := &asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}
 	dms.On("GetDataManager", "dmUuid").Once().Return(dataManager, nil)
 	ps.On("CanProcess", mock.Anything, "org1").Return(true)
 	dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
@@ -640,8 +661,6 @@ func TestSetPredictData(t *testing.T) {
 		Process:  &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 	}
-	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_PREDICT}
-	as.On("GetAlgo", taskInput.AlgoKey).Once().Return(algo, nil)
 	ps.On("IntersectPermissions", algo.Permissions, dataManager.Permissions).Return(modelPerms)
 
 	service := NewComputeTaskService(provider)
@@ -652,7 +671,6 @@ func TestSetPredictData(t *testing.T) {
 	dms.AssertExpectations(t)
 	dss.AssertExpectations(t)
 	ps.AssertExpectations(t)
-	as.AssertExpectations(t)
 }
 
 func TestSetCompositeData(t *testing.T) {
@@ -666,17 +684,16 @@ func TestSetCompositeData(t *testing.T) {
 	task := &asset.ComputeTask{
 		Owner:    "org1",
 		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
+		Algo:     &asset.Algo{Category: asset.AlgoCategory_ALGO_COMPOSITE},
 	}
 
 	dms := new(MockDataManagerAPI)
 	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
-	as := new(MockAlgoAPI)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
-	provider.On("GetAlgoService").Return(as)
 
 	// getCheckedDataManager
 	dms.On("GetDataManager", "dmUuid").Once().Return(&asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}, nil)
@@ -685,32 +702,24 @@ func TestSetCompositeData(t *testing.T) {
 
 	dss.On("ContainsTestSample", specificInput.DataSampleKeys).Once().Return(false, nil)
 
-	// getCheckedAlgo
-	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_COMPOSITE}
-	as.On("GetAlgo", taskInput.AlgoKey).Once().Return(algo, nil)
-
 	service := NewComputeTaskService(provider)
 
 	err := service.setCompositeData(taskInput, specificInput, task)
 	assert.NoError(t, err)
 
-	assert.Equal(t, algo, task.Algo)
 	assert.Equal(t, "dmOwner", task.Worker)
 	assert.Equal(t, "dmUuid", task.Data.(*asset.ComputeTask_Composite).Composite.DataManagerKey)
 
 	dms.AssertExpectations(t)
 	dss.AssertExpectations(t)
 	ps.AssertExpectations(t)
-	as.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
 func TestSetAggregateData(t *testing.T) {
 	ns := new(MockOrganizationAPI)
-	as := new(MockAlgoAPI)
 	provider := newMockedProvider()
 	provider.On("GetOrganizationService").Return(ns)
-	provider.On("GetAlgoService").Return(as)
 	// Use the real permission service
 	provider.On("GetPermissionService").Return(NewPermissionService(provider))
 
@@ -723,6 +732,9 @@ func TestSetAggregateData(t *testing.T) {
 	task := &asset.ComputeTask{
 		Owner:    "org1",
 		Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
+		Algo: &asset.Algo{Category: asset.AlgoCategory_ALGO_AGGREGATE, Permissions: &asset.Permissions{
+			Process: &asset.Permission{Public: true},
+		}},
 	}
 
 	parents := []*asset.ComputeTask{
@@ -742,162 +754,56 @@ func TestSetAggregateData(t *testing.T) {
 	// used by permissions service
 	ns.On("GetAllOrganizations").Once().Return([]*asset.Organization{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
 
-	// getCheckedAlgo
-	algo := &asset.Algo{Category: asset.AlgoCategory_ALGO_AGGREGATE, Permissions: &asset.Permissions{
-		Process: &asset.Permission{Public: true},
-	}}
-	as.On("GetAlgo", taskInput.AlgoKey).Once().Return(algo, nil)
-
 	service := NewComputeTaskService(provider)
 	err := service.setAggregateData(taskInput, specificInput, task, parents)
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, algo, task.Algo)
 	assert.Equal(t, "org3", task.Worker)
 	assert.ElementsMatch(t, task.LogsPermission.AuthorizedIds, []string{"org1", "org2", "org4"})
 
 	ns.AssertExpectations(t)
-	as.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
 func TestSetTestData(t *testing.T) {
-	t.Run("single metric", func(t *testing.T) {
-		specificInput := &asset.NewTestTaskData{
-			MetricKeys:     []string{"metric"},
-			DataManagerKey: "cdmKey",
-			DataSampleKeys: []string{"sample1", "sample2"},
-		}
-		task := &asset.ComputeTask{
-			Owner:    "org1",
-			Category: asset.ComputeTaskCategory_TASK_TEST,
-		}
-		parents := []*asset.ComputeTask{
-			{
-				Algo:           &asset.Algo{Key: "algoKey"},
-				ComputePlanKey: "cpKey",
-				Rank:           2,
-			},
-		}
+	specificInput := &asset.NewTestTaskData{
+		DataManagerKey: "cdmKey",
+		DataSampleKeys: []string{"sample1", "sample2"},
+	}
+	task := &asset.ComputeTask{
+		Algo:     &asset.Algo{Key: "algoKey", Category: asset.AlgoCategory_ALGO_METRIC},
+		Owner:    "org1",
+		Category: asset.ComputeTaskCategory_TASK_TEST,
+	}
+	parents := []*asset.ComputeTask{
+		{
+			Algo:           &asset.Algo{Key: "algoKey"},
+			ComputePlanKey: "cpKey",
+			Rank:           2,
+		},
+	}
 
-		as := new(MockAlgoAPI)
-		dms := new(MockDataManagerAPI)
-		dss := new(MockDataSampleAPI)
-		provider := newMockedProvider()
-		provider.On("GetAlgoService").Return(as)
-		provider.On("GetDataManagerService").Return(dms)
-		provider.On("GetDataSampleService").Return(dss)
-		provider.On("GetPermissionService").Return(NewPermissionService(provider))
-		service := NewComputeTaskService(provider)
+	dms := new(MockDataManagerAPI)
+	dss := new(MockDataSampleAPI)
+	provider := newMockedProvider()
+	provider.On("GetDataManagerService").Return(dms)
+	provider.On("GetDataSampleService").Return(dss)
+	provider.On("GetPermissionService").Return(NewPermissionService(provider))
+	service := NewComputeTaskService(provider)
 
-		// single metric
-		as.On("AlgoExists", "metric").Return(true, nil)
-		as.On("CanDownload", "metric", "dmowner").Return(true, nil)
-		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
-		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+	// single metric
+	dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
+	dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
 
-		err := service.setTestData(specificInput, task, parents)
-		assert.NoError(t, err)
-		assert.Equal(t, parents[0].Algo, task.Algo)
-		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
-		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
-		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
-		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
-		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.MetricKeys, specificInput.MetricKeys)
+	err := service.setTestData(specificInput, task, parents)
+	assert.NoError(t, err)
+	assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
+	assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
+	assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
+	assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
 
-		as.AssertExpectations(t)
-		provider.AssertExpectations(t)
-	})
-	t.Run("multiple metrics", func(t *testing.T) {
-		specificInput := &asset.NewTestTaskData{
-			MetricKeys:     []string{"metric1", "metric2"},
-			DataManagerKey: "cdmKey",
-			DataSampleKeys: []string{"sample1", "sample2"},
-		}
-		task := &asset.ComputeTask{
-			Owner:    "org1",
-			Category: asset.ComputeTaskCategory_TASK_TEST,
-		}
-		parents := []*asset.ComputeTask{
-			{
-				Algo:           &asset.Algo{Key: "algoKey"},
-				ComputePlanKey: "cpKey",
-				Rank:           2,
-			},
-		}
-
-		as := new(MockAlgoAPI)
-		dms := new(MockDataManagerAPI)
-		dss := new(MockDataSampleAPI)
-		provider := newMockedProvider()
-		provider.On("GetAlgoService").Return(as)
-		provider.On("GetDataManagerService").Return(dms)
-		provider.On("GetDataSampleService").Return(dss)
-		provider.On("GetPermissionService").Return(NewPermissionService(provider))
-		service := NewComputeTaskService(provider)
-
-		// multiple metrics
-		as.On("AlgoExists", "metric1").Return(true, nil)
-		as.On("AlgoExists", "metric2").Return(true, nil)
-		as.On("CanDownload", "metric1", "dmowner").Return(true, nil)
-		as.On("CanDownload", "metric2", "dmowner").Return(true, nil)
-		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
-		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
-
-		err := service.setTestData(specificInput, task, parents)
-		assert.NoError(t, err)
-		assert.Equal(t, parents[0].Algo, task.Algo)
-		assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
-		assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
-		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
-		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
-		assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.MetricKeys, specificInput.MetricKeys)
-
-		as.AssertExpectations(t)
-		provider.AssertExpectations(t)
-	})
-	t.Run("invalid metric", func(t *testing.T) {
-		specificInput := &asset.NewTestTaskData{
-			MetricKeys:     []string{"metric"},
-			DataManagerKey: "cdmKey",
-			DataSampleKeys: []string{"sample1", "sample2"},
-		}
-		task := &asset.ComputeTask{
-			Owner:    "org1",
-			Category: asset.ComputeTaskCategory_TASK_TEST,
-		}
-		parents := []*asset.ComputeTask{
-			{
-				Algo:           &asset.Algo{Key: "algoKey"},
-				ComputePlanKey: "cpKey",
-				Rank:           2,
-			},
-		}
-
-		as := new(MockAlgoAPI)
-		dms := new(MockDataManagerAPI)
-		dss := new(MockDataSampleAPI)
-		provider := newMockedProvider()
-		provider.On("GetAlgoService").Return(as)
-		provider.On("GetDataManagerService").Return(dms)
-		provider.On("GetDataSampleService").Return(dss)
-		// Use the real permission service
-		provider.On("GetPermissionService").Return(NewPermissionService(provider))
-		service := NewComputeTaskService(provider)
-
-		// can not download metric
-		as.On("AlgoExists", "metric").Return(true, nil)
-		as.On("CanDownload", "metric", "dmowner").Return(false, nil)
-		dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
-		dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
-
-		err := service.setTestData(specificInput, task, parents)
-		assert.Error(t, err)
-
-		as.AssertExpectations(t)
-		provider.AssertExpectations(t)
-	})
+	provider.AssertExpectations(t)
 }
 
 func TestIsAlgoCompatible(t *testing.T) {

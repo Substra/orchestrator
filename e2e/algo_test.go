@@ -49,6 +49,7 @@ func TestQueryAlgos(t *testing.T) {
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
 	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
 
 	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{}, "", 100)
@@ -68,11 +69,12 @@ func TestQueryAlgos(t *testing.T) {
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train2"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef("train1", "train2"),
-		client.DefaultTestTaskOptions().WithDataSampleRef("objSample").WithParentsRef("train3"),
+		client.DefaultPredictTaskOptions().WithKeyRef("predict").WithParentsRef("train3"),
+		client.DefaultTestTaskOptions().WithDataSampleRef("objSample").WithParentsRef("predict"),
 	)
 
 	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)
-	require.Equal(t, 1, len(resp.Algos), "Unexpected number of algo used in compute plan with tasks")
+	require.Equal(t, 3, len(resp.Algos), "Unexpected number of algo used in compute plan with tasks")
 }
 
 func TestQueryAlgosFilterCategories(t *testing.T) {

@@ -19,6 +19,7 @@ import (
 
 const DefaultCompositeTaskRef = "composite task"
 const DefaultAggregateTaskRef = "aggregate task"
+const DefaultPredictTaskRef = "predict task"
 const DefaultTestTaskRef = "test task"
 const DefaultTrainTaskRef = "task"
 

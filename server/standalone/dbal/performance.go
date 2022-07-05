@@ -35,23 +35,6 @@ func (d *DBAL) AddPerformance(perf *asset.Performance) error {
 	return d.exec(stmt)
 }
 
-func (d *DBAL) CountComputeTaskPerformances(computeTaskKey string) (int, error) {
-	stmt := getStatementBuilder().
-		Select("COUNT(*)").
-		From("performances").
-		Where(sq.Eq{"channel": d.channel, "compute_task_key": computeTaskKey})
-
-	row, err := d.queryRow(stmt)
-	if err != nil {
-		return 0, err
-	}
-
-	var count int
-	err = row.Scan(&count)
-
-	return count, err
-}
-
 // PerformanceExists implements persistence.PerformanceDBAL
 func (d *DBAL) PerformanceExists(perf *asset.Performance) (bool, error) {
 	stmt := getStatementBuilder().
