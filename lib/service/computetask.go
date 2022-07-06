@@ -340,7 +340,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 // Models produced by a task can only be disabled if all those conditions are met:
 // - the compute plan has the DeleteIntermediaryModel set
-// - task has train children, ie: not at the tip of the compute plan (test children are ignored)
+// - task has train children, ie: not at the tip of the compute plan (test/predict children are ignored)
 // - task is in a terminal state (done, failed, canceled)
 // - all children are in a terminal state
 func (s *ComputeTaskService) canDisableModels(key string, requester string) (bool, error) {
@@ -376,7 +376,7 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 	trainChildren := 0
 
 	for _, child := range children {
-		if child.Category != asset.ComputeTaskCategory_TASK_TEST {
+		if child.Category != asset.ComputeTaskCategory_TASK_TEST && child.Category != asset.ComputeTaskCategory_TASK_PREDICT {
 			trainChildren++
 		}
 		state := newState(&dumbUpdater, child)

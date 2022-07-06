@@ -1483,6 +1483,33 @@ func TestCanDisableModels(t *testing.T) {
 		dbal.AssertExpectations(t)
 		cps.AssertExpectations(t)
 	})
+	t.Run("task with only predict children", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status:         asset.ComputeTaskStatus_STATUS_DONE,
+			ComputePlanKey: "cpKey",
+			Worker:         "worker",
+		}
+
+		dbal := new(persistence.MockDBAL)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+		cps := new(MockComputePlanAPI)
+		provider.On("GetComputePlanService").Return(cps)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+		cps.On("canDeleteModels", "cpKey").Return(true, nil)
+		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
+			{Status: asset.ComputeTaskStatus_STATUS_DONE, Category: asset.ComputeTaskCategory_TASK_PREDICT},
+		}, nil)
+
+		service := NewComputeTaskService(provider)
+		can, err := service.canDisableModels("uuid", "worker")
+		assert.NoError(t, err)
+		assert.False(t, can)
+
+		dbal.AssertExpectations(t)
+		cps.AssertExpectations(t)
+	})
 	t.Run("task can be disabled", func(t *testing.T) {
 		task := &asset.ComputeTask{
 			Key:            "uuid",
