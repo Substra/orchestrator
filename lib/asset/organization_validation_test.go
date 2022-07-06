@@ -12,12 +12,15 @@ func TestOrganizationValidate(t *testing.T) {
 		valid bool
 	}{
 		"empty": {&RegisterOrganizationParam{}, true},
-		"valid": {&RegisterOrganizationParam{
-			Address: "substra-backend.org-1.com",
-		}, true},
 		"invalid": {&RegisterOrganizationParam{
-			Address: "http://substra-backend.org-1.com/",
+			Address: "substra-backend.org-1.com",
 		}, false},
+		"valid": {&RegisterOrganizationParam{
+			Address: "http://substra-backend.org-1.com/",
+		}, true},
+		"valid_ip": {&RegisterOrganizationParam{
+			Address: "http://127.0.0.1:8080",
+		}, true},
 	}
 
 	for name, c := range cases {

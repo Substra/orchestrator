@@ -8,6 +8,6 @@ import (
 // Validate returns an error if the new organization is not valid
 func (o *RegisterOrganizationParam) Validate() error {
 	return validation.ValidateStruct(o,
-		validation.Field(&o.Address, is.Host),
+		validation.Field(&o.Address, is.RequestURL),
 	)
 }

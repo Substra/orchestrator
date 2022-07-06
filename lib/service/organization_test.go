@@ -26,7 +26,7 @@ func TestRegisterOrganization(t *testing.T) {
 
 	expected := &asset.Organization{
 		Id:           "uuid1",
-		Address:      "org-1.com",
+		Address:      "http://org-1.com",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
 
@@ -44,7 +44,7 @@ func TestRegisterOrganization(t *testing.T) {
 	service := NewOrganizationService(provider)
 
 	newOrganization := &asset.RegisterOrganizationParam{
-		Address: "org-1.com",
+		Address: "http://org-1.com",
 	}
 
 	organization, err := service.RegisterOrganization("uuid1", newOrganization)
@@ -66,7 +66,7 @@ func TestRegisterExistingOrganization(t *testing.T) {
 	service := NewOrganizationService(provider)
 
 	newOrganization := &asset.RegisterOrganizationParam{
-		Address: "org-1.com",
+		Address: "http://org-1.com",
 	}
 
 	_, err := service.RegisterOrganization("uuid1", newOrganization)
