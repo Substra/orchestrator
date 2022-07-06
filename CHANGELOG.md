@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Organization hostname in the organization object (#805)
 
+### Fixed
+- SQL logging was enabled when `METRICS_ENABLED` flag was passed instead of documented `LOG_SQL_VERBOSE`
+
 ## [0.18.0] - 2022-07-05
 
 ### Removed

@@ -78,7 +78,7 @@ func InitDatabase(databaseURL string) (*Database, error) {
 		return nil, err
 	}
 
-	verbose, _ := utils.GetenvBool("METRICS_ENABLED")
+	verbose, _ := utils.GetenvBool("LOG_SQL_VERBOSE")
 	config.ConnConfig.Logger = &SQLLogger{verbose: verbose}
 
 	pool, err := pgxpool.ConnectConfig(context.Background(), config)
