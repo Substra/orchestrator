@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Organization hostname in the organization object (#805)
+- CancelationDate in the compute plan object (#804)
 
 ### Fixed
 - SQL logging was enabled when `METRICS_ENABLED` flag was passed instead of documented `LOG_SQL_VERBOSE`
 - Prevent disabling model if task has only predict or test children (#809)
+- Don't timeout when canceling a compute plan (#804)
 
 ## [0.18.0] - 2022-07-05
 

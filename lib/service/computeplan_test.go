@@ -4,11 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -77,12 +78,12 @@ func TestRegisterPlan(t *testing.T) {
 }
 
 func TestCancelPlan(t *testing.T) {
+	ts := new(MockTimeAPI)
 	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
 
-	provider.On("GetComputeTaskDBAL").Return(dbal)
-	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetTimeService").Return(ts)
+	provider.On("GetComputePlanDBAL").Return(dbal)
 
 	service := NewComputePlanService(provider)
 
@@ -93,33 +94,20 @@ func TestCancelPlan(t *testing.T) {
 		Owner: "owner",
 	}
 
-	task1 := &asset.ComputeTask{Key: "uuid1", Status: asset.ComputeTaskStatus_STATUS_DOING}
-	task2 := &asset.ComputeTask{Key: "uuid2", Status: asset.ComputeTaskStatus_STATUS_DONE}
+	ts.On("GetTransactionTime").Return(time.Now())
 
-	tasks := []*asset.ComputeTask{task1, task2}
-
-	dbal.On("GetComputePlanTasks", "b9b3ecda-0a90-41da-a2e3-945eeafb06d8").Once().Return(tasks, nil)
-
-	cts.On(
-		"ApplyTaskAction",
-		task1.Key,
-		asset.ComputeTaskAction_TASK_ACTION_CANCELED,
-		"compute plan b9b3ecda-0a90-41da-a2e3-945eeafb06d8 is cancelled",
-		plan.Owner,
-	).Once().Return(nil)
-	cts.On(
-		"ApplyTaskAction",
-		task2.Key,
-		asset.ComputeTaskAction_TASK_ACTION_CANCELED,
-		"compute plan b9b3ecda-0a90-41da-a2e3-945eeafb06d8 is cancelled",
-		plan.Owner,
-	).Once().Return(fsm.InvalidEventError{})
+	dbal.On("CancelComputePlan", plan, mock.AnythingOfType("time.Time")).Return(nil)
+	dbal.On("CancelComputePlan", plan, mock.AnythingOfType("time.Time")).Return(orcerrors.NewBadRequest("already canceled"))
 
 	err := service.cancelPlan(plan)
 	assert.NoError(t, err)
 
+	plan.CancelationDate = timestamppb.Now()
+	err = service.cancelPlan(plan)
+	assert.ErrorContains(t, err, "already canceled")
+
+	ts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
-	cts.AssertExpectations(t)
 }
 
 func TestComputePlanAllowIntermediaryModelDeletion(t *testing.T) {

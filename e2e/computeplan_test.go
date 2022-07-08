@@ -69,15 +69,20 @@ func TestCancelComputePlan(t *testing.T) {
 
 	appClient.RegisterModels(client.DefaultModelOptions().WithTaskRef("cmp1").WithKeyRef("cmp1h").WithCategory(asset.ModelCategory_MODEL_HEAD), client.DefaultModelOptions().WithTaskRef("cmp1").WithKeyRef("cmp1s").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
 
+	// initially, the cp is not canceled
+	plan := appClient.GetComputePlan(client.DefaultPlanRef)
+	require.NotEqual(t, asset.ComputePlanStatus_PLAN_STATUS_CANCELED, plan.Status)
+	require.Nil(t, plan.CancelationDate)
+
+	// we cancel the cp
 	appClient.CancelComputePlan(client.DefaultPlanRef)
+	plan = appClient.GetComputePlan(client.DefaultPlanRef)
+	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_CANCELED, plan.Status)
+	require.NotNil(t, plan.CancelationDate)
 
-	for _, tasKey := range []string{"cmp2", "cmp3", "cmp4", "agg1"} {
-		task := appClient.GetComputeTask(tasKey)
-		require.Equal(t, asset.ComputeTaskStatus_STATUS_CANCELED, task.Status)
-	}
-
-	cmp1 := appClient.GetComputeTask("cmp1")
-	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, cmp1.Status)
+	// we cannot cancel the cp a second time
+	_, err := appClient.CancelComputePlan(client.DefaultPlanRef)
+	require.Errorf(t, err, "already canceled")
 }
 
 // TestMultiStageComputePlan is the "canonical" example of FL with 2 organizations aggregating their trunks

@@ -19,9 +19,7 @@ func makeDataManagerRows() *pgxmock.Rows {
 
 func TestQueryDataManagers(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
@@ -44,9 +42,7 @@ func TestQueryDataManagers(t *testing.T) {
 
 func TestPaginatedQueryDataManagers(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()

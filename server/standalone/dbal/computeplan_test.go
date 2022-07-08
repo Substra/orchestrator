@@ -14,17 +14,15 @@ import (
 
 func TestGetComputePlan(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
-		AddRow("uuid", "owner", false, time.Now(), "", "My compute plan", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
+		AddRow("uuid", "owner", false, time.Now(), nil, "", "My compute plan", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
-	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, tag, name, metadata, task_count, waiting_count, todo_count, doing_count, canceled_count, failed_count, done_count`).
+	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, cancelation_date, tag, name, metadata, task_count, waiting_count, todo_count, doing_count, canceled_count, failed_count, done_count`).
 		WithArgs(testChannel, "uuid").
 		WillReturnRows(rows)
 
@@ -50,17 +48,15 @@ func TestGetComputePlan(t *testing.T) {
 
 func TestGetRawComputePlan(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata"}).
-		AddRow("uuid", "owner", false, time.Now(), "", "My compute plan", map[string]string{})
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata"}).
+		AddRow("uuid", "owner", false, time.Now(), nil, "", "My compute plan", map[string]string{})
 
-	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, tag, name, metadata FROM compute_plans`).
+	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, cancelation_date, tag, name, metadata FROM compute_plans`).
 		WithArgs(testChannel, "uuid").
 		WillReturnRows(rows)
 
@@ -81,15 +77,13 @@ func TestGetRawComputePlan(t *testing.T) {
 
 func TestQueryComputePlans(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
-		AddRow("uuid", "owner", false, time.Now(), "", "My compute plan", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
+		AddRow("uuid", "owner", false, time.Now(), nil, "", "My compute plan", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
 
 	mock.ExpectQuery(`SELECT key,.* FROM expanded_compute_plans .* ORDER BY creation_date ASC, key ASC`).
 		WithArgs(testChannel, "owner").
@@ -121,14 +115,12 @@ func TestQueryComputePlans(t *testing.T) {
 
 func TestQueryComputePlansNilFilter(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"})
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"})
 
 	mock.ExpectQuery(`SELECT key,.* FROM expanded_compute_plans .* ORDER BY creation_date ASC, key`).
 		WithArgs(testChannel).
@@ -145,5 +137,31 @@ func TestQueryComputePlansNilFilter(t *testing.T) {
 	)
 	assert.NoError(t, err)
 
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestCancelComputePlan(t *testing.T) {
+	mock, err := pgxmock.NewConn(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
+	assert.NoError(t, err)
+	defer mock.Close(context.Background())
+
+	cpKey := "abc"
+	cancelationDate, err := time.Parse("2006-01-02T15:04:05.000Z", "2021-02-03T04:05:06.007Z")
+	assert.NoError(t, err)
+
+	mock.ExpectBegin()
+
+	mock.
+		ExpectExec(`UPDATE compute_plans SET cancelation_date = $1 WHERE key = $2`).
+		WithArgs(cancelationDate, cpKey).
+		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	err = dbal.CancelComputePlan(&asset.ComputePlan{Key: cpKey}, cancelationDate)
+	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

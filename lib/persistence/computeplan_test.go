@@ -5,80 +5,99 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestGetPlanStatus(t *testing.T) {
 	cases := map[string]struct {
-		total    uint32
-		done     uint32
-		doing    uint32
-		waiting  uint32
-		failed   uint32
-		canceled uint32
-		outcome  asset.ComputePlanStatus
+		total           uint32
+		done            uint32
+		doing           uint32
+		waiting         uint32
+		failed          uint32
+		canceled        uint32
+		outcome         asset.ComputePlanStatus
+		cancelationDate *timestamppb.Timestamp
 	}{
 		"done": {
-			total:    11,
-			done:     11,
-			doing:    0,
-			waiting:  0,
-			failed:   0,
-			canceled: 0,
-			outcome:  asset.ComputePlanStatus_PLAN_STATUS_DONE,
+			total:           11,
+			done:            11,
+			doing:           0,
+			waiting:         0,
+			failed:          0,
+			canceled:        0,
+			outcome:         asset.ComputePlanStatus_PLAN_STATUS_DONE,
+			cancelationDate: nil,
 		},
 		"waiting": {
-			total:    11,
-			done:     0,
-			doing:    0,
-			waiting:  11,
-			failed:   0,
-			canceled: 0,
-			outcome:  asset.ComputePlanStatus_PLAN_STATUS_WAITING,
+			total:           11,
+			done:            0,
+			doing:           0,
+			waiting:         11,
+			failed:          0,
+			canceled:        0,
+			outcome:         asset.ComputePlanStatus_PLAN_STATUS_WAITING,
+			cancelationDate: nil,
 		},
 		"failed": {
-			total:    11,
-			done:     1,
-			doing:    0,
-			waiting:  1,
-			failed:   1,
-			canceled: 1,
-			outcome:  asset.ComputePlanStatus_PLAN_STATUS_FAILED,
+			total:           11,
+			done:            1,
+			doing:           0,
+			waiting:         1,
+			failed:          1,
+			canceled:        1,
+			outcome:         asset.ComputePlanStatus_PLAN_STATUS_FAILED,
+			cancelationDate: nil,
 		},
-		"canceled": {
-			total:    11,
-			done:     1,
-			doing:    0,
-			waiting:  1,
-			failed:   0,
-			canceled: 1,
-			outcome:  asset.ComputePlanStatus_PLAN_STATUS_CANCELED,
+		"canceled count": {
+			total:           11,
+			done:            1,
+			doing:           0,
+			waiting:         1,
+			failed:          0,
+			canceled:        1,
+			outcome:         asset.ComputePlanStatus_PLAN_STATUS_CANCELED,
+			cancelationDate: nil,
+		},
+		"canceled CancelationDate": {
+			total:           11,
+			done:            1,
+			doing:           0,
+			waiting:         1,
+			failed:          0,
+			canceled:        0,
+			outcome:         asset.ComputePlanStatus_PLAN_STATUS_CANCELED,
+			cancelationDate: timestamppb.Now(),
 		},
 		"doing": {
-			total:    11,
-			done:     1,
-			doing:    0,
-			waiting:  1,
-			failed:   0,
-			canceled: 0,
-			outcome:  asset.ComputePlanStatus_PLAN_STATUS_DOING,
+			total:           11,
+			done:            1,
+			doing:           0,
+			waiting:         1,
+			failed:          0,
+			canceled:        0,
+			outcome:         asset.ComputePlanStatus_PLAN_STATUS_DOING,
+			cancelationDate: nil,
 		},
 		"todo": {
-			total:    11,
-			done:     0,
-			doing:    0,
-			waiting:  10,
-			failed:   0,
-			canceled: 0,
-			outcome:  asset.ComputePlanStatus_PLAN_STATUS_TODO,
+			total:           11,
+			done:            0,
+			doing:           0,
+			waiting:         10,
+			failed:          0,
+			canceled:        0,
+			outcome:         asset.ComputePlanStatus_PLAN_STATUS_TODO,
+			cancelationDate: nil,
 		},
 		"empty": {
-			total:    0,
-			done:     0,
-			doing:    0,
-			waiting:  0,
-			failed:   0,
-			canceled: 0,
-			outcome:  asset.ComputePlanStatus_PLAN_STATUS_EMPTY,
+			total:           0,
+			done:            0,
+			doing:           0,
+			waiting:         0,
+			failed:          0,
+			canceled:        0,
+			outcome:         asset.ComputePlanStatus_PLAN_STATUS_EMPTY,
+			cancelationDate: nil,
 		},
 	}
 
@@ -94,7 +113,7 @@ func TestGetPlanStatus(t *testing.T) {
 				Canceled: tc.canceled,
 			}
 
-			status := count.GetPlanStatus()
+			status := GetPlanStatus(&asset.ComputePlan{CancelationDate: tc.cancelationDate}, &count)
 			assert.Equal(t, tc.outcome, status)
 		})
 	}

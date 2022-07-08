@@ -1,10 +1,6 @@
 package service
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/looplab/fsm"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
@@ -118,21 +114,14 @@ func (s *ComputePlanService) QueryPlans(p *common.Pagination, filter *asset.Plan
 }
 
 func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
-	tasks, err := s.GetComputeTaskDBAL().GetComputePlanTasks(plan.Key)
-	if err != nil {
-		return err
+
+	if plan.CancelationDate != nil {
+		return orcerrors.NewBadRequest("compute plan is already canceled")
 	}
 
-	for _, task := range tasks {
-		err := s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_CANCELED, fmt.Sprintf("compute plan %s is cancelled", plan.Key), plan.Owner)
-		if errors.As(err, &fsm.InvalidEventError{}) {
-			s.GetLogger().WithError(err).WithField("taskKey", task.Key).WithField("taskStatus", task.Status).Debug("skipping task cancellation: expected error")
-		} else if err != nil {
-			return err
-		}
-	}
+	txTimestamp := s.GetTimeService().GetTransactionTime()
 
-	return nil
+	return s.GetComputePlanDBAL().CancelComputePlan(plan, txTimestamp)
 }
 
 // canDeleteModels returns true if the compute plan allows intermediary models deletion.

@@ -57,9 +57,7 @@ func makeEventRows() *pgxmock.Rows {
 
 func TestEventQuery(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
@@ -83,9 +81,7 @@ func TestEventQuery(t *testing.T) {
 
 func TestQueryEventsNilFilter(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()

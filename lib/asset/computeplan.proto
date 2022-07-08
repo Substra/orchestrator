@@ -33,6 +33,7 @@ message ComputePlan {
   string tag = 16;
   string name = 19;
   map<string, string> metadata = 17;
+  google.protobuf.Timestamp cancelation_date = 18;
 }
 
 message NewComputePlan {

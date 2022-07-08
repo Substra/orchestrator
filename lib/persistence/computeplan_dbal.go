@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"time"
+
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 )
@@ -12,6 +14,7 @@ type ComputePlanDBAL interface {
 	GetRawComputePlan(key string) (*asset.ComputePlan, error)
 	AddComputePlan(plan *asset.ComputePlan) error
 	QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error)
+	CancelComputePlan(plan *asset.ComputePlan, ts time.Time) error
 }
 
 type ComputePlanDBALProvider interface {
@@ -28,8 +31,9 @@ type ComputePlanTaskCount struct {
 	Done     uint32
 }
 
-// GetPlanStatus returns the compute plan's status based on its tasks statuses
-func (c *ComputePlanTaskCount) GetPlanStatus() asset.ComputePlanStatus {
+// GetPlanStatus returns the compute plan's status
+func GetPlanStatus(cp *asset.ComputePlan, c *ComputePlanTaskCount) asset.ComputePlanStatus {
+
 	if c.Total == 0 {
 		return asset.ComputePlanStatus_PLAN_STATUS_EMPTY
 	}
@@ -42,7 +46,7 @@ func (c *ComputePlanTaskCount) GetPlanStatus() asset.ComputePlanStatus {
 		return asset.ComputePlanStatus_PLAN_STATUS_FAILED
 	}
 
-	if c.Canceled > 0 {
+	if cp.CancelationDate != nil || c.Canceled > 0 {
 		return asset.ComputePlanStatus_PLAN_STATUS_CANCELED
 	}
 

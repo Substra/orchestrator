@@ -567,16 +567,12 @@ func (c *TestClient) GetFailureReport(taskRef string) *asset.FailureReport {
 	return failureReport
 }
 
-func (c *TestClient) CancelComputePlan(computePlanRef string) *asset.ApplyPlanActionResponse {
+func (c *TestClient) CancelComputePlan(computePlanRef string) (*asset.ApplyPlanActionResponse, error) {
 	param := &asset.ApplyPlanActionParam{
 		Key:    c.ks.GetKey(computePlanRef),
 		Action: asset.ComputePlanAction_PLAN_ACTION_CANCELED,
 	}
 
 	c.logger.WithField("compute plan key", computePlanRef).Debug("cancelling compute plan")
-	cancelResponse, err := c.computePlanService.ApplyPlanAction(c.ctx, param)
-	if err != nil {
-		c.logger.WithError(err).Fatal("ApplyPlanAction failed")
-	}
-	return cancelResponse
+	return c.computePlanService.ApplyPlanAction(c.ctx, param)
 }

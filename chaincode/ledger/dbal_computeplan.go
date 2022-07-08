@@ -2,12 +2,14 @@ package ledger
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // AddComputePlan stores a new ComputePlan in DB
@@ -66,7 +68,7 @@ func (db *DB) computePlanProperties(plan *asset.ComputePlan) error {
 	plan.CanceledCount = count.Canceled
 	plan.FailedCount = count.Failed
 	plan.DoneCount = count.Done
-	plan.Status = count.GetPlanStatus()
+	plan.Status = persistence.GetPlanStatus(plan, count)
 
 	return nil
 }
@@ -148,24 +150,35 @@ func (db *DB) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFil
 	return plans, bookmark.Bookmark, nil
 }
 
+func (db *DB) CancelComputePlan(cp *asset.ComputePlan, ts time.Time) error {
+	cp.CancelationDate = timestamppb.New(ts)
+
+	bytes, err := marshaller.Marshal(cp)
+	if err != nil {
+		return err
+	}
+
+	return db.putState(asset.ComputePlanKind, cp.GetKey(), bytes)
+}
+
 // getTaskCounts returns the count of plan's tasks by status.
-func (db *DB) getTaskCounts(key string) (persistence.ComputePlanTaskCount, error) {
+func (db *DB) getTaskCounts(key string) (*persistence.ComputePlanTaskCount, error) {
 	count := persistence.ComputePlanTaskCount{}
 
 	iterator, err := db.ccStub.GetStateByPartialCompositeKey(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key})
 	if err != nil {
-		return count, err
+		return &count, err
 	}
 	defer iterator.Close()
 
 	for iterator.HasNext() {
 		compositeKey, err := iterator.Next()
 		if err != nil {
-			return count, err
+			return &count, err
 		}
 		_, keyParts, err := db.ccStub.SplitCompositeKey(compositeKey.Key)
 		if err != nil {
-			return count, err
+			return &count, err
 		}
 		switch keyParts[2] {
 		case asset.ComputeTaskStatus_STATUS_CANCELED.String():
@@ -185,5 +198,5 @@ func (db *DB) getTaskCounts(key string) (persistence.ComputePlanTaskCount, error
 		count.Total++
 	}
 
-	return count, nil
+	return &count, nil
 }

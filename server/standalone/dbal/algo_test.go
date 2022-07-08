@@ -52,9 +52,7 @@ func makeAlgoOutputRows(algoKeys ...string) *pgxmock.Rows {
 
 func TestQueryAlgos(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
@@ -89,9 +87,7 @@ func TestQueryAlgos(t *testing.T) {
 
 func TestPaginatedQueryAlgos(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
@@ -177,9 +173,7 @@ func TestGetAlgoFail(t *testing.T) {
 
 func TestQueryAlgosByComputePlan(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
@@ -207,9 +201,7 @@ func TestQueryAlgosByComputePlan(t *testing.T) {
 
 func TestQueryAlgosNilFilter(t *testing.T) {
 	mock, err := pgxmock.NewConn()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
