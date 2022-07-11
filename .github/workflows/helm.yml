@@ -26,7 +26,7 @@ jobs:
         run: helm dep update charts/orchestrator
       - name: Lint Chart
         run: helm lint charts/orchestrator
-  
+
   generate-chart-readme:
     runs-on: ubuntu-latest
     steps:
@@ -38,16 +38,16 @@ jobs:
           if [ -z "$(git status --porcelain)" ]; then
             exit 0
           else
-            echo "There should be no change generated, please run 'make chart-doc' to update the chart README.md"
+            echo "There should be no change generated, please run 'make docs-charts' to update the chart README.md"
             git diff
             exit 1
           fi
-  
+
   publish:
     name: Publish
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: 
+    needs:
       - test
       - generate-chart-readme
     steps:
