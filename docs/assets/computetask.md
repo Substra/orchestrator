@@ -97,13 +97,9 @@ Task actions should match the following restrictions:
 | DOING               | n     | y      | n     |
 | CANCELED            | y     | n      | n     |
 | FAILED              | n     | y      | n     |
+| DONE                | n     | y      | n     |
 
 Basically:
 
 - only the owner can cancel a task
 - only the worker can act on a task processing (DOING/DONE/FAILED)
-
-*DONE* status is a special case since the transition is internal:
-only registration of all outputs can trigger the transition to DONE
-i.e. when registering the last model of a train task, the task will switch to DONE.
-The same goes for test tasks once their performance are registered.

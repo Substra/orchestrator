@@ -352,13 +352,6 @@ func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([
 		registeredModels[modelIndex] = model
 
 		existingModels = append(existingModels, model)
-		if s.AreAllOutputsRegistered(computeTask, existingModels) {
-			reason := fmt.Sprintf("Last model %s registered by %s", model.Key, owner)
-			err = s.GetComputeTaskService().applyTaskAction(computeTask, transitionDone, reason)
-			if err != nil {
-				return nil, err
-			}
-		}
 	}
 
 	return registeredModels, nil

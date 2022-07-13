@@ -311,6 +311,10 @@ func (c *TestClient) FailTask(keyRef string) {
 	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_FAILED)
 }
 
+func (c *TestClient) DoneTask(keyRef string) {
+	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_DONE)
+}
+
 func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskAction) {
 	taskKey := c.ks.GetKey(keyRef)
 	c.logger.WithField("taskKey", taskKey).WithField("action", action).Debug("applying task action")

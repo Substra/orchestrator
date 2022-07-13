@@ -941,8 +941,6 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
-	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
-
 	_, err := service.RegisterModels(models, "test")
 	assert.NoError(t, err)
 
@@ -1077,9 +1075,6 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 		Asset:     &asset.Event_Model{Model: storedSimple},
 	}
 	es.On("RegisterEvents", eventSimple).Once().Return(nil)
-
-	// Model registration will initiate a task transition to done
-	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
 
 	_, err := service.RegisterModels(models, "test")
 	assert.NoError(t, err)

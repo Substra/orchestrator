@@ -7,7 +7,6 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -63,9 +62,6 @@ func TestRegisterPerformance(t *testing.T) {
 		Asset:     &asset.Event_Performance{Performance: stored},
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
-
-	// Performance registration will initiate a task transition to done
-	cts.On("applyTaskAction", task, transitionDone, mock.AnythingOfType("string")).Once().Return(nil)
 
 	_, err := service.RegisterPerformance(perf, "test")
 	assert.NoError(t, err)

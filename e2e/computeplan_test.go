@@ -164,9 +164,10 @@ func TestMultiStageComputePlan(t *testing.T) {
 
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA1").WithKeyRef("modelA1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA1").WithKeyRef("modelA1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("compA1")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB1").WithKeyRef("modelB1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
-
+	appClient.DoneTask("compB1")
 	cp := appClient.GetComputePlan(client.DefaultPlanRef)
 	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DOING, cp.Status)
 	require.EqualValues(t, 2, cp.DoneCount)
@@ -174,6 +175,7 @@ func TestMultiStageComputePlan(t *testing.T) {
 	// Start step 2
 	appClient.StartTask("aggC2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC2").WithKeyRef("modelC2").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("aggC2")
 
 	// Start step 3
 	appClient.StartTask("compA3")
@@ -181,12 +183,15 @@ func TestMultiStageComputePlan(t *testing.T) {
 
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA3").WithKeyRef("modelA3H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compA3").WithKeyRef("modelA3T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("compA3")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("compB3").WithKeyRef("modelB3T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("compB3")
 
 	// Start step 4
 	appClient.StartTask("aggC4")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("aggC4")
 }
 
 func TestLargeComputePlan(t *testing.T) {
@@ -301,13 +306,16 @@ func TestAggregateComposite(t *testing.T) {
 		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE),
 	}
 	appClient.RegisterModels(models...)
+	appClient.DoneTask("c1")
 
 	appClient.StartTask("c2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("c2")
 
 	appClient.StartTask("a1")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("a1").WithKeyRef("mAgg").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("a1")
 
 	appClient.StartTask("c3")
 
@@ -404,7 +412,7 @@ func TestGetComputePlan(t *testing.T) {
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts := [7]uint32{3, 2, 1, 0, 0, 0, 0}
 	actualCounts := [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	require.Equal(t, expectedCounts, actualCounts)
+	require.Equal(t, expectedCounts, actualCounts, "Tasks counts per status should match")
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.CancelTask("task#1")
@@ -412,13 +420,14 @@ func TestGetComputePlan(t *testing.T) {
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts = [7]uint32{3, 0, 0, 1, 1, 1, 0}
 	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	require.Equal(t, expectedCounts, actualCounts)
+	require.Equal(t, expectedCounts, actualCounts, "Tasks counts per status should match")
 
 	appClient.RegisterModel(client.DefaultModelOptions())
+	appClient.DoneTask(client.DefaultTrainTaskRef)
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts = [7]uint32{3, 0, 0, 0, 1, 1, 1}
 	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	require.Equal(t, expectedCounts, actualCounts)
+	require.Equal(t, expectedCounts, actualCounts, "Tasks counts per status should match")
 }
 
 func TestCompositeParentChild(t *testing.T) {
@@ -439,10 +448,12 @@ func TestCompositeParentChild(t *testing.T) {
 	appClient.StartTask("comp1")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("comp1")
 
 	appClient.StartTask("comp2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2H").WithCategory(asset.ModelCategory_MODEL_HEAD))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2T").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.DoneTask("comp2")
 
 	// Register a composite task with 2 composite parents
 	appClient.RegisterTasks(

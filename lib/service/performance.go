@@ -102,13 +102,6 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, err
 	}
 
-	// Mark the test task as done
-	reason := fmt.Sprintf("Performances registered on %s by %s", task.Key, requester)
-	err = s.GetComputeTaskService().applyTaskAction(task, transitionDone, reason)
-	if err != nil {
-		return nil, err
-	}
-
 	return perf, nil
 }
 

@@ -69,9 +69,11 @@ func TestPredictTaskLifecycle(t *testing.T) {
 
 	appClient.StartTask("train")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_end"))
+	appClient.DoneTask("train")
 
 	appClient.StartTask("predict")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predict").WithKeyRef("pred_end"))
+	appClient.DoneTask("predict")
 
 	predictTask := appClient.GetComputeTask("predict")
 	require.Equal(t, predictTask.Status, asset.ComputeTaskStatus_STATUS_DONE)
@@ -123,6 +125,7 @@ func TestCascadeTodo(t *testing.T) {
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
+	appClient.DoneTask(client.DefaultTrainTaskRef)
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))

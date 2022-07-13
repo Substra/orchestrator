@@ -37,6 +37,3 @@ They glue together the **Algos**, **DataManager** and **DataSamples**.
 When a task is processed, it outputs one or more **Model** or **Performance**.
 The produced **[Model](./model.md)** will inherit its permissions from different parents: task definition, data processed, etc.
 See more details in [related section of the doc](../permissions.md).
-
-Once all outputs of a task are registered, the task status is switched to `DONE` and its children can be processed.
-There are more details in the [compute task documentation](./computetask.md).

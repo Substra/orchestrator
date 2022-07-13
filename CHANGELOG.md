@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- Automatic transition to DONE when registering models or performances (#814).
+
 ## [0.19.1] - 2022-07-13
 
 ### Fixed

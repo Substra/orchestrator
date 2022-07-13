@@ -32,8 +32,8 @@ func TestRegisterModel(t *testing.T) {
 
 	taskEvents := appClient.QueryEvents(&asset.EventQueryFilter{AssetKey: appClient.GetKeyStore().GetKey(client.DefaultTrainTaskRef)}, "", 10)
 
-	// 3 events: creation, start, done
-	require.Equalf(t, 3, len(taskEvents.Events), "events: %v", taskEvents.Events)
+	// 2 events: creation, start
+	require.Equalf(t, 2, len(taskEvents.Events), "events: %v", taskEvents.Events)
 
 	retrievedModel := appClient.GetModel(client.DefaultModelRef)
 	e2erequire.ProtoEqual(t, registeredModel, retrievedModel)
@@ -66,12 +66,15 @@ func TestDeleteIntermediary(t *testing.T) {
 	// First task done
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model0"))
+	appClient.DoneTask(client.DefaultTrainTaskRef)
 	// second done
 	appClient.StartTask("child1")
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model1").WithTaskRef("child1"))
+	appClient.DoneTask("child1")
 	// last task
 	appClient.StartTask("child2")
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model2").WithTaskRef("child2"))
+	appClient.DoneTask("child2")
 
 	models := appClient.GetTaskOutputModels(client.DefaultTrainTaskRef)
 	require.Len(t, models, 1, "invalid number of output models")
@@ -104,7 +107,7 @@ func TestRegisterTwoSimpleModelsForTrainTask(t *testing.T) {
 		client.DefaultModelOptions().WithKeyRef("mod2"),
 	)
 
-	require.ErrorContains(t, err, "OE0003")
+	require.ErrorContains(t, err, "OE0006")
 	log.WithError(err).Debug("Failed to register models, as expected")
 }
 
@@ -122,6 +125,7 @@ func TestRegisterAllModelsForCompositeTask(t *testing.T) {
 		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_HEAD).WithKeyRef("mod1"),
 		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithKeyRef("mod2"),
 	)
+	appClient.DoneTask(client.DefaultCompositeTaskRef)
 
 	task := appClient.GetComputeTask(client.DefaultCompositeTaskRef)
 	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
