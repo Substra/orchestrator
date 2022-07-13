@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2022-07-13
+
 ### Fixed
 - SQL query for organization with null address (#816)
 
