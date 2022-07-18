@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Automatic transition to DONE when registering models or performances (#814).
 
+### Changed
+- updated grpc healthprobe to 0.4.11 in server image
+
 ## [0.19.1] - 2022-07-13
 
 ### Fixed
