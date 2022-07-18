@@ -4,10 +4,10 @@ This repository contains the logic to orchestrate Substra assets.
 
 ## Mission statement
 
-This component's purpose is to orchestrate task processing in multiple channels of _connect_ partners:
+This component's purpose is to orchestrate task processing in multiple channels of _Substra_ partners:
 
-- it is the single source of truth of _connect_ organizations;
-- it exposes necessary data to _connect_ instances to process their tasks and register their assets;
+- it is the single source of truth of _Substra_ organizations;
+- it exposes necessary data to _Substra_ instances to process their tasks and register their assets;
 - its API is aimed to serve backends, not end-users;
 - it works the same way in both standalone and distributed mode;
 - it enforces that all registered data are valid;
@@ -128,7 +128,7 @@ Assuming `orchestrator.org-1.com` and `orchestrator.org-2.com` are pointing to y
 grpcurl --cacert examples/tools/ca.crt --key examples/tools/client-org-1.key --cert examples/tools/client-org-1.crt --rpc-header 'mspid: MyOrg1MSP' --rpc-header 'channel: mychannel' --rpc-header 'chaincode: mycc' orchestrator.org-1.com:443 list
 ```
 
-You can also deploy [connect-backend](https://github.com/owkin/connect-backend/tree/orchestrator) (note that this is the `orchestrator` branch) with a `skaffold dev -p distributed` or `skaffold run -p distributed`
+You can also deploy [connect-backend](https://github.com/owkin/connect-backend) with a `skaffold dev -p distributed` or `skaffold run -p distributed`
 
 ### Testing
 
