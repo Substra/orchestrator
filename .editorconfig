@@ -7,3 +7,6 @@ insert_final_newline = true
 
 [Makefile]
 indent_style = tab
+
+[docker/*/dependencies.json]
+insert_final_newline = false
