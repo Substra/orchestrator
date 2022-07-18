@@ -21,7 +21,7 @@ Make sure you have these requirements fulfilled before trying to build the orche
 
 - [go](https://golang.org/): v1.18
 - [protoc](https://github.com/protocolbuffers/protobuf): v3.18.0
-- [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.27.1
+- [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.28.0
 - [golang-migrate](https://github.com/golang-migrate/migrate): optional, used to create migration files
 - [skaffold](https://skaffold.dev/): used to run the orchestrator locally
 - [mockery](https://github.com/vektra/mockery#installation): used to generate mocks
@@ -190,4 +190,3 @@ If you're running into issues with things like "Go to definition" or "Find refer
     "build.buildFlags": ["-tags=e2e"],
 }
 ```
-

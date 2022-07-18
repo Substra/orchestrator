@@ -14,7 +14,7 @@ ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/orchestrator
 
 # Install protobuf codegen dependencies
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 && \
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
 
 WORKDIR ${SRC_DIR}
