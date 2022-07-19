@@ -6,46 +6,17 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )
-
-type mockedTransactionDBAL struct {
-	persistence.MockDBAL
-}
-
-func (m *mockedTransactionDBAL) Commit() error {
-	args := m.Called()
-	return args.Error(0)
-}
-
-func (m *mockedTransactionDBAL) Rollback() error {
-	args := m.Called()
-	return args.Error(0)
-}
-
-type mockTransactionalDBALProvider struct {
-	m *mockedTransactionDBAL
-}
-
-func (p *mockTransactionalDBALProvider) GetTransactionalDBAL(_ context.Context, _ string, _ bool) (dbal.TransactionDBAL, error) {
-	return p.m, nil
-}
-
-type mockHealthReporter struct {
-	mock.Mock
-}
-
-func (m *mockHealthReporter) Shutdown() {
-	m.Called()
-}
 
 func TestExtractProvider(t *testing.T) {
 	ctx := context.TODO()
@@ -64,17 +35,22 @@ func TestExtractProvider(t *testing.T) {
 }
 
 func TestInjectProvider(t *testing.T) {
+	ctx := common.WithChannel(context.TODO(), "testChannel")
+
 	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
 	publisher.On("Publish", mock.Anything, "testChannel", [][]byte{}).Once().Return(nil)
 
-	db := new(mockedTransactionDBAL)
-	db.On("Commit").Once().Return(nil)
-	dbProvider := &mockTransactionalDBALProvider{db}
+	tx := new(utils.MockTx)
+	tx.On("Conn").Return(nil)
+	tx.On("Commit", utils.AnyContext).Return(nil)
+	pool := new(dbal.MockPgPool)
+	pool.On("BeginTx", ctx, pgx.TxOptions{IsoLevel: pgx.Serializable}).Return(tx, nil)
+	db := &dbal.Database{Pool: pool}
 
-	healthcheck := new(mockHealthReporter)
+	healthcheck := new(MockHealthReporter)
 
-	interceptor := NewProviderInterceptor(dbProvider, publisher, healthcheck)
+	interceptor := NewProviderInterceptor(db, publisher, healthcheck)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -85,22 +61,29 @@ func TestInjectProvider(t *testing.T) {
 		return "test", nil
 	}
 
-	ctx := common.WithChannel(context.TODO(), "testChannel")
 	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
 
-	db.AssertExpectations(t)
 	publisher.AssertExpectations(t)
+	tx.AssertExpectations(t)
+	pool.AssertExpectations(t)
+	healthcheck.AssertExpectations(t)
 }
 
 func TestOnSuccess(t *testing.T) {
+	ctx := common.WithChannel(context.TODO(), "testChannel")
+
 	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
-	db := new(mockedTransactionDBAL)
-	dbProvider := &mockTransactionalDBALProvider{db}
-	healthcheck := new(mockHealthReporter)
 
-	db.On("Commit").Once().Return(nil)
+	tx := new(utils.MockTx)
+	tx.On("Conn").Return(nil)
+	tx.On("Commit", utils.AnyContext).Return(nil)
+	pool := new(dbal.MockPgPool)
+	pool.On("BeginTx", ctx, pgx.TxOptions{IsoLevel: pgx.Serializable}).Return(tx, nil)
+	db := &dbal.Database{Pool: pool}
+
+	healthcheck := new(MockHealthReporter)
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
@@ -109,7 +92,7 @@ func TestOnSuccess(t *testing.T) {
 		wg.Done()
 	})
 
-	interceptor := NewProviderInterceptor(dbProvider, publisher, healthcheck)
+	interceptor := NewProviderInterceptor(db, publisher, healthcheck)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -124,27 +107,35 @@ func TestOnSuccess(t *testing.T) {
 		return "test", nil
 	}
 
-	ctx := common.WithChannel(context.TODO(), "testChannel")
 	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
 
 	// wait for async event dispatch
 	wg.Wait()
 
-	db.AssertExpectations(t)
 	publisher.AssertExpectations(t)
+	tx.AssertExpectations(t)
+	pool.AssertExpectations(t)
+	healthcheck.AssertExpectations(t)
 }
 
 func TestOnError(t *testing.T) {
+	ctx := common.WithChannel(context.TODO(), "testChannel")
+
 	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
-	db := new(mockedTransactionDBAL)
-	dbProvider := &mockTransactionalDBALProvider{db}
-	healthcheck := new(mockHealthReporter)
 
-	db.On("Rollback").Once().Return(nil)
+	tx := new(utils.MockTx)
+	tx.On("Conn").Return(nil)
+	tx.On("Rollback", utils.AnyContext).Return(nil)
 
-	interceptor := NewProviderInterceptor(dbProvider, publisher, healthcheck)
+	pool := new(dbal.MockPgPool)
+	pool.On("BeginTx", ctx, pgx.TxOptions{IsoLevel: pgx.Serializable}).Return(tx, nil)
+	db := &dbal.Database{Pool: pool}
+
+	healthcheck := new(MockHealthReporter)
+
+	interceptor := NewProviderInterceptor(db, publisher, healthcheck)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -159,24 +150,29 @@ func TestOnError(t *testing.T) {
 		return nil, errors.New("test error")
 	}
 
-	ctx := common.WithChannel(context.TODO(), "testChannel")
 	res, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.Nil(t, res)
 	assert.Error(t, err)
 
-	db.AssertExpectations(t)
 	publisher.AssertExpectations(t)
+	tx.AssertExpectations(t)
+	pool.AssertExpectations(t)
+	healthcheck.AssertExpectations(t)
 }
 
 func TestStopServingOnBrokerNotReady(t *testing.T) {
+	ctx := common.WithChannel(context.TODO(), "testChannel")
+
 	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(false)
-	db := new(mockedTransactionDBAL)
-	dbProvider := &mockTransactionalDBALProvider{db}
-	healthcheck := new(mockHealthReporter)
+
+	pool := new(dbal.MockPgPool)
+	db := &dbal.Database{Pool: pool}
+
+	healthcheck := new(MockHealthReporter)
 	healthcheck.On("Shutdown")
 
-	interceptor := NewProviderInterceptor(dbProvider, publisher, healthcheck)
+	interceptor := NewProviderInterceptor(db, publisher, healthcheck)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -186,12 +182,11 @@ func TestStopServingOnBrokerNotReady(t *testing.T) {
 		return nil, errors.New("test error")
 	}
 
-	ctx := common.WithChannel(context.TODO(), "testChannel")
 	res, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
 	assert.Nil(t, res)
 	assert.Error(t, err)
 
-	db.AssertExpectations(t)
+	pool.AssertExpectations(t)
 	publisher.AssertExpectations(t)
 	healthcheck.AssertExpectations(t)
 }

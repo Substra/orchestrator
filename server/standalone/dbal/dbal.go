@@ -6,36 +6,31 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	// Database driver
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
-	"github.com/owkin/orchestrator/lib/persistence"
 )
 
 const PgSortAsc = "ASC"
 const PgSortDesc = "DESC"
 
-// TransactionDBAL is a persistence.DBAL augmented with transaction capabilities.
-// Its purpose is to be rolled back in case of error or committed at the end of a successful request.
-type TransactionDBAL interface {
-	persistence.DBAL
-	Commit() error
-	Rollback() error
+// Conn is the database connection used by the DBAL.
+type Conn interface {
+	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+	Query(context.Context, string, ...interface{}) (pgx.Rows, error)
+	QueryRow(context.Context, string, ...interface{}) pgx.Row
+	WaitForNotification(ctx context.Context) (*pgconn.Notification, error)
 }
 
 // DBAL is the Database Abstraction Layer around asset storage
 type DBAL struct {
 	ctx     context.Context
 	tx      pgx.Tx
+	conn    Conn
 	channel string
 }
 
-// Commit the changes to the underlying storage backend
-func (d *DBAL) Commit() error {
-	return d.tx.Commit(d.ctx)
-}
-
-// Rollback the changes so that the storage is left untouched
-func (d *DBAL) Rollback() error {
-	return d.tx.Rollback(d.ctx)
+func New(ctx context.Context, tx pgx.Tx, conn Conn, channel string) *DBAL {
+	return &DBAL{ctx: ctx, tx: tx, conn: conn, channel: channel}
 }
 
 func getStatementBuilder() squirrel.StatementBuilderType {

@@ -49,8 +49,8 @@ func NewMSPIDInterceptor() (*MSPIDInterceptor, error) {
 	}, nil
 }
 
-// InterceptMSPID is a gRPC interceptor and will make the MSPID from headers available to request context
-func (i *MSPIDInterceptor) InterceptMSPID(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+// UnaryServerInterceptor enforces MSPID presence in context
+func (i *MSPIDInterceptor) UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
 	for _, m := range ignoredMethods {
 		if strings.Contains(info.FullMethod, m) {
@@ -58,6 +58,31 @@ func (i *MSPIDInterceptor) InterceptMSPID(ctx context.Context, req interface{}, 
 		}
 	}
 
+	newCtx, err := i.extractFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return handler(newCtx, req)
+}
+
+// StreamServerInterceptor enforces MSPID presence in context
+func (i *MSPIDInterceptor) StreamServerInterceptor(
+	srv interface{},
+	stream grpc.ServerStream,
+	info *grpc.StreamServerInfo,
+	handler grpc.StreamHandler,
+) error {
+	newCtx, err := i.extractFromContext(stream.Context())
+	if err != nil {
+		return err
+	}
+	streamWithContext := BindStreamToContext(newCtx, stream)
+
+	return handler(srv, streamWithContext)
+}
+
+func (i *MSPIDInterceptor) extractFromContext(ctx context.Context) (context.Context, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errors.NewBadRequest("could not extract metadata")
@@ -76,8 +101,7 @@ func (i *MSPIDInterceptor) InterceptMSPID(ctx context.Context, req interface{}, 
 		}
 	}
 
-	newCtx := context.WithValue(ctx, CtxMSPIDKey, MSPID)
-	return handler(newCtx, req)
+	return context.WithValue(ctx, CtxMSPIDKey, MSPID), nil
 }
 
 // VerifyClientMSPID returns an error if the provided MSPID string doesn't match

@@ -36,13 +36,17 @@ Table names are snake_cased and plural
 
 ### Indexes
 
-Indexes should be prefixed with `ix_` and follow the rule of `ix_<table>_<colums>` where there can be several `<columns>` separated by underscores (`_`).
+Indexes should be prefixed with `ix_` and follow the rule of `ix_<table>_<columns>` where there can be several `<columns>` separated by underscores (`_`).
 
 Example:
 
 ```sql
 CREATE INDEX IF NOT EXISTS ix_compute_tasks_compute_plan_id_status ON compute_tasks (compute_plan_id, status);
 ```
+
+### Sequences
+
+Sequences should be prefixed with `seq_` and follow the naming pattern `seq_<table>_<column>`.
 
 ### Views
 

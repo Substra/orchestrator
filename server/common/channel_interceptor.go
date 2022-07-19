@@ -34,8 +34,8 @@ func NewChannelInterceptor(config *OrchestratorConfiguration) *ChannelIntercepto
 	}
 }
 
-// InterceptChannel is a gRPC interceptor and will make the channel from headers available to request context.
-func (i *ChannelInterceptor) InterceptChannel(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+// UnaryServerInterceptor will make the channel from headers available from the request context.
+func (i *ChannelInterceptor) UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
 	for _, m := range ignoredMethods {
 		if strings.Contains(info.FullMethod, m) {
@@ -43,6 +43,30 @@ func (i *ChannelInterceptor) InterceptChannel(ctx context.Context, req interface
 		}
 	}
 
+	newCtx, err := i.extractFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return handler(newCtx, req)
+}
+
+// StreamServerInterceptor will make the channel from headers available from the request context.
+func (i *ChannelInterceptor) StreamServerInterceptor(
+	srv interface{},
+	stream grpc.ServerStream,
+	info *grpc.StreamServerInfo,
+	handler grpc.StreamHandler,
+) error {
+	newCtx, err := i.extractFromContext(stream.Context())
+	if err != nil {
+		return err
+	}
+	streamWithContext := BindStreamToContext(newCtx, stream)
+
+	return handler(srv, streamWithContext)
+}
+
+func (i *ChannelInterceptor) extractFromContext(ctx context.Context) (context.Context, error) {
 	org, err := ExtractMSPID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract organization: %w", err)
@@ -63,8 +87,7 @@ func (i *ChannelInterceptor) InterceptChannel(ctx context.Context, req interface
 		return nil, err
 	}
 
-	newCtx := WithChannel(ctx, channel)
-	return handler(newCtx, req)
+	return WithChannel(ctx, channel), nil
 }
 
 func (i *ChannelInterceptor) checkOrgBelongsToChannel(org, channel string) error {

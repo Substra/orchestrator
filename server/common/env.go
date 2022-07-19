@@ -2,6 +2,7 @@ package common
 
 import (
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-playground/log/v7"
@@ -41,11 +42,31 @@ func GetEnv(name string) (string, bool) {
 	return os.LookupEnv(n)
 }
 
+// GetEnvOrFallback attempts to get an environment variable or fallback
+// to the provided default value.
+// Every env var is prefixed by ORCHESTRATOR_.
+func GetEnvOrFallback(name string, fallback string) string {
+	value, ok := GetEnv(name)
+	if !ok {
+		value = fallback
+	}
+	return value
+}
+
 // MustParseDuration parse input as a duration or log and exit.
 func MustParseDuration(duration string) time.Duration {
 	res, err := time.ParseDuration(duration)
 	if err != nil {
 		log.WithField("duration", duration).Fatal("Cannot parse duration")
+	}
+	return res
+}
+
+// MustParseInt parse input as int or log and exit.
+func MustParseInt(s string) int {
+	res, err := strconv.Atoi(s)
+	if err != nil {
+		log.WithField("input", s).Fatal("Cannot parse integer")
 	}
 	return res
 }

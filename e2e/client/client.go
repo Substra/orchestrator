@@ -72,6 +72,7 @@ func (ks *KeyStore) GetKey(id string) string {
 // TestClient is a client for the tested app
 type TestClient struct {
 	MSPID                string
+	Channel              string
 	ctx                  context.Context
 	ks                   *KeyStore
 	logger               log.Entry
@@ -121,6 +122,7 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 
 	client := &TestClient{
 		MSPID:                f.mspid,
+		Channel:              f.channel,
 		ctx:                  ctx,
 		ks:                   NewKeyStore(),
 		logger:               logger,
@@ -146,6 +148,15 @@ func (f *TestClientFactory) WithMSPID(mspid string) *TestClientFactory {
 		conn:      f.conn,
 		mspid:     mspid,
 		channel:   f.channel,
+		chaincode: f.chaincode,
+	}
+}
+
+func (f *TestClientFactory) WithChannel(channel string) *TestClientFactory {
+	return &TestClientFactory{
+		conn:      f.conn,
+		mspid:     f.mspid,
+		channel:   channel,
 		chaincode: f.chaincode,
 	}
 }
@@ -520,6 +531,12 @@ func (c *TestClient) GetAlgo(algoRef string) *asset.Algo {
 	return resp
 }
 
+func (c *TestClient) GetAssetCreationEvent(assetKey string) *asset.Event {
+	filter := &asset.EventQueryFilter{AssetKey: assetKey, EventKind: asset.EventKind_EVENT_ASSET_CREATED}
+	resp := c.QueryEvents(filter, "", 1)
+	return resp.Events[0]
+}
+
 func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken string, pageSize int) *asset.QueryEventsResponse {
 	resp, err := c.eventService.QueryEvents(c.ctx, &asset.QueryEventsParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
@@ -527,6 +544,16 @@ func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken strin
 	}
 
 	return resp
+}
+
+func (c *TestClient) SubscribeToEvents(startEventID string) (asset.EventService_SubscribeToEventsClient, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(c.ctx)
+
+	stream, err := c.eventService.SubscribeToEvents(ctx, &asset.SubscribeToEventsParam{StartEventId: startEventID})
+	if err != nil {
+		c.logger.WithError(err).Fatal("SubscribeToEvents failed")
+	}
+	return stream, cancel
 }
 
 func (c *TestClient) QueryPlans(filter *asset.PlanQueryFilter, pageToken string, pageSize int) *asset.QueryPlansResponse {

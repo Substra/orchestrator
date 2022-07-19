@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/common/trace"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/handlers"
@@ -43,19 +42,28 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 
 	retryInterceptor := common.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 
-	interceptor := grpc.ChainUnaryInterceptor(
+	unaryInterceptor := grpc.ChainUnaryInterceptor(
 		trace.InterceptRequestID,
 		grpc_prometheus.UnaryServerInterceptor,
-		logger.AddLogger,
-		common.LogRequest,
+		common.UnaryServerLoggerInterceptor,
+		common.UnaryServerRequestLogger,
 		common.InterceptStandaloneErrors,
-		MSPIDInterceptor.InterceptMSPID,
-		channelInterceptor.InterceptChannel,
+		MSPIDInterceptor.UnaryServerInterceptor,
+		channelInterceptor.UnaryServerInterceptor,
 		retryInterceptor.Intercept,
 		providerInterceptor.Intercept,
 	)
 
-	serverOptions := append(params.GrpcOptions, interceptor)
+	dbConnInterceptor := interceptors.NewDatabaseConnInterceptor(dbURL)
+	streamInterceptor := grpc.ChainStreamInterceptor(
+		grpc_prometheus.StreamServerInterceptor,
+		common.StreamServerLoggerInterceptor,
+		common.StreamServerRequestLogger,
+		MSPIDInterceptor.StreamServerInterceptor,
+		channelInterceptor.StreamServerInterceptor,
+		dbConnInterceptor.StreamServerInterceptor,
+	)
+	serverOptions := append(params.GrpcOptions, unaryInterceptor, streamInterceptor)
 
 	server := grpc.NewServer(serverOptions...)
 

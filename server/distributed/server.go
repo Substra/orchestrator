@@ -9,7 +9,6 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/common/trace"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"google.golang.org/grpc"
@@ -37,11 +36,11 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 	interceptor := grpc.ChainUnaryInterceptor(
 		trace.InterceptRequestID,
 		grpc_prometheus.UnaryServerInterceptor,
-		logger.AddLogger,
-		common.LogRequest,
+		common.UnaryServerLoggerInterceptor,
+		common.UnaryServerRequestLogger,
 		common.InterceptDistributedErrors,
-		MSPIDInterceptor.InterceptMSPID,
-		channelInterceptor.InterceptChannel,
+		MSPIDInterceptor.UnaryServerInterceptor,
+		channelInterceptor.UnaryServerInterceptor,
 		retryInterceptor.Intercept,
 		chaincodeInterceptor.Intercept,
 	)

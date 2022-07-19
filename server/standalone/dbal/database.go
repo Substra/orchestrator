@@ -14,15 +14,10 @@ type PgPool interface {
 	Close()
 }
 
-// TransactionalDBALProvider describe an object able to return a TransactionalDBAL
-type TransactionalDBALProvider interface {
-	GetTransactionalDBAL(ctx context.Context, channel string, readOnly bool) (TransactionDBAL, error)
-}
-
-// Database is a thin wrapper around sql.DB.
+// Database is a thin wrapper around PgPool.
 // It handles the orchestrator specifics, such as DBAL creation.
 type Database struct {
-	pool PgPool
+	Pool PgPool
 }
 
 type SQLLogger struct {
@@ -45,11 +40,11 @@ func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, dat
 	log := logger.Get(ctx).
 		WithField("msg", msg).
 		WithField("level", level)
-		// Other available fields (omitted to keep logs readable):
-		// - data["args"]: the query arguments (truncated if too long)
-		// - data["time"]: the query execution time
-		// - data["rowCount"]: number of rows returned, for SELECT statements
-		// - data["pid"]
+	// Other available fields (omitted to keep logs readable):
+	// - data["args"]: the query arguments (truncated if too long)
+	// - data["time"]: the query execution time
+	// - data["rowCount"]: number of rows returned, for SELECT statements
+	// - data["pid"]
 
 	if query, ok := data["sql"]; ok {
 		log = log.WithField("sql", query)
@@ -91,14 +86,14 @@ func InitDatabase(databaseURL string) (*Database, error) {
 
 // Close the connexion
 func (d *Database) Close() {
-	d.pool.Close()
+	d.Pool.Close()
 }
 
-// GetTransactionalDBAL returns a new transactional DBAL.
-// The transaction is configured with SERIALIZABLE isolation level to protect against potential
+// BeginTransaction returns a new transaction.
+// When readOnly is false the transaction is configured with SERIALIZABLE isolation level to protect against potential
 // inconsistencies with concurrent requests.
-func (d *Database) GetTransactionalDBAL(ctx context.Context, channel string, readOnly bool) (TransactionDBAL, error) {
-	logger.Get(ctx).WithField("ReadOnly", readOnly).WithField("channel", channel).Debug("new DB transaction")
+func (d *Database) BeginTransaction(ctx context.Context, readOnly bool) (pgx.Tx, error) {
+	logger.Get(ctx).WithField("ReadOnly", readOnly).Debug("new DB transaction")
 	txOpts := pgx.TxOptions{
 		IsoLevel: pgx.Serializable, // This level of isolation is the guarantee to always return consistent data
 	}
@@ -106,10 +101,5 @@ func (d *Database) GetTransactionalDBAL(ctx context.Context, channel string, rea
 		txOpts.AccessMode = pgx.ReadOnly
 		txOpts.IsoLevel = pgx.ReadCommitted
 	}
-	tx, err := d.pool.BeginTx(ctx, txOpts)
-	if err != nil {
-		return nil, err
-	}
-
-	return &DBAL{ctx: ctx, tx: tx, channel: channel}, nil
+	return d.Pool.BeginTx(ctx, txOpts)
 }

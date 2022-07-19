@@ -30,7 +30,7 @@ type HealthReporter interface {
 // to the request context.
 type ProviderInterceptor struct {
 	amqp           common.AMQPPublisher
-	dbalProvider   dbal.TransactionalDBALProvider
+	db             *dbal.Database
 	txChecker      common.TransactionChecker
 	statusReporter HealthReporter
 }
@@ -40,10 +40,10 @@ type ctxProviderInterceptorMarker struct{}
 var ctxProviderKey = &ctxProviderInterceptorMarker{}
 
 // NewProviderInterceptor returns an instance of ProviderInterceptor
-func NewProviderInterceptor(dbalProvider dbal.TransactionalDBALProvider, amqp common.AMQPPublisher, statusReporter HealthReporter) *ProviderInterceptor {
+func NewProviderInterceptor(db *dbal.Database, amqp common.AMQPPublisher, statusReporter HealthReporter) *ProviderInterceptor {
 	return &ProviderInterceptor{
 		amqp:           amqp,
-		dbalProvider:   dbalProvider,
+		db:             db,
 		txChecker:      new(common.GrpcMethodChecker),
 		statusReporter: statusReporter,
 	}
@@ -78,15 +78,16 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 
 	readOnly := pi.txChecker.IsEvaluateMethod(info.FullMethod)
 
-	tx, err := pi.dbalProvider.GetTransactionalDBAL(ctx, channel, readOnly)
+	tx, err := pi.db.BeginTransaction(ctx, readOnly)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
+	transactionalDBAL := dbal.New(ctx, tx, tx.Conn(), channel)
 
 	// Truncate time to microsecond resolution to match PostgreSQL timestamp resolution.
 	// https://www.postgresql.org/docs/current/datatype-datetime.html
 	ts := service.NewTimeService(time.Now().Truncate(time.Microsecond))
-	provider := service.NewProvider(logger.Get(ctx), tx, dispatcher, ts, channel)
+	provider := service.NewProvider(logger.Get(ctx), transactionalDBAL, dispatcher, ts, channel)
 
 	ctx = WithProvider(ctx, provider)
 	res, err := handler(ctx, req)
@@ -94,7 +95,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 	// Events should be dispatched only on successful transactions
 	if err != nil {
 		metrics.DBTransactionTotal.WithLabelValues(info.FullMethod, "rollback").Inc()
-		rollbackErr := tx.Rollback()
+		rollbackErr := tx.Rollback(ctx)
 		if rollbackErr != nil {
 			return nil, fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
 		}
@@ -103,7 +104,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 			return nil, orcerrors.NewInternal("Message broker not ready")
 		}
 		metrics.DBTransactionTotal.WithLabelValues(info.FullMethod, "commit").Inc()
-		commitErr := tx.Commit()
+		commitErr := tx.Commit(ctx)
 		if commitErr != nil {
 			return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
 		}

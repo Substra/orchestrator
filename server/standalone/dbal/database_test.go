@@ -32,14 +32,14 @@ func TestTransactionIsolation(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			pool := new(MockPgPool)
-			db := Database{pool: pool}
+			db := Database{Pool: pool}
 
-			var tx pgx.Tx
+			tx := new(utils.MockTx)
 			pool.On("BeginTx", utils.AnyContext, tc.txOpts).Return(tx, nil)
 
-			_, err := db.GetTransactionalDBAL(context.Background(), "test", tc.readOnly)
-
+			_, err := db.BeginTransaction(context.Background(), tc.readOnly)
 			assert.NoError(t, err)
+			tx.AssertExpectations(t)
 			pool.AssertExpectations(t)
 		})
 	}

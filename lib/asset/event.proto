@@ -67,6 +67,13 @@ message QueryEventsResponse {
   string next_page_token = 2;
 }
 
+message SubscribeToEventsParam {
+  // Start streaming events from this ID (excluding)
+  string start_event_id = 1;
+}
+
+
 service EventService {
   rpc QueryEvents(QueryEventsParam) returns (QueryEventsResponse);
+  rpc SubscribeToEvents(SubscribeToEventsParam) returns (stream Event);
 }
