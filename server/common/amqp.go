@@ -242,7 +242,8 @@ func (session *Session) unsafePush(routingKey string, data []byte) error {
 	if !session.isReady {
 		return errNotConnected
 	}
-	return session.channel.Publish(
+	return session.channel.PublishWithContext(
+		context.TODO(),
 		exchangeName, // Exchange
 		routingKey,   // Routing key
 		false,        // Mandatory

@@ -20,7 +20,7 @@ require (
 	github.com/looplab/fsm v0.3.0
 	github.com/pashagolub/pgxmock v1.6.0
 	github.com/prometheus/client_golang v1.12.2
-	github.com/rabbitmq/amqp091-go v1.3.4
+	github.com/rabbitmq/amqp091-go v1.4.0
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.48.0

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - updated grpc healthprobe to 0.4.11 in server image
+- updated rabbitmq/amqp091-go lib to 1.4.0 (#829)
 
 ## [0.19.1] - 2022-07-13
 
