@@ -6,8 +6,4 @@ skaffold.yaml
 /examples
 /docs
 /lib/asset/*.pb.go
-/lib/service/mock_*.go
-/lib/event/mock_*.go
-/lib/persistence/mocks
-/chaincode/mocks
-/forwarder/event/mock_*.go
+mock_*.go
