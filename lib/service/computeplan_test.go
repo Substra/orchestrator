@@ -80,10 +80,12 @@ func TestRegisterPlan(t *testing.T) {
 func TestCancelPlan(t *testing.T) {
 	ts := new(MockTimeAPI)
 	dbal := new(persistence.MockDBAL)
+	es := new(MockEventAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetTimeService").Return(ts)
 	provider.On("GetComputePlanDBAL").Return(dbal)
+	provider.On("GetEventService").Return(es)
 
 	service := NewComputePlanService(provider)
 
@@ -94,12 +96,27 @@ func TestCancelPlan(t *testing.T) {
 		Owner: "owner",
 	}
 
-	ts.On("GetTransactionTime").Return(time.Now())
+	ts.On("GetTransactionTime").Return(time.Unix(1337, 0))
 
 	dbal.On("CancelComputePlan", plan, mock.AnythingOfType("time.Time")).Return(nil)
 	dbal.On("CancelComputePlan", plan, mock.AnythingOfType("time.Time")).Return(orcerrors.NewBadRequest("already canceled"))
 
+	expectedEvent := &asset.Event{
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
+		AssetKey:  plan.Key,
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		Asset: &asset.Event_ComputePlan{ComputePlan: &asset.ComputePlan{
+			Key:             plan.Key,
+			Tag:             plan.Tag,
+			Name:            plan.Name,
+			Owner:           plan.Owner,
+			Status:          asset.ComputePlanStatus_PLAN_STATUS_CANCELED,
+			CancelationDate: timestamppb.New(time.Unix(1337, 0)),
+		}},
+	}
+	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
 	err := service.cancelPlan(plan)
+
 	assert.NoError(t, err)
 
 	plan.CancelationDate = timestamppb.Now()
@@ -108,6 +125,7 @@ func TestCancelPlan(t *testing.T) {
 
 	ts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
+	es.AssertExpectations(t)
 }
 
 func TestComputePlanAllowIntermediaryModelDeletion(t *testing.T) {

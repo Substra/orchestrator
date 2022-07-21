@@ -121,7 +121,22 @@ func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
 
 	txTimestamp := s.GetTimeService().GetTransactionTime()
 
-	return s.GetComputePlanDBAL().CancelComputePlan(plan, txTimestamp)
+	err := s.GetComputePlanDBAL().CancelComputePlan(plan, txTimestamp)
+	if err != nil {
+		return err
+	}
+
+	plan.CancelationDate = timestamppb.New(txTimestamp)
+	plan.Status = asset.ComputePlanStatus_PLAN_STATUS_CANCELED
+
+	event := &asset.Event{
+		AssetKey:  plan.Key,
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
+		Asset:     &asset.Event_ComputePlan{ComputePlan: plan},
+	}
+
+	return s.GetEventService().RegisterEvents(event)
 }
 
 // canDeleteModels returns true if the compute plan allows intermediary models deletion.

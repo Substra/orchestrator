@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Introduce gRPC SubscribeToEvents method in standalone mode (#781)
+- Dispatch updated asset event on ComputePlan cancellation (#832)
 
 ### Removed
 - Automatic transition to DONE when registering models or performances (#814).
