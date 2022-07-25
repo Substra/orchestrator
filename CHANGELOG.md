@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2022-07-25
+
 ### Added
 - Introduce gRPC SubscribeToEvents method in standalone mode (#781)
 - Dispatch updated asset event on ComputePlan cancellation (#832)

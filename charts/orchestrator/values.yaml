@@ -278,7 +278,7 @@ orchestrator:
     pullPolicy: IfNotPresent
     ## @param orchestrator.image.tag `orchestrator` image tag
     ##
-    tag: 0.19.1
+    tag: 0.20.0
 
   ## @param orchestrator.fullnameOverride String to fully override the `orchestrator.server.fullname`
   ##
@@ -370,7 +370,7 @@ forwarder:
     pullPolicy: IfNotPresent
     ## @param forwarder.image.tag Event forwarder image tag
     ##
-    tag: 0.19.1
+    tag: 0.20.0
   ## @param forwarder.fullnameOverride String to fully override the `forwarder.server.fullname`
   ##
   fullnameOverride: ""
@@ -397,7 +397,7 @@ rabbitmqOperator:
     pullPolicy: IfNotPresent
     ## @param rabbitmqOperator.image.tag RabbitMQ operator image tag
     ##
-    tag: 0.19.1
+    tag: 0.20.0
   ## @param rabbitmqOperator.fullnameOverride String to fully override the `rabbitmqOperator.server.fullname`
   ##
   fullnameOverride: ""
