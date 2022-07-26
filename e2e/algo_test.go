@@ -32,16 +32,6 @@ func TestRegisterAlgo(t *testing.T) {
 	e2erequire.ProtoEqual(t, registeredAlgo, eventAlgo)
 }
 
-func TestPredictAlgo(t *testing.T) {
-	appClient := factory.NewTestClient()
-
-	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
-
-	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_PREDICT}}, "", 100)
-
-	require.GreaterOrEqual(t, len(resp.Algos), 1, "Unexpected total number of predict algo")
-}
-
 func TestQueryAlgos(t *testing.T) {
 	appClient := factory.NewTestClient()
 
@@ -75,31 +65,6 @@ func TestQueryAlgos(t *testing.T) {
 
 	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)
 	require.Equal(t, 3, len(resp.Algos), "Unexpected number of algo used in compute plan with tasks")
-}
-
-func TestQueryAlgosFilterCategories(t *testing.T) {
-	appClient := factory.NewTestClient()
-
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("algo_filter_simple"))
-	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions().WithKeyRef("algo_filter_composite"))
-	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("algo_filter_aggregate"))
-	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("algo_filter_metric"))
-
-	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{}, "", 10000)
-
-	require.GreaterOrEqual(t, len(resp.Algos), 4, "Unexpected number of algos")
-	e2erequire.ContainsKeys(t, true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_composite", "algo_filter_aggregate", "algo_filter_metric")
-
-	filter := &asset.AlgoQueryFilter{
-		Categories: []asset.AlgoCategory{
-			asset.AlgoCategory_ALGO_SIMPLE,
-			asset.AlgoCategory_ALGO_METRIC,
-		}}
-
-	resp = appClient.QueryAlgos(filter, "", 10000)
-
-	e2erequire.ContainsKeys(t, true, appClient, resp.Algos, "algo_filter_simple", "algo_filter_metric")
-	e2erequire.ContainsKeys(t, false, appClient, resp.Algos, "algo_filter_composite", "algo_filter_aggregate")
 }
 
 func TestQueryAlgosInputOutputs(t *testing.T) {

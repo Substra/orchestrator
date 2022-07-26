@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
@@ -55,10 +56,12 @@ func TestQueryAlgos(t *testing.T) {
 	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
+	computePlanKey := uuid.NewString()
+
 	mock.ExpectBegin()
 
 	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
-		WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(makeAlgoRows("key1", "key2"))
+		WithArgs(testChannel, computePlanKey).WillReturnRows(makeAlgoRows("key1", "key2"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1,$2)`)).
 		WithArgs("key1", "key2").WillReturnRows(makeAlgoInputRows("key1", "key2"))
@@ -71,7 +74,7 @@ func TestQueryAlgos(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	filter := &asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_COMPOSITE}}
+	filter := &asset.AlgoQueryFilter{ComputePlanKey: computePlanKey}
 
 	res, bookmark, err := dbal.QueryAlgos(common.NewPagination("", 12), filter)
 	assert.NoError(t, err)
@@ -90,10 +93,12 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 	assert.NoError(t, err)
 	defer mock.Close(context.Background())
 
+	computePlanKey := uuid.NewString()
+
 	mock.ExpectBegin()
 
 	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
-		WithArgs(testChannel, asset.AlgoCategory_ALGO_COMPOSITE.String()).WillReturnRows(makeAlgoRows("key1", "key2"))
+		WithArgs(testChannel, computePlanKey).WillReturnRows(makeAlgoRows("key1", "key2"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1)`)).
 		WithArgs("key1").WillReturnRows(makeAlgoInputRows("key1"))
@@ -106,7 +111,7 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	filter := &asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_COMPOSITE}}
+	filter := &asset.AlgoQueryFilter{ComputePlanKey: computePlanKey}
 
 	res, bookmark, err := dbal.QueryAlgos(common.NewPagination("", 1), filter)
 	assert.NoError(t, err)

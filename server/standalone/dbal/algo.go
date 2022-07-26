@@ -155,14 +155,6 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 		Limit(uint64(p.Size + 1))
 
 	if filter != nil {
-		if len(filter.Categories) > 0 {
-			categories := make([]string, len(filter.Categories))
-			for i, c := range filter.Categories {
-				categories[i] = c.String()
-			}
-			stmt = stmt.Where(sq.Eq{"category": categories})
-		}
-
 		if filter.ComputePlanKey != "" {
 			stmt = stmt.Where(sq.Expr(
 				"key IN (SELECT DISTINCT(algo_key) FROM compute_tasks WHERE compute_plan_key = ?)",

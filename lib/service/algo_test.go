@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/persistence"
@@ -107,6 +108,8 @@ func TestQueryAlgos(t *testing.T) {
 	provider.On("GetAlgoDBAL").Return(dbal)
 	service := NewAlgoService(provider)
 
+	computePlanKey := uuid.NewString()
+
 	algo1 := asset.Algo{
 		Key:      "algo1",
 		Name:     "Test 1",
@@ -120,10 +123,10 @@ func TestQueryAlgos(t *testing.T) {
 
 	pagination := common.NewPagination("", 12)
 
-	dbal.On("QueryAlgos", pagination, &asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_SIMPLE}}).
+	dbal.On("QueryAlgos", pagination, &asset.AlgoQueryFilter{ComputePlanKey: computePlanKey}).
 		Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
 
-	r, token, err := service.QueryAlgos(pagination, &asset.AlgoQueryFilter{Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_SIMPLE}})
+	r, token, err := service.QueryAlgos(pagination, &asset.AlgoQueryFilter{ComputePlanKey: computePlanKey})
 	require.Nil(t, err)
 
 	assert.Len(t, r, 2)

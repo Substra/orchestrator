@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/chaincode/ledger"
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
@@ -67,13 +68,15 @@ func TestRegistration(t *testing.T) {
 func TestQueryAlgos(t *testing.T) {
 	contract := &SmartContract{}
 
+	computePlanKey := uuid.NewString()
+
 	algos := []*asset.Algo{
 		{Name: "test", Category: asset.AlgoCategory_ALGO_SIMPLE},
 		{Name: "test2", Category: asset.AlgoCategory_ALGO_SIMPLE},
 	}
 
 	filter := &asset.AlgoQueryFilter{
-		Categories: []asset.AlgoCategory{asset.AlgoCategory_ALGO_SIMPLE},
+		ComputePlanKey: computePlanKey,
 	}
 
 	ctx := new(ledger.MockTransactionContext)
