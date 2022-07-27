@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- In standalone mode, lock the `events` table when inserting events to prevent
+missing events in `SubscribeToEvents` gRPC stream (#835)
+
 ### Removed
 
 - Category filter from QueryAlgos rpc (#836)

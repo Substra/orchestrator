@@ -55,11 +55,28 @@ func (e *sqlEvent) toEvent() (*asset.Event, error) {
 func (d *DBAL) AddEvents(events ...*asset.Event) error {
 	log.WithField("numEvents", len(events)).Debug("dbal: adding multiple events in batch mode")
 
+	_, err := d.tx.Exec(d.ctx, "LOCK TABLE events IN SHARE ROW EXCLUSIVE MODE")
+	if err != nil {
+		return err
+	}
+
+	stmt := getStatementBuilder().Select("COALESCE(MAX(position), 0) + 1").From("events")
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return err
+	}
+
+	var position uint64
+	err = row.Scan(&position)
+	if err != nil {
+		return err
+	}
+
 	// Relying on COPY FROM directive is faster for a large number of items.
-	_, err := d.tx.CopyFrom(
+	_, err = d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"events"},
-		[]string{"id", "asset_key", "asset_kind", "event_kind", "channel", "timestamp", "asset", "metadata"},
+		[]string{"id", "asset_key", "asset_kind", "event_kind", "channel", "timestamp", "asset", "metadata", "position"},
 		pgx.CopyFromSlice(len(events), func(i int) ([]interface{}, error) {
 			event := events[i]
 
@@ -74,7 +91,7 @@ func (d *DBAL) AddEvents(events ...*asset.Event) error {
 				return nil, err
 			}
 
-			return []interface{}{
+			value := []interface{}{
 				id,
 				event.AssetKey,
 				event.AssetKind.String(),
@@ -83,7 +100,11 @@ func (d *DBAL) AddEvents(events ...*asset.Event) error {
 				event.Timestamp.AsTime(),
 				eventAsset,
 				event.Metadata,
-			}, nil
+				position,
+			}
+
+			position++
+			return value, nil
 		}),
 	)
 
