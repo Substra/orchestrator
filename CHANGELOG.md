@@ -14,6 +14,7 @@ missing events in `SubscribeToEvents` gRPC stream (#835)
 ### Removed
 
 - Category filter from QueryAlgos rpc (#836)
+- Legacy compute task permission fields (#839)
 
 ## [0.20.0] - 2022-07-25
 

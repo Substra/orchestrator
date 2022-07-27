@@ -98,8 +98,8 @@ message NewComputeTask {
 message TrainTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  // deprecated field, use permissions from task output instead
-  Permissions model_permissions = 4 [deprecated=true];
+  reserved 4;
+  reserved "model_permissions";
 }
 
 message NewTrainTaskData {
@@ -110,8 +110,8 @@ message NewTrainTaskData {
 message PredictTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  // deprecated field, use permissions from task output instead
-  Permissions prediction_permissions = 3 [deprecated=true];
+  reserved 3;
+  reserved "prediction_permissions";
 }
 
 message NewPredictTaskData {
@@ -136,22 +136,22 @@ message NewTestTaskData {
 message CompositeTrainTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  // deprecated field, use permissions from task output instead
-  Permissions head_permissions = 5 [deprecated=true];
-  // deprecated field, use permissions from task output instead
-  Permissions trunk_permissions = 6 [deprecated=true];
+  reserved 5;
+  reserved "head_permissions";
+  reserved 6;
+  reserved "trunk_permissions";
 }
 
 message NewCompositeTrainTaskData {
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  reserved "trunk_permissions";
   reserved 4;
+  reserved "trunk_permissions";
 }
 
 message AggregateTrainTaskData {
-  // deprecated field, use permissions from task output instead
-  Permissions model_permissions = 2 [deprecated=true];
+  reserved 2;
+  reserved "model_permissions";
 }
 
 message NewAggregateTrainTaskData {

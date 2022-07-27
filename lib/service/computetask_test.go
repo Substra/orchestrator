@@ -265,9 +265,8 @@ func TestRegisterTrainTask(t *testing.T) {
 		Worker:         dataManager.Owner,
 		Data: &asset.ComputeTask_Train{
 			Train: &asset.TrainTaskData{
-				DataManagerKey:   dataManagerKey,
-				DataSampleKeys:   dataSampleKeys,
-				ModelPermissions: modelPerms,
+				DataManagerKey: dataManagerKey,
+				DataSampleKeys: dataSampleKeys,
 			},
 		},
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
@@ -447,10 +446,8 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Rank:           1,
 		Data: &asset.ComputeTask_Composite{
 			Composite: &asset.CompositeTrainTaskData{
-				DataManagerKey:   dataManagerKey,
-				DataSampleKeys:   dataSampleKeys,
-				HeadPermissions:  localPerms,
-				TrunkPermissions: sharedPerms,
+				DataManagerKey: dataManagerKey,
+				DataSampleKeys: dataSampleKeys,
 			},
 		},
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
@@ -519,9 +516,7 @@ func TestRegisterFailedTask(t *testing.T) {
 		Status: asset.ComputeTaskStatus_STATUS_FAILED,
 		Key:    "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
 		Data: &asset.ComputeTask_Train{
-			Train: &asset.TrainTaskData{
-				ModelPermissions: parentPerms,
-			},
+			Train: &asset.TrainTaskData{},
 		},
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {Permissions: parentPerms},
@@ -580,9 +575,7 @@ func TestRegisterDeletedModel(t *testing.T) {
 		Key:            "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db82309fff",
 		Data: &asset.ComputeTask_Train{
-			Train: &asset.TrainTaskData{
-				ModelPermissions: parentPerms,
-			},
+			Train: &asset.TrainTaskData{},
 		},
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {Permissions: parentPerms},
@@ -656,12 +649,6 @@ func TestSetPredictData(t *testing.T) {
 	dms.On("GetDataManager", "dmUuid").Once().Return(dataManager, nil)
 	ps.On("CanProcess", mock.Anything, "org1").Return(true)
 	dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
-
-	modelPerms := &asset.Permissions{
-		Process:  &asset.Permission{AuthorizedIds: []string{"testOwner"}},
-		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
-	}
-	ps.On("IntersectPermissions", algo.Permissions, dataManager.Permissions).Return(modelPerms)
 
 	service := NewComputeTaskService(provider)
 

@@ -308,26 +308,6 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
-	// Populate legacy permission fields
-	// Linter is silenced since we populate deprecated fields on purpose
-	switch x := task.Data.(type) {
-	case *asset.ComputeTask_Composite:
-		if shared, ok := task.Outputs[taskIOShared]; ok {
-			x.Composite.TrunkPermissions = shared.Permissions //nolint:staticcheck
-		}
-		if local, ok := task.Outputs[taskIOLocal]; ok {
-			x.Composite.HeadPermissions = local.Permissions //nolint:staticcheck
-		}
-	case *asset.ComputeTask_Aggregate:
-		if model, ok := task.Outputs[taskIOModel]; ok {
-			x.Aggregate.ModelPermissions = model.Permissions //nolint:staticcheck
-		}
-	case *asset.ComputeTask_Train:
-		if model, ok := task.Outputs[taskIOModel]; ok {
-			x.Train.ModelPermissions = model.Permissions //nolint:staticcheck
-		}
-	}
-
 	err = s.checkCanProcessParents(task.Worker, parentTasks, input.Category)
 	if err != nil {
 		return nil, err
@@ -555,12 +535,9 @@ func (s *ComputeTaskService) setPredictData(taskInput *asset.NewComputeTask, spe
 		return err
 	}
 
-	permissions := s.GetPermissionService().IntersectPermissions(task.Algo.Permissions, datamanager.Permissions)
-
 	taskData := &asset.PredictTaskData{
-		DataManagerKey:        datamanager.Key,
-		DataSampleKeys:        specificInput.DataSampleKeys,
-		PredictionPermissions: permissions,
+		DataManagerKey: datamanager.Key,
+		DataSampleKeys: specificInput.DataSampleKeys,
 	}
 
 	task.Data = &asset.ComputeTask_Predict{
