@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.1.6] - 2022-07-26
+
+### Removed
+- fabric configmap mount on /var/hyperledger/xxx
+
 ## [7.1.6] - 2022-07-25
 
 ### Changed

@@ -113,8 +113,6 @@ spec:
             - name: fabric-config
               mountPath: /var/hyperledger/fabric-config.yaml
               subPath: fabric-config.yaml
-            - name: fabric-config
-              mountPath: /var/hyperledger/xxx
             - name: user-cert
               mountPath: /var/hyperledger/msp/signcerts
             - name: user-key

@@ -65,8 +65,6 @@ spec:
             - name: forwarder-config
               mountPath: /var/hyperledger/forwarder-config.yaml
               subPath: forwarder-config.yaml
-            - name: fabric-config
-              mountPath: /var/hyperledger/xxx
             - name: user-cert
               mountPath: /var/hyperledger/msp/signcerts
             - name: user-key
