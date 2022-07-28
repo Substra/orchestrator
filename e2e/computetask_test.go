@@ -49,7 +49,9 @@ func TestTrainTaskLifecycle(t *testing.T) {
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").WithParentsRef(client.DefaultTrainTaskRef))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").
+		WithParentsRef(client.DefaultTrainTaskRef).
+		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	appClient.StartTask(client.DefaultTrainTaskRef)
 }
 
@@ -63,9 +65,20 @@ func TestPredictTaskLifecycle(t *testing.T) {
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("train").WithAlgoRef("train_algo"))
-	appClient.RegisterTasks(client.DefaultPredictTaskOptions().WithParentsRef("train").WithAlgoRef("predict_algo").WithKeyRef("predict"))
-	appClient.RegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("test").WithParentsRef("predict").WithAlgoRef("metric"))
+
+	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
+		WithParentsRef("train").
+		WithInput("model", &client.TaskOutputRef{TaskRef: "train", Identifier: "model"}).
+		WithAlgoRef("predict_algo").
+		WithKeyRef("predict"))
+
+	appClient.RegisterTasks(client.DefaultTestTaskOptions().
+		WithKeyRef("test").
+		WithParentsRef("predict").
+		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predict", Identifier: "predictions"}).
+		WithAlgoRef("metric"))
 
 	appClient.StartTask("train")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_end"))
@@ -94,7 +107,9 @@ func TestCascadeCancel(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).
+			WithParentsRef(client.DefaultTrainTaskRef).
+			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
@@ -120,7 +135,9 @@ func TestCascadeTodo(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).
+			WithParentsRef(client.DefaultTrainTaskRef).
+			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
@@ -148,7 +165,9 @@ func TestCascadeFailure(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
 	for i := 0; i < 10; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).
+			WithParentsRef(client.DefaultTrainTaskRef).
+			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
@@ -214,11 +233,17 @@ func TestConcurrency(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		wg.Add(2)
 		go func(i int) {
-			client1.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task1%d", i)).WithParentsRef("parent1"))
+			client1.RegisterTasks(client.DefaultTrainTaskOptions().
+				WithKeyRef(fmt.Sprintf("task1%d", i)).
+				WithParentsRef("parent1").
+				WithInput("model", &client.TaskOutputRef{TaskRef: "parent1", Identifier: "model"}))
 			wg.Done()
 		}(i)
 		go func(i int) {
-			client2.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task2%d", i)).WithParentsRef("parent2"))
+			client2.RegisterTasks(client.DefaultTrainTaskOptions().
+				WithKeyRef(fmt.Sprintf("task2%d", i)).
+				WithParentsRef("parent2").
+				WithInput("model", &client.TaskOutputRef{TaskRef: "parent2", Identifier: "model"}))
 			wg.Done()
 		}(i)
 	}
@@ -241,7 +266,10 @@ func TestStableTaskSort(t *testing.T) {
 
 	newTasks := make([]client.Taskable, 0, nbTasks)
 	for i := 0; i < nbTasks; i++ {
-		newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
+		newTasks = append(newTasks, client.DefaultTrainTaskOptions().
+			WithKeyRef(fmt.Sprintf("task%d", i)).
+			WithParentsRef(client.DefaultTrainTaskRef).
+			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 	appClient.RegisterTasks(newTasks...)
 
@@ -288,12 +316,15 @@ func TestGetSortedParentTaskKeys(t *testing.T) {
 	}
 
 	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("aggAlgo"))
-	appClient.RegisterTasks(
-		client.DefaultAggregateTaskOptions().
-			WithAlgoRef("aggAlgo").
-			WithKeyRef("aggTask").
-			WithParentsRef(parentTaskRefs...),
-	)
+	agg := client.
+		DefaultAggregateTaskOptions().
+		WithAlgoRef("aggAlgo").
+		WithKeyRef("aggTask").
+		WithParentsRef(parentTaskRefs...)
+	for _, parent := range parentTaskRefs {
+		agg.WithInput("model", &client.TaskOutputRef{TaskRef: parent, Identifier: "model"})
+	}
+	appClient.RegisterTasks(agg)
 
 	task := appClient.GetComputeTask("aggTask")
 	require.Equal(t, len(parentTaskRefs), len(task.ParentTaskKeys))
@@ -309,9 +340,11 @@ func TestQueryTaskInputs(t *testing.T) {
 
 	taskRef := "task with inputs"
 	cpRef := "CP with inputs"
-	parentAlgoRef := "parent algo ref"
-	childAlgoRef := "child algo ref"
-	parentTaskRef := "parent task ref"
+	parentAlgoRef := "parent algo"
+	childAlgoRef := "child algo"
+	parentTaskRef := "parent task"
+	otherTaskRef := "other task"
+	inputModelRef := "input model"
 
 	parentAlgoOptions := client.
 		DefaultSimpleAlgoOptions().
@@ -321,8 +354,9 @@ func TestQueryTaskInputs(t *testing.T) {
 	childAlgoOptions := client.
 		DefaultSimpleAlgoOptions().
 		WithKeyRef(childAlgoRef).
-		WithOutput("models", asset.AssetKind_ASSET_MODEL, true)
+		WithOutput("other model", asset.AssetKind_ASSET_MODEL, true)
 
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterAlgo(parentAlgoOptions)
 	appClient.RegisterAlgo(childAlgoOptions)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -331,24 +365,28 @@ func TestQueryTaskInputs(t *testing.T) {
 
 	parentTaskOptions := client.
 		DefaultTrainTaskOptions().
-		WithAlgoRef(parentAlgoRef).
 		WithKeyRef(parentTaskRef).
+		WithAlgoRef(parentAlgoRef).
 		WithPlanRef(cpRef).
 		WithOutput("output model", &asset.NewPermissions{
 			Public:        false,
 			AuthorizedIds: []string{appClient.MSPID},
 		})
-
 	appClient.RegisterTasks(parentTaskOptions)
+
+	otherTaskOptions := client.DefaultTrainTaskOptions().WithKeyRef(otherTaskRef).WithPlanRef(cpRef)
+	appClient.RegisterTasks(otherTaskOptions)
+	appClient.StartTask(otherTaskRef)
+	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef(inputModelRef).WithTaskRef(otherTaskRef))
 
 	taskOptions := client.
 		DefaultTrainTaskOptions().
 		WithAlgoRef(childAlgoRef).
 		WithKeyRef(taskRef).
 		WithPlanRef(cpRef).
-		WithAssetInputRef("models", "inputModelRef").
-		WithParentTaskInputRef("models", parentTaskRef, "output model").
-		WithOutput("models", &asset.NewPermissions{
+		WithInputAsset("model", inputModelRef).
+		WithInput("model", &client.TaskOutputRef{TaskRef: parentTaskRef, Identifier: "output model"}).
+		WithOutput("other model", &asset.NewPermissions{
 			Public:        false,
 			AuthorizedIds: []string{appClient.MSPID},
 		})
@@ -367,13 +405,13 @@ func TestQueryTaskInputs(t *testing.T) {
 			},
 		},
 		{
-			Identifier: "models",
+			Identifier: "model",
 			Ref: &asset.ComputeTaskInput_AssetKey{
-				AssetKey: ks.GetKey("inputModelRef"),
+				AssetKey: ks.GetKey(inputModelRef),
 			},
 		},
 		{
-			Identifier: "models",
+			Identifier: "model",
 			Ref: &asset.ComputeTaskInput_ParentTaskOutput{
 				ParentTaskOutput: &asset.ParentTaskOutputRef{
 					ParentTaskKey:    ks.GetKey(parentTaskRef),
@@ -396,7 +434,7 @@ func TestQueryTaskInputs(t *testing.T) {
 				},
 			},
 		},
-		"models": {
+		"other model": {
 			Permissions: &asset.Permissions{
 				Process: &asset.Permission{
 					Public:        false,
@@ -422,7 +460,7 @@ func TestQueryTaskInputs(t *testing.T) {
 	e2erequire.ProtoMapEqual(t, respTask.Outputs, expectedOutputs)
 
 	// test QueryTasks
-	resp := appClient.QueryTasks(&asset.TaskQueryFilter{ComputePlanKey: ks.GetKey(cpRef)}, "", 2)
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{ComputePlanKey: ks.GetKey(cpRef)}, "", 10000)
 	found := false
 	for _, task := range resp.Tasks {
 		if task.Key == ks.GetKey(taskRef) {
@@ -487,6 +525,7 @@ func TestWorkerCancelTaskInFailedComputePlan(t *testing.T) {
 		WithAlgoRef("aggAlgo").
 		WithKeyRef("aggTask").
 		WithParentsRef("trainTask1").
+		WithInput("model", &client.TaskOutputRef{TaskRef: "trainTask1", Identifier: "model"}).
 		WithWorker("MyOrg2MSP"))
 
 	client1.StartTask("trainTask1")

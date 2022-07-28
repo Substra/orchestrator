@@ -19,6 +19,7 @@ func (t *NewComputeTask) Validate() error {
 		validation.Field(&t.Metadata, validation.By(validateMetadata)),
 		validation.Field(&t.ParentTaskKeys, validation.Each(is.UUID)),
 		validation.Field(&t.Data, validation.Required),
+		validation.Field(&t.Inputs, validation.By(validateTaskInputs)),
 		validation.Field(&t.Outputs, validation.By(validateTaskOutputs)),
 	)
 
@@ -26,19 +27,19 @@ func (t *NewComputeTask) Validate() error {
 		return baseTaskErr
 	}
 
-	switch x := t.Data.(type) {
+	switch d := t.Data.(type) {
 	case *NewComputeTask_Composite:
-		return t.Data.(*NewComputeTask_Composite).Composite.Validate()
+		return d.Composite.Validate()
 	case *NewComputeTask_Aggregate:
-		return t.Data.(*NewComputeTask_Aggregate).Aggregate.Validate()
+		return d.Aggregate.Validate()
 	case *NewComputeTask_Test:
-		return t.Data.(*NewComputeTask_Test).Test.Validate()
+		return d.Test.Validate()
 	case *NewComputeTask_Train:
-		return t.Data.(*NewComputeTask_Train).Train.Validate()
+		return d.Train.Validate()
 	case *NewComputeTask_Predict:
-		return t.Data.(*NewComputeTask_Predict).Predict.Validate()
+		return d.Predict.Validate()
 	default:
-		return errors.NewInvalidAsset(fmt.Sprintf("unknown task data %T", x))
+		return errors.NewInvalidAsset(fmt.Sprintf("unknown task data %T", d))
 	}
 }
 
@@ -85,6 +86,54 @@ func (p *ApplyTaskActionParam) Validate() error {
 			ComputeTaskAction_TASK_ACTION_CANCELED,
 			ComputeTaskAction_TASK_ACTION_DONE,
 		)),
+	)
+}
+
+func validateTaskInputs(input interface{}) error {
+	inputs, ok := input.([]*ComputeTaskInput)
+	if !ok {
+		return errors.NewInvalidAsset("inputs is not a proper map")
+	}
+
+	for _, input := range inputs {
+		err := input.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (i *ComputeTaskInput) Validate() error {
+	err := validation.ValidateStruct(i,
+		validation.Field(&i.Identifier, validation.Required),
+		validation.Field(&i.Ref, validation.Required),
+	)
+	if err != nil {
+		return err
+	}
+
+	switch ref := i.Ref.(type) {
+	case *ComputeTaskInput_AssetKey:
+		return ref.Validate()
+	case *ComputeTaskInput_ParentTaskOutput:
+		return ref.ParentTaskOutput.Validate()
+	default:
+		return errors.NewInvalidAsset(fmt.Sprintf("unknown input ref %T", i.Ref))
+	}
+}
+
+func (i *ComputeTaskInput_AssetKey) Validate() error {
+	return validation.ValidateStruct(i,
+		validation.Field(&i.AssetKey, validation.Required, is.UUID),
+	)
+}
+
+func (i *ParentTaskOutputRef) Validate() error {
+	return validation.ValidateStruct(i,
+		validation.Field(&i.ParentTaskKey, validation.Required, is.UUID),
+		validation.Field(&i.OutputIdentifier, validation.Required),
 	)
 }
 

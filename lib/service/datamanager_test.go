@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -153,4 +154,88 @@ func TestIsOwner(t *testing.T) {
 	assert.NoError(t, err, "is owner should not fail")
 	assert.Equal(t, ok, true, "owner owns the datamanager")
 	dbal.AssertExpectations(t)
+}
+
+func TestGetCheckedDataManager(t *testing.T) {
+	type getDataManagerResponse struct {
+		dataManager *asset.DataManager
+		err         error
+	}
+
+	type result struct {
+		dataManager *asset.DataManager
+		err         string
+	}
+
+	cases := []struct {
+		name                string
+		dataManagerResponse getDataManagerResponse
+		canProcess          bool
+		checkSameManagerErr error
+		result              result
+	}{
+		{
+			name:                "ok",
+			dataManagerResponse: getDataManagerResponse{dataManager: &asset.DataManager{}},
+			canProcess:          true,
+			result:              result{dataManager: &asset.DataManager{}},
+		},
+		{
+			name:                "data manager doesn't exist",
+			dataManagerResponse: getDataManagerResponse{err: errors.New("This datamanager doesn't exist")},
+			canProcess:          true,
+			result:              result{err: "This datamanager doesn't exist"},
+		},
+		{
+			name:                "not authorized",
+			dataManagerResponse: getDataManagerResponse{dataManager: &asset.DataManager{}},
+			canProcess:          false,
+			result:              result{err: "not authorized to process datamanager"},
+		},
+		{
+			name:                "not same data manager",
+			dataManagerResponse: getDataManagerResponse{dataManager: &asset.DataManager{}},
+			canProcess:          true,
+			checkSameManagerErr: errors.New("datasamples do not share a common manager"),
+			result:              result{err: "datasamples do not share a common manager"},
+		},
+	}
+
+	dataManagerKey := "uuid1"
+	dataSampleKeys := []string{"uuid2", "uuid3"}
+	owner := "owner"
+
+	for _, c := range cases {
+		t.Run(
+			c.name,
+			func(t *testing.T) {
+				dbal := new(persistence.MockDBAL)
+				ps := new(MockPermissionAPI)
+				dss := new(MockDataSampleAPI)
+				provider := newMockedProvider()
+
+				dbal.On("GetDataManager", dataManagerKey).Return(c.dataManagerResponse.dataManager, c.dataManagerResponse.err)
+				if c.dataManagerResponse.dataManager != nil {
+					ps.On("CanProcess", c.dataManagerResponse.dataManager.Permissions, owner).Return(c.canProcess)
+				}
+				dss.On("CheckSameManager", dataManagerKey, dataSampleKeys).Return(c.checkSameManagerErr)
+
+				provider.On("GetDataManagerDBAL").Return(dbal)
+				provider.On("GetPermissionService").Return(ps)
+				provider.On("GetDataSampleService").Return(dss)
+
+				service := NewDataManagerService(provider)
+
+				dmResp, err := service.GetCheckedDataManager(dataManagerKey, dataSampleKeys, owner)
+
+				if c.result.err == "" {
+					assert.Equal(t, c.result.dataManager, dmResp)
+					assert.NoError(t, err)
+				} else {
+					assert.Nil(t, dmResp)
+					assert.ErrorContains(t, err, c.result.err)
+				}
+			},
+		)
+	}
 }

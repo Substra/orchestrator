@@ -7,6 +7,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -20,6 +21,7 @@ type ModelAPI interface {
 	GetModel(key string) (*asset.Model, error)
 	QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error)
 	RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error)
+	GetCheckedModel(key string, worker string) (*asset.Model, error)
 }
 
 type ModelServiceProvider interface {
@@ -53,6 +55,19 @@ func (s *ModelService) GetComputeTaskOutputModels(key string) ([]*asset.Model, e
 func (s *ModelService) GetModel(key string) (*asset.Model, error) {
 	s.GetLogger().WithField("key", key).Debug("Get model")
 	return s.GetModelDBAL().GetModel(key)
+}
+
+// GetCheckedModel returns the model if it exists and it can be processed by the worker
+func (s *ModelService) GetCheckedModel(key string, worker string) (*asset.Model, error) {
+	s.GetLogger().WithField("key", key).Debug("Get model")
+	model, err := s.GetModelDBAL().GetModel(key)
+	if err != nil {
+		return nil, err
+	}
+	if ok := s.GetPermissionService().CanProcess(model.Permissions, worker); !ok {
+		return nil, orcerrors.NewPermissionDenied(fmt.Sprintf("not authorized to process model %q", model.Key))
+	}
+	return model, nil
 }
 
 func (s *ModelService) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {

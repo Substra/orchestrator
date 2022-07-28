@@ -58,9 +58,19 @@ func TestQueryAlgos(t *testing.T) {
 	appClient.RegisterTasks(
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train2"),
-		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef("train1", "train2"),
-		client.DefaultPredictTaskOptions().WithKeyRef("predict").WithParentsRef("train3"),
-		client.DefaultTestTaskOptions().WithDataSampleRef("objSample").WithParentsRef("predict"),
+
+		client.DefaultTrainTaskOptions().WithKeyRef("train3").
+			WithParentsRef("train1", "train2").
+			WithInput("model", &client.TaskOutputRef{TaskRef: "train1", Identifier: "model"}).
+			WithInput("model", &client.TaskOutputRef{TaskRef: "train2", Identifier: "model"}),
+
+		client.DefaultPredictTaskOptions().WithKeyRef("predict").
+			WithParentsRef("train3").
+			WithInput("model", &client.TaskOutputRef{TaskRef: "train3", Identifier: "model"}),
+
+		client.DefaultTestTaskOptions().WithDataSampleRef("objSample").
+			WithParentsRef("predict").
+			WithInput("predictions", &client.TaskOutputRef{TaskRef: "predict", Identifier: "predictions"}),
 	)
 
 	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)

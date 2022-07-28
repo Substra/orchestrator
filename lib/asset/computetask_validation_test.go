@@ -26,6 +26,23 @@ func TestNewComputeTaskValidation(t *testing.T) {
 				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
 			},
 		},
+		Inputs: []*ComputeTaskInput{
+			{
+				Identifier: "model",
+				Ref: &ComputeTaskInput_AssetKey{
+					AssetKey: "867852b4-8419-4d52-8862-d5db823095be",
+				},
+			},
+			{
+				Identifier: "model2",
+				Ref: &ComputeTaskInput_ParentTaskOutput{
+					ParentTaskOutput: &ParentTaskOutputRef{
+						ParentTaskKey:    "867852b4-8419-4d52-8862-d5db823095be",
+						OutputIdentifier: "model",
+					},
+				},
+			},
+		},
 		Outputs: validOutputs,
 	}
 	invalidCategory := &NewComputeTask{
@@ -108,6 +125,128 @@ func TestNewComputeTaskValidation(t *testing.T) {
 			},
 		},
 	}
+	missingInputIdentifier := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+		Inputs: []*ComputeTaskInput{
+			{
+				Identifier: "",
+				Ref: &ComputeTaskInput_AssetKey{
+					AssetKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				},
+			},
+		},
+	}
+	missingInputRef := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+		Inputs: []*ComputeTaskInput{{Identifier: "model"}},
+	}
+	invalidInputRef := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+		Inputs: []*ComputeTaskInput{
+			{
+				Identifier: "model",
+				Ref: &ComputeTaskInput_AssetKey{
+					AssetKey: "abc",
+				},
+			},
+		},
+	}
+	missingInputTaskOutputKey := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+		Inputs: []*ComputeTaskInput{
+			{
+				Identifier: "model",
+				Ref: &ComputeTaskInput_ParentTaskOutput{
+					ParentTaskOutput: &ParentTaskOutputRef{
+						ParentTaskKey:    "",
+						OutputIdentifier: "model",
+					},
+				},
+			},
+		},
+	}
+	invalidInputTaskOutputKey := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+		Inputs: []*ComputeTaskInput{
+			{
+				Identifier: "model",
+				Ref: &ComputeTaskInput_ParentTaskOutput{
+					ParentTaskOutput: &ParentTaskOutputRef{
+						ParentTaskKey:    "abc",
+						OutputIdentifier: "model",
+					},
+				},
+			},
+		},
+	}
+	missingInputTaskOutputIdentifier := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+		Inputs: []*ComputeTaskInput{
+			{
+				Identifier: "model",
+				Ref: &ComputeTaskInput_ParentTaskOutput{
+					ParentTaskOutput: &ParentTaskOutputRef{
+						ParentTaskKey:    "867852b4-8419-4d52-8862-d5db823095be",
+						OutputIdentifier: "",
+					},
+				},
+			},
+		},
+	}
 
 	cases := map[string]struct {
 		valid   bool
@@ -119,6 +258,12 @@ func TestNewComputeTaskValidation(t *testing.T) {
 		"missing compute plan":                  {valid: false, newTask: missingComputePlan},
 		"missing train data":                    {valid: false, newTask: missingData},
 		"invalid parent":                        {valid: false, newTask: invalidParent},
+		"missing input identifier":              {valid: false, newTask: missingInputIdentifier},
+		"missing input ref":                     {valid: false, newTask: missingInputRef},
+		"invalid input ref":                     {valid: false, newTask: invalidInputRef},
+		"missing input task output key":         {valid: false, newTask: missingInputTaskOutputKey},
+		"invalid intput task output key":        {valid: false, newTask: invalidInputTaskOutputKey},
+		"missing input task output identifier":  {valid: false, newTask: missingInputTaskOutputIdentifier},
 		"invalid output permissions identifier": {valid: false, newTask: invalidOutputPermissionsIdentifier},
 	}
 

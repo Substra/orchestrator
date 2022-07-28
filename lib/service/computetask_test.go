@@ -819,6 +819,316 @@ func TestIsAlgoCompatible(t *testing.T) {
 	}
 }
 
+func TestValidateTaskInputs(t *testing.T) {
+
+	type dependenciesErrors struct {
+		getComputeTask        error
+		getCheckedDataManager error
+		getCheckedModel       error
+	}
+
+	owner := "org1"
+	defaultWorker := "org2"
+
+	validRef := &asset.ComputeTaskInput_AssetKey{
+		AssetKey: "valid_key",
+	}
+
+	permission := &asset.Permission{
+		Public:        false,
+		AuthorizedIds: []string{owner, defaultWorker},
+	}
+
+	validTask := &asset.ComputeTask{
+		Key: "valid_key",
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"model": {
+					Kind: asset.AssetKind_ASSET_MODEL,
+				},
+				"models": {
+					Kind:     asset.AssetKind_ASSET_MODEL,
+					Multiple: true,
+				},
+				"performance": {
+					Kind: asset.AssetKind_ASSET_PERFORMANCE,
+				},
+			},
+		},
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"model": {
+				Permissions: &asset.Permissions{
+					Download: permission,
+					Process:  permission,
+				},
+			},
+			"models": {
+				Permissions: &asset.Permissions{
+					Download: permission,
+					Process:  permission,
+				},
+			},
+		},
+	}
+
+	cases := []struct {
+		name               string
+		worker             string
+		algo               map[string]*asset.AlgoInput
+		task               []*asset.ComputeTaskInput
+		dependenciesErrors dependenciesErrors
+		expectedError      string
+	}{
+		{
+			name: "ok",
+			algo: map[string]*asset.AlgoInput{
+				"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+				"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+				"model":       {Kind: asset.AssetKind_ASSET_MODEL},
+				"other model": {Kind: asset.AssetKind_ASSET_MODEL},
+			},
+			task: []*asset.ComputeTaskInput{
+				{Identifier: "opener", Ref: validRef},
+				{Identifier: "datasamples", Ref: validRef},
+				{Identifier: "datasamples", Ref: validRef},
+				{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+					ParentTaskKey:    validTask.Key,
+					OutputIdentifier: "model",
+				}}},
+				{Identifier: "other model", Ref: validRef},
+			},
+		},
+		{
+			name: "optional input",
+			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
+			task: []*asset.ComputeTaskInput{},
+		},
+		{
+			name:          "missing input",
+			algo:          map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			task:          []*asset.ComputeTaskInput{},
+			expectedError: "missing task input",
+		},
+		{
+			name: "duplicate input",
+			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			task: []*asset.ComputeTaskInput{
+				{Identifier: "model", Ref: validRef},
+				{Identifier: "model", Ref: validRef},
+			},
+			expectedError: "duplicate task input",
+		},
+		{
+			name: "unknown input",
+			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
+			task: []*asset.ComputeTaskInput{
+				{Identifier: "foo", Ref: validRef},
+			},
+			expectedError: "unknown task input",
+		},
+		{
+			name: "error in GetCheckedModel",
+			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "model",
+					Ref:        validRef,
+				},
+			},
+			dependenciesErrors: dependenciesErrors{
+				getCheckedModel: errors.New("model error, e.g. permission error"),
+			},
+			expectedError: "model error",
+		},
+		{
+			name: "error in GetComputeTask",
+			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "model",
+					Ref:        &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: validTask.Key}},
+				},
+			},
+			dependenciesErrors: dependenciesErrors{
+				getComputeTask: errors.New("task error, e.g. task not found"),
+			},
+			expectedError: "task error",
+		},
+		{
+			name: "mismatching asset kinds",
+			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "model",
+					Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+						ParentTaskKey:    validTask.Key,
+						OutputIdentifier: "performance",
+					}},
+				},
+			},
+			expectedError: "mismatching task input asset kinds",
+		},
+		{
+			name: "parent task output not found",
+			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "model",
+					Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+						ParentTaskKey:    validTask.Key,
+						OutputIdentifier: "not found",
+					}},
+				},
+			},
+			expectedError: "algo output not found",
+		},
+		{
+			name: "multiple output used as single input",
+			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "model",
+					Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+						ParentTaskKey:    validTask.Key,
+						OutputIdentifier: "models",
+					}},
+				},
+			},
+			expectedError: "multiple task output used as single task input",
+		},
+		{
+			name: "input data manager referenced using parent task output",
+			algo: map[string]*asset.AlgoInput{
+				"datamanager": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+				"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "datamanager",
+					Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+						ParentTaskKey:    validTask.Key,
+						OutputIdentifier: "datamanager",
+					}},
+				},
+				{
+					Identifier: "datasamples",
+					Ref:        validRef,
+				},
+			},
+			expectedError: "openers must be referenced using an asset key",
+		},
+		{
+			name: "error in GetCheckedDataManager",
+			algo: map[string]*asset.AlgoInput{
+				"datamanager": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+				"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "datamanager",
+					Ref:        validRef,
+				},
+				{
+					Identifier: "datasamples",
+					Ref:        validRef,
+				},
+			},
+			dependenciesErrors: dependenciesErrors{
+				getCheckedDataManager: errors.New("data manager error, e.g. permission error"),
+			},
+			expectedError: "data manager error",
+		},
+		{
+			name: "input data sample referenced using parent task output",
+			algo: map[string]*asset.AlgoInput{
+				"datamanager": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+				"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "datamanager",
+					Ref:        validRef,
+				},
+				{
+					Identifier: "datasamples",
+					Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+						ParentTaskKey:    validTask.Key,
+						OutputIdentifier: "datasample",
+					}},
+				},
+			},
+			expectedError: "data samples must be referenced using an asset key",
+		},
+		{
+			name: "worker is not authorized to process parent task output",
+			algo: map[string]*asset.AlgoInput{
+				"model": {Kind: asset.AssetKind_ASSET_MODEL},
+			},
+			task: []*asset.ComputeTaskInput{
+				{
+					Identifier: "model",
+					Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+						ParentTaskKey:    validTask.Key,
+						OutputIdentifier: "model",
+					}},
+				},
+			},
+			expectedError: "doesn't have permission",
+			worker:        "org3",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(
+			c.name,
+			func(t *testing.T) {
+
+				provider := newMockedProvider()
+				service := NewComputeTaskService(provider)
+
+				ctdbal := new(persistence.MockComputeTaskDBAL)
+				ms := new(MockModelAPI)
+				dms := new(MockDataManagerAPI)
+
+				if c.dependenciesErrors.getComputeTask == nil {
+					ctdbal.On("GetComputeTask", mock.Anything).Return(validTask, nil)
+				} else {
+					ctdbal.On("GetComputeTask", mock.Anything).Return(nil, c.dependenciesErrors.getComputeTask)
+				}
+
+				if c.dependenciesErrors.getCheckedModel == nil {
+					ms.On("GetCheckedModel", mock.Anything, mock.Anything).Return(&asset.Model{}, nil)
+				} else {
+					ms.On("GetCheckedModel", mock.Anything, mock.Anything).Return(nil, c.dependenciesErrors.getCheckedModel)
+				}
+
+				if c.dependenciesErrors.getCheckedDataManager == nil {
+					dms.On("GetCheckedDataManager", mock.Anything, mock.Anything, mock.Anything).Return(&asset.DataManager{}, nil)
+				} else {
+					dms.On("GetCheckedDataManager", mock.Anything, mock.Anything, mock.Anything).Return(nil, c.dependenciesErrors.getCheckedDataManager)
+				}
+
+				provider.On("GetDataManagerService").Return(dms)
+				provider.On("GetModelService").Return(ms)
+				provider.On("GetComputeTaskDBAL").Return(ctdbal)
+				provider.On("GetPermissionService").Return(NewPermissionService(provider))
+
+				worker := defaultWorker
+				if c.worker != "" {
+					worker = c.worker
+				}
+
+				err := service.validateInputs(c.task, c.algo, owner, worker)
+				if c.expectedError == "" {
+					assert.NoError(t, err)
+				} else {
+					assert.ErrorContains(t, err, c.expectedError)
+				}
+			},
+		)
+	}
+}
+
 func TestValidateTaskOutputs(t *testing.T) {
 	cases := []struct {
 		name          string

@@ -29,7 +29,10 @@ func TestEventTSFilter(t *testing.T) {
 
 	newTasks := make([]client.Taskable, 0, nbTasks)
 	for i := 0; i < nbTasks; i++ {
-		newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
+		newTasks = append(newTasks, client.DefaultTrainTaskOptions().
+			WithKeyRef(fmt.Sprintf("task%d", i)).
+			WithParentsRef(client.DefaultTrainTaskRef).
+			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 	appClient.RegisterTasks(newTasks...)
 

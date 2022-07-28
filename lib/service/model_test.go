@@ -58,6 +58,42 @@ func TestGetModel(t *testing.T) {
 	dbal.AssertExpectations(t)
 }
 
+func TestGetCheckedModel(t *testing.T) {
+	model := &asset.Model{
+		Permissions: &asset.Permissions{
+			Process: &asset.Permission{
+				Public:        false,
+				AuthorizedIds: []string{"worker"},
+			},
+		},
+	}
+
+	dbal := new(persistence.MockDBAL)
+	dbal.On("GetModel", "uuid").Return(model, nil)
+	dbal.On("GetModel", "unknown uuid").Return(nil, orcerrors.NewNotFound("model", "unknown uuid"))
+
+	provider := newMockedProvider()
+	provider.On("GetModelDBAL").Return(dbal)
+	provider.On("GetPermissionService").Return(NewPermissionService(provider))
+
+	service := NewModelService(provider)
+
+	var actual *asset.Model
+	var err error
+
+	actual, err = service.GetCheckedModel("uuid", "worker")
+	assert.NoError(t, err)
+	assert.Equal(t, model, actual)
+
+	actual, err = service.GetCheckedModel("unknown uuid", "worker")
+	assert.ErrorContains(t, err, "not found")
+	assert.Nil(t, actual)
+
+	actual, err = service.GetCheckedModel("uuid", "bad worker")
+	assert.ErrorContains(t, err, "not authorized")
+	assert.Nil(t, actual)
+}
+
 func TestRegisterOnNonDoingTask(t *testing.T) {
 	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()

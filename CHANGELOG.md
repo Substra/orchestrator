@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Validate task inputs (#733)
+
 ### Fixed
 
 - In standalone mode, lock the `events` table when inserting events to prevent

@@ -26,14 +26,18 @@ type DataSampleOptions struct {
 	TestOnly bool
 }
 
-type TaskInputOptions struct {
-	Identifier                 string
-	AssetRef                   string
-	ParentTaskRef              string
-	ParentTaskOutputIdentifier string
+type TaskOutputRef struct {
+	TaskRef    string
+	Identifier string
 }
 
-type TestTaskOptions struct {
+type TaskInputOptions struct {
+	Identifier string
+	TaskOutput *TaskOutputRef // either this field is set
+	AssetRef   string         //...or this field is set
+}
+
+type TrainTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
 	ParentsRef     []string
@@ -44,7 +48,7 @@ type TestTaskOptions struct {
 	Outputs        map[string]*asset.NewComputeTaskOutput
 }
 
-type TrainTaskOptions struct {
+type TestTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
 	ParentsRef     []string
@@ -62,6 +66,7 @@ type PredictTaskOptions struct {
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
+	Inputs         []*TaskInputOptions
 	Outputs        map[string]*asset.NewComputeTaskOutput
 }
 
@@ -110,6 +115,16 @@ func DefaultTestTaskOptions() *TestTaskOptions {
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
+		Inputs: []*TaskInputOptions{
+			{
+				Identifier: "opener",
+				AssetRef:   DefaultDataManagerRef,
+			},
+			{
+				Identifier: "datasamples",
+				AssetRef:   DefaultDataSampleRef,
+			},
+		},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
 			"performance": {
 				Permissions: &asset.NewPermissions{Public: true},
@@ -155,6 +170,7 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
 			},
 		},
+		Inputs:  GetNewTaskInputs(ks, o.Inputs),
 		Outputs: o.Outputs,
 	}
 }
@@ -203,36 +219,18 @@ func (o *TrainTaskOptions) WithAlgoRef(ref string) *TrainTaskOptions {
 	return o
 }
 
+func (o *TrainTaskOptions) WithOutput(identifier string, permissions *asset.NewPermissions) *TrainTaskOptions {
+	o.Outputs[identifier] = &asset.NewComputeTaskOutput{
+		Permissions: permissions,
+	}
+	return o
+}
+
 func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 
 	parentKeys := make([]string, len(o.ParentsRef))
 	for i, ref := range o.ParentsRef {
 		parentKeys[i] = ks.GetKey(ref)
-	}
-
-	inputs := make([]*asset.ComputeTaskInput, len(o.Inputs))
-	for i, in := range o.Inputs {
-
-		inputs[i] = &asset.ComputeTaskInput{
-			Identifier: in.Identifier,
-		}
-
-		if (in.AssetRef != "") && (in.ParentTaskRef != "" || in.ParentTaskOutputIdentifier != "") {
-			log.Fatal("Cannot have AssetRef and (ParentTaskRef or OutputIdentifier) at the same time.")
-		}
-
-		if in.AssetRef != "" {
-			inputs[i].Ref = &asset.ComputeTaskInput_AssetKey{
-				AssetKey: ks.GetKey(in.AssetRef),
-			}
-		} else if in.ParentTaskRef != "" {
-			inputs[i].Ref = &asset.ComputeTaskInput_ParentTaskOutput{
-				ParentTaskOutput: &asset.ParentTaskOutputRef{
-					ParentTaskKey:    ks.GetKey(in.ParentTaskRef),
-					OutputIdentifier: in.ParentTaskOutputIdentifier,
-				},
-			}
-		}
 	}
 
 	return &asset.NewComputeTask{
@@ -247,7 +245,7 @@ func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
 			},
 		},
-		Inputs:  inputs,
+		Inputs:  GetNewTaskInputs(ks, o.Inputs),
 		Outputs: o.Outputs,
 	}
 }
@@ -260,6 +258,16 @@ func DefaultPredictTaskOptions() *PredictTaskOptions {
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
+		Inputs: []*TaskInputOptions{
+			{
+				Identifier: "opener",
+				AssetRef:   DefaultDataManagerRef,
+			},
+			{
+				Identifier: "datasamples",
+				AssetRef:   DefaultDataSampleRef,
+			},
+		},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
 			"predictions": {Permissions: &asset.NewPermissions{Public: false}},
 		},
@@ -304,6 +312,7 @@ func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
 			},
 		},
+		Inputs:  GetNewTaskInputs(ks, o.Inputs),
 		Outputs: o.Outputs,
 	}
 }
@@ -316,6 +325,16 @@ func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
+		Inputs: []*TaskInputOptions{
+			{
+				Identifier: "opener",
+				AssetRef:   DefaultDataManagerRef,
+			},
+			{
+				Identifier: "datasamples",
+				AssetRef:   DefaultDataSampleRef,
+			},
+		},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
 			"shared": {Permissions: &asset.NewPermissions{Public: true}},
 			"local":  {Permissions: &asset.NewPermissions{Public: true}},
@@ -355,6 +374,7 @@ func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
 			},
 		},
+		Inputs:  GetNewTaskInputs(ks, o.Inputs),
 		Outputs: o.Outputs,
 	}
 }
@@ -366,6 +386,7 @@ func DefaultAggregateTaskOptions() *AggregateTaskOptions {
 		ParentsRef: []string{},
 		PlanRef:    DefaultPlanRef,
 		Worker:     "MyOrg1MSP",
+		Inputs:     []*TaskInputOptions{},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
 			"model": {Permissions: &asset.NewPermissions{Public: true}},
 		},
@@ -379,30 +400,6 @@ func (o *AggregateTaskOptions) WithKeyRef(ref string) *AggregateTaskOptions {
 
 func (o *AggregateTaskOptions) WithParentsRef(p ...string) *AggregateTaskOptions {
 	o.ParentsRef = p
-	return o
-}
-
-func (o *TrainTaskOptions) WithParentTaskInputRef(identifier string, parentTaskRef string, parentTaskOutputIdentifier string) *TrainTaskOptions {
-	o.Inputs = append(o.Inputs, &TaskInputOptions{
-		Identifier:                 identifier,
-		ParentTaskRef:              parentTaskRef,
-		ParentTaskOutputIdentifier: parentTaskOutputIdentifier,
-	})
-	return o
-}
-
-func (o *TrainTaskOptions) WithOutput(identifier string, permissions *asset.NewPermissions) *TrainTaskOptions {
-	o.Outputs[identifier] = &asset.NewComputeTaskOutput{
-		Permissions: permissions,
-	}
-	return o
-}
-
-func (o *TrainTaskOptions) WithAssetInputRef(identifier string, assetRef string) *TrainTaskOptions {
-	o.Inputs = append(o.Inputs, &TaskInputOptions{
-		Identifier: identifier,
-		AssetRef:   assetRef,
-	})
 	return o
 }
 
@@ -432,6 +429,7 @@ func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 				Worker: o.Worker,
 			},
 		},
+		Inputs:  GetNewTaskInputs(ks, o.Inputs),
 		Outputs: o.Outputs,
 	}
 }
@@ -440,6 +438,11 @@ func DefaultSimpleAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
 		KeyRef:   DefaultSimpleAlgoRef,
 		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Inputs: map[string]*asset.AlgoInput{
+			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			"model":       {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true, Optional: true},
+		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"model": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
@@ -450,6 +453,12 @@ func DefaultCompositeAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
 		KeyRef:   DefaultCompositeAlgoRef,
 		Category: asset.AlgoCategory_ALGO_COMPOSITE,
+		Inputs: map[string]*asset.AlgoInput{
+			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			"shared":      {Kind: asset.AssetKind_ASSET_MODEL, Optional: true},
+			"local":       {Kind: asset.AssetKind_ASSET_MODEL, Optional: true},
+		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
@@ -461,6 +470,9 @@ func DefaultAggregateAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
 		KeyRef:   DefaultAggregateAlgoRef,
 		Category: asset.AlgoCategory_ALGO_AGGREGATE,
+		Inputs: map[string]*asset.AlgoInput{
+			"model": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true, Optional: true},
+		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"model": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
@@ -471,6 +483,11 @@ func DefaultPredictAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
 		KeyRef:   DefaultPredictAlgoRef,
 		Category: asset.AlgoCategory_ALGO_PREDICT,
+		Inputs: map[string]*asset.AlgoInput{
+			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			"model":       {Kind: asset.AssetKind_ASSET_MODEL},
+		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"predictions": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
@@ -481,6 +498,11 @@ func DefaultMetricAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
 		KeyRef:   DefaultMetricAlgoRef,
 		Category: asset.AlgoCategory_ALGO_METRIC,
+		Inputs: map[string]*asset.AlgoInput{
+			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			"predictions": {Kind: asset.AssetKind_ASSET_MODEL},
+		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE},
 		},
@@ -589,4 +611,33 @@ func DefaultDataManagerOptions() *DataManagerOptions {
 func (o *DataManagerOptions) WithLogsPermission(permission *asset.NewPermissions) *DataManagerOptions {
 	o.LogsPermission = permission
 	return o
+}
+
+func GetNewTaskInputs(ks *KeyStore, inputs []*TaskInputOptions) []*asset.ComputeTaskInput {
+	res := make([]*asset.ComputeTaskInput, len(inputs))
+
+	for i, in := range inputs {
+		res[i] = &asset.ComputeTaskInput{
+			Identifier: in.Identifier,
+		}
+
+		if (in.AssetRef != "") && (in.TaskOutput != nil) {
+			log.Fatal("Cannot have AssetRef and TaskOutput at the same time.")
+		}
+
+		if in.AssetRef != "" {
+			res[i].Ref = &asset.ComputeTaskInput_AssetKey{
+				AssetKey: ks.GetKey(in.AssetRef),
+			}
+		} else {
+			res[i].Ref = &asset.ComputeTaskInput_ParentTaskOutput{
+				ParentTaskOutput: &asset.ParentTaskOutputRef{
+					ParentTaskKey:    ks.GetKey(in.TaskOutput.TaskRef),
+					OutputIdentifier: in.TaskOutput.Identifier,
+				},
+			}
+		}
+	}
+
+	return res
 }

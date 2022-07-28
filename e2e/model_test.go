@@ -60,8 +60,14 @@ func TestDeleteIntermediary(t *testing.T) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithDeleteIntermediaryModels(true))
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithParentsRef(client.DefaultTrainTaskRef))
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child2").WithParentsRef("child1"))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().
+		WithKeyRef("child1").
+		WithParentsRef(client.DefaultTrainTaskRef).
+		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().
+		WithKeyRef("child2").
+		WithParentsRef("child1").
+		WithInput("model", &client.TaskOutputRef{TaskRef: "child1", Identifier: "model"}))
 
 	// First task done
 	appClient.StartTask(client.DefaultTrainTaskRef)
@@ -86,7 +92,11 @@ func TestDeleteIntermediary(t *testing.T) {
 	models = appClient.GetTaskOutputModels(client.DefaultTrainTaskRef)
 	require.Nil(t, models[0].Address, "model has not been disabled")
 
-	_, err := appClient.FailableRegisterTasks(client.DefaultTestTaskOptions().WithKeyRef("badinput").WithParentsRef(client.DefaultTrainTaskRef))
+	_, err := appClient.FailableRegisterTasks(client.DefaultPredictTaskOptions().
+		WithKeyRef("badinput").
+		WithParentsRef(client.DefaultTrainTaskRef).
+		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
+
 	require.ErrorContains(t, err, "OE0101", "registering a task with disabled input models should fail")
 
 	log.WithError(err).Debug("Failed to register task, as expected")

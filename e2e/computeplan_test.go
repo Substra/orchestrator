@@ -58,10 +58,26 @@ func TestCancelComputePlan(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp1").WithAlgoRef("compAlgo"))
 	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp2").WithAlgoRef("compAlgo"))
 
-	appClient.RegisterTasks(client.DefaultAggregateTaskOptions().WithKeyRef("agg1").WithAlgoRef("aggAlgo").WithParentsRef("cmp1", "cmp2"))
+	appClient.RegisterTasks(client.DefaultAggregateTaskOptions().
+		WithKeyRef("agg1").
+		WithAlgoRef("aggAlgo").
+		WithParentsRef("cmp1", "cmp2").
+		WithInput("model", &client.TaskOutputRef{TaskRef: "cmp1", Identifier: "shared"}).
+		WithInput("model", &client.TaskOutputRef{TaskRef: "cmp2", Identifier: "shared"}))
 
-	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp3").WithAlgoRef("compAlgo").WithParentsRef("cmp1", "agg1"))
-	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().WithKeyRef("cmp4").WithAlgoRef("compAlgo").WithParentsRef("cmp2", "agg1"))
+	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().
+		WithKeyRef("cmp3").
+		WithAlgoRef("compAlgo").
+		WithParentsRef("cmp1", "agg1").
+		WithInput("local", &client.TaskOutputRef{TaskRef: "cmp1", Identifier: "local"}).
+		WithInput("shared", &client.TaskOutputRef{TaskRef: "agg1", Identifier: "model"}))
+
+	appClient.RegisterTasks(client.DefaultCompositeTaskOptions().
+		WithKeyRef("cmp4").
+		WithAlgoRef("compAlgo").
+		WithParentsRef("cmp2", "agg1").
+		WithInput("local", &client.TaskOutputRef{TaskRef: "cmp2", Identifier: "local"}).
+		WithInput("shared", &client.TaskOutputRef{TaskRef: "agg1", Identifier: "model"}))
 
 	// We start processing the compute plan
 	appClient.StartTask("cmp1")
@@ -139,18 +155,38 @@ func TestMultiStageComputePlan(t *testing.T) {
 	)
 	// step 2
 	appClient.RegisterTasks(
-		client.DefaultAggregateTaskOptions().WithKeyRef("aggC2").WithParentsRef("compA1", "compB1").WithAlgoRef("algoAgg"),
+		client.DefaultAggregateTaskOptions().
+			WithKeyRef("aggC2").
+			WithParentsRef("compA1", "compB1").
+			WithInput("model", &client.TaskOutputRef{TaskRef: "compA1", Identifier: "shared"}).
+			WithInput("model", &client.TaskOutputRef{TaskRef: "compB1", Identifier: "shared"}).
+			WithAlgoRef("algoAgg"),
 	)
 	// step 3
 	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("compA3").WithParentsRef("compA1", "aggC2").WithAlgoRef("algoComp"),
+		client.DefaultCompositeTaskOptions().
+			WithKeyRef("compA3").
+			WithParentsRef("compA1", "aggC2").
+			WithInput("local", &client.TaskOutputRef{TaskRef: "compA1", Identifier: "local"}).
+			WithInput("shared", &client.TaskOutputRef{TaskRef: "aggC2", Identifier: "model"}).
+			WithAlgoRef("algoComp"),
 	)
 	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("compB3").WithParentsRef("compB1", "aggC2").WithAlgoRef("algoComp"),
+		client.DefaultCompositeTaskOptions().
+			WithKeyRef("compB3").
+			WithParentsRef("compB1", "aggC2").
+			WithInput("local", &client.TaskOutputRef{TaskRef: "compB1", Identifier: "local"}).
+			WithInput("shared", &client.TaskOutputRef{TaskRef: "aggC2", Identifier: "model"}).
+			WithAlgoRef("algoComp"),
 	)
 	// step 4
 	appClient.RegisterTasks(
-		client.DefaultAggregateTaskOptions().WithKeyRef("aggC4").WithParentsRef("compA3", "compB3").WithAlgoRef("algoAgg"),
+		client.DefaultAggregateTaskOptions().
+			WithKeyRef("aggC4").
+			WithParentsRef("compA3", "compB3").
+			WithInput("model", &client.TaskOutputRef{TaskRef: "compA3", Identifier: "shared"}).
+			WithInput("model", &client.TaskOutputRef{TaskRef: "compB3", Identifier: "shared"}).
+			WithAlgoRef("algoAgg"),
 	)
 
 	lastAggregate := appClient.GetComputeTask("aggC4")
@@ -212,7 +248,10 @@ func TestLargeComputePlan(t *testing.T) {
 
 	start := time.Now()
 	for i := 0; i < nbTasks; i++ {
-		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
+		appClient.RegisterTasks(client.DefaultTrainTaskOptions().
+			WithKeyRef(fmt.Sprintf("task%d", i)).
+			WithParentsRef(client.DefaultTrainTaskRef).
+			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 	log.WithField("registrationDuration", time.Since(start)).WithField("nbTasks", nbTasks).Info("registration done")
 
@@ -246,7 +285,10 @@ func TestBatchLargeComputePlan(t *testing.T) {
 		newTasks := make([]client.Taskable, 0, batchSize)
 		for c := 0; c < batchSize && i < nbTasks; c++ {
 			i++
-			newTasks = append(newTasks, client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).WithParentsRef(client.DefaultTrainTaskRef))
+			newTasks = append(newTasks, client.DefaultTrainTaskOptions().
+				WithKeyRef(fmt.Sprintf("task%d", i)).
+				WithParentsRef(client.DefaultTrainTaskRef).
+				WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 		}
 		appClient.RegisterTasks(newTasks...)
 		log.WithField("batchDuration", time.Since(batchStart)).WithField("nbTasks", i).Info("batch done")
@@ -268,18 +310,31 @@ func TestSmallComputePlan(t *testing.T) {
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
 	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
 
 	appClient.RegisterTasks(
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
 		client.DefaultTrainTaskOptions().WithKeyRef("train2"),
-		client.DefaultTrainTaskOptions().WithKeyRef("train3").WithParentsRef("train1", "train2"),
-		client.DefaultTestTaskOptions().WithDataSampleRef("objSample").WithParentsRef("train3"),
+
+		client.DefaultTrainTaskOptions().WithKeyRef("train3").
+			WithParentsRef("train1", "train2").
+			WithInput("model", &client.TaskOutputRef{TaskRef: "train1", Identifier: "model"}).
+			WithInput("model", &client.TaskOutputRef{TaskRef: "train2", Identifier: "model"}),
+
+		client.DefaultPredictTaskOptions().WithKeyRef("predict").
+			WithParentsRef("train3").
+			WithInput("model", &client.TaskOutputRef{TaskRef: "train3", Identifier: "model"}),
+
+		client.DefaultTestTaskOptions().
+			WithDataSampleRef("objSample").
+			WithParentsRef("predict").
+			WithInput("predictions", &client.TaskOutputRef{TaskRef: "predict", Identifier: "predictions"}),
 	)
 
 	cp := appClient.GetComputePlan(client.DefaultPlanRef)
 	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_TODO, cp.Status, "unexpected plan status")
-	require.EqualValues(t, 4, cp.TaskCount, "invalid task count")
+	require.EqualValues(t, 5, cp.TaskCount, "invalid task count")
 }
 
 func TestAggregateComposite(t *testing.T) {
@@ -296,9 +351,21 @@ func TestAggregateComposite(t *testing.T) {
 	appClient.RegisterTasks(
 		client.DefaultCompositeTaskOptions().WithKeyRef("c1"),
 		client.DefaultCompositeTaskOptions().WithKeyRef("c2"),
-		client.DefaultAggregateTaskOptions().WithKeyRef("a1").WithAlgoRef("aggAlgo").WithParentsRef("c1", "c2"),
-		client.DefaultCompositeTaskOptions().WithKeyRef("c3").WithParentsRef("a1", "c1"),
-	)
+
+		client.
+			DefaultAggregateTaskOptions().
+			WithKeyRef("a1").
+			WithAlgoRef("aggAlgo").
+			WithParentsRef("c1", "c2").
+			WithInput("model", &client.TaskOutputRef{TaskRef: "c1", Identifier: "shared"}).
+			WithInput("model", &client.TaskOutputRef{TaskRef: "c2", Identifier: "shared"}),
+
+		client.
+			DefaultCompositeTaskOptions().
+			WithKeyRef("c3").
+			WithParentsRef("a1", "c1").
+			WithInput("shared", &client.TaskOutputRef{TaskRef: "a1", Identifier: "model"}).
+			WithInput("local", &client.TaskOutputRef{TaskRef: "c1", Identifier: "local"}))
 
 	appClient.StartTask("c1")
 	models := []*client.ModelOptions{
@@ -352,7 +419,12 @@ func TestFailLargeComputePlan(t *testing.T) {
 			task := client.DefaultCompositeTaskOptions().WithKeyRef(compKey).WithAlgoRef("algoComp")
 			if i > 0 {
 				// Reference previous composite and aggregate
-				task.WithParentsRef(fmt.Sprintf("compP%dR%d", pharma, i-1), fmt.Sprintf("aggR%d", i-1))
+				local := fmt.Sprintf("compP%dR%d", pharma, i-1)
+				shared := fmt.Sprintf("aggR%d", i-1)
+				task.
+					WithParentsRef(local, shared).
+					WithInput("local", &client.TaskOutputRef{TaskRef: local, Identifier: "local"}).
+					WithInput("shared", &client.TaskOutputRef{TaskRef: shared, Identifier: "model"})
 			}
 			newTasks = append(newTasks, task)
 			nbTasks++
@@ -360,7 +432,16 @@ func TestFailLargeComputePlan(t *testing.T) {
 		}
 
 		// Add aggregate
-		newTasks = append(newTasks, client.DefaultAggregateTaskOptions().WithKeyRef(fmt.Sprintf("aggR%d", i)).WithParentsRef(compKeys...).WithAlgoRef("algoAgg"))
+		agg := client.
+			DefaultAggregateTaskOptions().
+			WithKeyRef(fmt.Sprintf("aggR%d", i)).
+			WithParentsRef(compKeys...).
+			WithAlgoRef("algoAgg")
+		for _, compKey := range compKeys {
+			agg.WithInput("model", &client.TaskOutputRef{TaskRef: compKey, Identifier: "shared"})
+		}
+
+		newTasks = append(newTasks, agg)
 		nbTasks++
 
 		i++
@@ -406,8 +487,16 @@ func TestGetComputePlan(t *testing.T) {
 	// A CP with 1 parent task and 2 child tasks
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task#1").WithParentsRef(client.DefaultTrainTaskRef))
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task#2").WithParentsRef(client.DefaultTrainTaskRef))
+
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().
+		WithKeyRef("task#1").
+		WithParentsRef(client.DefaultTrainTaskRef).
+		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
+
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().
+		WithKeyRef("task#2").
+		WithParentsRef(client.DefaultTrainTaskRef).
+		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
 	expectedCounts := [7]uint32{3, 2, 1, 0, 0, 0, 0}
@@ -442,8 +531,12 @@ func TestCompositeParentChild(t *testing.T) {
 		client.DefaultCompositeTaskOptions().WithKeyRef("comp1").WithAlgoRef("algoComp"),
 	)
 	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("comp2").WithAlgoRef("algoComp").WithParentsRef("comp1", "comp1"),
-	)
+		client.DefaultCompositeTaskOptions().
+			WithKeyRef("comp2").
+			WithAlgoRef("algoComp").
+			WithParentsRef("comp1", "comp1").
+			WithInput("local", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "local"}).
+			WithInput("shared", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}))
 
 	appClient.StartTask("comp1")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1H").WithCategory(asset.ModelCategory_MODEL_HEAD))
@@ -457,8 +550,12 @@ func TestCompositeParentChild(t *testing.T) {
 
 	// Register a composite task with 2 composite parents
 	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("comp3").WithAlgoRef("algoComp").WithParentsRef("comp1", "comp2"),
-	)
+		client.DefaultCompositeTaskOptions().
+			WithKeyRef("comp3").
+			WithAlgoRef("algoComp").
+			WithParentsRef("comp1", "comp2").
+			WithInput("local", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "local"}).
+			WithInput("shared", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}))
 
 	inputs := appClient.GetInputModels("comp3")
 	require.Len(t, inputs, 2, "composite task should have 2 input models")
