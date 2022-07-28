@@ -14,6 +14,12 @@ spec:
       name: {{ include "orchestrator.migrations.fullname" . }}
     spec:
       restartPolicy: OnFailure
+      initContainers:
+      {{- if .Values.postgresql.enabled }}  {{/* TODO: enable for external pg instances too */}}
+      - name: wait-postgresql
+        image: busybox
+        command: ['sh', '-c', 'until nc -vz {{ template "postgresql.serviceName" . }}.{{ .Release.Namespace }} {{ .Values.postgresql.primary.service.ports.postgresql }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+      {{- end }}
       containers:
       - name: db-migrations
         image: {{ include "common.images.name" .Values.orchestrator.image }}
@@ -21,5 +27,4 @@ spec:
         envFrom:
         - secretRef:
             name: {{ template "orchestrator.server.fullname" . }}-secret
-
 {{- end }}

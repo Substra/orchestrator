@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [7.1.6] - 2022-07-26
+## [7.1.8] - 2022-07-28
+
+### Added
+- initContainer in the migration job to wait for postgres to be ready
+
+## [7.1.7] - 2022-07-26
 
 ### Removed
 - fabric configmap mount on /var/hyperledger/xxx
