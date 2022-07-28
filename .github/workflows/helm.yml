@@ -58,7 +58,6 @@ jobs:
         id: install
       - name: Install tools
         run: |
-          sudo snap install yq
           helm plugin install https://github.com/chartmuseum/helm-push
       - name: Add dependencies repo
         run: |
@@ -71,4 +70,4 @@ jobs:
           helm dep build charts/orchestrator
           helm package charts/orchestrator
           helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-orchestrator
-          helm cm-push orchestrator-$(yq eval .version charts/orchestrator/Chart.yaml).tgz owkin-priv
+          helm cm-push orchestrator-$(grep -e "^version" charts/orchestrator/Chart.yaml | cut -c10-).tgz owkin-priv
