@@ -51,6 +51,10 @@ func (e *sqlEvent) toEvent() (*asset.Event, error) {
 	return event, nil
 }
 
+func (d *DBAL) NewEventID() string {
+	return uuid.NewString()
+}
+
 // AddEvents insert events in storage in batch mode.
 func (d *DBAL) AddEvents(events ...*asset.Event) error {
 	log.WithField("numEvents", len(events)).Debug("dbal: adding multiple events in batch mode")

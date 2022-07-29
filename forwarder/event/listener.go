@@ -3,6 +3,8 @@
 package event
 
 import (
+	"context"
+
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -12,7 +14,7 @@ import (
 )
 
 // Handler is the signature of the chaincode event callback
-type Handler = func(*fab.CCEvent)
+type Handler = func(*fab.CCEvent) error
 
 // Listener listens to Chaincode events.
 type Listener struct {
@@ -34,6 +36,21 @@ type ListenerChaincodeData struct {
 	Chaincode string
 }
 
+// ConnectToGateway connects to the Fabric gateway using the provided ListenerChaincodeData
+func ConnectToGateway(ccData *ListenerChaincodeData, options ...gateway.Option) (*gateway.Gateway, error) {
+	label := ccData.MSPID + "-listener"
+	err := ccData.Wallet.EnsureIdentity(label, ccData.MSPID)
+	if err != nil {
+		return nil, err
+	}
+
+	return gateway.Connect(
+		gateway.WithConfig(ccData.Config),
+		gateway.WithIdentity(ccData.Wallet, label),
+		options...,
+	)
+}
+
 // NewListener instanciate a Listener listening events on the configured blockchain.
 // It filters only events emitted by the chaincode (see ledger.EventName).
 // The onEvent callback will be called for every event received.
@@ -42,12 +59,6 @@ func NewListener(
 	eventIdx Indexer,
 	handler Handler,
 ) (*Listener, error) {
-	label := ccData.MSPID + "-listener"
-	err := ccData.Wallet.EnsureIdentity(label, ccData.MSPID)
-	if err != nil {
-		return nil, err
-	}
-
 	logger := log.WithFields(
 		log.F("channel", ccData.Channel),
 		log.F("chaincode", ccData.Chaincode),
@@ -58,11 +69,10 @@ func NewListener(
 
 	logger.WithField("lastEventBlock", checkpoint.BlockNum).WithField("lastTxID", checkpoint.TxID).Debug("instanciating event listener")
 
-	gw, err := gateway.Connect(gateway.WithConfig(ccData.Config), gateway.WithIdentity(ccData.Wallet, label), gateway.WithBlockNum(checkpoint.BlockNum))
+	gw, err := ConnectToGateway(ccData, gateway.WithBlockNum(checkpoint.BlockNum))
 	if err != nil {
 		return nil, err
 	}
-
 	defer gw.Close()
 
 	network, err := gw.GetNetwork(ccData.Channel)
@@ -97,7 +107,7 @@ func (l *Listener) Close() {
 }
 
 // Listen will trigger the callback with every event received, until *Listener.Close() is called.
-func (l *Listener) Listen() {
+func (l *Listener) Listen(ctx context.Context) error {
 	checkpoint := l.eventIdx.GetLastEvent(l.channel)
 	// As a block may have multiple transactions, make sure we skip events until we reach the last seen
 	skipEvent := checkpoint.TxID != ""
@@ -111,20 +121,28 @@ func (l *Listener) Listen() {
 				log.F("txID", event.TxID),
 			)
 			skipEvent = skipEvent && event.TxID != checkpoint.TxID
-			if skipEvent || event.TxID == checkpoint.TxID {
+			if skipEvent || (event.TxID == checkpoint.TxID && !checkpoint.IsIncluded) {
 				logger.Debug("skipping previously handled event")
 				break
 			}
 
 			logger.Debug("handling event")
-			l.handler(event)
-			err := l.eventIdx.SetLastEvent(l.channel, event)
+
+			err := l.handler(event)
+			if err != nil {
+				return err
+			}
+
+			err = l.eventIdx.SetLastEvent(l.channel, event)
 			if err != nil {
 				logger.WithError(err).Error("cannot track event")
 			}
 		case <-l.done:
-			l.logger.Debug("Stop listening")
-			break
+			l.logger.Debug("Listener done: stop listening")
+			return nil
+		case <-ctx.Done():
+			l.logger.Debug("Context done: stop listening")
+			return ctx.Err()
 		}
 	}
 }

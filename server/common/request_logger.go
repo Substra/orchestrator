@@ -4,8 +4,11 @@ import (
 	"context"
 	"strings"
 
+	"errors"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // UnaryServerRequestLogger log every gRPC response
@@ -37,12 +40,35 @@ func StreamServerRequestLogger(
 	handler grpc.StreamHandler,
 ) error {
 	err := handler(srv, stream)
-	if err != nil {
-		logger.
-			Get(stream.Context()).
-			WithField("method", info.FullMethod).
-			WithError(err).
-			Error("Stream response failed")
+	if err == nil {
+		return nil
 	}
+
+	log := logger.
+		Get(stream.Context()).
+		WithField("method", info.FullMethod).
+		WithError(err)
+
+	// handle errors happening when the client terminates the server-streaming RPC
+	if errors.Is(err, context.Canceled) {
+		log.Info("interrupted: context canceled")
+		return nil
+	}
+
+	st := status.Convert(err)
+	switch st.Code() {
+	case codes.Canceled:
+		log.Info("interrupted: gRPC operation canceled")
+		return nil
+	case codes.Unavailable:
+		if st.Message() == "transport is closing" {
+			log.Infof("interrupted: %s", st.Message())
+			return nil
+		}
+	}
+
+	// handle other errors
+	log.Error("stream response failed")
+
 	return err
 }

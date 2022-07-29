@@ -5,13 +5,17 @@ import (
 	"time"
 
 	"github.com/go-playground/log/v7"
+	"github.com/google/uuid"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const eventResource = "event"
+const (
+	EventIDSeparator = ":"
+	eventResource    = "event"
+)
 
 // storableEvent is a custom representation of asset.Event to enforce storing timestamp as the number of seconds since the Epoch.
 type storableEvent struct {
@@ -82,6 +86,10 @@ func (db *DB) newEventFromStorable(s *storableEvent) (*asset.Event, error) {
 	}
 
 	return event, nil
+}
+
+func (db *DB) NewEventID() string {
+	return db.ccStub.GetTxID() + EventIDSeparator + uuid.NewString()
 }
 
 func (db *DB) addSingleEvent(event *asset.Event) error {

@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Introduce gRPC SubscribeToEvents method in distributed mode (#790)
+
 ### Changed
+
 - Validate task inputs (#733)
 
 ### Fixed

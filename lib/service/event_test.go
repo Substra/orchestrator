@@ -27,6 +27,7 @@ func TestEnqueue(t *testing.T) {
 		AssetKey:  "uuid",
 	}
 
+	dbal.On("NewEventID").Once().Return("c70d3e0e-7e0b-4638-b320-ee11f5c61055")
 	dbal.On("AddEvents", event).Once().Return(nil)
 	queue.On("Enqueue", event).Once().Return(nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))

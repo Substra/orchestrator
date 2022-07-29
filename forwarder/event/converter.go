@@ -29,7 +29,7 @@ func NewForwarder(channel string, publisher common.AMQPPublisher) *Forwarder {
 }
 
 // Forward takes a chaincode event, converts it to orchestration events and publish them as AMQP messages.
-func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
+func (f *Forwarder) Forward(ccEvent *fab.CCEvent) error {
 	payload := ccEvent.Payload
 
 	rawEvents := []json.RawMessage{}
@@ -37,7 +37,7 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 
 	if err != nil {
 		log.WithError(err).WithField("payload", string(payload)).Error("Failed to deserialize chaincode event")
-		return
+		return nil
 	}
 
 	log.WithField("num_events", len(rawEvents)).Debug("Pushing chaincode events")
@@ -65,4 +65,5 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) {
 		logger.Debug("successfully converted event")
 	}
 	f.publisher.Publish(context.Background(), f.channel, messages)
+	return nil
 }

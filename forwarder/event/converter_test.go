@@ -78,7 +78,8 @@ func TestForwardCCEvent(t *testing.T) {
 
 	publisher.On("Publish", utils.AnyContext, "testChannel", [][]byte{bytes1, bytes2}).Once().Return(nil)
 
-	forwarder.Forward(ccEvent)
+	err = forwarder.Forward(ccEvent)
+	require.NoError(t, err)
 
 	publisher.AssertExpectations(t)
 }

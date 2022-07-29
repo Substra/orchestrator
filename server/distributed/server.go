@@ -10,6 +10,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/trace"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"google.golang.org/grpc"
 )
@@ -33,7 +34,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 
 	retryInterceptor := common.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 
-	interceptor := grpc.ChainUnaryInterceptor(
+	unaryInterceptor := grpc.ChainUnaryInterceptor(
 		trace.InterceptRequestID,
 		grpc_prometheus.UnaryServerInterceptor,
 		common.UnaryServerLoggerInterceptor,
@@ -45,7 +46,18 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 		chaincodeInterceptor.Intercept,
 	)
 
-	serverOptions := append(params.GrpcOptions, interceptor)
+	chaincodeDataInterceptor := interceptors.NewChaincodeDataInterceptor(wallet, config)
+
+	streamInterceptor := grpc.ChainStreamInterceptor(
+		grpc_prometheus.StreamServerInterceptor,
+		common.StreamServerLoggerInterceptor,
+		common.StreamServerRequestLogger,
+		MSPIDInterceptor.StreamServerInterceptor,
+		channelInterceptor.StreamServerInterceptor,
+		chaincodeDataInterceptor.StreamServerInterceptor,
+	)
+
+	serverOptions := append(params.GrpcOptions, unaryInterceptor, streamInterceptor)
 
 	server := grpc.NewServer(serverOptions...)
 

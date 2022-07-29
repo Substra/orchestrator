@@ -1,6 +1,7 @@
 package event
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
@@ -20,14 +21,18 @@ func TestEventHandling(t *testing.T) {
 	listener := &Listener{
 		events: eventSource,
 		done:   done,
-		handler: func(event *fab.CCEvent) {
+		handler: func(event *fab.CCEvent) error {
 			events++
+			return nil
 		},
 		eventIdx: eventIdx,
 		channel:  "testChannel",
 	}
 
-	go listener.Listen()
+	go func() {
+		err := listener.Listen(context.TODO())
+		assert.NoError(t, err)
+	}()
 
 	event1 := &fab.CCEvent{
 		TxID: "1",
@@ -61,16 +66,20 @@ func TestEventSkipping(t *testing.T) {
 	listener := &Listener{
 		events: eventSource,
 		done:   done,
-		handler: func(event *fab.CCEvent) {
+		handler: func(event *fab.CCEvent) error {
 			if event.TxID == "4" {
 				events++
 			}
+			return nil
 		},
 		eventIdx: eventIdx,
 		channel:  "testChannel",
 	}
 
-	go listener.Listen()
+	go func() {
+		err := listener.Listen(context.TODO())
+		assert.NoError(t, err)
+	}()
 
 	// events 1-3 should be skipped
 	event1 := &fab.CCEvent{

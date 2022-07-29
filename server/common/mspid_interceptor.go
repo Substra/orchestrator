@@ -171,9 +171,9 @@ var (
 // ExtractMSPID retrieves MSPID from request context
 // MSPID is expected to be set by InterceptMSPID
 func ExtractMSPID(ctx context.Context) (string, error) {
-	invocator, ok := ctx.Value(CtxMSPIDKey).(string)
+	mspid, ok := ctx.Value(CtxMSPIDKey).(string)
 	if !ok {
 		return "", errors.NewInternal("MSPID not found in context")
 	}
-	return invocator, nil
+	return mspid, nil
 }

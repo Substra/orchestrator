@@ -166,8 +166,8 @@ func TestSubscribeWithoutStartEventID(t *testing.T) {
 // This check is made on a stream of events containing replayed events but also
 // events that are emitted while listening.
 func TestSubscribeCheckEventStreamConsistency(t *testing.T) {
-	client1 := factory.WithChannel("mychannel").NewTestClient()
-	client2 := factory.WithChannel("yourchannel").NewTestClient()
+	client1 := factory.WithChaincode("mycc").WithChannel("mychannel").NewTestClient()
+	client2 := factory.WithChaincode("yourcc").WithChannel("yourchannel").NewTestClient()
 
 	algo := client1.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	client2.RegisterAlgo(client.DefaultSimpleAlgoOptions())

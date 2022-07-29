@@ -17,8 +17,9 @@ type Indexer interface {
 }
 
 type IndexedEvent struct {
-	BlockNum uint64
-	TxID     string
+	BlockNum   uint64
+	TxID       string
+	IsIncluded bool // whether the bound must be included when listing events from this event
 }
 
 // Index implements Indexer by writing events in a file.

@@ -161,6 +161,15 @@ func (f *TestClientFactory) WithChannel(channel string) *TestClientFactory {
 	}
 }
 
+func (f *TestClientFactory) WithChaincode(chaincode string) *TestClientFactory {
+	return &TestClientFactory{
+		conn:      f.conn,
+		mspid:     f.mspid,
+		channel:   f.channel,
+		chaincode: chaincode,
+	}
+}
+
 func (c *TestClient) WithKeyStore(ks *KeyStore) *TestClient {
 	c.ks = ks
 	return c

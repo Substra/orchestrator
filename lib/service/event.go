@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/google/uuid"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/event"
@@ -36,7 +35,7 @@ func NewEventService(provider EventDependencyProvider) *EventService {
 // RegisterEvents assigns an ID to each event and persist them.
 func (s *EventService) RegisterEvents(events ...*asset.Event) error {
 	for _, e := range events {
-		e.Id = uuid.NewString()
+		e.Id = s.GetEventDBAL().NewEventID()
 		e.Timestamp = timestamppb.New(s.GetTimeService().GetTransactionTime())
 		err := s.GetEventQueue().Enqueue(e)
 		if err != nil {

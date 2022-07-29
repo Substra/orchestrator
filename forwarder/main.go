@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -121,7 +122,10 @@ func listenToChannel(ccData event.ListenerChaincodeData, forwarder *event.Forwar
 	defer listener.Close()
 	log.WithField("channel", ccData.Channel).WithField("chaincode", ccData.Chaincode).Info("Listening to channel events")
 
-	listener.Listen()
+	err := listener.Listen(context.Background())
+	if err != nil {
+		log.WithError(err).Error("listen has failed")
+	}
 }
 
 func getConf(path string) *forwarderConf {

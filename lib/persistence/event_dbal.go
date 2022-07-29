@@ -6,6 +6,7 @@ import (
 )
 
 type EventDBAL interface {
+	NewEventID() string
 	AddEvents(events ...*asset.Event) error
 	QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error)
 }
