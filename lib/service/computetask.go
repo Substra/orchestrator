@@ -21,7 +21,7 @@ var (
 	taskIOPredictions = "predictions"
 )
 
-type NamedAlgoOutputs = map[string]*asset.AlgoOutput
+type namedAlgoOutputs = map[string]*asset.AlgoOutput
 
 // ComputeTaskAPI defines the methods to act on ComputeTasks
 type ComputeTaskAPI interface {
@@ -479,11 +479,7 @@ func (s *ComputeTaskService) validateDataManagerInput(dataManagerInput *asset.Co
 
 	// Check permissions + check datasamples are compatible with data manager
 	_, err := s.GetDataManagerService().GetCheckedDataManager(dmKey, dsKeys, owner)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // validateInputRef validates that the asset referenced by the input exist and is of the correct kind
@@ -544,7 +540,7 @@ func (s *ComputeTaskService) validateInputRef(algoInput *asset.AlgoInput, taskIn
 func (s *ComputeTaskService) validateOutputs(
 	taskKey string,
 	computeTaskOutputs map[string]*asset.ComputeTaskOutput,
-	algoOutputs NamedAlgoOutputs,
+	algoOutputs namedAlgoOutputs,
 ) error {
 	seen := make(map[string]bool, len(algoOutputs))
 
