@@ -27,7 +27,6 @@ type ComputePlanServiceProvider interface {
 type ComputePlanDependencyProvider interface {
 	LoggerProvider
 	persistence.ComputePlanDBALProvider
-	persistence.ComputeTaskDBALProvider
 	EventServiceProvider
 	ComputeTaskServiceProvider
 	TimeServiceProvider

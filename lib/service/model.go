@@ -31,8 +31,6 @@ type ModelServiceProvider interface {
 type ModelDependencyProvider interface {
 	LoggerProvider
 	persistence.ModelDBALProvider
-	persistence.AlgoDBALProvider
-	persistence.DataManagerDBALProvider
 	PermissionServiceProvider
 	ComputeTaskServiceProvider
 	ComputePlanServiceProvider
