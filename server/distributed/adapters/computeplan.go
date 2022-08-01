@@ -1,9 +1,10 @@
-package distributed
+package adapters
 
 import (
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // ComputePlanAdapter is a grpc server exposing the same plan interface,
@@ -18,7 +19,7 @@ func NewComputePlanAdapter() *ComputePlanAdapter {
 }
 
 func (a *ComputePlanAdapter) RegisterPlan(ctx context.Context, in *asset.NewComputePlan) (*asset.ComputePlan, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func (a *ComputePlanAdapter) RegisterPlan(ctx context.Context, in *asset.NewComp
 }
 
 func (a *ComputePlanAdapter) GetPlan(ctx context.Context, param *asset.GetComputePlanParam) (*asset.ComputePlan, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +47,7 @@ func (a *ComputePlanAdapter) GetPlan(ctx context.Context, param *asset.GetComput
 }
 
 func (a *ComputePlanAdapter) QueryPlans(ctx context.Context, param *asset.QueryPlansParam) (*asset.QueryPlansResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func (a *ComputePlanAdapter) QueryPlans(ctx context.Context, param *asset.QueryP
 }
 
 func (a *ComputePlanAdapter) ApplyPlanAction(ctx context.Context, param *asset.ApplyPlanActionParam) (*asset.ApplyPlanActionResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

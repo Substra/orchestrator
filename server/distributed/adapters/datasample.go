@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // DataSampleAdapter is a grpc server exposing the same datasample interface,
@@ -21,7 +22,7 @@ func NewDataSampleAdapter() *DataSampleAdapter {
 
 // RegisterDataSamples will add a new DataSample to the state
 func (a *DataSampleAdapter) RegisterDataSamples(ctx context.Context, param *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +51,7 @@ func (a *DataSampleAdapter) RegisterDataSamples(ctx context.Context, param *asse
 
 // UpdateDataSamples will update a DataSample from the state
 func (a *DataSampleAdapter) UpdateDataSamples(ctx context.Context, param *asset.UpdateDataSamplesParam) (*asset.UpdateDataSamplesResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +64,7 @@ func (a *DataSampleAdapter) UpdateDataSamples(ctx context.Context, param *asset.
 
 // QueryDataSamples returns all DataSamples
 func (a *DataSampleAdapter) QueryDataSamples(ctx context.Context, param *asset.QueryDataSamplesParam) (*asset.QueryDataSamplesResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +78,7 @@ func (a *DataSampleAdapter) QueryDataSamples(ctx context.Context, param *asset.Q
 
 // GetDataSample returns a datasample from its key
 func (a *DataSampleAdapter) GetDataSample(ctx context.Context, param *asset.GetDataSampleParam) (*asset.DataSample, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

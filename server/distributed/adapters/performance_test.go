@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -21,13 +23,13 @@ func TestRegisterPerformance(t *testing.T) {
 	adapter := NewPerformanceAdapter()
 
 	newCtx := context.TODO()
-	invocator := &mockedInvocator{}
+	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.NewPerformance{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.performance:RegisterPerformance", param, &asset.Performance{}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.RegisterPerformance(ctx, param)
 
@@ -38,13 +40,13 @@ func TestQueryPerformances(t *testing.T) {
 	adapter := NewPerformanceAdapter()
 
 	newCtx := context.TODO()
-	invocator := &mockedInvocator{}
+	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.QueryPerformancesParam{PageToken: "uuid", PageSize: 20}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.performance:QueryPerformances", param, &asset.QueryPerformancesResponse{}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.QueryPerformances(ctx, param)
 
@@ -54,8 +56,8 @@ func TestQueryPerformances(t *testing.T) {
 func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 	adapter := NewPerformanceAdapter()
 
-	newCtx := common.WithLastError(context.Background(), fabricTimeout)
-	invocator := &mockedInvocator{}
+	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	invocator := &chaincode.MockInvocator{}
 
 	newPerf := &asset.NewPerformance{
 		ComputeTaskKey: "taskUuid",
@@ -96,7 +98,7 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 		}
 	}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.RegisterPerformance(ctx, newPerf)
 

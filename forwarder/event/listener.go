@@ -10,7 +10,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 	"github.com/owkin/orchestrator/chaincode/ledger"
-	"github.com/owkin/orchestrator/server/distributed/wallet"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
 )
 
 // Handler is the signature of the chaincode event callback
@@ -29,7 +29,7 @@ type Listener struct {
 }
 
 type ListenerChaincodeData struct {
-	Wallet    *wallet.Wallet
+	Wallet    *chaincode.Wallet
 	Config    core.ConfigProvider
 	MSPID     string
 	Channel   string

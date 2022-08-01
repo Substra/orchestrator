@@ -1,7 +1,6 @@
 package distributed
 
 import (
-	"context"
 	"time"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -10,21 +9,22 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/trace"
+	"github.com/owkin/orchestrator/server/distributed/adapters"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/owkin/orchestrator/server/distributed/interceptors"
-	"github.com/owkin/orchestrator/server/distributed/wallet"
 	"google.golang.org/grpc"
 )
 
 type AppServer struct {
-	grpc          *grpc.Server
-	ccInterceptor *Interceptor
+	grpc                 *grpc.Server
+	invocatorInterceptor *interceptors.InvocatorInterceptor
 }
 
 func GetServer(networkConfig string, certificate string, key string, gatewayTimeout time.Duration, params common.AppParameters) (*AppServer, error) {
-	wallet := wallet.New(certificate, key)
+	wallet := chaincode.NewWallet(certificate, key)
 	config := config.FromFile(networkConfig)
 
-	chaincodeInterceptor := NewInterceptor(config, wallet, gatewayTimeout)
+	invocatorInterceptor := interceptors.NewInvocatorInterceptor(config, wallet, gatewayTimeout)
 
 	channelInterceptor := common.NewChannelInterceptor(params.Config)
 	MSPIDInterceptor, err := common.NewMSPIDInterceptor()
@@ -43,7 +43,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 		MSPIDInterceptor.UnaryServerInterceptor,
 		channelInterceptor.UnaryServerInterceptor,
 		retryInterceptor.Intercept,
-		chaincodeInterceptor.Intercept,
+		invocatorInterceptor.UnaryServerInterceptor,
 	)
 
 	chaincodeDataInterceptor := interceptors.NewChaincodeDataInterceptor(wallet, config)
@@ -62,20 +62,20 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 	server := grpc.NewServer(serverOptions...)
 
 	// Register application services
-	asset.RegisterOrganizationServiceServer(server, NewOrganizationAdapter())
-	asset.RegisterDataSampleServiceServer(server, NewDataSampleAdapter())
-	asset.RegisterAlgoServiceServer(server, NewAlgoAdapter())
-	asset.RegisterDataManagerServiceServer(server, NewDataManagerAdapter())
-	asset.RegisterDatasetServiceServer(server, NewDatasetAdapter())
-	asset.RegisterComputeTaskServiceServer(server, NewComputeTaskAdapter())
-	asset.RegisterModelServiceServer(server, NewModelAdapter())
-	asset.RegisterComputePlanServiceServer(server, NewComputePlanAdapter())
-	asset.RegisterPerformanceServiceServer(server, NewPerformanceAdapter())
-	asset.RegisterEventServiceServer(server, NewEventAdapter())
-	asset.RegisterInfoServiceServer(server, NewInfoAdapter())
-	asset.RegisterFailureReportServiceServer(server, NewFailureReportAdapter())
+	asset.RegisterOrganizationServiceServer(server, adapters.NewOrganizationAdapter())
+	asset.RegisterDataSampleServiceServer(server, adapters.NewDataSampleAdapter())
+	asset.RegisterAlgoServiceServer(server, adapters.NewAlgoAdapter())
+	asset.RegisterDataManagerServiceServer(server, adapters.NewDataManagerAdapter())
+	asset.RegisterDatasetServiceServer(server, adapters.NewDatasetAdapter())
+	asset.RegisterComputeTaskServiceServer(server, adapters.NewComputeTaskAdapter())
+	asset.RegisterModelServiceServer(server, adapters.NewModelAdapter())
+	asset.RegisterComputePlanServiceServer(server, adapters.NewComputePlanAdapter())
+	asset.RegisterPerformanceServiceServer(server, adapters.NewPerformanceAdapter())
+	asset.RegisterEventServiceServer(server, adapters.NewEventAdapter())
+	asset.RegisterInfoServiceServer(server, adapters.NewInfoAdapter())
+	asset.RegisterFailureReportServiceServer(server, adapters.NewFailureReportAdapter())
 
-	return &AppServer{server, chaincodeInterceptor}, nil
+	return &AppServer{server, invocatorInterceptor}, nil
 }
 
 func (a *AppServer) GetGrpcServer() *grpc.Server {
@@ -84,7 +84,7 @@ func (a *AppServer) GetGrpcServer() *grpc.Server {
 
 func (a *AppServer) Stop() {
 	a.grpc.Stop()
-	a.ccInterceptor.Close()
+	a.invocatorInterceptor.Close()
 }
 
 // shouldRetry will trigger a retry on specific orchestration error.
@@ -96,15 +96,4 @@ func shouldRetry(err error) bool {
 	default:
 		return false
 	}
-}
-
-// isTimeoutRetry will return true if we are in a retry and the last error was a fabric timeout
-func isFabricTimeoutRetry(ctx context.Context) bool {
-	prevErr := common.GetLastError(ctx)
-	if prevErr == nil {
-		return false
-	}
-
-	st, ok := status.FromError(prevErr)
-	return ok && st.Code == int32(status.Timeout)
 }

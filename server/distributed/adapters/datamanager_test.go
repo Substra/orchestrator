@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -20,7 +22,7 @@ func TestRegisterDatamanager(t *testing.T) {
 	}
 
 	newCtx := context.TODO()
-	invocator := &mockedInvocator{}
+	invocator := &chaincode.MockInvocator{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
 		Once().
@@ -31,7 +33,7 @@ func TestRegisterDatamanager(t *testing.T) {
 		}).
 		Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	dm, err := adapter.RegisterDataManager(ctx, newObj)
 	assert.NoError(t, err, "Registration should pass")
@@ -47,8 +49,8 @@ func TestHandleDatamanagerConflictAfterTimeout(t *testing.T) {
 		Key: "uuid",
 	}
 
-	newCtx := common.WithLastError(context.Background(), fabricTimeout)
-	invocator := &mockedInvocator{}
+	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	invocator := &chaincode.MockInvocator{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).
 		Once().
@@ -57,7 +59,7 @@ func TestHandleDatamanagerConflictAfterTimeout(t *testing.T) {
 		Once().
 		Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.RegisterDataManager(ctx, newObj)
 	assert.NoError(t, err, "Registration should pass")

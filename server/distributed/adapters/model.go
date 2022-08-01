@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // ModelAdapter is a grpc server exposing the same Model interface,
@@ -20,7 +21,7 @@ func NewModelAdapter() *ModelAdapter {
 }
 
 func (a *ModelAdapter) RegisterModel(ctx context.Context, newModel *asset.NewModel) (*asset.Model, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func (a *ModelAdapter) RegisterModel(ctx context.Context, newModel *asset.NewMod
 }
 
 func (a *ModelAdapter) GetModel(ctx context.Context, param *asset.GetModelParam) (*asset.Model, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +58,7 @@ func (a *ModelAdapter) GetModel(ctx context.Context, param *asset.GetModelParam)
 
 // QueryModels returns all known models
 func (a *ModelAdapter) QueryModels(ctx context.Context, query *asset.QueryModelsParam) (*asset.QueryModelsResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +72,7 @@ func (a *ModelAdapter) QueryModels(ctx context.Context, query *asset.QueryModels
 }
 
 func (a *ModelAdapter) GetComputeTaskOutputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +89,7 @@ func (a *ModelAdapter) GetComputeTaskOutputModels(ctx context.Context, param *as
 }
 
 func (a *ModelAdapter) GetComputeTaskInputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func (a *ModelAdapter) GetComputeTaskInputModels(ctx context.Context, param *ass
 }
 
 func (a *ModelAdapter) CanDisableModel(ctx context.Context, param *asset.CanDisableModelParam) (*asset.CanDisableModelResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +123,7 @@ func (a *ModelAdapter) CanDisableModel(ctx context.Context, param *asset.CanDisa
 }
 
 func (a *ModelAdapter) DisableModel(ctx context.Context, param *asset.DisableModelParam) (*asset.DisableModelResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +138,7 @@ func (a *ModelAdapter) DisableModel(ctx context.Context, param *asset.DisableMod
 }
 
 func (a *ModelAdapter) RegisterModels(ctx context.Context, param *asset.RegisterModelsParam) (*asset.RegisterModelsResponse, error) {
-	Invocator, err := ExtractInvocator(ctx)
+	Invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

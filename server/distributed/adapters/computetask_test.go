@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,13 +22,13 @@ func TestRegisterTasks(t *testing.T) {
 	adapter := NewComputeTaskAdapter()
 
 	newCtx := context.TODO()
-	invocator := &mockedInvocator{}
+	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.RegisterTasksParam{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.RegisterTasks(ctx, param)
 
@@ -37,13 +39,13 @@ func TestQueryTasks(t *testing.T) {
 	adapter := NewComputeTaskAdapter()
 
 	newCtx := context.TODO()
-	invocator := &mockedInvocator{}
+	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.QueryTasksParam{PageToken: "uuid", PageSize: 20}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:QueryTasks", param, &asset.QueryTasksResponse{}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.QueryTasks(ctx, param)
 
@@ -53,8 +55,8 @@ func TestQueryTasks(t *testing.T) {
 func TestHandleTasksConflictAfterTimeout(t *testing.T) {
 	adapter := NewComputeTaskAdapter()
 
-	newCtx := common.WithLastError(context.Background(), fabricTimeout)
-	invocator := &mockedInvocator{}
+	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.RegisterTasksParam{
 		Tasks: []*asset.NewComputeTask{
@@ -68,7 +70,7 @@ func TestHandleTasksConflictAfterTimeout(t *testing.T) {
 	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:GetTask", &asset.GetTaskParam{Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"}, &asset.ComputeTask{}).
 		Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.RegisterTasks(ctx, param)
 
@@ -78,8 +80,8 @@ func TestHandleTasksConflictAfterTimeout(t *testing.T) {
 func TestHandleTasksBatchConflictAfterTimeout(t *testing.T) {
 	adapter := NewComputeTaskAdapter()
 
-	newCtx := common.WithLastError(context.Background(), fabricTimeout)
-	invocator := &mockedInvocator{}
+	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.RegisterTasksParam{
 		Tasks: []*asset.NewComputeTask{{}, {}, {}},
@@ -87,7 +89,7 @@ func TestHandleTasksBatchConflictAfterTimeout(t *testing.T) {
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.computetask:RegisterTasks", param, &asset.RegisterTasksResponse{}).Return(errors.NewError(errors.ErrConflict, "test"))
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.RegisterTasks(ctx, param)
 

@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // ComputeTaskAdapter is a grpc server exposing the same task interface,
@@ -21,7 +22,7 @@ func NewComputeTaskAdapter() *ComputeTaskAdapter {
 
 // RegisterTasks processes a batch of new tasks to add them to a compute plan
 func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +51,7 @@ func (a *ComputeTaskAdapter) RegisterTasks(ctx context.Context, input *asset.Reg
 
 // GetTask returns a task from its key
 func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.GetTaskParam) (*asset.ComputeTask, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +66,7 @@ func (a *ComputeTaskAdapter) GetTask(ctx context.Context, query *asset.GetTaskPa
 
 // QueryTasks returns tasks matching the selection criteria
 func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryTasksParam) (*asset.QueryTasksResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +81,7 @@ func (a *ComputeTaskAdapter) QueryTasks(ctx context.Context, param *asset.QueryT
 
 // ApplyTaskAction updates a task status
 func (a *ComputeTaskAdapter) ApplyTaskAction(ctx context.Context, param *asset.ApplyTaskActionParam) (*asset.ApplyTaskActionResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

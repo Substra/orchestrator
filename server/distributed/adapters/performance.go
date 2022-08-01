@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // PerformanceAdapter is a grpc server exposing the same Performance interface than standalone mode,
@@ -20,7 +21,7 @@ func NewPerformanceAdapter() *PerformanceAdapter {
 }
 
 func (a *PerformanceAdapter) RegisterPerformance(ctx context.Context, newPerf *asset.NewPerformance) (*asset.Performance, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,7 @@ func (a *PerformanceAdapter) RegisterPerformance(ctx context.Context, newPerf *a
 }
 
 func (a *PerformanceAdapter) QueryPerformances(ctx context.Context, param *asset.QueryPerformancesParam) (*asset.QueryPerformancesResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

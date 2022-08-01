@@ -6,8 +6,8 @@ As explained in the [overview](./architecture.md), asset handling is done throug
 
 - a protobuf definition in `lib/asset/<asset>.proto`
 - a service definition in `lib/service/<asset>.go`
-- a standalone grpc server in `server/standalone/<asset>.go`
-- a distributed grpc server in `server/distributed/<asset>.go`
+- a standalone gRPC server in `server/standalone/handlers/<asset>.go`
+- a distributed gRPC server in `server/distributed/adapters/<asset>.go`
 - a smart contract as a `chaincode` submodule
 
 ## Step by step implementation
@@ -79,7 +79,7 @@ There are also generated helpers (prefixed with `Mock`) in `github.com/owkin/orc
 
 ### 4. Create the standalone gRPC server
 
-Define a gRPC server in `server/standalone/<asset>.go`, it should implement `assets.AssetServiceServer` (interface generated from the protobuf).
+Define a gRPC server in `server/standalone/handlers/<asset>.go`, it should implement `assets.AssetServiceServer` (interface generated from the protobuf).
 
 The first thing to do in a standalone handler is to wait for an execution token.
 A scheduler makes sure no more than one handler at a time is processing a request.
@@ -131,7 +131,7 @@ That way, the *Invocator* (more below) can transparently handle the serializatio
 
 #### gRPC adapter
 
-gRPC service relying on chaincode is defined in `server/distributed/<asset>.go`
+gRPC service relying on chaincode is defined in `server/distributed/adapters/<asset>.go`
 
 This is done the same way as for the standalone mode, except that there is a chaincode invocation instead of orchestration logic.
 
@@ -154,4 +154,4 @@ func (a *AssetAdapter) DoSomething(ctx context.Context, input *assets.AssetDoSom
 }
 ```
 
-The new gRPC service can be registered into the gRPC server: this happen in the `server/distributed/server.go` file somewhere in the *GetServer* function.
+The new gRPC service can be registered into the gRPC server: this happens in the `server/distributed/server.go` file somewhere in the *GetServer* function.

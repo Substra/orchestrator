@@ -1,9 +1,10 @@
-package distributed
+package adapters
 
 import (
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // DatasetAdapter is a grpc server exposing the same dataset interface,
@@ -19,7 +20,7 @@ func NewDatasetAdapter() *DatasetAdapter {
 
 // GetDataset fetches a dataset by its key
 func (s *DatasetAdapter) GetDataset(ctx context.Context, params *asset.GetDatasetParam) (*asset.Dataset, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

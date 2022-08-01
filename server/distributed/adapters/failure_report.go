@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // FailureReportAdapter is a gRPC server exposing the same FailureReport interface,
@@ -20,7 +21,7 @@ func NewFailureReportAdapter() *FailureReportAdapter {
 }
 
 func (a *FailureReportAdapter) RegisterFailureReport(ctx context.Context, newFailureReport *asset.NewFailureReport) (*asset.FailureReport, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func (a *FailureReportAdapter) RegisterFailureReport(ctx context.Context, newFai
 }
 
 func (a *FailureReportAdapter) GetFailureReport(ctx context.Context, param *asset.GetFailureReportParam) (*asset.FailureReport, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

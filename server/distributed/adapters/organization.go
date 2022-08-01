@@ -1,9 +1,10 @@
-package distributed
+package adapters
 
 import (
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // OrganizationAdapter is a grpc server exposing the same organization interface,
@@ -19,7 +20,7 @@ func NewOrganizationAdapter() *OrganizationAdapter {
 
 // RegisterOrganization will add a new organization to the network
 func (a *OrganizationAdapter) RegisterOrganization(ctx context.Context, in *asset.RegisterOrganizationParam) (*asset.Organization, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +35,7 @@ func (a *OrganizationAdapter) RegisterOrganization(ctx context.Context, in *asse
 
 // GetAllOrganizations will return all known organizations
 func (a *OrganizationAdapter) GetAllOrganizations(ctx context.Context, in *asset.GetAllOrganizationsParam) (*asset.GetAllOrganizationsResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package gateway
+package chaincode
 
 import (
 	"context"

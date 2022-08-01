@@ -1,10 +1,11 @@
-package distributed
+package adapters
 
 import (
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 type InfoAdapter struct {
@@ -16,7 +17,7 @@ func NewInfoAdapter() *InfoAdapter {
 }
 
 func (a *InfoAdapter) QueryVersion(ctx context.Context, in *asset.QueryVersionParam) (*asset.QueryVersionResponse, error) {
-	Invocator, err := ExtractInvocator(ctx)
+	Invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -4,22 +4,37 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/owkin/orchestrator/server/common"
-	"google.golang.org/grpc/metadata"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/owkin/orchestrator/forwarder/event"
-	"github.com/owkin/orchestrator/server/distributed/wallet"
+	"github.com/owkin/orchestrator/server/common"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
+const headerChaincode = "chaincode"
+
+func extractChaincodeName(ctx context.Context) (string, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return "", errors.New("could not extract metadata")
+	}
+
+	if len(md.Get(headerChaincode)) != 1 {
+		return "", fmt.Errorf("missing or invalid header '%s'", headerChaincode)
+	}
+
+	return md.Get(headerChaincode)[0], nil
+}
+
 type ChaincodeDataInterceptor struct {
-	wallet *wallet.Wallet
+	wallet *chaincode.Wallet
 	config core.ConfigProvider
 }
 
 func NewChaincodeDataInterceptor(
-	wallet *wallet.Wallet,
+	wallet *chaincode.Wallet,
 	config core.ConfigProvider,
 ) *ChaincodeDataInterceptor {
 	return &ChaincodeDataInterceptor{
@@ -27,8 +42,6 @@ func NewChaincodeDataInterceptor(
 		config: config,
 	}
 }
-
-const headerChaincode = "chaincode"
 
 func (i *ChaincodeDataInterceptor) StreamServerInterceptor(
 	srv interface{},
@@ -48,25 +61,17 @@ func (i *ChaincodeDataInterceptor) StreamServerInterceptor(
 		return err
 	}
 
-	// TODO: factor metadata retrieval with
-	// 	server/distributed/interceptors.go:64
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return errors.New("could not extract metadata")
+	chaincodeName, err := extractChaincodeName(ctx)
+	if err != nil {
+		return err
 	}
-
-	if len(md.Get(headerChaincode)) != 1 {
-		return fmt.Errorf("missing or invalid header '%s'", headerChaincode)
-	}
-
-	chaincode := md.Get(headerChaincode)[0]
 
 	ccData := &event.ListenerChaincodeData{
 		Wallet:    i.wallet,
 		Config:    i.config,
 		MSPID:     mspid,
 		Channel:   channel,
-		Chaincode: chaincode,
+		Chaincode: chaincodeName,
 	}
 	newCtx := WithChaincodeData(ctx, ccData)
 	streamWithContext := common.BindStreamToContext(newCtx, stream)

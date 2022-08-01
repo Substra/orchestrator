@@ -1,4 +1,4 @@
-package distributed
+package chaincode
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/owkin/orchestrator/chaincode/communication"
 	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/distributed/gateway"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -19,13 +18,13 @@ type Invocator interface {
 
 // ContractInvocator implements the Invocator interface.
 type ContractInvocator struct {
-	requester gateway.ChaincodeRequester
+	requester Requester
 	channel   string
 	chaincode string
 }
 
 // NewContractInvocator creates an Invocator based on given smart contract.
-func NewContractInvocator(requester gateway.ChaincodeRequester, channel, chaincode string) *ContractInvocator {
+func NewContractInvocator(requester Requester, channel, chaincode string) *ContractInvocator {
 	return &ContractInvocator{requester, channel, chaincode}
 }
 

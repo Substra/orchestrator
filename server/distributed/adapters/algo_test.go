@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,11 +26,11 @@ func TestRegisterAlgo(t *testing.T) {
 	}
 
 	newCtx := context.TODO()
-	invocator := &mockedInvocator{}
+	invocator := &chaincode.MockInvocator{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.RegisterAlgo(ctx, newObj)
 
@@ -39,13 +41,13 @@ func TestGetAlgo(t *testing.T) {
 	adapter := NewAlgoAdapter()
 
 	newCtx := context.TODO()
-	invocator := &mockedInvocator{}
+	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.GetAlgoParam{Key: "uuid"}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.algo:GetAlgo", param, &asset.Algo{}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.GetAlgo(ctx, param)
 
@@ -56,13 +58,13 @@ func TestQueryAlgos(t *testing.T) {
 	adapter := NewAlgoAdapter()
 
 	newCtx := context.TODO()
-	invocator := &mockedInvocator{}
+	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.QueryAlgosParam{PageToken: "uuid", PageSize: 20}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.algo:QueryAlgos", param, &asset.QueryAlgosResponse{}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.QueryAlgos(ctx, param)
 
@@ -76,14 +78,14 @@ func TestHandleAlgoConflictAfterTimeout(t *testing.T) {
 		Key: "uuid",
 	}
 
-	newCtx := common.WithLastError(context.Background(), fabricTimeout)
-	invocator := &mockedInvocator{}
+	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	invocator := &chaincode.MockInvocator{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.algo:RegisterAlgo", newObj, &asset.Algo{}).Return(errors.NewError(errors.ErrConflict, "test"))
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.algo:GetAlgo", &asset.GetAlgoParam{Key: newObj.Key}, &asset.Algo{}).Return(nil)
 
-	ctx := context.WithValue(newCtx, ctxInvocatorKey, invocator)
+	ctx := interceptors.WithInvocator(newCtx, invocator)
 
 	_, err := adapter.RegisterAlgo(ctx, newObj)
 

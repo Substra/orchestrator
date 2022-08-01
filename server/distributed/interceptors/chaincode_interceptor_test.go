@@ -1,18 +1,18 @@
-package distributed
+package interceptors
 
 import (
 	"context"
 	"testing"
 
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestExtractInvocator(t *testing.T) {
 	ctx := context.TODO()
 
-	i := &mockedInvocator{}
-
-	ctxWithInvocator := context.WithValue(ctx, ctxInvocatorKey, i)
+	i := &chaincode.MockInvocator{}
+	ctxWithInvocator := WithInvocator(ctx, i)
 
 	extracted, err := ExtractInvocator(ctxWithInvocator)
 	assert.NoError(t, err, "extraction should not fail")

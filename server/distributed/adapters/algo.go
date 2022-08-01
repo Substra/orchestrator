@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // AlgoAdapter is a grpc server exposing the same algo interface than standalone,
@@ -21,7 +22,7 @@ func NewAlgoAdapter() *AlgoAdapter {
 
 // RegisterAlgo will add a new Algo to the network
 func (a *AlgoAdapter) RegisterAlgo(ctx context.Context, in *asset.NewAlgo) (*asset.Algo, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func (a *AlgoAdapter) RegisterAlgo(ctx context.Context, in *asset.NewAlgo) (*ass
 
 // GetAlgo returns an algo from its key
 func (a *AlgoAdapter) GetAlgo(ctx context.Context, query *asset.GetAlgoParam) (*asset.Algo, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +60,7 @@ func (a *AlgoAdapter) GetAlgo(ctx context.Context, query *asset.GetAlgoParam) (*
 
 // QueryAlgos returns all known algos
 func (a *AlgoAdapter) QueryAlgos(ctx context.Context, query *asset.QueryAlgosParam) (*asset.QueryAlgosResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

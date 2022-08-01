@@ -15,7 +15,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/owkin/orchestrator/forwarder/event"
 	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/distributed/wallet"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/yaml.v2"
@@ -52,7 +52,7 @@ func main() {
 	session := common.NewSession(rabbitDSN)
 	defer session.Close()
 
-	wallet := wallet.New(mustGetEnv("FABRIC_CERT"), mustGetEnv("FABRIC_KEY"))
+	wallet := chaincode.NewWallet(mustGetEnv("FABRIC_CERT"), mustGetEnv("FABRIC_KEY"))
 
 	config := config.FromFile(networkConfig)
 	log.Info("network config loaded")

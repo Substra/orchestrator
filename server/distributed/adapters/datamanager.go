@@ -1,4 +1,4 @@
-package distributed
+package adapters
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/distributed/interceptors"
 )
 
 // DataManagerAdapter is a grpc server exposing the same dataManager interface,
@@ -21,7 +22,7 @@ func NewDataManagerAdapter() *DataManagerAdapter {
 
 // RegisterDataManager will persist new DataManagers
 func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.DataManager, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +45,7 @@ func (s *DataManagerAdapter) RegisterDataManager(ctx context.Context, d *asset.N
 
 // GetDataManager fetches a datamanager by its key
 func (s *DataManagerAdapter) GetDataManager(ctx context.Context, params *asset.GetDataManagerParam) (*asset.DataManager, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +59,7 @@ func (s *DataManagerAdapter) GetDataManager(ctx context.Context, params *asset.G
 
 // QueryDataManagers returns a paginated list of all known datamanagers
 func (s *DataManagerAdapter) QueryDataManagers(ctx context.Context, params *asset.QueryDataManagersParam) (*asset.QueryDataManagersResponse, error) {
-	invocator, err := ExtractInvocator(ctx)
+	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}

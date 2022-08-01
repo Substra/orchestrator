@@ -1,6 +1,4 @@
-// Package gateway contains the abstraction over fabric's gateway API.
-// It exposes structures to reuse the gateway in long-running processes.
-package gateway
+package chaincode
 
 import (
 	"context"
@@ -15,11 +13,10 @@ import (
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/distributed/wallet"
 )
 
-// ChaincodeRequester describe a component capable of querying the chaincode.
-type ChaincodeRequester interface {
+// Requester describes a component capable of querying the chaincode.
+type Requester interface {
 	Request(ctx context.Context, channel, chaincode, method string, args []byte) (<-chan []byte, <-chan error)
 }
 
@@ -34,7 +31,8 @@ type chaincodeRequest struct {
 	err       chan error
 }
 
-// Gateway wraps fabric Gateway
+// Gateway wraps Fabric Gateway.
+// It is used to reuse Fabric gateway in long-running processes.
 type Gateway struct {
 	gw       *gateway.Gateway
 	requests chan chaincodeRequest
@@ -44,9 +42,9 @@ type Gateway struct {
 	mspid    string
 }
 
-// Pool is a container for multiple gateways.
-type Pool struct {
-	wallet   *wallet.Wallet
+// GatewayPool is a container for multiple gateways.
+type GatewayPool struct {
+	wallet   *Wallet
 	config   core.ConfigProvider
 	timeout  time.Duration
 	gwLock   *sync.RWMutex
@@ -54,9 +52,9 @@ type Pool struct {
 	checker  common.TransactionChecker
 }
 
-// NewPool creates an empty Pool.
-func NewPool(config core.ConfigProvider, wallet *wallet.Wallet, gatewayTimeout time.Duration, checker common.TransactionChecker) Pool {
-	return Pool{
+// NewGatewayPool creates an empty GatewayPool.
+func NewGatewayPool(config core.ConfigProvider, wallet *Wallet, gatewayTimeout time.Duration, checker common.TransactionChecker) GatewayPool {
+	return GatewayPool{
 		wallet:   wallet,
 		config:   config,
 		timeout:  gatewayTimeout,
@@ -66,8 +64,8 @@ func NewPool(config core.ConfigProvider, wallet *wallet.Wallet, gatewayTimeout t
 	}
 }
 
-// Close will close all gateways in the Pool.
-func (p *Pool) Close() {
+// Close will close all gateways in the GatewayPool.
+func (p *GatewayPool) Close() {
 	p.gwLock.RLock()
 	defer p.gwLock.RUnlock()
 
@@ -77,7 +75,7 @@ func (p *Pool) Close() {
 }
 
 // GetGateway returns the existing gateway for the given MSP ID or creates one if needed.
-func (p *Pool) GetGateway(ctx context.Context, mspid string) (*Gateway, error) {
+func (p *GatewayPool) GetGateway(ctx context.Context, mspid string) (*Gateway, error) {
 	label := mspid + "-id"
 	log := logger.Get(ctx).WithField("mspid", mspid)
 
@@ -120,7 +118,7 @@ func (p *Pool) GetGateway(ctx context.Context, mspid string) (*Gateway, error) {
 }
 
 // newGateway instanciates a Gateway object and spawn a goroutine to process chaincode requests.
-func (p *Pool) newGateway(fabricGateway *gateway.Gateway, mspid string) Gateway {
+func (p *GatewayPool) newGateway(fabricGateway *gateway.Gateway, mspid string) Gateway {
 	gateway := Gateway{
 		gw:       fabricGateway,
 		requests: make(chan chaincodeRequest),

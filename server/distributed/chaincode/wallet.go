@@ -1,5 +1,4 @@
-// Package wallet holds the logic around chaincode identity management.
-package wallet
+package chaincode
 
 import (
 	"io/ioutil"
@@ -9,8 +8,9 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
 )
 
-// Wallet is a wrapper around gateway.Wallet.
-// It provides convenience methods to ensure a specific identity exists.
+// Wallet holds the logic around chaincode identity management.
+// It is a wrapper around gateway.Wallet and provides convenience methods
+// to ensure a specific identity exists.
 type Wallet struct {
 	*gateway.Wallet
 	certPath string
@@ -18,8 +18,8 @@ type Wallet struct {
 	m        sync.RWMutex
 }
 
-// New returns a ready to use instance of in-memory wallet
-func New(certPath string, keyPath string) *Wallet {
+// NewWallet returns a ready to use instance of in-memory wallet
+func NewWallet(certPath string, keyPath string) *Wallet {
 	return &Wallet{gateway.NewInMemoryWallet(), certPath, keyPath, sync.RWMutex{}}
 }
 
