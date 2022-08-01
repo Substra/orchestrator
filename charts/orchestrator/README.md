@@ -100,7 +100,7 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `orchestrator.image.registry`                    | `orchestrator` image repository                                                                                                                                          | `gcr.io`                             |
 | `orchestrator.image.repository`                  | `orchestrator` image repository                                                                                                                                          | `connect-314908/orchestrator-server` |
 | `orchestrator.image.pullPolicy`                  | `orchestrator` image pull policy                                                                                                                                         | `IfNotPresent`                       |
-| `orchestrator.image.tag`                         | `orchestrator` image tag                                                                                                                                                 | `0.20.0`                             |
+| `orchestrator.image.tag`                         | `orchestrator` image tag                                                                                                                                                 | `0.21.0`                             |
 | `orchestrator.fullnameOverride`                  | String to fully override the `orchestrator.server.fullname`                                                                                                              | `""`                                 |
 | `orchestrator.logLevel`                          | Orchestrator log level                                                                                                                                                   | `INFO`                               |
 | `orchestrator.logSQLVerbose`                     | Log SQL statements with debug verbosity                                                                                                                                  | `false`                              |
@@ -134,7 +134,7 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `forwarder.image.registry`      | Event forwarder image registry                                                             | `gcr.io`                                |
 | `forwarder.image.repository`    | Event forwarder image repository                                                           | `connect-314908/orchestrator-forwarder` |
 | `forwarder.image.pullPolicy`    | Event forwarder image pull policy                                                          | `IfNotPresent`                          |
-| `forwarder.image.tag`           | Event forwarder image tag                                                                  | `0.20.0`                                |
+| `forwarder.image.tag`           | Event forwarder image tag                                                                  | `0.21.0`                                |
 | `forwarder.fullnameOverride`    | String to fully override the `forwarder.server.fullname`                                   | `""`                                    |
 | `forwarder.persistence.enabled` | Whether to enable persistent storage (required to properly keep track of processed events) | `false`                                 |
 | `forwarder.persistence.size`    | Storage class size, there is not need for more, the forwarder only store a small JSON      | `100Mi`                                 |
@@ -147,7 +147,7 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `rabbitmqOperator.image.registry`   | RabbitMQ operator image registry                                | `gcr.io`                                        |
 | `rabbitmqOperator.image.repository` | RabbitMQ operator image repository                              | `connect-314908/orchestrator-rabbitmq-operator` |
 | `rabbitmqOperator.image.pullPolicy` | RabbitMQ operator image pull policy                             | `IfNotPresent`                                  |
-| `rabbitmqOperator.image.tag`        | RabbitMQ operator image tag                                     | `0.20.0`                                        |
+| `rabbitmqOperator.image.tag`        | RabbitMQ operator image tag                                     | `0.21.0`                                        |
 | `rabbitmqOperator.fullnameOverride` | String to fully override the `rabbitmqOperator.server.fullname` | `""`                                            |
 | `rabbitmqOperator.credentials`      | Couples of username:password                                    | `{}`                                            |
 
