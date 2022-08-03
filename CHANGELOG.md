@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Build images with go 1.19
+
 ## [0.21.0] - 2022-08-01
 
 ### Added

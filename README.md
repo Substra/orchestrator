@@ -19,7 +19,7 @@ This component's purpose is to orchestrate task processing in multiple channels 
 
 Make sure you have these requirements fulfilled before trying to build the orchestrator:
 
-- [go](https://golang.org/): v1.18
+- [go](https://golang.org/): v1.18+
 - [protoc](https://github.com/protocolbuffers/protobuf): v3.18.0
 - [proto-gen-go](https://grpc.io/docs/languages/go/quickstart/#prerequisites): v1.28.0
 - [golang-migrate](https://github.com/golang-migrate/migrate): optional, used to create migration files
