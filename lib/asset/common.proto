@@ -7,6 +7,7 @@ option go_package = "github.com/owkin/orchestrator/lib/asset";
 enum AssetKind {
   reserved 2;
   reserved "ASSET_METRIC";
+
   ASSET_UNKNOWN = 0;
   ASSET_ORGANIZATION = 1;
   ASSET_DATA_SAMPLE = 3;

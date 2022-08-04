@@ -147,7 +147,7 @@ func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, MSPID string) 
 		authKeyID := hex.EncodeToString(cert.AuthorityKeyId)
 		log.WithField("orgCertIDs", certIDs).WithField("clientAuthKeyID", authKeyID).
 			Debug("checking that client cert is signed by legitimate CA for organization")
-		if utils.StringInSlice(certIDs, authKeyID) {
+		if utils.SliceContains(certIDs, authKeyID) {
 			validOrgCA = true
 			break
 		}

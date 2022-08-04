@@ -198,7 +198,7 @@ func (d *DBAL) ComputeTaskExists(key string) (bool, error) {
 
 // GetExistingComputeTaskKeys returns the keys of tasks already in storage among those given as input.
 func (d *DBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
-	uniqueKeys := utils.UniqueString(keys)
+	uniqueKeys := utils.Unique(keys)
 
 	stmt := getStatementBuilder().
 		Select("key").

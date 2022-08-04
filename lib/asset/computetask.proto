@@ -98,10 +98,11 @@ message NewComputeTask {
 }
 
 message TrainTaskData {
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
   reserved 4;
   reserved "model_permissions";
+
+  string data_manager_key = 1;
+  repeated string data_sample_keys = 2;
 }
 
 message NewTrainTaskData {
@@ -110,10 +111,11 @@ message NewTrainTaskData {
 }
 
 message PredictTaskData {
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
   reserved 3;
   reserved "prediction_permissions";
+
+  string data_manager_key = 1;
+  repeated string data_sample_keys = 2;
 }
 
 message NewPredictTaskData {
@@ -123,32 +125,34 @@ message NewPredictTaskData {
 
 message TestTaskData {
   string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
   reserved 3;
   reserved "metric_keys";
+
+  repeated string data_sample_keys = 2;
 }
 
 message NewTestTaskData {
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
   reserved 3;
   reserved "metric_keys";
+
+  string data_manager_key = 1;
+  repeated string data_sample_keys = 2;
 }
 
 message CompositeTrainTaskData {
+  reserved 5, 6;
+  reserved "head_permissions", "trunk_permissions";
+
   string data_manager_key = 1;
   repeated string data_sample_keys = 2;
-  reserved 5;
-  reserved "head_permissions";
-  reserved 6;
-  reserved "trunk_permissions";
 }
 
 message NewCompositeTrainTaskData {
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
   reserved 4;
   reserved "trunk_permissions";
+
+  string data_manager_key = 1;
+  repeated string data_sample_keys = 2;
 }
 
 message AggregateTrainTaskData {

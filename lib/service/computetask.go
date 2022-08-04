@@ -108,7 +108,7 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	if err != nil {
 		return nil, err
 	}
-	sortedTasks, err := s.SortTasks(tasks, existingKeys)
+	sortedTasks, err := s.sortTasks(tasks, existingKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -148,13 +148,13 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	return registeredTasks, nil
 }
 
-// SortTasks is a function to sort a list of tasks in a valid order for their registration.
+// sortTasks is a function to sort a list of tasks in a valid order for their registration.
 // It performs a topological sort of the tasks such that for every dependency from task A to B
 // A comes before B in the resulting list of tasks.
 // A topological ordering is possible only if the graph is a DAG and has no cycles. This function will
 // raise an error if there is a cycle in the list of tasks.
 // This sorting function is based on Kahn's algorithm.
-func (s *ComputeTaskService) SortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*asset.NewComputeTask, error) {
+func (s *ComputeTaskService) sortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*asset.NewComputeTask, error) {
 	sortedTasks := make([]*asset.NewComputeTask, len(newTasks))
 	unsortedTasks := make([]*asset.NewComputeTask, len(newTasks))
 	copy(unsortedTasks, newTasks)
@@ -166,7 +166,7 @@ func (s *ComputeTaskService) SortTasks(newTasks []*asset.NewComputeTask, existin
 		unsortedParentsCount[unsortedTasks[i].Key] = 0
 		// We count the number of parents that are not already registered in the persistence layer
 		for _, parent := range unsortedTasks[i].GetParentTaskKeys() {
-			if !utils.StringInSlice(existingTasks, parent) {
+			if !utils.SliceContains(existingTasks, parent) {
 				unsortedParentsCount[unsortedTasks[i].Key]++
 			}
 		}

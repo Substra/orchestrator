@@ -34,7 +34,7 @@ func (c *ContractCollection) GetAllContracts() []contractapi.ContractInterface {
 // of the smart contract methods defined as "Evaluate-only" in the list of
 // all smart-contracts
 func (c *ContractCollection) IsEvaluateMethod(method string) bool {
-	return utils.StringInSlice(c.allEvaluateTransactions, method)
+	return utils.SliceContains(c.allEvaluateTransactions, method)
 }
 
 func buildAllEvaluateTransactions() []string {

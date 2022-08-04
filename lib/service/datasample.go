@@ -171,7 +171,7 @@ func (s *DataSampleService) CheckSameManager(managerKey string, sampleKeys []str
 		if err != nil {
 			return err
 		}
-		if !utils.StringInSlice(dataSample.DataManagerKeys, managerKey) {
+		if !utils.SliceContains(dataSample.DataManagerKeys, managerKey) {
 			return orcerrors.NewInvalidAsset("datasamples do not share a common manager")
 		}
 	}

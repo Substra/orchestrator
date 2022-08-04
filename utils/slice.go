@@ -6,8 +6,8 @@ import (
 	"sort"
 )
 
-// StringInSlice will check if needle is found in haystack
-func StringInSlice(haystack []string, needle string) bool {
+// SliceContains will check if needle is found in haystack
+func SliceContains[T comparable](haystack []T, needle T) bool {
 	for _, s := range haystack {
 		if s == needle {
 			return true
@@ -26,7 +26,7 @@ func Combine(list1 []string, list2 []string) []string {
 func Filter(list1 []string, list2 []string) []string {
 	var output []string
 	for _, item := range list1 {
-		ok := StringInSlice(list2, item)
+		ok := SliceContains(list2, item)
 		if !ok {
 			output = append(output, item)
 		}
@@ -57,17 +57,17 @@ func IsEqual(a, b []string) bool {
 func Intersection(a, b []string) []string {
 	res := []string{}
 	for _, n := range a {
-		if StringInSlice(b, n) {
+		if SliceContains(b, n) {
 			res = append(res, n)
 		}
 	}
 	return res
 }
 
-// UniqueString returns a slice without duplicates.
-func UniqueString(arr []string) []string {
-	keys := make(map[string]bool)
-	list := []string{}
+// Unique returns a slice without duplicates.
+func Unique[T comparable](arr []T) []T {
+	keys := make(map[T]bool)
+	list := make([]T, 0, len(arr))
 	for _, entry := range arr {
 		if _, value := keys[entry]; !value {
 			keys[entry] = true

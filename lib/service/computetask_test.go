@@ -1369,7 +1369,7 @@ func TestSortTasks(t *testing.T) {
 
 	provider := newMockedProvider()
 	service := NewComputeTaskService(provider)
-	result, err := service.SortTasks(nodes, existingKeys)
+	result, err := service.sortTasks(nodes, existingKeys)
 
 	assert.NoError(t, err)
 	assert.Equal(t, len(nodes), len(result))
@@ -1408,7 +1408,7 @@ func TestSortTasksWithCircularDependency(t *testing.T) {
 
 	provider := newMockedProvider()
 	service := NewComputeTaskService(provider)
-	_, err := service.SortTasks(nodes, existingKeys)
+	_, err := service.sortTasks(nodes, existingKeys)
 
 	assert.Error(t, err)
 }
@@ -1445,7 +1445,7 @@ func TestSortDependencyWithExistingTasks(t *testing.T) {
 
 	provider := newMockedProvider()
 	service := NewComputeTaskService(provider)
-	result, err := service.SortTasks(nodes, existingKeys)
+	result, err := service.sortTasks(nodes, existingKeys)
 
 	assert.NoError(t, err)
 	assert.Equal(t, len(nodes), len(result))
@@ -1480,7 +1480,7 @@ func TestSortTasksUnknownRef(t *testing.T) {
 
 	provider := newMockedProvider()
 	service := NewComputeTaskService(provider)
-	_, err := service.SortTasks(nodes, existingKeys)
+	_, err := service.sortTasks(nodes, existingKeys)
 
 	assert.Error(t, err)
 }

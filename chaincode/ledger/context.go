@@ -147,5 +147,5 @@ func IsEvaluateTransaction(fnName string, evalFuncs []string) bool {
 	if idx != -1 {
 		fnName = fnName[idx+1:]
 	}
-	return utils.StringInSlice(evalFuncs, fnName)
+	return utils.SliceContains(evalFuncs, fnName)
 }

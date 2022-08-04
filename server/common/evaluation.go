@@ -57,5 +57,5 @@ func (c GrpcMethodChecker) IsEvaluateMethod(method string) bool {
 		return false
 	}
 
-	return utils.StringInSlice(methods, serviceMethod[2])
+	return utils.SliceContains(methods, serviceMethod[2])
 }

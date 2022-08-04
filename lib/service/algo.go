@@ -116,7 +116,7 @@ func (s *AlgoService) CanDownload(key string, requester string) (bool, error) {
 		return false, err
 	}
 
-	return obj.Permissions.Download.Public || utils.StringInSlice(obj.Permissions.Download.AuthorizedIds, requester), nil
+	return obj.Permissions.Download.Public || utils.SliceContains(obj.Permissions.Download.AuthorizedIds, requester), nil
 }
 
 // AlgoExists returns true if the algo exists

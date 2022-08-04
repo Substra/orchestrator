@@ -88,7 +88,7 @@ func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
 	}
 
 	for _, authorizedID := range IDs {
-		if !utils.StringInSlice(organizationIDs, authorizedID) {
+		if !utils.SliceContains(organizationIDs, authorizedID) {
 			return orcerrors.NewBadRequest("invalid permission input values")
 		}
 	}
@@ -97,7 +97,7 @@ func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
 }
 
 func (s *PermissionService) CanProcess(perms *asset.Permissions, requester string) bool {
-	if perms.Process.Public || utils.StringInSlice(perms.Process.AuthorizedIds, requester) {
+	if perms.Process.Public || utils.SliceContains(perms.Process.AuthorizedIds, requester) {
 		return true
 	}
 	s.GetLogger().WithField("requester", requester).WithField("permissions", perms).Debug("Requester can't process the asset")
@@ -165,7 +165,7 @@ func newPermission(newPerms *asset.NewPermissions, owner string) *asset.Permissi
 
 	// Owner must always be defined in the list of authorizedIDs, if the permission is private,
 	// it will ease the merge of private permissions
-	if !utils.StringInSlice(IDs, owner) {
+	if !utils.SliceContains(IDs, owner) {
 		IDs = append(IDs, owner)
 	}
 
