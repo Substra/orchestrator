@@ -23,6 +23,7 @@ type sqlTaskOutput struct {
 	ComputeTaskKey string
 	Identifier     string
 	Permissions    asset.Permissions
+	Transient      bool
 }
 
 func (i *sqlTaskInput) toComputeTaskInput() (*asset.ComputeTaskInput, error) {
@@ -141,7 +142,7 @@ func (d *DBAL) insertTaskOutputs(tasks []*asset.ComputeTask) error {
 	_, err = d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"compute_task_outputs"},
-		[]string{"compute_task_key", "identifier", "permissions"},
+		[]string{"compute_task_key", "identifier", "permissions", "transient"},
 		pgx.CopyFromRows(rows),
 	)
 
@@ -183,6 +184,7 @@ func getTaskOutputRows(taskKey uuid.UUID, outputs map[string]*asset.ComputeTaskO
 			taskKey,
 			identifier,
 			permissions,
+			output.Transient,
 		})
 	}
 
@@ -262,7 +264,7 @@ func (d *DBAL) getTaskOutputs(taskKeys ...string) (map[string]map[string]*asset.
 	}
 
 	stmt := getStatementBuilder().
-		Select("compute_task_key", "identifier", "permissions").
+		Select("compute_task_key", "identifier", "permissions", "transient").
 		From("compute_task_outputs").
 		Where(sq.Eq{"compute_task_key": taskKeys}).
 		OrderBy("compute_task_key")
@@ -275,13 +277,14 @@ func (d *DBAL) getTaskOutputs(taskKeys ...string) (map[string]map[string]*asset.
 
 	for rows.Next() {
 		o := sqlTaskOutput{}
-		err = rows.Scan(&o.ComputeTaskKey, &o.Identifier, &o.Permissions)
+		err = rows.Scan(&o.ComputeTaskKey, &o.Identifier, &o.Permissions, &o.Transient)
 		if err != nil {
 			return nil, err
 		}
 
 		res[o.ComputeTaskKey][o.Identifier] = &asset.ComputeTaskOutput{
 			Permissions: &o.Permissions,
+			Transient:   o.Transient,
 		}
 	}
 

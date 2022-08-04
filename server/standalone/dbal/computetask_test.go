@@ -113,10 +113,10 @@ func makeTaskInputRows(taskKeys ...string) *pgxmock.Rows {
 }
 
 func makeTaskOutputRows(taskKeys ...string) *pgxmock.Rows {
-	res := pgxmock.NewRows([]string{"compute_task_key", "identifier", "permissions"})
+	res := pgxmock.NewRows([]string{"compute_task_key", "identifier", "permissions", "transient"})
 
 	for _, key := range taskKeys {
-		res.AddRow(key, "model", []byte("{}"))
+		res.AddRow(key, "model", []byte("{}"), true)
 	}
 
 	return res
@@ -298,7 +298,7 @@ func TestAddComputeTask(t *testing.T) {
 	// Insert task inputs
 	mock.ExpectCopyFrom(`"compute_task_inputs"`, []string{"compute_task_key", "identifier", "position", "asset_key", "parent_task_key", "parent_task_output_identifier"}).WillReturnResult(2)
 	// Insert task outputs
-	mock.ExpectCopyFrom(`"compute_task_outputs"`, []string{"compute_task_key", "identifier", "permissions"}).WillReturnResult(1)
+	mock.ExpectCopyFrom(`"compute_task_outputs"`, []string{"compute_task_key", "identifier", "permissions", "transient"}).WillReturnResult(1)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -381,7 +381,7 @@ func TestAddComputeTasks(t *testing.T) {
 	// Insert task inputs
 	mock.ExpectCopyFrom(`"compute_task_inputs"`, []string{"compute_task_key", "identifier", "position", "asset_key", "parent_task_key", "parent_task_output_identifier"}).WillReturnResult(3)
 	// Insert task outputs
-	mock.ExpectCopyFrom(`"compute_task_outputs"`, []string{"compute_task_key", "identifier", "permissions"}).WillReturnResult(3)
+	mock.ExpectCopyFrom(`"compute_task_outputs"`, []string{"compute_task_key", "identifier", "permissions", "transient"}).WillReturnResult(3)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)

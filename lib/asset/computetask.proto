@@ -42,10 +42,12 @@ message ComputeTaskInput {
 
 message ComputeTaskOutput {
   Permissions permissions = 1;
+  bool transient = 2;
 }
 
 message NewComputeTaskOutput {
   NewPermissions permissions = 1;
+  bool transient = 2;
 }
 
 

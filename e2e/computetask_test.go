@@ -11,6 +11,7 @@ import (
 	"github.com/owkin/orchestrator/e2e/client"
 	e2erequire "github.com/owkin/orchestrator/e2e/require"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,6 +35,22 @@ func TestRegisterComputeTask(t *testing.T) {
 	// QueryTasks
 	retrievedTask = appClient.QueryTasks(&asset.TaskQueryFilter{ComputePlanKey: ks.GetKey(computePlanRef)}, "", 10).Tasks[0]
 	e2erequire.ProtoEqual(t, registeredTask, retrievedTask)
+}
+
+func TestRegisterTaskWithTransientOutput(t *testing.T) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+
+	registeredTask := appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithOutput("model", &asset.NewPermissions{Public: true}, true))[0]
+
+	// GetTask
+	retrievedTask := appClient.GetComputeTask(client.DefaultTrainTaskRef)
+	e2erequire.ProtoEqual(t, registeredTask, retrievedTask)
+	assert.True(t, retrievedTask.Outputs["model"].Transient)
 }
 
 // TestTrainTaskLifecycle registers a task and its dependencies, then start the task.
@@ -371,7 +388,7 @@ func TestQueryTaskInputs(t *testing.T) {
 		WithOutput("output model", &asset.NewPermissions{
 			Public:        false,
 			AuthorizedIds: []string{appClient.MSPID},
-		})
+		}, false)
 	appClient.RegisterTasks(parentTaskOptions)
 
 	otherTaskOptions := client.DefaultTrainTaskOptions().WithKeyRef(otherTaskRef).WithPlanRef(cpRef)
@@ -389,7 +406,7 @@ func TestQueryTaskInputs(t *testing.T) {
 		WithOutput("other model", &asset.NewPermissions{
 			Public:        false,
 			AuthorizedIds: []string{appClient.MSPID},
-		})
+		}, false)
 
 	expectedInputs := []*asset.ComputeTaskInput{
 		{

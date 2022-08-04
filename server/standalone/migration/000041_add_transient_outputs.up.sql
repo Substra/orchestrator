@@ -1,0 +1,2 @@
+ALTER TABLE compute_task_outputs
+ADD COLUMN IF NOT EXISTS transient BOOLEAN NOT NULL DEFAULT False;

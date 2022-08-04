@@ -267,6 +267,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		}
 		outputs[identifier] = &asset.ComputeTaskOutput{
 			Permissions: perm,
+			Transient:   output.Transient,
 		}
 	}
 
@@ -551,6 +552,9 @@ func (s *ComputeTaskService) validateOutputs(
 		}
 		if algoOutput.Kind == asset.AssetKind_ASSET_PERFORMANCE && !output.Permissions.Process.Public {
 			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, invalid task output %q: a PERFORMANCE output should be public", taskKey, identifier))
+		}
+		if algoOutput.Kind == asset.AssetKind_ASSET_PERFORMANCE && output.Transient {
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, invalid task output %q: a PERFORMANCE output cannot be transient", taskKey, identifier))
 		}
 		seen[identifier] = true
 	}

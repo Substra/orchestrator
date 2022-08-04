@@ -194,7 +194,7 @@ func DefaultTrainTaskOptions() *TrainTaskOptions {
 			},
 		},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
-			"model": {Permissions: &asset.NewPermissions{Public: true}},
+			"model": {Permissions: &asset.NewPermissions{Public: true}, Transient: false},
 		},
 	}
 }
@@ -219,9 +219,10 @@ func (o *TrainTaskOptions) WithAlgoRef(ref string) *TrainTaskOptions {
 	return o
 }
 
-func (o *TrainTaskOptions) WithOutput(identifier string, permissions *asset.NewPermissions) *TrainTaskOptions {
+func (o *TrainTaskOptions) WithOutput(identifier string, permissions *asset.NewPermissions, transient bool) *TrainTaskOptions {
 	o.Outputs[identifier] = &asset.NewComputeTaskOutput{
 		Permissions: permissions,
+		Transient:   transient,
 	}
 	return o
 }

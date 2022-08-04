@@ -1171,6 +1171,33 @@ func TestValidateTaskOutputs(t *testing.T) {
 			expectedError: "a PERFORMANCE output should be public",
 		},
 		{
+			name: "performance transient",
+			algo: map[string]*asset.AlgoOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
+			task: map[string]*asset.ComputeTaskOutput{
+				"performance": {
+					Permissions: &asset.Permissions{
+						Process:  &asset.Permission{Public: true},
+						Download: &asset.Permission{Public: true},
+					},
+					Transient: true,
+				},
+			},
+			expectedError: "a PERFORMANCE output cannot be transient",
+		},
+		{
+			name: "performance non transient",
+			algo: map[string]*asset.AlgoOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
+			task: map[string]*asset.ComputeTaskOutput{
+				"performance": {
+					Permissions: &asset.Permissions{
+						Process:  &asset.Permission{Public: true},
+						Download: &asset.Permission{Public: true},
+					},
+					Transient: false,
+				},
+			},
+		},
+		{
 			name: "public performance",
 			algo: map[string]*asset.AlgoOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
