@@ -15,7 +15,6 @@ import (
 func TestAddOrganization(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	organization := &asset.Organization{
 		Id:           "1e8c1074-7fc4-4350-afcb-dc2d4849694c",
@@ -39,7 +38,6 @@ func TestAddOrganization(t *testing.T) {
 func TestOrganizationExists(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	organizationID := "45e80360-a9e5-11ec-b909-0242ac120002"
 
@@ -64,7 +62,6 @@ func TestOrganizationExists(t *testing.T) {
 func TestGetAllOrganizations(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	organization1 := &asset.Organization{
 		Id:           "45e80360-a9e5-11ec-b909-0242ac120002",
@@ -101,7 +98,6 @@ func TestGetAllOrganizations(t *testing.T) {
 func TestGetOrganization(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	organization := &asset.Organization{
 		Id:           "45e80360-a9e5-11ec-b909-0242ac120002",

@@ -15,7 +15,6 @@ import (
 func TestGetComputePlan(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -49,7 +48,6 @@ func TestGetComputePlan(t *testing.T) {
 func TestGetRawComputePlan(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -78,7 +76,6 @@ func TestGetRawComputePlan(t *testing.T) {
 func TestQueryComputePlans(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -116,7 +113,6 @@ func TestQueryComputePlans(t *testing.T) {
 func TestQueryComputePlansNilFilter(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -143,7 +139,6 @@ func TestQueryComputePlansNilFilter(t *testing.T) {
 func TestCancelComputePlan(t *testing.T) {
 	mock, err := pgxmock.NewConn(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	cpKey := "abc"
 	cancelationDate, err := time.Parse("2006-01-02T15:04:05.000Z", "2021-02-03T04:05:06.007Z")

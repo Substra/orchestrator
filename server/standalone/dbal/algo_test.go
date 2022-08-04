@@ -54,7 +54,6 @@ func makeAlgoOutputRows(algoKeys ...string) *pgxmock.Rows {
 func TestQueryAlgos(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	computePlanKey := uuid.NewString()
 
@@ -91,7 +90,6 @@ func TestQueryAlgos(t *testing.T) {
 func TestPaginatedQueryAlgos(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	computePlanKey := uuid.NewString()
 
@@ -127,8 +125,6 @@ func TestGetAlgo(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 
-	defer mock.Close(context.Background())
-
 	mock.ExpectBegin()
 
 	uid := "key1"
@@ -157,8 +153,6 @@ func TestGetAlgoFail(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 
-	defer mock.Close(context.Background())
-
 	mock.ExpectBegin()
 
 	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
@@ -179,7 +173,6 @@ func TestGetAlgoFail(t *testing.T) {
 func TestQueryAlgosByComputePlan(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -207,7 +200,6 @@ func TestQueryAlgosByComputePlan(t *testing.T) {
 func TestQueryAlgosNilFilter(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 

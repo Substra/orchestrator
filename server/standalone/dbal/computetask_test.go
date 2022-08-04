@@ -151,7 +151,6 @@ func TestTaskFilterToQuery(t *testing.T) {
 func TestGetTasks(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -190,7 +189,6 @@ func TestGetTasks(t *testing.T) {
 func TestGetNoTask(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -215,7 +213,6 @@ func TestGetNoTask(t *testing.T) {
 func TestQueryComputeTasks(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -285,7 +282,6 @@ func TestAddComputeTask(t *testing.T) {
 
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -368,7 +364,6 @@ func TestAddComputeTasks(t *testing.T) {
 
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 
@@ -397,7 +392,6 @@ func TestAddComputeTasks(t *testing.T) {
 func TestQueryComputeTasksNilFilter(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 

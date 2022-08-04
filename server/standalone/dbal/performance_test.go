@@ -15,8 +15,6 @@ func TestPerformanceNotFound(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 
-	defer mock.Close(context.Background())
-
 	mock.ExpectBegin()
 
 	taskKey := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
@@ -44,8 +42,6 @@ func TestPerformanceNotFound(t *testing.T) {
 func TestQueryPerformancesNilFilter(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
-
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 

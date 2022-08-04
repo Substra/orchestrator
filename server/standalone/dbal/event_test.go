@@ -65,7 +65,6 @@ func makeEventRows() *pgxmock.Rows {
 func TestEventQuery(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT id, asset_key, asset_kind, event_kind, timestamp, asset, metadata FROM events .* ORDER BY timestamp ASC, id ASC`).
@@ -89,7 +88,6 @@ func TestEventQuery(t *testing.T) {
 func TestQueryEventsNilFilter(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT id, asset_key, asset_kind, event_kind, timestamp, asset, metadata FROM events`).

@@ -16,8 +16,6 @@ func TestGetFailureReportNotFound(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	require.NoError(t, err)
 
-	defer mock.Close(context.Background())
-
 	mock.ExpectBegin()
 
 	computeTaskKey := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"

@@ -20,7 +20,6 @@ func makeDataManagerRows() *pgxmock.Rows {
 func TestQueryDataManagers(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT .* FROM expanded_datamanagers`).
@@ -43,7 +42,6 @@ func TestQueryDataManagers(t *testing.T) {
 func TestPaginatedQueryDataManagers(t *testing.T) {
 	mock, err := pgxmock.NewConn()
 	assert.NoError(t, err)
-	defer mock.Close(context.Background())
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(`SELECT .* FROM expanded_datamanagers`).
