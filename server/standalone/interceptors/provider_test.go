@@ -10,6 +10,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +36,7 @@ func TestExtractProvider(t *testing.T) {
 }
 
 func TestInjectProvider(t *testing.T) {
-	ctx := common.WithChannel(context.TODO(), "testChannel")
+	ctx := interceptors.WithChannel(context.TODO(), "testChannel")
 
 	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
@@ -61,7 +62,7 @@ func TestInjectProvider(t *testing.T) {
 		return "test", nil
 	}
 
-	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
+	_, err := interceptor.UnaryServerInterceptor(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
 
 	publisher.AssertExpectations(t)
@@ -71,7 +72,7 @@ func TestInjectProvider(t *testing.T) {
 }
 
 func TestOnSuccess(t *testing.T) {
-	ctx := common.WithChannel(context.TODO(), "testChannel")
+	ctx := interceptors.WithChannel(context.TODO(), "testChannel")
 
 	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
@@ -107,7 +108,7 @@ func TestOnSuccess(t *testing.T) {
 		return "test", nil
 	}
 
-	_, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
+	_, err := interceptor.UnaryServerInterceptor(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
 
 	// wait for async event dispatch
@@ -120,7 +121,7 @@ func TestOnSuccess(t *testing.T) {
 }
 
 func TestOnError(t *testing.T) {
-	ctx := common.WithChannel(context.TODO(), "testChannel")
+	ctx := interceptors.WithChannel(context.TODO(), "testChannel")
 
 	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(true)
@@ -150,7 +151,7 @@ func TestOnError(t *testing.T) {
 		return nil, errors.New("test error")
 	}
 
-	res, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
+	res, err := interceptor.UnaryServerInterceptor(ctx, "test", unaryInfo, unaryHandler)
 	assert.Nil(t, res)
 	assert.Error(t, err)
 
@@ -161,7 +162,7 @@ func TestOnError(t *testing.T) {
 }
 
 func TestStopServingOnBrokerNotReady(t *testing.T) {
-	ctx := common.WithChannel(context.TODO(), "testChannel")
+	ctx := interceptors.WithChannel(context.TODO(), "testChannel")
 
 	publisher := new(common.MockAMQPPublisher)
 	publisher.On("IsReady").Return(false)
@@ -182,7 +183,7 @@ func TestStopServingOnBrokerNotReady(t *testing.T) {
 		return nil, errors.New("test error")
 	}
 
-	res, err := interceptor.Intercept(ctx, "test", unaryInfo, unaryHandler)
+	res, err := interceptor.UnaryServerInterceptor(ctx, "test", unaryInfo, unaryHandler)
 	assert.Nil(t, res)
 	assert.Error(t, err)
 

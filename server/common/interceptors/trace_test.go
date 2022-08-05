@@ -1,4 +1,4 @@
-package trace
+package interceptors
 
 import (
 	"context"

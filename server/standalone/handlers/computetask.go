@@ -5,8 +5,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/server/common"
-
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -21,7 +20,7 @@ func NewComputeTaskServer() *ComputeTaskServer {
 }
 
 func (s *ComputeTaskServer) RegisterTasks(ctx context.Context, input *asset.RegisterTasksParam) (*asset.RegisterTasksResponse, error) {
-	owner, err := common.ExtractMSPID(ctx)
+	owner, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +66,7 @@ func (s *ComputeTaskServer) GetTask(ctx context.Context, in *asset.GetTaskParam)
 }
 
 func (s *ComputeTaskServer) ApplyTaskAction(ctx context.Context, param *asset.ApplyTaskActionParam) (*asset.ApplyTaskActionResponse, error) {
-	requester, err := common.ExtractMSPID(ctx)
+	requester, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}

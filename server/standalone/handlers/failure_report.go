@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -19,7 +19,7 @@ func NewFailureReportServer() *FailureReportServer {
 }
 
 func (s *FailureReportServer) RegisterFailureReport(ctx context.Context, newFailureReport *asset.NewFailureReport) (*asset.FailureReport, error) {
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}

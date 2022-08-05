@@ -5,7 +5,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	servercommon "github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
@@ -45,12 +45,12 @@ func (s *EventServer) QueryEvents(ctx context.Context, params *asset.QueryEvents
 func (s *EventServer) SubscribeToEvents(param *asset.SubscribeToEventsParam, stream asset.EventService_SubscribeToEventsServer) error {
 	ctx := stream.Context()
 
-	mspid, err := servercommon.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return err
 	}
 
-	channel, err := servercommon.ExtractChannel(ctx)
+	channel, err := commonInterceptors.ExtractChannel(ctx)
 	if err != nil {
 		return err
 	}

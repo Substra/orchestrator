@@ -1,14 +1,15 @@
-package common
+package interceptors
 
 import (
 	"context"
 	"testing"
 
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewChannelInterceptor(t *testing.T) {
-	config := &OrchestratorConfiguration{
+	config := &common.OrchestratorConfiguration{
 		Channels: map[string][]string{
 			"mychannel":   {"org1", "org2"},
 			"yourchannel": {"org2"},
@@ -22,7 +23,7 @@ func TestNewChannelInterceptor(t *testing.T) {
 }
 
 func TestCheckOrgBelongsToChannel(t *testing.T) {
-	config := &OrchestratorConfiguration{
+	config := &common.OrchestratorConfiguration{
 		Channels: map[string][]string{
 			"mychannel":    {"org1", "org2"},
 			"yourchannel":  {"org1", "org2"},

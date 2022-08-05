@@ -6,7 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
@@ -49,7 +49,7 @@ func TestHandleDatamanagerConflictAfterTimeout(t *testing.T) {
 		Key: "uuid",
 	}
 
-	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	newCtx := commonInterceptors.WithLastError(context.Background(), FabricTimeout)
 	invocator := &chaincode.MockInvocator{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.datamanager:RegisterDataManager", newObj, &asset.DataManager{}).

@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/owkin/orchestrator/server/distributed/chaincode"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/owkin/orchestrator/forwarder/event"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/interceptors"
+	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -51,12 +52,12 @@ func (i *ChaincodeDataInterceptor) StreamServerInterceptor(
 ) error {
 	ctx := stream.Context()
 
-	channel, err := common.ExtractChannel(ctx)
+	channel, err := interceptors.ExtractChannel(ctx)
 	if err != nil {
 		return nil
 	}
 
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := interceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return err
 	}

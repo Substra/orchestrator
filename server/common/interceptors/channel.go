@@ -1,4 +1,4 @@
-package common
+package interceptors
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/owkin/orchestrator/server/common"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -20,7 +21,7 @@ type ChannelInterceptor struct {
 
 // NewChannelInterceptor creates a ChannelInterceptor which will enforce organization & channel consistency.
 // ChannelInterceptor MUST come after the mspid interceptor.
-func NewChannelInterceptor(config *OrchestratorConfiguration) *ChannelInterceptor {
+func NewChannelInterceptor(config *common.OrchestratorConfiguration) *ChannelInterceptor {
 	orgChannels := make(map[string][]string)
 
 	for channel, orgs := range config.Channels {
@@ -37,7 +38,7 @@ func NewChannelInterceptor(config *OrchestratorConfiguration) *ChannelIntercepto
 // UnaryServerInterceptor will make the channel from headers available from the request context.
 func (i *ChannelInterceptor) UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
-	for _, m := range ignoredMethods {
+	for _, m := range IgnoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return handler(ctx, req)
 		}
@@ -61,7 +62,7 @@ func (i *ChannelInterceptor) StreamServerInterceptor(
 	if err != nil {
 		return err
 	}
-	streamWithContext := BindStreamToContext(newCtx, stream)
+	streamWithContext := common.BindStreamToContext(newCtx, stream)
 
 	return handler(srv, streamWithContext)
 }
@@ -107,9 +108,7 @@ func (i *ChannelInterceptor) checkOrgBelongsToChannel(org, channel string) error
 
 type ctxChannelMarker struct{}
 
-var (
-	ctxChannelKey = &ctxChannelMarker{}
-)
+var ctxChannelKey = &ctxChannelMarker{}
 
 // WithChannel add channel information to a context
 func WithChannel(ctx context.Context, channel string) context.Context {

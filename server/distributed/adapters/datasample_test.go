@@ -6,7 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
@@ -91,7 +91,7 @@ func TestHandleDataSampleConflictAfterTimeout(t *testing.T) {
 		},
 	}
 
-	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	newCtx := commonInterceptors.WithLastError(context.Background(), FabricTimeout)
 	invocator := &chaincode.MockInvocator{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.datasample:RegisterDataSamples", param, &asset.RegisterDataSamplesResponse{}).
@@ -125,7 +125,7 @@ func TestHandleDataSampleBatchConflictAfterTimeout(t *testing.T) {
 		},
 	}
 
-	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	newCtx := commonInterceptors.WithLastError(context.Background(), FabricTimeout)
 	invocator := &chaincode.MockInvocator{}
 
 	invocator.On("Call", utils.AnyContext, "orchestrator.datasample:RegisterDataSamples", param, &asset.RegisterDataSamplesResponse{}).

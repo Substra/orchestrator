@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/common"
-
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -21,7 +20,7 @@ func NewOrganizationServer() *OrganizationServer {
 
 // RegisterOrganization will add a new organization to the network
 func (s *OrganizationServer) RegisterOrganization(ctx context.Context, in *asset.RegisterOrganizationParam) (*asset.Organization, error) {
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}

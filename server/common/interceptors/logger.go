@@ -1,10 +1,10 @@
-package common
+package interceptors
 
 import (
 	"context"
+	"github.com/owkin/orchestrator/server/common"
 
 	"github.com/go-playground/log/v7"
-	"github.com/owkin/orchestrator/server/common/trace"
 	"google.golang.org/grpc"
 )
 
@@ -13,7 +13,7 @@ import (
 // `logger.Get(ctx)`. This ensures all the log entries have the same "request id" field, making it easy filter log entries by
 // "request id".
 func setContext(ctx context.Context) context.Context {
-	logger := log.WithField("requestID", trace.GetRequestID(ctx))
+	logger := log.WithField("requestID", GetRequestID(ctx))
 	return log.SetContext(ctx, logger)
 }
 
@@ -31,6 +31,6 @@ func StreamServerLoggerInterceptor(
 	handler grpc.StreamHandler,
 ) error {
 	ctx := setContext(stream.Context())
-	streamWithContext := BindStreamToContext(ctx, stream)
+	streamWithContext := common.BindStreamToContext(ctx, stream)
 	return handler(srv, streamWithContext)
 }

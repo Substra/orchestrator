@@ -8,15 +8,11 @@ import (
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/owkin/orchestrator/chaincode/contracts"
-	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"google.golang.org/grpc"
 )
-
-var ignoredMethods = [...]string{
-	"grpc.health",
-}
 
 // InvocatorInterceptor is a structure referencing a wallet which will keeps identities for the duration of program execution.
 // It is responsible for injecting a chaincode Invocator in the request's context.
@@ -40,18 +36,18 @@ func (ci *InvocatorInterceptor) Close() {
 // UnaryServerInterceptor is a gRPC interceptor and will make the fabric contract available in the request context
 func (ci *InvocatorInterceptor) UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
-	for _, m := range ignoredMethods {
+	for _, m := range interceptors.IgnoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return handler(ctx, req)
 		}
 	}
 
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := interceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	channel, err := common.ExtractChannel(ctx)
+	channel, err := interceptors.ExtractChannel(ctx)
 	if err != nil {
 		return nil, err
 	}

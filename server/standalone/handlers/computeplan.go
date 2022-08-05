@@ -5,8 +5,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/server/common"
-
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -19,7 +18,7 @@ func NewComputePlanServer() *ComputePlanServer {
 }
 
 func (s *ComputePlanServer) RegisterPlan(ctx context.Context, in *asset.NewComputePlan) (*asset.ComputePlan, error) {
-	owner, err := common.ExtractMSPID(ctx)
+	owner, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +69,7 @@ func (s *ComputePlanServer) QueryPlans(ctx context.Context, param *asset.QueryPl
 }
 
 func (s *ComputePlanServer) ApplyPlanAction(ctx context.Context, param *asset.ApplyPlanActionParam) (*asset.ApplyPlanActionResponse, error) {
-	requester, err := common.ExtractMSPID(ctx)
+	requester, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}

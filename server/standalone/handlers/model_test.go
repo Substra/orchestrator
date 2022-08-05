@@ -6,7 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/service"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +16,7 @@ func getContext() (context.Context, *service.MockDependenciesProvider) {
 	provider := new(service.MockDependenciesProvider)
 	ctx := context.TODO()
 	ctxWithProvider := interceptors.WithProvider(ctx, provider)
-	ctxWithIdentity := context.WithValue(ctxWithProvider, common.CtxMSPIDKey, "requester")
+	ctxWithIdentity := context.WithValue(ctxWithProvider, commonInterceptors.CtxMSPIDKey, "requester")
 
 	return ctxWithIdentity, provider
 }

@@ -1,5 +1,4 @@
-// Package trace contains request tracing logic
-package trace
+package interceptors
 
 import (
 	"context"
@@ -15,10 +14,8 @@ const headerRequestID = "reqid"
 
 type requestIDMarker struct{}
 
-var (
-	// RequestIDMarker is the identifier of the RequestID in context.
-	RequestIDMarker = &requestIDMarker{}
-)
+// RequestIDMarker is the identifier of the RequestID in context.
+var RequestIDMarker = &requestIDMarker{}
 
 // InterceptRequestID adds a unique identifier to the context.
 // This identifier is retrieved from query header "reqid" and is generated if there is no such header.

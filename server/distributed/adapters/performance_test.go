@@ -6,7 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
@@ -56,7 +56,7 @@ func TestQueryPerformances(t *testing.T) {
 func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 	adapter := NewPerformanceAdapter()
 
-	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	newCtx := commonInterceptors.WithLastError(context.Background(), FabricTimeout)
 	invocator := &chaincode.MockInvocator{}
 
 	newPerf := &asset.NewPerformance{

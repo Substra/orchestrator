@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/trace"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/handlers"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
@@ -30,9 +30,9 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 
 	session := common.NewSession(rabbitDSN)
 
-	channelInterceptor := common.NewChannelInterceptor(params.Config)
+	channelInterceptor := commonInterceptors.NewChannelInterceptor(params.Config)
 
-	MSPIDInterceptor, err := common.NewMSPIDInterceptor()
+	MSPIDInterceptor, err := commonInterceptors.NewMSPIDInterceptor()
 	if err != nil {
 		return nil, err
 	}
@@ -40,25 +40,25 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
 	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session, healthcheck)
 
-	retryInterceptor := common.NewRetryInterceptor(params.RetryBudget, shouldRetry)
+	retryInterceptor := commonInterceptors.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 
 	unaryInterceptor := grpc.ChainUnaryInterceptor(
-		trace.InterceptRequestID,
+		commonInterceptors.InterceptRequestID,
 		grpc_prometheus.UnaryServerInterceptor,
-		common.UnaryServerLoggerInterceptor,
-		common.UnaryServerRequestLogger,
-		common.InterceptStandaloneErrors,
+		commonInterceptors.UnaryServerLoggerInterceptor,
+		commonInterceptors.UnaryServerRequestLogger,
+		commonInterceptors.InterceptStandaloneErrors,
 		MSPIDInterceptor.UnaryServerInterceptor,
 		channelInterceptor.UnaryServerInterceptor,
-		retryInterceptor.Intercept,
-		providerInterceptor.Intercept,
+		retryInterceptor.UnaryServerInterceptor,
+		providerInterceptor.UnaryServerInterceptor,
 	)
 
 	dbConnInterceptor := interceptors.NewDatabaseConnInterceptor(dbURL)
 	streamInterceptor := grpc.ChainStreamInterceptor(
 		grpc_prometheus.StreamServerInterceptor,
-		common.StreamServerLoggerInterceptor,
-		common.StreamServerRequestLogger,
+		commonInterceptors.StreamServerLoggerInterceptor,
+		commonInterceptors.StreamServerRequestLogger,
 		MSPIDInterceptor.StreamServerInterceptor,
 		channelInterceptor.StreamServerInterceptor,
 		dbConnInterceptor.StreamServerInterceptor,

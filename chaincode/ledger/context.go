@@ -11,8 +11,8 @@ import (
 	"github.com/owkin/orchestrator/lib/event"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/common/trace"
 	"github.com/owkin/orchestrator/utils"
 )
 
@@ -122,7 +122,7 @@ func GetBeforeTransactionHook(contract contractapi.EvaluationContractInterface) 
 
 		// Populate context
 		ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, isEval)
-		ctx = context.WithValue(ctx, trace.RequestIDMarker, requestID)
+		ctx = context.WithValue(ctx, interceptors.RequestIDMarker, requestID)
 		ctx = log.SetContext(ctx, l)
 		c.SetContext(ctx)
 

@@ -8,7 +8,7 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/trace"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/distributed/adapters"
 	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/owkin/orchestrator/server/distributed/interceptors"
@@ -26,23 +26,23 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 
 	invocatorInterceptor := interceptors.NewInvocatorInterceptor(config, wallet, gatewayTimeout)
 
-	channelInterceptor := common.NewChannelInterceptor(params.Config)
-	MSPIDInterceptor, err := common.NewMSPIDInterceptor()
+	channelInterceptor := commonInterceptors.NewChannelInterceptor(params.Config)
+	MSPIDInterceptor, err := commonInterceptors.NewMSPIDInterceptor()
 	if err != nil {
 		return nil, err
 	}
 
-	retryInterceptor := common.NewRetryInterceptor(params.RetryBudget, shouldRetry)
+	retryInterceptor := commonInterceptors.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 
 	unaryInterceptor := grpc.ChainUnaryInterceptor(
-		trace.InterceptRequestID,
+		commonInterceptors.InterceptRequestID,
 		grpc_prometheus.UnaryServerInterceptor,
-		common.UnaryServerLoggerInterceptor,
-		common.UnaryServerRequestLogger,
-		common.InterceptDistributedErrors,
+		commonInterceptors.UnaryServerLoggerInterceptor,
+		commonInterceptors.UnaryServerRequestLogger,
+		commonInterceptors.InterceptDistributedErrors,
 		MSPIDInterceptor.UnaryServerInterceptor,
 		channelInterceptor.UnaryServerInterceptor,
-		retryInterceptor.Intercept,
+		retryInterceptor.UnaryServerInterceptor,
 		invocatorInterceptor.UnaryServerInterceptor,
 	)
 
@@ -50,8 +50,8 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 
 	streamInterceptor := grpc.ChainStreamInterceptor(
 		grpc_prometheus.StreamServerInterceptor,
-		common.StreamServerLoggerInterceptor,
-		common.StreamServerRequestLogger,
+		commonInterceptors.StreamServerLoggerInterceptor,
+		commonInterceptors.StreamServerRequestLogger,
 		MSPIDInterceptor.StreamServerInterceptor,
 		channelInterceptor.StreamServerInterceptor,
 		chaincodeDataInterceptor.StreamServerInterceptor,

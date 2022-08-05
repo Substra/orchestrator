@@ -5,9 +5,8 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/common/logger"
-
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -25,7 +24,7 @@ func NewAlgoServer() *AlgoServer {
 func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset.Algo, error) {
 	logger.Get(ctx).WithField("algo", a).Debug("Register Algo")
 
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package common
+package interceptors
 
 import (
 	"context"
@@ -34,7 +34,7 @@ func TestRetryOnError(t *testing.T) {
 		return nil, fmt.Errorf("test retry on error")
 	}
 
-	_, err := interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
+	_, err := interceptor.UnaryServerInterceptor(context.TODO(), "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
 
 	assert.True(t, checked)
@@ -57,7 +57,7 @@ func TestDoNotRetryHardFail(t *testing.T) {
 		return nil, fmt.Errorf("test retry on error")
 	}
 
-	_, err := interceptor.Intercept(context.TODO(), "test", unaryInfo, unaryHandler)
+	_, err := interceptor.UnaryServerInterceptor(context.TODO(), "test", unaryInfo, unaryHandler)
 	assert.Error(t, err)
 
 	assert.True(t, checked)

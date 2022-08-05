@@ -10,17 +10,14 @@ import (
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/service"
 	"github.com/owkin/orchestrator/server/common"
+	"github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/standalone/dbal"
 	"github.com/owkin/orchestrator/server/standalone/event"
 	"github.com/owkin/orchestrator/server/standalone/metrics"
+
 	"google.golang.org/grpc"
 )
-
-// gRPC methods for which we won't inject a service provider
-var ignoredMethods = [...]string{
-	"grpc.health",
-}
 
 type HealthReporter interface {
 	Shutdown()
@@ -53,11 +50,11 @@ func WithProvider(ctx context.Context, provider service.DependenciesProvider) co
 	return context.WithValue(ctx, ctxProviderKey, provider)
 }
 
-// Intercept a gRPC request and inject the dependency injection orchestration.Provider into the context.
+// UnaryServerInterceptor a gRPC request and inject the dependency injection orchestration.Provider into the context.
 // The provider can be retrieved from context with ExtractProvider function.
-func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (pi *ProviderInterceptor) UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
-	for _, m := range ignoredMethods {
+	for _, m := range interceptors.IgnoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return handler(ctx, req)
 		}
@@ -68,7 +65,7 @@ func (pi *ProviderInterceptor) Intercept(ctx context.Context, req interface{}, i
 		return nil, orcerrors.NewInternal("Message broker not ready")
 	}
 
-	channel, err := common.ExtractChannel(ctx)
+	channel, err := interceptors.ExtractChannel(ctx)
 	if err != nil {
 		return nil, err
 	}

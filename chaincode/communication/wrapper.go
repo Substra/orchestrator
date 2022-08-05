@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/owkin/orchestrator/server/common/trace"
+	"github.com/owkin/orchestrator/server/common/interceptors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -31,7 +31,7 @@ func Wrap(ctx context.Context, param protoreflect.ProtoMessage) (*Wrapper, error
 
 	wrapper := &Wrapper{
 		Message:   string(p),
-		RequestID: trace.GetRequestID(ctx),
+		RequestID: interceptors.GetRequestID(ctx),
 	}
 
 	return wrapper, nil

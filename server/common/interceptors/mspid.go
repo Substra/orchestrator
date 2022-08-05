@@ -1,4 +1,4 @@
-package common
+package interceptors
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/server/common"
 	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/grpc"
@@ -18,24 +19,20 @@ import (
 
 const headerMSPID = "mspid"
 
-var ignoredMethods = [...]string{
-	"grpc.health",
-}
-
 type MSPIDInterceptor struct {
 	checkMSPID   bool
-	orgCaCertIDs OrgCACertList
+	orgCaCertIDs common.OrgCACertList
 }
 
 // NewMSPIDInterceptor instanciate a new interceptor
 func NewMSPIDInterceptor() (*MSPIDInterceptor, error) {
-	var orgCACerts OrgCACertList
+	var orgCACerts common.OrgCACertList
 	verifyClientMSPID := false
 
-	if MustGetEnvFlag("VERIFY_CLIENT_MSP_ID") {
+	if common.MustGetEnvFlag("VERIFY_CLIENT_MSP_ID") {
 		verifyClientMSPID = true
 		var err error
-		orgCACerts, err = GetOrgCACerts()
+		orgCACerts, err = common.GetOrgCACerts()
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +49,7 @@ func NewMSPIDInterceptor() (*MSPIDInterceptor, error) {
 // UnaryServerInterceptor enforces MSPID presence in context
 func (i *MSPIDInterceptor) UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
-	for _, m := range ignoredMethods {
+	for _, m := range IgnoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return handler(ctx, req)
 		}
@@ -77,7 +74,7 @@ func (i *MSPIDInterceptor) StreamServerInterceptor(
 	if err != nil {
 		return err
 	}
-	streamWithContext := BindStreamToContext(newCtx, stream)
+	streamWithContext := common.BindStreamToContext(newCtx, stream)
 
 	return handler(srv, streamWithContext)
 }

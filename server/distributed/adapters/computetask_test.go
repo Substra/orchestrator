@@ -6,7 +6,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
@@ -55,7 +55,7 @@ func TestQueryTasks(t *testing.T) {
 func TestHandleTasksConflictAfterTimeout(t *testing.T) {
 	adapter := NewComputeTaskAdapter()
 
-	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	newCtx := commonInterceptors.WithLastError(context.Background(), FabricTimeout)
 	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.RegisterTasksParam{
@@ -80,7 +80,7 @@ func TestHandleTasksConflictAfterTimeout(t *testing.T) {
 func TestHandleTasksBatchConflictAfterTimeout(t *testing.T) {
 	adapter := NewComputeTaskAdapter()
 
-	newCtx := common.WithLastError(context.Background(), FabricTimeout)
+	newCtx := commonInterceptors.WithLastError(context.Background(), FabricTimeout)
 	invocator := &chaincode.MockInvocator{}
 
 	param := &asset.RegisterTasksParam{

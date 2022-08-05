@@ -1,4 +1,4 @@
-package common
+package interceptors
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 // UnaryServerRequestLogger log every gRPC response
 func UnaryServerRequestLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
-	for _, m := range ignoredMethods {
+	for _, m := range IgnoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return handler(ctx, req)
 		}

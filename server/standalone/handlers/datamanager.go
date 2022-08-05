@@ -5,9 +5,8 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/common/logger"
-
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -25,7 +24,7 @@ func NewDataManagerServer() *DataManagerServer {
 func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.DataManager, error) {
 	logger.Get(ctx).WithField("datamanager", d).Debug("Register DataManager")
 
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}

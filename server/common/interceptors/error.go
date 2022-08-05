@@ -1,4 +1,4 @@
-package common
+package interceptors
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func InterceptStandaloneErrors(ctx context.Context, req interface{}, info *grpc.
 	res, err := handler(ctx, req)
 
 	// Passthrough for ignored methods
-	for _, m := range ignoredMethods {
+	for _, m := range IgnoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return res, err
 		}
@@ -47,7 +47,7 @@ func InterceptDistributedErrors(ctx context.Context, req interface{}, info *grpc
 	res, err := handler(ctx, req)
 
 	// Passthrough for ignored methods
-	for _, m := range ignoredMethods {
+	for _, m := range IgnoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return res, err
 		}

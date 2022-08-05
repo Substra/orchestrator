@@ -5,9 +5,8 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/server/common"
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/common/logger"
-
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -25,7 +24,7 @@ func NewDataSampleServer() *DataSampleServer {
 func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
 	logger.Get(ctx).WithField("nbSamples", len(input.Samples)).Debug("Register DataSamples")
 
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +46,7 @@ func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset
 func (s *DataSampleServer) UpdateDataSamples(ctx context.Context, datasample *asset.UpdateDataSamplesParam) (*asset.UpdateDataSamplesResponse, error) {
 	logger.Get(ctx).WithField("datasample", datasample).Debug("Update DataSample")
 
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}

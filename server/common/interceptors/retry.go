@@ -1,4 +1,4 @@
-package common
+package interceptors
 
 import (
 	"context"
@@ -11,9 +11,7 @@ import (
 
 type ctxLastErrorMarker struct{}
 
-var (
-	ctxLastErrorKey = &ctxLastErrorMarker{}
-)
+var ctxLastErrorKey = &ctxLastErrorMarker{}
 
 // RetryInterceptor will retry a failed request according to its checker decision and time budget.
 type RetryInterceptor struct {
@@ -32,9 +30,9 @@ func NewRetryInterceptor(retryBudget time.Duration, checker RetryChecker) *Retry
 // It receives the returned error and elapsed time since first attempt.
 type RetryChecker = func(error) bool
 
-func (ri *RetryInterceptor) Intercept(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (ri *RetryInterceptor) UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Passthrough for ignored methods
-	for _, m := range ignoredMethods {
+	for _, m := range IgnoredMethods {
 		if strings.Contains(info.FullMethod, m) {
 			return handler(ctx, req)
 		}

@@ -5,8 +5,7 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/server/common"
-
+	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -21,7 +20,7 @@ func NewModelServer() *ModelServer {
 }
 
 func (s *ModelServer) RegisterModel(ctx context.Context, newModel *asset.NewModel) (*asset.Model, error) {
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +96,7 @@ func (s *ModelServer) GetComputeTaskInputModels(ctx context.Context, param *asse
 }
 
 func (s *ModelServer) CanDisableModel(ctx context.Context, param *asset.CanDisableModelParam) (*asset.CanDisableModelResponse, error) {
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +116,7 @@ func (s *ModelServer) CanDisableModel(ctx context.Context, param *asset.CanDisab
 }
 
 func (s *ModelServer) DisableModel(ctx context.Context, param *asset.DisableModelParam) (*asset.DisableModelResponse, error) {
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +134,7 @@ func (s *ModelServer) DisableModel(ctx context.Context, param *asset.DisableMode
 }
 
 func (s *ModelServer) RegisterModels(ctx context.Context, param *asset.RegisterModelsParam) (*asset.RegisterModelsResponse, error) {
-	mspid, err := common.ExtractMSPID(ctx)
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
 		return nil, err
 	}
