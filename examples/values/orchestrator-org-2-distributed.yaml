@@ -8,10 +8,10 @@ orchestrator:
       enabled: true
       domains:
         - "orchestrator.org-2.com"
-        - "owkin-orchestrator-org-2-server.org-2.svc.cluster.local"
-        - "owkin-orchestrator-org-2-rabbitmq.org-2.svc.cluster.local"
+        - "orchestrator-org-2-server.org-2.svc.cluster.local"
+        - "orchestrator-org-2-rabbitmq.org-2.svc.cluster.local"
       duration: 2160h
-      issuer: owkin-issuer
+      issuer: substra-issuer
     enabled: true
     secrets:
       pair: orchestrator-tls-server-pair

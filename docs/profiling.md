@@ -13,7 +13,7 @@ You'll find below the steps to obtain a profile in a canonical dev environment (
 ## Forward port 8484
 
 ```sh
-kubectl port-forward owkin-orchestrator-org-1-server-77bddf65b-nfxt7 8484:8484
+kubectl port-forward substra-orchestrator-org-1-server-77bddf65b-nfxt7 8484:8484
 ```
 
 ## Start profiling

@@ -1,7 +1,7 @@
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: owkin-issuer
+  name: substra-issuer
   namespace: cert-manager
 spec:
   ca:
