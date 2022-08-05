@@ -33,13 +33,6 @@ func TestGetComputePlan(t *testing.T) {
 	plan, err := dbal.GetComputePlan("uuid")
 	assert.NoError(t, err)
 
-	assert.Equal(t, uint32(21), plan.TaskCount)
-	assert.Equal(t, uint32(1), plan.WaitingCount)
-	assert.Equal(t, uint32(2), plan.TodoCount)
-	assert.Equal(t, uint32(3), plan.DoingCount)
-	assert.Equal(t, uint32(4), plan.CanceledCount)
-	assert.Equal(t, uint32(5), plan.FailedCount)
-	assert.Equal(t, uint32(6), plan.DoneCount)
 	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plan.Status)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -66,8 +59,6 @@ func TestGetRawComputePlan(t *testing.T) {
 	plan, err := dbal.GetRawComputePlan("uuid")
 	assert.NoError(t, err)
 
-	assert.Equal(t, uint32(0), plan.TaskCount)
-	assert.Equal(t, uint32(0), plan.DoneCount)
 	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, plan.Status)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -98,13 +89,6 @@ func TestQueryComputePlans(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, plans, 1)
-	assert.Equal(t, uint32(21), plans[0].TaskCount)
-	assert.Equal(t, uint32(1), plans[0].WaitingCount)
-	assert.Equal(t, uint32(2), plans[0].TodoCount)
-	assert.Equal(t, uint32(3), plans[0].DoingCount)
-	assert.Equal(t, uint32(4), plans[0].CanceledCount)
-	assert.Equal(t, uint32(5), plans[0].FailedCount)
-	assert.Equal(t, uint32(6), plans[0].DoneCount)
 	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plans[0].Status)
 
 	assert.NoError(t, mock.ExpectationsWereMet())

@@ -18,15 +18,11 @@ enum ComputePlanStatus {
 }
 
 message ComputePlan {
+  reserved 8, 9, 10, 11, 12, 3, 4;
+  reserved "waiting_count", "todo_count", "doing_count" ,"canceled_count", "failed_count", "done_count", "task_count";
+
   string key = 1;
   string owner = 2;
-  uint32 waiting_count = 8; // Dynamic data, not persisted and set on query
-  uint32 todo_count = 9; // Dynamic data, not persisted and set on query
-  uint32 doing_count = 10; // Dynamic data, not persisted and set on query
-  uint32 canceled_count = 11; // Dynamic data, not persisted and set on query
-  uint32 failed_count = 12; // Dynamic data, not persisted and set on query
-  uint32 done_count = 3; // Dynamic data, not persisted and set on query
-  uint32 task_count = 4; // Dynamic data, not persisted and set on query
   ComputePlanStatus status = 5; // Dynamic data, not persisted and set on query
   bool delete_intermediary_models = 6;
   google.protobuf.Timestamp creation_date = 7;

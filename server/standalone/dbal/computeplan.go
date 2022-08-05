@@ -47,13 +47,6 @@ func (cp *sqlComputePlan) toRawComputePlan() *asset.ComputePlan {
 // toComputePlan returns a compute plan with its computed properties.
 func (cp *sqlComputePlan) toComputePlan() *asset.ComputePlan {
 	plan := cp.toRawComputePlan()
-	plan.TaskCount = cp.TaskCounts.Total
-	plan.WaitingCount = cp.TaskCounts.Waiting
-	plan.TodoCount = cp.TaskCounts.Todo
-	plan.DoingCount = cp.TaskCounts.Doing
-	plan.CanceledCount = cp.TaskCounts.Canceled
-	plan.FailedCount = cp.TaskCounts.Failed
-	plan.DoneCount = cp.TaskCounts.Done
 	plan.Status = persistence.GetPlanStatus(plan, &cp.TaskCounts)
 	return plan
 }

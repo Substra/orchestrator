@@ -23,13 +23,6 @@ func TestRegisterComputePlan(t *testing.T) {
 	retrievedPlan := appClient.GetComputePlan(client.DefaultPlanRef)
 
 	// Ignore dynamic fields
-	retrievedPlan.WaitingCount = 0
-	retrievedPlan.TodoCount = 0
-	retrievedPlan.DoingCount = 0
-	retrievedPlan.CanceledCount = 0
-	retrievedPlan.FailedCount = 0
-	retrievedPlan.DoneCount = 0
-	retrievedPlan.TaskCount = 0
 	retrievedPlan.Status = asset.ComputePlanStatus_PLAN_STATUS_EMPTY
 
 	e2erequire.ProtoEqual(t, registeredPlan, retrievedPlan)
@@ -206,7 +199,6 @@ func TestMultiStageComputePlan(t *testing.T) {
 	appClient.DoneTask("compB1")
 	cp := appClient.GetComputePlan(client.DefaultPlanRef)
 	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DOING, cp.Status)
-	require.EqualValues(t, 2, cp.DoneCount)
 
 	// Start step 2
 	appClient.StartTask("aggC2")
@@ -334,7 +326,6 @@ func TestSmallComputePlan(t *testing.T) {
 
 	cp := appClient.GetComputePlan(client.DefaultPlanRef)
 	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_TODO, cp.Status, "unexpected plan status")
-	require.EqualValues(t, 5, cp.TaskCount, "invalid task count")
 }
 
 func TestAggregateComposite(t *testing.T) {
@@ -493,30 +484,16 @@ func TestGetComputePlan(t *testing.T) {
 		WithParentsRef(client.DefaultTrainTaskRef).
 		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().
-		WithKeyRef("task#2").
-		WithParentsRef(client.DefaultTrainTaskRef).
-		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
-
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	expectedCounts := [7]uint32{3, 2, 1, 0, 0, 0, 0}
-	actualCounts := [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	require.Equal(t, expectedCounts, actualCounts, "Tasks counts per status should match")
+	require.Equal(t, plan.Status, asset.ComputePlanStatus_PLAN_STATUS_TODO)
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
-	appClient.CancelTask("task#1")
-	appClient.FailTask("task#2")
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
-	expectedCounts = [7]uint32{3, 0, 0, 1, 1, 1, 0}
-	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	require.Equal(t, expectedCounts, actualCounts, "Tasks counts per status should match")
+	require.Equal(t, plan.Status, asset.ComputePlanStatus_PLAN_STATUS_DOING)
 
-	appClient.RegisterModel(client.DefaultModelOptions())
-	appClient.DoneTask(client.DefaultTrainTaskRef)
+	appClient.FailTask("task#1")
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
-	expectedCounts = [7]uint32{3, 0, 0, 0, 1, 1, 1}
-	actualCounts = [7]uint32{plan.TaskCount, plan.WaitingCount, plan.TodoCount, plan.DoingCount, plan.CanceledCount, plan.FailedCount, plan.DoneCount}
-	require.Equal(t, expectedCounts, actualCounts, "Tasks counts per status should match")
+	require.Equal(t, plan.Status, asset.ComputePlanStatus_PLAN_STATUS_FAILED)
 }
 
 func TestCompositeParentChild(t *testing.T) {

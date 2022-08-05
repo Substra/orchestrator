@@ -21,7 +21,7 @@ func TestGetPlan(t *testing.T) {
 
 	service := NewComputePlanService(provider)
 
-	cp := &asset.ComputePlan{Key: "uuid", Owner: "org1", Tag: "test", Name: "My Test", TaskCount: 243, DoneCount: 223}
+	cp := &asset.ComputePlan{Key: "uuid", Owner: "org1", Tag: "test", Name: "My Test"}
 
 	dbal.On("GetComputePlan", "uuid").Once().Return(cp, nil)
 

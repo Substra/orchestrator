@@ -23,9 +23,6 @@ func TestRegisterFailureReport(t *testing.T) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	plan := appClient.GetComputePlan("cp")
-	require.EqualValues(t, 1, plan.TaskCount)
-
 	appClient.StartTask(client.DefaultTrainTaskRef)
 
 	registeredFailureReport := appClient.RegisterFailureReport(client.DefaultTrainTaskRef)

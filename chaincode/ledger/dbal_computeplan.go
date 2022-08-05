@@ -61,13 +61,6 @@ func (db *DB) computePlanProperties(plan *asset.ComputePlan) error {
 		return err
 	}
 
-	plan.TaskCount = count.Total
-	plan.WaitingCount = count.Waiting
-	plan.TodoCount = count.Todo
-	plan.DoingCount = count.Doing
-	plan.CanceledCount = count.Canceled
-	plan.FailedCount = count.Failed
-	plan.DoneCount = count.Done
 	plan.Status = persistence.GetPlanStatus(plan, count)
 
 	return nil
