@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/go-playground/log/v7"
@@ -55,19 +56,15 @@ func newStorableEvent(e *asset.Event) (*storableEvent, error) {
 }
 
 // newEventFromStorable converts a storableEvent back into an asset.Event
-func (db *DB) newEventFromStorable(s *storableEvent) (*asset.Event, error) {
-	logger := db.logger.WithField("event", s.ID)
-
+func (s *storableEvent) newEvent() (*asset.Event, error) {
 	eventKind, ok := asset.EventKind_value[s.EventKind]
 	if !ok {
-		logger.WithField("eventKind", s.EventKind).Warn("unable to convert event kind into proto value")
-		eventKind = int32(asset.EventKind_EVENT_UNKNOWN)
+		return nil, errors.NewUnimplemented(fmt.Sprintf("unsupported event kind %q", s.EventKind))
 	}
 
 	assetKind, ok := asset.AssetKind_value[s.AssetKind]
 	if !ok {
-		logger.WithField("assetKind", s.AssetKind).Warn("unable to convert asset kind into proto value")
-		assetKind = int32(asset.AssetKind_ASSET_UNKNOWN)
+		return nil, errors.NewUnimplemented(fmt.Sprintf("unsupported asset kind %q", s.AssetKind))
 	}
 
 	event := &asset.Event{
@@ -188,7 +185,7 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, 
 			return nil, "", err
 		}
 
-		event, err := db.newEventFromStorable(proxy)
+		event, err := proxy.newEvent()
 		if err != nil {
 			return nil, "", err
 		}

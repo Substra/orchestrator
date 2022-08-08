@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 	"time"
@@ -11,6 +12,7 @@ import (
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -84,12 +86,31 @@ func TestProxyConversion(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(1337000001234), proxy.Timestamp, "proxy object should store TS as unix time")
 
-	stub := new(testHelper.MockedStub)
-	db := NewDB(context.Background(), stub)
-
-	converted, err := db.newEventFromStorable(proxy)
+	converted, err := proxy.newEvent()
 	require.NoError(t, err)
 	assert.Equal(t, event, converted)
+}
+
+func TestFailingProxyConversion(t *testing.T) {
+	cases := map[string]storableEvent{
+		"invalid event": {
+			EventKind: "notanevent",
+		},
+		"invalid asset": {
+			AssetKind: "notanasset",
+		},
+	}
+
+	for name, stored := range cases {
+		t.Run(name, func(t *testing.T) {
+			_, err := stored.newEvent()
+			assert.Error(t, err)
+			orcError := new(orcerrors.OrcError)
+			assert.True(t, errors.As(err, &orcError))
+			assert.Equal(t, orcerrors.ErrUnimplemented, orcError.Kind)
+		})
+	}
+
 }
 
 func TestEventAssetFilterBuilder(t *testing.T) {
