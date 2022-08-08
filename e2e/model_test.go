@@ -29,8 +29,8 @@ func TestRegisterModel(t *testing.T) {
 
 	taskEvents := appClient.QueryEvents(&asset.EventQueryFilter{AssetKey: appClient.GetKeyStore().GetKey(client.DefaultTrainTaskRef)}, "", 10)
 
-	// 2 events: creation, start
-	require.Equalf(t, 2, len(taskEvents.Events), "events: %v", taskEvents.Events)
+	// 3 events: start, model creation, task output asset creation
+	require.Equalf(t, 3, len(taskEvents.Events), "events: %v", taskEvents.Events)
 
 	retrievedModel := appClient.GetModel(client.DefaultModelRef)
 	e2erequire.ProtoEqual(t, registeredModel, retrievedModel)
@@ -129,8 +129,8 @@ func TestRegisterAllModelsForCompositeTask(t *testing.T) {
 
 	appClient.StartTask(client.DefaultCompositeTaskRef)
 	appClient.RegisterModels(
-		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_HEAD).WithKeyRef("mod1"),
-		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithKeyRef("mod2"),
+		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_HEAD).WithKeyRef("mod1").WithTaskOutput("local"),
+		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithKeyRef("mod2").WithTaskOutput("shared"),
 	)
 	appClient.DoneTask(client.DefaultCompositeTaskRef)
 

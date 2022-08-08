@@ -56,7 +56,13 @@ var (
 	ErrIncompatibleTaskStatus = "OE0104"
 
 	// ErrCannotDisableModel occurs when attempting to disable a model that is not eligible
-	ErrCannotDisableModel = "OE105"
+	ErrCannotDisableModel = "OE0105"
+
+	// ErrMissingTaskOutput occurs when attempting to register an asset referencing a non-existing task output
+	ErrMissingTaskOutput = "OE0106"
+
+	// ErrIncompatibleKind occurs when attempting to register an asset for a task output of a different kind
+	ErrIncompatibleKind = "OE0107"
 )
 
 // OrcError represents an orchestration error.
@@ -157,6 +163,23 @@ func NewInternal(msg string) *OrcError {
 // NewNotImplemented returns an ErrUnimplemented kind of OrcError with given message
 func NewUnimplemented(msg string) *OrcError {
 	return newErrorWithSource(ErrUnimplemented, msg)
+}
+
+func NewMissingTaskOutput(taskKey, identifier string) *OrcError {
+	return newErrorWithSource(ErrMissingTaskOutput, fmt.Sprintf("Task %q has no output named %q", taskKey, identifier))
+}
+
+func NewIncompatibleTaskOutput(taskKey, identifier, expected, actual string) *OrcError {
+	return newErrorWithSource(
+		ErrIncompatibleKind,
+		fmt.Sprintf(
+			"Incompatible kind for task %q: output %q expects %q, received %q",
+			taskKey,
+			identifier,
+			expected,
+			actual,
+		),
+	)
 }
 
 // FromValidationError returns an OrcError with ErrInvalidAsset kind wrapping the underlying validation error

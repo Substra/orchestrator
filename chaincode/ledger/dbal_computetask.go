@@ -285,3 +285,60 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 	}
 	return tasks, bookmark.Bookmark, nil
 }
+
+type storableComputeTaskOutputAsset struct {
+	ComputeTaskKey              string `json:"compute_task_key"`
+	ComputeTaskOutputIdentifier string `json:"compute_task_output_identifier"`
+	AssetKind                   string `json:"asset_kind"`
+	AssetKey                    string `json:"asset_key"`
+}
+
+func newStorableTaskOutputAsset(o *asset.ComputeTaskOutputAsset) *storableComputeTaskOutputAsset {
+	return &storableComputeTaskOutputAsset{
+		ComputeTaskKey:              o.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: o.ComputeTaskOutputIdentifier,
+		AssetKind:                   o.AssetKind.String(),
+		AssetKey:                    o.AssetKey,
+	}
+}
+
+func (db *DB) getTaskOutputAssets(taskKey string) ([]*storableComputeTaskOutputAsset, error) {
+	outputAssets := make([]*storableComputeTaskOutputAsset, 0)
+
+	bytes, err := db.getState(asset.ComputeTaskOutputAssetKind, taskKey)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(bytes, &outputAssets)
+	if err != nil {
+		return nil, err
+	}
+
+	return outputAssets, nil
+}
+
+func (db *DB) AddComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error {
+	var outputs []*storableComputeTaskOutputAsset
+
+	exist, err := db.hasKey(asset.ComputeTaskOutputAssetKind, output.ComputeTaskKey)
+	if err != nil {
+		return err
+	}
+	if exist {
+		outputs, err = db.getTaskOutputAssets(output.ComputeTaskKey)
+		if err != nil {
+			return err
+		}
+	} else {
+		outputs = []*storableComputeTaskOutputAsset{}
+	}
+
+	outputs = append(outputs, newStorableTaskOutputAsset(output))
+
+	bytes, err := json.Marshal(outputs)
+	if err != nil {
+		return err
+	}
+	return db.putState(asset.ComputeTaskOutputAssetKind, output.ComputeTaskKey, bytes)
+}

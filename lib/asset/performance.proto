@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 
 message NewPerformance {
   string compute_task_key = 1;
+  string compute_task_output_identifier = 3;
   string metric_key = 5;
   float performance_value = 2;
 }

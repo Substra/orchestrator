@@ -71,6 +71,18 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewInvalidAsset(fmt.Sprintf("MetricKey should point to an Algo with category %s", asset.AlgoCategory_ALGO_METRIC.String()))
 	}
 
+	if _, ok := task.Outputs[newPerf.ComputeTaskOutputIdentifier]; !ok {
+		return nil, errors.NewMissingTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier)
+	}
+	algoOutput, ok := task.Algo.Outputs[newPerf.ComputeTaskOutputIdentifier]
+	if !ok {
+		// This should never happen since task outputs are checked against algo on registration
+		return nil, errors.NewInternal(fmt.Sprintf("missing algo output %q for task %q", newPerf.ComputeTaskOutputIdentifier, task.Key))
+	}
+	if algoOutput.Kind != asset.AssetKind_ASSET_PERFORMANCE {
+		return nil, errors.NewIncompatibleTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier, algoOutput.Kind.String(), asset.AssetKind_ASSET_PERFORMANCE.String())
+	}
+
 	perf := &asset.Performance{
 		ComputeTaskKey:   newPerf.ComputeTaskKey,
 		PerformanceValue: newPerf.PerformanceValue,
@@ -86,11 +98,21 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewConflict(asset.PerformanceKind, perf.GetKey())
 	}
 
-	err = s.GetPerformanceDBAL().AddPerformance(perf)
+	err = s.GetPerformanceDBAL().AddPerformance(perf, newPerf.ComputeTaskOutputIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
+	outputAsset := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              newPerf.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_PERFORMANCE,
+		AssetKey:                    perf.GetKey(),
+	}
+	err = s.GetComputeTaskService().addComputeTaskOutputAsset(outputAsset)
+	if err != nil {
+		return nil, err
+	}
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  perf.GetKey(),

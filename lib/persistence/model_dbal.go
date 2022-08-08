@@ -10,7 +10,7 @@ type ModelDBAL interface {
 	GetModel(key string) (*asset.Model, error)
 	QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error)
 	GetComputeTaskOutputModels(key string) ([]*asset.Model, error)
-	AddModel(m *asset.Model) error
+	AddModel(m *asset.Model, identifier string) error
 	UpdateModel(m *asset.Model) error
 }
 

@@ -1,10 +1,12 @@
 package service
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/owkin/orchestrator/lib/asset"
+	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -36,13 +38,24 @@ func TestRegisterPerformance(t *testing.T) {
 		Data: &asset.ComputeTask_Test{
 			Test: &asset.TestTaskData{},
 		},
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"auc": {},
+		},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"auc": {
+					Kind: asset.AssetKind_ASSET_PERFORMANCE,
+				},
+			},
+		},
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 
 	perf := &asset.NewPerformance{
-		ComputeTaskKey:   "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		MetricKey:        "1da600d4-f8ad-45d7-92a0-7ff752a82275",
-		PerformanceValue: 0.36492,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "auc",
+		MetricKey:                   "1da600d4-f8ad-45d7-92a0-7ff752a82275",
+		PerformanceValue:            0.36492,
 	}
 
 	stored := &asset.Performance{
@@ -53,7 +66,15 @@ func TestRegisterPerformance(t *testing.T) {
 	}
 
 	dbal.On("PerformanceExists", stored).Return(false, nil).Once()
-	dbal.On("AddPerformance", stored).Once().Return(nil)
+	dbal.On("AddPerformance", stored, "auc").Once().Return(nil)
+
+	output := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              perf.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: perf.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_PERFORMANCE,
+		AssetKey:                    stored.GetKey(),
+	}
+	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,
@@ -85,14 +106,70 @@ func TestRegisterPerformanceInvalidTask(t *testing.T) {
 	}, nil)
 
 	perf := &asset.NewPerformance{
-		ComputeTaskKey:   "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		MetricKey:        "1da600d4-f8ad-45d7-92a0-7ff752a82275",
-		PerformanceValue: 0.36492,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "auc",
+		MetricKey:                   "1da600d4-f8ad-45d7-92a0-7ff752a82275",
+		PerformanceValue:            0.36492,
 	}
 
 	_, err := service.RegisterPerformance(perf, "test")
 	assert.Error(t, err)
 
+	cts.AssertExpectations(t)
+	provider.AssertExpectations(t)
+}
+
+func TestRegisterPerformanceInvalidOutput(t *testing.T) {
+	as := new(MockAlgoAPI)
+	cts := new(MockComputeTaskAPI)
+	provider := newMockedProvider()
+	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetAlgoService").Return(as)
+	service := NewPerformanceService(provider)
+
+	metric := &asset.Algo{Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275", Category: asset.AlgoCategory_ALGO_METRIC}
+	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
+
+	task := &asset.ComputeTask{
+		Status:   asset.ComputeTaskStatus_STATUS_DOING,
+		Worker:   "test",
+		Category: asset.ComputeTaskCategory_TASK_TEST,
+		Data: &asset.ComputeTask_Test{
+			Test: &asset.TestTaskData{},
+		},
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"auc": {},
+		},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"auc": {
+					Kind: asset.AssetKind_ASSET_UNKNOWN,
+				},
+			},
+		},
+	}
+	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
+
+	perf := &asset.NewPerformance{
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "foo",
+		MetricKey:                   "1da600d4-f8ad-45d7-92a0-7ff752a82275",
+		PerformanceValue:            0.36492,
+	}
+
+	_, err := service.RegisterPerformance(perf, "test")
+	assert.ErrorContains(t, err, "has no output named \"foo\"")
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrMissingTaskOutput, orcError.Kind)
+
+	perf.ComputeTaskOutputIdentifier = "auc"
+	_, err = service.RegisterPerformance(perf, "test")
+	orcError = new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrIncompatibleKind, orcError.Kind)
+
+	as.AssertExpectations(t)
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }

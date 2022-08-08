@@ -2,9 +2,10 @@ package dbal
 
 import (
 	"errors"
-	"github.com/jackc/pgtype"
 	"strconv"
 	"time"
+
+	"github.com/jackc/pgtype"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
@@ -172,7 +173,7 @@ func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 	return models, nil
 }
 
-func (d *DBAL) AddModel(model *asset.Model) error {
+func (d *DBAL) AddModel(model *asset.Model, identifier string) error {
 	err := d.addAddressable(model.Address)
 	if err != nil {
 		return err

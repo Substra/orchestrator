@@ -2,6 +2,7 @@ package asset
 
 import (
 	"fmt"
+
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -30,6 +31,8 @@ func MarshalEventAsset(event *Event) ([]byte, error) {
 		m = event.GetOrganization()
 	case *Event_Performance:
 		m = event.GetPerformance()
+	case *Event_ComputeTaskOutputAsset:
+		m = event.GetComputeTaskOutputAsset()
 	default:
 		return nil, orcerrors.NewInternal(fmt.Sprintf("unsupported asset %T", a))
 	}
@@ -95,6 +98,12 @@ func UnmarshalEventAsset(b []byte, event *Event, assetKind AssetKind) error {
 			return err
 		}
 		event.Asset = &Event_Performance{Performance: perf}
+	case AssetKind_ASSET_COMPUTE_TASK_OUTPUT_ASSET:
+		out := new(ComputeTaskOutputAsset)
+		if err := protojson.Unmarshal(b, out); err != nil {
+			return err
+		}
+		event.Asset = &Event_ComputeTaskOutputAsset{ComputeTaskOutputAsset: out}
 	default:
 		return orcerrors.NewInternal(fmt.Sprintf("unsupported asset kind %T", assetKind))
 	}

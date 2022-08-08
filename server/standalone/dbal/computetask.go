@@ -17,6 +17,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+const computeTaskOutputAssetsTable = "compute_task_output_assets"
+
 type sqlComputeTask struct {
 	Key            string
 	Category       asset.ComputeTaskCategory
@@ -499,4 +501,23 @@ func (d *DBAL) GetComputeTasks(keys []string) ([]*asset.ComputeTask, error) {
 		return builder.Where(sq.Eq{"key": keys})
 	})
 	return tasks, err
+}
+
+func (d *DBAL) AddComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error {
+	stmt := getStatementBuilder().
+		Insert(computeTaskOutputAssetsTable).
+		Columns("compute_task_key", "compute_task_output_identifier", "position", "asset_kind", "asset_key").
+		Select(
+			getStatementBuilder().
+				Select().
+				Column("?", output.ComputeTaskKey).
+				Column("?", output.ComputeTaskOutputIdentifier).
+				Column("coalesce(max(position)+1, 0)").
+				Column("?", output.AssetKind).
+				Column("?", output.AssetKey).
+				From(computeTaskOutputAssetsTable).
+				Where(sq.Eq{"compute_task_key": output.ComputeTaskKey, "compute_task_output_identifier": output.ComputeTaskOutputIdentifier}),
+		)
+
+	return d.exec(stmt)
 }

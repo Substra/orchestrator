@@ -54,7 +54,7 @@ func (db *DB) GetComputeTaskOutputModels(computeTaskKey string) ([]*asset.Model,
 	return models, nil
 }
 
-func (db *DB) AddModel(model *asset.Model) error {
+func (db *DB) AddModel(model *asset.Model, identifier string) error {
 	exists, err := db.hasKey(asset.ModelKind, model.GetKey())
 	if err != nil {
 		return err

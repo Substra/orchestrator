@@ -92,13 +92,15 @@ type AggregateTaskOptions struct {
 }
 
 type ModelOptions struct {
-	KeyRef   string
-	TaskRef  string
-	Category asset.ModelCategory
+	KeyRef     string
+	TaskRef    string
+	TaskOutput string
+	Category   asset.ModelCategory
 }
 
 type PerformanceOptions struct {
 	ComputeTaskKeyRef string
+	ComputeTaskOutput string
 	MetricKeyRef      string
 	PerformanceValue  float32
 }
@@ -547,9 +549,10 @@ func (o *ComputePlanOptions) WithDeleteIntermediaryModels(flag bool) *ComputePla
 
 func DefaultModelOptions() *ModelOptions {
 	return &ModelOptions{
-		KeyRef:   DefaultModelRef,
-		TaskRef:  DefaultTrainTaskRef,
-		Category: asset.ModelCategory_MODEL_SIMPLE,
+		KeyRef:     DefaultModelRef,
+		TaskRef:    DefaultTrainTaskRef,
+		TaskOutput: "model",
+		Category:   asset.ModelCategory_MODEL_SIMPLE,
 	}
 }
 
@@ -563,6 +566,11 @@ func (o *ModelOptions) WithTaskRef(ref string) *ModelOptions {
 	return o
 }
 
+func (o *ModelOptions) WithTaskOutput(output string) *ModelOptions {
+	o.TaskOutput = output
+	return o
+}
+
 func (o *ModelOptions) WithCategory(category asset.ModelCategory) *ModelOptions {
 	o.Category = category
 	return o
@@ -571,6 +579,7 @@ func (o *ModelOptions) WithCategory(category asset.ModelCategory) *ModelOptions 
 func DefaultPerformanceOptions() *PerformanceOptions {
 	return &PerformanceOptions{
 		ComputeTaskKeyRef: DefaultTrainTaskRef,
+		ComputeTaskOutput: "performance",
 		MetricKeyRef:      DefaultMetricAlgoRef,
 		PerformanceValue:  0.5,
 	}
@@ -578,6 +587,11 @@ func DefaultPerformanceOptions() *PerformanceOptions {
 
 func (o *PerformanceOptions) WithTaskRef(ref string) *PerformanceOptions {
 	o.ComputeTaskKeyRef = ref
+	return o
+}
+
+func (o *PerformanceOptions) WithTaskOutput(output string) *PerformanceOptions {
+	o.ComputeTaskOutput = output
 	return o
 }
 

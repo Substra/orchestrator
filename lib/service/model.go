@@ -146,6 +146,19 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register model for task with status %q", task.Status.String()))
 	}
 
+	taskOutput, ok := task.Outputs[newModel.ComputeTaskOutputIdentifier]
+	if !ok {
+		return nil, errors.NewMissingTaskOutput(task.Key, newModel.ComputeTaskOutputIdentifier)
+	}
+	algoOutput, ok := task.Algo.Outputs[newModel.ComputeTaskOutputIdentifier]
+	if !ok {
+		// This should never happen since task outputs are checked against algo on registration
+		return nil, errors.NewInternal(fmt.Sprintf("missing algo output %q for task %q", newModel.ComputeTaskOutputIdentifier, task.Key))
+	}
+	if algoOutput.Kind != asset.AssetKind_ASSET_MODEL {
+		return nil, errors.NewIncompatibleTaskOutput(task.Key, newModel.ComputeTaskOutputIdentifier, algoOutput.Kind.String(), asset.AssetKind_ASSET_MODEL.String())
+	}
+
 	if err = checkDuplicateModel(existingModels, newModel); err != nil {
 		return nil, err
 	}
@@ -167,14 +180,25 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 		return nil, errors.NewUnimplemented("unhandled model category")
 	}
 
+	model.Permissions = taskOutput.Permissions
 	model.Owner = requester
 	model.CreationDate = timestamppb.New(s.GetTimeService().GetTransactionTime())
 
-	err = s.GetModelDBAL().AddModel(model)
+	err = s.GetModelDBAL().AddModel(model, newModel.ComputeTaskOutputIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
+	outputAsset := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              newModel.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: newModel.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    newModel.Key,
+	}
+	err = s.GetComputeTaskService().addComputeTaskOutputAsset(outputAsset)
+	if err != nil {
+		return nil, err
+	}
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  model.Key,
@@ -185,6 +209,7 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 	if err != nil {
 		return nil, err
 	}
+
 	return model, nil
 }
 
@@ -197,31 +222,11 @@ func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester s
 		return nil, errors.NewBadRequest("cannot register non-simple model")
 	}
 
-	var permissions *asset.Permissions
-
-	switch task.Category {
-	case asset.ComputeTaskCategory_TASK_TRAIN, asset.ComputeTaskCategory_TASK_AGGREGATE:
-		output, ok := task.Outputs[taskIOModel]
-		if !ok {
-			return nil, errors.NewInternal(fmt.Sprintf("Task %q has no output %s", task.Key, taskIOModel))
-		}
-		permissions = output.Permissions
-	case asset.ComputeTaskCategory_TASK_PREDICT:
-		output, ok := task.Outputs[taskIOPredictions]
-		if !ok {
-			return nil, errors.NewInternal(fmt.Sprintf("Task %q has no output %s", task.Key, taskIOModel))
-		}
-		permissions = output.Permissions
-	default:
-		return nil, errors.NewBadRequest(fmt.Sprintf("cannot set model permissions for %q task", task.Category.String()))
-	}
-
 	model := &asset.Model{
 		Key:            newModel.Key,
 		Category:       newModel.Category,
 		ComputeTaskKey: task.Key,
 		Address:        newModel.Address,
-		Permissions:    permissions,
 	}
 
 	return model, nil
@@ -236,31 +241,11 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 		return nil, errors.NewBadRequest("cannot register non-composite model")
 	}
 
-	var permissions *asset.Permissions
-
-	switch newModel.Category {
-	case asset.ModelCategory_MODEL_HEAD:
-		output, ok := task.Outputs[taskIOLocal]
-		if !ok {
-			return nil, errors.NewInternal(fmt.Sprintf("Task %q has no output %s", task.Key, taskIOModel))
-		}
-		permissions = output.Permissions
-	case asset.ModelCategory_MODEL_SIMPLE:
-		output, ok := task.Outputs[taskIOShared]
-		if !ok {
-			return nil, errors.NewInternal(fmt.Sprintf("Task %q has no output %s", task.Key, taskIOModel))
-		}
-		permissions = output.Permissions
-	default:
-		return nil, errors.NewBadRequest(fmt.Sprintf("cannot set permissions for %q model", newModel.Category.String()))
-	}
-
 	model := &asset.Model{
 		Key:            newModel.Key,
 		Category:       newModel.Category,
 		ComputeTaskKey: task.Key,
 		Address:        newModel.Address,
-		Permissions:    permissions,
 	}
 
 	return model, nil

@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-func (db *DB) AddPerformance(perf *asset.Performance) error {
+func (db *DB) AddPerformance(perf *asset.Performance, identifier string) error {
 	exists, err := db.hasKey(asset.PerformanceKind, perf.GetKey())
 	if err != nil {
 		return err

@@ -82,6 +82,10 @@ func fromMessage(msg string) error {
 		return status.Error(codes.Unimplemented, msg)
 	case strings.Contains(msg, orcerrors.ErrCannotDisableModel):
 		return status.Error(codes.InvalidArgument, msg)
+	case strings.Contains(msg, orcerrors.ErrMissingTaskOutput):
+		return status.Error(codes.InvalidArgument, msg)
+	case strings.Contains(msg, orcerrors.ErrIncompatibleKind):
+		return status.Error(codes.InvalidArgument, msg)
 	case strings.Contains(msg, orcerrors.ErrInternal):
 		return status.Error(codes.Internal, msg)
 	default:
@@ -116,6 +120,10 @@ func fromError(err error) error {
 	case orcError.Kind == orcerrors.ErrUnimplemented:
 		return status.Error(codes.Unimplemented, err.Error())
 	case orcError.Kind == orcerrors.ErrCannotDisableModel:
+		return status.Error(codes.InvalidArgument, err.Error())
+	case orcError.Kind == orcerrors.ErrMissingTaskOutput:
+		return status.Error(codes.InvalidArgument, err.Error())
+	case orcError.Kind == orcerrors.ErrIncompatibleKind:
 		return status.Error(codes.InvalidArgument, err.Error())
 	case orcError.Kind == orcerrors.ErrInternal:
 		return status.Error(codes.Internal, err.Error())

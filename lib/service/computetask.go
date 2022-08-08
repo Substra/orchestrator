@@ -34,6 +34,7 @@ type ComputeTaskAPI interface {
 	canDisableModels(key, requester string) (bool, error)
 	// applyTaskAction is internal only, it will trigger a task status update.
 	applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error
+	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance
@@ -377,6 +378,22 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 	}
 
 	return true, nil
+}
+
+func (s *ComputeTaskService) addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error {
+	err := s.GetComputeTaskDBAL().AddComputeTaskOutputAsset(output)
+	if err != nil {
+		return err
+	}
+
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
+		AssetKey:  output.ComputeTaskKey,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_TASK_OUTPUT_ASSET,
+		Asset:     &asset.Event_ComputeTaskOutputAsset{ComputeTaskOutputAsset: output},
+	}
+
+	return s.GetEventService().RegisterEvents(event)
 }
 
 // getCheckedAlgo returns the Algo identified by given key,

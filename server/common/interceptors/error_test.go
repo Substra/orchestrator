@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -15,16 +16,18 @@ func TestStatusConversion(t *testing.T) {
 		err  error
 		code codes.Code
 	}{
-		"conflict":            {err: errors.NewError(errors.ErrConflict, "test"), code: codes.AlreadyExists},
-		"validation":          {err: errors.NewError(errors.ErrInvalidAsset, "test"), code: codes.InvalidArgument},
-		"unknown":             {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
-		"unauthorized":        {err: errors.NewError(errors.ErrPermissionDenied, "test"), code: codes.PermissionDenied},
-		"notfound":            {err: errors.NewError(errors.ErrNotFound, "test"), code: codes.NotFound},
-		"badrequest":          {err: errors.NewError(errors.ErrBadRequest, "test"), code: codes.FailedPrecondition},
-		"incompatible_status": {err: errors.NewError(errors.ErrIncompatibleTaskStatus, "test"), code: codes.InvalidArgument},
-		"unimplemented":       {err: errors.NewError(errors.ErrUnimplemented, "test"), code: codes.Unimplemented},
-		"unprocessable model": {err: errors.NewError(errors.ErrCannotDisableModel, "test"), code: codes.InvalidArgument},
-		"internal":            {err: errors.NewInternal("test"), code: codes.Internal},
+		"conflict":                 {err: errors.NewError(errors.ErrConflict, "test"), code: codes.AlreadyExists},
+		"validation":               {err: errors.NewError(errors.ErrInvalidAsset, "test"), code: codes.InvalidArgument},
+		"unknown":                  {err: fmt.Errorf("some unknown error"), code: codes.Unknown},
+		"unauthorized":             {err: errors.NewError(errors.ErrPermissionDenied, "test"), code: codes.PermissionDenied},
+		"notfound":                 {err: errors.NewError(errors.ErrNotFound, "test"), code: codes.NotFound},
+		"badrequest":               {err: errors.NewError(errors.ErrBadRequest, "test"), code: codes.FailedPrecondition},
+		"incompatible_status":      {err: errors.NewError(errors.ErrIncompatibleTaskStatus, "test"), code: codes.InvalidArgument},
+		"unimplemented":            {err: errors.NewError(errors.ErrUnimplemented, "test"), code: codes.Unimplemented},
+		"unprocessable model":      {err: errors.NewError(errors.ErrCannotDisableModel, "test"), code: codes.InvalidArgument},
+		"internal":                 {err: errors.NewInternal("test"), code: codes.Internal},
+		"missing task output":      {err: errors.NewMissingTaskOutput("test", "output"), code: codes.InvalidArgument},
+		"incompatible task output": {err: errors.NewIncompatibleTaskOutput("test", "output", asset.AssetKind_ASSET_MODEL.String(), asset.AssetKind_ASSET_PERFORMANCE.String()), code: codes.InvalidArgument},
 	}
 
 	for name, tc := range cases {

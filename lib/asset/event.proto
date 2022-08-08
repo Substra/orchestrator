@@ -42,6 +42,7 @@ message Event {
     Model model = 13;
     Organization organization = 14;
     Performance performance = 15;
+    ComputeTaskOutputAsset compute_task_output_asset = 16;
   }
   map<string, string> metadata = 18;
 }

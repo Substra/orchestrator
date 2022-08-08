@@ -26,7 +26,7 @@ func (p *sqlPerformance) toPerformance() *asset.Performance {
 	}
 }
 
-func (d *DBAL) AddPerformance(perf *asset.Performance) error {
+func (d *DBAL) AddPerformance(perf *asset.Performance, identifier string) error {
 	stmt := getStatementBuilder().
 		Insert("performances").
 		Columns("channel", "compute_task_key", "algo_key", "performance_value", "creation_date").

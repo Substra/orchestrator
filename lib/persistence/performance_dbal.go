@@ -6,7 +6,7 @@ import (
 )
 
 type PerformanceDBAL interface {
-	AddPerformance(perf *asset.Performance) error
+	AddPerformance(perf *asset.Performance, identifier string) error
 	QueryPerformances(p *common.Pagination, filter *asset.PerformanceQueryFilter) ([]*asset.Performance, common.PaginationToken, error)
 	PerformanceExists(perf *asset.Performance) (bool, error)
 }

@@ -348,15 +348,7 @@ func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskActi
 }
 
 func (c *TestClient) RegisterModel(o *ModelOptions) *asset.Model {
-	newModel := &asset.NewModel{
-		ComputeTaskKey: c.ks.GetKey(o.TaskRef),
-		Key:            c.ks.GetKey(o.KeyRef),
-		Category:       o.Category,
-		Address: &asset.Addressable{
-			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
-			StorageAddress: "http://somewhere.online/model/" + uuid.NewString(),
-		},
-	}
+	newModel := c.makeNewModel(o)
 	c.logger.WithField("model", newModel).Debug("registering model")
 	//nolint: staticcheck //This method is deprecated but still needs to be tested
 	model, err := c.modelService.RegisterModel(c.ctx, newModel)
@@ -381,15 +373,7 @@ func (c *TestClient) GetModel(modelRef string) *asset.Model {
 func (c *TestClient) FailableRegisterModels(o ...*ModelOptions) (*asset.RegisterModelsResponse, error) {
 	newModels := make([]*asset.NewModel, len(o))
 	for i, modelOpt := range o {
-		newModel := &asset.NewModel{
-			ComputeTaskKey: c.ks.GetKey(modelOpt.TaskRef),
-			Key:            c.ks.GetKey(modelOpt.KeyRef),
-			Category:       modelOpt.Category,
-			Address: &asset.Addressable{
-				Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
-				StorageAddress: "http://somewhere.online/model/" + uuid.NewString(),
-			},
-		}
+		newModel := c.makeNewModel(modelOpt)
 		c.logger.WithField("model", newModel).Debug("registering model")
 		newModels[i] = newModel
 	}
@@ -474,9 +458,10 @@ func (c *TestClient) QueryTasks(filter *asset.TaskQueryFilter, pageToken string,
 
 func (c *TestClient) RegisterPerformance(o *PerformanceOptions) (*asset.Performance, error) {
 	newPerf := &asset.NewPerformance{
-		ComputeTaskKey:   c.ks.GetKey(o.ComputeTaskKeyRef),
-		MetricKey:        c.ks.GetKey(o.MetricKeyRef),
-		PerformanceValue: o.PerformanceValue,
+		ComputeTaskKey:              c.ks.GetKey(o.ComputeTaskKeyRef),
+		ComputeTaskOutputIdentifier: o.ComputeTaskOutput,
+		MetricKey:                   c.ks.GetKey(o.MetricKeyRef),
+		PerformanceValue:            o.PerformanceValue,
 	}
 
 	c.logger.WithField("performance", newPerf).Debug("registering performance")
@@ -615,4 +600,17 @@ func (c *TestClient) CancelComputePlan(computePlanRef string) (*asset.ApplyPlanA
 
 	c.logger.WithField("compute plan key", computePlanRef).Debug("cancelling compute plan")
 	return c.computePlanService.ApplyPlanAction(c.ctx, param)
+}
+
+func (c *TestClient) makeNewModel(o *ModelOptions) *asset.NewModel {
+	return &asset.NewModel{
+		ComputeTaskKey:              c.ks.GetKey(o.TaskRef),
+		ComputeTaskOutputIdentifier: o.TaskOutput,
+		Key:                         c.ks.GetKey(o.KeyRef),
+		Category:                    o.Category,
+		Address: &asset.Addressable{
+			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
+			StorageAddress: "http://somewhere.online/model/" + uuid.NewString(),
+		},
+	}
 }

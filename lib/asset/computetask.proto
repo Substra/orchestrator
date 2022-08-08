@@ -203,6 +203,15 @@ enum ComputeTaskAction {
   TASK_ACTION_DONE = 4;
 }
 
+// ComputeTaskOutputAsset links an asset to a task output.
+// It is not exposed through gRPC methods, but will be sent as event.
+message ComputeTaskOutputAsset {
+  string compute_task_key = 1;
+  string compute_task_output_identifier = 2;
+  AssetKind asset_kind = 3;
+  string asset_key = 4;
+}
+
 message ApplyTaskActionParam {
   string compute_task_key = 1;
   ComputeTaskAction action = 2;

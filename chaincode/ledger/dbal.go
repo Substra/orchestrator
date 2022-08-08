@@ -220,8 +220,7 @@ func (db *DB) createIndex(index string, attributes []string) error {
 	if err != nil {
 		return err
 	}
-	value := []byte{0x00}
-	return db.ccStub.PutState(compositeKey, value)
+	return db.ccStub.PutState(compositeKey, []byte{0x00})
 }
 
 func (db *DB) deleteIndex(index string, attributes []string) error {

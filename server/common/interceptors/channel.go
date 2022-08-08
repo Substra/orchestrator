@@ -94,7 +94,7 @@ func (i *ChannelInterceptor) extractFromContext(ctx context.Context) (context.Co
 func (i *ChannelInterceptor) checkOrgBelongsToChannel(org, channel string) error {
 	channels, ok := i.orgChannels[org]
 	if !ok {
-		return fmt.Errorf("organization \"%s\" is unknown", org)
+		return fmt.Errorf("organization %q is unknown", org)
 	}
 
 	for _, c := range channels {
@@ -103,7 +103,7 @@ func (i *ChannelInterceptor) checkOrgBelongsToChannel(org, channel string) error
 		}
 	}
 
-	return fmt.Errorf("organization \"%s\" has not access to channel \"%s\"", org, channel)
+	return fmt.Errorf("organization %q has not access to channel %q", org, channel)
 }
 
 type ctxChannelMarker struct{}

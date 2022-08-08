@@ -27,6 +27,7 @@ message NewModel {
   string key = 1;
   ModelCategory category = 2;
   string compute_task_key = 3;
+  string compute_task_output_identifier = 5;
   Addressable address = 4;
 }
 

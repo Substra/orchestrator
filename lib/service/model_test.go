@@ -100,9 +100,10 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 	service := NewModelService(provider)
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_SIMPLE,
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_SIMPLE,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "test",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -136,9 +137,10 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 	service := NewModelService(provider)
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_SIMPLE,
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_SIMPLE,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "test",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -165,10 +167,12 @@ func TestRegisterTrainModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
+	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
+	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
@@ -192,12 +196,20 @@ func TestRegisterTrainModel(t *testing.T) {
 				},
 			},
 		},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"model": {
+					Kind: asset.AssetKind_ASSET_MODEL,
+				},
+			},
+		},
 	}
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_SIMPLE,
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_SIMPLE,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -222,7 +234,15 @@ func TestRegisterTrainModel(t *testing.T) {
 		Owner:        "test",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
-	dbal.On("AddModel", storedModel).Once().Return(nil)
+	dbal.On("AddModel", storedModel, "model").Once().Return(nil)
+
+	output := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              model.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: model.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    model.Key,
+	}
+	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_MODEL,
@@ -245,10 +265,12 @@ func TestRegisterAggregateModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
+	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
+	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
@@ -272,12 +294,20 @@ func TestRegisterAggregateModel(t *testing.T) {
 				},
 			},
 		},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"model": {
+					Kind: asset.AssetKind_ASSET_MODEL,
+				},
+			},
+		},
 	}
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_SIMPLE,
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_SIMPLE,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -302,7 +332,15 @@ func TestRegisterAggregateModel(t *testing.T) {
 		Owner:        "test",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
-	dbal.On("AddModel", storedModel).Once().Return(nil)
+	dbal.On("AddModel", storedModel, "model").Once().Return(nil)
+
+	output := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              model.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: model.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    model.Key,
+	}
+	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
 
 	es.On("RegisterEvents", mock.AnythingOfType("*asset.Event")).Once().Return(nil)
 
@@ -320,9 +358,10 @@ func TestRegisterDuplicateModel(t *testing.T) {
 	service := NewModelService(provider)
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_SIMPLE,
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_SIMPLE,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -342,6 +381,27 @@ func TestRegisterDuplicateModel(t *testing.T) {
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
 			Category: asset.ComputeTaskCategory_TASK_TRAIN,
 			Worker:   "test",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"model": {
+					Permissions: &asset.Permissions{
+						Process: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{"org1", "org2"},
+						},
+						Download: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+					},
+				},
+			},
+			Algo: &asset.Algo{
+				Outputs: map[string]*asset.AlgoOutput{
+					"model": {
+						Kind: asset.AssetKind_ASSET_MODEL,
+					},
+				},
+			},
 		},
 	)
 	assert.Error(t, err)
@@ -356,10 +416,12 @@ func TestRegisterHeadModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
+	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
+	provider.On("GetComputeTaskService").Return(cts)
 	service := NewModelService(provider)
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
@@ -393,12 +455,23 @@ func TestRegisterHeadModel(t *testing.T) {
 					},
 				}},
 		},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"local": {
+					Kind: asset.AssetKind_ASSET_MODEL,
+				},
+				"shared": {
+					Kind: asset.AssetKind_ASSET_MODEL,
+				},
+			},
+		},
 	}
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_HEAD,
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_HEAD,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "local",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -423,7 +496,15 @@ func TestRegisterHeadModel(t *testing.T) {
 		Owner:        "test",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
-	dbal.On("AddModel", storedModel).Once().Return(nil)
+	dbal.On("AddModel", storedModel, "local").Once().Return(nil)
+
+	output := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              model.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: model.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    model.Key,
+	}
+	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_MODEL,
@@ -455,9 +536,10 @@ func TestRegisterWrongModelType(t *testing.T) {
 	service := NewModelService(provider)
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_HEAD, // cannot register a HEAD model on composite task
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_HEAD, // cannot register a HEAD model on aggregate task
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -473,6 +555,26 @@ func TestRegisterWrongModelType(t *testing.T) {
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
 			Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
 			Worker:   "test",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"model": {
+					Permissions: &asset.Permissions{
+						Process: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+						Download: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+					}},
+			},
+			Algo: &asset.Algo{
+				Outputs: map[string]*asset.AlgoOutput{
+					"model": {
+						Kind: asset.AssetKind_ASSET_MODEL,
+					},
+				},
+			},
 		})
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
@@ -487,9 +589,10 @@ func TestRegisterMultipleHeads(t *testing.T) {
 	service := NewModelService(provider)
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_HEAD,
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_HEAD,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "local",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -508,11 +611,119 @@ func TestRegisterMultipleHeads(t *testing.T) {
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
 			Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
 			Worker:   "test",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"shared": {
+					Permissions: &asset.Permissions{
+						Process: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+						Download: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+					}},
+				"local": {
+					Permissions: &asset.Permissions{
+						Process: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+						Download: &asset.Permission{
+							Public:        true,
+							AuthorizedIds: []string{},
+						},
+					}},
+			},
+			Algo: &asset.Algo{
+				Outputs: map[string]*asset.AlgoOutput{
+					"local": {
+						Kind: asset.AssetKind_ASSET_MODEL,
+					},
+					"shared": {
+						Kind: asset.AssetKind_ASSET_MODEL,
+					},
+				},
+			},
 		})
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
+
+	provider.AssertExpectations(t)
+}
+
+func TestRegisterInvalidOutput(t *testing.T) {
+	provider := newMockedProvider()
+	service := NewModelService(provider)
+
+	task := &asset.ComputeTask{
+		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status:   asset.ComputeTaskStatus_STATUS_DOING,
+		Category: asset.ComputeTaskCategory_TASK_TRAIN,
+		Worker:   "test",
+		Outputs: map[string]*asset.ComputeTaskOutput{
+			"model": {
+				Permissions: &asset.Permissions{
+					Process: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+					Download: &asset.Permission{
+						Public:        true,
+						AuthorizedIds: []string{},
+					},
+				}},
+		},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"model": {
+					Kind: asset.AssetKind_ASSET_UNKNOWN,
+				},
+			},
+		},
+	}
+
+	model := &asset.NewModel{
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_HEAD,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "invalid",
+		Address: &asset.Addressable{
+			StorageAddress: "https://somewhere",
+			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		},
+	}
+
+	_, err := service.registerModel(
+		model,
+		"test",
+		[]*asset.Model{
+			{
+				Category: asset.ModelCategory_MODEL_SIMPLE,
+			},
+		},
+		task)
+	assert.Error(t, err)
+	orcError := new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrMissingTaskOutput, orcError.Kind)
+
+	model.ComputeTaskOutputIdentifier = "model"
+	_, err = service.registerModel(
+		model,
+		"test",
+		[]*asset.Model{
+			{
+				Category: asset.ModelCategory_MODEL_SIMPLE,
+			},
+		},
+		task)
+	assert.Error(t, err)
+	orcError = new(orcerrors.OrcError)
+	assert.True(t, errors.As(err, &orcError))
+	assert.Equal(t, orcerrors.ErrIncompatibleKind, orcError.Kind)
 
 	provider.AssertExpectations(t)
 }
@@ -932,6 +1143,13 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 				},
 			},
 		},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"model": {
+					Kind: asset.AssetKind_ASSET_MODEL,
+				},
+			},
+		},
 	}
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
@@ -939,9 +1157,10 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 
 	models := []*asset.NewModel{
 		{
-			Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-			Category:       asset.ModelCategory_MODEL_SIMPLE,
-			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+			Category:                    asset.ModelCategory_MODEL_SIMPLE,
+			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ComputeTaskOutputIdentifier: "model",
 			Address: &asset.Addressable{
 				StorageAddress: "https://somewhere",
 				Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -967,7 +1186,15 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 		Owner:        "test",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
-	dbal.On("AddModel", storedModel).Once().Return(nil)
+	dbal.On("AddModel", storedModel, "model").Once().Return(nil)
+
+	output := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              models[0].ComputeTaskKey,
+		ComputeTaskOutputIdentifier: models[0].ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    models[0].Key,
+	}
+	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_MODEL,
@@ -1030,23 +1257,35 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 					},
 				}},
 		},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"local": {
+					Kind: asset.AssetKind_ASSET_MODEL,
+				},
+				"shared": {
+					Kind: asset.AssetKind_ASSET_MODEL,
+				},
+			},
+		},
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Times(2).Return(task, nil)
 
 	models := []*asset.NewModel{
 		{
-			Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-			Category:       asset.ModelCategory_MODEL_HEAD,
-			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+			Category:                    asset.ModelCategory_MODEL_HEAD,
+			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ComputeTaskOutputIdentifier: "local",
 			Address: &asset.Addressable{
 				StorageAddress: "https://somewhere",
 				Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 			},
 		},
 		{
-			Key:            "7d2c6aa1-18b9-4ffd-a6e3-dfdc740d64dd",
-			Category:       asset.ModelCategory_MODEL_SIMPLE,
-			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Key:                         "7d2c6aa1-18b9-4ffd-a6e3-dfdc740d64dd",
+			Category:                    asset.ModelCategory_MODEL_SIMPLE,
+			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ComputeTaskOutputIdentifier: "shared",
 			Address: &asset.Addressable{
 				StorageAddress: "https://somewhere",
 				Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -1072,7 +1311,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 		Owner:        "test",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
-	dbal.On("AddModel", storedHead).Once().Return(nil)
+	dbal.On("AddModel", storedHead, "local").Once().Return(nil)
 
 	storedSimple := &asset.Model{
 		Key:            models[1].Key,
@@ -1092,9 +1331,19 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 		Owner:        "test",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
-	dbal.On("AddModel", storedSimple).Once().Return(nil)
+	dbal.On("AddModel", storedSimple, "shared").Once().Return(nil)
 
 	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
+
+	for _, model := range models {
+		output := &asset.ComputeTaskOutputAsset{
+			ComputeTaskKey:              model.ComputeTaskKey,
+			ComputeTaskOutputIdentifier: model.ComputeTaskOutputIdentifier,
+			AssetKind:                   asset.AssetKind_ASSET_MODEL,
+			AssetKey:                    model.Key,
+		}
+		cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
+	}
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_MODEL,
@@ -1135,9 +1384,10 @@ func TestRegisterMissingOutput(t *testing.T) {
 	}
 
 	model := &asset.NewModel{
-		Key:            "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:       asset.ModelCategory_MODEL_SIMPLE,
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
+		Category:                    asset.ModelCategory_MODEL_SIMPLE,
+		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
@@ -1145,7 +1395,7 @@ func TestRegisterMissingOutput(t *testing.T) {
 	}
 
 	_, err := service.registerModel(model, "test", []*asset.Model{}, task)
-	assert.ErrorContains(t, err, "has no output model")
+	assert.ErrorContains(t, err, "has no output named \"model\"")
 
 	provider.AssertExpectations(t)
 }

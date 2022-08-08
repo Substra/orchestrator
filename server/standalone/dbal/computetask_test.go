@@ -428,3 +428,31 @@ func TestQueryComputeTasksNilFilter(t *testing.T) {
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestAddComputeTaskOutputAsset(t *testing.T) {
+	mock, err := pgxmock.NewConn()
+	assert.NoError(t, err)
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	output := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              "taskKey",
+		ComputeTaskOutputIdentifier: "identifierOut",
+		AssetKind:                   asset.AssetKind_ASSET_ALGO,
+		AssetKey:                    "assetKey",
+	}
+
+	mock.ExpectExec(`INSERT INTO compute_task_output_assets \(.*\) SELECT .* FROM compute_task_output_assets WHERE compute_task_key = \$\d AND compute_task_output_identifier = \$\d`).
+		WithArgs(output.ComputeTaskKey, output.ComputeTaskOutputIdentifier, output.AssetKind, output.AssetKey, output.ComputeTaskKey, output.ComputeTaskOutputIdentifier).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	err = dbal.AddComputeTaskOutputAsset(output)
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

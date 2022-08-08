@@ -102,7 +102,7 @@ func TestPredictTaskLifecycle(t *testing.T) {
 	appClient.DoneTask("train")
 
 	appClient.StartTask("predict")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predict").WithKeyRef("pred_end"))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predict").WithKeyRef("pred_end").WithTaskOutput("predictions"))
 	appClient.DoneTask("predict")
 
 	predictTask := appClient.GetComputeTask("predict")

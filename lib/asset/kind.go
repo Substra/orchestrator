@@ -23,5 +23,6 @@ var (
 	// PerformanceKind is the type of Performance assets
 	PerformanceKind = "performance"
 	// FailureReportKind is the type of FailureReport assets
-	FailureReportKind = "failurereport"
+	FailureReportKind          = "failurereport"
+	ComputeTaskOutputAssetKind = "computetask_output_asset"
 )
