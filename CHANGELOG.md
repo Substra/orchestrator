@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New service methods to update algo, compute_plan and data manager name (#800)
+- New service methods to update algo, compute_plan and data manager name
 
 ### Changed
 
@@ -31,315 +31,376 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Introduce gRPC SubscribeToEvents method in distributed mode (#790)
+- Introduce gRPC SubscribeToEvents method in distributed mode
 
 ### Changed
 
-- Validate task inputs (#733)
+- Validate task inputs
 
 ### Fixed
+
 - In standalone mode, lock the `events` table when inserting events to prevent
-missing events in `SubscribeToEvents` gRPC stream (#835)
+  missing events in `SubscribeToEvents` gRPC stream
 
 ### Removed
-- Category filter from QueryAlgos rpc (#836)
-- Legacy compute task permission fields (#839)
+
+- Category filter from QueryAlgos rpc
+- Legacy compute task permission fields
 
 ## [0.20.0] - 2022-07-25
 
 ### Added
-- Introduce gRPC SubscribeToEvents method in standalone mode (#781)
-- Dispatch updated asset event on ComputePlan cancellation (#832)
+
+- Introduce gRPC SubscribeToEvents method in standalone mode
+- Dispatch updated asset event on ComputePlan cancellation
 
 ### Removed
-- Automatic transition to DONE when registering models or performances (#814).
+
+- Automatic transition to DONE when registering models or performances.
 
 ### Changed
+
 - updated grpc healthprobe to 0.4.11 in server image
-- updated rabbitmq/amqp091-go lib to 1.4.0 (#829)
+- updated rabbitmq/amqp091-go lib to 1.4.0
 
 ### Fixed
-- properly ignore mocks when building image locally (#831)
+
+- properly ignore mocks when building image locally
 
 ## [0.19.1] - 2022-07-13
 
 ### Fixed
-- SQL query for organization with null address (#816)
+
+- SQL query for organization with null address
 
 ## [0.19.0] - 2022-07-11
 
 ### Added
-- Organization hostname in the organization object (#805)
-- CancelationDate in the compute plan object (#804)
+
+- Organization hostname in the organization object
+- CancelationDate in the compute plan object
 
 ### Fixed
+
 - SQL logging was enabled when `METRICS_ENABLED` flag was passed instead of documented `LOG_SQL_VERBOSE`
-- Prevent disabling model if task has only predict or test children (#809)
-- Don't timeout when canceling a compute plan (#804)
+- Prevent disabling model if task has only predict or test children
+- Don't timeout when canceling a compute plan
 
 ## [0.18.0] - 2022-07-05
 
 ### Removed
-- Metadata set in events (#787)
+
+- Metadata set in events
 
 ### Changed
-- (BREAKING) Removed the `MetricKeys` property of test tasks in favor of the generic `Algo` field (#776)
+
+- (BREAKING) Removed the `MetricKeys` property of test tasks in favor of the generic `Algo` field
 
 ## [0.17.0] - 2022-06-20
 
 ### Added
-- Enable transition to DONE through ApplyTaskAction (#785)
+
+- Enable transition to DONE through ApplyTaskAction
 
 ## [0.16.0] - 2022-06-14
 
 ### Changed
-- BREAKING: rename node to organization (#730)
+
+- (BREAKING) rename node to organization
 
 ### Fixed
-- allow a worker to cancel a task it does not own (#780)
+
+- allow a worker to cancel a task it does not own
 
 ## [0.15.0] - 2022-06-07
 
 ### Added
-- Introduce Predict task type (#707)
-- Introduce compute task outputs (#747)
+
+- Introduce Predict task type
+- Introduce compute task outputs
 
 ### Changed
-- use go test to run e2e tests (#754)
+
+- use go test to run e2e tests
 
 ## [0.14.0] - 2022-05-31
 
 ### Added
-- Introduce empty compute plan status (#726)
+
+- Introduce empty compute plan status
 
 ### Changed
-- base docker image from alpine 3.15 to alpine 3.16 (#751)
+
+- base docker image from alpine 3.15 to alpine 3.16
 
 ### Fixed
-- event asset migration (#750)
+
+- event asset migration
 
 ### Changed
-- only update status on task update (#753).
+
+- only update status on task update.
 
 ## [0.13.2] - 2022-05-24
 
 ### Fixed
-- `conn busy` error when querying Tasks (#749)
+
+- `conn busy` error when querying Tasks
 
 ## [0.13.1] - 2022-05-24
 
 ### Fixed
-- `conn busy` error when querying Algos (#748)
+
+- `conn busy` error when querying Algos
 
 ## [0.13.0] - 2022-05-23
 
 ### Fixed
+
 - In standalone mode, truncate TimeService time to microsecond resolution to match
-  PostgreSQL timestamp resolution (#718).
+  PostgreSQL timestamp resolution.
 
 ### Changed
-- Disable CGO (#724).
-- More validation of Algo inputs (data managers / data samples) (#736)
+
+- Disable CGO.
+- More validation of Algo inputs (data managers / data samples)
 
 ### Added
-- Introduce compute task inputs (#691) **existing tasks won't have any inputs**
-- Embed historical assets in the event messages (#715).
+
+- Introduce compute task inputs **existing tasks won't have any inputs**
+- Embed historical assets in the event messages.
 
 ## [0.12.0] - 2022-05-16
 
 ### Added
-- New mandatory name field to compute plan (#696)
+
+- New mandatory name field to compute plan
 
 ### Changed
-- Remove event column (#695)
+
+- Remove event column
 
 ## [0.11.0] - 2022-05-09
 
 ### Added
-- Add a new `ALGO_PREDICT` algo category (#693)
+
+- Add a new `ALGO_PREDICT` algo category
 
 ### Changed
-- Validate algo inputs and outputs (#699)
+
+- Validate algo inputs and outputs
 
 ## [0.10.0] - 2022-05-03
 
 ### Changed
-- Remove model asset column (#636)
-- Remove performance asset column (#640)
-- Remove datamanager asset column (#652)
-- Remove datasample asset column (#666)
-- Algos now have Inputs and Outputs (#641)
-- The orchestrator-server doesn't run DB migrations on startup anymore (#670)
+
+- Remove model asset column
+- Remove performance asset column
+- Remove datamanager asset column
+- Remove datasample asset column
+- Algos now have Inputs and Outputs
+- The orchestrator-server doesn't run DB migrations on startup anymore
 
 ### Removed
-- `ASSET_METRIC` kind (#672)
+
+- `ASSET_METRIC` kind
 
 ## [0.9.2] - 2022-04-15
 
 ### Changed
-- Build with go 1.18 (#639)
+
+- Build with go 1.18
 
 ### Fixed
-- Update failure report asset column migration to prevent null value error when migrating a populated database (#658)
-- Parent tasks keys format validation (#662)
+
+- Update failure report asset column migration to prevent null value error when migrating a populated database
+- Parent tasks keys format validation
 
 ## [0.9.1] - 2022-04-13
 
 ### Fixed
-- Order parent tasks keys by task position (#649)
+
+- Order parent tasks keys by task position
 
 ## [0.9.0] - 2022-04-13
 
 ### Added
-- Added ALGO_METRICS Algo category (#628)
+
+- Added ALGO_METRICS Algo category
 
 ### Changed
-- Remove compute task asset column (#619)
-- QueryAlgos filter "Category" is now "Categories" (#628)
-- Remove failure report asset column (#631)
+
+- Remove compute task asset column
+- QueryAlgos filter "Category" is now "Categories"
+- Remove failure report asset column
 
 ### Removed
-- Metrics gRPC routes. Use Algo gRPC routes and ALGO_METRICS category instead. (#628)
+
+- Metrics gRPC routes. Use Algo gRPC routes and ALGO_METRICS category instead.
 
 ## [0.8.0] - 2022-04-11
 
 ### Added
-- Allow querying datasamples by keys (#627)
+
+- Allow querying datasamples by keys
 
 ### Changed
-- Remove node asset column (#604)
-- Remove algo asset column (#612)
-- Remove compute plan asset column (#618)
+
+- Remove node asset column
+- Remove algo asset column
+- Remove compute plan asset column
 
 ### Fixed
-- Do not panic on nil filter (#510)
+
+- Do not panic on nil filter
 
 ## [0.7.0] - 2022-03-29
 
 ### Added
-- Expose gRPC metrics (#584)
-- Expose database transaction and events metrics (#589)
-- Expose task metrics (#590)
+
+- Expose gRPC metrics
+- Expose database transaction and events metrics
+- Expose task metrics
 
 ### Changed
-- Log SQL errors regardless of log level (#587)
-- Remove `asset` column of `nodes` table (#604)
+
+- Log SQL errors regardless of log level
+- Remove `asset` column of `nodes` table
 
 ### Fixed
-- Publish events sequentially, preserving the order (#600)
+
+- Publish events sequentially, preserving the order
 
 ## [0.6.1] - 2022-03-01
 
 ### Added
-- add support for graceful shutdown on `SIGTERM` signal (#557)
+
+- add support for graceful shutdown on `SIGTERM` signal
 
 ### Changed
-- removed codegen layer and implicit protojson serialization (#535)
+
+- removed codegen layer and implicit protojson serialization
 
 ### Fixed
-- Cancel all tasks when cancelling a compute plan (#546)
-- Check for compute plan existence on task registration (#554)
-- Disallow registration of tasks on a compute plan you don't own (#566)
+
+- Cancel all tasks when cancelling a compute plan
+- Check for compute plan existence on task registration
+- Disallow registration of tasks on a compute plan you don't own
 
 ## [0.6.0] - 2022-02-18
 
 ### Added
-- add `Start` and `End` timestamp filters for `EventQueryFilter` (#482)
-- support composite tasks with two composite parents (#464)
-- Add migration logs (#501)
-- add owner field to failure report asset (#531)
-- Add a new endpoint to register multiple models at the same time (#530,#541)
+
+- add `Start` and `End` timestamp filters for `EventQueryFilter`
+- support composite tasks with two composite parents
+- Add migration logs
+- add owner field to failure report asset
+- Add a new endpoint to register multiple models at the same time
 
 ### Changed
-- return `datasamples` list in `RegisterDataSamplesResponse` (#486)
-- return `tasks` list in `RegisterTasksResponse` (#493)
-- store the error type of a failed compute task in a failure report instead of an event (#487)
-- improve performance of `compute_tasks` SQL indexes by using dedicated columns instead of JSONB (#503)
-- improve performance of compute plan queries by leveraging a specific index for status count (#509)
-- isolation level of read-only queries in standalone mode is now [READ COMMITTED](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED) (#492)
-- improve performance of model SQL indexes by using dedicated columns instead of JSONB (#539)
+
+- return `datasamples` list in `RegisterDataSamplesResponse`
+- return `tasks` list in `RegisterTasksResponse`
+- store the error type of a failed compute task in a failure report instead of an event
+- improve performance of `compute_tasks` SQL indexes by using dedicated columns instead of JSONB
+- improve performance of compute plan queries by leveraging a specific index for status count
+- isolation level of read-only queries in standalone mode is now [READ COMMITTED](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-READ-COMMITTED)
+- improve performance of model SQL indexes by using dedicated columns instead of JSONB
 
 ### Fixed
-- set the correct name of the `RegisterFailureReport` service method used in distributed mode (#485)
-- Return the correct models in `GetComputeTaskInputModels` for composite tasks (#499)
-- timestamp comparison when performing event sorting and filtering in PostgreSQL (#491)
-- ComputePlan query now uses correct SQL indexes (#500)
-- Incorrect sort order when checking parent task compatibility (#507)
+
+- set the correct name of the `RegisterFailureReport` service method used in distributed mode
+- Return the correct models in `GetComputeTaskInputModels` for composite tasks
+- timestamp comparison when performing event sorting and filtering in PostgreSQL
+- ComputePlan query now uses correct SQL indexes
+- Incorrect sort order when checking parent task compatibility
 
 ### Deprecated
 
-- `RegisterModel` gRPC method (#530)
+- `RegisterModel` gRPC method
 
 ## [0.5.0] - 2022-01-16
 
 ### Added
-- add a `logs_permission` field to the Dataset asset (#459)
-- add a `GetDataSample` method to the DataSample service(#479)
+
+- add a `logs_permission` field to the Dataset asset
+- add a `GetDataSample` method to the DataSample service
 
 ## [0.4.0] - 2022-01-05
 
 ### Added
-- add filter for compute plan query (#433)
-- chaincode now properly propagate request ID in every logs (#443)
-- log events as JSON (#452)
-- add FailureReport asset to store compute task failure information (#456)
+
+- add filter for compute plan query
+- chaincode now properly propagate request ID in every logs
+- log events as JSON
+- add FailureReport asset to store compute task failure information
 
 ## [0.3.0] - 2021-11-30
 
 ### Added
-- sort queried events (#417)
+
+- sort queried events
 - expose basic metrics from server, chaincode and forwarder behind `METRICS_ENABLED` feature flag
-- filter queried events on metadata (#422)
+- filter queried events on metadata
 
 ## [0.2.0] - 2021-11-02
 
 ### Changed
-- (BREAKING) Replace objective by metric (#356)
-- (BREAKING) Multiple metrics and performances per test task (#369)
-- fail gRPC healthcheck and stop serving on message broker disconnection (#397)
+
+- (BREAKING) Replace objective by metric
+- (BREAKING) Multiple metrics and performances per test task
+- fail gRPC healthcheck and stop serving on message broker disconnection
 
 ### Added
-- Get task counts grouped by status when querying compute plans (#400)
+
+- Get task counts grouped by status when querying compute plans
 
 ### Fixed
-- Events queried from the gRPC API now have their channel properly set (#414)
+
+- Events queried from the gRPC API now have their channel properly set
 - Leverage asset_key index when querying events
 
 ## [0.1.0] - 2021-10-04
 
 ### Fixed
-- Stable sorting of tasks (#371)
+
+- Stable sorting of tasks
 
 ### Added
-- Expose the orchestrator version and chaincode version (#370)
+
+- Expose the orchestrator version and chaincode version
 
 ## [0.0.2] - 2021-09-16
 
 ### Added
+
 - Expose worker in task event metadata
-- Assets expose a creation date (#328)
-- Query algo by compute plan (#307)
-- Handle event backlog (#288)
+- Assets expose a creation date
+- Query algo by compute plan
+- Handle event backlog
 - Retry on fabric timeout
 - Add request ID to log context
 
 ### Changed
-- Do not retry on assets out of sync (#335)
-- Do not compute plan status on model deletion (#329)
-- Reuse gateway connection in distributed mode (#324)
-- Replace readinessProbe by startupProbe (#314)
-- Do not cascade canceled status (#313)
+
+- Do not retry on assets out of sync
+- Do not compute plan status on model deletion
+- Reuse gateway connection in distributed mode
+- Replace readinessProbe by startupProbe
+- Do not cascade canceled status
 
 ### Fixed
+
 - Properly retry on postgres' serialization error
-- Filtering events by asset in distributed mode (#321)
-- Input models for composite child of aggregate (#280)
+- Filtering events by asset in distributed mode
+- Input models for composite child of aggregate
 
 ## [0.0.1] - 2021-06-29
 
-- Automatic generation of graphviz documentation from *.proto file definition
 
 ### Added
+
+- Automatic generation of graphviz documentation from *.proto file definition
 - asset management
 - asset event dispatch
 - standalone database (postgresql) support

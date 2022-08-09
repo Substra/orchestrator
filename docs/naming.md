@@ -32,7 +32,7 @@ Table names are snake_cased and plural
 
 ### Columns
 
-- Surrogate keys are named `key` (and not `id`, see [related discussions](https://github.com/owkin/orchestrator/issues/538) on this topic).
+- Surrogate keys are named `key` and not `id`.
 
 ### Indexes
 

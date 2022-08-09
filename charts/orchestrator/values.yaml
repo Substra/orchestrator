@@ -205,7 +205,7 @@ fabric:
   ## @param fabric.mspID Hyperledger Fabric Peer MSP ID
   ##
   mspID: MyOrg1MSP
-  ## @param fabric.channels A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/owkin/connect-hlf-k8s)
+  ## @param fabric.channels A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/substra/hlf-k8s)
   ##
   channels:
     - mychannel

@@ -1,10 +1,6 @@
-## Related
-
-[Asana card](https://app.asana.com/link/to/card) 
-
-Closes # (issue)
-
 ## Description
+
+<!-- Please reference issue if any. -->
 
 <!-- Please include a summary of your changes. -->
 

@@ -91,7 +91,7 @@ Assuming `orchestrator.org-1.com` is pointing to your local k8s cluster IP (edit
 grpcurl -insecure orchestrator.org-1.com:443 list
 ```
 
-You can also deploy [connect-backend](https://github.com/owkin/connect-backend) with a `skaffold dev` or `skaffold run`
+You can also deploy [substra-backend](https://github.com/substra/substra-backend) with a `skaffold dev` or `skaffold run`
 
 ### Distributed mode
 
@@ -109,7 +109,7 @@ docker build -f docker/orchestrator-chaincode-init/Dockerfile -t gcr.io/connect-
 
 Update hlf-k8s' values so that it uses your `dev` image instead of `latest`.
 
-Deploy [connect-hlf-k8s](https://github.com/owkin/connect-hlf-k8s) with a `skaffold dev` or `skaffold run`.
+Deploy [hlf-k8s](https://github.com/substra/hlf-k8s) with a `skaffold dev` or `skaffold run`.
 
 Then, in the orchestrator repo:
 
@@ -128,7 +128,7 @@ Assuming `orchestrator.org-1.com` and `orchestrator.org-2.com` are pointing to y
 grpcurl --cacert examples/tools/ca.crt --key examples/tools/client-org-1.key --cert examples/tools/client-org-1.crt --rpc-header 'mspid: MyOrg1MSP' --rpc-header 'channel: mychannel' --rpc-header 'chaincode: mycc' orchestrator.org-1.com:443 list
 ```
 
-You can also deploy [connect-backend](https://github.com/owkin/connect-backend) with a `skaffold dev -p distributed` or `skaffold run -p distributed`
+You can also deploy [substra-backend](https://github.com/substra/substra-backend) with a `skaffold dev -p distributed` or `skaffold run -p distributed`
 
 ### Testing
 
@@ -168,25 +168,5 @@ echo '{}' | evans \
 ```
 
 Note that you need your ingress manager to support SSL passthrough (`--enable-ssl-passthrough` with nginx-ingress).
-Refer to [the wiki](https://github.com/owkin/orchestrator/wiki/Enabling-ssl-passthrough-for-ingress-in-minikube) for detailed instructions.
 
-
-### Running the backend on arm64 architecture (apple M1)
-
-Bitnami does not yet provide a rabbitmq docker image for the arm64 processor. We are using the original rabbitmq image from dockerhub directly. Compatible image should be released in the future. (see [github issue](https://github.com/bitnami/charts/issues/7305))
-The following patches are necessary as the bitnami charts used to install the rabbitmq image are not fully compatible.
-
-1. Deploy with `skaffold run -p arm64`
-
-2. After deploying run the patch
-`./examples/tools/patch-rabbitmq-statefulset-arm64.sh`
-
-### Go Language Server
-
-If you're running into issues with things like "Go to definition" or "Find references", it could be because of [this gopls bug](https://github.com/golang/go/issues/29202). Try adding build flags to your editor config. Example for VSCode:
-
-```json
-"gopls": {
-    "build.buildFlags": ["-tags=e2e"],
-}
-```
+For additional development tips, please refer to [the documentation](./docs/development.md).

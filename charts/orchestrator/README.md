@@ -74,23 +74,23 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 
 ### Hyperledger Fabric settings
 
-| Name                                | Description                                                                                                  | Value                                                   |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| `fabric.organization`               | Hyperledger Fabric Peer organization name                                                                    | `MyOrg1`                                                |
-| `fabric.mspID`                      | Hyperledger Fabric Peer MSP ID                                                                               | `MyOrg1MSP`                                             |
-| `fabric.channels`                   | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/owkin/connect-hlf-k8s) | `["mychannel","yourchannel"]`                           |
-| `fabric.user.name`                  | Hyperledger Fabric Peer user name                                                                            | `User`                                                  |
-| `fabric.peer.host`                  | Hyperledger Fabric Peer hostname                                                                             | `network-org-1-peer-1-hlf-peer.org-1.svc.cluster.local` |
-| `fabric.peer.port`                  | Hyperledger Fabric Peer port                                                                                 | `7051`                                                  |
-| `fabric.waitForEventTimeoutSeconds` | Time to wait for confirmation from the Peers that the transaction has been committed                         | `45`                                                    |
-| `fabric.logLevel`                   | Log level for `fabric-sdk-go`                                                                                | `INFO`                                                  |
-| `fabric.strategy.invoke`            | Chaincode invocation endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers)       | `ALL`                                                   |
-| `fabric.strategy.query`             | Chaincode query endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers)            | `SELF`                                                  |
-| `fabric.secrets.caCert`             | Hyperledger Fabric CA Cert                                                                                   | `hlf-cacert`                                            |
-| `fabric.secrets.user.cert`          | Hyperledger Fabric Peer user certificate                                                                     | `hlf-msp-cert-user`                                     |
-| `fabric.secrets.user.key`           | Hyperledger Fabric Peer user certificate key                                                                 | `hlf-msp-key-user`                                      |
-| `fabric.secrets.peer.tls.client`    | Hyperledger Fabric Peer TLS client key/cert                                                                  | `hlf-tls-user`                                          |
-| `fabric.secrets.peer.tls.server`    | Hyperledger Fabric Peer TLS server key/cert                                                                  | `hlf-tls-admin`                                         |
+| Name                                | Description                                                                                            | Value                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `fabric.organization`               | Hyperledger Fabric Peer organization name                                                              | `MyOrg1`                                                |
+| `fabric.mspID`                      | Hyperledger Fabric Peer MSP ID                                                                         | `MyOrg1MSP`                                             |
+| `fabric.channels`                   | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/substra/hlf-k8s) | `["mychannel","yourchannel"]`                           |
+| `fabric.user.name`                  | Hyperledger Fabric Peer user name                                                                      | `User`                                                  |
+| `fabric.peer.host`                  | Hyperledger Fabric Peer hostname                                                                       | `network-org-1-peer-1-hlf-peer.org-1.svc.cluster.local` |
+| `fabric.peer.port`                  | Hyperledger Fabric Peer port                                                                           | `7051`                                                  |
+| `fabric.waitForEventTimeoutSeconds` | Time to wait for confirmation from the Peers that the transaction has been committed                   | `45`                                                    |
+| `fabric.logLevel`                   | Log level for `fabric-sdk-go`                                                                          | `INFO`                                                  |
+| `fabric.strategy.invoke`            | Chaincode invocation endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers) | `ALL`                                                   |
+| `fabric.strategy.query`             | Chaincode query endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers)      | `SELF`                                                  |
+| `fabric.secrets.caCert`             | Hyperledger Fabric CA Cert                                                                             | `hlf-cacert`                                            |
+| `fabric.secrets.user.cert`          | Hyperledger Fabric Peer user certificate                                                               | `hlf-msp-cert-user`                                     |
+| `fabric.secrets.user.key`           | Hyperledger Fabric Peer user certificate key                                                           | `hlf-msp-key-user`                                      |
+| `fabric.secrets.peer.tls.client`    | Hyperledger Fabric Peer TLS client key/cert                                                            | `hlf-tls-user`                                          |
+| `fabric.secrets.peer.tls.server`    | Hyperledger Fabric Peer TLS server key/cert                                                            | `hlf-tls-admin`                                         |
 
 
 ### Orchestrator application specific parameters
