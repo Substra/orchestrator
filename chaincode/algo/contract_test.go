@@ -95,6 +95,30 @@ func TestQueryAlgos(t *testing.T) {
 	assert.Len(t, resp.Algos, len(algos), "query should return all algos")
 }
 
+func TestUpdate(t *testing.T) {
+	contract := &SmartContract{}
+
+	mspid := "org"
+	updateAlgoParam := &asset.UpdateAlgoParam{
+		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name: "Updated algo name",
+	}
+	wrapper, err := communication.Wrap(context.Background(), updateAlgoParam)
+	assert.NoError(t, err)
+
+	ctx := new(ledger.MockTransactionContext)
+
+	service := getMockedService(ctx)
+	service.On("UpdateAlgo", updateAlgoParam, mspid).Return(nil).Once()
+
+	stub := new(testHelper.MockedStub)
+	ctx.On("GetStub").Return(stub).Once()
+	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
+
+	err = contract.UpdateAlgo(ctx, wrapper)
+	assert.NoError(t, err, "Smart contract execution should not fail")
+}
+
 func TestEvaluateTransactions(t *testing.T) {
 	contract := &SmartContract{}
 

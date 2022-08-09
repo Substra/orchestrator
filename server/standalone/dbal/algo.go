@@ -199,3 +199,13 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 
 	return algos, bookmark, nil
 }
+
+// UpdateAlgo updates the mutable fields of an algo in the DB. List of mutable fields: name.
+func (d *DBAL) UpdateAlgo(algo *asset.Algo) error {
+	stmt := getStatementBuilder().
+		Update("algos").
+		Set("name", algo.Name).
+		Where(sq.Eq{"channel": d.channel, "key": algo.Key})
+
+	return d.exec(stmt)
+}

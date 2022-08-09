@@ -8,6 +8,11 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 )
 
+var nameValidationRules = []validation.Rule{
+	validation.Required,
+	validation.Length(1, 100),
+}
+
 // Validate makes sure the Addressable object is valid
 func (a *Addressable) Validate() error {
 	return validation.ValidateStruct(a,

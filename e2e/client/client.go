@@ -253,6 +253,19 @@ func (c *TestClient) GetDataManager(dataManagerRef string) *asset.DataManager {
 	return resp
 }
 
+func (c *TestClient) UpdateDataManager(dataManagerRef string, name string) *asset.UpdateDataManagerResponse {
+	param := &asset.UpdateDataManagerParam{
+		Key:  c.ks.GetKey(dataManagerRef),
+		Name: name,
+	}
+	c.logger.WithField("data manager key", c.ks.GetKey(dataManagerRef)).Debug("UpdateDataManager")
+	resp, err := c.dataManagerService.UpdateDataManager(c.ctx, param)
+	if err != nil {
+		c.logger.WithError(err).Fatal("UpdateDataManager failed")
+	}
+	return resp
+}
+
 func (c *TestClient) RegisterDataSample(o *DataSampleOptions) *asset.DataSample {
 	newDs := &asset.NewDataSample{
 		Key:             c.ks.GetKey(o.KeyRef),
@@ -531,6 +544,19 @@ func (c *TestClient) GetAssetCreationEvent(assetKey string) *asset.Event {
 	return resp.Events[0]
 }
 
+func (c *TestClient) UpdateAlgo(algoRef string, name string) *asset.UpdateAlgoResponse {
+	param := &asset.UpdateAlgoParam{
+		Key:  c.ks.GetKey(algoRef),
+		Name: name,
+	}
+	c.logger.WithField("algo key", c.ks.GetKey(algoRef)).Debug("UpdateAlgo")
+	resp, err := c.algoService.UpdateAlgo(c.ctx, param)
+	if err != nil {
+		c.logger.WithError(err).Fatal("UpdateAlgo failed")
+	}
+	return resp
+}
+
 func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken string, pageSize int) *asset.QueryEventsResponse {
 	resp, err := c.eventService.QueryEvents(c.ctx, &asset.QueryEventsParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
@@ -600,6 +626,19 @@ func (c *TestClient) CancelComputePlan(computePlanRef string) (*asset.ApplyPlanA
 
 	c.logger.WithField("compute plan key", computePlanRef).Debug("cancelling compute plan")
 	return c.computePlanService.ApplyPlanAction(c.ctx, param)
+}
+
+func (c *TestClient) UpdateComputePlan(computePlanRef string, name string) *asset.UpdateComputePlanResponse {
+	param := &asset.UpdateComputePlanParam{
+		Key:  c.ks.GetKey(computePlanRef),
+		Name: name,
+	}
+	c.logger.WithField("compute plan key", c.ks.GetKey(computePlanRef)).Debug("UpdateComputePlan")
+	resp, err := c.computePlanService.UpdatePlan(c.ctx, param)
+	if err != nil {
+		c.logger.WithError(err).Fatal("UpdateComputePlan failed")
+	}
+	return resp
 }
 
 func (c *TestClient) makeNewModel(o *ModelOptions) *asset.NewModel {

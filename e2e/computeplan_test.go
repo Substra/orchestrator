@@ -595,3 +595,30 @@ func TestCompositeParentChild(t *testing.T) {
 	require.Equal(t, appClient.GetKeyStore().GetKey("model1H"), inputs[0].Key, "first model should be HEAD from comp1")
 	require.Equal(t, appClient.GetKeyStore().GetKey("model2T"), inputs[1].Key, "second model should be TRUNK from comp2")
 }
+
+// TestUpdateComputePlan updates mutable fieds of a compute plan and ensure an event containing the compute plan is recorded. List of mutable fields: name.
+func TestUpdateComputePlan(t *testing.T) {
+	appClient := factory.NewTestClient()
+	keyRef := "compute_plan_update"
+	registeredPlan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef(keyRef))
+	expectedPlan := appClient.GetComputePlan(keyRef)
+
+	appClient.UpdateComputePlan(keyRef, "new compute plan name")
+	retrievedPlan := appClient.GetComputePlan(keyRef)
+
+	expectedPlan.Name = "new compute plan name"
+
+	e2erequire.ProtoEqual(t, expectedPlan, retrievedPlan)
+
+	resp := appClient.QueryEvents(&asset.EventQueryFilter{
+		AssetKey:  registeredPlan.Key,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+	}, "", 100)
+
+	require.Len(t, resp.Events, 1, "Unexpected number of events")
+
+	eventComputePlan := resp.Events[0].GetComputePlan()
+
+	e2erequire.ProtoEqual(t, expectedPlan, eventComputePlan)
+}

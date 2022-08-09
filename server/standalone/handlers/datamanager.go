@@ -67,3 +67,24 @@ func (s *DataManagerServer) QueryDataManagers(ctx context.Context, params *asset
 		NextPageToken: paginationToken,
 	}, nil
 }
+
+// UpdateDataManager will update mutable fields of the existing DataManager. List of mutable fields: name.
+func (s *DataManagerServer) UpdateDataManager(ctx context.Context, params *asset.UpdateDataManagerParam) (*asset.UpdateDataManagerResponse, error) {
+	logger.Get(ctx).WithField("datamanager", params).Debug("Update Data Manager")
+
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	services, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = services.GetDataManagerService().UpdateDataManager(params, mspid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.UpdateDataManagerResponse{}, nil
+}

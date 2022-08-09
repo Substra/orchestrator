@@ -73,3 +73,18 @@ func (a *ComputePlanAdapter) ApplyPlanAction(ctx context.Context, param *asset.A
 
 	return response, err
 }
+
+// UpdatePlan will update a ComputePlan from the state
+func (a *ComputePlanAdapter) UpdatePlan(ctx context.Context, param *asset.UpdateComputePlanParam) (*asset.UpdateComputePlanResponse, error) {
+	invocator, err := interceptors.ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.computeplan:UpdatePlan"
+
+	response := &asset.UpdateComputePlanResponse{}
+
+	err = invocator.Call(ctx, method, param, nil)
+
+	return response, err
+}

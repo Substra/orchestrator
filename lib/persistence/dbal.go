@@ -36,6 +36,7 @@ type AlgoDBAL interface {
 	GetAlgo(key string) (*asset.Algo, error)
 	QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error)
 	AlgoExists(key string) (bool, error)
+	UpdateAlgo(algo *asset.Algo) error
 }
 
 // DataManagerDBAL is the database abstraction layer for DataManagers
@@ -44,6 +45,7 @@ type DataManagerDBAL interface {
 	GetDataManager(key string) (*asset.DataManager, error)
 	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	DataManagerExists(key string) (bool, error)
+	UpdateDataManager(dm *asset.DataManager) error
 }
 
 // OrganizationDBALProvider represents an object capable of providing an OrganizationDBAL

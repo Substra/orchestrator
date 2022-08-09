@@ -45,8 +45,16 @@ message QueryDataManagersResponse {
   string next_page_token = 2;
 }
 
+message UpdateDataManagerParam {
+  string key = 1;
+  string name = 2;
+}
+
+message UpdateDataManagerResponse {}
+
 service DataManagerService {
   rpc RegisterDataManager(NewDataManager) returns (DataManager);
   rpc GetDataManager(GetDataManagerParam) returns (DataManager);
   rpc QueryDataManagers(QueryDataManagersParam) returns (QueryDataManagersResponse);
+  rpc UpdateDataManager(UpdateDataManagerParam) returns (UpdateDataManagerResponse);
 }

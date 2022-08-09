@@ -94,3 +94,13 @@ func (db *DB) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, com
 
 	return dms, bookmark.Bookmark, nil
 }
+
+// UpdateDataManager implements persistence.DataManagerDBAL
+func (db *DB) UpdateDataManager(plan *asset.DataManager) error {
+	planBytes, err := marshaller.Marshal(plan)
+	if err != nil {
+		return err
+	}
+
+	return db.putState(asset.DataManagerKind, plan.GetKey(), planBytes)
+}

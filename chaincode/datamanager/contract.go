@@ -132,3 +132,34 @@ func (s *SmartContract) QueryDataManagers(ctx ledger.TransactionContext, wrapper
 func (s *SmartContract) GetEvaluateTransactions() []string {
 	return commonserv.ReadOnlyMethods["DataManager"]
 }
+
+// UpdateDataManager updates an DataManager in world state
+// If the key does not exist, it will throw an error
+func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetDataManagerService()
+
+	params := new(asset.UpdateDataManagerParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return err
+	}
+
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
+		return err
+	}
+
+	err = service.UpdateDataManager(params, requester)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to update DataManager")
+		return err
+	}
+
+	return nil
+}

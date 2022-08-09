@@ -76,8 +76,16 @@ message QueryAlgosParam {
   AlgoQueryFilter filter = 3;
 }
 
+message UpdateAlgoParam {
+  string key = 1;
+  string name = 2;
+}
+
+message UpdateAlgoResponse {}
+
 service AlgoService {
   rpc RegisterAlgo(NewAlgo) returns (Algo);
   rpc GetAlgo(GetAlgoParam) returns (Algo);
   rpc QueryAlgos(QueryAlgosParam) returns (QueryAlgosResponse);
+  rpc UpdateAlgo(UpdateAlgoParam) returns (UpdateAlgoResponse);
 }

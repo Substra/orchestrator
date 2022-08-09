@@ -91,3 +91,22 @@ func TestHandleAlgoConflictAfterTimeout(t *testing.T) {
 
 	assert.NoError(t, err, "Registration should pass")
 }
+
+func TestUpdateAlgo(t *testing.T) {
+	adapter := NewAlgoAdapter()
+
+	updatedA := &asset.UpdateAlgoParam{
+		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name: "Updated algo name",
+	}
+
+	newCtx := context.TODO()
+	invocator := &chaincode.MockInvocator{}
+
+	invocator.On("Call", utils.AnyContext, "orchestrator.algo:UpdateAlgo", updatedA, nil).Return(nil)
+
+	ctx := interceptors.WithInvocator(newCtx, invocator)
+
+	_, err := adapter.UpdateAlgo(ctx, updatedA)
+	assert.NoError(t, err, "Update should pass")
+}

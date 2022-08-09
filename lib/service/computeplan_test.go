@@ -188,3 +188,73 @@ func TestComputePlanExists(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, exist)
 }
+
+func TestUpdateSingleExistingComputePlan(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	provider := newMockedProvider()
+	es := new(MockEventAPI)
+	provider.On("GetEventService").Return(es)
+	provider.On("GetComputePlanDBAL").Return(dbal)
+	service := NewComputePlanService(provider)
+
+	existingComputePlan := &asset.ComputePlan{
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name:  "compute plan name",
+		Owner: "owner",
+	}
+
+	updateComputePlanParam := &asset.UpdateComputePlanParam{
+		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name: "Updated compute plan name",
+	}
+
+	storedComputePlan := &asset.ComputePlan{
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name:  "Updated compute plan name",
+		Owner: "owner",
+	}
+
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
+		AssetKey:  storedComputePlan.Key,
+		Asset:     &asset.Event_ComputePlan{ComputePlan: storedComputePlan},
+	}
+
+	cases := map[string]struct {
+		requester string
+		valid     bool
+	}{
+		"update successful": {
+			requester: "owner",
+			valid:     true,
+		},
+		"update rejected: requester is not owner": {
+			requester: "user",
+			valid:     false,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			dbal.On("GetComputePlan", existingComputePlan.GetKey()).Return(existingComputePlan, nil).Once()
+
+			if tc.valid {
+				dbal.On("UpdateComputePlan", storedComputePlan).Return(nil).Once()
+				es.On("RegisterEvents", e).Once().Return(nil)
+			}
+
+			err := service.UpdatePlan(updateComputePlanParam, tc.requester)
+
+			if tc.valid {
+				assert.NoError(t, err, "Update of compute plan should not fail")
+			} else {
+				assert.Error(t, err, "Update of compute plan should fail")
+			}
+
+			dbal.AssertExpectations(t)
+			es.AssertExpectations(t)
+		})
+	}
+
+}

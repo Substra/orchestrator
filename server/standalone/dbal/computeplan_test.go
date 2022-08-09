@@ -144,3 +144,28 @@ func TestCancelComputePlan(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestUpdateComputePlan(t *testing.T) {
+	mock, err := pgxmock.NewConn(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
+	assert.NoError(t, err)
+	defer mock.Close(context.Background())
+
+	cpKey := "abc"
+	name := "My compute plan"
+
+	mock.ExpectBegin()
+
+	mock.
+		ExpectExec(`UPDATE compute_plans SET name = $1 WHERE channel = $2 AND key = $3`).
+		WithArgs(name, testChannel, cpKey).
+		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	err = dbal.UpdateComputePlan(&asset.ComputePlan{Key: cpKey, Name: name})
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

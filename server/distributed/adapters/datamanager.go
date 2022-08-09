@@ -70,3 +70,18 @@ func (s *DataManagerAdapter) QueryDataManagers(ctx context.Context, params *asse
 
 	return response, err
 }
+
+// UpdateDataManager will update a DataManager from the state
+func (s *DataManagerAdapter) UpdateDataManager(ctx context.Context, params *asset.UpdateDataManagerParam) (*asset.UpdateDataManagerResponse, error) {
+	invocator, err := interceptors.ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.datamanager:UpdateDataManager"
+
+	response := &asset.UpdateDataManagerResponse{}
+
+	err = invocator.Call(ctx, method, params, nil)
+
+	return response, err
+}

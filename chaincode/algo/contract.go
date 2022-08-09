@@ -127,6 +127,37 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 	return wrapped, nil
 }
 
+// UpdateAlgo updates an algo in world state
+// If the key does not exist, it will throw an error
+func (s *SmartContract) UpdateAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetAlgoService()
+
+	params := new(asset.UpdateAlgoParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return err
+	}
+
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
+		return err
+	}
+
+	err = service.UpdateAlgo(params, requester)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to update algo")
+		return err
+	}
+
+	return nil
+}
+
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
 	return commonserv.ReadOnlyMethods["Algo"]

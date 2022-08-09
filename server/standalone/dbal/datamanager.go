@@ -155,3 +155,13 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 
 	return datamanagers, bookmark, nil
 }
+
+// UpdateDataManager updates the mutable fields of a data manager in the DB. List of mutable fields: name.
+func (d *DBAL) UpdateDataManager(datamanager *asset.DataManager) error {
+	stmt := getStatementBuilder().
+		Update("datamanagers").
+		Set("name", datamanager.Name).
+		Where(sq.Eq{"channel": d.channel, "key": datamanager.Key})
+
+	return d.exec(stmt)
+}

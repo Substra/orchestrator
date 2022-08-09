@@ -64,3 +64,22 @@ func TestHandleDatamanagerConflictAfterTimeout(t *testing.T) {
 	_, err := adapter.RegisterDataManager(ctx, newObj)
 	assert.NoError(t, err, "Registration should pass")
 }
+
+func TestUpdateDataManager(t *testing.T) {
+	adapter := NewDataManagerAdapter()
+
+	updatedA := &asset.UpdateDataManagerParam{
+		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name: "Updated datamanager name",
+	}
+
+	newCtx := context.TODO()
+	invocator := &chaincode.MockInvocator{}
+
+	invocator.On("Call", utils.AnyContext, "orchestrator.datamanager:UpdateDataManager", updatedA, nil).Return(nil)
+
+	ctx := interceptors.WithInvocator(newCtx, invocator)
+
+	_, err := adapter.UpdateDataManager(ctx, updatedA)
+	assert.NoError(t, err, "Update should pass")
+}

@@ -164,3 +164,75 @@ func TestCanDownload(t *testing.T) {
 
 	dbal.AssertExpectations(t)
 }
+
+func TestUpdateSingleExistingAlgo(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	provider := newMockedProvider()
+	es := new(MockEventAPI)
+	provider.On("GetEventService").Return(es)
+	provider.On("GetAlgoDBAL").Return(dbal)
+	service := NewAlgoService(provider)
+
+	existingAlgo := &asset.Algo{
+		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Name:     "algo name",
+		Owner:    "owner",
+	}
+
+	updateAlgoParam := &asset.UpdateAlgoParam{
+		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name: "Updated algo name",
+	}
+
+	storedAlgo := &asset.Algo{
+		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Name:     "Updated algo name",
+		Owner:    "owner",
+	}
+
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKey:  storedAlgo.Key,
+		Asset:     &asset.Event_Algo{Algo: storedAlgo},
+	}
+
+	cases := map[string]struct {
+		requester string
+		valid     bool
+	}{
+		"update successful": {
+			requester: "owner",
+			valid:     true,
+		},
+		"update rejected: requester is not owner": {
+			requester: "user",
+			valid:     false,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			dbal.On("GetAlgo", existingAlgo.GetKey()).Return(existingAlgo, nil).Once()
+
+			if tc.valid {
+				dbal.On("UpdateAlgo", storedAlgo).Return(nil).Once()
+				es.On("RegisterEvents", e).Once().Return(nil)
+			}
+
+			err := service.UpdateAlgo(updateAlgoParam, tc.requester)
+
+			if tc.valid {
+				assert.NoError(t, err, "Update of algo should not fail")
+			} else {
+				assert.Error(t, err, "Update of algo should fail")
+			}
+
+			dbal.AssertExpectations(t)
+			es.AssertExpectations(t)
+		})
+	}
+
+}

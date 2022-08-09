@@ -71,9 +71,17 @@ message QueryPlansResponse {
   string next_page_token = 2;
 }
 
+message UpdateComputePlanParam {
+  string key = 1;
+  string name = 2;
+}
+
+message UpdateComputePlanResponse {}
+
 service ComputePlanService {
   rpc RegisterPlan(NewComputePlan) returns (ComputePlan);
   rpc GetPlan(GetComputePlanParam) returns (ComputePlan);
   rpc ApplyPlanAction(ApplyPlanActionParam) returns (ApplyPlanActionResponse);
   rpc QueryPlans(QueryPlansParam) returns (QueryPlansResponse);
+  rpc UpdatePlan(UpdateComputePlanParam) returns (UpdateComputePlanResponse);
 }

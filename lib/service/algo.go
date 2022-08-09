@@ -16,6 +16,7 @@ type AlgoAPI interface {
 	QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error)
 	CanDownload(key string, requester string) (bool, error)
 	AlgoExists(key string) (bool, error)
+	UpdateAlgo(algo *asset.UpdateAlgoParam, requester string) error
 }
 
 // AlgoServiceProvider defines an object able to provide an AlgoAPI instance
@@ -122,4 +123,40 @@ func (s *AlgoService) CanDownload(key string, requester string) (bool, error) {
 // AlgoExists returns true if the algo exists
 func (s *AlgoService) AlgoExists(key string) (bool, error) {
 	return s.GetAlgoDBAL().AlgoExists(key)
+}
+
+// UpdateAlgo updates mutable fields of an algo. List of mutable fields : name.
+func (s *AlgoService) UpdateAlgo(a *asset.UpdateAlgoParam, requester string) error {
+	s.GetLogger().WithField("requester", requester).WithField("algoUpdate", a).Debug("Updating algo")
+	err := a.Validate()
+	if err != nil {
+		return orcerrors.FromValidationError(asset.AlgoKind, err)
+	}
+
+	algoKey := a.Key
+
+	algo, err := s.GetAlgoDBAL().GetAlgo(algoKey)
+	if err != nil {
+		return orcerrors.NewNotFound(asset.AlgoKind, algoKey)
+	}
+
+	if algo.GetOwner() != requester {
+		return orcerrors.NewPermissionDenied("requester does not own the algo")
+	}
+
+	// Update algo name
+	algo.Name = a.Name
+
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKey:  algoKey,
+		AssetKind: asset.AssetKind_ASSET_ALGO,
+		Asset:     &asset.Event_Algo{Algo: algo},
+	}
+	err = s.GetEventService().RegisterEvents(event)
+	if err != nil {
+		return err
+	}
+
+	return s.GetAlgoDBAL().UpdateAlgo(algo)
 }

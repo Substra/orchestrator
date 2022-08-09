@@ -6,6 +6,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	libCommon "github.com/owkin/orchestrator/lib/common"
 	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
+	"github.com/owkin/orchestrator/server/common/logger"
 	"github.com/owkin/orchestrator/server/standalone/interceptors"
 )
 
@@ -84,4 +85,25 @@ func (s *ComputePlanServer) ApplyPlanAction(ctx context.Context, param *asset.Ap
 	}
 
 	return &asset.ApplyPlanActionResponse{}, nil
+}
+
+// UpdatePlan will update mutable fields of the existing ComputePlan. List of mutable fields: name.
+func (s *ComputePlanServer) UpdatePlan(ctx context.Context, params *asset.UpdateComputePlanParam) (*asset.UpdateComputePlanResponse, error) {
+	logger.Get(ctx).WithField("computeplan", params).Debug("Update Compute Plan")
+
+	requester, err := commonInterceptors.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	services, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = services.GetComputePlanService().UpdatePlan(params, requester)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.UpdateComputePlanResponse{}, nil
 }

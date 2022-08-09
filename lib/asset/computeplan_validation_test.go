@@ -6,6 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type updateComputePlanTestCase struct {
+	computePlan *UpdateComputePlanParam
+	valid       bool
+}
+
 func TestValidateNewComputePlan(t *testing.T) {
 	cases := map[string]struct {
 		newComputePlan *NewComputePlan
@@ -27,6 +32,28 @@ func TestValidateNewComputePlan(t *testing.T) {
 			assert.NoError(t, tc.newComputePlan.Validate(), name+" should be valid")
 		} else {
 			assert.Error(t, tc.newComputePlan.Validate(), name+" should be invalid")
+		}
+	}
+}
+
+func TestUpdateComputePlanValidate(t *testing.T) {
+	cases := map[string]updateComputePlanTestCase{
+		"empty": {&UpdateComputePlanParam{}, false},
+		"invalidComputePlanKey": {&UpdateComputePlanParam{
+			Key:  "not36chars",
+			Name: "ComputePlan Name",
+		}, false},
+		"valid": {&UpdateComputePlanParam{
+			Key:  "834f47c3-2d95-4ccd-a718-7143b64e61c0",
+			Name: "ComputePlan Name",
+		}, true},
+	}
+
+	for name, tc := range cases {
+		if tc.valid {
+			assert.NoError(t, tc.computePlan.Validate(), name+" should be valid")
+		} else {
+			assert.Error(t, tc.computePlan.Validate(), name+" should be invalid")
 		}
 	}
 }

@@ -14,6 +14,7 @@ type ComputePlanAPI interface {
 	GetPlan(key string) (*asset.ComputePlan, error)
 	QueryPlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error)
 	ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error
+	UpdatePlan(computePlan *asset.UpdateComputePlanParam, requester string) error
 	canDeleteModels(key string) (bool, error)
 	computePlanExists(key string) (bool, error)
 }
@@ -110,6 +111,42 @@ func (s *ComputePlanService) GetPlan(key string) (*asset.ComputePlan, error) {
 
 func (s *ComputePlanService) QueryPlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error) {
 	return s.GetComputePlanDBAL().QueryComputePlans(p, filter)
+}
+
+// UpdatePlan updates mutable fields of a compute plan. List of mutable fields : name.
+func (s *ComputePlanService) UpdatePlan(a *asset.UpdateComputePlanParam, requester string) error {
+	s.GetLogger().WithField("requester", requester).WithField("computePlanUpdate", a).Debug("Updating compute plan")
+	err := a.Validate()
+	if err != nil {
+		return orcerrors.FromValidationError(asset.ComputePlanKind, err)
+	}
+
+	planKey := a.Key
+
+	plan, err := s.GetComputePlanDBAL().GetComputePlan(planKey)
+	if err != nil {
+		return orcerrors.NewNotFound(asset.ComputePlanKind, planKey)
+	}
+
+	if requester != plan.Owner {
+		return orcerrors.NewPermissionDenied("requester does not own the compute plan")
+	}
+
+	// Update compute plan name
+	plan.Name = a.Name
+
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKey:  planKey,
+		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
+		Asset:     &asset.Event_ComputePlan{ComputePlan: plan},
+	}
+	err = s.GetEventService().RegisterEvents(event)
+	if err != nil {
+		return err
+	}
+
+	return s.GetComputePlanDBAL().UpdateComputePlan(plan)
 }
 
 func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {

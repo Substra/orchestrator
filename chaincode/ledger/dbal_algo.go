@@ -179,3 +179,13 @@ func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
 
 	return keys, nil
 }
+
+// UpdateAlgo implements persistence.AlgoDBAL
+func (db *DB) UpdateAlgo(algo *asset.Algo) error {
+	algoBytes, err := marshaller.Marshal(algo)
+	if err != nil {
+		return err
+	}
+
+	return db.putState(asset.AlgoKind, algo.GetKey(), algoBytes)
+}

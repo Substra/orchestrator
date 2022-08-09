@@ -127,3 +127,29 @@ func TestQueryAlgosInputOutputs(t *testing.T) {
 	e2erequire.ProtoMapEqual(t, respAlgo.Inputs, algoOptions.Inputs)
 	e2erequire.ProtoMapEqual(t, respAlgo.Outputs, algoOptions.Outputs)
 }
+
+// TestUpdateAlgo updates mutable fieds of an algo and ensure an event containing the algo is recorded. List of mutable fields: name.
+func TestUpdateAlgo(t *testing.T) {
+	appClient := factory.NewTestClient()
+	keyRef := "algo_filter_simple"
+	registeredAlgo := appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef(keyRef))
+
+	appClient.UpdateAlgo(keyRef, "new algo name")
+
+	expectedAlgo := registeredAlgo
+	expectedAlgo.Name = "new algo name"
+
+	retrievedAlgo := appClient.GetAlgo(keyRef)
+	e2erequire.ProtoEqual(t, expectedAlgo, retrievedAlgo)
+
+	resp := appClient.QueryEvents(&asset.EventQueryFilter{
+		AssetKey:  registeredAlgo.Key,
+		AssetKind: asset.AssetKind_ASSET_ALGO,
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+	}, "", 100)
+
+	require.Len(t, resp.Events, 1, "Unexpected number of events")
+
+	eventAlgo := resp.Events[0].GetAlgo()
+	e2erequire.ProtoEqual(t, expectedAlgo, eventAlgo)
+}

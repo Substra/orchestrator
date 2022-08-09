@@ -11,6 +11,11 @@ type algoTestCase struct {
 	valid bool
 }
 
+type updateAlgoTestCase struct {
+	algo  *UpdateAlgoParam
+	valid bool
+}
+
 func TestAlgoValidate(t *testing.T) {
 	validAddressable := &Addressable{
 		StorageAddress: "https://somewhere",
@@ -137,6 +142,28 @@ func TestAlgoValidate(t *testing.T) {
 				"datasamples": {Kind: AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			},
 		}, false},
+	}
+
+	for name, tc := range cases {
+		if tc.valid {
+			assert.NoError(t, tc.algo.Validate(), name+" should be valid")
+		} else {
+			assert.Error(t, tc.algo.Validate(), name+" should be invalid")
+		}
+	}
+}
+
+func TestUpdateAlgoValidate(t *testing.T) {
+	cases := map[string]updateAlgoTestCase{
+		"empty": {&UpdateAlgoParam{}, false},
+		"invalidAlgoKey": {&UpdateAlgoParam{
+			Key:  "not36chars",
+			Name: "Algo Name",
+		}, false},
+		"valid": {&UpdateAlgoParam{
+			Key:  "834f47c3-2d95-4ccd-a718-7143b64e61c0",
+			Name: "Algo Name",
+		}, true},
 	}
 
 	for name, tc := range cases {

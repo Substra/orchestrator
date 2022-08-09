@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
@@ -9,6 +10,7 @@ import (
 	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
+	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -68,4 +70,40 @@ func TestQueryComputePlansNilFilter(t *testing.T) {
 	assert.NoError(t, err)
 
 	stub.AssertExpectations(t)
+}
+
+// TestStorableComputePlanFields should fail if the storable struct is not updated after a new field is added to the compute plan.
+func TestStorableComputePlanFields(t *testing.T) {
+	var publicPlanFields, publicStorablePlanFields int
+
+	// Represents the list of compute plan dynamically computed fields.
+	// planComputedFields should be updated after adding a new dynamic field to the compute plan.
+	planComputedFields := []string{
+		"WaitingCount",
+		"TodoCount",
+		"DoingCount",
+		"CanceledCount",
+		"FailedCount",
+		"DoneCount",
+		"TaskCount",
+		"Status",
+	}
+
+	planType := reflect.TypeOf(asset.ComputePlan{})
+	planFields := reflect.VisibleFields(planType)
+	for _, f := range planFields {
+		if f.IsExported() && !utils.SliceContains(planComputedFields, f.Name) {
+			publicPlanFields++
+		}
+	}
+
+	storableType := reflect.TypeOf(storableComputePlan{})
+	storableFields := reflect.VisibleFields(storableType)
+	for _, f := range storableFields {
+		if f.IsExported() {
+			publicStorablePlanFields++
+		}
+	}
+
+	assert.GreaterOrEqual(t, publicStorablePlanFields, publicPlanFields, "storable struct should have at least as many fields than the asset it represents")
 }

@@ -15,6 +15,7 @@ type ComputePlanDBAL interface {
 	AddComputePlan(plan *asset.ComputePlan) error
 	QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error)
 	CancelComputePlan(plan *asset.ComputePlan, ts time.Time) error
+	UpdateComputePlan(plan *asset.ComputePlan) error
 }
 
 type ComputePlanDBALProvider interface {

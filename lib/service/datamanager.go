@@ -17,6 +17,7 @@ type DataManagerAPI interface {
 	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	CheckOwner(keys []string, requester string) error
 	GetCheckedDataManager(key string, dataSampleKeys []string, owner string) (*asset.DataManager, error)
+	UpdateDataManager(a *asset.UpdateDataManagerParam, requester string) error
 }
 
 // DataManagerServiceProvider defines an object able to provide an DataManagerAPI instance
@@ -158,4 +159,39 @@ func (s *DataManagerService) GetCheckedDataManager(key string, dataSampleKeys []
 	}
 
 	return datamanager, err
+}
+
+// UpdateDataManager updates mutable fields of a data manager. List of mutable fields : name.
+func (s *DataManagerService) UpdateDataManager(a *asset.UpdateDataManagerParam, requester string) error {
+	s.GetLogger().WithField("requester", requester).WithField("dataManagerUpdate", a).Debug("Updating data manager")
+	err := a.Validate()
+	if err != nil {
+		return orcerrors.FromValidationError(asset.DataManagerKind, err)
+	}
+
+	dataManagerKey := a.GetKey()
+
+	dataManager, err := s.GetDataManagerDBAL().GetDataManager(dataManagerKey)
+	if err != nil {
+		return orcerrors.NewNotFound(asset.DataManagerKind, dataManagerKey)
+	}
+
+	if dataManager.GetOwner() != requester {
+		return orcerrors.NewPermissionDenied("requester does not own the data manager")
+	}
+
+	// Update data manager name
+	dataManager.Name = a.GetName()
+
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKey:  dataManagerKey,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
+		Asset:     &asset.Event_DataManager{DataManager: dataManager},
+	}
+	err = s.GetEventService().RegisterEvents(event)
+	if err != nil {
+		return err
+	}
+	return s.GetDataManagerDBAL().UpdateDataManager(dataManager)
 }

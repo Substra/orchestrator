@@ -153,3 +153,34 @@ func (s *SmartContract) ApplyPlanAction(ctx ledger.TransactionContext, wrapper *
 func (s *SmartContract) GetEvaluateTransactions() []string {
 	return commonserv.ReadOnlyMethods["ComputePlan"]
 }
+
+// UpdatePlan updates an Compute Plan in world state
+// If the key does not exist, it will throw an error
+func (s *SmartContract) UpdatePlan(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetComputePlanService()
+
+	params := new(asset.UpdateComputePlanParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to unwrap param")
+		return err
+	}
+
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		s.logger.WithError(err).Error("failed to extract tx creator")
+		return err
+	}
+
+	err = service.UpdatePlan(params, requester)
+	if err != nil {
+		s.logger.WithError(err).Error("failed to update Compute Plan")
+		return err
+	}
+
+	return nil
+}

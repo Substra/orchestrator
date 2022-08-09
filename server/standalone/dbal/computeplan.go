@@ -192,3 +192,13 @@ func (d *DBAL) CancelComputePlan(cp *asset.ComputePlan, ts time.Time) error {
 
 	return d.exec(stmt)
 }
+
+// UpdateComputePlan updates the mutable fields of a compute plan in the DB. List of mutable fields: name.
+func (d *DBAL) UpdateComputePlan(plan *asset.ComputePlan) error {
+	stmt := getStatementBuilder().
+		Update("compute_plans").
+		Set("name", plan.Name).
+		Where(sq.Eq{"channel": d.channel, "key": plan.Key})
+
+	return d.exec(stmt)
+}

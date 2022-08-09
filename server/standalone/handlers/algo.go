@@ -62,3 +62,24 @@ func (s *AlgoServer) QueryAlgos(ctx context.Context, params *asset.QueryAlgosPar
 		NextPageToken: paginationToken,
 	}, nil
 }
+
+// UpdateAlgo will update mutable fields of the existing Algo. List of mutable fields: name.
+func (s *AlgoServer) UpdateAlgo(ctx context.Context, params *asset.UpdateAlgoParam) (*asset.UpdateAlgoResponse, error) {
+	logger.Get(ctx).WithField("algo", params).Debug("Update Algo")
+
+	mspid, err := commonInterceptors.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	services, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = services.GetAlgoService().UpdateAlgo(params, mspid)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.UpdateAlgoResponse{}, nil
+}

@@ -95,3 +95,27 @@ func TestRegistration(t *testing.T) {
 	_, err = contract.RegisterDataManager(ctx, wrapper)
 	assert.NoError(t, err)
 }
+
+func TestUpdate(t *testing.T) {
+	contract := &SmartContract{}
+
+	mspid := "org"
+	updateDataManagerParam := &asset.UpdateDataManagerParam{
+		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name: "Updated data manager name",
+	}
+	wrapper, err := communication.Wrap(context.Background(), updateDataManagerParam)
+	assert.NoError(t, err)
+
+	ctx := new(ledger.MockTransactionContext)
+
+	service := getMockedService(ctx)
+	service.On("UpdateDataManager", updateDataManagerParam, mspid).Return(nil).Once()
+
+	stub := new(testHelper.MockedStub)
+	ctx.On("GetStub").Return(stub).Once()
+	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
+
+	err = contract.UpdateDataManager(ctx, wrapper)
+	assert.NoError(t, err, "Smart contract execution should not fail")
+}

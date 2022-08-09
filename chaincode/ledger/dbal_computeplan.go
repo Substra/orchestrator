@@ -9,8 +9,42 @@ import (
 	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// storableComputePlan is a custom representation of asset.ComputePlan to enforce storing without its computed properties.
+type storableComputePlan struct {
+	Key                      string            `json:"key"`
+	Owner                    string            `json:"owner"`
+	DeleteIntermediaryModels bool              `json:"delete_intermediary_models"`
+	CreationDate             *time.Time        `json:"creation_date"`
+	Tag                      string            `json:"tag"`
+	Name                     string            `json:"name"`
+	Metadata                 map[string]string `json:"metadata"`
+	CancelationDate          *time.Time        `json:"cancelation_date"`
+}
+
+// newStorableComputePlan returns a storableComputePlan without its computed properties.
+func newStorableComputePlan(plan *asset.ComputePlan) *storableComputePlan {
+	storablePlan := &storableComputePlan{
+		Key:                      plan.Key,
+		Owner:                    plan.Owner,
+		DeleteIntermediaryModels: plan.DeleteIntermediaryModels,
+		Tag:                      plan.Tag,
+		Name:                     plan.Name,
+		Metadata:                 plan.Metadata,
+	}
+
+	if plan.CreationDate != nil {
+		creationDate := plan.CreationDate.AsTime()
+		storablePlan.CreationDate = &creationDate
+	}
+	if plan.CancelationDate != nil {
+		cancelationDate := plan.CancelationDate.AsTime()
+		storablePlan.CancelationDate = &cancelationDate
+	}
+
+	return storablePlan
+}
 
 // AddComputePlan stores a new ComputePlan in DB
 func (db *DB) AddComputePlan(cp *asset.ComputePlan) error {
@@ -21,8 +55,9 @@ func (db *DB) AddComputePlan(cp *asset.ComputePlan) error {
 	if exists {
 		return errors.NewConflict(asset.ComputePlanKind, cp.Key)
 	}
+	storablePlan := newStorableComputePlan(cp)
 
-	bytes, err := marshaller.Marshal(cp)
+	bytes, err := json.Marshal(storablePlan)
 	if err != nil {
 		return err
 	}
@@ -144,9 +179,22 @@ func (db *DB) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFil
 }
 
 func (db *DB) CancelComputePlan(cp *asset.ComputePlan, ts time.Time) error {
-	cp.CancelationDate = timestamppb.New(ts)
+	storablePlan := newStorableComputePlan(cp)
+	storablePlan.CancelationDate = &ts
 
-	bytes, err := marshaller.Marshal(cp)
+	bytes, err := json.Marshal(storablePlan)
+	if err != nil {
+		return err
+	}
+
+	return db.putState(asset.ComputePlanKind, cp.GetKey(), bytes)
+}
+
+// UpdateComputePlan implements persistence.ComputePlanDBAL
+func (db *DB) UpdateComputePlan(cp *asset.ComputePlan) error {
+	storablePlan := newStorableComputePlan(cp)
+
+	bytes, err := json.Marshal(storablePlan)
 	if err != nil {
 		return err
 	}

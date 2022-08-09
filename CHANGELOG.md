@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New service methods to update algo, compute_plan and data manager name (#800)
+
 ### Changed
 
 - Prevent duplicate model registration based on task output definition
@@ -34,12 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validate task inputs (#733)
 
 ### Fixed
-
 - In standalone mode, lock the `events` table when inserting events to prevent
 missing events in `SubscribeToEvents` gRPC stream (#835)
 
 ### Removed
-
 - Category filter from QueryAlgos rpc (#836)
 - Legacy compute task permission fields (#839)
 

@@ -115,3 +115,27 @@ func TestEvaluateTransactions(t *testing.T) {
 
 	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")
 }
+
+func TestUpdate(t *testing.T) {
+	contract := &SmartContract{}
+
+	mspid := "org"
+	updateComputePlanParam := &asset.UpdateComputePlanParam{
+		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name: "Updated compute plan name",
+	}
+	wrapper, err := communication.Wrap(context.Background(), updateComputePlanParam)
+	assert.NoError(t, err)
+
+	ctx := new(ledger.MockTransactionContext)
+
+	service := getMockedService(ctx)
+	service.On("UpdatePlan", updateComputePlanParam, mspid).Return(nil).Once()
+
+	stub := new(testHelper.MockedStub)
+	ctx.On("GetStub").Return(stub).Once()
+	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
+
+	err = contract.UpdatePlan(ctx, wrapper)
+	assert.NoError(t, err, "Smart contract execution should not fail")
+}

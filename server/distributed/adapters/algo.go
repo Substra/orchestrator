@@ -72,3 +72,18 @@ func (a *AlgoAdapter) QueryAlgos(ctx context.Context, query *asset.QueryAlgosPar
 
 	return response, err
 }
+
+// UpdateAlgo will update an Algo
+func (a *AlgoAdapter) UpdateAlgo(ctx context.Context, query *asset.UpdateAlgoParam) (*asset.UpdateAlgoResponse, error) {
+	invocator, err := interceptors.ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.algo:UpdateAlgo"
+
+	response := &asset.UpdateAlgoResponse{}
+
+	err = invocator.Call(ctx, method, query, nil)
+
+	return response, err
+}
