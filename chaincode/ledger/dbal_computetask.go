@@ -303,6 +303,20 @@ func newStorableTaskOutputAsset(o *asset.ComputeTaskOutputAsset) *storableComput
 	}
 }
 
+func (s *storableComputeTaskOutputAsset) newComputeTaskOutputAsset() (*asset.ComputeTaskOutputAsset, error) {
+	assetKind, ok := asset.AssetKind_value[s.AssetKind]
+	if !ok {
+		return nil, errors.NewUnimplemented(fmt.Sprintf("Unsupported asset kind: %q", s.AssetKind))
+	}
+
+	return &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              s.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: s.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind(assetKind),
+		AssetKey:                    s.AssetKey,
+	}, nil
+}
+
 func (db *DB) getTaskOutputAssets(taskKey string) ([]*storableComputeTaskOutputAsset, error) {
 	outputAssets := make([]*storableComputeTaskOutputAsset, 0)
 
@@ -357,4 +371,24 @@ func (db *DB) CountComputeTaskRegisteredOutputs(key string) (persistence.Compute
 	}
 
 	return counter, nil
+}
+
+func (db *DB) GetComputeTaskOutputAssets(taskKey, identifier string) ([]*asset.ComputeTaskOutputAsset, error) {
+	storedAssets, err := db.getTaskOutputAssets(taskKey)
+	if err != nil {
+		return nil, err
+	}
+	outputAssets := make([]*asset.ComputeTaskOutputAsset, 0)
+
+	for _, storedAsset := range storedAssets {
+		if storedAsset.ComputeTaskOutputIdentifier == identifier {
+			output, err := storedAsset.newComputeTaskOutputAsset()
+			if err != nil {
+				return nil, err
+			}
+			outputAssets = append(outputAssets, output)
+		}
+	}
+
+	return outputAssets, nil
 }

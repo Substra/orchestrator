@@ -1929,3 +1929,100 @@ func TestGetCachedPlan(t *testing.T) {
 
 	cps.AssertExpectations(t)
 }
+
+func TestGetInputAssetsTaskUnready(t *testing.T) {
+	provider := newMockedProvider()
+	db := new(persistence.MockComputeTaskDBAL)
+	provider.On("GetComputeTaskDBAL").Return(db)
+
+	service := NewComputeTaskService(provider)
+
+	db.On("GetComputeTask", "uuid").
+		Once().
+		Return(&asset.ComputeTask{
+			Key:    "uuid",
+			Status: asset.ComputeTaskStatus_STATUS_WAITING,
+		}, nil)
+
+	_, err := service.GetInputAssets("uuid")
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "inputs may not be defined")
+
+	provider.AssertExpectations(t)
+	db.AssertExpectations(t)
+}
+
+func TestGetInputAssets(t *testing.T) {
+	provider := newMockedProvider()
+	db := new(persistence.MockComputeTaskDBAL)
+	dss := new(MockDataSampleAPI)
+	dms := new(MockDataManagerAPI)
+	ms := new(MockModelAPI)
+	provider.On("GetComputeTaskDBAL").Return(db)
+	provider.On("GetDataSampleService").Return(dss)
+	provider.On("GetDataManagerService").Return(dms)
+	provider.On("GetModelService").Return(ms)
+
+	service := NewComputeTaskService(provider)
+
+	db.On("GetComputeTask", "uuid").
+		Once().
+		Return(&asset.ComputeTask{
+			Key:    "uuid",
+			Status: asset.ComputeTaskStatus_STATUS_TODO,
+			Inputs: []*asset.ComputeTaskInput{
+				{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:ds"}},
+				{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm"}},
+				{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "uuid:parent", OutputIdentifier: "aggregate"}}},
+			},
+			Algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"data":   {Kind: asset.AssetKind_ASSET_DATA_SAMPLE},
+					"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+					"model":  {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+		}, nil)
+
+	dataSample := &asset.DataSample{Key: "uuid:ds"}
+	dataManager := &asset.DataManager{Key: "uuid:dm"}
+	model := &asset.Model{Key: "uuid:model"}
+
+	dss.On("GetDataSample", "uuid:ds").
+		Once().
+		Return(dataSample, nil)
+
+	dms.On("GetDataManager", "uuid:dm").
+		Once().
+		Return(dataManager, nil)
+
+	db.On("GetComputeTaskOutputAssets", "uuid:parent", "aggregate").
+		Once().
+		Return(
+			[]*asset.ComputeTaskOutputAsset{
+				{ComputeTaskKey: "uuid:parent", AssetKind: asset.AssetKind_ASSET_MODEL, AssetKey: "uuid:model"},
+			},
+			nil,
+		)
+
+	ms.On("GetModel", "uuid:model").
+		Once().
+		Return(model, nil)
+
+	expectedInputs := []*asset.ComputeTaskInputAsset{
+		{Identifier: "data", Asset: &asset.ComputeTaskInputAsset_DataSample{DataSample: dataSample}},
+		{Identifier: "opener", Asset: &asset.ComputeTaskInputAsset_DataManager{DataManager: dataManager}},
+		{Identifier: "model", Asset: &asset.ComputeTaskInputAsset_Model{Model: model}},
+	}
+
+	inputAssets, err := service.GetInputAssets("uuid")
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedInputs, inputAssets)
+
+	provider.AssertExpectations(t)
+	db.AssertExpectations(t)
+	dss.AssertExpectations(t)
+	dms.AssertExpectations(t)
+	ms.AssertExpectations(t)
+}

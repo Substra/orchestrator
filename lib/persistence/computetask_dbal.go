@@ -25,6 +25,7 @@ type ComputeTaskDBAL interface {
 	AddComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 	// CountComputeTaskRegisteredOutputs returns the number of registered outputs by identifier
 	CountComputeTaskRegisteredOutputs(key string) (ComputeTaskOutputCounter, error)
+	GetComputeTaskOutputAssets(taskKey, identifier string) ([]*asset.ComputeTaskOutputAsset, error)
 }
 
 type ComputeTaskDBALProvider interface {

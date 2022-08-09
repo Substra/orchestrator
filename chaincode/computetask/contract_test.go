@@ -49,3 +49,34 @@ func TestRegistration(t *testing.T) {
 	_, err = contract.RegisterTasks(ctx, wrapper)
 	assert.NoError(t, err, "task registration should not fail")
 }
+
+func TestGetTaskInputAssets(t *testing.T) {
+	contract := &SmartContract{}
+
+	param := &asset.GetTaskInputAssetsParam{ComputeTaskKey: "uuid"}
+	wrapper, err := communication.Wrap(context.Background(), param)
+	assert.NoError(t, err)
+
+	stub := new(testHelper.MockedStub)
+
+	ctx := new(ledger.MockTransactionContext)
+
+	inputs := []*asset.ComputeTaskInputAsset{
+		{Identifier: "test"},
+	}
+
+	service := getMockedService(ctx)
+	service.On("GetInputAssets", "uuid").Return(inputs, nil).Once()
+
+	ctx.On("GetStub").Return(stub).Once()
+
+	w, err := contract.GetTaskInputAssets(ctx, wrapper)
+	assert.NoError(t, err)
+
+	resp := new(asset.GetTaskInputAssetsResponse)
+	err = w.Unwrap(resp)
+	assert.NoError(t, err)
+	assert.Equal(t, inputs, resp.Assets)
+
+	service.AssertExpectations(t)
+}

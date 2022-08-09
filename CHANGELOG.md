@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a `Transient` field to the task inputs
 - Return an error in distributed mode if a stored event has invalid event or asset kind
 - Associate asset with task output on registration
+- gRPC method to get task input assets
 
 ### Removed
 

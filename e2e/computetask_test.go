@@ -552,3 +552,77 @@ func TestWorkerCancelTaskInFailedComputePlan(t *testing.T) {
 	client1.FailTask("trainTask2")
 	client2.CancelTask("aggTask")
 }
+
+// TestGetTaskInputAssets creates a train and a predict task and asserts that the predict
+// task has three input assets: datasample, opener and model
+func TestGetTaskInputAssets(t *testing.T) {
+	appClient := factory.NewTestClient()
+	ks := appClient.GetKeyStore()
+
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("train_algo"))
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+
+	appClient.RegisterTasks(
+		client.DefaultTrainTaskOptions().WithKeyRef("train").WithAlgoRef("train_algo"),
+		client.DefaultTrainTaskOptions().WithKeyRef("train2").WithAlgoRef("train_algo"), // Make sure we have several models as aggregate input to check order
+	)
+
+	// Check that train has expected inputs
+	trainInputs := appClient.GetTaskInputAssets("train")
+	assert.Len(t, trainInputs, 2)
+
+	for _, input := range trainInputs {
+		if input.Identifier == "opener" {
+			assert.IsType(t, &asset.ComputeTaskInputAsset_DataManager{}, input.Asset)
+			dm := input.Asset.(*asset.ComputeTaskInputAsset_DataManager).DataManager
+			assert.Equal(t, ks.GetKey(client.DefaultDataManagerRef), dm.Key)
+		}
+		if input.Identifier == "datasamples" {
+			assert.IsType(t, &asset.ComputeTaskInputAsset_DataSample{}, input.Asset)
+			ds := input.Asset.(*asset.ComputeTaskInputAsset_DataSample).DataSample
+			assert.Equal(t, ks.GetKey(client.DefaultDataSampleRef), ds.Key)
+		}
+	}
+
+	appClient.RegisterAlgo(
+		client.DefaultAggregateAlgoOptions().
+			SetInputs(map[string]*asset.AlgoInput{
+				"sink": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true},
+			}).
+			WithKeyRef("aggregate_algo"),
+	)
+	appClient.RegisterTasks(
+		client.DefaultAggregateTaskOptions().
+			WithParentsRef("train", "train2"). // This won't be necessary soon
+			WithInput("sink", &client.TaskOutputRef{TaskRef: "train", Identifier: "model"}).
+			WithInput("sink", &client.TaskOutputRef{TaskRef: "train2", Identifier: "model"}).
+			WithKeyRef("aggregate").
+			WithAlgoRef("aggregate_algo"),
+	)
+
+	// Fetching inputs for a task not in TODO should return an error
+	_, err := appClient.FailableGetTaskInputAssets("aggregate")
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "inputs may not be defined")
+
+	appClient.StartTask("train")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_model"))
+	appClient.DoneTask("train")
+
+	appClient.StartTask("train2")
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train2").WithKeyRef("train2_model"))
+	appClient.DoneTask("train2")
+
+	aggInputs := appClient.GetTaskInputAssets("aggregate")
+	assert.Len(t, aggInputs, 2)
+	expectedKeyRef := []string{"train_model", "train2_model"}
+	for i, input := range aggInputs {
+		assert.IsType(t, &asset.ComputeTaskInputAsset_Model{}, input.Asset)
+		model := input.Asset.(*asset.ComputeTaskInputAsset_Model).Model
+		keyRef := expectedKeyRef[i]
+		assert.Equal(t, ks.GetKey(keyRef), model.Key)
+	}
+}

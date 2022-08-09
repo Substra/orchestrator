@@ -94,3 +94,20 @@ func (a *ComputeTaskAdapter) ApplyTaskAction(ctx context.Context, param *asset.A
 
 	return &asset.ApplyTaskActionResponse{}, nil
 }
+
+func (a *ComputeTaskAdapter) GetTaskInputAssets(ctx context.Context, param *asset.GetTaskInputAssetsParam) (*asset.GetTaskInputAssetsResponse, error) {
+	invocator, err := interceptors.ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.computetask:GetTaskInputAssets"
+
+	response := &asset.GetTaskInputAssetsResponse{}
+
+	err = invocator.Call(ctx, method, param, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}

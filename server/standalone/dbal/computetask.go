@@ -553,3 +553,39 @@ func (d *DBAL) AddComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) e
 
 	return d.exec(stmt)
 }
+
+func (d *DBAL) GetComputeTaskOutputAssets(taskKey, identifier string) ([]*asset.ComputeTaskOutputAsset, error) {
+	stmt := getStatementBuilder().
+		Select("asset_kind", "asset_key").
+		From(computeTaskOutputAssetsTable).
+		Where(sq.Eq{"compute_task_key": taskKey, "compute_task_output_identifier": identifier}).
+		OrderBy("position ASC")
+
+	rows, err := d.query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	outputAssets := []*asset.ComputeTaskOutputAsset{}
+
+	for rows.Next() {
+		out := &asset.ComputeTaskOutputAsset{
+			ComputeTaskKey:              taskKey,
+			ComputeTaskOutputIdentifier: identifier,
+		}
+
+		err = rows.Scan(&out.AssetKind, &out.AssetKey)
+		if err != nil {
+			return nil, err
+		}
+
+		outputAssets = append(outputAssets, out)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return outputAssets, nil
+}

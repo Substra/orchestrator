@@ -4,6 +4,9 @@ package orchestrator;
 
 import "google/protobuf/timestamp.proto";
 import "algo.proto";
+import "model.proto";
+import "datamanager.proto";
+import "datasample.proto";
 import "common.proto";
 
 option go_package = "github.com/owkin/orchestrator/lib/asset";
@@ -218,7 +221,23 @@ message ApplyTaskActionParam {
   string log = 3;
 }
 
-message ApplyTaskActionResponse {
+message ApplyTaskActionResponse {}
+
+message ComputeTaskInputAsset {
+  string identifier = 1;
+  oneof asset {
+    Model model = 2;
+    DataManager data_manager = 3;
+    DataSample data_sample = 4;
+  }
+}
+
+message GetTaskInputAssetsParam {
+  string compute_task_key = 1;
+}
+
+message GetTaskInputAssetsResponse {
+  repeated ComputeTaskInputAsset assets = 1;
 }
 
 service ComputeTaskService {
@@ -226,4 +245,5 @@ service ComputeTaskService {
   rpc QueryTasks(QueryTasksParam) returns (QueryTasksResponse);
   rpc GetTask(GetTaskParam) returns (ComputeTask);
   rpc ApplyTaskAction(ApplyTaskActionParam) returns (ApplyTaskActionResponse);
+  rpc GetTaskInputAssets(GetTaskInputAssetsParam) returns (GetTaskInputAssetsResponse);
 }

@@ -505,6 +505,26 @@ func (c *TestClient) GetInputModels(taskRef string) []*asset.Model {
 	return resp.Models
 }
 
+func (c *TestClient) GetTaskInputAssets(taskRef string) []*asset.ComputeTaskInputAsset {
+	c.logger.WithField("task key", c.ks.GetKey(taskRef)).Debug("GetComputeTaskInputAssets")
+	assets, err := c.FailableGetTaskInputAssets(taskRef)
+	if err != nil {
+		c.logger.WithError(err).Fatal("Task input assets retrieval failed")
+	}
+	return assets
+}
+
+func (c *TestClient) FailableGetTaskInputAssets(taskRef string) ([]*asset.ComputeTaskInputAsset, error) {
+	param := &asset.GetTaskInputAssetsParam{
+		ComputeTaskKey: c.ks.GetKey(taskRef),
+	}
+	resp, err := c.computeTaskService.GetTaskInputAssets(c.ctx, param)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Assets, nil
+}
+
 func (c *TestClient) GetDataset(dataManagerRef string) *asset.Dataset {
 	param := &asset.GetDatasetParam{
 		Key: c.ks.GetKey(dataManagerRef),

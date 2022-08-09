@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestQueryComputePlans(t *testing.T) {
@@ -106,4 +108,56 @@ func TestStorableComputePlanFields(t *testing.T) {
 	}
 
 	assert.GreaterOrEqual(t, publicStorablePlanFields, publicPlanFields, "storable struct should have at least as many fields than the asset it represents")
+}
+
+func TestStorableComputeTaskOutputAsset(t *testing.T) {
+	output := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              "uuid",
+		ComputeTaskOutputIdentifier: "test",
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    "testasset",
+	}
+
+	storable := newStorableTaskOutputAsset(output)
+
+	converted, err := storable.newComputeTaskOutputAsset()
+	require.NoError(t, err)
+	assert.Equal(t, output, converted)
+}
+
+func TestGetComputeTaskOutputAssets(t *testing.T) {
+	stub := new(testHelper.MockedStub)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+
+	storableOutputs := []*storableComputeTaskOutputAsset{
+		{ComputeTaskKey: "uuid", ComputeTaskOutputIdentifier: "model", AssetKind: asset.AssetKind_ASSET_MODEL.String(), AssetKey: "modelUUID"},
+		{ComputeTaskKey: "uuid", ComputeTaskOutputIdentifier: "anotherIdentifier", AssetKind: asset.AssetKind_ASSET_MODEL.String(), AssetKey: "anotherModelUUID"},
+	}
+	bytes, err := json.Marshal(storableOutputs)
+	require.NoError(t, err)
+	stored := storedAsset{
+		DocType: "test",
+		Asset:   bytes,
+	}
+	bytes, err = json.Marshal(stored)
+	require.NoError(t, err)
+
+	stub.On("GetState", "computetask_output_asset:uuid").
+		Once().
+		Return(bytes, nil)
+
+	outputs, err := db.GetComputeTaskOutputAssets("uuid", "model")
+	require.NoError(t, err)
+
+	expectedOutput := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              "uuid",
+		ComputeTaskOutputIdentifier: "model",
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    "modelUUID",
+	}
+
+	assert.Len(t, outputs, 1)
+	assert.Equal(t, expectedOutput, outputs[0])
+
+	stub.AssertExpectations(t)
 }

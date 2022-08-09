@@ -456,3 +456,37 @@ func TestAddComputeTaskOutputAsset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGetComputeTaskOutputAssets(t *testing.T) {
+	mock, err := pgxmock.NewConn()
+	assert.NoError(t, err)
+	defer mock.Close(context.Background())
+
+	mock.ExpectBegin()
+
+	res := pgxmock.NewRows([]string{"asset_kind", "asset_key"}).
+		AddRow("ASSET_MODEL", "6d313ee9-3ea6-4ceb-abaa-eac9643863a6")
+
+	mock.ExpectQuery(`SELECT asset_kind, asset_key FROM compute_task_output_assets WHERE compute_task_key = \$\d AND compute_task_output_identifier = \$\d ORDER BY position ASC`).
+		WithArgs("e9133395-f3c1-4407-96cc-e1681815bea3", "model").
+		WillReturnRows(res)
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	expectedOutput := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              "e9133395-f3c1-4407-96cc-e1681815bea3",
+		ComputeTaskOutputIdentifier: "model",
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    "6d313ee9-3ea6-4ceb-abaa-eac9643863a6",
+	}
+
+	outputs, err := dbal.GetComputeTaskOutputAssets("e9133395-f3c1-4407-96cc-e1681815bea3", "model")
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+
+	assert.Len(t, outputs, 1)
+	assert.Equal(t, expectedOutput, outputs[0])
+}

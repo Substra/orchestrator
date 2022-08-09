@@ -229,6 +229,12 @@ func (o *TrainTaskOptions) WithOutput(identifier string, permissions *asset.NewP
 	return o
 }
 
+// SetOutputs will override existing outputs with provided argument
+func (o *TrainTaskOptions) SetOutputs(outputs map[string]*asset.NewComputeTaskOutput) *TrainTaskOptions {
+	o.Outputs = outputs
+	return o
+}
+
 func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 
 	parentKeys := make([]string, len(o.ParentsRef))
@@ -517,6 +523,18 @@ func (o *AlgoOptions) WithOutput(identifier string, kind asset.AssetKind, multip
 		Kind:     kind,
 		Multiple: multiple,
 	}
+	return o
+}
+
+// SetInputs will override existing inputs with provided argument
+func (o *AlgoOptions) SetInputs(inputs map[string]*asset.AlgoInput) *AlgoOptions {
+	o.Inputs = inputs
+	return o
+}
+
+// SetOutputs will override existing outputs with provided argument
+func (o *AlgoOptions) SetOutputs(outputs map[string]*asset.AlgoOutput) *AlgoOptions {
+	o.Outputs = outputs
 	return o
 }
 

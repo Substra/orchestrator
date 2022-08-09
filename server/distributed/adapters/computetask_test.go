@@ -11,6 +11,7 @@ import (
 	"github.com/owkin/orchestrator/server/distributed/interceptors"
 	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestComputeTaskAdapterImplementServer(t *testing.T) {
@@ -95,4 +96,32 @@ func TestHandleTasksBatchConflictAfterTimeout(t *testing.T) {
 
 	// We cannot assume that ALL tasks have been registered.
 	assert.Error(t, err, "Registration should fail because batch contains more than one task")
+}
+
+func TestGetTaskInputAssets(t *testing.T) {
+	adapter := NewComputeTaskAdapter()
+
+	newCtx := context.TODO()
+	invocator := &chaincode.MockInvocator{}
+
+	param := &asset.GetTaskInputAssetsParam{ComputeTaskKey: "uuid"}
+
+	inputs := []*asset.ComputeTaskInputAsset{
+		{Identifier: "test"},
+	}
+
+	invocator.
+		On("Call", utils.AnyContext, "orchestrator.computetask:GetTaskInputAssets", param, &asset.GetTaskInputAssetsResponse{}).
+		Run(func(args mock.Arguments) {
+			resp := args.Get(3).(*asset.GetTaskInputAssetsResponse)
+			resp.Assets = inputs
+		}).
+		Return(nil)
+
+	ctx := interceptors.WithInvocator(newCtx, invocator)
+
+	response, err := adapter.GetTaskInputAssets(ctx, param)
+
+	assert.NoError(t, err)
+	assert.Equal(t, inputs, response.Assets)
 }

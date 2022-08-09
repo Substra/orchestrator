@@ -5,7 +5,6 @@ import (
 
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/errors"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/owkin/orchestrator/lib/metrics"
 	"github.com/owkin/orchestrator/lib/persistence"
@@ -21,6 +20,12 @@ var (
 	taskIOPredictions = "predictions"
 )
 
+// Task statuses in which the inputs are defined
+var inputDefinedStatus = []asset.ComputeTaskStatus{
+	asset.ComputeTaskStatus_STATUS_DOING,
+	asset.ComputeTaskStatus_STATUS_TODO,
+}
+
 type namedAlgoOutputs = map[string]*asset.AlgoOutput
 
 // ComputeTaskAPI defines the methods to act on ComputeTasks
@@ -29,6 +34,7 @@ type ComputeTaskAPI interface {
 	GetTask(key string) (*asset.ComputeTask, error)
 	QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
+	GetInputAssets(key string) ([]*asset.ComputeTaskInputAsset, error)
 	// canDisableModels is internal only (exposed only to other services).
 	// it will return true if models produced by the task can be disabled
 	canDisableModels(key, requester string) (bool, error)
@@ -148,6 +154,60 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	metrics.TaskRegistrationBatchSize.WithLabelValues(s.GetChannel()).Observe(float64(len(registeredTasks)))
 
 	return registeredTasks, nil
+}
+
+// GetInputAssets returns the assets necessary to process the task.
+func (s *ComputeTaskService) GetInputAssets(key string) ([]*asset.ComputeTaskInputAsset, error) {
+	task, err := s.GetTask(key)
+	if err != nil {
+		return nil, err
+	}
+
+	if !utils.SliceContains(inputDefinedStatus, task.Status) {
+		return nil, orcerrors.NewBadRequest(
+			fmt.Sprintf("Task inputs may not be defined in current task status (%q)", task.Status.String()),
+		)
+	}
+
+	inputAssets := make([]*asset.ComputeTaskInputAsset, 0, len(task.Inputs))
+
+	for _, input := range task.Inputs {
+		algoInput, ok := task.Algo.Inputs[input.Identifier]
+		if !ok {
+			// This should not happen since this is checked on registration
+			return nil, orcerrors.NewError(orcerrors.ErrInternal, "missing algo input")
+		}
+
+		switch inputRef := input.Ref.(type) {
+		case *asset.ComputeTaskInput_AssetKey:
+			inputAsset, err := s.getInputAsset(algoInput.Kind, inputRef.AssetKey, input.Identifier)
+			if err != nil {
+				return nil, err
+			}
+			inputAssets = append(inputAssets, inputAsset)
+		case *asset.ComputeTaskInput_ParentTaskOutput:
+			outputs, err := s.GetComputeTaskDBAL().
+				GetComputeTaskOutputAssets(
+					inputRef.ParentTaskOutput.ParentTaskKey,
+					inputRef.ParentTaskOutput.OutputIdentifier,
+				)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, output := range outputs {
+				inputAsset, err := s.getInputAsset(output.AssetKind, output.AssetKey, input.Identifier)
+				if err != nil {
+					return nil, err
+				}
+				inputAssets = append(inputAssets, inputAsset)
+			}
+		default:
+			return nil, orcerrors.NewUnimplemented(fmt.Sprintf("unsupported input type: %T", inputRef))
+		}
+	}
+
+	return inputAssets, nil
 }
 
 // sortTasks is a function to sort a list of tasks in a valid order for their registration.
@@ -770,7 +830,7 @@ func (s *ComputeTaskService) checkGenericCanProcessParents(worker string, parent
 		case *asset.ComputeTask_Composite:
 			output, ok := p.Outputs[taskIOShared]
 			if !ok {
-				return errors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOShared))
+				return orcerrors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOShared))
 			}
 			sharedPerms := output.Permissions
 			if !s.GetPermissionService().CanProcess(sharedPerms, worker) {
@@ -780,7 +840,7 @@ func (s *ComputeTaskService) checkGenericCanProcessParents(worker string, parent
 			}
 			output, ok = p.Outputs[taskIOLocal]
 			if !ok {
-				return errors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOLocal))
+				return orcerrors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOLocal))
 			}
 			localPerms := output.Permissions
 			if category == asset.ComputeTaskCategory_TASK_TEST && !s.GetPermissionService().CanProcess(localPerms, worker) {
@@ -791,7 +851,7 @@ func (s *ComputeTaskService) checkGenericCanProcessParents(worker string, parent
 		case *asset.ComputeTask_Aggregate, *asset.ComputeTask_Train:
 			output, ok := p.Outputs[taskIOModel]
 			if !ok {
-				return errors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOModel))
+				return orcerrors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOModel))
 			}
 			permissions := output.Permissions
 			if !s.GetPermissionService().CanProcess(permissions, worker) {
@@ -802,7 +862,7 @@ func (s *ComputeTaskService) checkGenericCanProcessParents(worker string, parent
 		case *asset.ComputeTask_Predict:
 			output, ok := p.Outputs[taskIOPredictions]
 			if !ok {
-				return errors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOModel))
+				return orcerrors.NewInternal(fmt.Sprintf("Task %q has no output %s", p.Key, taskIOModel))
 			}
 			permissions := output.Permissions
 			if !s.GetPermissionService().CanProcess(permissions, worker) {
@@ -992,6 +1052,41 @@ func (s *ComputeTaskService) getCachedCP(key string) (*asset.ComputePlan, error)
 		s.planStore[key] = plan
 	}
 	return s.planStore[key], nil
+}
+
+// getInputAsset returns an input asset with the appropriate requested asset kind
+func (s *ComputeTaskService) getInputAsset(kind asset.AssetKind, key, identifier string) (*asset.ComputeTaskInputAsset, error) {
+	inputAsset := &asset.ComputeTaskInputAsset{
+		Identifier: identifier,
+	}
+	switch kind {
+	case asset.AssetKind_ASSET_MODEL:
+		model, err := s.GetModelService().GetModel(key)
+		if err != nil {
+			return nil, err
+		}
+
+		inputAsset.Asset = &asset.ComputeTaskInputAsset_Model{Model: model}
+		return inputAsset, nil
+	case asset.AssetKind_ASSET_DATA_MANAGER:
+		manager, err := s.GetDataManagerService().GetDataManager(key)
+		if err != nil {
+			return nil, err
+		}
+
+		inputAsset.Asset = &asset.ComputeTaskInputAsset_DataManager{DataManager: manager}
+		return inputAsset, nil
+	case asset.AssetKind_ASSET_DATA_SAMPLE:
+		sample, err := s.GetDataSampleService().GetDataSample(key)
+		if err != nil {
+			return nil, err
+		}
+
+		inputAsset.Asset = &asset.ComputeTaskInputAsset_DataSample{DataSample: sample}
+		return inputAsset, nil
+	}
+
+	return nil, orcerrors.NewUnimplemented(fmt.Sprintf("unsupported input kind: %q", kind.String()))
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory

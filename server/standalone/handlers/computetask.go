@@ -82,3 +82,17 @@ func (s *ComputeTaskServer) ApplyTaskAction(ctx context.Context, param *asset.Ap
 
 	return &asset.ApplyTaskActionResponse{}, nil
 }
+
+func (s *ComputeTaskServer) GetTaskInputAssets(ctx context.Context, param *asset.GetTaskInputAssetsParam) (*asset.GetTaskInputAssetsResponse, error) {
+	provider, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	inputs, err := provider.GetComputeTaskService().GetInputAssets(param.ComputeTaskKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.GetTaskInputAssetsResponse{Assets: inputs}, nil
+}
