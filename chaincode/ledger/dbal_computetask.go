@@ -8,6 +8,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -341,4 +342,19 @@ func (db *DB) AddComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) er
 		return err
 	}
 	return db.putState(asset.ComputeTaskOutputAssetKind, output.ComputeTaskKey, bytes)
+}
+
+func (db *DB) CountComputeTaskRegisteredOutputs(key string) (persistence.ComputeTaskOutputCounter, error) {
+	counter := make(persistence.ComputeTaskOutputCounter)
+
+	assets, err := db.getTaskOutputAssets(key)
+	if err != nil {
+		return counter, err
+	}
+
+	for _, asset := range assets {
+		counter[asset.ComputeTaskOutputIdentifier]++
+	}
+
+	return counter, nil
 }

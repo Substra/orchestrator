@@ -12,6 +12,7 @@ import (
 	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/owkin/orchestrator/lib/common"
 	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/owkin/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -348,6 +349,37 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 	}
 
 	return keys, nil
+}
+
+func (d *DBAL) CountComputeTaskRegisteredOutputs(key string) (persistence.ComputeTaskOutputCounter, error) {
+	counter := make(persistence.ComputeTaskOutputCounter)
+
+	stmt := getStatementBuilder().
+		Select("compute_task_output_identifier, count(1)").
+		From("compute_task_output_assets").
+		GroupBy("compute_task_output_identifier").
+		Where(sq.Eq{"compute_task_key": key})
+
+	rows, err := d.query(stmt)
+	if err != nil {
+		return counter, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var identifier string
+		var count int
+		err := rows.Scan(&identifier, &count)
+		if err != nil {
+			return counter, err
+		}
+		counter[identifier] = count
+	}
+	if err := rows.Err(); err != nil {
+		return counter, err
+	}
+
+	return counter, nil
 }
 
 // queryBaseComputeTasks will return tasks without inputs/outputs, their keys and pagination token

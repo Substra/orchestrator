@@ -5,6 +5,9 @@ import (
 	"github.com/owkin/orchestrator/lib/common"
 )
 
+// ComputeTaskOutputCounter counts registered outputs by identifier
+type ComputeTaskOutputCounter = map[string]int
+
 type ComputeTaskDBAL interface {
 	ComputeTaskExists(key string) (bool, error)
 	// GetExistingKeys returns a slice with inputs keys existing in storage.
@@ -20,6 +23,8 @@ type ComputeTaskDBAL interface {
 	GetComputePlanTasks(key string) ([]*asset.ComputeTask, error)
 	GetComputePlanTasksKeys(key string) ([]string, error)
 	AddComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
+	// CountComputeTaskRegisteredOutputs returns the number of registered outputs by identifier
+	CountComputeTaskRegisteredOutputs(key string) (ComputeTaskOutputCounter, error)
 }
 
 type ComputeTaskDBALProvider interface {

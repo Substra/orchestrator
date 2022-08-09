@@ -113,12 +113,7 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 	_, err := service.registerModel(
 		model,
 		"test",
-		[]*asset.Model{
-			{
-				Key:      "model1",
-				Category: asset.ModelCategory_MODEL_SIMPLE,
-			},
-		},
+		persistence.ComputeTaskOutputCounter{},
 		&asset.ComputeTask{
 			Status: asset.ComputeTaskStatus_STATUS_DONE,
 			Worker: "test",
@@ -150,7 +145,7 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 	_, err := service.registerModel(
 		model,
 		"test",
-		[]*asset.Model{},
+		persistence.ComputeTaskOutputCounter{},
 		&asset.ComputeTask{
 			Status: asset.ComputeTaskStatus_STATUS_DONE,
 			Worker: "owner",
@@ -252,7 +247,7 @@ func TestRegisterTrainModel(t *testing.T) {
 	}
 	es.On("RegisterEvents", event).Once().Return(nil)
 
-	_, err := service.registerModel(model, "test", []*asset.Model{}, task)
+	_, err := service.registerModel(model, "test", persistence.ComputeTaskOutputCounter{}, task)
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
@@ -344,7 +339,7 @@ func TestRegisterAggregateModel(t *testing.T) {
 
 	es.On("RegisterEvents", mock.AnythingOfType("*asset.Event")).Once().Return(nil)
 
-	_, err := service.registerModel(model, "test", []*asset.Model{}, task)
+	_, err := service.registerModel(model, "test", persistence.ComputeTaskOutputCounter{}, task)
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
@@ -371,11 +366,7 @@ func TestRegisterDuplicateModel(t *testing.T) {
 	_, err := service.registerModel(
 		model,
 		"test",
-		[]*asset.Model{
-			{
-				Category: asset.ModelCategory_MODEL_SIMPLE,
-			},
-		},
+		persistence.ComputeTaskOutputCounter{"model": 1},
 		&asset.ComputeTask{
 			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
@@ -517,11 +508,7 @@ func TestRegisterHeadModel(t *testing.T) {
 	_, err := service.registerModel(
 		model,
 		"test",
-		[]*asset.Model{
-			{
-				Category: asset.ModelCategory_MODEL_SIMPLE,
-			},
-		},
+		persistence.ComputeTaskOutputCounter{"shared": 1},
 		task)
 	assert.NoError(t, err)
 
@@ -549,7 +536,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 	_, err := service.registerModel(
 		model,
 		"test",
-		[]*asset.Model{},
+		persistence.ComputeTaskOutputCounter{},
 		&asset.ComputeTask{
 			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
@@ -602,10 +589,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 	_, err := service.registerModel(
 		model,
 		"test",
-		[]*asset.Model{
-			{
-				Category: asset.ModelCategory_MODEL_HEAD,
-			}},
+		persistence.ComputeTaskOutputCounter{"local": 1},
 		&asset.ComputeTask{
 			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Status:   asset.ComputeTaskStatus_STATUS_DOING,
@@ -699,11 +683,7 @@ func TestRegisterInvalidOutput(t *testing.T) {
 	_, err := service.registerModel(
 		model,
 		"test",
-		[]*asset.Model{
-			{
-				Category: asset.ModelCategory_MODEL_SIMPLE,
-			},
-		},
+		persistence.ComputeTaskOutputCounter{},
 		task)
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
@@ -714,11 +694,7 @@ func TestRegisterInvalidOutput(t *testing.T) {
 	_, err = service.registerModel(
 		model,
 		"test",
-		[]*asset.Model{
-			{
-				Category: asset.ModelCategory_MODEL_SIMPLE,
-			},
-		},
+		persistence.ComputeTaskOutputCounter{},
 		task)
 	assert.Error(t, err)
 	orcError = new(orcerrors.OrcError)
@@ -1066,50 +1042,6 @@ func TestAreAllOutputsRegistered(t *testing.T) {
 	}
 }
 
-func TestCheckDuplicateModel(t *testing.T) {
-	cases := map[string]struct {
-		models      []*asset.Model
-		model       *asset.NewModel
-		shouldError bool
-	}{
-		"no models": {
-			[]*asset.Model{},
-			&asset.NewModel{Category: asset.ModelCategory_MODEL_SIMPLE},
-			false,
-		},
-		"simple": {
-			[]*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}},
-			&asset.NewModel{Category: asset.ModelCategory_MODEL_SIMPLE},
-			true,
-		},
-		"head": {
-			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}},
-			&asset.NewModel{Category: asset.ModelCategory_MODEL_HEAD},
-			true,
-		},
-		"head and trunk": {
-			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}},
-			&asset.NewModel{Category: asset.ModelCategory_MODEL_SIMPLE},
-			false,
-		},
-		"complete composite": {
-			[]*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}, {Category: asset.ModelCategory_MODEL_SIMPLE}},
-			&asset.NewModel{Category: asset.ModelCategory_MODEL_SIMPLE},
-			true,
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			if tc.shouldError {
-				assert.Error(t, checkDuplicateModel(tc.models, tc.model))
-			} else {
-				assert.NoError(t, checkDuplicateModel(tc.models, tc.model))
-			}
-		})
-	}
-}
-
 func TestRegisterModelsTrainTask(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	cts := new(MockComputeTaskAPI)
@@ -1153,7 +1085,7 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 	}
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
+	cts.On("getTaskOutputCounter", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(persistence.ComputeTaskOutputCounter{}, nil)
 
 	models := []*asset.NewModel{
 		{
@@ -1333,7 +1265,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 	}
 	dbal.On("AddModel", storedSimple, "shared").Once().Return(nil)
 
-	dbal.On("GetComputeTaskOutputModels", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return([]*asset.Model{}, nil)
+	cts.On("getTaskOutputCounter", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(persistence.ComputeTaskOutputCounter{}, nil)
 
 	for _, model := range models {
 		output := &asset.ComputeTaskOutputAsset{
@@ -1394,7 +1326,7 @@ func TestRegisterMissingOutput(t *testing.T) {
 		},
 	}
 
-	_, err := service.registerModel(model, "test", []*asset.Model{}, task)
+	_, err := service.registerModel(model, "test", persistence.ComputeTaskOutputCounter{}, task)
 	assert.ErrorContains(t, err, "has no output named \"model\"")
 
 	provider.AssertExpectations(t)

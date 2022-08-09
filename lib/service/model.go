@@ -130,7 +130,7 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 	return inputs, nil
 }
 
-func (s *ModelService) registerModel(newModel *asset.NewModel, requester string, existingModels []*asset.Model, task *asset.ComputeTask) (*asset.Model, error) {
+func (s *ModelService) registerModel(newModel *asset.NewModel, requester string, outputCounter persistence.ComputeTaskOutputCounter, task *asset.ComputeTask) (*asset.Model, error) {
 	s.GetLogger().WithField("model", newModel).WithField("requester", requester).Debug("Registering new model")
 
 	err := newModel.Validate()
@@ -159,8 +159,8 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 		return nil, errors.NewIncompatibleTaskOutput(task.Key, newModel.ComputeTaskOutputIdentifier, algoOutput.Kind.String(), asset.AssetKind_ASSET_MODEL.String())
 	}
 
-	if err = checkDuplicateModel(existingModels, newModel); err != nil {
-		return nil, err
+	if outputCounter[newModel.ComputeTaskOutputIdentifier] >= 1 && !algoOutput.Multiple {
+		return nil, errors.NewError(orcerrors.ErrConflict, fmt.Sprintf("compute task %q already has its unique output %q registered", task.Key, newModel.ComputeTaskOutputIdentifier))
 	}
 
 	var model *asset.Model
@@ -328,7 +328,7 @@ func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([
 
 	registeredModels := make([]*asset.Model, len(models))
 
-	existingModels, err := s.GetModelDBAL().GetComputeTaskOutputModels(models[0].ComputeTaskKey)
+	outputCounter, err := s.GetComputeTaskService().getTaskOutputCounter(models[0].ComputeTaskKey)
 	if err != nil {
 		return nil, err
 	}
@@ -343,13 +343,13 @@ func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([
 			return nil, errors.NewBadRequest("All models should be part of the same task")
 		}
 
-		model, err := s.registerModel(newModel, owner, existingModels, computeTask)
+		model, err := s.registerModel(newModel, owner, outputCounter, computeTask)
 		if err != nil {
 			return nil, err
 		}
 		registeredModels[modelIndex] = model
 
-		existingModels = append(existingModels, model)
+		outputCounter[newModel.ComputeTaskOutputIdentifier]++
 	}
 
 	return registeredModels, nil
@@ -373,16 +373,6 @@ func countModels(models []*asset.Model) modelCount {
 	}
 
 	return count
-}
-
-// checkDuplicateModel returns an error if a model of the same category already exist
-func checkDuplicateModel(existingModels []*asset.Model, model *asset.NewModel) error {
-	for _, m := range existingModels {
-		if m.Category == model.Category {
-			return errors.NewError(errors.ErrConflict, fmt.Sprintf("task already has a %s model", model.Category.String()))
-		}
-	}
-	return nil
 }
 
 // containsHeadModel returns true if the slice contains a HEAD model

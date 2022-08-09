@@ -35,6 +35,7 @@ type ComputeTaskAPI interface {
 	// applyTaskAction is internal only, it will trigger a task status update.
 	applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error
 	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
+	getTaskOutputCounter(taskKey string) (persistence.ComputeTaskOutputCounter, error)
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance
@@ -1028,4 +1029,8 @@ func getRank(parentTasks []*asset.ComputeTask) int32 {
 	}
 
 	return maxParentRank + 1
+}
+
+func (s *ComputeTaskService) getTaskOutputCounter(taskKey string) (persistence.ComputeTaskOutputCounter, error) {
+	return s.GetComputeTaskDBAL().CountComputeTaskRegisteredOutputs(taskKey)
 }
