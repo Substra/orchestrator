@@ -107,14 +107,14 @@ deploy:
         remoteChart: jetstack/cert-manager
         namespace: cert-manager
         createNamespace: true
-        version: v1.6.0
+        version: v1.9.1
     hooks:
       before:
         - host:
             command:
               - sh
               - -c
-              - "kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.6.0/cert-manager.crds.yaml"
+              - "kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.9.1/cert-manager.crds.yaml"
 profiles:
 - name: apponly
   patches:
