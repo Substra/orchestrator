@@ -20,7 +20,7 @@ require (
 	github.com/jackc/pgtype v1.12.0
 	github.com/jackc/pgx/v4 v4.17.0
 	github.com/looplab/fsm v0.3.0
-	github.com/pashagolub/pgxmock v1.7.0
+	github.com/pashagolub/pgxmock v1.8.0
 	github.com/prometheus/client_golang v1.13.0
 	github.com/rabbitmq/amqp091-go v1.4.0
 	github.com/stretchr/testify v1.8.0
