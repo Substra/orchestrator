@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-playground/log/v7"
-	"github.com/go-playground/log/v7/handlers/console"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -59,23 +59,15 @@ func tearDown() {
 
 	err := conn.Close()
 	if err != nil {
-		log.Fatalf("fail to close gRPC connection: %v", err)
+		log.Fatal().Err(err).Msg("fail to close gRPC connection")
 	}
 }
 
 func setUpLogging() {
-	cLog := console.New(true)
-	levels := make([]log.Level, 0)
-	for _, lvl := range log.AllLevels {
-		if !*debugEnabled && lvl == log.DebugLevel {
-			continue
-		}
-
-		levels = append(levels, lvl)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	if !*debugEnabled {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
-
-	log.AddHandler(cLog, levels...)
-
 }
 
 func initGrpcConn() {
@@ -83,15 +75,15 @@ func initGrpcConn() {
 	if *tlsEnabled {
 		b, err := ioutil.ReadFile(*caFile)
 		if err != nil {
-			log.WithError(err).Fatal("failed to read cacert")
+			log.Fatal().Err(err).Msg("failed to read cacert")
 		}
 		cp := x509.NewCertPool()
 		if !cp.AppendCertsFromPEM(b) {
-			log.Fatal("failed to append cert")
+			log.Fatal().Msg("failed to append cert")
 		}
 		cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
 		if err != nil {
-			log.Fatal("failed to load client keypair")
+			log.Fatal().Msg("failed to load client keypair")
 		}
 		config := &tls.Config{
 			InsecureSkipVerify: false,
@@ -109,7 +101,7 @@ func initGrpcConn() {
 
 	opts = append(opts, grpc.WithBlock())
 
-	log.WithField("server_addr", *serverAddr).Info("connecting to server")
+	log.Info().Str("server_addr", *serverAddr).Msg("connecting to server")
 
 	dialCtx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
@@ -117,6 +109,6 @@ func initGrpcConn() {
 	var err error
 	conn, err = grpc.DialContext(dialCtx, *serverAddr, opts...)
 	if err != nil {
-		log.Fatalf("fail to dial: %v", err)
+		log.Fatal().Err(err).Msg("fail to dial")
 	}
 }

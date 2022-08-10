@@ -8,9 +8,10 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -75,7 +76,7 @@ type TestClient struct {
 	Channel              string
 	ctx                  context.Context
 	ks                   *KeyStore
-	logger               log.Entry
+	logger               zerolog.Logger
 	organizationService  asset.OrganizationServiceClient
 	algoService          asset.AlgoServiceClient
 	dataManagerService   asset.DataManagerServiceClient
@@ -103,17 +104,17 @@ func NewTestClientFactory(conn *grpc.ClientConn, mspid, channel, chaincode strin
 }
 
 func (f *TestClientFactory) NewTestClient() *TestClient {
-	logger := log.WithFields(
-		log.F("mspid", f.mspid),
-		log.F("channel", f.channel),
-		log.F("chaincode", f.chaincode),
-	)
+	logger := log.With().
+		Str("mspid", f.mspid).
+		Str("channel", f.channel).
+		Str("chaincode", f.chaincode).
+		Logger()
 
 	pc, _, _, ok := runtime.Caller(1)
 	if ok {
 		fn := runtime.FuncForPC(pc)
 		if fn != nil {
-			logger = logger.WithField("caller", fn.Name())
+			logger = logger.With().Str("caller", fn.Name()).Logger()
 		}
 	}
 
@@ -183,12 +184,12 @@ func (c *TestClient) GetKeyStore() *KeyStore {
 func (c *TestClient) EnsureOrganization() {
 	_, err := c.organizationService.RegisterOrganization(c.ctx, &asset.RegisterOrganizationParam{})
 	if status.Code(err) == codes.AlreadyExists {
-		c.logger.Debug("organization already exists")
+		c.logger.Debug().Msg("organization already exists")
 		// expected error
 		return
 	}
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterOrganization failed")
+		c.logger.Fatal().Err(err).Msg("RegisterOrganization failed")
 	}
 }
 
@@ -209,10 +210,10 @@ func (c *TestClient) RegisterAlgo(o *AlgoOptions) *asset.Algo {
 		Inputs:         o.Inputs,
 		Outputs:        o.Outputs,
 	}
-	c.logger.WithField("algo", newAlgo).Debug("registering algo")
+	c.logger.Debug().Interface("algo", newAlgo).Msg("registering algo")
 	algo, err := c.algoService.RegisterAlgo(c.ctx, newAlgo)
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterAlgo failed")
+		c.logger.Fatal().Err(err).Msg("RegisterAlgo failed")
 	}
 	return algo
 }
@@ -233,10 +234,10 @@ func (c *TestClient) RegisterDataManager(o *DataManagerOptions) *asset.DataManag
 		Type:           "test",
 		LogsPermission: o.LogsPermission,
 	}
-	c.logger.WithField("datamanager", newDm).Debug("registering datamanager")
+	c.logger.Debug().Interface("datamanager", newDm).Msg("registering datamanager")
 	dataManager, err := c.dataManagerService.RegisterDataManager(c.ctx, newDm)
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterDataManager failed")
+		c.logger.Fatal().Err(err).Msg("RegisterDataManager failed")
 	}
 	return dataManager
 }
@@ -245,10 +246,10 @@ func (c *TestClient) GetDataManager(dataManagerRef string) *asset.DataManager {
 	param := &asset.GetDataManagerParam{
 		Key: c.ks.GetKey(dataManagerRef),
 	}
-	c.logger.WithField("datamanager key", c.ks.GetKey(dataManagerRef)).Debug("GetDataManager")
+	c.logger.Debug().Str("datamanager key", c.ks.GetKey(dataManagerRef)).Msg("GetDataManager")
 	resp, err := c.dataManagerService.GetDataManager(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetDataManager failed")
+		c.logger.Fatal().Err(err).Msg("GetDataManager failed")
 	}
 	return resp
 }
@@ -258,10 +259,10 @@ func (c *TestClient) UpdateDataManager(dataManagerRef string, name string) *asse
 		Key:  c.ks.GetKey(dataManagerRef),
 		Name: name,
 	}
-	c.logger.WithField("data manager key", c.ks.GetKey(dataManagerRef)).Debug("UpdateDataManager")
+	c.logger.Debug().Str("data manager key", c.ks.GetKey(dataManagerRef)).Msg("UpdateDataManager")
 	resp, err := c.dataManagerService.UpdateDataManager(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("UpdateDataManager failed")
+		c.logger.Fatal().Err(err).Msg("UpdateDataManager failed")
 	}
 	return resp
 }
@@ -273,13 +274,13 @@ func (c *TestClient) RegisterDataSample(o *DataSampleOptions) *asset.DataSample 
 		TestOnly:        o.TestOnly,
 		Checksum:        "7e87a07aeb05e0e66918ce1c93155acf54649eec453060b75caf494bc0bc0b9c",
 	}
-	c.logger.WithField("datasample", newDs).Debug("registering datasample")
+	c.logger.Debug().Interface("datasample", newDs).Msg("registering datasample")
 	input := &asset.RegisterDataSamplesParam{
 		Samples: []*asset.NewDataSample{newDs},
 	}
 	res, err := c.dataSampleService.RegisterDataSamples(c.ctx, input)
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterDataSample failed")
+		c.logger.Fatal().Err(err).Msg("RegisterDataSample failed")
 	}
 	return res.DataSamples[0]
 }
@@ -288,10 +289,10 @@ func (c *TestClient) GetDataSample(dataSampleRef string) *asset.DataSample {
 	param := &asset.GetDataSampleParam{
 		Key: c.ks.GetKey(dataSampleRef),
 	}
-	c.logger.WithField("data sample key", c.ks.GetKey(dataSampleRef)).Debug("GetDataSample")
+	c.logger.Debug().Interface("data sample key", c.ks.GetKey(dataSampleRef)).Msg("GetDataSample")
 	resp, err := c.dataSampleService.GetDataSample(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetDataSample failed")
+		c.logger.Fatal().Err(err).Msg("GetDataSample failed")
 	}
 	return resp
 }
@@ -302,15 +303,15 @@ func (c *TestClient) QueryDataSamples(pageToken string, pageSize uint32, filter 
 		PageSize:  pageSize,
 		Filter:    filter,
 	}
-	c.logger.
-		WithField("pageToken", pageToken).
-		WithField("pageSize", pageSize).
-		WithField("filter", filter).
-		Debug("QueryDataSamples")
+	c.logger.Debug().
+		Str("pageToken", pageToken).
+		Uint32("pageSize", pageSize).
+		Interface("filter", filter).
+		Msg("QueryDataSamples")
 
 	resp, err := c.dataSampleService.QueryDataSamples(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("QueryDataSamples failed")
+		c.logger.Fatal().Err(err).Msg("QueryDataSamples failed")
 	}
 	return resp
 }
@@ -318,7 +319,7 @@ func (c *TestClient) QueryDataSamples(pageToken string, pageSize uint32, filter 
 func (c *TestClient) RegisterTasks(optList ...Taskable) []*asset.ComputeTask {
 	res, err := c.FailableRegisterTasks(optList...)
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterTasks failed")
+		c.logger.Fatal().Err(err).Msg("RegisterTasks failed")
 	}
 	return res.Tasks
 }
@@ -328,7 +329,7 @@ func (c *TestClient) FailableRegisterTasks(optList ...Taskable) (*asset.Register
 	for i, o := range optList {
 		newTasks[i] = o.GetNewTask(c.ks)
 	}
-	c.logger.WithField("nbTasks", len(newTasks)).Debug("registering tasks")
+	c.logger.Debug().Int("nbTasks", len(newTasks)).Msg("registering tasks")
 	return c.computeTaskService.RegisterTasks(c.ctx, &asset.RegisterTasksParam{Tasks: newTasks})
 }
 
@@ -350,23 +351,23 @@ func (c *TestClient) DoneTask(keyRef string) {
 
 func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskAction) {
 	taskKey := c.ks.GetKey(keyRef)
-	c.logger.WithField("taskKey", taskKey).WithField("action", action).Debug("applying task action")
+	c.logger.Debug().Str("taskKey", taskKey).Str("action", action.String()).Msg("applying task action")
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
 		ComputeTaskKey: taskKey,
 		Action:         action,
 	})
 	if err != nil {
-		c.logger.WithError(err).Fatalf("failed to mark task as %v", action)
+		c.logger.Fatal().Err(err).Msgf("failed to mark task as %v", action)
 	}
 }
 
 func (c *TestClient) RegisterModel(o *ModelOptions) *asset.Model {
 	newModel := c.makeNewModel(o)
-	c.logger.WithField("model", newModel).Debug("registering model")
+	c.logger.Debug().Interface("model", newModel).Msg("registering model")
 	//nolint: staticcheck //This method is deprecated but still needs to be tested
 	model, err := c.modelService.RegisterModel(c.ctx, newModel)
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterModel failed")
+		c.logger.Fatal().Err(err).Msg("RegisterModel failed")
 	}
 	return model
 }
@@ -375,10 +376,10 @@ func (c *TestClient) GetModel(modelRef string) *asset.Model {
 	param := &asset.GetModelParam{
 		Key: c.ks.GetKey(modelRef),
 	}
-	c.logger.WithField("model key", c.ks.GetKey(modelRef)).Debug("GetModel")
+	c.logger.Debug().Str("model key", c.ks.GetKey(modelRef)).Msg("GetModel")
 	resp, err := c.modelService.GetModel(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetModel failed")
+		c.logger.Fatal().Err(err).Msg("GetModel failed")
 	}
 	return resp
 }
@@ -387,7 +388,7 @@ func (c *TestClient) FailableRegisterModels(o ...*ModelOptions) (*asset.Register
 	newModels := make([]*asset.NewModel, len(o))
 	for i, modelOpt := range o {
 		newModel := c.makeNewModel(modelOpt)
-		c.logger.WithField("model", newModel).Debug("registering model")
+		c.logger.Debug().Interface("model", newModel).Msg("registering model")
 		newModels[i] = newModel
 	}
 	return c.modelService.RegisterModels(c.ctx, &asset.RegisterModelsParam{Models: newModels})
@@ -396,7 +397,7 @@ func (c *TestClient) FailableRegisterModels(o ...*ModelOptions) (*asset.Register
 func (c *TestClient) RegisterModels(o ...*ModelOptions) []*asset.Model {
 	res, err := c.FailableRegisterModels(o...)
 	if err != nil {
-		log.WithError(err).Fatal("RegisterModels failed")
+		log.Fatal().Err(err).Msg("RegisterModels failed")
 	}
 	return res.Models
 }
@@ -404,7 +405,7 @@ func (c *TestClient) RegisterModels(o ...*ModelOptions) []*asset.Model {
 func (c *TestClient) GetTaskOutputModels(taskRef string) []*asset.Model {
 	resp, err := c.modelService.GetComputeTaskOutputModels(c.ctx, &asset.GetComputeTaskModelsParam{ComputeTaskKey: c.ks.GetKey(taskRef)})
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetComputeTaskOutputModels failed")
+		c.logger.Fatal().Err(err).Msg("GetComputeTaskOutputModels failed")
 	}
 
 	return resp.Models
@@ -413,7 +414,7 @@ func (c *TestClient) GetTaskOutputModels(taskRef string) []*asset.Model {
 func (c *TestClient) CanDisableModel(modelRef string) bool {
 	resp, err := c.modelService.CanDisableModel(c.ctx, &asset.CanDisableModelParam{ModelKey: c.ks.GetKey(modelRef)})
 	if err != nil {
-		c.logger.WithError(err).Fatal("CanDisableModel failed")
+		c.logger.Fatal().Err(err).Msg("CanDisableModel failed")
 	}
 
 	return resp.CanDisable
@@ -421,10 +422,10 @@ func (c *TestClient) CanDisableModel(modelRef string) bool {
 
 func (c *TestClient) DisableModel(modelRef string) {
 	modelKey := c.ks.GetKey(modelRef)
-	c.logger.WithField("modelKey", modelKey).Debug("disabling model")
+	c.logger.Debug().Str("modelKey", modelKey).Msg("disabling model")
 	_, err := c.modelService.DisableModel(c.ctx, &asset.DisableModelParam{ModelKey: modelKey})
 	if err != nil {
-		c.logger.WithError(err).Fatal("DisableModel failed")
+		c.logger.Fatal().Err(err).Msg("DisableModel failed")
 	}
 }
 
@@ -434,10 +435,10 @@ func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) *asset.ComputePl
 		Name:                     "Compute plan test",
 		DeleteIntermediaryModels: o.DeleteIntermediaryModels,
 	}
-	c.logger.WithField("plan", newCp).Debug("registering compute plan")
+	c.logger.Debug().Interface("plan", newCp).Msg("registering compute plan")
 	plan, err := c.computePlanService.RegisterPlan(c.ctx, newCp)
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterPlan failed")
+		c.logger.Fatal().Err(err).Msg("RegisterPlan failed")
 	}
 	return plan
 }
@@ -445,7 +446,7 @@ func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) *asset.ComputePl
 func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
 	plan, err := c.computePlanService.GetPlan(c.ctx, &asset.GetComputePlanParam{Key: c.ks.GetKey(keyRef)})
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetPlan failed")
+		c.logger.Fatal().Err(err).Msg("GetPlan failed")
 	}
 
 	return plan
@@ -454,7 +455,7 @@ func (c *TestClient) GetComputePlan(keyRef string) *asset.ComputePlan {
 func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
 	task, err := c.computeTaskService.GetTask(c.ctx, &asset.GetTaskParam{Key: c.ks.GetKey(keyRef)})
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetTask failed")
+		c.logger.Fatal().Err(err).Msg("GetTask failed")
 	}
 
 	return task
@@ -463,7 +464,7 @@ func (c *TestClient) GetComputeTask(keyRef string) *asset.ComputeTask {
 func (c *TestClient) QueryTasks(filter *asset.TaskQueryFilter, pageToken string, pageSize int) *asset.QueryTasksResponse {
 	resp, err := c.computeTaskService.QueryTasks(c.ctx, &asset.QueryTasksParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
-		c.logger.WithError(err).Fatal("QueryTasks failed")
+		c.logger.Fatal().Err(err).Msg("QueryTasks failed")
 	}
 
 	return resp
@@ -477,7 +478,7 @@ func (c *TestClient) RegisterPerformance(o *PerformanceOptions) (*asset.Performa
 		PerformanceValue:            o.PerformanceValue,
 	}
 
-	c.logger.WithField("performance", newPerf).Debug("registering performance")
+	c.logger.Debug().Interface("performance", newPerf).Msg("registering performance")
 	return c.performanceService.RegisterPerformance(c.ctx, newPerf)
 }
 
@@ -488,7 +489,7 @@ func (c *TestClient) QueryPerformances(filter *asset.PerformanceQueryFilter, pag
 		PageSize:  uint32(pageSize),
 	})
 	if err != nil {
-		c.logger.WithError(err).Fatal("QueryPerformances failed")
+		c.logger.Fatal().Err(err).Msg("QueryPerformances failed")
 	}
 	return resp
 }
@@ -497,19 +498,19 @@ func (c *TestClient) GetInputModels(taskRef string) []*asset.Model {
 	param := &asset.GetComputeTaskModelsParam{
 		ComputeTaskKey: c.ks.GetKey(taskRef),
 	}
-	c.logger.WithField("task key", c.ks.GetKey(taskRef)).Debug("GetComputeTaskInputModels")
+	c.logger.Debug().Str("task key", c.ks.GetKey(taskRef)).Msg("GetComputeTaskInputModels")
 	resp, err := c.modelService.GetComputeTaskInputModels(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("Task input model retrieval failed")
+		c.logger.Fatal().Err(err).Msg("Task input model retrieval failed")
 	}
 	return resp.Models
 }
 
 func (c *TestClient) GetTaskInputAssets(taskRef string) []*asset.ComputeTaskInputAsset {
-	c.logger.WithField("task key", c.ks.GetKey(taskRef)).Debug("GetComputeTaskInputAssets")
+	c.logger.Debug().Str("task key", c.ks.GetKey(taskRef)).Msg("GetComputeTaskInputAssets")
 	assets, err := c.FailableGetTaskInputAssets(taskRef)
 	if err != nil {
-		c.logger.WithError(err).Fatal("Task input assets retrieval failed")
+		c.logger.Fatal().Err(err).Msg("Task input assets retrieval failed")
 	}
 	return assets
 }
@@ -529,10 +530,10 @@ func (c *TestClient) GetDataset(dataManagerRef string) *asset.Dataset {
 	param := &asset.GetDatasetParam{
 		Key: c.ks.GetKey(dataManagerRef),
 	}
-	c.logger.WithField("data manager key", c.ks.GetKey(dataManagerRef)).Debug("GetDataset")
+	c.logger.Debug().Str("data manager key", c.ks.GetKey(dataManagerRef)).Msg("GetDataset")
 	resp, err := c.datasetService.GetDataset(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetDataset failed")
+		c.logger.Fatal().Err(err).Msg("GetDataset failed")
 	}
 	return resp
 }
@@ -540,7 +541,7 @@ func (c *TestClient) GetDataset(dataManagerRef string) *asset.Dataset {
 func (c *TestClient) QueryAlgos(filter *asset.AlgoQueryFilter, pageToken string, pageSize int) *asset.QueryAlgosResponse {
 	resp, err := c.algoService.QueryAlgos(c.ctx, &asset.QueryAlgosParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
-		c.logger.WithError(err).Fatal("QueryAlgos failed")
+		c.logger.Fatal().Err(err).Msg("QueryAlgos failed")
 	}
 
 	return resp
@@ -550,10 +551,10 @@ func (c *TestClient) GetAlgo(algoRef string) *asset.Algo {
 	param := &asset.GetAlgoParam{
 		Key: c.ks.GetKey(algoRef),
 	}
-	c.logger.WithField("algo key", c.ks.GetKey(algoRef)).Debug("GetAlgo")
+	c.logger.Debug().Str("algo key", c.ks.GetKey(algoRef)).Msg("GetAlgo")
 	resp, err := c.algoService.GetAlgo(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetAlgo failed")
+		c.logger.Fatal().Err(err).Msg("GetAlgo failed")
 	}
 	return resp
 }
@@ -569,10 +570,10 @@ func (c *TestClient) UpdateAlgo(algoRef string, name string) *asset.UpdateAlgoRe
 		Key:  c.ks.GetKey(algoRef),
 		Name: name,
 	}
-	c.logger.WithField("algo key", c.ks.GetKey(algoRef)).Debug("UpdateAlgo")
+	c.logger.Debug().Str("algo key", c.ks.GetKey(algoRef)).Msg("UpdateAlgo")
 	resp, err := c.algoService.UpdateAlgo(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("UpdateAlgo failed")
+		c.logger.Fatal().Err(err).Msg("UpdateAlgo failed")
 	}
 	return resp
 }
@@ -580,7 +581,7 @@ func (c *TestClient) UpdateAlgo(algoRef string, name string) *asset.UpdateAlgoRe
 func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken string, pageSize int) *asset.QueryEventsResponse {
 	resp, err := c.eventService.QueryEvents(c.ctx, &asset.QueryEventsParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
-		c.logger.WithError(err).Fatal("QueryEvents failed")
+		c.logger.Fatal().Err(err).Msg("QueryEvents failed")
 	}
 
 	return resp
@@ -591,7 +592,7 @@ func (c *TestClient) SubscribeToEvents(startEventID string) (asset.EventService_
 
 	stream, err := c.eventService.SubscribeToEvents(ctx, &asset.SubscribeToEventsParam{StartEventId: startEventID})
 	if err != nil {
-		c.logger.WithError(err).Fatal("SubscribeToEvents failed")
+		c.logger.Fatal().Err(err).Msg("SubscribeToEvents failed")
 	}
 	return stream, cancel
 }
@@ -599,7 +600,7 @@ func (c *TestClient) SubscribeToEvents(startEventID string) (asset.EventService_
 func (c *TestClient) QueryPlans(filter *asset.PlanQueryFilter, pageToken string, pageSize int) *asset.QueryPlansResponse {
 	resp, err := c.computePlanService.QueryPlans(c.ctx, &asset.QueryPlansParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
-		c.logger.WithError(err).Fatal("QueryPlans failed")
+		c.logger.Fatal().Err(err).Msg("QueryPlans failed")
 	}
 
 	return resp
@@ -615,10 +616,10 @@ func (c *TestClient) RegisterFailureReport(taskRef string) *asset.FailureReport 
 		},
 	}
 
-	c.logger.WithField("failureReport", newFailureReport).Debug("registering failure report")
+	c.logger.Debug().Interface("failureReport", newFailureReport).Msg("registering failure report")
 	failureReport, err := c.failureReportService.RegisterFailureReport(c.ctx, newFailureReport)
 	if err != nil {
-		c.logger.WithError(err).Fatal("RegisterFailureReport failed")
+		c.logger.Fatal().Err(err).Msg("RegisterFailureReport failed")
 	}
 
 	return failureReport
@@ -629,10 +630,10 @@ func (c *TestClient) GetFailureReport(taskRef string) *asset.FailureReport {
 		ComputeTaskKey: c.ks.GetKey(taskRef),
 	}
 
-	c.logger.WithField("task key", param.ComputeTaskKey).Debug("getting failure report")
+	c.logger.Debug().Str("task key", param.ComputeTaskKey).Msg("getting failure report")
 	failureReport, err := c.failureReportService.GetFailureReport(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("GetFailureReport failed")
+		c.logger.Fatal().Err(err).Msg("GetFailureReport failed")
 	}
 
 	return failureReport
@@ -644,7 +645,7 @@ func (c *TestClient) CancelComputePlan(computePlanRef string) (*asset.ApplyPlanA
 		Action: asset.ComputePlanAction_PLAN_ACTION_CANCELED,
 	}
 
-	c.logger.WithField("compute plan key", computePlanRef).Debug("cancelling compute plan")
+	c.logger.Debug().Str("compute plan key", computePlanRef).Msg("cancelling compute plan")
 	return c.computePlanService.ApplyPlanAction(c.ctx, param)
 }
 
@@ -653,10 +654,10 @@ func (c *TestClient) UpdateComputePlan(computePlanRef string, name string) *asse
 		Key:  c.ks.GetKey(computePlanRef),
 		Name: name,
 	}
-	c.logger.WithField("compute plan key", c.ks.GetKey(computePlanRef)).Debug("UpdateComputePlan")
+	c.logger.Debug().Str("compute plan key", c.ks.GetKey(computePlanRef)).Msg("UpdateComputePlan")
 	resp, err := c.computePlanService.UpdatePlan(c.ctx, param)
 	if err != nil {
-		c.logger.WithError(err).Fatal("UpdateComputePlan failed")
+		c.logger.Fatal().Err(err).Msg("UpdateComputePlan failed")
 	}
 	return resp
 }
