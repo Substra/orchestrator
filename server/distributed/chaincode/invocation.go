@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/chaincode/communication"
+	"github.com/substra/orchestrator/server/common/logger"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 

@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/owkin/orchestrator/forwarder/event"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/distributed/chaincode"
+	"github.com/substra/orchestrator/forwarder/event"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/distributed/chaincode"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

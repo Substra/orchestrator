@@ -3,7 +3,7 @@ package common
 import (
 	"regexp"
 
-	"github.com/owkin/orchestrator/utils"
+	"github.com/substra/orchestrator/utils"
 )
 
 // ReadOnlyMethods maps for service "read only" methods.

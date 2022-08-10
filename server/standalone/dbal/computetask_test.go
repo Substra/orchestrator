@@ -9,12 +9,12 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

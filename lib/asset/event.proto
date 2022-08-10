@@ -14,7 +14,7 @@ import "organization.proto";
 import "performance.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/owkin/orchestrator/lib/asset";
+option go_package = "github.com/substra/orchestrator/lib/asset";
 
 enum EventKind {
   EVENT_UNKNOWN = 0;

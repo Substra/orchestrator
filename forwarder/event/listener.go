@@ -9,8 +9,8 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
-	"github.com/owkin/orchestrator/chaincode/ledger"
-	"github.com/owkin/orchestrator/server/distributed/chaincode"
+	"github.com/substra/orchestrator/chaincode/ledger"
+	"github.com/substra/orchestrator/server/distributed/chaincode"
 )
 
 // Handler is the signature of the chaincode event callback

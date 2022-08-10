@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/ledger"
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/substra/orchestrator/chaincode/communication"
+	"github.com/substra/orchestrator/chaincode/ledger"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 func TestQueryVersion(t *testing.T) {

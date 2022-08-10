@@ -5,11 +5,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/utils"
 )
 
 func TestEventChannel(t *testing.T) {

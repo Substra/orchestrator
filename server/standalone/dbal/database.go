@@ -5,8 +5,8 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/utils"
+	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/utils"
 )
 
 type PgPool interface {

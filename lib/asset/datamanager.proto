@@ -5,7 +5,7 @@ package orchestrator;
 import "google/protobuf/timestamp.proto";
 import "common.proto";
 
-option go_package = "github.com/owkin/orchestrator/lib/asset";
+option go_package = "github.com/substra/orchestrator/lib/asset";
 
 message DataManager {
   string key = 1;

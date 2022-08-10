@@ -1,8 +1,8 @@
 package ledger
 
 import (
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

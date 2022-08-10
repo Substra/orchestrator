@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/owkin/orchestrator/server/common/interceptors"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/server/common/interceptors"
 )
 
 func TestIsFabricTimeoutRetry(t *testing.T) {

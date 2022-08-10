@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/asset"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/stretchr/testify/assert"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
+	"github.com/substra/orchestrator/lib/asset"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
 )
 
 func TestAddExistingAlgo(t *testing.T) {

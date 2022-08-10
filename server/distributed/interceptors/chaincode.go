@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/owkin/orchestrator/chaincode/contracts"
-	"github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/distributed/chaincode"
+	"github.com/substra/orchestrator/chaincode/contracts"
+	"github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/server/distributed/chaincode"
 	"google.golang.org/grpc"
 )
 

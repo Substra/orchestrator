@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/owkin/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/common"
 	"google.golang.org/grpc"
 )
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
+	"github.com/substra/orchestrator/lib/event"
+	"github.com/substra/orchestrator/lib/service"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

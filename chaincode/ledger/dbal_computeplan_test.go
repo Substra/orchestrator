@@ -8,12 +8,12 @@ import (
 
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
 	"github.com/hyperledger/fabric-protos-go/peer"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	"github.com/substra/orchestrator/utils"
 )
 
 func TestQueryComputePlans(t *testing.T) {

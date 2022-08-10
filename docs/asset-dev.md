@@ -75,7 +75,7 @@ This *AssetAPI* interface is used by both the smartcontract and the grpc server.
 #### Unit testing
 
 There is a *MockDependenciesProvider* defined in `lib/service` module.
-There are also generated helpers (prefixed with `Mock`) in `github.com/owkin/orchestrator/lib/persistence` to mock the persistence layer.
+There are also generated helpers (prefixed with `Mock`) in `github.com/substra/orchestrator/lib/persistence` to mock the persistence layer.
 
 ### 4. Create the standalone gRPC server
 

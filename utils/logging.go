@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/go-playground/log/v7/handlers/json"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
 )
 
 // InitLogging configure log library to output to console with appropriate levels

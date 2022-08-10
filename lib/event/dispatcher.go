@@ -3,7 +3,7 @@
 // Once the orchestration action is done, those events can be sent to a broker through a Dispatcher.
 package event
 
-import "github.com/owkin/orchestrator/lib/asset"
+import "github.com/substra/orchestrator/lib/asset"
 
 // Queue holds events while the transaction is being processed.
 // Events are eventually dispatched by a Dispatcher once processing is done.

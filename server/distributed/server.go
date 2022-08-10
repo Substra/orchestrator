@@ -6,12 +6,12 @@ import (
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/errors/status"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/common"
-	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/distributed/adapters"
-	"github.com/owkin/orchestrator/server/distributed/chaincode"
-	"github.com/owkin/orchestrator/server/distributed/interceptors"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/server/common"
+	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/distributed/adapters"
+	"github.com/substra/orchestrator/server/distributed/chaincode"
+	"github.com/substra/orchestrator/server/distributed/interceptors"
 	"google.golang.org/grpc"
 )
 

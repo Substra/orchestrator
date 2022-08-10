@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/service"
-	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/standalone/interceptors"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/service"
+	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/standalone/interceptors"
 
 	"github.com/stretchr/testify/assert"
 )

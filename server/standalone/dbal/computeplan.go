@@ -8,10 +8,10 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/persistence"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

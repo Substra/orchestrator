@@ -13,11 +13,11 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
-	"github.com/owkin/orchestrator/forwarder/event"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/distributed/chaincode"
-	"github.com/owkin/orchestrator/utils"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/substra/orchestrator/forwarder/event"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/distributed/chaincode"
+	"github.com/substra/orchestrator/utils"
 	"gopkg.in/yaml.v2"
 )
 

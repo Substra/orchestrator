@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/event"
+	"github.com/substra/orchestrator/lib/persistence"
 )
 
 func TestEnqueue(t *testing.T) {

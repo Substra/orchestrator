@@ -9,7 +9,7 @@ import "datamanager.proto";
 import "datasample.proto";
 import "common.proto";
 
-option go_package = "github.com/owkin/orchestrator/lib/asset";
+option go_package = "github.com/substra/orchestrator/lib/asset";
 
 enum ComputeTaskCategory {
   TASK_UNKNOWN = 0;

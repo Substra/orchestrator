@@ -3,8 +3,8 @@ package service
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 func TestCreatePermission(t *testing.T) {

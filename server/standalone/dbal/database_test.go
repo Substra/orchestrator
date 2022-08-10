@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/utils"
 )
 
 func TestTransactionIsolation(t *testing.T) {

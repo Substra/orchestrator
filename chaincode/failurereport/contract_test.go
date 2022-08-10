@@ -2,14 +2,14 @@ package failurereport
 
 import (
 	"context"
-	"github.com/owkin/orchestrator/lib/service"
+	"github.com/substra/orchestrator/lib/service"
 	"testing"
 
-	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/ledger"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/chaincode/communication"
+	"github.com/substra/orchestrator/chaincode/ledger"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 func getMockedService(ctx *ledger.MockTransactionContext) *service.MockFailureReportAPI {

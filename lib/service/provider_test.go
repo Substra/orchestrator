@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/go-playground/log/v7"
-	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/event"
+	"github.com/substra/orchestrator/lib/persistence"
 )
 
 func newMockedProvider() *MockDependenciesProvider {

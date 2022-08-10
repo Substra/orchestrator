@@ -5,8 +5,8 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

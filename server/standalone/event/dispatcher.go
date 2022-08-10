@@ -4,10 +4,10 @@ package event
 import (
 	"context"
 
-	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/standalone/metrics"
+	"github.com/substra/orchestrator/lib/event"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/server/standalone/metrics"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/server/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/server/common"
 )
 
 func TestNewChannelInterceptor(t *testing.T) {

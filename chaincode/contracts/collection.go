@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/utils"
+	"github.com/substra/orchestrator/utils"
 )
 
 // Type definitions

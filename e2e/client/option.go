@@ -6,7 +6,7 @@ package client
 import (
 	"github.com/go-playground/log/v7"
 
-	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 type ComputePlanOptions struct {

@@ -2,18 +2,18 @@ package contracts
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/chaincode/algo"
-	"github.com/owkin/orchestrator/chaincode/computeplan"
-	"github.com/owkin/orchestrator/chaincode/computetask"
-	"github.com/owkin/orchestrator/chaincode/datamanager"
-	"github.com/owkin/orchestrator/chaincode/datasample"
-	"github.com/owkin/orchestrator/chaincode/dataset"
-	"github.com/owkin/orchestrator/chaincode/event"
-	"github.com/owkin/orchestrator/chaincode/failurereport"
-	"github.com/owkin/orchestrator/chaincode/info"
-	"github.com/owkin/orchestrator/chaincode/model"
-	"github.com/owkin/orchestrator/chaincode/organization"
-	"github.com/owkin/orchestrator/chaincode/performance"
+	"github.com/substra/orchestrator/chaincode/algo"
+	"github.com/substra/orchestrator/chaincode/computeplan"
+	"github.com/substra/orchestrator/chaincode/computetask"
+	"github.com/substra/orchestrator/chaincode/datamanager"
+	"github.com/substra/orchestrator/chaincode/datasample"
+	"github.com/substra/orchestrator/chaincode/dataset"
+	"github.com/substra/orchestrator/chaincode/event"
+	"github.com/substra/orchestrator/chaincode/failurereport"
+	"github.com/substra/orchestrator/chaincode/info"
+	"github.com/substra/orchestrator/chaincode/model"
+	"github.com/substra/orchestrator/chaincode/organization"
+	"github.com/substra/orchestrator/chaincode/performance"
 )
 
 // AllContracts is the list referencing all smartcontracts supported by the chaincode

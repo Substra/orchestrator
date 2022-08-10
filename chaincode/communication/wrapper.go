@@ -6,7 +6,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/owkin/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/common/interceptors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

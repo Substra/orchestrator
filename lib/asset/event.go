@@ -3,7 +3,7 @@ package asset
 import (
 	"fmt"
 
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

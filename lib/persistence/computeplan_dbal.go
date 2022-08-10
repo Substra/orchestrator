@@ -3,8 +3,8 @@ package persistence
 import (
 	"time"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
 )
 
 type ComputePlanDBAL interface {

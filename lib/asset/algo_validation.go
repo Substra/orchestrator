@@ -5,7 +5,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	is "github.com/go-ozzo/ozzo-validation/v4/is"
-	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/errors"
 )
 
 // Validate returns an error if the new algo is not valid:

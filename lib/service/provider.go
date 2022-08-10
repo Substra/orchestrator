@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/go-playground/log/v7"
-	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/lib/persistence"
+	"github.com/substra/orchestrator/lib/event"
+	"github.com/substra/orchestrator/lib/persistence"
 )
 
 // LoggerProvider describes a provider of logger instance.

@@ -11,9 +11,9 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/chaincode/contracts"
-	"github.com/owkin/orchestrator/utils"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/substra/orchestrator/chaincode/contracts"
+	"github.com/substra/orchestrator/utils"
 )
 
 const httpPort = "8484"

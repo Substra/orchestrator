@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/common"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/server/common"
 )
 
 // InfoServer is the gRPC server exposing info actions

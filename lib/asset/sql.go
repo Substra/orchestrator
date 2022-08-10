@@ -3,7 +3,7 @@ package asset
 import (
 	"database/sql/driver"
 
-	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

@@ -3,10 +3,10 @@ package info
 import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/ledger"
-	"github.com/owkin/orchestrator/lib/asset"
-	commonserv "github.com/owkin/orchestrator/server/common"
+	"github.com/substra/orchestrator/chaincode/communication"
+	"github.com/substra/orchestrator/chaincode/ledger"
+	"github.com/substra/orchestrator/lib/asset"
+	commonserv "github.com/substra/orchestrator/server/common"
 )
 
 // Version represents the version of the chaincode, the value is changed at build time

@@ -6,10 +6,10 @@ package e2e
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/e2e/client"
-	e2erequire "github.com/owkin/orchestrator/e2e/require"
-	"github.com/owkin/orchestrator/lib/asset"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/e2e/client"
+	e2erequire "github.com/substra/orchestrator/e2e/require"
+	"github.com/substra/orchestrator/lib/asset"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/stretchr/testify/require"
 )
 

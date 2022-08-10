@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/require"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

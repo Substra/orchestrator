@@ -10,7 +10,7 @@ linters:
 
 linters-settings:
   importas:
-    "orcerrors": github.com/owkin/orchestrator/lib/errors
-    "commonserv": github.com/owkin/orchestrator/server/common
+    "orcerrors": github.com/substra/orchestrator/lib/errors
+    "commonserv": github.com/substra/orchestrator/server/common
     "sq": github.com/Masterminds/squirrel
-    "e2erequire": github.com/owkin/orchestrator/e2e/require
+    "e2erequire": github.com/substra/orchestrator/e2e/require

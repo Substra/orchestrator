@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/server/distributed/interceptors"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/server/distributed/interceptors"
 )
 
 // DataManagerAdapter is a grpc server exposing the same dataManager interface,

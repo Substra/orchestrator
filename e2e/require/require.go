@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/owkin/orchestrator/e2e/client"
+	"github.com/substra/orchestrator/e2e/client"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 )

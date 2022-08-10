@@ -3,12 +3,12 @@ package handlers
 import (
 	"context"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/standalone/dbal"
-	"github.com/owkin/orchestrator/server/standalone/interceptors"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/server/standalone/dbal"
+	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
 // EventServer is the gRPC facade to Model manipulation

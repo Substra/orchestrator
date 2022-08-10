@@ -9,10 +9,10 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/utils"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

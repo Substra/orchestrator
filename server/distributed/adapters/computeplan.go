@@ -3,8 +3,8 @@ package adapters
 import (
 	"context"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/distributed/interceptors"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/server/distributed/interceptors"
 )
 
 // ComputePlanAdapter is a grpc server exposing the same plan interface,

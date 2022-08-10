@@ -3,8 +3,8 @@ package ledger
 import (
 	"testing"
 
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/stretchr/testify/assert"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
 )
 
 func TestGetTxCreator(t *testing.T) {

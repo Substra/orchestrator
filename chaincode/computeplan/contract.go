@@ -3,11 +3,11 @@ package computeplan
 import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/ledger"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	commonserv "github.com/owkin/orchestrator/server/common"
+	"github.com/substra/orchestrator/chaincode/communication"
+	"github.com/substra/orchestrator/chaincode/ledger"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	commonserv "github.com/substra/orchestrator/server/common"
 )
 
 // SmartContract manages ComputePlan

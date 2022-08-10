@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

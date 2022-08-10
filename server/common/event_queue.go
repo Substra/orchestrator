@@ -1,6 +1,6 @@
 package common
 
-import "github.com/owkin/orchestrator/lib/asset"
+import "github.com/substra/orchestrator/lib/asset"
 
 // MemoryQueue keeps events in memory
 type MemoryQueue struct {

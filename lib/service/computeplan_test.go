@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/persistence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

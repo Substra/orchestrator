@@ -3,8 +3,8 @@ package persistence
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/asset"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

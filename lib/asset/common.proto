@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package orchestrator;
 
-option go_package = "github.com/owkin/orchestrator/lib/asset";
+option go_package = "github.com/substra/orchestrator/lib/asset";
 
 enum AssetKind {
   reserved 2;

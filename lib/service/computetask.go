@@ -3,12 +3,12 @@ package service
 import (
 	"fmt"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/metrics"
-	"github.com/owkin/orchestrator/lib/persistence"
-	"github.com/owkin/orchestrator/utils"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/metrics"
+	"github.com/substra/orchestrator/lib/persistence"
+	"github.com/substra/orchestrator/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

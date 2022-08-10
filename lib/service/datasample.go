@@ -1,13 +1,13 @@
 package service
 
 import (
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/utils"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/persistence"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	"github.com/substra/orchestrator/lib/persistence"
 )
 
 // DataSampleAPI defines the methods to act on DataSamples

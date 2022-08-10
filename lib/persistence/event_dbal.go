@@ -1,8 +1,8 @@
 package persistence
 
 import (
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
 )
 
 type EventDBAL interface {

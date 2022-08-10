@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 func TestInfoServerImplementServer(t *testing.T) {

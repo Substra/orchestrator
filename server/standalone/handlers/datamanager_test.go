@@ -3,8 +3,8 @@ package handlers
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 func TestDataManagerServerImplementServer(t *testing.T) {

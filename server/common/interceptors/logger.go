@@ -2,7 +2,7 @@ package interceptors
 
 import (
 	"context"
-	"github.com/owkin/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/common"
 
 	"github.com/go-playground/log/v7"
 	"google.golang.org/grpc"

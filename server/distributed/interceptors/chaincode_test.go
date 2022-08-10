@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/server/distributed/chaincode"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/server/distributed/chaincode"
 )
 
 func TestExtractInvocator(t *testing.T) {

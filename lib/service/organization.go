@@ -1,9 +1,9 @@
 package service
 
 import (
-	"github.com/owkin/orchestrator/lib/asset"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/persistence"
+	"github.com/substra/orchestrator/lib/asset"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

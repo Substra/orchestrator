@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/jackc/pgconn"
-	"github.com/owkin/orchestrator/lib/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/errors"
 )
 
 func TestRetryOnUnserializableTransaction(t *testing.T) {

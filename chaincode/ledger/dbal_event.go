@@ -7,9 +7,9 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

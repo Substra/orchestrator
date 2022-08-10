@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	libCommon "github.com/owkin/orchestrator/lib/common"
-	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/standalone/interceptors"
+	"github.com/substra/orchestrator/lib/asset"
+	libCommon "github.com/substra/orchestrator/lib/common"
+	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
 // ComputeTaskServer is the gRPC server exposing ComputeTask actions

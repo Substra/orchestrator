@@ -58,7 +58,7 @@ Refer to `go test -tags=e2e ./e2e -args --help` for more options.
 An overview of the code structure is [available in the docs directory](./docs/architecture.md) and there is also a [documentation of the assets](./docs/assets/README.md).
 If you are interested in adding a new asset there is a [step by step documentation](./docs/asset-dev.md) on this subject.
 
-A good entry point to get an overview of the codebase is to launch `godoc -http=:6060` and [open module documentation](http://localhost:6060/pkg/github.com/owkin/orchestrator/).
+A good entry point to get an overview of the codebase is to launch `godoc -http=:6060` and [open module documentation](http://localhost:6060/pkg/github.com/substra/orchestrator/).
 
 
 If you want to run the orchestrator with Skaffold you will need to add the jetstack and bitnami helm repo:

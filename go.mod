@@ -1,4 +1,4 @@
-module github.com/owkin/orchestrator
+module github.com/substra/orchestrator
 
 go 1.18
 

@@ -4,7 +4,7 @@
 package e2e
 
 import (
-	"github.com/owkin/orchestrator/e2e/client"
+	"github.com/substra/orchestrator/e2e/client"
 	"google.golang.org/grpc"
 )
 

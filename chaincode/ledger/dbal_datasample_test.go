@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
 	"github.com/stretchr/testify/assert"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
 )
 
 func TestGetDataSampleKeysByManager(t *testing.T) {

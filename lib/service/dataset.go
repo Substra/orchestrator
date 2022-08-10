@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 // DatasetAPI defines the methods to act on Datasets

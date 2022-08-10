@@ -6,7 +6,7 @@ package e2e
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/e2e/client"
+	"github.com/substra/orchestrator/e2e/client"
 	"github.com/stretchr/testify/require"
 )
 

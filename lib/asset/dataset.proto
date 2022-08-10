@@ -4,7 +4,7 @@ package orchestrator;
 
 import "datamanager.proto";
 
-option go_package = "github.com/owkin/orchestrator/lib/asset";
+option go_package = "github.com/substra/orchestrator/lib/asset";
 
 // Dataset references several related samples
 message Dataset {

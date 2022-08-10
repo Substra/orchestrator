@@ -1,7 +1,7 @@
 package persistence
 
 import (
-	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 type FailureReportDBAL interface {

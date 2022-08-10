@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/ledger"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/substra/orchestrator/chaincode/communication"
+	"github.com/substra/orchestrator/chaincode/ledger"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/service"
 )
 
 // getMockedService returns a service mocks and make sure the provider returns the mock as well.

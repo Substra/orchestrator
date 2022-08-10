@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/substra/orchestrator/lib/asset"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

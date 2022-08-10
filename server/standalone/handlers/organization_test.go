@@ -3,8 +3,8 @@ package handlers
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 // TestOrganizationServerImplementServer makes sure chaincode-baked and standalone orchestration are in sync

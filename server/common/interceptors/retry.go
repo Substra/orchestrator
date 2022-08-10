@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/owkin/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/server/common/logger"
 	"google.golang.org/grpc"
 )
 

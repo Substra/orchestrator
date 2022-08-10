@@ -9,11 +9,11 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/ledger"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
-	orcledger "github.com/owkin/orchestrator/chaincode/ledger"
-	forwarder "github.com/owkin/orchestrator/forwarder/event"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/distributed/interceptors"
+	orcledger "github.com/substra/orchestrator/chaincode/ledger"
+	forwarder "github.com/substra/orchestrator/forwarder/event"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/server/distributed/interceptors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

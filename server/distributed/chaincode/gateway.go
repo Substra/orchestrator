@@ -10,9 +10,9 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/logger"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/common/logger"
 )
 
 // Requester describes a component capable of querying the chaincode.

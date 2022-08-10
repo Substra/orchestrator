@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/owkin/orchestrator/e2e/client"
-	e2erequire "github.com/owkin/orchestrator/e2e/require"
-	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/e2e/client"
+	e2erequire "github.com/substra/orchestrator/e2e/require"
+	"github.com/substra/orchestrator/lib/asset"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 )

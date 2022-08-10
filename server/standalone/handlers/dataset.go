@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/server/standalone/interceptors"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
 // DatasetServer is the gRPC facade to Dataset manipulation

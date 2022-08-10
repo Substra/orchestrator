@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/chaincode/ledger"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/chaincode/communication"
+	"github.com/substra/orchestrator/chaincode/ledger"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	"github.com/substra/orchestrator/lib/service"
 )
 
 func getMockedService(ctx *ledger.MockTransactionContext) *service.MockDataSampleAPI {

@@ -10,7 +10,7 @@ import (
 	"path"
 
 	"github.com/go-playground/log/v7"
-	"github.com/owkin/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

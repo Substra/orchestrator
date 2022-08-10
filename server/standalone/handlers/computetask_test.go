@@ -3,9 +3,9 @@ package handlers
 import (
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/service"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/service"
 )
 
 func TestComputeTaskServerImplementServer(t *testing.T) {

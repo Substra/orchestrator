@@ -3,9 +3,9 @@ package handlers
 import (
 	"context"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/standalone/interceptors"
+	"github.com/substra/orchestrator/lib/asset"
+	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
 // FailureReportServer is the gRPC facade to FailureReport manipulation

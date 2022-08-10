@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-playground/log/v7"
-	"github.com/owkin/orchestrator/utils"
+	"github.com/substra/orchestrator/utils"
 )
 
 // envPrefix is the string prefixing environment variables related to the orchestrator

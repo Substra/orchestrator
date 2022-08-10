@@ -7,15 +7,15 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/service"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/standalone/dbal"
-	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/service"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/standalone/dbal"
+	"github.com/substra/orchestrator/utils"
 	"google.golang.org/grpc"
 )
 

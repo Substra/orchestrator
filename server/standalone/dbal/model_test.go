@@ -6,10 +6,10 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v4"
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
 )
 
 func TestModelNotFound(t *testing.T) {

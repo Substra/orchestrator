@@ -7,14 +7,14 @@ import (
 	"strings"
 	"time"
 
-	orcerrors "github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/service"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/server/standalone/dbal"
-	"github.com/owkin/orchestrator/server/standalone/event"
-	"github.com/owkin/orchestrator/server/standalone/metrics"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/service"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/server/standalone/dbal"
+	"github.com/substra/orchestrator/server/standalone/event"
+	"github.com/substra/orchestrator/server/standalone/metrics"
 
 	"google.golang.org/grpc"
 )

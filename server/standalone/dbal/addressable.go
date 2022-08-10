@@ -2,7 +2,7 @@ package dbal
 
 import (
 	sq "github.com/Masterminds/squirrel"
-	"github.com/owkin/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/asset"
 )
 
 func (d *DBAL) addAddressable(addressable *asset.Addressable) error {

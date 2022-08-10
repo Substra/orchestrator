@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"errors"
-	"github.com/owkin/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/server/common/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

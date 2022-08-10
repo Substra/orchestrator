@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/server/distributed/adapters"
 	"github.com/stretchr/testify/assert"
+	"github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/server/distributed/adapters"
 )
 
 func TestRetryOnSpecificError(t *testing.T) {

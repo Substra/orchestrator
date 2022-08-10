@@ -4,14 +4,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/errors"
-	commonInterceptors "github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/distributed/chaincode"
-	"github.com/owkin/orchestrator/server/distributed/interceptors"
-	"github.com/owkin/orchestrator/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/errors"
+	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/distributed/chaincode"
+	"github.com/substra/orchestrator/server/distributed/interceptors"
+	"github.com/substra/orchestrator/utils"
 )
 
 func TestPerformanceAdapterImplementServer(t *testing.T) {

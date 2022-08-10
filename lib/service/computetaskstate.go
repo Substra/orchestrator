@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/looplab/fsm"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/errors"
-	"github.com/owkin/orchestrator/lib/metrics"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/errors"
+	"github.com/substra/orchestrator/lib/metrics"
 )
 
 type taskTransition string

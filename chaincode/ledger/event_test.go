@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/go-playground/log/v7"
-	testHelper "github.com/owkin/orchestrator/chaincode/testing"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/event"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	testHelper "github.com/substra/orchestrator/chaincode/testing"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/event"
 )
 
 func TestEventDispatcher(t *testing.T) {

@@ -11,9 +11,9 @@ import (
 	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
-	"github.com/owkin/orchestrator/lib/asset"
-	"github.com/owkin/orchestrator/lib/common"
-	commonserv "github.com/owkin/orchestrator/server/common"
+	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
+	commonserv "github.com/substra/orchestrator/server/common"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

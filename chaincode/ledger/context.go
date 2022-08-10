@@ -7,13 +7,13 @@ import (
 
 	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/owkin/orchestrator/chaincode/communication"
-	"github.com/owkin/orchestrator/lib/event"
-	"github.com/owkin/orchestrator/lib/service"
-	"github.com/owkin/orchestrator/server/common"
-	"github.com/owkin/orchestrator/server/common/interceptors"
-	"github.com/owkin/orchestrator/server/common/logger"
-	"github.com/owkin/orchestrator/utils"
+	"github.com/substra/orchestrator/chaincode/communication"
+	"github.com/substra/orchestrator/lib/event"
+	"github.com/substra/orchestrator/lib/service"
+	"github.com/substra/orchestrator/server/common"
+	"github.com/substra/orchestrator/server/common/interceptors"
+	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/substra/orchestrator/utils"
 )
 
 // TransactionContext describes the context passed to every smart contract.
