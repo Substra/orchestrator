@@ -12,8 +12,8 @@ labels: [ "enhancement" ]
 
 ## Rationale
 
-<!-- 
-Why is this enhancement needed? 
+<!--
+Why is this enhancement needed?
 
 For instance:
 * improve code modularity
@@ -24,7 +24,7 @@ For instance:
 
 ## Does it require an ADR?
 
-<!-- Does this enhancement implies significant architectural changes that should be exposed in an ADR in conformance with https://github.com/owkin/tech-team/blob/main/ADRs/README.md? -->
+<!-- Does this enhancement implies significant architectural changes that should be exposed in an ADR? -->
 
 ## Completion criteria
 
@@ -36,7 +36,7 @@ For instance:
 
 <!-- How the enhancement will impact the codebase? Which technologies will be used? -->
 
-<!-- 
+<!--
 ## Appendix
 
 Links? References? Anything that will give us more information about the enhancement.
