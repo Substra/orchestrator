@@ -116,7 +116,16 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 	if err != nil {
 		return nil, err
 	}
-	sortedTasks, err := s.sortTasks(tasks, existingKeys)
+	if len(existingKeys) > 0 {
+		return nil, orcerrors.NewConflict(asset.ComputeTaskKind, existingKeys[0])
+	}
+
+	existingParentKeys, err := s.getExistingParentKeys(tasks)
+	if err != nil {
+		return nil, err
+	}
+
+	sortedTasks, err := s.sortTasks(tasks, existingParentKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -286,14 +295,6 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 	if computePlan.Owner != owner {
 		return nil, orcerrors.NewPermissionDenied("Cannot register tasks to a compute plan you don't own")
-	}
-
-	taskExist, err := s.GetComputeTaskDBAL().ComputeTaskExists(input.Key)
-	if err != nil {
-		return nil, err
-	}
-	if taskExist {
-		return nil, orcerrors.NewConflict(asset.ComputeTaskKind, input.Key)
 	}
 
 	parentTasks, err := s.getRegisteredTasks(input.ParentTaskKeys...)
@@ -973,18 +974,24 @@ func (s *ComputeTaskService) getRegisteredTasks(keys ...string) ([]*asset.Comput
 
 // getExistingKeys returns the list of tasks already persisted.
 func (s *ComputeTaskService) getExistingKeys(tasks []*asset.NewComputeTask) ([]string, error) {
+	keys := make([]string, len(tasks))
+
+	for i, task := range tasks {
+		keys[i] = task.Key
+	}
+
+	return s.GetComputeTaskDBAL().GetExistingComputeTaskKeys(keys)
+}
+
+// getExistingParentKeys returns the list of parent tasks already persisted.
+func (s *ComputeTaskService) getExistingParentKeys(tasks []*asset.NewComputeTask) ([]string, error) {
 	parents := []string{}
 
 	for _, task := range tasks {
 		parents = append(parents, task.ParentTaskKeys...)
 	}
 
-	existingKeys, err := s.GetComputeTaskDBAL().GetExistingComputeTaskKeys(parents)
-	if err != nil {
-		return nil, err
-	}
-
-	return existingKeys, nil
+	return s.GetComputeTaskDBAL().GetExistingComputeTaskKeys(parents)
 }
 
 // isCompatibleWithParents checks task compatibility with parents tasks

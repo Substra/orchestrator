@@ -9,9 +9,7 @@ import (
 type ComputeTaskOutputCounter = map[string]int
 
 type ComputeTaskDBAL interface {
-	ComputeTaskExists(key string) (bool, error)
-	// GetExistingKeys returns a slice with inputs keys existing in storage.
-	// The implementer should deal with duplicate keys.
+	// GetExistingComputeTaskKeys returns a slice with inputs keys existing in storage.
 	GetExistingComputeTaskKeys(keys []string) ([]string, error)
 	GetComputeTask(key string) (*asset.ComputeTask, error)
 	GetComputeTasks(keys []string) ([]*asset.ComputeTask, error)

@@ -94,22 +94,12 @@ func (db *DB) UpdateComputeTaskStatus(taskKey string, taskStatus asset.ComputeTa
 	return nil
 }
 
-// ComputeTaskExists returns true if a task with the given key exists
-func (db *DB) ComputeTaskExists(key string) (bool, error) {
-	exists, err := db.hasKey(asset.ComputeTaskKind, key)
-	if err != nil {
-		return false, err
-	}
-
-	return exists, nil
-}
-
 func (db *DB) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
 	uniqueKeys := utils.Unique(keys)
 	existingKeys := []string{}
 
 	for _, key := range uniqueKeys {
-		exist, err := db.ComputeTaskExists(key)
+		exist, err := db.hasKey(asset.ComputeTaskKind, key)
 		if err != nil {
 			return nil, err
 		}

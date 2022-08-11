@@ -181,24 +181,6 @@ func (d *DBAL) UpdateComputeTaskStatus(taskKey string, taskStatus asset.ComputeT
 	return d.exec(stmt)
 }
 
-// ComputeTaskExists returns true if a task with the given key exists
-func (d *DBAL) ComputeTaskExists(key string) (bool, error) {
-	stmt := getStatementBuilder().
-		Select("COUNT(key)").
-		From("compute_tasks").
-		Where(sq.Eq{"channel": d.channel, "key": key})
-
-	row, err := d.queryRow(stmt)
-	if err != nil {
-		return false, err
-	}
-
-	var count int
-	err = row.Scan(&count)
-
-	return count == 1, err
-}
-
 // GetExistingComputeTaskKeys returns the keys of tasks already in storage among those given as input.
 func (d *DBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
 	if len(keys) == 0 {

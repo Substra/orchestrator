@@ -92,6 +92,7 @@ func TestRegisterMissingComputePlan(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
+	dbal.On("GetExistingComputeTaskKeys", []string{newTrainTask.Key}).Once().Return([]string{}, nil)
 	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(nil, orcerrors.NewNotFound("compute plan", newTrainTask.ComputePlanKey))
 
@@ -115,6 +116,7 @@ func TestRegisterTasksComputePlanOwnedBySomeoneElse(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
+	dbal.On("GetExistingComputeTaskKeys", []string{newTrainTask.Key}).Once().Return([]string{}, nil)
 	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "not test"}, nil)
 
@@ -130,19 +132,12 @@ func TestRegisterTasksComputePlanOwnedBySomeoneElse(t *testing.T) {
 
 func TestRegisterTaskConflict(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	cps := new(MockComputePlanAPI)
 	provider := newMockedProvider()
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
-	provider.On("GetComputePlanService").Return(cps)
+	dbal.On("GetExistingComputeTaskKeys", []string{newTrainTask.Key}).Once().Return([]string{newTrainTask.Key}, nil)
 
 	service := NewComputeTaskService(provider)
-
-	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "test"}, nil)
-
-	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
-	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(true, nil)
-
 	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTrainTask}, "test")
 	orcError := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
@@ -205,7 +200,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	service := NewComputeTaskService(provider)
 
 	// Checking existing task
-	dbal.On("ComputeTaskExists", newTrainTask.Key).Once().Return(false, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{newTrainTask.Key}).Once().Return([]string{}, nil)
 	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 
 	dataManagerKey := newTrainTask.Data.(*asset.NewComputeTask_Train).Train.DataManagerKey
@@ -386,7 +381,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	service := NewComputeTaskService(provider)
 
 	// Checking existing task
-	dbal.On("ComputeTaskExists", newTask.Key).Once().Return(false, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{newTask.Key}).Once().Return([]string{}, nil)
 	// All parents already exist
 	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return(newTask.ParentTaskKeys, nil)
 
@@ -507,9 +502,10 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 	// Checking existing task
-	dbal.On("ComputeTaskExists", newTask.Key).Once().Return(false, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{newTask.Key}).Once().Return([]string{}, nil)
+
+	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 
 	parentPerms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 	parentTask := &asset.ComputeTask{
@@ -565,9 +561,10 @@ func TestRegisterDeletedModel(t *testing.T) {
 
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "testOwner"}, nil)
 
-	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 	// Checking existing task
-	dbal.On("ComputeTaskExists", newTask.Key).Once().Return(false, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{newTask.Key}).Once().Return([]string{}, nil)
+
+	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 
 	parentPerms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 	parentTask := &asset.ComputeTask{
