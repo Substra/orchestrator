@@ -2,12 +2,13 @@ package ledger
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/go-playground/log/v7"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
-	"github.com/substra/orchestrator/lib/errors"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/persistence"
 	"github.com/substra/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -21,7 +22,7 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 		return err
 	}
 	if exists {
-		return errors.NewConflict(asset.ComputeTaskKind, t.Key)
+		return orcerrors.NewConflict(asset.ComputeTaskKind, t.Key)
 	}
 
 	bytes, err := marshaller.Marshal(t)
@@ -306,7 +307,7 @@ func newStorableTaskOutputAsset(o *asset.ComputeTaskOutputAsset) *storableComput
 func (s *storableComputeTaskOutputAsset) newComputeTaskOutputAsset() (*asset.ComputeTaskOutputAsset, error) {
 	assetKind, ok := asset.AssetKind_value[s.AssetKind]
 	if !ok {
-		return nil, errors.NewUnimplemented(fmt.Sprintf("Unsupported asset kind: %q", s.AssetKind))
+		return nil, orcerrors.NewUnimplemented(fmt.Sprintf("Unsupported asset kind: %q", s.AssetKind))
 	}
 
 	return &asset.ComputeTaskOutputAsset{
@@ -363,6 +364,11 @@ func (db *DB) CountComputeTaskRegisteredOutputs(key string) (persistence.Compute
 
 	assets, err := db.getTaskOutputAssets(key)
 	if err != nil {
+		// If there is no outputs registered, getTaskOutputAssets will return an error
+		orcErr := new(orcerrors.OrcError)
+		if errors.As(err, &orcErr) && orcErr.Kind == orcerrors.ErrNotFound {
+			return counter, nil
+		}
 		return counter, err
 	}
 
