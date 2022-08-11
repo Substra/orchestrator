@@ -6,11 +6,11 @@ package e2e
 import (
 	"testing"
 
-	"github.com/go-playground/log/v7"
+	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/e2e/client"
 	e2erequire "github.com/substra/orchestrator/e2e/require"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/stretchr/testify/require"
 )
 
 // TestRegisterModel registers a task, start it, register a model on it,
@@ -96,7 +96,7 @@ func TestDeleteIntermediary(t *testing.T) {
 
 	require.ErrorContains(t, err, "OE0101", "registering a task with disabled input models should fail")
 
-	log.WithError(err).Debug("Failed to register task, as expected")
+	log.Debug().Err(err).Msg("Failed to register task, as expected")
 }
 
 func TestRegisterTwoSimpleModelsForTrainTask(t *testing.T) {
@@ -115,7 +115,7 @@ func TestRegisterTwoSimpleModelsForTrainTask(t *testing.T) {
 	)
 
 	require.ErrorContains(t, err, "OE0006")
-	log.WithError(err).Debug("Failed to register models, as expected")
+	log.Debug().Err(err).Msg("Failed to register models, as expected")
 }
 
 func TestRegisterAllModelsForCompositeTask(t *testing.T) {

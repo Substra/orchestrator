@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/contracts"
 	"github.com/substra/orchestrator/server/common/interceptors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/distributed/chaincode"
 	"google.golang.org/grpc"
 )
@@ -57,10 +57,11 @@ func (ci *InvocatorInterceptor) UnaryServerInterceptor(ctx context.Context, req 
 		return nil, err
 	}
 
-	logger.Get(ctx).WithField("chaincode", chaincodeName).
-		WithField("channel", channel).
-		WithField("mspid", mspid).
-		Debug("Successfully retrieved chaincode metadata from headers")
+	log.Ctx(ctx).Debug().
+		Str("chaincode", chaincodeName).
+		Str("channel", channel).
+		Str("mspid", mspid).
+		Msg("Successfully retrieved chaincode metadata from headers")
 
 	gw, err := ci.gwPool.GetGateway(ctx, mspid)
 	if err != nil {

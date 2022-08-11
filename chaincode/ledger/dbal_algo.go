@@ -3,7 +3,6 @@ package ledger
 import (
 	"encoding/json"
 
-	"github.com/go-playground/log/v7"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	"github.com/substra/orchestrator/lib/errors"
@@ -47,11 +46,12 @@ func (db *DB) GetAlgo(key string) (*asset.Algo, error) {
 
 // QueryAlgos retrieves all algos
 func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
-	logger := db.logger.WithFields(
-		log.F("pagination", p),
-		log.F("filter", filter),
-	)
-	logger.Debug("get algos")
+	logger := db.logger.With().
+		Interface("pagination", p).
+		Interface("filter", filter).
+		Logger()
+
+	logger.Debug().Msg("get algos")
 
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
@@ -84,7 +84,7 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 
 	queryString := string(b)
 
-	log.WithField("couchQuery", queryString).Debug("mango query")
+	logger.Debug().Str("couchQuery", queryString).Msg("mango query")
 
 	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
 	if err != nil {
@@ -123,7 +123,7 @@ func (db *DB) AlgoExists(key string) (bool, error) {
 
 // getComputePlanAlgoKeys returns keys of Algo in use in a ComputePlan
 func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
-	logger := db.logger.WithField("computePlan", planKey)
+	logger := db.logger.With().Str("computePlan", planKey).Logger()
 
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
@@ -141,7 +141,7 @@ func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
 	}
 	queryString := string(b)
 
-	logger.WithField("couchQuery", queryString).Debug("mango query")
+	logger.Debug().Str("couchQuery", queryString).Msg("mango query")
 
 	resultsIterator, err := db.getQueryResult(queryString)
 	if err != nil {

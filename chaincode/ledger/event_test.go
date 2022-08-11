@@ -3,7 +3,7 @@ package ledger
 import (
 	"testing"
 
-	"github.com/go-playground/log/v7"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	testHelper "github.com/substra/orchestrator/chaincode/testing"
@@ -18,8 +18,8 @@ func TestEventDispatcher(t *testing.T) {
 
 	queue.On("Len").Twice().Return(2)
 	queue.On("GetEvents").Once().Return([]*asset.Event{{}, {}})
-
-	dispatcher := newEventDispatcher(stub, queue, log.WithField("test", true))
+	logger := log.With().Bool("test", true).Logger()
+	dispatcher := newEventDispatcher(stub, queue, &logger)
 
 	err := dispatcher.Dispatch()
 	assert.NoError(t, err)
@@ -31,7 +31,8 @@ func TestEventDispatcher(t *testing.T) {
 func TestDispatchNoEvent(t *testing.T) {
 	stub := new(testHelper.MockedStub)
 	queue := new(event.MockQueue)
-	dispatcher := newEventDispatcher(stub, queue, log.WithField("test", true))
+	logger := log.With().Bool("test", true).Logger()
+	dispatcher := newEventDispatcher(stub, queue, &logger)
 
 	queue.On("Len").Return(0)
 

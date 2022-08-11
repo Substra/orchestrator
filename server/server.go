@@ -17,9 +17,9 @@ import (
 	// #nosec: profiling tool is exposed on a separate port
 	_ "net/http/pprof"
 
-	"github.com/go-playground/log/v7"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/distributed"
 	"github.com/substra/orchestrator/server/standalone"
@@ -42,7 +42,7 @@ func getDistributedServer(params common.AppParameters) common.Runnable {
 
 	server, err := distributed.GetServer(networkConfig, certificate, key, gatewayTimeout, params)
 	if err != nil {
-		log.WithError(err).Fatal("failed to create standalone server")
+		log.Fatal().Err(err).Msg("failed to create standalone server")
 	}
 
 	return server
@@ -54,7 +54,7 @@ func getStandaloneServer(params common.AppParameters, healthcheck *health.Server
 
 	server, err := standalone.GetServer(dbURL, rabbitDSN, params, healthcheck)
 	if err != nil {
-		log.WithError(err).Fatal("failed to create standalone server")
+		log.Fatal().Err(err).Msg("failed to create standalone server")
 	}
 
 	return server
@@ -136,9 +136,9 @@ func main() {
 	// Expose HTTP endpoints
 	g.Go(func() error {
 		err := httpServer.ListenAndServe()
-		log.WithField("port", httpPort).Info("HTTP server serving")
+		log.Info().Str("port", httpPort).Msg("HTTP server serving")
 		if err != http.ErrServerClosed {
-			log.WithError(err).WithField("port", httpPort).Error("failed to serve HTTP endpoints")
+			log.Error().Err(err).Str("port", httpPort).Msg("failed to serve HTTP endpoints")
 			return err
 		}
 		return nil
@@ -148,21 +148,21 @@ func main() {
 	g.Go(func() error {
 		listen, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
 		if err != nil {
-			log.WithError(err).WithField("port", grpcPort).Fatal("failed to listen")
+			log.Fatal().Err(err).Str("port", grpcPort).Msg("failed to listen")
 		}
-		log.WithField("address", listen.Addr().String()).Info("gRPC server listening")
+		log.Info().Str("address", listen.Addr().String()).Msg("gRPC server listening")
 		return app.GetGrpcServer().Serve(listen)
 	})
 
 	select {
 	case <-interrupt:
-		log.Info("Received interruption signal")
+		log.Info().Msg("Received interruption signal")
 		break
 	case <-ctx.Done():
 		break
 	}
 
-	log.Warn("Server shutting down")
+	log.Warn().Msg("Server shutting down")
 
 	healthcheck.Shutdown()
 
@@ -171,7 +171,7 @@ func main() {
 
 	err := httpServer.Shutdown(shutdownCtx)
 	if err != nil {
-		log.WithError(err).Warn("error during graceful shutdown of the HTTP server")
+		log.Warn().Err(err).Msg("error during graceful shutdown of the HTTP server")
 	}
 
 	app.GetGrpcServer().GracefulStop()
@@ -179,6 +179,6 @@ func main() {
 
 	err = g.Wait()
 	if err != nil {
-		log.WithError(err).Fatal("Server returned an error")
+		log.Fatal().Err(err).Msg("Server returned an error")
 	}
 }

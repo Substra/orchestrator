@@ -6,13 +6,12 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/client/ledger"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/rs/zerolog/log"
 	orcledger "github.com/substra/orchestrator/chaincode/ledger"
 	forwarder "github.com/substra/orchestrator/forwarder/event"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/distributed/interceptors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -115,12 +114,15 @@ func (a *EventAdapter) SubscribeToEvents(param *asset.SubscribeToEventsParam, st
 		return err
 	}
 
-	logger.Get(ctx).
-		WithField("mspid", ccData.MSPID).
-		WithField("chaincode", ccData.Chaincode).
-		WithField("channel", ccData.Channel).
-		WithField("startEventId", param.StartEventId).
-		Info("Subscribing to events")
+	logger := log.Ctx(ctx).
+		With().
+		Str("mspid", ccData.MSPID).
+		Str("chaincode", ccData.Chaincode).
+		Str("channel", ccData.Channel).
+		Str("startEventId", param.StartEventId).
+		Logger()
+
+	logger.Info().Msg("Subscribing to events")
 
 	eventIdx, err := newEventIndex(param.StartEventId, ccData)
 	if err != nil {
@@ -134,7 +136,7 @@ func (a *EventAdapter) SubscribeToEvents(param *asset.SubscribeToEventsParam, st
 		var rawEvents []json.RawMessage
 		err := json.Unmarshal(ccEvent.Payload, &rawEvents)
 		if err != nil {
-			log.WithError(err).WithField("payload", string(ccEvent.Payload)).Error("Failed to deserialize chaincode event")
+			logger.Error().Err(err).Str("payload", string(ccEvent.Payload)).Msg("Failed to deserialize chaincode event")
 			return err
 		}
 
@@ -142,13 +144,13 @@ func (a *EventAdapter) SubscribeToEvents(param *asset.SubscribeToEventsParam, st
 			event := new(asset.Event)
 			err = protojson.Unmarshal(rawEvent, event)
 			if err != nil {
-				log.WithField("rawEvent", string(rawEvent)).WithError(err).Error("failed to deserialize event")
+				logger.Error().Str("rawEvent", string(rawEvent)).Err(err).Msg("failed to deserialize event")
 				return err
 			}
 
 			skipEvent = skipEvent && param.StartEventId != event.Id
 			if skipEvent || param.StartEventId == event.Id {
-				log.WithField("event", event).Debug("skipping previously handled event")
+				logger.Debug().Interface("event", event).Msg("skipping previously handled event")
 				continue
 			}
 
@@ -158,7 +160,7 @@ func (a *EventAdapter) SubscribeToEvents(param *asset.SubscribeToEventsParam, st
 			if err != nil {
 				return err
 			}
-			log.WithField("event", event).Debug("event sent")
+			logger.Debug().Interface("event", event).Msg("event sent")
 		}
 
 		return nil
@@ -170,6 +172,6 @@ func (a *EventAdapter) SubscribeToEvents(param *asset.SubscribeToEventsParam, st
 	}
 	defer listener.Close()
 
-	log.WithField("channel", ccData.Channel).WithField("chaincode", ccData.Chaincode).Info("Listening to channel events")
+	logger.Info().Msg("Listening to channel events")
 	return listener.Listen(ctx)
 }

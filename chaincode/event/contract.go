@@ -1,8 +1,9 @@
 package event
 
 import (
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/communication"
 	"github.com/substra/orchestrator/chaincode/ledger"
 	"github.com/substra/orchestrator/lib/asset"
@@ -13,7 +14,7 @@ import (
 // SmartContract manages Models
 type SmartContract struct {
 	contractapi.Contract
-	logger log.Entry
+	logger zerolog.Logger
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -24,7 +25,7 @@ func NewSmartContract() *SmartContract {
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
 
-	contract.logger = log.WithField("contract", contract.Name)
+	contract.logger = log.With().Str("contract", contract.Name).Logger()
 
 	return contract
 }
@@ -45,7 +46,7 @@ func (s *SmartContract) QueryEvents(ctx ledger.TransactionContext, wrapper *comm
 	params := new(asset.QueryEventsParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
@@ -55,7 +56,7 @@ func (s *SmartContract) QueryEvents(ctx ledger.TransactionContext, wrapper *comm
 		params.Sort,
 	)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to query events")
+		s.logger.Error().Err(err).Msg("failed to query events")
 		return nil, err
 	}
 
@@ -66,7 +67,7 @@ func (s *SmartContract) QueryEvents(ctx ledger.TransactionContext, wrapper *comm
 
 	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,8 +30,12 @@ func InterceptStandaloneErrors(ctx context.Context, req interface{}, info *grpc.
 	if err != nil {
 		grpcError := fromError(err)
 
-		log := logger.Get(ctx).WithField("method", info.FullMethod).WithError(err)
-		log.WithField("grpcCode", status.Code(grpcError)).Error("Error response")
+		log.Ctx(ctx).Error().
+			Str("method", info.FullMethod).
+			Stack().
+			Err(err).
+			Str("grpcCode", status.Code(grpcError).String()).
+			Msg("Error response")
 
 		return res, grpcError
 	}
@@ -56,8 +60,11 @@ func InterceptDistributedErrors(ctx context.Context, req interface{}, info *grpc
 	var wrappedErr error
 	if err != nil {
 		wrappedErr = fromMessage(err.Error())
-		log := logger.Get(ctx).WithField("method", info.FullMethod).WithError(err)
-		log.WithField("grpcCode", status.Code(wrappedErr)).Error("Error response")
+		log.Ctx(ctx).Error().
+			Str("method", info.FullMethod).
+			Err(err).
+			Str("grpcCode", status.Code(wrappedErr).String()).
+			Msg("Error response")
 	}
 
 	return res, wrappedErr

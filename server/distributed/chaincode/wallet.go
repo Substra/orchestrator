@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"sync"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+	"github.com/rs/zerolog/log"
 )
 
 // Wallet holds the logic around chaincode identity management.
@@ -48,7 +48,7 @@ func (w *Wallet) EnsureIdentity(label string, mspid string) error {
 		if err != nil {
 			return err
 		}
-		log.WithField("label", label).WithField("mspid", mspid).Info("Identity added to wallet")
+		log.Info().Str("label", label).Str("mspid", mspid).Msg("Identity added to wallet")
 	}
 
 	return nil

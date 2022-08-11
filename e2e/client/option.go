@@ -4,8 +4,7 @@
 package client
 
 import (
-	"github.com/go-playground/log/v7"
-
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 )
 
@@ -655,7 +654,7 @@ func GetNewTaskInputs(ks *KeyStore, inputs []*TaskInputOptions) []*asset.Compute
 		}
 
 		if (in.AssetRef != "") && (in.TaskOutput != nil) {
-			log.Fatal("Cannot have AssetRef and TaskOutput at the same time.")
+			log.Fatal().Msg("Cannot have AssetRef and TaskOutput at the same time.")
 		}
 
 		if in.AssetRef != "" {

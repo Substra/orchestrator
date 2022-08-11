@@ -4,9 +4,9 @@ package event
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/server/common"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/standalone/metrics"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -33,7 +33,7 @@ func NewAMQPDispatcher(amqp common.AMQPPublisher, channel string) *AMQPDispatche
 
 // Dispatch sends events one by one to the AMQP channel
 func (d *AMQPDispatcher) Dispatch(ctx context.Context) error {
-	logger.Get(ctx).WithField("num_events", d.Len()).WithField("channel", d.channel).Debug("Dispatching events")
+	log.Ctx(ctx).Debug().Int("num_events", d.Len()).Str("channel", d.channel).Msg("Dispatching events")
 	metrics.EventDispatchedTotal.Add(float64(d.Len()))
 
 	messages := make([][]byte, d.Len())

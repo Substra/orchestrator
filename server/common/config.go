@@ -3,7 +3,7 @@ package common
 import (
 	"io/ioutil"
 
-	"github.com/go-playground/log/v7"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -23,11 +23,11 @@ func NewConfig(path string) *OrchestratorConfiguration {
 
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to read config file")
+		log.Fatal().Err(err).Msg("Failed to read config file")
 	}
 	err = yaml.Unmarshal(yamlFile, conf)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to parse config file")
+		log.Fatal().Err(err).Msg("Failed to parse config file")
 	}
 
 	return conf

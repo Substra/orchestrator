@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/errors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -35,14 +35,14 @@ func init() {
 type DB struct {
 	context          context.Context
 	ccStub           shim.ChaincodeStubInterface
-	logger           log.Entry
+	logger           *zerolog.Logger
 	transactionState map[string]([]byte)
 	transactionMutex sync.RWMutex
 }
 
 // NewDB creates a ledger.DB instance based on given stub
 func NewDB(ctx context.Context, stub shim.ChaincodeStubInterface) *DB {
-	logger := logger.Get(ctx)
+	logger := log.Ctx(ctx)
 
 	return &DB{
 		context:          ctx,
@@ -93,12 +93,12 @@ func (db *DB) putTransactionState(key string, b []byte) {
 // putState stores data in the ledger
 func (db *DB) putState(resource string, key string, data []byte) error {
 	k := getFullKey(resource, key)
-	logger := db.logger.WithFields(
-		log.F("resource", resource),
-		log.F("key", key),
-		log.F("fullkey", k),
-	)
-	logger.Debug("put state")
+	logger := db.logger.With().
+		Str("resource", resource).
+		Str("key", key).
+		Str("fullkey", k).
+		Logger()
+	logger.Debug().Msg("put state")
 
 	storedAsset := &storedAsset{
 		DocType: resource,
@@ -107,10 +107,10 @@ func (db *DB) putState(resource string, key string, data []byte) error {
 
 	b, err := json.Marshal(storedAsset)
 	if err != nil {
-		logger.WithError(err).Error("Failed to marshal stored asset")
+		logger.Error().Err(err).Msg("Failed to marshal stored asset")
 		return err
 	}
-	logger.WithField("numBytes", len(b)).Debug("Marshalling successful")
+	logger.Debug().Int("numBytes", len(b)).Msg("Marshalling successful")
 
 	err = db.ccStub.PutState(k, b)
 
@@ -130,13 +130,13 @@ func (db *DB) putState(resource string, key string, data []byte) error {
 func (db *DB) getState(resource string, key string) ([]byte, error) {
 
 	k := getFullKey(resource, key)
-	logger := db.logger.WithFields(
-		log.F("resource", resource),
-		log.F("key", key),
-		log.F("fullkey", k),
-	)
+	logger := db.logger.With().
+		Str("resource", resource).
+		Str("key", key).
+		Str("fullkey", k).
+		Logger()
 
-	logger.Debug("get state")
+	logger.Debug().Msg("get state")
 
 	b, ok := db.getTransactionState(k)
 
@@ -157,7 +157,7 @@ func (db *DB) getState(resource string, key string) ([]byte, error) {
 	var stored storedAsset
 	err = json.Unmarshal(b, &stored)
 	if err != nil {
-		logger.WithError(err).Error("Failed to unmarshal stored asset")
+		logger.Error().Err(err).Msg("Failed to unmarshal stored asset")
 		return nil, err
 	}
 
@@ -195,9 +195,9 @@ func (db *DB) validateQueryContext() error {
 }
 
 func (db *DB) getQueryResult(query string) (shim.StateQueryIteratorInterface, error) {
-	logger := db.logger.WithField("query", query)
+	logger := db.logger.With().Str("query", query).Logger()
 	if err := db.validateQueryContext(); err != nil {
-		logger.WithError(err).Error("invalid context")
+		logger.Error().Err(err).Msg("invalid context")
 		return nil, err
 	}
 
@@ -205,9 +205,9 @@ func (db *DB) getQueryResult(query string) (shim.StateQueryIteratorInterface, er
 }
 
 func (db *DB) getQueryResultWithPagination(query string, pageSize int32, bookmark string) (shim.StateQueryIteratorInterface, *pb.QueryResponseMetadata, error) {
-	logger := db.logger.WithField("query", query)
+	logger := db.logger.With().Str("query", query).Logger()
 	if err := db.validateQueryContext(); err != nil {
-		logger.WithError(err).Error("invalid context")
+		logger.Error().Err(err).Msg("invalid context")
 		return nil, nil, err
 	}
 
@@ -215,7 +215,7 @@ func (db *DB) getQueryResultWithPagination(query string, pageSize int32, bookmar
 }
 
 func (db *DB) createIndex(index string, attributes []string) error {
-	db.logger.WithField("index", index).WithField("attributes", attributes).Debug("Create index")
+	db.logger.Debug().Str("index", index).Strs("attributes", attributes).Msg("Create index")
 	compositeKey, err := db.ccStub.CreateCompositeKey(index, attributes)
 	if err != nil {
 		return err

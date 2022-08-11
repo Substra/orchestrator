@@ -5,10 +5,11 @@ package event
 import (
 	"context"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/ledger"
 	"github.com/substra/orchestrator/server/distributed/chaincode"
 )
@@ -25,7 +26,7 @@ type Listener struct {
 	handler      Handler
 	channel      string
 	eventIdx     Indexer
-	logger       log.Entry
+	logger       zerolog.Logger
 }
 
 type ListenerChaincodeData struct {
@@ -59,15 +60,15 @@ func NewListener(
 	eventIdx Indexer,
 	handler Handler,
 ) (*Listener, error) {
-	logger := log.WithFields(
-		log.F("channel", ccData.Channel),
-		log.F("chaincode", ccData.Chaincode),
-	)
+	logger := log.With().
+		Str("channel", ccData.Channel).
+		Str("chaincode", ccData.Chaincode).
+		Logger()
 
 	// For new index (without referenced events), this will default to block 0
 	checkpoint := eventIdx.GetLastEvent(ccData.Channel)
 
-	logger.WithField("lastEventBlock", checkpoint.BlockNum).WithField("lastTxID", checkpoint.TxID).Debug("instanciating event listener")
+	logger.Debug().Uint64("lastEventBlock", checkpoint.BlockNum).Str("lastTxID", checkpoint.TxID).Msg("instanciating event listener")
 
 	gw, err := ConnectToGateway(ccData, gateway.WithBlockNum(checkpoint.BlockNum))
 	if err != nil {
@@ -101,7 +102,7 @@ func NewListener(
 
 // Close will unregister the chaincode listener and properly stop the event listening loop.
 func (l *Listener) Close() {
-	l.logger.Debug("Closing chaincode event listener")
+	l.logger.Debug().Msg("Closing chaincode event listener")
 	l.contract.Unregister(l.registration)
 	close(l.done)
 }
@@ -114,19 +115,19 @@ func (l *Listener) Listen(ctx context.Context) error {
 	for {
 		select {
 		case event := <-l.events:
-			logger := l.logger.WithFields(
-				log.F("eventName", event.EventName),
-				log.F("blockNumber", event.BlockNumber),
-				log.F("source", event.SourceURL),
-				log.F("txID", event.TxID),
-			)
+			logger := l.logger.With().
+				Str("eventName", event.EventName).
+				Uint64("blockNumber", event.BlockNumber).
+				Str("source", event.SourceURL).
+				Str("txID", event.TxID).
+				Logger()
 			skipEvent = skipEvent && event.TxID != checkpoint.TxID
 			if skipEvent || (event.TxID == checkpoint.TxID && !checkpoint.IsIncluded) {
-				logger.Debug("skipping previously handled event")
+				logger.Debug().Msg("skipping previously handled event")
 				break
 			}
 
-			logger.Debug("handling event")
+			logger.Debug().Msg("handling event")
 
 			err := l.handler(event)
 			if err != nil {
@@ -135,13 +136,13 @@ func (l *Listener) Listen(ctx context.Context) error {
 
 			err = l.eventIdx.SetLastEvent(l.channel, event)
 			if err != nil {
-				logger.WithError(err).Error("cannot track event")
+				logger.Error().Err(err).Msg("cannot track event")
 			}
 		case <-l.done:
-			l.logger.Debug("Listener done: stop listening")
+			l.logger.Debug().Msg("Listener done: stop listening")
 			return nil
 		case <-ctx.Done():
-			l.logger.Debug("Context done: stop listening")
+			l.logger.Debug().Msg("Context done: stop listening")
 			return ctx.Err()
 		}
 	}

@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/contracts"
 	"github.com/substra/orchestrator/utils"
 )
@@ -30,7 +30,7 @@ func main() {
 		go func() {
 			err := http.ListenAndServe(fmt.Sprintf(":%s", httpPort), nil)
 			if err != nil {
-				log.WithError(err).WithField("port", httpPort).Error("failed to serve HTTP endpoints")
+				log.Error().Err(err).Str("port", httpPort).Msg("failed to serve HTTP endpoints")
 			}
 		}()
 	}
@@ -40,22 +40,22 @@ func main() {
 	cc, err := contractapi.NewChaincode(allContracts...)
 
 	if err != nil {
-		log.WithError(err).Fatal("error creating substra chaincode")
+		log.Fatal().Err(err).Msg("error creating substra chaincode")
 	}
 
 	key, err := ioutil.ReadFile(os.Getenv("TLS_KEY_FILE"))
 	if err != nil {
-		log.WithError(err).WithField("path", os.Getenv("TLS_KEY_FILE")).Fatal("unable to read key file")
+		log.Fatal().Err(err).Str("path", os.Getenv("TLS_KEY_FILE")).Msg("unable to read key file")
 	}
 
 	cert, err := ioutil.ReadFile(os.Getenv("TLS_CERT_FILE"))
 	if err != nil {
-		log.WithError(err).WithField("path", os.Getenv("TLS_CERT_FILE")).Fatal("unable to read cert file")
+		log.Fatal().Err(err).Str("path", os.Getenv("TLS_CERT_FILE")).Msg("unable to read cert file")
 	}
 
 	ca, err := ioutil.ReadFile(os.Getenv("TLS_ROOTCERT_FILE"))
 	if err != nil {
-		log.WithError(err).WithField("path", os.Getenv("TLS_ROOTCERT_FILE")).Fatal("unable to read CA cert file")
+		log.Fatal().Err(err).Str("path", os.Getenv("TLS_ROOTCERT_FILE")).Msg("unable to read CA cert file")
 	}
 
 	server := &shim.ChaincodeServer{
@@ -71,8 +71,8 @@ func main() {
 	}
 
 	// Start the chaincode external server
-	log.Info("starting substra chaincode server")
+	log.Info().Msg("starting substra chaincode server")
 	if err = server.Start(); err != nil {
-		log.WithError(err).WithField("title", cc.Info.Title).WithField("version", cc.Info.Version).Fatal("error happened while starting chaincode")
+		log.Fatal().Err(err).Str("title", cc.Info.Title).Str("version", cc.Info.Version).Msg("error happened while starting chaincode")
 	}
 }

@@ -100,7 +100,7 @@ func (s *PermissionService) CanProcess(perms *asset.Permissions, requester strin
 	if perms.Process.Public || utils.SliceContains(perms.Process.AuthorizedIds, requester) {
 		return true
 	}
-	s.GetLogger().WithField("requester", requester).WithField("permissions", perms).Debug("Requester can't process the asset")
+	s.GetLogger().Debug().Str("requester", requester).Interface("permissions", perms).Msg("Requester can't process the asset")
 	return false
 }
 

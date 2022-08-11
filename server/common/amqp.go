@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/go-playground/log/v7"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/rs/zerolog/log"
 )
 
 // AMQPPublisher represent the ability to push a message to a broker.
@@ -75,7 +75,7 @@ func NewSession(addr string) *Session {
 	go session.sendToBroker()
 
 	for !session.isReady {
-		log.WithField("delay", reconnectDelay).Info("AMQP session not yet ready, waiting")
+		log.Info().Dur("delay", reconnectDelay).Msg("AMQP session not yet ready, waiting")
 		<-time.After(reconnectDelay)
 	}
 
@@ -87,12 +87,12 @@ func NewSession(addr string) *Session {
 func (session *Session) handleReconnect(addr string) {
 	for {
 		session.isReady = false
-		log.Info("Attempting to connect to AMQP broker")
+		log.Info().Msg("Attempting to connect to AMQP broker")
 
 		conn, err := session.connect(addr)
 
 		if err != nil {
-			log.WithError(err).Warn("Failed to connect to broker. Retrying...")
+			log.Warn().Err(err).Msg("Failed to connect to broker. Retrying...")
 
 			select {
 			case <-session.done:
@@ -117,7 +117,7 @@ func (session *Session) connect(addr string) (*amqp.Connection, error) {
 	}
 
 	session.changeConnection(conn)
-	log.Info("Connected!")
+	log.Info().Msg("Connected!")
 	return conn, nil
 }
 
@@ -130,7 +130,7 @@ func (session *Session) handleReInit(conn *amqp.Connection) bool {
 		err := session.init(conn)
 
 		if err != nil {
-			log.Warn("Failed to initialize channel. Retrying...")
+			log.Warn().Msg("Failed to initialize channel. Retrying...")
 
 			select {
 			case <-session.done:
@@ -144,10 +144,10 @@ func (session *Session) handleReInit(conn *amqp.Connection) bool {
 		case <-session.done:
 			return true
 		case <-session.notifyConnClose:
-			log.Info("AMQP connection closed. Reconnecting...")
+			log.Info().Msg("AMQP connection closed. Reconnecting...")
 			return false
 		case <-session.notifyChanClose:
-			log.Info("AMQP channel closed. Re-running init...")
+			log.Info().Msg("AMQP channel closed. Re-running init...")
 		}
 	}
 }
@@ -180,7 +180,7 @@ func (session *Session) init(conn *amqp.Connection) error {
 
 	session.changeChannel(ch)
 	session.isReady = true
-	log.WithField("exchange", exchangeName).Debug("AMQP session ready")
+	log.Debug().Str("exchange", exchangeName).Msg("AMQP session ready")
 
 	return nil
 }
@@ -215,7 +215,7 @@ func (session *Session) publish(routingKey string, data []byte) error {
 	for {
 		err := session.unsafePush((routingKey), data)
 		if err != nil {
-			log.WithError(err).Warn("Push failed. Retrying...")
+			log.Warn().Err(err).Msg("Push failed. Retrying...")
 			select {
 			case <-session.done:
 				return errShutdown
@@ -230,7 +230,7 @@ func (session *Session) publish(routingKey string, data []byte) error {
 			}
 		case <-time.After(resendDelay):
 		}
-		log.Warn("Push didn't confirm. Retrying...")
+		log.Warn().Msg("Push didn't confirm. Retrying...")
 	}
 }
 
@@ -258,16 +258,16 @@ func (session *Session) unsafePush(routingKey string, data []byte) error {
 
 // sendToBroker will loop over the pending messages to publish and push them to the broker.
 func (session *Session) sendToBroker() {
-	log.Info("Starting event publication")
+	log.Info().Msg("Starting event publication")
 	for {
 		select {
 		case msg := <-session.messagesToPublish:
 			err := session.publish(msg.routingKey, msg.data)
 			if err != nil {
-				log.WithError(err).WithField("event", string(msg.data)).WithField("routingKey", msg.routingKey).Error("failed to publish event")
+				log.Error().Err(err).Bytes("event", msg.data).Str("routingKey", msg.routingKey).Msg("failed to publish event")
 			}
 		case <-session.stopPublishing:
-			log.Info("Stopping event publication")
+			log.Info().Msg("Stopping event publication")
 			session.donePublishing <- true
 			close(session.donePublishing)
 			return

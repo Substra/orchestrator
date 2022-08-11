@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/looplab/fsm"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/errors"
@@ -116,7 +115,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 // applyTaskAction is the internal method allowing any transition (string).
 // This allows to use this method with internal only transitions (abort).
 func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
-	s.GetLogger().WithField("taskKey", task.Key).WithField("action", action).WithField("reason", reason).Debug("Applying task action")
+	s.GetLogger().Debug().Str("taskKey", task.Key).Str("action", string(action)).Str("reason", reason).Msg("Applying task action")
 	state := newState(s, task)
 	err := state.Event(string(action), task, reason)
 
@@ -145,11 +144,11 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 		return
 	}
 
-	s.GetLogger().WithFields(
-		log.F("taskKey", task.Key),
-		log.F("taskStatus", task.Status),
-		log.F("numChildren", len(children)),
-	).Debug("onDone: updating children statuses")
+	s.GetLogger().Debug().
+		Str("taskKey", task.Key).
+		Str("taskStatus", task.Status.String()).
+		Int("numChildren", len(children)).
+		Msg("onDone: updating children statuses")
 
 	for _, child := range children {
 		err := s.propagateDone(task, child)
@@ -165,15 +164,15 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 // propagateDone propagates the DONE status of a parent to the task.
 // This will iterate over task parents and mark it as TODO if all parents are DONE.
 func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.ComputeTask) error {
-	logger := s.GetLogger().WithFields(
-		log.F("triggeringParent", triggeringParent.Key),
-		log.F("triggeringParentStatus", triggeringParent.Status),
-		log.F("child", child.Key),
-		log.F("childStatus", child.Status),
-	)
+	logger := s.GetLogger().With().
+		Str("triggeringParent", triggeringParent.Key).
+		Str("triggeringParentStatus", triggeringParent.Status.String()).
+		Str("child", child.Key).
+		Str("childStatus", child.Status.String()).
+		Logger()
 	state := newState(s, child)
 	if !state.Can(string(transitionTodo)) {
-		logger.Info("propagateDone: skipping child due to incompatible state")
+		logger.Info().Msg("propagateDone: skipping child due to incompatible state")
 		// this is expected as we might go over already failed children (from another parent)
 		return nil
 	}
@@ -190,7 +189,10 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 		}
 
 		if parent.Status != asset.ComputeTaskStatus_STATUS_DONE {
-			logger.WithField("parent", parent.Key).WithField("parentStatus", parent.Status).Debug("propagateDone: skipping child due to pending parent")
+			logger.Debug().
+				Str("parent", parent.Key).
+				Str("parentStatus", parent.Status.String()).
+				Msg("propagateDone: skipping child due to pending parent")
 			// At least one of the parents is not done, so no change for children
 			// but no error, this is expected.
 			return nil
@@ -229,13 +231,13 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 	}
 	task.Status = asset.ComputeTaskStatus(statusVal)
 
-	s.GetLogger().WithFields(
-		log.F("taskKey", task.Key),
-		log.F("computePlanKey", task.ComputePlanKey),
-		log.F("newStatus", task.Status),
-		log.F("taskWorker", task.Worker),
-		log.F("reason", reason),
-	).Debug("Updating task status")
+	s.GetLogger().Debug().
+		Str("taskKey", task.Key).
+		Str("computePlanKey", task.ComputePlanKey).
+		Str("newStatus", task.Status.String()).
+		Str("taskWorker", task.Worker).
+		Str("reason", reason).
+		Msg("Updating task status")
 
 	err := s.GetComputeTaskDBAL().UpdateComputeTaskStatus(task.Key, task.Status)
 	if err != nil {

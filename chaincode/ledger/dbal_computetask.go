@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/go-playground/log/v7"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
@@ -168,7 +167,7 @@ func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 		return nil, err
 	}
 
-	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetComputeTaskChildren")
+	db.logger.Debug().Int("numChildren", len(elementKeys)).Msg("GetComputeTaskChildren")
 
 	tasks := []*asset.ComputeTask{}
 	for _, childKey := range elementKeys {
@@ -199,7 +198,7 @@ func (db *DB) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
 		return nil, err
 	}
 
-	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetComputePlanTasks")
+	db.logger.Debug().Int("numChildren", len(elementKeys)).Msg("GetComputePlanTasks")
 
 	tasks := []*asset.ComputeTask{}
 	for _, childKey := range elementKeys {
@@ -214,11 +213,11 @@ func (db *DB) GetComputePlanTasks(key string) ([]*asset.ComputeTask, error) {
 }
 
 func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
-	logger := db.logger.WithFields(
-		log.F("pagination", p),
-		log.F("filter", filter),
-	)
-	logger.Debug("query compute task")
+	logger := db.logger.With().
+		Interface("pagination", p).
+		Interface("filter", filter).
+		Logger()
+	logger.Debug().Msg("query compute task")
 
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
@@ -257,7 +256,7 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 
 	queryString := string(b)
 
-	log.WithField("couchQuery", queryString).Debug("mango query")
+	logger.Debug().Str("couchQuery", queryString).Msg("mango query")
 
 	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
 	if err != nil {

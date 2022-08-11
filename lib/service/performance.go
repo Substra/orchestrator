@@ -39,7 +39,11 @@ func NewPerformanceService(provider PerformanceDependencyProvider) *PerformanceS
 // RegisterPerformance check asset validity and stores a new performance report for the given task.
 // Note that the task key will also be the performance key (1:1 relationship).
 func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, requester string) (*asset.Performance, error) {
-	s.GetLogger().WithField("taskKey", newPerf.ComputeTaskKey).WithField("metricKey", newPerf.MetricKey).WithField("requester", requester).Debug("Registering new performance")
+	s.GetLogger().Debug().
+		Str("taskKey", newPerf.ComputeTaskKey).
+		Str("metricKey", newPerf.MetricKey).
+		Str("requester", requester).
+		Msg("Registering new performance")
 	err := newPerf.Validate()
 	if err != nil {
 		return nil, errors.FromValidationError(asset.PerformanceKind, err)

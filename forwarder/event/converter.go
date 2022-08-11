@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/fab"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/server/common"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -36,11 +36,11 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) error {
 	err := json.Unmarshal(payload, &rawEvents)
 
 	if err != nil {
-		log.WithError(err).WithField("payload", string(payload)).Error("Failed to deserialize chaincode event")
+		log.Error().Err(err).Str("payload", string(payload)).Msg("Failed to deserialize chaincode event")
 		return nil
 	}
 
-	log.WithField("num_events", len(rawEvents)).Debug("Pushing chaincode events")
+	log.Debug().Int("numEvents", len(rawEvents)).Msg("Pushing chaincode events")
 
 	messages := make([][]byte, len(rawEvents))
 
@@ -48,21 +48,21 @@ func (f *Forwarder) Forward(ccEvent *fab.CCEvent) error {
 		event := new(asset.Event)
 		err := protojson.Unmarshal(rawEvent, event)
 		if err != nil {
-			log.WithField("rawEvent", string(rawEvent)).WithError(err).Error("failed to deserialize event")
+			log.Error().Str("rawEvent", string(rawEvent)).Err(err).Msg("failed to deserialize event")
 			continue
 		}
 
 		event.Channel = f.channel
-		logger := log.WithField("event", event)
+		logger := log.With().Interface("event", event).Logger()
 
 		data, err := f.marshaller.Marshal(event)
 		if err != nil {
-			logger.WithError(err).Error("Failed to serialize")
+			logger.Error().Err(err).Msg("Failed to serialize")
 			continue
 		}
 
 		messages[i] = data
-		logger.Debug("successfully converted event")
+		logger.Debug().Msg("successfully converted event")
 	}
 	f.publisher.Publish(context.Background(), f.channel, messages)
 	return nil

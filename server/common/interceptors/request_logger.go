@@ -5,7 +5,8 @@ import (
 	"strings"
 
 	"errors"
-	"github.com/substra/orchestrator/server/common/logger"
+
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,13 +21,13 @@ func UnaryServerRequestLogger(ctx context.Context, req interface{}, info *grpc.U
 		}
 	}
 
-	log := logger.Get(ctx).WithField("method", info.FullMethod)
+	logger := log.Ctx(ctx).With().Str("method", info.FullMethod).Logger()
 
 	resp, err := handler(ctx, req)
 
 	if err == nil {
 		// Error is already logged by the error interceptor
-		log.WithField("response", resp).Debug("Success response")
+		logger.Debug().Interface("response", resp).Msg("Success response")
 	}
 
 	return resp, err
@@ -44,31 +45,32 @@ func StreamServerRequestLogger(
 		return nil
 	}
 
-	log := logger.
-		Get(stream.Context()).
-		WithField("method", info.FullMethod).
-		WithError(err)
+	logger := log.Ctx(stream.Context()).
+		With().
+		Str("method", info.FullMethod).
+		Err(err).
+		Logger()
 
 	// handle errors happening when the client terminates the server-streaming RPC
 	if errors.Is(err, context.Canceled) {
-		log.Info("interrupted: context canceled")
+		logger.Info().Msg("interrupted: context canceled")
 		return nil
 	}
 
 	st := status.Convert(err)
 	switch st.Code() {
 	case codes.Canceled:
-		log.Info("interrupted: gRPC operation canceled")
+		logger.Info().Msg("interrupted: gRPC operation canceled")
 		return nil
 	case codes.Unavailable:
 		if st.Message() == "transport is closing" {
-			log.Infof("interrupted: %s", st.Message())
+			logger.Info().Msgf("interrupted: %s", st.Message())
 			return nil
 		}
 	}
 
 	// handle other errors
-	log.Error("stream response failed")
+	logger.Error().Msg("stream response failed")
 
 	return err
 }

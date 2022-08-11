@@ -1,14 +1,17 @@
 package service
 
 import (
-	"github.com/go-playground/log/v7"
+	"context"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/lib/persistence"
 )
 
 // LoggerProvider describes a provider of logger instance.
 type LoggerProvider interface {
-	GetLogger() log.Entry
+	GetLogger() *zerolog.Logger
 }
 
 type ChannelProvider interface {
@@ -42,7 +45,7 @@ type DependenciesProvider interface {
 // Each service should define a ServiceDependencyProvider interface which states what are its requirements.
 // Since the Provider implements every Provider interface, it can fit all service dependencies.
 type Provider struct {
-	logger        log.Entry
+	logger        *zerolog.Logger
 	channel       string
 	dbal          persistence.DBAL
 	eventQueue    event.Queue
@@ -62,7 +65,7 @@ type Provider struct {
 }
 
 // GetLogger returns a logger instance.
-func (sc *Provider) GetLogger() log.Entry {
+func (sc *Provider) GetLogger() *zerolog.Logger {
 	return sc.logger
 }
 
@@ -75,9 +78,9 @@ func (sc *Provider) GetChannel() string {
 }
 
 // NewProvider return an instance of Provider based on given persistence layer.
-func NewProvider(logger log.Entry, dbal persistence.DBAL, queue event.Queue, time TimeAPI, channel string) *Provider {
+func NewProvider(ctx context.Context, dbal persistence.DBAL, queue event.Queue, time TimeAPI, channel string) *Provider {
 	return &Provider{
-		logger:     logger,
+		logger:     log.Ctx(ctx),
 		dbal:       dbal,
 		eventQueue: queue,
 		time:       time,

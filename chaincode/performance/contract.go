@@ -2,8 +2,9 @@
 package performance
 
 import (
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/communication"
 	"github.com/substra/orchestrator/chaincode/ledger"
 	"github.com/substra/orchestrator/lib/asset"
@@ -14,7 +15,7 @@ import (
 // SmartContract manages Models
 type SmartContract struct {
 	contractapi.Contract
-	logger log.Entry
+	logger zerolog.Logger
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -25,7 +26,7 @@ func NewSmartContract() *SmartContract {
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
 
-	contract.logger = log.WithField("contract", contract.Name)
+	contract.logger = log.With().Str("contract", contract.Name).Logger()
 
 	return contract
 }
@@ -45,24 +46,24 @@ func (s *SmartContract) RegisterPerformance(ctx ledger.TransactionContext, wrapp
 	newPerf := new(asset.NewPerformance)
 	err = wrapper.Unwrap(newPerf)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
 	requester, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		s.logger.WithError(err).Error("failed to extract tx creator")
+		s.logger.Error().Err(err).Msg("failed to extract tx creator")
 		return nil, err
 	}
 
 	t, err := service.RegisterPerformance(newPerf, requester)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to register performance")
+		s.logger.Error().Err(err).Msg("failed to register performance")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(ctx.GetContext(), t)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -78,13 +79,13 @@ func (s *SmartContract) QueryPerformances(ctx ledger.TransactionContext, wrapper
 	param := new(asset.QueryPerformancesParam)
 	err = wrapper.Unwrap(param)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
 	performances, nextPage, err := service.QueryPerformances(&common.Pagination{Token: param.GetPageToken(), Size: param.GetPageSize()}, param.Filter)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to query performances")
+		s.logger.Error().Err(err).Msg("failed to query performances")
 		return nil, err
 	}
 
@@ -95,7 +96,7 @@ func (s *SmartContract) QueryPerformances(ctx ledger.TransactionContext, wrapper
 
 	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil

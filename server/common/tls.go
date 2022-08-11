@@ -9,7 +9,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/go-playground/log/v7"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -25,12 +25,12 @@ func GetTLSOptions() grpc.ServerOption {
 	tlsCertFile := MustGetEnv("TLS_CERT_PATH")
 	tlsKeyFile := MustGetEnv("TLS_KEY_PATH")
 
-	log.WithField("cert", tlsCertFile).WithField("key", tlsKeyFile).Info("Loading TLS certificates")
+	log.Info().Str("cert", tlsCertFile).Str("key", tlsKeyFile).Msg("Loading TLS certificates")
 
 	// Load server's certificate and private key
 	serverCert, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to load server TLS certificate")
+		log.Fatal().Err(err).Msg("Failed to load server TLS certificate")
 	}
 
 	// Create the credentials and return it
@@ -49,27 +49,27 @@ func GetTLSOptions() grpc.ServerOption {
 		serverCA := MustGetEnv("TLS_SERVER_CA_CERT")
 		pemServerCA, err := ioutil.ReadFile(serverCA)
 		if err != nil {
-			log.WithField("CA Cert", serverCA).Fatal("Failed to load TLS server CA")
+			log.Fatal().Str("CA Cert", serverCA).Msg("Failed to load TLS server CA")
 		}
 		if !certPool.AppendCertsFromPEM(pemServerCA) {
-			log.WithField("CA Cert", serverCA).Fatal("Failed to add TLS client CA certificate to pool")
+			log.Fatal().Str("CA Cert", serverCA).Msg("Failed to add TLS client CA certificate to pool")
 		}
 
 		// 2. Add provided client CAs
 		clientCAPath := MustGetEnv("TLS_CLIENT_CA_CERT_DIR")
 		clientCAFiles, err := findCACerts(clientCAPath)
 		if err != nil {
-			log.WithError(err).Fatal("Failed to load TLS client CA certificates")
+			log.Fatal().Err(err).Msg("Failed to load TLS client CA certificates")
 		}
 		for _, f := range clientCAFiles {
 			pemClientCA, err := ioutil.ReadFile(f)
 			if err != nil {
-				log.WithField("cacert", f).Fatal("Failed to load TLS client CA certificate")
+				log.Fatal().Str("cacert", f).Msg("Failed to load TLS client CA certificate")
 			}
 			if !certPool.AppendCertsFromPEM(pemClientCA) {
-				log.WithField("cacert", f).Fatal("Failed to add TLS client CA certificate to pool")
+				log.Fatal().Str("cacert", f).Msg("Failed to add TLS client CA certificate to pool")
 			}
-			log.WithField("cacert", f).Info("Loaded TLS client CA certificate")
+			log.Info().Str("cacert", f).Msg("Loaded TLS client CA certificate")
 		}
 
 		config.ClientAuth = tls.RequireAndVerifyClientCert

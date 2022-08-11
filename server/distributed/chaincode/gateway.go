@@ -7,12 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
+	"github.com/rs/zerolog/log"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/server/common"
-	"github.com/substra/orchestrator/server/common/logger"
 )
 
 // Requester describes a component capable of querying the chaincode.
@@ -77,7 +76,7 @@ func (p *GatewayPool) Close() {
 // GetGateway returns the existing gateway for the given MSP ID or creates one if needed.
 func (p *GatewayPool) GetGateway(ctx context.Context, mspid string) (*Gateway, error) {
 	label := mspid + "-id"
-	log := logger.Get(ctx).WithField("mspid", mspid)
+	logger := log.Ctx(ctx).With().Str("mspid", mspid).Logger()
 
 	p.gwLock.RLock()
 	gw, ok := p.gateways[label]
@@ -91,7 +90,7 @@ func (p *GatewayPool) GetGateway(ctx context.Context, mspid string) (*Gateway, e
 	p.gwLock.Lock()
 	defer p.gwLock.Unlock()
 
-	log.Debug("creating new gateway connection")
+	logger.Debug().Msg("creating new gateway connection")
 
 	err := p.wallet.EnsureIdentity(label, mspid)
 	if err != nil {
@@ -112,7 +111,7 @@ func (p *GatewayPool) GetGateway(ctx context.Context, mspid string) (*Gateway, e
 	p.gateways[label] = gw
 
 	elapsed := time.Since(start)
-	log.WithField("duration", elapsed).Debug("Connected to gateway")
+	logger.Debug().Dur("duration", elapsed).Msg("Connected to gateway")
 
 	return &gw, nil
 }
@@ -146,7 +145,7 @@ func (gw *Gateway) processRequests() {
 	for request := range gw.requests {
 		gw.invoke(request)
 	}
-	log.WithField("mspip", gw.mspid).Info("Stopping chaincode request processing")
+	log.Info().Str("mspip", gw.mspid).Msg("Stopping chaincode request processing")
 }
 
 // invoke the chaincode according to the request and send results over the channels
@@ -156,16 +155,14 @@ func (gw *Gateway) invoke(req chaincodeRequest) {
 
 	isEvaluate := gw.checker.IsEvaluateMethod(req.method)
 
-	log := logger.Get(req.ctx).
-		WithFields(
-			log.F("mspid", gw.mspid),
-			log.F("channel", req.channel),
-			log.F("chaincode", req.chaincode),
-			log.F("method", req.method),
-			log.F("evaluate", isEvaluate),
-		)
-
-	log.Debug("Calling chaincode")
+	logger := log.Ctx(req.ctx).With().
+		Str("mspid", gw.mspid).
+		Str("channel", req.channel).
+		Str("chaincode", req.chaincode).
+		Str("method", req.method).
+		Bool("evaluate", isEvaluate).
+		Logger()
+	logger.Debug().Msg("Calling chaincode")
 
 	configBackend, err := gw.config()
 	if err != nil {
@@ -219,7 +216,7 @@ func (gw *Gateway) Request(ctx context.Context, channel, chaincode, method strin
 	err := make(chan error, 1)
 
 	if gw.closed {
-		logger.Get(ctx).Warn("Gateway closed")
+		log.Ctx(ctx).Warn().Msg("Gateway closed")
 		err <- orcerrors.NewInternal("gateway closed")
 		close(out)
 		close(err)

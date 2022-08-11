@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/service"
 	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/common/interceptors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/standalone/dbal"
 	"github.com/substra/orchestrator/server/standalone/event"
 	"github.com/substra/orchestrator/server/standalone/metrics"
@@ -84,7 +84,7 @@ func (pi *ProviderInterceptor) UnaryServerInterceptor(ctx context.Context, req i
 	// Truncate time to microsecond resolution to match PostgreSQL timestamp resolution.
 	// https://www.postgresql.org/docs/current/datatype-datetime.html
 	ts := service.NewTimeService(time.Now().Truncate(time.Microsecond))
-	provider := service.NewProvider(logger.Get(ctx), transactionalDBAL, dispatcher, ts, channel)
+	provider := service.NewProvider(ctx, transactionalDBAL, dispatcher, ts, channel)
 
 	ctx = WithProvider(ctx, provider)
 	res, err := handler(ctx, req)
@@ -108,9 +108,9 @@ func (pi *ProviderInterceptor) UnaryServerInterceptor(ctx context.Context, req i
 		dispatchErr := dispatcher.Dispatch(ctx)
 		if dispatchErr != nil {
 			pi.statusReporter.Shutdown()
-			logger.Get(ctx).WithError(dispatchErr).
-				WithField("events", dispatcher.GetEvents()).
-				Error("failed to dispatch events after successful transaction commit")
+			log.Ctx(ctx).Error().Err(dispatchErr).
+				Interface("events", dispatcher.GetEvents()).
+				Msg("failed to dispatch events after successful transaction commit")
 		}
 
 	}

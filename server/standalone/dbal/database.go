@@ -5,7 +5,8 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/utils"
 )
 
@@ -37,9 +38,10 @@ func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, dat
 		return
 	}
 
-	log := logger.Get(ctx).
-		WithField("msg", msg).
-		WithField("level", level)
+	logger := log.Ctx(ctx).With().
+		Str("msg", msg).
+		Str("level", level.String()).
+		Logger()
 	// Other available fields (omitted to keep logs readable):
 	// - data["args"]: the query arguments (truncated if too long)
 	// - data["time"]: the query execution time
@@ -47,23 +49,26 @@ func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, dat
 	// - data["pid"]
 
 	if query, ok := data["sql"]; ok {
-		log = log.WithField("sql", query)
+		logger = logger.With().Interface("sql", query).Logger()
 	}
 
 	if hasError {
-		log = log.WithField("err", sqlErr)
+		logger = logger.With().Interface("err", sqlErr).Logger()
 	}
 
+	logLevel := zerolog.DebugLevel
 	switch level {
 	case pgx.LogLevelTrace, pgx.LogLevelDebug:
-		log.Debug("SQL")
+		logLevel = zerolog.DebugLevel
 	case pgx.LogLevelInfo:
-		log.Info("SQL")
+		logLevel = zerolog.InfoLevel
 	case pgx.LogLevelWarn:
-		log.Warn("SQL")
+		logLevel = zerolog.WarnLevel
 	case pgx.LogLevelError:
-		log.Error("SQL")
+		logLevel = zerolog.ErrorLevel
 	}
+
+	logger.WithLevel(logLevel).Msg("SQL")
 }
 
 // InitDatabase opens a database connexion from given url.
@@ -93,7 +98,7 @@ func (d *Database) Close() {
 // When readOnly is false the transaction is configured with SERIALIZABLE isolation level to protect against potential
 // inconsistencies with concurrent requests.
 func (d *Database) BeginTransaction(ctx context.Context, readOnly bool) (pgx.Tx, error) {
-	logger.Get(ctx).WithField("ReadOnly", readOnly).Debug("new DB transaction")
+	log.Ctx(ctx).Debug().Bool("ReadOnly", readOnly).Msg("new DB transaction")
 	txOpts := pgx.TxOptions{
 		IsoLevel: pgx.Serializable, // This level of isolation is the guarantee to always return consistent data
 	}

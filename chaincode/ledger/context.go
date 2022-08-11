@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/communication"
 	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/lib/service"
 	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/common/interceptors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/utils"
 )
 
@@ -59,7 +58,6 @@ func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 
 	ctx := c.GetContext()
 	db := NewDB(ctx, stub)
-	logger := logger.Get(ctx)
 
 	txTimestamp, err := stub.GetTxTimestamp()
 	if err != nil {
@@ -68,7 +66,7 @@ func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 
 	ts := service.NewTimeService(txTimestamp.AsTime())
 
-	return service.NewProvider(logger, db, c.getQueue(), ts, stub.GetChannelID()), nil
+	return service.NewProvider(ctx, db, c.getQueue(), ts, stub.GetChannelID()), nil
 }
 
 func (c *Context) getQueue() event.Queue {
@@ -82,7 +80,7 @@ func (c *Context) getQueue() event.Queue {
 func (c *Context) GetDispatcher() event.Dispatcher {
 	if c.dispatcher == nil {
 		stub := c.GetStub()
-		c.dispatcher = newEventDispatcher(stub, c.getQueue(), logger.Get(c.Context))
+		c.dispatcher = newEventDispatcher(stub, c.getQueue(), log.Ctx(c.Context))
 	}
 	return c.dispatcher
 }
@@ -103,7 +101,7 @@ func GetBeforeTransactionHook(contract contractapi.EvaluationContractInterface) 
 		// Determine is method being called is an "Evaluation" method (v.s. "Invoke" method)
 		fnName, args := c.GetStub().GetFunctionAndParameters()
 
-		l := log.WithField("function", fnName)
+		logger := log.With().Str("function", fnName).Logger()
 
 		var requestID string
 		if len(args) > 0 {
@@ -111,22 +109,22 @@ func GetBeforeTransactionHook(contract contractapi.EvaluationContractInterface) 
 			if err := json.Unmarshal([]byte(args[0]), &w); err == nil {
 				requestID = w.RequestID
 			} else {
-				l.WithError(err).Warn("cannot extract request ID")
+				logger.Warn().Err(err).Msg("cannot extract request ID")
 			}
 		}
 
 		evalFuncs := contract.GetEvaluateTransactions()
 		isEval := IsEvaluateTransaction(fnName, evalFuncs)
 
-		l = l.WithField("isEval", isEval).WithField("requestID", requestID)
+		logger = logger.With().Bool("isEval", isEval).Str("requestID", requestID).Logger()
 
 		// Populate context
 		ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, isEval)
 		ctx = context.WithValue(ctx, interceptors.RequestIDMarker, requestID)
-		ctx = log.SetContext(ctx, l)
+		ctx = logger.WithContext(ctx)
 		c.SetContext(ctx)
 
-		l.Debug("transaction context initialized")
+		logger.Debug().Msg("transaction context initialized")
 		return nil
 	}
 }

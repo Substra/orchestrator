@@ -1,8 +1,9 @@
 package computeplan
 
 import (
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/communication"
 	"github.com/substra/orchestrator/chaincode/ledger"
 	"github.com/substra/orchestrator/lib/asset"
@@ -13,7 +14,7 @@ import (
 // SmartContract manages ComputePlan
 type SmartContract struct {
 	contractapi.Contract
-	logger log.Entry
+	logger zerolog.Logger
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -24,7 +25,7 @@ func NewSmartContract() *SmartContract {
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
 
-	contract.logger = log.WithField("contract", contract.Name)
+	contract.logger = log.With().Str("contract", contract.Name).Logger()
 
 	return contract
 }
@@ -39,24 +40,24 @@ func (s *SmartContract) RegisterPlan(ctx ledger.TransactionContext, wrapper *com
 	newPlan := new(asset.NewComputePlan)
 	err = wrapper.Unwrap(newPlan)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		s.logger.WithError(err).Error("failed to extract tx creator")
+		s.logger.Error().Err(err).Msg("failed to extract tx creator")
 		return nil, err
 	}
 
 	t, err := service.RegisterPlan(newPlan, owner)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to register compute plan")
+		s.logger.Error().Err(err).Msg("failed to register compute plan")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(ctx.GetContext(), t)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -72,18 +73,18 @@ func (s *SmartContract) GetPlan(ctx ledger.TransactionContext, wrapper *communic
 	param := new(asset.GetComputePlanParam)
 	err = wrapper.Unwrap(param)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
 	t, err := service.GetPlan(param.Key)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to get compute plan")
+		s.logger.Error().Err(err).Msg("failed to get compute plan")
 		return nil, err
 	}
 	wrapped, err := communication.Wrap(ctx.GetContext(), t)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -99,13 +100,13 @@ func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *commu
 	param := new(asset.QueryPlansParam)
 	err = wrapper.Unwrap(param)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
 	plans, nextPage, err := service.QueryPlans(common.NewPagination(param.PageToken, param.PageSize), param.Filter)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to query compute plans")
+		s.logger.Error().Err(err).Msg("failed to query compute plans")
 		return nil, err
 	}
 	resp := &asset.QueryPlansResponse{
@@ -114,7 +115,7 @@ func (s *SmartContract) QueryPlans(ctx ledger.TransactionContext, wrapper *commu
 	}
 	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -130,19 +131,19 @@ func (s *SmartContract) ApplyPlanAction(ctx ledger.TransactionContext, wrapper *
 	param := new(asset.ApplyPlanActionParam)
 	err = wrapper.Unwrap(param)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return err
 	}
 
 	requester, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		s.logger.WithError(err).Error("failed to extract tx creator")
+		s.logger.Error().Err(err).Msg("failed to extract tx creator")
 		return err
 	}
 
 	err = service.ApplyPlanAction(param.Key, param.Action, requester)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to apply compute plan action")
+		s.logger.Error().Err(err).Msg("failed to apply compute plan action")
 		return err
 	}
 
@@ -166,19 +167,19 @@ func (s *SmartContract) UpdatePlan(ctx ledger.TransactionContext, wrapper *commu
 	params := new(asset.UpdateComputePlanParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return err
 	}
 
 	requester, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		s.logger.WithError(err).Error("failed to extract tx creator")
+		s.logger.Error().Err(err).Msg("failed to extract tx creator")
 		return err
 	}
 
 	err = service.UpdatePlan(params, requester)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to update Compute Plan")
+		s.logger.Error().Err(err).Msg("failed to update Compute Plan")
 		return err
 	}
 

@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-sdk-go/pkg/core/config"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/forwarder/event"
 	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/distributed/chaincode"
@@ -27,7 +27,7 @@ func mustGetEnv(name string) string {
 	n := "FORWARDER_" + name
 	v, ok := os.LookupEnv(n)
 	if !ok {
-		log.WithField("env_var", n).Fatal("Missing environment variable")
+		log.Fatal().Str("env_var", n).Msg("Missing environment variable")
 	}
 	return v
 }
@@ -45,7 +45,7 @@ func main() {
 
 	eventIdx, err := event.NewIndex(indexFile)
 	if err != nil {
-		log.WithError(err).WithField("indexFile", indexFile).Fatal("cannot instanciate event indexer")
+		log.Fatal().Err(err).Str("indexFile", indexFile).Msg("cannot instanciate event indexer")
 	}
 
 	rabbitDSN := mustGetEnv("AMQP_DSN")
@@ -55,7 +55,7 @@ func main() {
 	wallet := chaincode.NewWallet(mustGetEnv("FABRIC_CERT"), mustGetEnv("FABRIC_KEY"))
 
 	config := config.FromFile(networkConfig)
-	log.Info("network config loaded")
+	log.Info().Msg("network config loaded")
 
 	mspID := mustGetEnv("MSPID")
 
@@ -65,7 +65,7 @@ func main() {
 
 	for channel, chaincodes := range conf.Listeners {
 		forwarder := event.NewForwarder(channel, session)
-		log.WithField("channel", channel).Info("instanciated AMQP forwarder")
+		log.Info().Str("channel", channel).Msg("instanciated AMQP forwarder")
 
 		for _, chaincode := range chaincodes {
 			ccData := event.ListenerChaincodeData{
@@ -81,7 +81,7 @@ func main() {
 	}
 
 	wg.Wait()
-	log.Debug("all listeners ready")
+	log.Debug().Msg("all listeners ready")
 
 	http.HandleFunc("/", healthcheck)
 
@@ -91,7 +91,7 @@ func main() {
 
 	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
-		log.WithError(err).Fatal("Could not spawn http server")
+		log.Fatal().Err(err).Msg("Could not spawn http server")
 	}
 }
 
@@ -109,7 +109,7 @@ func listenToChannel(ccData event.ListenerChaincodeData, forwarder *event.Forwar
 
 		if err != nil {
 			waitTime := time.Second * 5
-			log.WithError(err).WithField("waitTime", waitTime).Error("Failed to instanciate listener, retrying")
+			log.Error().Err(err).Dur("waitTime", waitTime).Msg("Failed to instanciate listener, retrying")
 			time.Sleep(waitTime)
 			continue
 		}
@@ -120,11 +120,11 @@ func listenToChannel(ccData event.ListenerChaincodeData, forwarder *event.Forwar
 	wg.Done()
 
 	defer listener.Close()
-	log.WithField("channel", ccData.Channel).WithField("chaincode", ccData.Chaincode).Info("Listening to channel events")
+	log.Info().Str("channel", ccData.Channel).Str("chaincode", ccData.Chaincode).Msg("Listening to channel events")
 
 	err := listener.Listen(context.Background())
 	if err != nil {
-		log.WithError(err).Error("listen has failed")
+		log.Error().Err(err).Msg("listen has failed")
 	}
 }
 
@@ -133,11 +133,11 @@ func getConf(path string) *forwarderConf {
 
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to read config file")
+		log.Fatal().Err(err).Msg("Failed to read config file")
 	}
 	err = yaml.Unmarshal(yamlFile, conf)
 	if err != nil {
-		log.WithError(err).Fatal("Failed to parse config file")
+		log.Fatal().Err(err).Msg("Failed to parse config file")
 	}
 
 	return conf

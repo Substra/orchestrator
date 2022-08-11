@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	libCommon "github.com/substra/orchestrator/lib/common"
 	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
@@ -22,7 +22,7 @@ func NewDataSampleServer() *DataSampleServer {
 
 // RegisterDataSamples will persist new DataSamples
 func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset.RegisterDataSamplesParam) (*asset.RegisterDataSamplesResponse, error) {
-	logger.Get(ctx).WithField("nbSamples", len(input.Samples)).Debug("Register DataSamples")
+	log.Ctx(ctx).Debug().Int("nbSamples", len(input.Samples)).Msg("Register DataSamples")
 
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *DataSampleServer) RegisterDataSamples(ctx context.Context, input *asset
 
 // UpdateDataSamples will update the datamanagers existing DataSamples
 func (s *DataSampleServer) UpdateDataSamples(ctx context.Context, datasample *asset.UpdateDataSamplesParam) (*asset.UpdateDataSamplesResponse, error) {
-	logger.Get(ctx).WithField("datasample", datasample).Debug("Update DataSample")
+	log.Ctx(ctx).Debug().Interface("datasample", datasample).Msg("Update DataSample")
 
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {

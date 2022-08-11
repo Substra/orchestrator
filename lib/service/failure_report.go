@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/persistence"
@@ -34,7 +35,7 @@ func NewFailureReportService(provider FailureReportDependencyProvider) *FailureR
 }
 
 func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.NewFailureReport, requester string) (*asset.FailureReport, error) {
-	s.GetLogger().WithField("failureReport", newFailureReport).WithField("requester", requester).Debug("Registering new failure report")
+	s.GetLogger().Debug().Interface("failureReport", newFailureReport).Str("requester", requester).Msg("Registering new failure report")
 
 	err := newFailureReport.Validate()
 	if err != nil {
@@ -87,6 +88,6 @@ func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.New
 }
 
 func (s *FailureReportService) GetFailureReport(computeTaskKey string) (*asset.FailureReport, error) {
-	s.GetLogger().WithField("computeTaskKey", computeTaskKey).Debug("Get failure report")
+	s.GetLogger().Debug().Str("computeTaskKey", computeTaskKey).Msg("Get failure report")
 	return s.GetFailureReportDBAL().GetFailureReport(computeTaskKey)
 }

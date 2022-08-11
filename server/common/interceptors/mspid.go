@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-playground/log/v7"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/server/common"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -37,7 +36,7 @@ func NewMSPIDInterceptor() (*MSPIDInterceptor, error) {
 			return nil, err
 		}
 
-		log.WithField("orgCACerts", orgCACerts).Debug("MSP ID will be checked")
+		log.Debug().Interface("orgCACerts", orgCACerts).Msg("MSP ID will be checked")
 	}
 
 	return &MSPIDInterceptor{
@@ -105,7 +104,7 @@ func (i *MSPIDInterceptor) extractFromContext(ctx context.Context) (context.Cont
 // one of the Subject Organizations of the provided context's client TLS certificate
 // or if the issuer is not valid for the given organization.
 func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, MSPID string) error {
-	log := logger.Get(ctx).WithField("MSPID", MSPID)
+	logger := log.Ctx(ctx).With().Str("MSPID", MSPID).Logger()
 	peer, ok := peer.FromContext(ctx)
 
 	if !ok || peer == nil || peer.AuthInfo == nil {
@@ -121,7 +120,7 @@ func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, MSPID string) 
 		len(tlsInfo.State.PeerCertificates[0].Subject.Organization) != 0 {
 
 		orgs := tlsInfo.State.PeerCertificates[0].Subject.Organization
-		log.WithField("orgs", orgs).Debug("checking MSPID against cert organizations")
+		logger.Debug().Strs("orgs", orgs).Msg("checking MSPID against cert organizations")
 		for _, org := range orgs {
 			if org == MSPID {
 				orgMatchCert = true
@@ -142,8 +141,10 @@ func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, MSPID string) 
 	validOrgCA := false
 	for _, cert := range tlsInfo.State.PeerCertificates {
 		authKeyID := hex.EncodeToString(cert.AuthorityKeyId)
-		log.WithField("orgCertIDs", certIDs).WithField("clientAuthKeyID", authKeyID).
-			Debug("checking that client cert is signed by legitimate CA for organization")
+		logger.Debug().
+			Strs("orgCertIDs", certIDs).
+			Str("clientAuthKeyID", authKeyID).
+			Msg("checking that client cert is signed by legitimate CA for organization")
 		if utils.SliceContains(certIDs, authKeyID) {
 			validOrgCA = true
 			break

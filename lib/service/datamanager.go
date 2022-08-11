@@ -52,7 +52,7 @@ type DataManagerPermissions struct {
 
 // RegisterDataManager persists a DataManager
 func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner string) (*asset.DataManager, error) {
-	s.GetLogger().WithField("owner", owner).WithField("newDataManager", d).Debug("Registering DataManager")
+	s.GetLogger().Debug().Str("owner", owner).Interface("newDataManager", d).Msg("Registering DataManager")
 	err := d.Validate()
 	if err != nil {
 		return nil, orcerrors.FromValidationError(asset.DataManagerKind, err)
@@ -163,7 +163,7 @@ func (s *DataManagerService) GetCheckedDataManager(key string, dataSampleKeys []
 
 // UpdateDataManager updates mutable fields of a data manager. List of mutable fields : name.
 func (s *DataManagerService) UpdateDataManager(a *asset.UpdateDataManagerParam, requester string) error {
-	s.GetLogger().WithField("requester", requester).WithField("dataManagerUpdate", a).Debug("Updating data manager")
+	s.GetLogger().Debug().Str("requester", requester).Interface("dataManagerUpdate", a).Msg("Updating data manager")
 	err := a.Validate()
 	if err != nil {
 		return orcerrors.FromValidationError(asset.DataManagerKind, err)

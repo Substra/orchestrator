@@ -86,21 +86,21 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 
 // QueryTasks returns tasks matching filter
 func (s *ComputeTaskService) QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error) {
-	s.GetLogger().WithField("pagination", p).WithField("filter", filter).Debug("Querying ComputeTasks")
+	s.GetLogger().Debug().Interface("pagination", p).Interface("filter", filter).Msg("Querying ComputeTasks")
 
 	return s.GetComputeTaskDBAL().QueryComputeTasks(p, filter)
 }
 
 // GetTask return a single task
 func (s *ComputeTaskService) GetTask(key string) (*asset.ComputeTask, error) {
-	s.GetLogger().WithField("key", key).Debug("Get ComputeTask")
+	s.GetLogger().Debug().Str("key", key).Msg("Get ComputeTask")
 
 	return s.GetComputeTaskDBAL().GetComputeTask(key)
 }
 
 // RegisterTasks creates multiple compute tasks
 func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner string) ([]*asset.ComputeTask, error) {
-	s.GetLogger().WithField("numTasks", len(tasks)).WithField("owner", owner).Debug("Registering new compute tasks")
+	s.GetLogger().Debug().Int("numTasks", len(tasks)).Str("owner", owner).Msg("Registering new compute tasks")
 	if len(tasks) == 0 {
 		return nil, orcerrors.NewBadRequest("no task to register")
 	}
@@ -266,10 +266,10 @@ func (s *ComputeTaskService) sortTasks(newTasks []*asset.NewComputeTask, existin
 	}
 
 	if len(unsortedTasks) > 0 {
-		s.GetLogger().
-			WithField("unsortedTasks", len(unsortedTasks)).
-			WithField("existingTasks", len(existingTasks)).
-			Debug("Failed to sort tasks, cyclic dependency in compute plan graph or unknown parent")
+		s.GetLogger().Debug().
+			Int("unsortedTasks", len(unsortedTasks)).
+			Int("existingTasks", len(existingTasks)).
+			Msg("Failed to sort tasks, cyclic dependency in compute plan graph or unknown parent")
 		return nil, orcerrors.NewInvalidAsset(fmt.Sprintf("cyclic dependency in compute plan graph or unknown task parent, unsorted_tasks_count: %d", len(unsortedTasks)))
 	}
 
@@ -391,7 +391,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 // - task is in a terminal state (done, failed, canceled)
 // - all children are in a terminal state
 func (s *ComputeTaskService) canDisableModels(key string, requester string) (bool, error) {
-	logger := s.GetLogger().WithField("taskKey", key)
+	logger := s.GetLogger().With().Str("taskKey", key).Logger()
 	task, err := s.GetTask(key)
 	if err != nil {
 		return false, err
@@ -402,7 +402,7 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 
 	state := newState(&dumbUpdater, task)
 	if len(state.AvailableTransitions()) > 0 {
-		logger.WithField("status", state.Current()).Debug("skip model disable: task not in final state")
+		logger.Debug().Str("status", state.Current()).Msg("skip model disable: task not in final state")
 		return false, nil
 	}
 
@@ -411,7 +411,7 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 		return false, err
 	}
 	if !planAllowIntermediary {
-		logger.WithField("computePlanKey", task.ComputePlanKey).Debug("skip model disable: DeleteIntermediaryModels is false")
+		logger.Debug().Str("computePlanKey", task.ComputePlanKey).Msg("skip model disable: DeleteIntermediaryModels is false")
 		return false, nil
 	}
 
@@ -428,13 +428,13 @@ func (s *ComputeTaskService) canDisableModels(key string, requester string) (boo
 		}
 		state := newState(&dumbUpdater, child)
 		if len(state.AvailableTransitions()) > 0 {
-			logger.WithField("childKey", child.Key).Debug("cannot disable model: task has active children")
+			logger.Debug().Str("childKey", child.Key).Msg("cannot disable model: task has active children")
 			return false, nil
 		}
 	}
 
 	if trainChildren == 0 {
-		logger.Debug("cannot disable model: task has no children")
+		logger.Debug().Msg("cannot disable model: task has no children")
 		return false, nil
 	}
 
@@ -995,7 +995,7 @@ func (s *ComputeTaskService) isCompatibleWithParents(category asset.ComputeTaskC
 		inputs[p.Category]++
 	}
 
-	s.GetLogger().WithField("category", category).WithField("parents", inputs).Debug("checking parent compatibility")
+	s.GetLogger().Debug().Str("category", category.String()).Interface("parents", inputs).Msg("checking parent compatibility")
 
 	noTest := inputs[asset.ComputeTaskCategory_TASK_TEST] == 0
 	noTrain := inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-playground/log/v7"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/utils"
 )
 
@@ -17,7 +17,7 @@ const envPrefix = "ORCHESTRATOR_"
 func MustGetEnv(name string) string {
 	v, ok := GetEnv(name)
 	if !ok {
-		log.WithField("env_var", envPrefix+name).Fatal("Missing environment variable")
+		log.Fatal().Str("env_var", envPrefix+name).Msg("Missing environment variable")
 	}
 	return v
 }
@@ -30,7 +30,7 @@ func MustGetEnvFlag(name string) bool {
 	n := envPrefix + name
 	v, err := utils.GetenvBool(n)
 	if err != nil {
-		log.WithField("env_var", envPrefix+name).WithError(err).Fatal("Failed to determine flag from environment")
+		log.Fatal().Str("env_var", envPrefix+name).Err(err).Msg("Failed to determine flag from environment")
 	}
 	return v
 }
@@ -57,7 +57,7 @@ func GetEnvOrFallback(name string, fallback string) string {
 func MustParseDuration(duration string) time.Duration {
 	res, err := time.ParseDuration(duration)
 	if err != nil {
-		log.WithField("duration", duration).Fatal("Cannot parse duration")
+		log.Fatal().Str("duration", duration).Msg("Cannot parse duration")
 	}
 	return res
 }
@@ -66,7 +66,7 @@ func MustParseDuration(duration string) time.Duration {
 func MustParseInt(s string) int {
 	res, err := strconv.Atoi(s)
 	if err != nil {
-		log.WithField("input", s).Fatal("Cannot parse integer")
+		log.Fatal().Str("input", s).Msg("Cannot parse integer")
 	}
 	return res
 }

@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-playground/log/v7"
+	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/e2e/client"
 	e2erequire "github.com/substra/orchestrator/e2e/require"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/stretchr/testify/require"
 )
 
 // TestRegisterComputePlan registers a compute plan and ensure an event containing the compute plan is recorded.
@@ -187,7 +187,7 @@ func TestMultiStageComputePlan(t *testing.T) {
 
 	lastAggregate := appClient.GetComputeTask("aggC4")
 	if lastAggregate.Rank != 3 {
-		log.WithField("rank", lastAggregate.Rank).Fatal("last aggegation task has not expected rank")
+		log.Fatal().Int32("rank", lastAggregate.Rank).Msg("last aggegation task has not expected rank")
 	}
 
 	// Start step 1
@@ -301,11 +301,11 @@ func TestLargeComputePlan(t *testing.T) {
 			WithParentsRef(client.DefaultTrainTaskRef).
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
-	log.WithField("registrationDuration", time.Since(start)).WithField("nbTasks", nbTasks).Info("registration done")
+	log.Info().Dur("registrationDuration", time.Since(start)).Int("nbTasks", nbTasks).Msg("registration done")
 
 	start = time.Now()
 	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultSimpleAlgoRef)}, "", nbQuery)
-	log.WithField("queryDuration", time.Since(start)).WithField("nbTasks", nbQuery).Info("query done")
+	log.Info().Dur("queryDuration", time.Since(start)).Int("nbTasks", nbQuery).Msg("query done")
 
 	require.Equal(t, nbQuery, len(resp.Tasks), "unexpected task count")
 }
@@ -339,13 +339,13 @@ func TestBatchLargeComputePlan(t *testing.T) {
 				WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 		}
 		appClient.RegisterTasks(newTasks...)
-		log.WithField("batchDuration", time.Since(batchStart)).WithField("nbTasks", i).Info("batch done")
+		log.Info().Dur("batchDuration", time.Since(batchStart)).Int("nbTasks", i).Msg("batch done")
 	}
-	log.WithField("registrationDuration", time.Since(start)).WithField("nbTasks", nbTasks).Info("registration done")
+	log.Info().Dur("registrationDuration", time.Since(start)).Int("nbTasks", nbTasks).Msg("registration done")
 
 	start = time.Now()
 	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultSimpleAlgoRef)}, "", nbQuery)
-	log.WithField("queryDuration", time.Since(start)).WithField("nbTasks", nbQuery).Info("query done")
+	log.Info().Dur("queryDuration", time.Since(start)).Int("nbTasks", nbQuery).Msg("query done")
 
 	require.Equal(t, nbQuery, len(resp.Tasks), "unexpected task count")
 }
@@ -495,7 +495,7 @@ func TestFailLargeComputePlan(t *testing.T) {
 
 		if i%20 == 0 {
 			appClient.RegisterTasks(newTasks...)
-			log.WithField("round", i).WithField("nbTasks", nbTasks).WithField("duration", time.Since(start)).Debug("Round registered")
+			log.Debug().Int("round", i).Int("nbTasks", nbTasks).Dur("duration", time.Since(start)).Msg("Round registered")
 			newTasks = make([]client.Taskable, 0)
 			start = time.Now()
 		}
@@ -503,14 +503,14 @@ func TestFailLargeComputePlan(t *testing.T) {
 
 	if len(newTasks) > 0 {
 		appClient.RegisterTasks(newTasks...)
-		log.WithField("nbTasks", nbTasks).WithField("duration", time.Since(start)).Debug("Round registered")
+		log.Debug().Int("nbTasks", nbTasks).Dur("duration", time.Since(start)).Msg("Round registered")
 	}
 
 	// Fail the composite of rank 0 on pharma1
 	start = time.Now()
 	appClient.StartTask("compP1R0")
 	appClient.FailTask("compP1R0")
-	log.WithField("duration", time.Since(start)).WithField("nbTasks", nbTasks).Info("canceled compute plan")
+	log.Info().Dur("duration", time.Since(start)).Int("nbTasks", nbTasks).Msg("canceled compute plan")
 }
 
 func TestQueryComputePlan(t *testing.T) {

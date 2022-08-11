@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	libCommon "github.com/substra/orchestrator/lib/common"
 	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
@@ -22,7 +22,7 @@ func NewDataManagerServer() *DataManagerServer {
 
 // RegisterDataManager will persist new DataManagers
 func (s *DataManagerServer) RegisterDataManager(ctx context.Context, d *asset.NewDataManager) (*asset.DataManager, error) {
-	logger.Get(ctx).WithField("datamanager", d).Debug("Register DataManager")
+	log.Ctx(ctx).Debug().Interface("datamanager", d).Msg("Register DataManager")
 
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *DataManagerServer) QueryDataManagers(ctx context.Context, params *asset
 
 // UpdateDataManager will update mutable fields of the existing DataManager. List of mutable fields: name.
 func (s *DataManagerServer) UpdateDataManager(ctx context.Context, params *asset.UpdateDataManagerParam) (*asset.UpdateDataManagerResponse, error) {
-	logger.Get(ctx).WithField("datamanager", params).Debug("Update Data Manager")
+	log.Ctx(ctx).Debug().Interface("datamanager", params).Msg("Update Data Manager")
 
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {

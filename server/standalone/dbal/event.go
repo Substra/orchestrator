@@ -8,9 +8,9 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	commonserv "github.com/substra/orchestrator/server/common"
@@ -57,7 +57,7 @@ func (d *DBAL) NewEventID() string {
 
 // AddEvents insert events in storage in batch mode.
 func (d *DBAL) AddEvents(events ...*asset.Event) error {
-	log.WithField("numEvents", len(events)).Debug("dbal: adding multiple events in batch mode")
+	log.Ctx(d.ctx).Debug().Int("numEvents", len(events)).Msg("dbal: adding multiple events in batch mode")
 
 	_, err := d.tx.Exec(d.ctx, "LOCK TABLE events IN SHARE ROW EXCLUSIVE MODE")
 	if err != nil {

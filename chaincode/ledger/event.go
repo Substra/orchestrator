@@ -3,8 +3,8 @@ package ledger
 import (
 	"encoding/json"
 
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
+	"github.com/rs/zerolog"
 	"github.com/substra/orchestrator/lib/event"
 )
 
@@ -17,11 +17,11 @@ const EventName = "chaincode-updates"
 type eventDispatcher struct {
 	queue  event.Queue
 	stub   shim.ChaincodeStubInterface
-	logger log.Entry
+	logger *zerolog.Logger
 }
 
 // newEventDispatcher returns an eventDispatcher instance
-func newEventDispatcher(stub shim.ChaincodeStubInterface, queue event.Queue, logger log.Entry) *eventDispatcher {
+func newEventDispatcher(stub shim.ChaincodeStubInterface, queue event.Queue, logger *zerolog.Logger) *eventDispatcher {
 	return &eventDispatcher{
 		queue:  queue,
 		stub:   stub,
@@ -33,7 +33,7 @@ func newEventDispatcher(stub shim.ChaincodeStubInterface, queue event.Queue, log
 // and assigns it to the transaction.
 func (ed *eventDispatcher) Dispatch() error {
 	if ed.queue.Len() == 0 {
-		ed.logger.Debug("No event to return with transaction")
+		ed.logger.Debug().Msg("No event to return with transaction")
 		return nil
 	}
 
@@ -52,12 +52,12 @@ func (ed *eventDispatcher) Dispatch() error {
 		return err
 	}
 
-	ed.logger.WithField("numBytes", len(payload)).Debug("Setting event to the transaction")
+	ed.logger.Debug().Int("numBytes", len(payload)).Msg("Setting event to the transaction")
 
 	err = ed.stub.SetEvent(EventName, payload)
 
 	if err != nil {
-		ed.logger.WithError(err).Error("Could not set event")
+		ed.logger.Error().Err(err).Msg("Could not set event")
 	}
 
 	return err

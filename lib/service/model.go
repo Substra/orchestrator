@@ -51,13 +51,13 @@ func (s *ModelService) GetComputeTaskOutputModels(key string) ([]*asset.Model, e
 }
 
 func (s *ModelService) GetModel(key string) (*asset.Model, error) {
-	s.GetLogger().WithField("key", key).Debug("Get model")
+	s.GetLogger().Debug().Str("key", key).Msg("Get model")
 	return s.GetModelDBAL().GetModel(key)
 }
 
 // GetCheckedModel returns the model if it exists and it can be processed by the worker
 func (s *ModelService) GetCheckedModel(key string, worker string) (*asset.Model, error) {
-	s.GetLogger().WithField("key", key).Debug("Get model")
+	s.GetLogger().Debug().Str("key", key).Msg("Get model")
 	model, err := s.GetModelDBAL().GetModel(key)
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, er
 }
 
 func (s *ModelService) registerModel(newModel *asset.NewModel, requester string, outputCounter persistence.ComputeTaskOutputCounter, task *asset.ComputeTask) (*asset.Model, error) {
-	s.GetLogger().WithField("model", newModel).WithField("requester", requester).Debug("Registering new model")
+	s.GetLogger().Debug().Interface("model", newModel).Str("requester", requester).Msg("Registering new model")
 
 	err := newModel.Validate()
 	if err != nil {
@@ -253,7 +253,7 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 
 // CanDisableModel returns true if the model can be disabled
 func (s *ModelService) CanDisableModel(key string, requester string) (bool, error) {
-	s.GetLogger().WithField("model", key).Debug("checking whether model can be disabled")
+	s.GetLogger().Debug().Str("modelKey", key).Msg("checking whether model can be disabled")
 	model, err := s.GetModelDBAL().GetModel(key)
 	if err != nil {
 		return false, err
@@ -268,7 +268,7 @@ func (s *ModelService) canDisableModel(model *asset.Model, requester string) (bo
 
 // DisableModel removes model's address and emit an "disabled" event
 func (s *ModelService) DisableModel(key string, requester string) error {
-	s.GetLogger().WithField("modelKey", key).Debug("disabling model")
+	s.GetLogger().Debug().Str("modelKey", key).Msg("disabling model")
 	model, err := s.GetModelDBAL().GetModel(key)
 	if err != nil {
 		return err
@@ -318,13 +318,13 @@ func (s *ModelService) AreAllOutputsRegistered(task *asset.ComputeTask, existing
 	case asset.ComputeTaskCategory_TASK_PREDICT:
 		return count.simple == 1
 	default:
-		s.GetLogger().WithField("taskKey", task.Key).WithField("category", task.Category).Warn("unexpected output model check")
+		s.GetLogger().Warn().Str("taskKey", task.Key).Str("category", task.Category.String()).Msg("unexpected output model check")
 		return false
 	}
 }
 
 func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error) {
-	s.GetLogger().WithField("owner", owner).WithField("nbModels", len(models)).Debug("Registering models")
+	s.GetLogger().Debug().Str("owner", owner).Int("nbModels", len(models)).Msg("Registering models")
 
 	registeredModels := make([]*asset.Model, len(models))
 

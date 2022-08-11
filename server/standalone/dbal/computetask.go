@@ -6,9 +6,9 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
@@ -63,7 +63,7 @@ func (t *sqlComputeTask) toComputeTask() (*asset.ComputeTask, error) {
 
 // AddComputeTasks add one or multiple tasks to storage.
 func (d *DBAL) AddComputeTasks(tasks ...*asset.ComputeTask) error {
-	log.WithField("numTasks", len(tasks)).Debug("dbal: adding tasks in batch mode")
+	log.Ctx(d.ctx).Debug().Int("numTasks", len(tasks)).Msg("dbal: adding tasks in batch mode")
 	err := d.insertTasks(tasks)
 	if err != nil {
 		return err
@@ -473,7 +473,6 @@ func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq
 
 	algos := make([]*asset.Algo, 0, len(tasks))
 	for _, task := range tasks {
-		log.Debug(algos)
 		algos = append(algos, task.Algo)
 	}
 

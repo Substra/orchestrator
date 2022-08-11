@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Prevent duplicate model registration based on task output definition
+- Switched to zerolog logging library
 
 ## [0.22.0] - 2022-08-09
 

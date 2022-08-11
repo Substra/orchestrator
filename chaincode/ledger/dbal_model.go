@@ -3,7 +3,6 @@ package ledger
 import (
 	"encoding/json"
 
-	"github.com/go-playground/log/v7"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	"github.com/substra/orchestrator/lib/errors"
@@ -40,7 +39,7 @@ func (db *DB) GetComputeTaskOutputModels(computeTaskKey string) ([]*asset.Model,
 		return nil, err
 	}
 
-	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetComputeTaskOutputModels")
+	db.logger.Debug().Int("numChildren", len(elementKeys)).Msg("GetComputeTaskOutputModels")
 
 	models := []*asset.Model{}
 	for _, modelKey := range elementKeys {
@@ -76,11 +75,11 @@ func (db *DB) AddModel(model *asset.Model, identifier string) error {
 }
 
 func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
-	logger := db.logger.WithFields(
-		log.F("pagination", p),
-		log.F("model_category", c.String()),
-	)
-	logger.Debug("get models")
+	logger := db.logger.With().
+		Interface("pagination", p).
+		Str("model_category", c.String()).
+		Logger()
+	logger.Debug().Msg("get models")
 
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
@@ -103,7 +102,7 @@ func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset
 
 	queryString := string(b)
 
-	log.WithField("couchQuery", queryString).Debug("mango query")
+	logger.Debug().Str("couchQuery", queryString).Msg("mango query")
 
 	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
 	if err != nil {

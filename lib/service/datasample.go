@@ -48,7 +48,7 @@ func NewDataSampleService(provider DataSampleDependencyProvider) *DataSampleServ
 }
 
 func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, owner string) ([]*asset.DataSample, error) {
-	s.GetLogger().WithField("owner", owner).WithField("nbSamples", len(samples)).Debug("Registering data samples")
+	s.GetLogger().Debug().Str("owner", owner).Int("nbSamples", len(samples)).Msg("Registering data samples")
 
 	registeredSamples := []*asset.DataSample{}
 	events := []*asset.Event{}
@@ -84,7 +84,7 @@ func (s *DataSampleService) RegisterDataSamples(samples []*asset.NewDataSample, 
 
 // createDataSample persist one datasample
 func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner string) (*asset.DataSample, error) {
-	s.GetLogger().WithField("owner", owner).WithField("newDataSample", sample).Debug("Registering data sample")
+	s.GetLogger().Debug().Str("owner", owner).Interface("newDataSample", sample).Msg("Registering data sample")
 	err := sample.Validate()
 	if err != nil {
 		return nil, orcerrors.FromValidationError(asset.DataSampleKind, err)
@@ -116,7 +116,7 @@ func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner 
 
 // UpdateDataSamples update or add one or multiple datasamples
 func (s *DataSampleService) UpdateDataSamples(d *asset.UpdateDataSamplesParam, owner string) error {
-	s.GetLogger().WithField("owner", owner).WithField("dataSampleUpdate", d).Debug("Updating data sample")
+	s.GetLogger().Debug().Str("owner", owner).Interface("dataSampleUpdate", d).Msg("Updating data sample")
 	err := d.Validate()
 	if err != nil {
 		return orcerrors.FromValidationError(asset.DataSampleKind, err)

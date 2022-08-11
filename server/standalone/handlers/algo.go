@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	libCommon "github.com/substra/orchestrator/lib/common"
 	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
@@ -22,7 +22,7 @@ func NewAlgoServer() *AlgoServer {
 
 // RegisterAlgo will persist a new algo
 func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset.Algo, error) {
-	logger.Get(ctx).WithField("algo", a).Debug("Register Algo")
+	log.Ctx(ctx).Debug().Interface("algo", a).Msg("Register Algo")
 
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
@@ -65,7 +65,7 @@ func (s *AlgoServer) QueryAlgos(ctx context.Context, params *asset.QueryAlgosPar
 
 // UpdateAlgo will update mutable fields of the existing Algo. List of mutable fields: name.
 func (s *AlgoServer) UpdateAlgo(ctx context.Context, params *asset.UpdateAlgoParam) (*asset.UpdateAlgoResponse, error) {
-	logger.Get(ctx).WithField("algo", params).Debug("Update Algo")
+	log.Ctx(ctx).Debug().Interface("algo", params).Msg("Update Algo")
 
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {

@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	libCommon "github.com/substra/orchestrator/lib/common"
 	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
@@ -89,7 +89,7 @@ func (s *ComputePlanServer) ApplyPlanAction(ctx context.Context, param *asset.Ap
 
 // UpdatePlan will update mutable fields of the existing ComputePlan. List of mutable fields: name.
 func (s *ComputePlanServer) UpdatePlan(ctx context.Context, params *asset.UpdateComputePlanParam) (*asset.UpdateComputePlanResponse, error) {
-	logger.Get(ctx).WithField("computeplan", params).Debug("Update Compute Plan")
+	log.Ctx(ctx).Debug().Interface("computeplan", params).Msg("Update Compute Plan")
 
 	requester, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {

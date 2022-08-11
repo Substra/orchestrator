@@ -26,7 +26,7 @@ func (db *DB) GetAllOrganizations() ([]*asset.Organization, error) {
 		return nil, err
 	}
 
-	db.logger.WithField("numChildren", len(elementKeys)).Debug("GetAllOrganizations")
+	db.logger.Debug().Int("numChildren", len(elementKeys)).Msg("GetAllOrganizations")
 
 	organizations := []*asset.Organization{}
 	for _, id := range elementKeys {

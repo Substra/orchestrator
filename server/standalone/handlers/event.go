@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
-	"github.com/substra/orchestrator/server/common/logger"
 	"github.com/substra/orchestrator/server/standalone/dbal"
 	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
@@ -55,11 +55,11 @@ func (s *EventServer) SubscribeToEvents(param *asset.SubscribeToEventsParam, str
 		return err
 	}
 
-	logger.Get(ctx).
-		WithField("mspid", mspid).
-		WithField("channel", channel).
-		WithField("startEventId", param.StartEventId).
-		Info("Subscribing to events")
+	log.Ctx(ctx).Info().
+		Str("mspid", mspid).
+		Str("channel", channel).
+		Str("startEventId", param.StartEventId).
+		Msg("Subscribing to events")
 
 	// Use a dedicated database connection per SubscribeToEvents request
 	// to prevent connection starvation in the pool.

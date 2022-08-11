@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/substra/orchestrator/server/common/logger"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
 
@@ -49,24 +49,24 @@ func (ri *RetryInterceptor) UnaryServerInterceptor(ctx context.Context, req inte
 
 		retryCtx = WithLastError(retryCtx, err)
 
-		logger := logger.Get(ctx).WithField("method", info.FullMethod).WithField("attempt_duration", attemptDuration).WithField("attempt", attempt)
+		logger := log.Ctx(ctx).With().Str("method", info.FullMethod).Dur("attempt_duration", attemptDuration).Int("attempt", attempt).Logger()
 
 		if err == nil {
 			return res, nil
 		}
 
 		if !ri.budgetAllowRetry(start) {
-			logger.Error("retry budget exceeded")
+			logger.Error().Msg("retry budget exceeded")
 			return nil, err
 		}
 
 		if ri.shouldRetry(err) {
 			attempt++
-			logger.Info("retrying failed transaction")
+			logger.Info().Msg("retrying failed transaction")
 			continue
 		}
 
-		logger.WithError(err).Debug("should not retry on this error")
+		logger.Debug().Err(err).Msg("should not retry on this error")
 		return nil, err
 	}
 }

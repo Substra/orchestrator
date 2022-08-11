@@ -44,7 +44,7 @@ func NewComputePlanService(provider ComputePlanDependencyProvider) *ComputePlanS
 }
 
 func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner string) (*asset.ComputePlan, error) {
-	s.GetLogger().WithField("plan", input).WithField("owner", owner).Debug("Registering new compute plan")
+	s.GetLogger().Debug().Interface("plan", input).Str("owner", owner).Msg("Registering new compute plan")
 	err := input.Validate()
 	if err != nil {
 		return nil, orcerrors.FromValidationError(asset.ComputePlanKind, err)
@@ -115,7 +115,7 @@ func (s *ComputePlanService) QueryPlans(p *common.Pagination, filter *asset.Plan
 
 // UpdatePlan updates mutable fields of a compute plan. List of mutable fields : name.
 func (s *ComputePlanService) UpdatePlan(a *asset.UpdateComputePlanParam, requester string) error {
-	s.GetLogger().WithField("requester", requester).WithField("computePlanUpdate", a).Debug("Updating compute plan")
+	s.GetLogger().Debug().Str("requester", requester).Interface("computePlanUpdate", a).Msg("Updating compute plan")
 	err := a.Validate()
 	if err != nil {
 		return orcerrors.FromValidationError(asset.ComputePlanKind, err)

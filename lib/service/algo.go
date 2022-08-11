@@ -46,7 +46,7 @@ func NewAlgoService(provider AlgoDependencyProvider) *AlgoService {
 
 // RegisterAlgo persist an algo
 func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo, error) {
-	s.GetLogger().WithField("owner", owner).WithField("newObj", a).Debug("Registering algo")
+	s.GetLogger().Debug().Str("owner", owner).Interface("newAlgo", a).Msg("Registering algo")
 	err := a.Validate()
 	if err != nil {
 		return nil, orcerrors.FromValidationError(asset.AlgoKind, err)
@@ -127,7 +127,7 @@ func (s *AlgoService) AlgoExists(key string) (bool, error) {
 
 // UpdateAlgo updates mutable fields of an algo. List of mutable fields : name.
 func (s *AlgoService) UpdateAlgo(a *asset.UpdateAlgoParam, requester string) error {
-	s.GetLogger().WithField("requester", requester).WithField("algoUpdate", a).Debug("Updating algo")
+	s.GetLogger().Debug().Str("requester", requester).Interface("algoUpdate", a).Msg("Updating algo")
 	err := a.Validate()
 	if err != nil {
 		return orcerrors.FromValidationError(asset.AlgoKind, err)

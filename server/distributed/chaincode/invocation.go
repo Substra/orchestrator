@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/communication"
-	"github.com/substra/orchestrator/server/common/logger"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -33,7 +33,7 @@ func NewContractInvocator(requester Requester, channel, chaincode string) *Contr
 func (i *ContractInvocator) Call(ctx context.Context, method string, param protoreflect.ProtoMessage, output protoreflect.ProtoMessage) error {
 	var err error
 
-	logger := logger.Get(ctx).WithField("method", method).WithField("param", param)
+	logger := log.Ctx(ctx).With().Str("method", method).Interface("param", param).Logger()
 	start := time.Now()
 
 	wrapper, err := communication.Wrap(ctx, param)
@@ -56,14 +56,14 @@ func (i *ContractInvocator) Call(ctx context.Context, method string, param proto
 			}
 			elapsed := time.Since(start)
 
-			logger.WithField("duration", elapsed).Debug("Successfully called chaincode")
+			logger.Debug().Dur("duration", elapsed).Msg("Successfully called chaincode")
 
 			return nil
 		}
 	case err = <-errChan:
 		return err
 	case <-ctx.Done():
-		logger.Info("context done before invocation response")
+		logger.Info().Msg("context done before invocation response")
 		return ctx.Err()
 	}
 

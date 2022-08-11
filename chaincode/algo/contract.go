@@ -1,8 +1,9 @@
 package algo
 
 import (
-	"github.com/go-playground/log/v7"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/communication"
 	"github.com/substra/orchestrator/chaincode/ledger"
 	"github.com/substra/orchestrator/lib/asset"
@@ -13,7 +14,7 @@ import (
 // SmartContract manages algos
 type SmartContract struct {
 	contractapi.Contract
-	logger log.Entry
+	logger zerolog.Logger
 }
 
 // NewSmartContract creates a smart contract to be used in a chaincode
@@ -24,7 +25,7 @@ func NewSmartContract() *SmartContract {
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
 
-	contract.logger = log.WithField("contract", contract.Name)
+	contract.logger = log.With().Str("contract", contract.Name).Logger()
 
 	return contract
 }
@@ -41,24 +42,24 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 	params := new(asset.NewAlgo)
 	err = wrapper.Unwrap(params)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
 	owner, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		s.logger.WithError(err).Error("failed to extract tx creator")
+		s.logger.Error().Err(err).Msg("failed to extract tx creator")
 		return nil, err
 	}
 
 	a, err := service.RegisterAlgo(params, owner)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to register algo")
+		s.logger.Error().Err(err).Msg("failed to register algo")
 		return nil, err
 	}
 	response, err := communication.Wrap(ctx.GetContext(), a)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return response, nil
@@ -75,19 +76,19 @@ func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communic
 	params := new(asset.GetAlgoParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
 	algo, err := service.GetAlgo(params.GetKey())
 	if err != nil {
-		s.logger.WithError(err).Error("failed to query algo")
+		s.logger.Error().Err(err).Msg("failed to query algo")
 		return nil, err
 	}
 
 	wrapped, err := communication.Wrap(ctx.GetContext(), algo)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -104,13 +105,13 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 	params := new(asset.QueryAlgosParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
 	algos, nextPage, err := service.QueryAlgos(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()}, params.Filter)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to query algos")
+		s.logger.Error().Err(err).Msg("failed to query algos")
 		return nil, err
 	}
 
@@ -121,7 +122,7 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 
 	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to wrap response")
+		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
 	}
 	return wrapped, nil
@@ -139,19 +140,19 @@ func (s *SmartContract) UpdateAlgo(ctx ledger.TransactionContext, wrapper *commu
 	params := new(asset.UpdateAlgoParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to unwrap param")
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return err
 	}
 
 	requester, err := ledger.GetTxCreator(ctx.GetStub())
 	if err != nil {
-		s.logger.WithError(err).Error("failed to extract tx creator")
+		s.logger.Error().Err(err).Msg("failed to extract tx creator")
 		return err
 	}
 
 	err = service.UpdateAlgo(params, requester)
 	if err != nil {
-		s.logger.WithError(err).Error("failed to update algo")
+		s.logger.Error().Err(err).Msg("failed to update algo")
 		return err
 	}
 

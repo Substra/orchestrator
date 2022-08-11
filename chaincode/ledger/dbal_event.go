@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
@@ -123,11 +122,11 @@ func (db *DB) AddEvents(events ...*asset.Event) error {
 }
 
 func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error) {
-	logger := db.logger.WithFields(
-		log.F("pagination", p),
-		log.F("filter", filter),
-	)
-	logger.Debug("query events")
+	logger := db.logger.With().
+		Interface("pagination", p).
+		Interface("filter", filter).
+		Logger()
+	logger.Debug().Msg("query events")
 
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
@@ -157,7 +156,7 @@ func (db *DB) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, 
 
 	queryString := string(b)
 
-	log.WithField("couchQuery", queryString).Debug("mango query")
+	logger.Debug().Str("couchQuery", queryString).Msg("mango query")
 
 	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
 	if err != nil {

@@ -1,9 +1,10 @@
 package service
 
 import (
+	"context"
 	"testing"
 
-	"github.com/go-playground/log/v7"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/lib/persistence"
@@ -12,7 +13,8 @@ import (
 func newMockedProvider() *MockDependenciesProvider {
 	provider := new(MockDependenciesProvider)
 	// Unconditionally mock logger
-	provider.On("GetLogger").Maybe().Return(log.Entry{})
+	logger := log.With().Bool("test", true).Logger()
+	provider.On("GetLogger").Maybe().Return(&logger)
 	// And channel
 	provider.On("GetChannel").Maybe().Return("testChannel")
 
@@ -23,7 +25,9 @@ func TestServiceProviderInit(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	queue := new(event.MockQueue)
 	time := new(MockTimeAPI)
-	provider := NewProvider(log.Entry{}, dbal, queue, time, "testChannel")
+	ctx := context.Background()
+	ctx = log.With().Bool("test", true).Logger().WithContext(ctx)
+	provider := NewProvider(ctx, dbal, queue, time, "testChannel")
 
 	assert.Implements(t, (*OrganizationServiceProvider)(nil), provider, "service provider should provide OrganizationService")
 	assert.Implements(t, (*DataSampleServiceProvider)(nil), provider, "service provider should provide DataSampleService")
@@ -39,7 +43,9 @@ func TestLazyInstanciation(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	queue := new(event.MockQueue)
 	time := new(MockTimeAPI)
-	provider := NewProvider(log.Entry{}, dbal, queue, time, "testChannel")
+	ctx := context.Background()
+	ctx = log.With().Bool("test", true).Logger().WithContext(ctx)
+	provider := NewProvider(ctx, dbal, queue, time, "testChannel")
 
 	assert.Nil(t, provider.organization, "service should be instanciated when needed")
 

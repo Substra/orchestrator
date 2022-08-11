@@ -6,9 +6,9 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/go-playground/log/v7"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
+	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
@@ -55,7 +55,7 @@ func (d *DBAL) DataSampleExists(key string) (bool, error) {
 
 // AddDataSamples add one or multiple data samples to storage.
 func (d *DBAL) AddDataSamples(datasamples ...*asset.DataSample) error {
-	log.WithField("numSamples", len(datasamples)).Debug("dbal: adding multiple datasamples in batch mode")
+	log.Ctx(d.ctx).Debug().Int("numSamples", len(datasamples)).Msg("dbal: adding multiple datasamples in batch mode")
 	err := d.insertDataSamples(datasamples)
 	if err != nil {
 		return err
