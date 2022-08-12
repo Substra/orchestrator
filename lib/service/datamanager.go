@@ -16,7 +16,7 @@ type DataManagerAPI interface {
 	GetDataManager(key string) (*asset.DataManager, error)
 	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	CheckOwner(keys []string, requester string) error
-	GetCheckedDataManager(key string, dataSampleKeys []string, owner string) (*asset.DataManager, error)
+	CheckDataManager(datamanager *asset.DataManager, dataSampleKeys []string, owner string) error
 	UpdateDataManager(a *asset.UpdateDataManagerParam, requester string) error
 }
 
@@ -142,23 +142,14 @@ func (s *DataManagerService) isOwner(key string, requester string) (bool, error)
 	return dm.GetOwner() == requester, nil
 }
 
-// GetCheckedDataManager returns the DataManager identified by the given key,
-// it will return an error if the DataManager is not processable by owner or DataSamples don't share the common manager.
-func (s *DataManagerService) GetCheckedDataManager(key string, dataSampleKeys []string, owner string) (*asset.DataManager, error) {
-	datamanager, err := s.GetDataManager(key)
-	if err != nil {
-		return nil, err
-	}
+// CheckDataManager returns an error if the DataManager is not processable by owner or DataSamples don't share the common manager.
+func (s *DataManagerService) CheckDataManager(datamanager *asset.DataManager, dataSampleKeys []string, owner string) error {
 	canProcess := s.GetPermissionService().CanProcess(datamanager.Permissions, owner)
 	if !canProcess {
-		return nil, orcerrors.NewPermissionDenied(fmt.Sprintf("not authorized to process datamanager %q", datamanager.Key))
-	}
-	err = s.GetDataSampleService().CheckSameManager(key, dataSampleKeys)
-	if err != nil {
-		return nil, err
+		return orcerrors.NewPermissionDenied(fmt.Sprintf("not authorized to process datamanager %q", datamanager.Key))
 	}
 
-	return datamanager, err
+	return s.GetDataSampleService().CheckSameManager(datamanager.Key, dataSampleKeys)
 }
 
 // UpdateDataManager updates mutable fields of a data manager. List of mutable fields : name.

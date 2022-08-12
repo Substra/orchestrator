@@ -218,10 +218,8 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
-	ps.On("CanProcess", dataManager.Permissions, "testOwner").Once().Return(true)
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
-	// Checking sample consistency
-	dss.On("CheckSameManager", dataManagerKey, dataSampleKeys).Once().Return(nil)
 	// Cannot train on test data
 	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
 
@@ -401,10 +399,8 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
-	ps.On("CanProcess", dataManager.Permissions, "testOwner").Once().Return(true)
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
-	// Checking sample consistency
-	dss.On("CheckSameManager", dataManagerKey, dataSampleKeys).Once().Return(nil)
 	// Cannot train on test data
 	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
 
@@ -637,15 +633,11 @@ func TestSetPredictData(t *testing.T) {
 	}
 
 	dms := new(MockDataManagerAPI)
-	dss := new(MockDataSampleAPI)
-	ps := new(MockPermissionAPI)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerService").Return(dms)
-	provider.On("GetDataSampleService").Return(dss)
-	provider.On("GetPermissionService").Return(ps)
+
 	dms.On("GetDataManager", "dmUuid").Once().Return(dataManager, nil)
-	ps.On("CanProcess", mock.Anything, "org1").Return(true)
-	dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+	dms.On("CheckDataManager", dataManager, specificInput.DataSampleKeys, task.Owner).Once().Return(nil)
 
 	service := NewComputeTaskService(provider)
 
@@ -653,8 +645,6 @@ func TestSetPredictData(t *testing.T) {
 	assert.NoError(t, err)
 	provider.AssertExpectations(t)
 	dms.AssertExpectations(t)
-	dss.AssertExpectations(t)
-	ps.AssertExpectations(t)
 }
 
 func TestSetCompositeData(t *testing.T) {
@@ -673,16 +663,14 @@ func TestSetCompositeData(t *testing.T) {
 
 	dms := new(MockDataManagerAPI)
 	dss := new(MockDataSampleAPI)
-	ps := new(MockPermissionAPI)
 	provider := newMockedProvider()
-	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetDataSampleService").Return(dss)
-	provider.On("GetPermissionService").Return(ps)
+	provider.On("GetDataManagerService").Return(dms)
 
-	// getCheckedDataManager
-	dms.On("GetDataManager", "dmUuid").Once().Return(&asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}, nil)
-	ps.On("CanProcess", mock.Anything, "org1").Return(true)
-	dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+	// Checking datamanager permissions
+	dataManager := &asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}
+	dms.On("GetDataManager", "dmUuid").Once().Return(dataManager, nil)
+	dms.On("CheckDataManager", dataManager, specificInput.DataSampleKeys, task.Owner).Once().Return(nil)
 
 	dss.On("ContainsTestSample", specificInput.DataSampleKeys).Once().Return(false, nil)
 
@@ -696,7 +684,6 @@ func TestSetCompositeData(t *testing.T) {
 
 	dms.AssertExpectations(t)
 	dss.AssertExpectations(t)
-	ps.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
@@ -769,16 +756,14 @@ func TestSetTestData(t *testing.T) {
 	}
 
 	dms := new(MockDataManagerAPI)
-	dss := new(MockDataSampleAPI)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerService").Return(dms)
-	provider.On("GetDataSampleService").Return(dss)
-	provider.On("GetPermissionService").Return(NewPermissionService(provider))
 	service := NewComputeTaskService(provider)
 
 	// single metric
-	dms.On("GetDataManager", "cdmKey").Once().Return(&asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}, nil)
-	dss.On("CheckSameManager", specificInput.DataManagerKey, specificInput.DataSampleKeys).Once().Return(nil)
+	dataManager := &asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}
+	dms.On("GetDataManager", "cdmKey").Once().Return(dataManager, nil)
+	dms.On("CheckDataManager", dataManager, specificInput.DataSampleKeys, task.Owner).Once().Return(nil)
 
 	err := service.setTestData(specificInput, task, parents)
 	assert.NoError(t, err)
@@ -787,6 +772,7 @@ func TestSetTestData(t *testing.T) {
 	assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
 	assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
 
+	dms.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
@@ -819,9 +805,9 @@ func TestIsAlgoCompatible(t *testing.T) {
 func TestValidateTaskInputs(t *testing.T) {
 
 	type dependenciesErrors struct {
-		getComputeTask        error
-		getCheckedDataManager error
-		getCheckedModel       error
+		getComputeTask   error
+		checkDataManager error
+		getCheckedModel  error
 	}
 
 	owner := "org1"
@@ -1031,7 +1017,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			dependenciesErrors: dependenciesErrors{
-				getCheckedDataManager: errors.New("data manager error, e.g. permission error"),
+				checkDataManager: errors.New("data manager error, e.g. permission error"),
 			},
 			expectedError: "data manager error",
 		},
@@ -1099,11 +1085,9 @@ func TestValidateTaskInputs(t *testing.T) {
 					ms.On("GetCheckedModel", mock.Anything, mock.Anything).Return(nil, c.dependenciesErrors.getCheckedModel)
 				}
 
-				if c.dependenciesErrors.getCheckedDataManager == nil {
-					dms.On("GetCheckedDataManager", mock.Anything, mock.Anything, mock.Anything).Return(&asset.DataManager{}, nil)
-				} else {
-					dms.On("GetCheckedDataManager", mock.Anything, mock.Anything, mock.Anything).Return(nil, c.dependenciesErrors.getCheckedDataManager)
-				}
+				dataManager := &asset.DataManager{}
+				dms.On("GetDataManager", mock.Anything).Once().Return(dataManager, nil)
+				dms.On("CheckDataManager", dataManager, mock.Anything, mock.Anything).Return(c.dependenciesErrors.checkDataManager)
 
 				provider.On("GetDataManagerService").Return(dms)
 				provider.On("GetModelService").Return(ms)

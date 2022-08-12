@@ -69,9 +69,10 @@ type ComputeTaskDependencyProvider interface {
 type ComputeTaskService struct {
 	ComputeTaskDependencyProvider
 	// Keep a local cache of algos, plans and tasks to be used in batch import
-	algoStore map[string]*asset.Algo
-	taskStore map[string]*asset.ComputeTask
-	planStore map[string]*asset.ComputePlan
+	algoStore        map[string]*asset.Algo
+	taskStore        map[string]*asset.ComputeTask
+	planStore        map[string]*asset.ComputePlan
+	dataManagerStore map[string]*asset.DataManager
 }
 
 // NewComputeTaskService creates a new service
@@ -81,6 +82,7 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 		algoStore:                     make(map[string]*asset.Algo),
 		taskStore:                     make(map[string]*asset.ComputeTask),
 		planStore:                     make(map[string]*asset.ComputePlan),
+		dataManagerStore:              make(map[string]*asset.DataManager),
 	}
 }
 
@@ -544,7 +546,8 @@ func (s *ComputeTaskService) validateDataManagerInput(dataManagerInput *asset.Co
 	for _, input := range inputs {
 		algoInput, ok := a[input.Identifier]
 		if !ok {
-			return orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", input.Identifier))
+			return orcerrors.NewInvalidAsset(fmt.Sprintf(
+				"unknown task input: this identifier was not declared in the Algo: %q", input.Identifier))
 		}
 		if algoInput.Kind != asset.AssetKind_ASSET_DATA_SAMPLE {
 			continue
@@ -558,8 +561,11 @@ func (s *ComputeTaskService) validateDataManagerInput(dataManagerInput *asset.Co
 	}
 
 	// Check permissions + check datasamples are compatible with data manager
-	_, err := s.GetDataManagerService().GetCheckedDataManager(dmKey, dsKeys, owner)
-	return err
+	datamanager, err := s.getCachedDataManager(dmKey)
+	if err != nil {
+		return err
+	}
+	return s.GetDataManagerService().CheckDataManager(datamanager, dsKeys, owner)
 }
 
 // validateInputRef validates that the asset referenced by the input exist and is of the correct kind
@@ -659,28 +665,13 @@ func (s *ComputeTaskService) getCachedComputeTask(key string) (*asset.ComputeTas
 	return s.taskStore[key], nil
 }
 
-// getCheckedDataManager returns the DataManager identified by the given key,
-// it will return an error if the DataManager is not processable by owner or DataSamples don't share the common manager.
-func (s *ComputeTaskService) getCheckedDataManager(key string, dataSampleKeys []string, owner string) (*asset.DataManager, error) {
-	datamanager, err := s.GetDataManagerService().GetDataManager(key)
-	if err != nil {
-		return nil, err
-	}
-	canProcess := s.GetPermissionService().CanProcess(datamanager.Permissions, owner)
-	if !canProcess {
-		return nil, orcerrors.NewPermissionDenied(fmt.Sprintf("not authorized to process datamanager %q", datamanager.Key))
-	}
-	err = s.GetDataSampleService().CheckSameManager(key, dataSampleKeys)
-	if err != nil {
-		return nil, err
-	}
-
-	return datamanager, err
-}
-
 // setCompositeData hydrates task specific CompositeTrainTaskData from input
 func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, specificInput *asset.NewCompositeTrainTaskData, task *asset.ComputeTask) error {
-	datamanager, err := s.getCheckedDataManager(specificInput.DataManagerKey, specificInput.DataSampleKeys, task.Owner)
+	datamanager, err := s.getCachedDataManager(specificInput.DataManagerKey)
+	if err != nil {
+		return err
+	}
+	err = s.GetDataManagerService().CheckDataManager(datamanager, specificInput.DataSampleKeys, task.Owner)
 	if err != nil {
 		return err
 	}
@@ -735,7 +726,11 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 
 // setTrainData hydrates task specific TrainTaskData from input
 func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, specificInput *asset.NewTrainTaskData, task *asset.ComputeTask) error {
-	datamanager, err := s.getCheckedDataManager(specificInput.DataManagerKey, specificInput.DataSampleKeys, task.Owner)
+	datamanager, err := s.getCachedDataManager(specificInput.DataManagerKey)
+	if err != nil {
+		return err
+	}
+	err = s.GetDataManagerService().CheckDataManager(datamanager, specificInput.DataSampleKeys, task.Owner)
 	if err != nil {
 		return err
 	}
@@ -763,7 +758,11 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 }
 
 func (s *ComputeTaskService) setPredictData(taskInput *asset.NewComputeTask, specificInput *asset.NewPredictTaskData, task *asset.ComputeTask) error {
-	datamanager, err := s.getCheckedDataManager(specificInput.DataManagerKey, specificInput.DataSampleKeys, task.Owner)
+	datamanager, err := s.getCachedDataManager(specificInput.DataManagerKey)
+	if err != nil {
+		return err
+	}
+	err = s.GetDataManagerService().CheckDataManager(datamanager, specificInput.DataSampleKeys, task.Owner)
 	if err != nil {
 		return err
 	}
@@ -784,7 +783,11 @@ func (s *ComputeTaskService) setPredictData(taskInput *asset.NewComputeTask, spe
 
 // setTestData hydrates task specific TestTaskData from input
 func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
-	datamanager, err := s.getCheckedDataManager(input.DataManagerKey, input.DataSampleKeys, task.Owner)
+	datamanager, err := s.getCachedDataManager(input.DataManagerKey)
+	if err != nil {
+		return err
+	}
+	err = s.GetDataManagerService().CheckDataManager(datamanager, input.DataSampleKeys, task.Owner)
 	if err != nil {
 		return err
 	}
@@ -1059,6 +1062,17 @@ func (s *ComputeTaskService) getCachedCP(key string) (*asset.ComputePlan, error)
 		s.planStore[key] = plan
 	}
 	return s.planStore[key], nil
+}
+
+func (s *ComputeTaskService) getCachedDataManager(key string) (*asset.DataManager, error) {
+	if _, ok := s.dataManagerStore[key]; !ok {
+		dm, err := s.GetDataManagerService().GetDataManager(key)
+		if err != nil {
+			return nil, err
+		}
+		s.dataManagerStore[key] = dm
+	}
+	return s.dataManagerStore[key], nil
 }
 
 // getInputAsset returns an input asset with the appropriate requested asset kind
