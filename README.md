@@ -71,7 +71,7 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 ### Standalone mode
 
 When running in standalone mode, the orchestrator needs a [postgres](https://www.postgresql.org/)
-database to persist its data and a [rabbitmq](https://www.rabbitmq.com/) broker to dispatch events.
+database to persist its data.
 
 To launch the orchestrator:
 

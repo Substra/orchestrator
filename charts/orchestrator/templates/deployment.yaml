@@ -31,9 +31,6 @@ spec:
         image: busybox
         command: ['sh', '-c', 'until nc -vz {{ template "postgresql.serviceName" . }}.{{ .Release.Namespace }} {{ .Values.postgresql.primary.service.ports.postgresql }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       {{- end}}
-      - name: wait-rabbitmq
-        image: busybox
-        command: ['sh', '-c', 'until nc -vz {{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }} {{ if $.Values.rabbitmq.auth.tls.enabled }}{{.Values.rabbitmq.service.ports.amqpTls}}{{ else }}{{.Values.rabbitmq.service.ports.amqp}}{{ end }}; do echo "Waiting for rabbitmq service"; sleep 5; done;']
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -93,17 +90,6 @@ spec:
            - name: METRICS_ENABLED
              value: "true"
            {{- end }}
-           - name: ORCHESTRATOR_AMQP_PASSWORD
-             valueFrom:
-               secretKeyRef:
-                 {{- if not .Values.rabbitmq.auth.existingPasswordSecret }}
-                 name: {{ template "rabbitmq.serviceName" . }}
-                 {{- else }}
-                 name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
-                 {{- end}}
-                 key: rabbitmq-password
-           - name: ORCHESTRATOR_AMQP_DSN
-             value: amqp://{{.Values.rabbitmq.auth.username}}:$(ORCHESTRATOR_AMQP_PASSWORD)@{{ template "rabbitmq.serviceName" . }}.{{ .Release.Namespace }}:{{.Values.rabbitmq.service.ports.amqp}}/
           volumeMounts:
             - name: orchestrator-config
               mountPath: /var/orchestrator/config.yaml

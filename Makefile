@@ -1,7 +1,6 @@
 OUTPUT_DIR = ./bin
 CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
 ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
-FORWARDER_BIN = $(OUTPUT_DIR)/forwarder
 PROJECT_ROOT = .
 MIGRATIONS_DIR = $(PROJECT_ROOT)/server/standalone/migration
 VERSION = dirty-$(shell git rev-parse --short HEAD)
@@ -16,16 +15,13 @@ pbgo = $(protobufs:.proto=.pb.go)
 build_env = CGO_ENABLED=0
 
 .PHONY: all
-all: chaincode orchestrator forwarder  ## Build all binaries
+all: chaincode orchestrator  ## Build all binaries
 
 .PHONY: chaincode
 chaincode: $(CHAINCODE_BIN)  ## Build chaincode binary
 
 .PHONY: orchestrator
 orchestrator: $(ORCHESTRATOR_BIN)  ## Build server binary
-
-.PHONY: forwarder
-forwarder: $(FORWARDER_BIN)  ## Build event-forwarded binary
 
 .PHONY: codegen
 codegen: $(pbgo) $(migrations_binpack)  ## Build codegen tool
@@ -39,9 +35,6 @@ $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 
 $(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 	$(build_env) go build -o $(CHAINCODE_BIN) -ldflags="-X 'github.com/substra/orchestrator/chaincode/info.Version=$(VERSION)'" ./chaincode
-
-$(FORWARDER_BIN): ${go_src} $(OUTPUT_DIR) $(pbgo) $(lib_generated)
-	$(build_env) go build -o $(FORWARDER_BIN) $(PROJECT_ROOT)/forwarder
 
 $(OUTPUT_DIR):
 	mkdir $(OUTPUT_DIR)

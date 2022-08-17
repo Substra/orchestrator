@@ -9,7 +9,6 @@ orchestrator:
       domains:
         - "orchestrator.org-1.com"
         - "orchestrator-org-1-server.org-1.svc.cluster.local"
-        - "orchestrator-org-1-rabbitmq.org-1.svc.cluster.local"
       duration: 2160h
       issuer: substra-issuer
     enabled: true
@@ -31,16 +30,6 @@ orchestrator:
 
 metrics:
   enabled: true
-
-rabbitmq:
-  auth:
-    username: user
-    password: password
-    tls:
-      enabled: true
-      existingSecret: orchestrator-tls-server-pair
-  persistence:
-    enabled: false
 
 fabric:
   organization: MyOrg1
@@ -66,7 +55,3 @@ channels:
     organizations: [ MyOrg1MSP ]
     fabric:
       chaincodes: [ yourcc ]
-
-rabbitmqOperator:
-  credentials:
-    MyOrg1MSP: password1

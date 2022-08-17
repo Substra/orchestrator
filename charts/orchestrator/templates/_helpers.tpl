@@ -35,26 +35,6 @@ app.kubernetes.io/component: "server"
 {{ include "orchestrator.common.labels" . }}
 {{- end -}}
 
-{{- define "orchestrator.eventForwarder.selectorLabels" -}}
-app.kubernetes.io/component: "event-forwarder"
-{{ include "orchestrator.common.selectorLabels" . }}
-{{- end -}}
-
-{{- define "orchestrator.eventForwarder.labels" -}}
-{{ include "orchestrator.eventForwarder.selectorLabels" . }}
-{{ include "orchestrator.common.labels" . }}
-{{- end -}}
-
-{{- define "orchestrator.rabbitmqOperator.selectorLabels" -}}
-app.kubernetes.io/component: "rabbitmq-operator"
-{{ include "orchestrator.common.selectorLabels" . }}
-{{- end -}}
-
-{{- define "orchestrator.rabbitmqOperator.labels" -}}
-{{ include "orchestrator.rabbitmqOperator.selectorLabels" . }}
-{{ include "orchestrator.common.labels" . }}
-{{- end -}}
-
 {{- define "orchestrator.migrations.labels" -}}
 app.kubernetes.io/component: "migrations"
 {{ include "orchestrator.common.labels" . }}
@@ -92,42 +72,6 @@ If release name contains chart name it will be used as a full name.
 {{- printf "%s-server" .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
 {{- printf "%s-%s-server" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{/*
-Create a fully qualified eventForwarder name
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
-*/}}
-{{- define "orchestrator.eventForwarder.fullname" -}}
-{{- if .Values.forwarder.fullnameOverride }}
-{{- .Values.forwarder.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- printf "%s-event-forwarder" .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s-event-forwarder" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{/*
-Create a fully qualified rabbitmqOperator name
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
-*/}}
-{{- define "orchestrator.rabbitmqOperator.fullname" -}}
-{{- if .Values.rabbitmqOperator.fullnameOverride }}
-{{- .Values.rabbitmqOperator.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- printf "%s-rabbitmq-operator" .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s-rabbitmq-operator" .Release.Name $name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -173,23 +117,6 @@ Redefine the postgresql service name because we can't use subchart templates dir
 {{- printf "%s-%s" $fullname "primary" | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
 {{- printf "%s" $fullname | trunc 63 | trimSuffix "-" }}
-{{- end -}}
-{{- end -}}
-
-
-{{/*
-Redefine the rabbitmq service name because we can't use subchart templates directly.
-*/}}
-{{- define "rabbitmq.serviceName" -}}
-{{- if .Values.rabbitmq.fullnameOverride -}}
-{{- .Values.rabbitmq.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default "rabbitmq" .Values.rabbitmq.nameOverride -}}
-{{- if contains $name (printf "%s" .Release.Name) -}}
-{{- printf "%s" .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
 {{- end -}}
 {{- end -}}
 

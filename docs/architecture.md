@@ -61,21 +61,53 @@ Postgresql in standalone mode and LedgerDB when running in distributed mode.
 ## Event dispatch
 
 Consumers may need to react to events.
-To that end, the orchestrator will emit events on an AMQP broker (rabbitmq).
+To that end, the orchestrator will emit events in `SubscribeToEvents` gRPC stream.
 
 When running in distributed mode, there will be a conversion between ledger events from the chaincode
 and events emitted by the orchestrator.
 
-![](./schemas/events.png)
+```mermaid
+graph TD
+    U([User]) -->|gRPC request| O1[Orchestrator]
+    U -->|gRPC request| O2[Orchestrator]
+
+    subgraph Standalone Mode
+    O2
+    end
+
+    subgraph Distributed Mode
+    O1 -->|chaincode invocation| C[Chaincode]
+    C -->|chaincode events| L[Ledger]
+    end
+
+    L --> |send events| S>SubscribeToEvents gRPC stream]
+    O2 --> |send events| S
+```
 
 Following the pattern of the gRPC API, events will have the same structure regardless of the execution mode.
-Consumers should not have to adapt to the distributed ledger and should only interact with the broker.
+Consumers should not have to adapt to the distributed ledger and should only interact with the orchestrator 
+`SubscribeToEvents` gRPC stream.
 
 ### Standalone execution
 
-Events are pushed in a queue during the transaction, and dispatched once the transaction has been successfully processed.
+Events are inserted in the `events` table during the transaction,
+and dispatched in the active `SubscribeToEvents` gRPC streams once the transaction has been successfully processed.
 
-![](./schemas/event-dispatch-standalone.png)
+```mermaid
+sequenceDiagram
+    actor backend1 as Backend 1
+    participant orchestrator as Orchestrator
+    participant database as Database
+    actor backend2 as Backend 2
+
+    backend2->>orchestrator: subscribe to events (gRPC)
+    backend1->>+orchestrator: request (gRPC)
+    orchestrator->>database: insert event
+    database-->>orchestrator: 
+    orchestrator-->>-backend1: response (gRPC)
+    database-->>orchestrator: event notification
+    orchestrator-->>backend2: send event (gRPC)
+```
 
 ### Distributed execution
 
@@ -85,19 +117,35 @@ This address a limitation of fabric: [only one event can be set per transaction]
 
 The workflow is represented below:
 
-![](./schemas/event-dispatch-distributed.png)
+```mermaid
+sequenceDiagram
+    actor backend1 as Backend 1
+    participant orchestrator as Orchestrator
+    participant chaincode as Chaincode
+    participant dispatcher as Dispatcher
+    participant ledger as Ledger
+    actor backend2 as Backend 2
 
-### Rabbitmq routing
+    backend2->>orchestrator: subscribe to events (gRPC)
+    backend1->>+orchestrator: request (gRPC)
 
-In order to both support multiple channels and provide isolation between them,
-we leverage rabbitmq routing capabilities to keep things as simple as possible for producer and consumers.
+    orchestrator->>+chaincode: SmartContract invocation
+    chaincode->>dispatcher: 
+    dispatcher->>dispatcher: store event
+    dispatcher-->>chaincode: 
+    chaincode->>dispatcher: 
+    dispatcher->>dispatcher: store event
+    dispatcher-->>chaincode: 
+    chaincode->>dispatcher: AfterTransaction hook
+    dispatcher-->>chaincode: stub.SetEvent(storedEvent)
+    chaincode->>ledger: 
+    chaincode-->>-orchestrator: 
+    orchestrator-->>-backend1: response (gRPC)
 
-That means there is only one entry point (the *orchestration*  exchange) on which the orchestrator publishes
-and one queue per consumer.
+    ledger-->>orchestrator: event notifications
 
-Consumers only have access to their own queue, which may receives events from multiple channels (according to the configuration).
-
-![](./schemas/rabbit-routing.png)
+    orchestrator->>backend2: send events (gRPC)
+```
 
 ## Concurrent request processing
 

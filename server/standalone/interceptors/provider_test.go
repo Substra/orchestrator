@@ -3,16 +3,12 @@ package interceptors
 import (
 	"context"
 	"errors"
-	"sync"
 	"testing"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/service"
-	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/common/interceptors"
 	"github.com/substra/orchestrator/server/standalone/dbal"
 	"github.com/substra/orchestrator/utils"
@@ -38,10 +34,6 @@ func TestExtractProvider(t *testing.T) {
 func TestInjectProvider(t *testing.T) {
 	ctx := interceptors.WithChannel(context.TODO(), "testChannel")
 
-	publisher := new(common.MockAMQPPublisher)
-	publisher.On("IsReady").Return(true)
-	publisher.On("Publish", mock.Anything, "testChannel", [][]byte{}).Once().Return(nil)
-
 	tx := new(utils.MockTx)
 	tx.On("Conn").Return(nil)
 	tx.On("Commit", utils.AnyContext).Return(nil)
@@ -51,7 +43,7 @@ func TestInjectProvider(t *testing.T) {
 
 	healthcheck := new(MockHealthReporter)
 
-	interceptor := NewProviderInterceptor(db, publisher, healthcheck)
+	interceptor := NewProviderInterceptor(db, healthcheck)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
@@ -65,7 +57,6 @@ func TestInjectProvider(t *testing.T) {
 	_, err := interceptor.UnaryServerInterceptor(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
 
-	publisher.AssertExpectations(t)
 	tx.AssertExpectations(t)
 	pool.AssertExpectations(t)
 	healthcheck.AssertExpectations(t)
@@ -73,9 +64,6 @@ func TestInjectProvider(t *testing.T) {
 
 func TestOnSuccess(t *testing.T) {
 	ctx := interceptors.WithChannel(context.TODO(), "testChannel")
-
-	publisher := new(common.MockAMQPPublisher)
-	publisher.On("IsReady").Return(true)
 
 	tx := new(utils.MockTx)
 	tx.On("Conn").Return(nil)
@@ -86,23 +74,13 @@ func TestOnSuccess(t *testing.T) {
 
 	healthcheck := new(MockHealthReporter)
 
-	wg := new(sync.WaitGroup)
-	wg.Add(1)
-
-	publisher.On("Publish", mock.Anything, "testChannel", mock.Anything).Once().Return(nil).Run(func(args mock.Arguments) {
-		wg.Done()
-	})
-
-	interceptor := NewProviderInterceptor(db, publisher, healthcheck)
+	interceptor := NewProviderInterceptor(db, healthcheck)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
 	}
 	unaryHandler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		provider, err := ExtractProvider(ctx)
-		require.NoError(t, err)
-
-		err = provider.GetEventQueue().Enqueue(&asset.Event{})
+		_, err := ExtractProvider(ctx)
 		require.NoError(t, err)
 
 		return "test", nil
@@ -111,10 +89,6 @@ func TestOnSuccess(t *testing.T) {
 	_, err := interceptor.UnaryServerInterceptor(ctx, "test", unaryInfo, unaryHandler)
 	assert.NoError(t, err)
 
-	// wait for async event dispatch
-	wg.Wait()
-
-	publisher.AssertExpectations(t)
 	tx.AssertExpectations(t)
 	pool.AssertExpectations(t)
 	healthcheck.AssertExpectations(t)
@@ -122,9 +96,6 @@ func TestOnSuccess(t *testing.T) {
 
 func TestOnError(t *testing.T) {
 	ctx := interceptors.WithChannel(context.TODO(), "testChannel")
-
-	publisher := new(common.MockAMQPPublisher)
-	publisher.On("IsReady").Return(true)
 
 	tx := new(utils.MockTx)
 	tx.On("Conn").Return(nil)
@@ -136,18 +107,14 @@ func TestOnError(t *testing.T) {
 
 	healthcheck := new(MockHealthReporter)
 
-	interceptor := NewProviderInterceptor(db, publisher, healthcheck)
+	interceptor := NewProviderInterceptor(db, healthcheck)
 
 	unaryInfo := &grpc.UnaryServerInfo{
 		FullMethod: "TestService.UnaryMethod",
 	}
 	unaryHandler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		provider, err := ExtractProvider(ctx)
+		_, err := ExtractProvider(ctx)
 		require.NoError(t, err)
-
-		err = provider.GetEventQueue().Enqueue(&asset.Event{})
-		require.NoError(t, err)
-
 		return nil, errors.New("test error")
 	}
 
@@ -155,39 +122,7 @@ func TestOnError(t *testing.T) {
 	assert.Nil(t, res)
 	assert.Error(t, err)
 
-	publisher.AssertExpectations(t)
 	tx.AssertExpectations(t)
 	pool.AssertExpectations(t)
-	healthcheck.AssertExpectations(t)
-}
-
-func TestStopServingOnBrokerNotReady(t *testing.T) {
-	ctx := interceptors.WithChannel(context.TODO(), "testChannel")
-
-	publisher := new(common.MockAMQPPublisher)
-	publisher.On("IsReady").Return(false)
-
-	pool := new(dbal.MockPgPool)
-	db := &dbal.Database{Pool: pool}
-
-	healthcheck := new(MockHealthReporter)
-	healthcheck.On("Shutdown")
-
-	interceptor := NewProviderInterceptor(db, publisher, healthcheck)
-
-	unaryInfo := &grpc.UnaryServerInfo{
-		FullMethod: "TestService.UnaryMethod",
-	}
-	unaryHandler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		assert.Fail(t, "handler should not be called")
-		return nil, errors.New("test error")
-	}
-
-	res, err := interceptor.UnaryServerInterceptor(ctx, "test", unaryInfo, unaryHandler)
-	assert.Nil(t, res)
-	assert.Error(t, err)
-
-	pool.AssertExpectations(t)
-	publisher.AssertExpectations(t)
 	healthcheck.AssertExpectations(t)
 }

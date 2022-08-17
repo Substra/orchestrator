@@ -21,7 +21,6 @@ Unless specified, all settings are mandatory.
 | `ORCHESTRATOR_FABRIC_KEY`               | distributed             | string (path)                                                      | path of the key corresponding to fabric's certificate                                                               |
 | `ORCHESTRATOR_FABRIC_GATEWAY_TIMEOUT`   | distributed             | duration ([go format](https://golang.org/pkg/time/#ParseDuration)) | Commit timeout for all transaction submissions for the gateway                                                      |
 | `ORCHESTRATOR_DATABASE_URL`             | standalone              | string                                                             | [postgresql connection string](http://www.postgresql.cn/docs/13/libpq-connect.html#LIBPQ-CONNSTRING)                |
-| `ORCHESTRATOR_AMQP_DSN`                 | standalone              | string                                                             | [rabbitmq connection string](https://www.rabbitmq.com/uri-spec.html)                                                |
 | `ORCHESTRATOR_VERIFY_CLIENT_MSP_ID`     | standalone, distributed | bool: `true`/`false`                                               | whether to check that client certificate matches the MSPID header                                                   |
 | `ORCHESTRATOR_CHANNEL_CONFIG`           | standalone, distributed | string (path)                                                      | where to find the [application configuration](#orchestration-configuration)                                         |
 | `ORCHESTRATOR_REPLAY_EVENTS_BATCH_SIZE` | standalone              | integer                                                            | the size of the batch of events used by the `SubscribeToEvents` method to replay existing events (default to `100`) |
@@ -29,20 +28,6 @@ Unless specified, all settings are mandatory.
 | `NO_COLOR`                              | standalone, distributed | presence (regardless of its value)                                 | disable log color (see [no-color](https://no-color.org/))                                                           |
 | `LOG_SQL_VERBOSE`                       | standalone              | bool: `true`/`false`                                               | log SQL statements with debug verbosity.                                                                            |
 | `METRICS_ENABLED`                       | standalone, distributed | bool: `true`/`false`                                               | whether to enable prometheus metrics.                                                                               |
-
-## Forwarder settings
-
-**Note**: forwarder is only meaningful in distributed mode
-
-| Env Var                      | type   | usage                                                                 |
-|------------------------------|--------|-----------------------------------------------------------------------|
-| `FORWARDER_NETWORK_CONFIG`   | string | path of the hyperledger fabric's network configuration                |
-| `FORWARDER_FABRIC_CERT`      | string | path of the certificate to present to fabric's peer                   |
-| `FORWARDER_FABRIC_KEY`       | string | path of the key corresponding to fabric's certificate                 |
-| `FORWARDER_AMQP_DSN`         | string | [rabbitmq connection string](https://www.rabbitmq.com/uri-spec.html)  |
-| `FORWARDER_CONFIG_PATH`      | string | which channel/chaincode combination to forward events for (see below) |
-| `FORWARDER_MSPID`            | string | MSP ID to use to connect to the channels                              |
-| `FORWARDER_EVENT_INDEX_FILE` | string | path of the event tracker index                                       |
 
 Here is a configuration example:
 ```yaml

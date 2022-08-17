@@ -6,7 +6,7 @@ For more details about the inner workings of the event dispatch, refer to [the a
 
 ## Structure of an event
 
-A client can receive events by listening to its dedicated AMQP queue.
+A client can receive events by listening to the `SubscribeToEvents` gRPC stream.
 All events will come serialized as JSON.
 
 An event will hold the following fields:

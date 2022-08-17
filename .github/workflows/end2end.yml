@@ -20,10 +20,6 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      rabbitmq:
-        image: rabbitmq
-        ports:
-          - 5672:5672
     runs-on: ubuntu-latest
     env:
       ORCHESTRATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
@@ -55,10 +51,9 @@ jobs:
           wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.15.1/migrate.linux-amd64.tar.gz | tar xzf - -C $HOME/.local/bin
       - name: build orchestrator
         run: make orchestrator
-      - name: wait for rabbitmq
-        # We don't explicitly wait for postgres since it will almost certainly come up before rabbit
+      - name: wait for postgres
         run: |
-          while ! $(nc localhost 5672 -z); do
+          while ! $(nc localhost 5432 -z); do
             sleep 2
           done
         timeout-minutes: 1
@@ -86,7 +81,6 @@ jobs:
           NO_COLOR: true
           ORCHESTRATOR_TLS_ENABLED: false
           ORCHESTRATOR_MODE: standalone
-          ORCHESTRATOR_AMQP_DSN: amqp://guest:guest@localhost:5672/
           ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
           ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
           ORCHESTRATOR_TX_RETRY_BUDGET: 500ms

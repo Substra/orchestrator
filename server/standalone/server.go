@@ -18,17 +18,14 @@ import (
 
 type AppServer struct {
 	grpc *grpc.Server
-	amqp *common.Session
 	db   *dbal.Database
 }
 
-func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, healthcheck *health.Server) (*AppServer, error) {
+func GetServer(dbURL string, params common.AppParameters, healthcheck *health.Server) (*AppServer, error) {
 	pgDB, err := dbal.InitDatabase(dbURL)
 	if err != nil {
 		return nil, err
 	}
-
-	session := common.NewSession(rabbitDSN)
 
 	channelInterceptor := commonInterceptors.NewChannelInterceptor(params.Config)
 
@@ -38,7 +35,7 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 	}
 
 	// providerInterceptor will wrap gRPC requests and inject a ServiceProvider in request's context
-	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, session, healthcheck)
+	providerInterceptor := interceptors.NewProviderInterceptor(pgDB, healthcheck)
 
 	retryInterceptor := commonInterceptors.NewRetryInterceptor(params.RetryBudget, shouldRetry)
 
@@ -83,7 +80,6 @@ func GetServer(dbURL string, rabbitDSN string, params common.AppParameters, heal
 
 	return &AppServer{
 		grpc: server,
-		amqp: session,
 		db:   pgDB,
 	}, nil
 }
@@ -95,7 +91,6 @@ func (a *AppServer) GetGrpcServer() *grpc.Server {
 func (a *AppServer) Stop() {
 	a.grpc.Stop()
 	a.db.Close()
-	a.amqp.Close()
 }
 
 // shouldRetry is used as RetryInterceptor's checker function

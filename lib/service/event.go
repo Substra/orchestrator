@@ -37,9 +37,13 @@ func (s *EventService) RegisterEvents(events ...*asset.Event) error {
 	for _, e := range events {
 		e.Id = s.GetEventDBAL().NewEventID()
 		e.Timestamp = timestamppb.New(s.GetTimeService().GetTransactionTime())
-		err := s.GetEventQueue().Enqueue(e)
-		if err != nil {
-			return err
+
+		// TODO: refactor the Provider so that GetEventQueue cannot return nil
+		if q := s.GetEventQueue(); q != nil {
+			err := q.Enqueue(e)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

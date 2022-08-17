@@ -8,10 +8,6 @@ build:
       context: .
       docker:
         dockerfile: docker/orchestrator-server/Dockerfile
-    - image: substrafoundation/orchestrator-rabbitmq-operator
-      context: .
-      docker:
-        dockerfile: docker/orchestrator-rabbitmq-operator/Dockerfile
 deploy:
   helm:
     releases:
@@ -24,19 +20,11 @@ deploy:
         createNamespace: true
         artifactOverrides:
           orchestrator.image: substrafoundation/orchestrator-server
-          rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
         valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
 
 profiles:
 - name: distributed
   patches:
-  - op: add
-    path: "/build/artifacts/-"
-    value:
-      image: substrafoundation/orchestrator-forwarder
-      context: .
-      docker:
-        dockerfile: docker/orchestrator-forwarder/Dockerfile
   - op: replace
     path: /deploy/helm/releases/0/valuesFiles
     value: [ examples/values/orchestrator-org-1-distributed.yaml ]
@@ -44,8 +32,6 @@ profiles:
     path: /deploy/helm/releases/0/artifactOverrides
     value:
       orchestrator.image: substrafoundation/orchestrator-server
-      forwarder.image: substrafoundation/orchestrator-forwarder
-      rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
   - op: add
     path: "/deploy/helm/releases/-"
     value:
@@ -55,8 +41,6 @@ profiles:
       createNamespace: true
       artifactOverrides:
         orchestrator.image: substrafoundation/orchestrator-server
-        forwarder.image: substrafoundation/orchestrator-forwarder
-        rabbitmqOperator.image: substrafoundation/orchestrator-rabbitmq-operator
       imageStrategy:
         helm:
           explicitRegistry: true
@@ -67,11 +51,6 @@ profiles:
     - op: add
       path: /deploy/helm/releases/0/skipBuildDependencies
       value: true
-- name: arm64
-  patches:
-    - op: replace
-      path: /deploy/helm/releases/0/valuesFiles
-      value: [ examples/values/orchestrator-org-1.yaml, examples/values/rabbitmq-arm64.yaml ]
 
 ---
 

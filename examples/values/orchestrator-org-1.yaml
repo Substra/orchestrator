@@ -9,7 +9,6 @@ orchestrator:
       domains:
         - "orchestrator.org-1.com"
         - "orchestrator-org-1-server.org-1.svc.cluster.local"
-        - "orchestrator-org-1-rabbitmq.org-1.svc.cluster.local"
       duration: 2160h
       issuer: substra-issuer
     enabled: true
@@ -38,16 +37,6 @@ postgresql:
     extendedConfiguration: |
       log_min_duration_statement = 0
 
-rabbitmq:
-  auth:
-    username: user
-    password: password
-    tls:
-      enabled: true
-      existingSecret: orchestrator-tls-server-pair
-  persistence:
-    enabled: false
-
 ingress:
   enabled: true
   hostname: "orchestrator.org-1.com"
@@ -59,8 +48,3 @@ channels:
     organizations: [ MyOrg1MSP, MyOrg2MSP ]
   - name: yourchannel
     organizations: [ MyOrg1MSP, MyOrg2MSP ]
-
-rabbitmqOperator:
-  credentials:
-    MyOrg1MSP: password1
-    MyOrg2MSP: password2

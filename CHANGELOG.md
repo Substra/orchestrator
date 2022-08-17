@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- (BREAKING) Remove RabbitMQ
+
 ## [0.23.0] - 2022-08-17
 
 ### Added

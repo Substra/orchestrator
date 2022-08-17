@@ -127,31 +127,6 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `channels` | List of channels and their members (MSPID) | `[]`  |
 
 
-### Forwarder settings
-
-| Name                            | Description                                                                                | Value                                   |
-| ------------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------- |
-| `forwarder.image.registry`      | Event forwarder image registry                                                             | `gcr.io`                                |
-| `forwarder.image.repository`    | Event forwarder image repository                                                           | `connect-314908/orchestrator-forwarder` |
-| `forwarder.image.pullPolicy`    | Event forwarder image pull policy                                                          | `IfNotPresent`                          |
-| `forwarder.image.tag`           | Event forwarder image tag                                                                  | `0.23.0`                                |
-| `forwarder.fullnameOverride`    | String to fully override the `forwarder.server.fullname`                                   | `""`                                    |
-| `forwarder.persistence.enabled` | Whether to enable persistent storage (required to properly keep track of processed events) | `false`                                 |
-| `forwarder.persistence.size`    | Storage class size, there is not need for more, the forwarder only store a small JSON      | `100Mi`                                 |
-
-
-### RabbitMQ operator settings
-
-| Name                                | Description                                                     | Value                                           |
-| ----------------------------------- | --------------------------------------------------------------- | ----------------------------------------------- |
-| `rabbitmqOperator.image.registry`   | RabbitMQ operator image registry                                | `gcr.io`                                        |
-| `rabbitmqOperator.image.repository` | RabbitMQ operator image repository                              | `connect-314908/orchestrator-rabbitmq-operator` |
-| `rabbitmqOperator.image.pullPolicy` | RabbitMQ operator image pull policy                             | `IfNotPresent`                                  |
-| `rabbitmqOperator.image.tag`        | RabbitMQ operator image tag                                     | `0.23.0`                                        |
-| `rabbitmqOperator.fullnameOverride` | String to fully override the `rabbitmqOperator.server.fullname` | `""`                                            |
-| `rabbitmqOperator.credentials`      | Couples of username:password                                    | `{}`                                            |
-
-
 ### migration job settings
 
 | Name                          | Description                                               | Value |
@@ -203,18 +178,6 @@ Note: The `orchestrator.verifyClientMSPID` security option (See "MSPID check" be
 
 Note: If you use nginx-ingress, use the `--enable-ssl-passthrough`.
 
-### Orchestrator RabbitMQ endpoint
-
-Use this sample configuration to enable mutual TLS for the orchestrator RabbitMQ endpoint
-
-
-```yaml
-rabbitmq:
-  auth:
-    tls:
-      enabled: true
-      existingSecret: orchestrator-tls-server-pair  # Needs to have the keys ca.crt, tls.cert and tls.key
-```
 
 ### MSPID check
 

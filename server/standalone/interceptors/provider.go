@@ -7,13 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
-	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/service"
 	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/common/interceptors"
 	"github.com/substra/orchestrator/server/standalone/dbal"
-	"github.com/substra/orchestrator/server/standalone/event"
 	"github.com/substra/orchestrator/server/standalone/metrics"
 
 	"google.golang.org/grpc"
@@ -26,7 +23,6 @@ type HealthReporter interface {
 // ProviderInterceptor intercepts gRPC requests and assign a request-scoped orchestration.Provider
 // to the request context.
 type ProviderInterceptor struct {
-	amqp           common.AMQPPublisher
 	db             *dbal.Database
 	txChecker      common.TransactionChecker
 	statusReporter HealthReporter
@@ -37,9 +33,8 @@ type ctxProviderInterceptorMarker struct{}
 var ctxProviderKey = &ctxProviderInterceptorMarker{}
 
 // NewProviderInterceptor returns an instance of ProviderInterceptor
-func NewProviderInterceptor(db *dbal.Database, amqp common.AMQPPublisher, statusReporter HealthReporter) *ProviderInterceptor {
+func NewProviderInterceptor(db *dbal.Database, statusReporter HealthReporter) *ProviderInterceptor {
 	return &ProviderInterceptor{
-		amqp:           amqp,
 		db:             db,
 		txChecker:      new(common.GrpcMethodChecker),
 		statusReporter: statusReporter,
@@ -60,18 +55,10 @@ func (pi *ProviderInterceptor) UnaryServerInterceptor(ctx context.Context, req i
 		}
 	}
 
-	if !pi.amqp.IsReady() {
-		pi.statusReporter.Shutdown()
-		return nil, orcerrors.NewInternal("Message broker not ready")
-	}
-
 	channel, err := interceptors.ExtractChannel(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	// This dispatcher should stay scoped per request since there is a single event queue
-	dispatcher := event.NewAMQPDispatcher(pi.amqp, channel)
 
 	readOnly := pi.txChecker.IsEvaluateMethod(info.FullMethod)
 
@@ -84,12 +71,13 @@ func (pi *ProviderInterceptor) UnaryServerInterceptor(ctx context.Context, req i
 	// Truncate time to microsecond resolution to match PostgreSQL timestamp resolution.
 	// https://www.postgresql.org/docs/current/datatype-datetime.html
 	ts := service.NewTimeService(time.Now().Truncate(time.Microsecond))
-	provider := service.NewProvider(ctx, transactionalDBAL, dispatcher, ts, channel)
+
+	// TODO: refactor the Provider to not pass a nil queue
+	provider := service.NewProvider(ctx, transactionalDBAL, nil, ts, channel)
 
 	ctx = WithProvider(ctx, provider)
 	res, err := handler(ctx, req)
 
-	// Events should be dispatched only on successful transactions
 	if err != nil {
 		metrics.DBTransactionTotal.WithLabelValues(info.FullMethod, "rollback").Inc()
 		rollbackErr := tx.Rollback(ctx)
@@ -97,22 +85,11 @@ func (pi *ProviderInterceptor) UnaryServerInterceptor(ctx context.Context, req i
 			return nil, fmt.Errorf("failed to rollback transaction: %w", rollbackErr)
 		}
 	} else {
-		if !pi.amqp.IsReady() {
-			return nil, orcerrors.NewInternal("Message broker not ready")
-		}
 		metrics.DBTransactionTotal.WithLabelValues(info.FullMethod, "commit").Inc()
 		commitErr := tx.Commit(ctx)
 		if commitErr != nil {
 			return nil, fmt.Errorf("failed to commit transaction: %w", commitErr)
 		}
-		dispatchErr := dispatcher.Dispatch(ctx)
-		if dispatchErr != nil {
-			pi.statusReporter.Shutdown()
-			log.Ctx(ctx).Error().Err(dispatchErr).
-				Interface("events", dispatcher.GetEvents()).
-				Msg("failed to dispatch events after successful transaction commit")
-		}
-
 	}
 
 	return res, err

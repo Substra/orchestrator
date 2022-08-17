@@ -28,16 +28,6 @@ spec:
 EOF
 ```
 
-## Running the backend on arm64 architecture (apple M1)
-
-Bitnami does not yet provide a rabbitmq docker image for the arm64 processor. We are using the original rabbitmq image from dockerhub directly. Compatible image should be released in the future. (see [github issue](https://github.com/bitnami/charts/issues/7305))
-The following patches are necessary as the bitnami charts used to install the rabbitmq image are not fully compatible.
-
-1. Deploy with `skaffold run -p arm64`
-
-2. After deploying run the patch
-`./examples/tools/patch-rabbitmq-statefulset-arm64.sh`
-
 ## Go Language Server
 
 If you're running into issues with things like "Go to definition" or "Find references", it could be because of [this gopls bug](https://github.com/golang/go/issues/29202). Try adding build flags to your editor config. Example for VSCode:

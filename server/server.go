@@ -1,6 +1,6 @@
 // server binary exposing a gRPC interface to manage distributed learning asset.
 // It can run in either standalone or distributed mode.
-// In standalone mode it handle all the logic while in distributed mode everything is delegated to a chaincode.
+// In standalone mode it handles all the logic while in distributed mode everything is delegated to a chaincode.
 package main
 
 import (
@@ -50,9 +50,8 @@ func getDistributedServer(params common.AppParameters) common.Runnable {
 
 func getStandaloneServer(params common.AppParameters, healthcheck *health.Server) common.Runnable {
 	dbURL := common.MustGetEnv("DATABASE_URL")
-	rabbitDSN := common.MustGetEnv("AMQP_DSN")
 
-	server, err := standalone.GetServer(dbURL, rabbitDSN, params, healthcheck)
+	server, err := standalone.GetServer(dbURL, params, healthcheck)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create standalone server")
 	}

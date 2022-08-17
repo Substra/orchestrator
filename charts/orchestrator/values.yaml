@@ -183,19 +183,6 @@ postgresql:
     ##
     database: orchestrator
 
-
-## @skip rabbitmq
-##
-rabbitmq:
-  enabled: true
-  auth:
-    erlangCookie: rabbitmqErlangCookie
-    tls:
-      enabled: false
-  service:
-    ports:
-      amqp: 5672
-
 ## @section Hyperledger Fabric settings
 ##
 fabric:
@@ -356,56 +343,6 @@ orchestrator:
 ##
 channels: []
 
-## @section Forwarder settings
-forwarder:
-  image:
-    ## @param forwarder.image.registry Event forwarder image registry
-    ##
-    registry: gcr.io
-    ## @param forwarder.image.repository Event forwarder image repository
-    ##
-    repository: connect-314908/orchestrator-forwarder
-    ## @param forwarder.image.pullPolicy Event forwarder image pull policy
-    ##
-    pullPolicy: IfNotPresent
-    ## @param forwarder.image.tag Event forwarder image tag
-    ##
-    tag: 0.23.0
-  ## @param forwarder.fullnameOverride String to fully override the `forwarder.server.fullname`
-  ##
-  fullnameOverride: ""
-  persistence:
-    ## @param forwarder.persistence.enabled Whether to enable persistent storage (required to properly keep track of processed events)
-    ## Without it, the forwarder will ALWAYS process ALL events (from block 0).
-    ##
-    enabled: false
-    ## @param forwarder.persistence.size Storage class size, there is not need for more, the forwarder only store a small JSON
-    ##
-    size: 100Mi
-
-## @section RabbitMQ operator settings
-rabbitmqOperator:
-  image:
-    ## @param rabbitmqOperator.image.registry RabbitMQ operator image registry
-    ##
-    registry: gcr.io
-    ## @param rabbitmqOperator.image.repository RabbitMQ operator image repository
-    ##
-    repository: connect-314908/orchestrator-rabbitmq-operator
-    ## @param rabbitmqOperator.image.pullPolicy RabbitMQ operator image pull policy
-    ##
-    pullPolicy: IfNotPresent
-    ## @param rabbitmqOperator.image.tag RabbitMQ operator image tag
-    ##
-    tag: 0.23.0
-  ## @param rabbitmqOperator.fullnameOverride String to fully override the `rabbitmqOperator.server.fullname`
-  ##
-  fullnameOverride: ""
-  ## @param rabbitmqOperator.credentials Couples of username:password
-  ## e.g:
-  ## MyOrg1MSP: password1
-  ##
-  credentials: {}
 
 ## @section migration job settings
 migrations:
