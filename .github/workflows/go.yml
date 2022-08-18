@@ -9,6 +9,11 @@ on:
 env:
     GO111MODULE: on
 
+concurrency:
+  # Cancel previous workflows on branch push
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build and test

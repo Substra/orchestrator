@@ -1,4 +1,5 @@
 name: golangci-lint
+
 on:
   push:
     tags:
@@ -9,6 +10,11 @@ on:
 
 env:
   GO111MODULE: on
+
+concurrency:
+  # Cancel previous workflows on branch push
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   golangci:

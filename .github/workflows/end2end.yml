@@ -6,6 +6,12 @@ on:
     branches:
       - main
   pull_request:
+
+concurrency:
+  # Cancel previous workflows on branch push
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   e2e:
     services:
