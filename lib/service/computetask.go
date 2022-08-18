@@ -24,6 +24,7 @@ var (
 var inputDefinedStatus = []asset.ComputeTaskStatus{
 	asset.ComputeTaskStatus_STATUS_DOING,
 	asset.ComputeTaskStatus_STATUS_TODO,
+	asset.ComputeTaskStatus_STATUS_FAILED,
 }
 
 type namedAlgoOutputs = map[string]*asset.AlgoOutput
