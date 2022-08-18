@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
-	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -20,7 +19,6 @@ type EventServiceProvider interface {
 
 type EventDependencyProvider interface {
 	persistence.EventDBALProvider
-	event.QueueProvider
 	TimeServiceProvider
 }
 
@@ -37,22 +35,9 @@ func (s *EventService) RegisterEvents(events ...*asset.Event) error {
 	for _, e := range events {
 		e.Id = s.GetEventDBAL().NewEventID()
 		e.Timestamp = timestamppb.New(s.GetTimeService().GetTransactionTime())
-
-		// TODO: refactor the Provider so that GetEventQueue cannot return nil
-		if q := s.GetEventQueue(); q != nil {
-			err := q.Enqueue(e)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
-	err := s.GetEventDBAL().AddEvents(events...)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.GetEventDBAL().AddEvents(events...)
 }
 
 func (s *EventService) QueryEvents(p *common.Pagination, filter *asset.EventQueryFilter, sortOrder asset.SortOrder) ([]*asset.Event, common.PaginationToken, error) {

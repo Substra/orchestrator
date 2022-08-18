@@ -11,7 +11,8 @@ import (
 
 func TestGetDataSampleKeysByManager(t *testing.T) {
 	stub := new(testHelper.MockedStub)
-	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	queue := new(MockEventQueue)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub, queue)
 
 	resp := &testHelper.MockedStateQueryIterator{}
 	resp.On("Close").Return(nil)

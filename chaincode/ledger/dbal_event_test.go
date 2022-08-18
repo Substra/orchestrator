@@ -10,6 +10,7 @@ import (
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
 	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	testHelper "github.com/substra/orchestrator/chaincode/testing"
 	"github.com/substra/orchestrator/lib/asset"
@@ -18,9 +19,28 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func TestAddEvents(t *testing.T) {
+	stub := new(testHelper.MockedStub)
+	queue := new(MockEventQueue)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub, queue)
+
+	event := &asset.Event{Id: "0", Asset: &asset.Event_Algo{Algo: &asset.Algo{}}}
+
+	queue.On("Enqueue", event).Once().Return(nil)
+	var buff []byte
+	stub.On("GetState", "event:0").Once().Return(buff, nil)
+	stub.On("PutState", "event:0", mock.AnythingOfType("[]uint8")).Once().Return(nil)
+
+	err := db.AddEvents(event)
+	assert.NoError(t, err)
+	stub.AssertExpectations(t)
+	queue.AssertExpectations(t)
+}
+
 func TestQueryTaskEvents(t *testing.T) {
 	stub := new(testHelper.MockedStub)
-	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	queue := new(MockEventQueue)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub, queue)
 	stub.On("GetChannelID").Return("eventTestChannel")
 
 	iter := &testHelper.MockedStateQueryIterator{}
@@ -160,7 +180,8 @@ func TestEventAssetFilterBuilder(t *testing.T) {
 
 func TestQueryEventsNilFilter(t *testing.T) {
 	stub := new(testHelper.MockedStub)
-	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	queue := new(MockEventQueue)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub, queue)
 	stub.On("GetChannelID").Return("eventTestChannel")
 
 	iter := &testHelper.MockedStateQueryIterator{}

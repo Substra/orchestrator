@@ -23,7 +23,8 @@ func TestGetFullKey(t *testing.T) {
 // In this test we fake 2 metrics in db, and fetch them in two queries of pageSize 1
 func TestGetPagination(t *testing.T) {
 	stub := new(testHelper.MockedStub)
-	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	queue := new(MockEventQueue)
+	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub, queue)
 
 	resp1 := &testHelper.MockedStateQueryIterator{}
 	resp1.On("Close").Return(nil)
@@ -73,24 +74,25 @@ func TestGetPagination(t *testing.T) {
 func TestValidateQueryContext(t *testing.T) {
 	var db *DB
 	var err error
-	mockStub := new(testHelper.MockedStub)
+	stub := new(testHelper.MockedStub)
+	queue := new(MockEventQueue)
 
 	// no context: error
-	db = NewDB(context.Background(), mockStub)
+	db = NewDB(context.Background(), stub, queue)
 	err = db.validateQueryContext()
 	orcErr := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcErr))
 	assert.Equal(t, orcerrors.ErrInternal, orcErr.Kind)
 
 	// context with isEval=false: error
-	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, false), mockStub)
+	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, false), stub, queue)
 	err = db.validateQueryContext()
 	orcErr = new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcErr))
 	assert.Equal(t, orcerrors.ErrInternal, orcErr.Kind)
 
 	// context with isEval=true: ok
-	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), mockStub)
+	db = NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub, queue)
 	err = db.validateQueryContext()
 	assert.NoError(t, err)
 }
@@ -99,17 +101,18 @@ func TestValidateQueryContext(t *testing.T) {
 func TestCheckQueryContext(t *testing.T) {
 	var db *DB
 	var err error
-	mockStub := new(testHelper.MockedStub)
+	stub := new(testHelper.MockedStub)
+	queue := new(MockEventQueue)
 
 	// getQueryResult
-	db = NewDB(context.Background(), mockStub)
+	db = NewDB(context.Background(), stub, queue)
 	_, err = db.getQueryResult("some query")
 	orcErr := new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcErr))
 	assert.Equal(t, orcerrors.ErrInternal, orcErr.Kind)
 
 	// getQueryResultWithPagination
-	db = NewDB(context.Background(), mockStub)
+	db = NewDB(context.Background(), stub, queue)
 	_, _, err = db.getQueryResultWithPagination("some query", 0, "bookmark")
 	orcErr = new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcErr))
@@ -117,9 +120,10 @@ func TestCheckQueryContext(t *testing.T) {
 }
 
 func TestTransactionState(t *testing.T) {
-	mockStub := new(testHelper.MockedStub)
+	stub := new(testHelper.MockedStub)
+	queue := new(MockEventQueue)
 
-	db := NewDB(context.Background(), mockStub)
+	db := NewDB(context.Background(), stub, queue)
 	fullkey := getFullKey("test", "key")
 	storedAsset := &storedAsset{
 		DocType: "test",

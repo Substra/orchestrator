@@ -5,7 +5,6 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/lib/persistence"
 )
 
@@ -21,7 +20,6 @@ type ChannelProvider interface {
 // DependenciesProvider describes a Provider exposing all orchestration services.
 type DependenciesProvider interface {
 	persistence.DBALProvider
-	event.QueueProvider
 	OrganizationServiceProvider
 	DataSampleServiceProvider
 	AlgoServiceProvider
@@ -48,7 +46,6 @@ type Provider struct {
 	logger        *zerolog.Logger
 	channel       string
 	dbal          persistence.DBAL
-	eventQueue    event.Queue
 	organization  OrganizationAPI
 	permission    PermissionAPI
 	datasample    DataSampleAPI
@@ -78,13 +75,12 @@ func (sc *Provider) GetChannel() string {
 }
 
 // NewProvider return an instance of Provider based on given persistence layer.
-func NewProvider(ctx context.Context, dbal persistence.DBAL, queue event.Queue, time TimeAPI, channel string) *Provider {
+func NewProvider(ctx context.Context, dbal persistence.DBAL, time TimeAPI, channel string) *Provider {
 	return &Provider{
-		logger:     log.Ctx(ctx),
-		dbal:       dbal,
-		eventQueue: queue,
-		time:       time,
-		channel:    channel,
+		logger:  log.Ctx(ctx),
+		dbal:    dbal,
+		time:    time,
+		channel: channel,
 	}
 }
 
@@ -134,11 +130,6 @@ func (sc *Provider) GetEventDBAL() persistence.EventDBAL {
 
 func (sc *Provider) GetFailureReportDBAL() persistence.FailureReportDBAL {
 	return sc.dbal
-}
-
-// GetEventQueue returns an event.Queue instance
-func (sc *Provider) GetEventQueue() event.Queue {
-	return sc.eventQueue
 }
 
 // GetOrganizationService returns a OrganizationAPI instance.

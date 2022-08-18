@@ -17,8 +17,10 @@ import (
 )
 
 func TestQueryComputePlans(t *testing.T) {
+	ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, true)
 	stub := new(testHelper.MockedStub)
-	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	queue := new(MockEventQueue)
+	db := NewDB(ctx, stub, queue)
 
 	// ComputePlan iterator
 	resp := &testHelper.MockedStateQueryIterator{}
@@ -53,8 +55,10 @@ func TestQueryComputePlans(t *testing.T) {
 }
 
 func TestQueryComputePlansNilFilter(t *testing.T) {
+	ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, true)
 	stub := new(testHelper.MockedStub)
-	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	queue := new(MockEventQueue)
+	db := NewDB(ctx, stub, queue)
 
 	// ComputePlan iterator
 	resp := &testHelper.MockedStateQueryIterator{}
@@ -126,8 +130,10 @@ func TestStorableComputeTaskOutputAsset(t *testing.T) {
 }
 
 func TestGetComputeTaskOutputAssets(t *testing.T) {
+	ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, true)
 	stub := new(testHelper.MockedStub)
-	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub)
+	queue := new(MockEventQueue)
+	db := NewDB(ctx, stub, queue)
 
 	storableOutputs := []*storableComputeTaskOutputAsset{
 		{ComputeTaskKey: "uuid", ComputeTaskOutputIdentifier: "model", AssetKind: asset.AssetKind_ASSET_MODEL.String(), AssetKey: "modelUUID"},

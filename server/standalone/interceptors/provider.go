@@ -72,8 +72,7 @@ func (pi *ProviderInterceptor) UnaryServerInterceptor(ctx context.Context, req i
 	// https://www.postgresql.org/docs/current/datatype-datetime.html
 	ts := service.NewTimeService(time.Now().Truncate(time.Microsecond))
 
-	// TODO: refactor the Provider to not pass a nil queue
-	provider := service.NewProvider(ctx, transactionalDBAL, nil, ts, channel)
+	provider := service.NewProvider(ctx, transactionalDBAL, ts, channel)
 
 	ctx = WithProvider(ctx, provider)
 	res, err := handler(ctx, req)

@@ -112,7 +112,12 @@ func (db *DB) addSingleEvent(event *asset.Event) error {
 
 func (db *DB) AddEvents(events ...*asset.Event) error {
 	for _, e := range events {
-		err := db.addSingleEvent(e)
+		err := db.eventQueue.Enqueue(e)
+		if err != nil {
+			return err
+		}
+
+		err = db.addSingleEvent(e)
 		if err != nil {
 			return err
 		}

@@ -13,8 +13,9 @@ import (
 
 func TestAddExistingAlgo(t *testing.T) {
 	stub := new(testHelper.MockedStub)
+	queue := new(MockEventQueue)
 
-	db := NewDB(context.TODO(), stub)
+	db := NewDB(context.TODO(), stub, queue)
 
 	algo := &asset.Algo{Key: "test"}
 

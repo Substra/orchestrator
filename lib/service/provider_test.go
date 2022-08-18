@@ -6,7 +6,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
-	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/lib/persistence"
 )
 
@@ -23,11 +22,10 @@ func newMockedProvider() *MockDependenciesProvider {
 
 func TestServiceProviderInit(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	queue := new(event.MockQueue)
 	time := new(MockTimeAPI)
 	ctx := context.Background()
 	ctx = log.With().Bool("test", true).Logger().WithContext(ctx)
-	provider := NewProvider(ctx, dbal, queue, time, "testChannel")
+	provider := NewProvider(ctx, dbal, time, "testChannel")
 
 	assert.Implements(t, (*OrganizationServiceProvider)(nil), provider, "service provider should provide OrganizationService")
 	assert.Implements(t, (*DataSampleServiceProvider)(nil), provider, "service provider should provide DataSampleService")
@@ -41,11 +39,10 @@ func TestServiceProviderInit(t *testing.T) {
 
 func TestLazyInstanciation(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	queue := new(event.MockQueue)
 	time := new(MockTimeAPI)
 	ctx := context.Background()
 	ctx = log.With().Bool("test", true).Logger().WithContext(ctx)
-	provider := NewProvider(ctx, dbal, queue, time, "testChannel")
+	provider := NewProvider(ctx, dbal, time, "testChannel")
 
 	assert.Nil(t, provider.organization, "service should be instanciated when needed")
 

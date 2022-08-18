@@ -2,26 +2,39 @@ package ledger
 
 import (
 	"encoding/json"
+	"github.com/substra/orchestrator/lib/asset"
 
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/rs/zerolog"
-	"github.com/substra/orchestrator/lib/event"
 )
 
 // EventName is the name used by the orchestration chaincode to register its events on the ledger.
 const EventName = "chaincode-updates"
 
+// EventQueue holds events while the transaction is being processed.
+// Events are eventually dispatched by an EventDispatcher once processing is done.
+type EventQueue interface {
+	Enqueue(event *asset.Event) error
+	GetEvents() []*asset.Event
+	Len() int
+}
+
+// EventDispatcher is responsible for pushing events with the transaction.
+type EventDispatcher interface {
+	Dispatch() error
+}
+
 // eventDispatcher is a struct storing events until their dispatch.
 // Once contract processing is done, emitted events are aggregated into a single chaincode event
 // and pushed with the transaction.
 type eventDispatcher struct {
-	queue  event.Queue
+	queue  EventQueue
 	stub   shim.ChaincodeStubInterface
 	logger *zerolog.Logger
 }
 
 // newEventDispatcher returns an eventDispatcher instance
-func newEventDispatcher(stub shim.ChaincodeStubInterface, queue event.Queue, logger *zerolog.Logger) *eventDispatcher {
+func newEventDispatcher(stub shim.ChaincodeStubInterface, queue EventQueue, logger *zerolog.Logger) *eventDispatcher {
 	return &eventDispatcher{
 		queue:  queue,
 		stub:   stub,

@@ -38,10 +38,11 @@ type DB struct {
 	logger           *zerolog.Logger
 	transactionState map[string]([]byte)
 	transactionMutex sync.RWMutex
+	eventQueue       EventQueue
 }
 
 // NewDB creates a ledger.DB instance based on given stub
-func NewDB(ctx context.Context, stub shim.ChaincodeStubInterface) *DB {
+func NewDB(ctx context.Context, stub shim.ChaincodeStubInterface, queue EventQueue) *DB {
 	logger := log.Ctx(ctx)
 
 	return &DB{
@@ -50,6 +51,7 @@ func NewDB(ctx context.Context, stub shim.ChaincodeStubInterface) *DB {
 		logger:           logger,
 		transactionState: make(map[string]([]byte)),
 		transactionMutex: sync.RWMutex{},
+		eventQueue:       queue,
 	}
 }
 

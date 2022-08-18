@@ -8,7 +8,6 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/chaincode/communication"
-	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/lib/service"
 	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/common/interceptors"
@@ -22,15 +21,15 @@ type TransactionContext interface {
 	SetContext(context.Context)
 	GetContext() context.Context
 	GetProvider() (service.DependenciesProvider, error)
-	GetDispatcher() event.Dispatcher
+	GetDispatcher() EventDispatcher
 }
 
 // Context is a TransactionContext implementation
 type Context struct {
 	context.Context
 	contractapi.TransactionContext
-	queue      event.Queue
-	dispatcher event.Dispatcher
+	queue      EventQueue
+	dispatcher EventDispatcher
 }
 
 // NewContext returns a Context instance
@@ -57,7 +56,7 @@ func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 	stub := c.GetStub()
 
 	ctx := c.GetContext()
-	db := NewDB(ctx, stub)
+	db := NewDB(ctx, stub, c.getQueue())
 
 	txTimestamp, err := stub.GetTxTimestamp()
 	if err != nil {
@@ -66,10 +65,10 @@ func (c *Context) GetProvider() (service.DependenciesProvider, error) {
 
 	ts := service.NewTimeService(txTimestamp.AsTime())
 
-	return service.NewProvider(ctx, db, c.getQueue(), ts, stub.GetChannelID()), nil
+	return service.NewProvider(ctx, db, ts, stub.GetChannelID()), nil
 }
 
-func (c *Context) getQueue() event.Queue {
+func (c *Context) getQueue() EventQueue {
 	if c.queue == nil {
 		c.queue = new(common.MemoryQueue)
 	}
@@ -77,7 +76,7 @@ func (c *Context) getQueue() event.Queue {
 }
 
 // GetDispatcher returns inner event.Dispatcher
-func (c *Context) GetDispatcher() event.Dispatcher {
+func (c *Context) GetDispatcher() EventDispatcher {
 	if c.dispatcher == nil {
 		stub := c.GetStub()
 		c.dispatcher = newEventDispatcher(stub, c.getQueue(), log.Ctx(c.Context))
@@ -87,9 +86,7 @@ func (c *Context) GetDispatcher() event.Dispatcher {
 
 type ctxIsInvokeMarker struct{}
 
-var (
-	ctxIsEvaluateTransaction = &ctxIsInvokeMarker{}
-)
+var ctxIsEvaluateTransaction = &ctxIsInvokeMarker{}
 
 // GetBeforeTransactionHook handles pre-transaction logic:
 // - setting the "IsEvaluateTransaction" boolean field;

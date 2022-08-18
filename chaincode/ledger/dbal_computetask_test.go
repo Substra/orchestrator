@@ -10,7 +10,8 @@ import (
 
 func TestCountComputeTaskRegisteredOutputs(t *testing.T) {
 	stub := new(testHelper.MockedStub)
-	db := NewDB(context.TODO(), stub)
+	queue := new(MockEventQueue)
+	db := NewDB(context.TODO(), stub, queue)
 
 	stub.On("GetState", "computetask_output_asset:test").Return([]byte{}, nil).Once()
 

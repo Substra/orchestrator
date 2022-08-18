@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	testHelper "github.com/substra/orchestrator/chaincode/testing"
-	"github.com/substra/orchestrator/lib/event"
 	"github.com/substra/orchestrator/lib/service"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -30,7 +29,7 @@ func TestAfterTransactionHook(t *testing.T) {
 	ctx := NewContext()
 	ctx.SetContext(context.Background())
 
-	dispatcher := new(event.MockDispatcher)
+	dispatcher := new(MockEventDispatcher)
 	ctx.dispatcher = dispatcher
 
 	dispatcher.On("Dispatch").Once().Return(nil)
