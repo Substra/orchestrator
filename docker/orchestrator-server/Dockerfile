@@ -34,7 +34,6 @@ COPY server ./server
 COPY chaincode ./chaincode
 COPY lib ./lib
 COPY utils ./utils
-COPY forwarder ./forwarder
 
 RUN make ./bin/orchestrator VERSION=$VERSION && mv ./bin/orchestrator /bin/orchestrator
 

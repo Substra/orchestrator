@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/common/providers/core"
-	"github.com/substra/orchestrator/forwarder/event"
 	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/common/interceptors"
 	"github.com/substra/orchestrator/server/distributed/chaincode"
@@ -67,7 +66,7 @@ func (i *ChaincodeDataInterceptor) StreamServerInterceptor(
 		return err
 	}
 
-	ccData := &event.ListenerChaincodeData{
+	ccData := &chaincode.ListenerChaincodeData{
 		Wallet:    i.wallet,
 		Config:    i.config,
 		MSPID:     mspid,
@@ -84,12 +83,12 @@ type ctxChaincodeDataInterceptorMarker struct{}
 
 var ctxChaincodeDataKey = &ctxChaincodeDataInterceptorMarker{}
 
-func WithChaincodeData(ctx context.Context, ccData *event.ListenerChaincodeData) context.Context {
+func WithChaincodeData(ctx context.Context, ccData *chaincode.ListenerChaincodeData) context.Context {
 	return context.WithValue(ctx, ctxChaincodeDataKey, ccData)
 }
 
-func ExtractChaincodeData(ctx context.Context) (*event.ListenerChaincodeData, error) {
-	ccData, ok := ctx.Value(ctxChaincodeDataKey).(*event.ListenerChaincodeData)
+func ExtractChaincodeData(ctx context.Context) (*chaincode.ListenerChaincodeData, error) {
+	ccData, ok := ctx.Value(ctxChaincodeDataKey).(*chaincode.ListenerChaincodeData)
 	if !ok {
 		return nil, errors.New("chaincode data not found in context")
 	}
