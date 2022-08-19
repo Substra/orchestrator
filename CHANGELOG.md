@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Properly register compute task outputs in distributed mode
+
 ### Removed
 
 - (BREAKING) Remove RabbitMQ

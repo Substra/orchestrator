@@ -13,7 +13,7 @@ func TestCountComputeTaskRegisteredOutputs(t *testing.T) {
 	queue := new(MockEventQueue)
 	db := NewDB(context.TODO(), stub, queue)
 
-	stub.On("GetState", "computetask_output_asset:test").Return([]byte{}, nil).Once()
+	stub.On("GetState", "computetask_output_asset:test").Return([]byte{}, nil).Twice()
 
 	counter, err := db.CountComputeTaskRegisteredOutputs("test")
 

@@ -169,6 +169,10 @@ func (db *DB) getState(resource string, key string) ([]byte, error) {
 // hasKey returns true if a resource with the same key already exists
 func (db *DB) hasKey(resource string, key string) (bool, error) {
 	k := getFullKey(resource, key)
+	_, ok := db.getTransactionState(k)
+	if ok {
+		return ok, nil
+	}
 	buff, err := db.ccStub.GetState(k)
 	return buff != nil, err
 }

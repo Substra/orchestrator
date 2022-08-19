@@ -310,34 +310,34 @@ func (s *storableComputeTaskOutputAsset) newComputeTaskOutputAsset() (*asset.Com
 func (db *DB) getTaskOutputAssets(taskKey string) ([]*storableComputeTaskOutputAsset, error) {
 	outputAssets := make([]*storableComputeTaskOutputAsset, 0)
 
-	bytes, err := db.getState(asset.ComputeTaskOutputAssetKind, taskKey)
+	exist, err := db.hasKey(asset.ComputeTaskOutputAssetKind, taskKey)
 	if err != nil {
 		return nil, err
 	}
+	if exist {
+		bytes, err := db.getState(asset.ComputeTaskOutputAssetKind, taskKey)
+		if err != nil {
+			return nil, err
+		}
 
-	err = json.Unmarshal(bytes, &outputAssets)
-	if err != nil {
-		return nil, err
+		err = json.Unmarshal(bytes, &outputAssets)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return outputAssets, nil
 }
 
 func (db *DB) AddComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error {
-	var outputs []*storableComputeTaskOutputAsset
-
-	exist, err := db.hasKey(asset.ComputeTaskOutputAssetKind, output.ComputeTaskKey)
+	outputs, err := db.getTaskOutputAssets(output.ComputeTaskKey)
 	if err != nil {
 		return err
 	}
-	if exist {
-		outputs, err = db.getTaskOutputAssets(output.ComputeTaskKey)
-		if err != nil {
-			return err
-		}
-	} else {
-		outputs = []*storableComputeTaskOutputAsset{}
-	}
+	db.logger.Debug().
+		Interface("output", output).
+		Interface("existingOutputs", outputs).
+		Msg("adding compute task output asset")
 
 	outputs = append(outputs, newStorableTaskOutputAsset(output))
 

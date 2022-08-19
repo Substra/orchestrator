@@ -149,7 +149,7 @@ func TestGetComputeTaskOutputAssets(t *testing.T) {
 	require.NoError(t, err)
 
 	stub.On("GetState", "computetask_output_asset:uuid").
-		Once().
+		Twice(). // First for hasKey, then to get the actual value
 		Return(bytes, nil)
 
 	outputs, err := db.GetComputeTaskOutputAssets("uuid", "model")

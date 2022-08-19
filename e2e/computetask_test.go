@@ -8,11 +8,11 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/e2e/client"
 	e2erequire "github.com/substra/orchestrator/e2e/require"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterComputeTask(t *testing.T) {
@@ -553,8 +553,8 @@ func TestWorkerCancelTaskInFailedComputePlan(t *testing.T) {
 	client2.CancelTask("aggTask")
 }
 
-// TestGetTaskInputAssets creates a train and a predict task and asserts that the predict
-// task has three input assets: datasample, opener and model
+// TestGetTaskInputAssets creates two trains and an aggregate tasks
+// and assert that their inputs are those expected.
 func TestGetTaskInputAssets(t *testing.T) {
 	appClient := factory.NewTestClient()
 	ks := appClient.GetKeyStore()
@@ -609,16 +609,95 @@ func TestGetTaskInputAssets(t *testing.T) {
 	assert.ErrorContains(t, err, "inputs may not be defined")
 
 	appClient.StartTask("train")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_model"))
+	appClient.RegisterModels(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_model"))
 	appClient.DoneTask("train")
 
 	appClient.StartTask("train2")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train2").WithKeyRef("train2_model"))
+	appClient.RegisterModels(client.DefaultModelOptions().WithTaskRef("train2").WithKeyRef("train2_model"))
 	appClient.DoneTask("train2")
 
 	aggInputs := appClient.GetTaskInputAssets("aggregate")
 	assert.Len(t, aggInputs, 2)
 	expectedKeyRef := []string{"train_model", "train2_model"}
+	for i, input := range aggInputs {
+		assert.IsType(t, &asset.ComputeTaskInputAsset_Model{}, input.Asset)
+		model := input.Asset.(*asset.ComputeTaskInputAsset_Model).Model
+		keyRef := expectedKeyRef[i]
+		assert.Equal(t, ks.GetKey(keyRef), model.Key)
+	}
+}
+
+func TestGetTaskInputAssetsFromComposite(t *testing.T) {
+	appClient := factory.NewTestClient()
+	ks := appClient.GetKeyStore()
+
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions().WithKeyRef("comp_algo"))
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+
+	appClient.RegisterTasks(
+		client.DefaultCompositeTaskOptions().WithKeyRef("comp1").WithAlgoRef("comp_algo"),
+		client.DefaultCompositeTaskOptions().WithKeyRef("comp2").WithAlgoRef("comp_algo"),
+	)
+
+	// Check that composite has expected inputs
+	compositeInputs := appClient.GetTaskInputAssets("comp1")
+	assert.Len(t, compositeInputs, 2)
+
+	for _, input := range compositeInputs {
+		if input.Identifier == "opener" {
+			assert.IsType(t, &asset.ComputeTaskInputAsset_DataManager{}, input.Asset)
+			dm := input.Asset.(*asset.ComputeTaskInputAsset_DataManager).DataManager
+			assert.Equal(t, ks.GetKey(client.DefaultDataManagerRef), dm.Key)
+		}
+		if input.Identifier == "datasamples" {
+			assert.IsType(t, &asset.ComputeTaskInputAsset_DataSample{}, input.Asset)
+			ds := input.Asset.(*asset.ComputeTaskInputAsset_DataSample).DataSample
+			assert.Equal(t, ks.GetKey(client.DefaultDataSampleRef), ds.Key)
+		}
+	}
+
+	appClient.RegisterAlgo(
+		client.DefaultAggregateAlgoOptions().
+			SetInputs(map[string]*asset.AlgoInput{
+				"sink": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true},
+			}).
+			WithKeyRef("aggregate_algo"),
+	)
+	appClient.RegisterTasks(
+		client.DefaultAggregateTaskOptions().
+			WithParentsRef("comp1", "comp2"). // This won't be necessary soon
+			WithInput("sink", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}).
+			WithInput("sink", &client.TaskOutputRef{TaskRef: "comp2", Identifier: "shared"}).
+			WithKeyRef("aggregate").
+			WithAlgoRef("aggregate_algo"),
+	)
+
+	// Fetching inputs for a task not in TODO should return an error
+	_, err := appClient.FailableGetTaskInputAssets("aggregate")
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "inputs may not be defined")
+
+	appClient.StartTask("comp1")
+	appClient.RegisterModels(
+		client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("local1").WithTaskOutput("local"),
+		client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("shared1").WithTaskOutput("shared"),
+	)
+	appClient.DoneTask("comp1")
+
+	appClient.StartTask("comp2")
+	// Here we register local after shared: order should not matter
+	appClient.RegisterModels(
+		client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("shared2").WithTaskOutput("shared"),
+		client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("local2").WithTaskOutput("local"),
+	)
+	appClient.DoneTask("comp2")
+
+	aggInputs := appClient.GetTaskInputAssets("aggregate")
+	assert.Len(t, aggInputs, 2)
+	expectedKeyRef := []string{"shared1", "shared2"}
 	for i, input := range aggInputs {
 		assert.IsType(t, &asset.ComputeTaskInputAsset_Model{}, input.Asset)
 		model := input.Asset.(*asset.ComputeTaskInputAsset_Model).Model

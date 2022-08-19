@@ -136,6 +136,10 @@ func TestTransactionState(t *testing.T) {
 	b, err := db.getState("test", "key")
 	assert.Equal(t, b, []byte("{}"))
 	assert.NoError(t, err)
+
+	exist, err := db.hasKey("test", "key")
+	assert.NoError(t, err)
+	assert.True(t, exist)
 }
 
 func TestRichQueryFilter(t *testing.T) {
