@@ -7,6 +7,7 @@ linters:
     - importas
     - rowserrcheck
     - gosec
+    - gocritic
 
 linters-settings:
   importas:

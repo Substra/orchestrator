@@ -103,8 +103,8 @@ func (i *MSPIDInterceptor) extractFromContext(ctx context.Context) (context.Cont
 // VerifyClientMSPID returns an error if the provided MSPID string doesn't match
 // one of the Subject Organizations of the provided context's client TLS certificate
 // or if the issuer is not valid for the given organization.
-func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, MSPID string) error {
-	logger := log.Ctx(ctx).With().Str("MSPID", MSPID).Logger()
+func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, mspid string) error {
+	logger := log.Ctx(ctx).With().Str("MSPID", mspid).Logger()
 	peer, ok := peer.FromContext(ctx)
 
 	if !ok || peer == nil || peer.AuthInfo == nil {
@@ -122,7 +122,7 @@ func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, MSPID string) 
 		orgs := tlsInfo.State.PeerCertificates[0].Subject.Organization
 		logger.Debug().Strs("orgs", orgs).Msg("checking MSPID against cert organizations")
 		for _, org := range orgs {
-			if org == MSPID {
+			if org == mspid {
 				orgMatchCert = true
 				break
 			}
@@ -130,12 +130,12 @@ func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, MSPID string) 
 	}
 
 	if !orgMatchCert {
-		return errors.NewPermissionDenied(fmt.Sprintf("invalid MSPID: cannot find MSPID %q in client TLS certificate Subject Organizations", MSPID))
+		return errors.NewPermissionDenied(fmt.Sprintf("invalid MSPID: cannot find MSPID %q in client TLS certificate Subject Organizations", mspid))
 	}
 
-	certIDs, ok := i.orgCaCertIDs[MSPID]
+	certIDs, ok := i.orgCaCertIDs[mspid]
 	if !ok {
-		return errors.NewPermissionDenied(fmt.Sprintf("invalid MSPID: cannot find MSPID %q in allowed organizations", MSPID))
+		return errors.NewPermissionDenied(fmt.Sprintf("invalid MSPID: cannot find MSPID %q in allowed organizations", mspid))
 	}
 
 	validOrgCA := false
@@ -155,7 +155,7 @@ func (i *MSPIDInterceptor) verifyClientMSPID(ctx context.Context, MSPID string) 
 		return nil
 	}
 
-	return errors.NewPermissionDenied(fmt.Sprintf("invalid MSPID: invalid issuer for MSPID %q", MSPID))
+	return errors.NewPermissionDenied(fmt.Sprintf("invalid MSPID: invalid issuer for MSPID %q", mspid))
 }
 
 type ctxMSPIDMarker struct{}

@@ -47,10 +47,8 @@ func (m *MockConn) WaitForNotification(ctx context.Context) (*pgconn.Notificatio
 	var r0 *pgconn.Notification
 	if rf, ok := ret.Get(0).(func(context.Context) *pgconn.Notification); ok {
 		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*pgconn.Notification)
-		}
+	} else if ret.Get(0) != nil {
+		r0 = ret.Get(0).(*pgconn.Notification)
 	}
 
 	var r1 error

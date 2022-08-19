@@ -134,7 +134,7 @@ func (m *MockedStub) GetQueryResultWithPagination(query string, pageSize int32, 
 	return args.Get(0).(shim.StateQueryIteratorInterface), args.Get(1).(*pb.QueryResponseMetadata), args.Error(2)
 }
 
-//GetHistoryForKey is a mock
+// GetHistoryForKey is a mock
 func (m *MockedStub) GetHistoryForKey(key string) (shim.HistoryQueryIteratorInterface, error) {
 	args := m.Called(key)
 	return args.Get(0).(shim.HistoryQueryIteratorInterface), args.Error(1)

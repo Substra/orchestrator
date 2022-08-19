@@ -75,7 +75,7 @@ func (s *PermissionService) CreatePermissions(owner string, newPerms *asset.NewP
 
 // validateAuthorizedIds checks that given IDs are valid organizations in the network.
 // Returns nil if all IDs are valid, an Error otherwise
-func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
+func (s *PermissionService) validateAuthorizedIDs(ids []string) error {
 	organizations, err := s.GetOrganizationService().GetAllOrganizations()
 	if err != nil {
 		return err
@@ -87,7 +87,7 @@ func (s *PermissionService) validateAuthorizedIDs(IDs []string) error {
 		organizationIDs = append(organizationIDs, n.Id)
 	}
 
-	for _, authorizedID := range IDs {
+	for _, authorizedID := range ids {
 		if !utils.SliceContains(organizationIDs, authorizedID) {
 			return orcerrors.NewBadRequest("invalid permission input values")
 		}

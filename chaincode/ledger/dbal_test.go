@@ -46,7 +46,7 @@ func TestGetPagination(t *testing.T) {
 	b, err := json.Marshal(query)
 	assert.NoError(t, err)
 	queryString := string(b)
-	//Notice how we request pagesize + 1 to check if we reached last page
+	// Notice how we request pagesize + 1 to check if we reached last page
 	stub.On("GetQueryResultWithPagination", queryString, int32(1), "").Return(resp1, meta1, nil)
 
 	_, firstBmark, err := db.getQueryResultWithPagination(queryString, int32(1), "")

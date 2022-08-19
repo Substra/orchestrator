@@ -57,7 +57,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 		chaincodeDataInterceptor.StreamServerInterceptor,
 	)
 
-	serverOptions := append(params.GrpcOptions, unaryInterceptor, streamInterceptor)
+	serverOptions := append(params.GrpcOptions, unaryInterceptor, streamInterceptor) //nolint:gocritic
 
 	server := grpc.NewServer(serverOptions...)
 

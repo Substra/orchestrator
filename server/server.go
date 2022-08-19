@@ -178,6 +178,6 @@ func main() {
 
 	err = g.Wait()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Server returned an error")
+		log.Error().Err(err).Msg("Server returned an error")
 	}
 }

@@ -60,7 +60,7 @@ func GetServer(dbURL string, params common.AppParameters, healthcheck *health.Se
 		channelInterceptor.StreamServerInterceptor,
 		dbConnInterceptor.StreamServerInterceptor,
 	)
-	serverOptions := append(params.GrpcOptions, unaryInterceptor, streamInterceptor)
+	serverOptions := append(params.GrpcOptions, unaryInterceptor, streamInterceptor) //nolint:gocritic
 
 	server := grpc.NewServer(serverOptions...)
 
