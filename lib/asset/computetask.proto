@@ -240,10 +240,18 @@ message GetTaskInputAssetsResponse {
   repeated ComputeTaskInputAsset assets = 1;
 }
 
+message DisableOutputParam {
+  string compute_task_key = 1;
+  string identifier = 2;
+}
+
+message DisableOutputResponse {}
+
 service ComputeTaskService {
   rpc RegisterTasks(RegisterTasksParam) returns (RegisterTasksResponse);
   rpc QueryTasks(QueryTasksParam) returns (QueryTasksResponse);
   rpc GetTask(GetTaskParam) returns (ComputeTask);
   rpc ApplyTaskAction(ApplyTaskActionParam) returns (ApplyTaskActionResponse);
   rpc GetTaskInputAssets(GetTaskInputAssetsParam) returns (GetTaskInputAssetsResponse);
+  rpc DisableOutput(DisableOutputParam) returns (DisableOutputResponse);
 }

@@ -22,6 +22,7 @@ type ModelAPI interface {
 	QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error)
 	RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error)
 	GetCheckedModel(key string, worker string) (*asset.Model, error)
+	disable(assetKey string) error
 }
 
 type ModelServiceProvider interface {
@@ -301,6 +302,29 @@ func (s *ModelService) DisableModel(key string, requester string) error {
 	}
 
 	return nil
+}
+
+func (s *ModelService) disable(assetKey string) error {
+	s.GetLogger().Debug().Str("modelKey", assetKey).Msg("disabling model")
+	model, err := s.GetModelDBAL().GetModel(assetKey)
+	if err != nil {
+		return err
+	}
+
+	model.Address = nil
+
+	err = s.GetModelDBAL().UpdateModel(model)
+	if err != nil {
+		return err
+	}
+
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_DISABLED,
+		AssetKey:  model.Key,
+		AssetKind: asset.AssetKind_ASSET_MODEL,
+		Asset:     &asset.Event_Model{Model: model},
+	}
+	return s.GetEventService().RegisterEvents(event)
 }
 
 // AreAllOutputsRegistered is based on the cardinality of existingModels to return whether all

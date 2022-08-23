@@ -9,9 +9,9 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/substra/orchestrator/lib/asset"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/substra/orchestrator/lib/asset"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -426,6 +426,15 @@ func (c *TestClient) DisableModel(modelRef string) {
 	_, err := c.modelService.DisableModel(c.ctx, &asset.DisableModelParam{ModelKey: modelKey})
 	if err != nil {
 		c.logger.Fatal().Err(err).Msg("DisableModel failed")
+	}
+}
+
+func (c *TestClient) DisableOutput(taskRef string, identifier string) {
+	taskKey := c.ks.GetKey(taskRef)
+	c.logger.Debug().Str("taskKey", taskKey).Str("identifier", identifier).Msg("disabling output")
+	_, err := c.computeTaskService.DisableOutput(c.ctx, &asset.DisableOutputParam{ComputeTaskKey: taskKey, Identifier: identifier})
+	if err != nil {
+		c.logger.Fatal().Err(err).Msg("DisableOutput failed")
 	}
 }
 

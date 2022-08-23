@@ -63,6 +63,9 @@ var (
 
 	// ErrIncompatibleKind occurs when attempting to register an asset for a task output of a different kind
 	ErrIncompatibleKind = "OE0107"
+
+	// ErrCannotDisableOutput occurs when attempting to disable an output that is not eligible
+	ErrCannotDisableOutput = "OE0108"
 )
 
 // OrcError represents an orchestration error.
@@ -153,6 +156,11 @@ func NewPermissionDenied(msg string) *OrcError {
 // NewCannotDisableModel returns an ErrCannotDisableModel kind of OrcError with given message
 func NewCannotDisableModel(msg string) *OrcError {
 	return newErrorWithSource(ErrCannotDisableModel, msg)
+}
+
+// NewCannotDisableAsset returns an ErrCannotDisableModel kind of OrcError with given message
+func NewCannotDisableAsset(msg string) *OrcError {
+	return newErrorWithSource(ErrCannotDisableOutput, msg)
 }
 
 // NewInternal returns an ErrInternalError kind of OrcError with given message

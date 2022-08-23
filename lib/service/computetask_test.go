@@ -1643,6 +1643,244 @@ func TestGetRank(t *testing.T) {
 	assert.Equal(t, int32(0), getRank(noParents))
 }
 
+func TestDisableOutputs(t *testing.T) {
+	t.Run("not worker", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "notmyorg",
+		}
+
+		dbal := new(persistence.MockDBAL)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+
+		service := NewComputeTaskService(provider)
+		err := service.DisableOutput("uuid", "output1", "myorg")
+		assert.Error(t, err)
+		orcError := new(orcerrors.OrcError)
+		assert.True(t, errors.As(err, &orcError))
+		assert.Equal(t, orcerrors.ErrPermissionDenied, orcError.Kind)
+
+		dbal.AssertExpectations(t)
+	})
+	t.Run("task not in terminal state", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Worker: "myorg",
+		}
+
+		dbal := new(persistence.MockDBAL)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+
+		service := NewComputeTaskService(provider)
+		err := service.DisableOutput("uuid", "output1", "myorg")
+		assert.Error(t, err)
+		orcError := new(orcerrors.OrcError)
+		assert.True(t, errors.As(err, &orcError))
+		assert.Equal(t, orcerrors.ErrCannotDisableOutput, orcError.Kind)
+		assert.Contains(t, orcError.Error(), "task not in final state")
+
+		dbal.AssertExpectations(t)
+	})
+	t.Run("identifier does not exist", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "myorg",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"output1": {
+					Transient: false,
+				},
+			},
+		}
+
+		dbal := new(persistence.MockDBAL)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+
+		service := NewComputeTaskService(provider)
+		err := service.DisableOutput("uuid", "nonexistent", "myorg")
+		assert.Error(t, err)
+		orcError := new(orcerrors.OrcError)
+		assert.True(t, errors.As(err, &orcError))
+		assert.Equal(t, orcerrors.ErrCannotDisableOutput, orcError.Kind)
+		assert.Contains(t, orcError.Error(), "there is no output identifier ")
+
+		dbal.AssertExpectations(t)
+	})
+	t.Run("output is not transient", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "myorg",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"output1": {
+					Transient: false,
+				},
+			},
+		}
+
+		dbal := new(persistence.MockDBAL)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+
+		service := NewComputeTaskService(provider)
+		err := service.DisableOutput("uuid", "output1", "myorg")
+		assert.Error(t, err)
+		orcError := new(orcerrors.OrcError)
+		assert.True(t, errors.As(err, &orcError))
+		assert.Equal(t, orcerrors.ErrCannotDisableOutput, orcError.Kind)
+		assert.Contains(t, orcError.Error(), "output is not transient")
+
+		dbal.AssertExpectations(t)
+	})
+	t.Run("output kind cannot be deleted", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "myorg",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"output1": {
+					Transient: true,
+				},
+			},
+		}
+
+		outputAsset := &asset.ComputeTaskOutputAsset{AssetKind: asset.AssetKind_ASSET_PERFORMANCE}
+
+		dbal := new(persistence.MockDBAL)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+		dbal.On("GetComputeTaskOutputAssets", "uuid", "output1").Return([]*asset.ComputeTaskOutputAsset{outputAsset}, nil)
+
+		service := NewComputeTaskService(provider)
+		err := service.DisableOutput("uuid", "output1", "myorg")
+		assert.Error(t, err)
+		orcError := new(orcerrors.OrcError)
+		assert.True(t, errors.As(err, &orcError))
+		assert.Equal(t, orcerrors.ErrCannotDisableOutput, orcError.Kind)
+		assert.Contains(t, orcError.Error(), "cannot disable output of kind")
+
+		dbal.AssertExpectations(t)
+	})
+	t.Run("children not in final state", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "myorg",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"output1": {
+					Transient: true,
+				},
+			},
+		}
+
+		child := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DOING,
+		}
+
+		outputAsset := &asset.ComputeTaskOutputAsset{AssetKind: asset.AssetKind_ASSET_MODEL}
+
+		dbal := new(persistence.MockDBAL)
+		modelService := new(MockModelAPI)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+		provider.On("GetModelService").Return(modelService)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+		dbal.On("GetComputeTaskOutputAssets", "uuid", "output1").Return([]*asset.ComputeTaskOutputAsset{outputAsset}, nil)
+		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{child}, nil)
+
+		service := NewComputeTaskService(provider)
+		err := service.DisableOutput("uuid", "output1", "myorg")
+		assert.Error(t, err)
+		orcError := new(orcerrors.OrcError)
+		assert.True(t, errors.As(err, &orcError))
+		assert.Equal(t, orcerrors.ErrCannotDisableOutput, orcError.Kind)
+		assert.Contains(t, orcError.Error(), "child not in final state")
+
+		dbal.AssertExpectations(t)
+		modelService.AssertExpectations(t)
+	})
+	t.Run("no children", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "myorg",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"output1": {
+					Transient: true,
+				},
+			},
+		}
+
+		outputAsset := &asset.ComputeTaskOutputAsset{AssetKind: asset.AssetKind_ASSET_MODEL}
+
+		dbal := new(persistence.MockDBAL)
+		modelService := new(MockModelAPI)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+		provider.On("GetModelService").Return(modelService)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+		dbal.On("GetComputeTaskOutputAssets", "uuid", "output1").Return([]*asset.ComputeTaskOutputAsset{outputAsset}, nil)
+		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{}, nil)
+
+		service := NewComputeTaskService(provider)
+		err := service.DisableOutput("uuid", "output1", "myorg")
+		assert.Error(t, err)
+		orcError := new(orcerrors.OrcError)
+		assert.True(t, errors.As(err, &orcError))
+		assert.Equal(t, orcerrors.ErrCannotDisableOutput, orcError.Kind)
+		assert.Contains(t, orcError.Error(), "a task with no children")
+
+		dbal.AssertExpectations(t)
+		modelService.AssertExpectations(t)
+	})
+	t.Run("success", func(t *testing.T) {
+		task := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+			Worker: "myorg",
+			Outputs: map[string]*asset.ComputeTaskOutput{
+				"output1": {
+					Transient: true,
+				},
+			},
+		}
+
+		child := &asset.ComputeTask{
+			Status: asset.ComputeTaskStatus_STATUS_DONE,
+		}
+
+		outputAsset := &asset.ComputeTaskOutputAsset{AssetKind: asset.AssetKind_ASSET_MODEL, AssetKey: "modelKey"}
+
+		dbal := new(persistence.MockDBAL)
+		modelService := new(MockModelAPI)
+		provider := newMockedProvider()
+		provider.On("GetComputeTaskDBAL").Return(dbal)
+		provider.On("GetModelService").Return(modelService)
+
+		dbal.On("GetComputeTask", "uuid").Return(task, nil)
+		dbal.On("GetComputeTaskOutputAssets", "uuid", "output1").Return([]*asset.ComputeTaskOutputAsset{outputAsset}, nil)
+		dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{child}, nil)
+
+		modelService.On("disable", "modelKey").Return(nil)
+
+		service := NewComputeTaskService(provider)
+		err := service.DisableOutput("uuid", "output1", "myorg")
+		assert.NoError(t, err)
+
+		dbal.AssertExpectations(t)
+		modelService.AssertExpectations(t)
+	})
+}
+
 func TestCanDisableModels(t *testing.T) {
 	t.Run("not worker", func(t *testing.T) {
 		task := &asset.ComputeTask{

@@ -96,3 +96,21 @@ func (s *ComputeTaskServer) GetTaskInputAssets(ctx context.Context, param *asset
 
 	return &asset.GetTaskInputAssetsResponse{Assets: inputs}, nil
 }
+
+func (s *ComputeTaskServer) DisableOutput(ctx context.Context, param *asset.DisableOutputParam) (*asset.DisableOutputResponse, error) {
+	requester, err := commonInterceptors.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	provider, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = provider.GetComputeTaskService().DisableOutput(param.ComputeTaskKey, param.Identifier, requester)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.DisableOutputResponse{}, nil
+}

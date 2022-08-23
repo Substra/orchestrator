@@ -190,6 +190,41 @@ func (s *SmartContract) GetTaskInputAssets(ctx ledger.TransactionContext, wrappe
 	return wrapped, nil
 }
 
+func (s *SmartContract) DeleteOutput(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return nil, err
+	}
+
+	service := provider.GetComputeTaskService()
+
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		return nil, err
+	}
+
+	params := new(asset.DisableOutputParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
+		return nil, err
+	}
+
+	err = service.DisableOutput(params.ComputeTaskKey, params.Identifier, requester)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &asset.DisableOutputResponse{}
+
+	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to wrap response")
+		return nil, err
+	}
+	return wrapped, nil
+}
+
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
 	return commonserv.ReadOnlyMethods["ComputeTask"]

@@ -27,6 +27,10 @@ var inputDefinedStatus = []asset.ComputeTaskStatus{
 	asset.ComputeTaskStatus_STATUS_FAILED,
 }
 
+type disabler interface {
+	disable(assetKey string) error
+}
+
 type namedAlgoOutputs = map[string]*asset.AlgoOutput
 
 // ComputeTaskAPI defines the methods to act on ComputeTasks
@@ -36,6 +40,7 @@ type ComputeTaskAPI interface {
 	QueryTasks(p *common.Pagination, filter *asset.TaskQueryFilter) ([]*asset.ComputeTask, common.PaginationToken, error)
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
 	GetInputAssets(key string) ([]*asset.ComputeTaskInputAsset, error)
+	DisableOutput(taskKey string, identifier string, requester string) error
 	// canDisableModels is internal only (exposed only to other services).
 	// it will return true if models produced by the task can be disabled
 	canDisableModels(key, requester string) (bool, error)
@@ -220,6 +225,70 @@ func (s *ComputeTaskService) GetInputAssets(key string) ([]*asset.ComputeTaskInp
 	}
 
 	return inputAssets, nil
+}
+
+func (s *ComputeTaskService) DisableOutput(taskKey string, identifier string, requester string) error {
+	task, err := s.GetTask(taskKey)
+	if err != nil {
+		return err
+	}
+	if task.Worker != requester {
+		return orcerrors.NewPermissionDenied("only the worker can disable a task output")
+	}
+
+	state := newState(&dumbUpdater, task)
+	if len(state.AvailableTransitions()) > 0 {
+		return orcerrors.NewCannotDisableAsset("cannot disable asset: task not in final state")
+	}
+
+	output, found := task.Outputs[identifier]
+	if !found {
+		return orcerrors.NewCannotDisableAsset(fmt.Sprintf("there is no output identifier %s for task %s", identifier, taskKey))
+	}
+
+	if !output.Transient {
+		return orcerrors.NewCannotDisableAsset("output is not transient")
+	}
+
+	outputAssets, err := s.GetComputeTaskDBAL().GetComputeTaskOutputAssets(taskKey, identifier)
+	if err != nil {
+		return err
+	}
+
+	var service disabler
+
+	// All outputs under the same identifier have the same kind so we use only the first one
+	switch outputAssets[0].AssetKind {
+	case asset.AssetKind_ASSET_MODEL:
+		service = s.GetModelService()
+	default:
+		// This should not happen since we validate output kinds when creating the task
+		return orcerrors.NewCannotDisableAsset(fmt.Sprintf("cannot disable output of kind: %s", outputAssets[0].AssetKind))
+	}
+
+	children, err := s.GetComputeTaskDBAL().GetComputeTaskChildren(taskKey)
+	if err != nil {
+		return err
+	}
+
+	if len(children) == 0 {
+		return orcerrors.NewCannotDisableAsset("cannot disable output of a task with no children")
+	}
+
+	for _, child := range children {
+		state := newState(&dumbUpdater, child)
+		if len(state.AvailableTransitions()) > 0 {
+			return orcerrors.NewCannotDisableAsset("cannot disable asset: child not in final state")
+		}
+	}
+
+	for _, outputAsset := range outputAssets {
+		err := service.disable(outputAsset.AssetKey)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // sortTasks is a function to sort a list of tasks in a valid order for their registration.

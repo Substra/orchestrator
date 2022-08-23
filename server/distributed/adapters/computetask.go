@@ -111,3 +111,20 @@ func (a *ComputeTaskAdapter) GetTaskInputAssets(ctx context.Context, param *asse
 
 	return response, nil
 }
+
+func (a *ComputeTaskAdapter) DisableOutput(ctx context.Context, param *asset.DisableOutputParam) (*asset.DisableOutputResponse, error) {
+	invocator, err := interceptors.ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.computetask:DisableOutput"
+
+	response := &asset.DisableOutputResponse{}
+
+	err = invocator.Call(ctx, method, param, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}

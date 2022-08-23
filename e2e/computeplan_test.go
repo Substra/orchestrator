@@ -100,39 +100,37 @@ func TestCancelComputePlan(t *testing.T) {
 // TestMultiStageComputePlan is the "canonical" example of FL with 2 organizations aggregating their trunks
 // This does not check multi-organization setup though!
 //
-//   ,========,                ,========,
-//   | ORG A  |                | ORG B  |
-//   *========*                *========*
+//	 ,========,                ,========,
+//	 | ORG A  |                | ORG B  |
+//	 *========*                *========*
 //
-//     ø     ø                  ø      ø
-//     |     |                  |      |
-//     hd    tr                 tr     hd
-//   -----------              -----------
-//  | Composite |            | Composite |      STEP 1
-//   -----------              -----------
-//     hd    tr                 tr     hd
-//     |      \   ,========,   /      |
-//     |       \  | ORG C  |  /       |
-//     |        \ *========* /        |
-//     |       ----------------       |
-//     |      |    Aggregate   |      |         STEP 2
-//     |       ----------------       |
-//     |              |               |
-//     |     ,_______/ \_______       |
-//     |     |                 |      |
-//     hd    tr                tr     hd
-//   -----------             -----------
-//  | Composite |           | Composite |       STEP 3
-//   -----------             -----------
-//     hd    tr                 tr     hd
-//            \                /
-//             \              /
-//              \            /
-//             ----------------
-//            |    Aggregate   |                STEP 4
-//             ----------------
-//
-//
+//	   ø     ø                  ø      ø
+//	   |     |                  |      |
+//	   hd    tr                 tr     hd
+//	 -----------              -----------
+//	| Composite |            | Composite |      STEP 1
+//	 -----------              -----------
+//	   hd    tr                 tr     hd
+//	   |      \   ,========,   /      |
+//	   |       \  | ORG C  |  /       |
+//	   |        \ *========* /        |
+//	   |       ----------------       |
+//	   |      |    Aggregate   |      |         STEP 2
+//	   |       ----------------       |
+//	   |              |               |
+//	   |     ,_______/ \_______       |
+//	   |     |                 |      |
+//	   hd    tr                tr     hd
+//	 -----------             -----------
+//	| Composite |           | Composite |       STEP 3
+//	 -----------             -----------
+//	   hd    tr                 tr     hd
+//	          \                /
+//	           \              /
+//	            \            /
+//	           ----------------
+//	          |    Aggregate   |                STEP 4
+//	           ----------------
 func TestMultiStageComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
@@ -621,4 +619,36 @@ func TestUpdateComputePlan(t *testing.T) {
 	eventComputePlan := resp.Events[0].GetComputePlan()
 
 	e2erequire.ProtoEqual(t, expectedPlan, eventComputePlan)
+}
+
+func TestDisableTransientOutput(t *testing.T) {
+	appClient := factory.NewTestClient()
+
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithOutput("model", &asset.NewPermissions{Public: true}, true))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithParentsRef(client.DefaultTrainTaskRef).WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
+
+	// First task done
+	appClient.StartTask(client.DefaultTrainTaskRef)
+	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model0"))
+	appClient.DoneTask(client.DefaultTrainTaskRef)
+	// second done
+	appClient.StartTask("child1")
+	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model1").WithTaskRef("child1"))
+	appClient.DoneTask("child1")
+
+	appClient.DisableOutput(client.DefaultTrainTaskRef, "model")
+	models := appClient.GetTaskOutputModels(client.DefaultTrainTaskRef)
+	require.Nil(t, models[0].Address, "model has not been disabled")
+
+	_, err := appClient.FailableRegisterTasks(client.DefaultPredictTaskOptions().
+		WithKeyRef("badinput").
+		WithParentsRef(client.DefaultTrainTaskRef).
+		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
+
+	require.ErrorContains(t, err, "OE0101", "registering a task with disabled input models should fail")
+
 }
