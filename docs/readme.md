@@ -10,4 +10,4 @@ Make sure to follow the [naming conventions](./naming.md).
 
 ## [Schemas](./schemas)
 
-[The database diagram](./schemas/standalone-database.png) is generated [using IntelliJ IDEA](https://www.jetbrains.com/help/idea/creating-diagrams.html).
+[The database diagram](./schemas/standalone-database.svg) is automatically generated using [tbls](https://github.com/k1LoW/tbls).
