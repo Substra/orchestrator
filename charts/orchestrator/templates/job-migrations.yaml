@@ -13,6 +13,10 @@ spec:
     metadata:
       name: {{ include "orchestrator.migrations.fullname" . }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       restartPolicy: OnFailure
       initContainers:
       {{- if .Values.postgresql.enabled }}  {{/* TODO: enable for external pg instances too */}}
