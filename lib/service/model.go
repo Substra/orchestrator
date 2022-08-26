@@ -14,6 +14,8 @@ import (
 
 type ModelAPI interface {
 	GetComputeTaskOutputModels(key string) ([]*asset.Model, error)
+	// GetComputeTaskInputModels returns models to be passed to a task.
+	// Deprecated: use ComputeTaskAPI.GetInputAssets instead.
 	GetComputeTaskInputModels(key string) ([]*asset.Model, error)
 	CanDisableModel(key, requester string) (bool, error)
 	// DisableModel removes a model address and emit a "disabled" event
@@ -74,7 +76,9 @@ func (s *ModelService) QueryModels(c asset.ModelCategory, p *common.Pagination) 
 }
 
 // GetComputeTaskInputModels retrieves input models of a given task from its parents.
+// Deprecated: use ComputeTaskAPI.GetInputAssets instead.
 func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, error) {
+	s.GetLogger().Warn().Str("method", "ModelService.GetComputeTaskInputModels").Msg("use of deprecated method")
 	task, err := s.GetComputeTaskService().GetTask(key)
 	if err != nil {
 		return nil, err

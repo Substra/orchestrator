@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - New RPC to disable task outputs
+
+### Deprecated
+
+- ModelService.GetComputeTaskInputModels, use ComputeTaskAPI.GetInputAssets instead
 
 ## [0.24.0] - 2022-08-22
 
