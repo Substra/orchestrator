@@ -65,8 +65,10 @@ func tearDown() {
 
 func setUpLogging() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	if !*debugEnabled {
+	if *debugEnabled {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	} else {
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 }
 
