@@ -2,7 +2,7 @@ name: end to end tests
 on:
   push:
     tags:
-      - v*
+      - '[0-9]+.[0-9]+.[0-9]+'
     branches:
       - main
   pull_request:
@@ -28,45 +28,97 @@ jobs:
           - 5432:5432
     runs-on: ubuntu-latest
     env:
+      LOG_LEVEL: DEBUG
+      NO_COLOR: true
       ORCHESTRATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
+      ORCHESTRATOR_MIGRATION_DIR: file://./server/standalone/migration/
+      ORCHESTRATOR_TLS_ENABLED: false
+      ORCHESTRATOR_MODE: standalone
+      ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
+      ORCHESTRATOR_TX_RETRY_BUDGET: 500ms
+      DB_DUMPS_BUCKET_NAME: substra-orchestrator-dumps
     steps:
       - name: Check out repository code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+
+      - name: Get changed migration files
+        id: changed_migrations
+        uses: tj-actions/changed-files@v29.0.1
+        with:
+          files: server/standalone/migration/*.sql
+
       - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: 1.19.x
+
       - name: Cache Go modules
         uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: build-${{ hashFiles('**/go.sum') }}
+
       - name: Install protobuf codegen tool
         run: |
           curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.18.1/protoc-3.18.1-linux-x86_64.zip
           unzip protoc-3.18.1-linux-x86_64.zip -d $HOME/.local
           echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Install go tools
         run: |
           cd /tmp
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
           go install github.com/go-bindata/go-bindata/...@v3.1.2
+
       - name: Install db migration tool
         run: |
           wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.15.1/migrate.linux-amd64.tar.gz | tar xzf - -C $HOME/.local/bin
-      - name: build orchestrator
+
+      - name: Build orchestrator
         run: make orchestrator
-      - name: wait for postgres
+
+      - name: Authenticate to Google Cloud
+        if: steps.changed_migrations.outputs.any_changed == 'true'
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: '${{ secrets.GCP_BUCKET_SECRET }}'
+
+      - name: Set up Google Cloud CLI
+        if: steps.changed_migrations.outputs.any_changed == 'true'
+        uses: google-github-actions/setup-gcloud@v0
+
+      - name: Install psql
+        if: steps.changed_migrations.outputs.any_changed == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends postgresql-client
+
+      - name: Wait for postgres
         run: |
           while ! $(nc localhost 5432 -z); do
             sleep 2
           done
         timeout-minutes: 1
-      - name: migrate db
+
+      - name: Restore db dump from previous release
+        id: restore_db
+        if: steps.changed_migrations.outputs.any_changed == 'true'
         run: |
-          migrate -source file://./server/standalone/migration/ -database "${ORCHESTRATOR_DATABASE_URL}" up
-      - name: setup channel configuration
+          LATEST_RELEASE_TAG=$(git tag -l | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n 1)
+          gsutil cp gs://${DB_DUMPS_BUCKET_NAME}/${LATEST_RELEASE_TAG} dump.sql
+          psql $ORCHESTRATOR_DATABASE_URL < dump.sql
+          INITIAL_MIGRATION_VERSION=$(migrate -source "${ORCHESTRATOR_MIGRATION_DIR}" -database "${ORCHESTRATOR_DATABASE_URL}" version 2>&1 > /dev/null)
+          echo "::set-output name=initial_migration_version::$INITIAL_MIGRATION_VERSION"
+
+      - name: Migrate db up from previous release data
+        if: steps.changed_migrations.outputs.any_changed == 'true'
+        run: |
+          migrate -source "${ORCHESTRATOR_MIGRATION_DIR}" -database "${ORCHESTRATOR_DATABASE_URL}" up
+
+      - name: Setup channel configuration
         run: |
           cat << EOF > ${{runner.temp}}/config.yaml
           ---
@@ -78,21 +130,50 @@ jobs:
               - MyOrg1MSP
               - MyOrg2MSP
           EOF
-      - name: run e2e tests
+
+      - name: Run e2e tests on previous release data
+        if: steps.changed_migrations.outputs.any_changed == 'true'
+        env:
+          ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
+        run: |
+          ./bin/orchestrator > server.prepopulated.run.log 2>&1 &
+          go test -tags=e2e ./e2e -v -short --failfast -server_addr localhost:9000
+
+      - name: Migrate db down to previous release migration version
+        if: steps.changed_migrations.outputs.any_changed == 'true'
+        run: >
+          migrate
+          -source "${ORCHESTRATOR_MIGRATION_DIR}"
+          -database "${ORCHESTRATOR_DATABASE_URL}"
+          goto ${{ steps.restore_db.outputs.initial_migration_version }}
+
+      - name: Reset db
+        if: steps.changed_migrations.outputs.any_changed == 'true'
+        run: |
+          psql "$ORCHESTRATOR_DATABASE_URL" << EOF
+            DROP SCHEMA public CASCADE;
+            CREATE SCHEMA public;
+          EOF
+
+      - name: Migrate db up
+        run: |
+          migrate -source "${ORCHESTRATOR_MIGRATION_DIR}/" -database "${ORCHESTRATOR_DATABASE_URL}" up
+
+      - name: Run e2e tests
+        env:
+          ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
         run: |
           ./bin/orchestrator > server.log 2>&1 &
           go test -tags=e2e ./e2e -v -short --failfast -server_addr localhost:9000
-        env:
-          LOG_LEVEL: DEBUG
-          NO_COLOR: true
-          ORCHESTRATOR_TLS_ENABLED: false
-          ORCHESTRATOR_MODE: standalone
-          ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
-          ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
-          ORCHESTRATOR_TX_RETRY_BUDGET: 500ms
+
+      - name: Save db dump in GCS bucket
+        if: github.ref_type == 'tag'
+        run: |
+          pg_dump "$ORCHESTRATOR_DATABASE_URL" | gsutil cp - gs://${DB_DUMPS_BUCKET_NAME}/${GITHUB_REF_NAME}
+
       - name: Archive server log
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: server-log
-          path: server.log
+          path: server*.log
