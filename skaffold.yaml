@@ -4,7 +4,7 @@ requires:
   - configs: ["cert_manager"]
 build:
   artifacts:
-    - image: substrafoundation/orchestrator-server
+    - image: substra/orchestrator-server
       context: .
       docker:
         dockerfile: docker/orchestrator-server/Dockerfile
@@ -19,7 +19,7 @@ deploy:
         namespace: org-1
         createNamespace: true
         artifactOverrides:
-          orchestrator.image: substrafoundation/orchestrator-server
+          orchestrator.image: substra/orchestrator-server
         valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
 
 profiles:
@@ -31,7 +31,7 @@ profiles:
   - op: replace
     path: /deploy/helm/releases/0/artifactOverrides
     value:
-      orchestrator.image: substrafoundation/orchestrator-server
+      orchestrator.image: substra/orchestrator-server
   - op: add
     path: "/deploy/helm/releases/-"
     value:
@@ -40,7 +40,7 @@ profiles:
       namespace: org-2
       createNamespace: true
       artifactOverrides:
-        orchestrator.image: substrafoundation/orchestrator-server
+        orchestrator.image: substra/orchestrator-server
       imageStrategy:
         helm:
           explicitRegistry: true
