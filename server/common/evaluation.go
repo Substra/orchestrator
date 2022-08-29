@@ -14,7 +14,7 @@ var ReadOnlyMethods = map[string][]string{
 	"Organization":  {"GetAllOrganizations"},
 	"Algo":          {"GetAlgo", "QueryAlgos"},
 	"Event":         {"QueryEvents"},
-	"Model":         {"GetComputeTaskOutputModels", "GetComputeTaskInputModels", "CanDisableModel", "GetModel", "QueryModels"},
+	"Model":         {"GetComputeTaskOutputModels", "CanDisableModel", "GetModel", "QueryModels"},
 	"Dataset":       {"GetDataset"},
 	"DataSample":    {"GetDataSample", "QueryDataSamples"},
 	"DataManager":   {"GetDataManager", "QueryDataManagers"},

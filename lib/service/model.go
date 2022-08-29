@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
@@ -14,9 +13,6 @@ import (
 
 type ModelAPI interface {
 	GetComputeTaskOutputModels(key string) ([]*asset.Model, error)
-	// GetComputeTaskInputModels returns models to be passed to a task.
-	// Deprecated: use ComputeTaskAPI.GetInputAssets instead.
-	GetComputeTaskInputModels(key string) ([]*asset.Model, error)
 	CanDisableModel(key, requester string) (bool, error)
 	// DisableModel removes a model address and emit a "disabled" event
 	DisableModel(key string, requester string) error
@@ -73,66 +69,6 @@ func (s *ModelService) GetCheckedModel(key string, worker string) (*asset.Model,
 
 func (s *ModelService) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
 	return s.GetModelDBAL().QueryModels(c, p)
-}
-
-// GetComputeTaskInputModels retrieves input models of a given task from its parents.
-// Deprecated: use ComputeTaskAPI.GetInputAssets instead.
-func (s *ModelService) GetComputeTaskInputModels(key string) ([]*asset.Model, error) {
-	s.GetLogger().Warn().Str("method", "ModelService.GetComputeTaskInputModels").Msg("use of deprecated method")
-	task, err := s.GetComputeTaskService().GetTask(key)
-	if err != nil {
-		return nil, err
-	}
-
-	inputs := []*asset.Model{}
-
-	for _, p := range task.ParentTaskKeys {
-		models, err := s.GetComputeTaskOutputModels(p)
-		if err != nil {
-			return nil, err
-		}
-
-		switch task.Category {
-		case asset.ComputeTaskCategory_TASK_AGGREGATE:
-			for _, model := range models {
-				if model.Category == asset.ModelCategory_MODEL_SIMPLE {
-					inputs = append(inputs, model)
-				}
-			}
-		case asset.ComputeTaskCategory_TASK_COMPOSITE:
-			// For this function the order of assets is important we should always have the HEAD MODEL first in the list
-			// Otherwise we end up feeding the head and trunk from the previous composite, ignoring the aggregate
-			sort.SliceStable(models, func(i, j int) bool {
-				return models[i].Category == asset.ModelCategory_MODEL_HEAD
-			})
-			// true if the parent has contributed an input to the composite task
-			parentContributed := false
-			for _, model := range models {
-				// Head model should always come from the first parent possible
-				if model.Category == asset.ModelCategory_MODEL_HEAD && !containsHeadModel(inputs) {
-					inputs = append(inputs, model)
-					parentContributed = true
-				}
-
-				singleParent := len(task.ParentTaskKeys) == 1
-				completeInputs := len(inputs) < 2
-				// Add trunk from parent if it's a single parent or if we still miss an input and the parent has not contributed a model yet
-				// Current parent should contribute the trunk model if:
-				// - it's a single parent
-				// - it has not contributed yet but not all inputs are set
-				shouldContributeTrunk := singleParent || (!parentContributed && completeInputs)
-
-				if model.Category == asset.ModelCategory_MODEL_SIMPLE && shouldContributeTrunk {
-					inputs = append(inputs, model)
-					parentContributed = true
-				}
-			}
-		default:
-			inputs = append(inputs, models...)
-		}
-	}
-
-	return inputs, nil
 }
 
 func (s *ModelService) registerModel(newModel *asset.NewModel, requester string, outputCounter persistence.ComputeTaskOutputCounter, task *asset.ComputeTask) (*asset.Model, error) {
@@ -401,15 +337,4 @@ func countModels(models []*asset.Model) modelCount {
 	}
 
 	return count
-}
-
-// containsHeadModel returns true if the slice contains a HEAD model
-func containsHeadModel(inputs []*asset.Model) bool {
-	for _, m := range inputs {
-		if m.Category == asset.ModelCategory_MODEL_HEAD {
-			return true
-		}
-	}
-
-	return false
 }

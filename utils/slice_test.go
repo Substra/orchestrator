@@ -21,11 +21,11 @@ func TestCombine(t *testing.T) {
 	assert.Equal(t, out, []string{"item1", "item2", "item3", "item4"})
 }
 
-func TestFilter(t *testing.T) {
+func TestDifference(t *testing.T) {
 	list1 := []string{"item1", "item2", "item3"}
 	list2 := []string{"item2", "item4"}
 
-	out := Filter(list1, list2)
+	out := Difference(list1, list2)
 	assert.Equal(t, out, []string{"item1", "item3"})
 }
 
@@ -35,4 +35,15 @@ func TestUnique(t *testing.T) {
 
 	out := Unique(input)
 	assert.Equal(t, expected, out)
+}
+
+func TestFilter(t *testing.T) {
+	input := []int{1, 2, 3, 4, 5}
+	expected := []int{4, 5}
+
+	filter := func(i int) bool {
+		return i > 3
+	}
+
+	assert.Equal(t, expected, Filter(input, filter))
 }

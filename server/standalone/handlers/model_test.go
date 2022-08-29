@@ -62,24 +62,6 @@ func TestGetComputeTaskOutputModels(t *testing.T) {
 	ms.AssertExpectations(t)
 }
 
-func TestGetComputeTaskInputModels(t *testing.T) {
-	ctx, p := getContext()
-	ms := new(service.MockModelAPI)
-
-	server := NewModelServer()
-
-	p.On("GetModelService").Return(ms)
-	ms.On("GetComputeTaskInputModels", "uuid").Once().Return([]*asset.Model{{Key: "m1"}, {Key: "m2"}}, nil)
-
-	resp, err := server.GetComputeTaskInputModels(ctx, &asset.GetComputeTaskModelsParam{ComputeTaskKey: "uuid"})
-	assert.NoError(t, err)
-
-	assert.Len(t, resp.Models, 2)
-
-	p.AssertExpectations(t)
-	ms.AssertExpectations(t)
-}
-
 func TestCanDisableModel(t *testing.T) {
 	ctx, p := getContext()
 	ms := new(service.MockModelAPI)

@@ -88,23 +88,6 @@ func (a *ModelAdapter) GetComputeTaskOutputModels(ctx context.Context, param *as
 	return response, nil
 }
 
-func (a *ModelAdapter) GetComputeTaskInputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
-	invocator, err := interceptors.ExtractInvocator(ctx)
-	if err != nil {
-		return nil, err
-	}
-	method := "orchestrator.model:GetComputeTaskInputModels"
-
-	response := new(asset.GetComputeTaskModelsResponse)
-
-	err = invocator.Call(ctx, method, param, response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
-}
-
 func (a *ModelAdapter) CanDisableModel(ctx context.Context, param *asset.CanDisableModelParam) (*asset.CanDisableModelResponse, error) {
 	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {

@@ -17,14 +17,14 @@ func SliceContains[T comparable](haystack []T, needle T) bool {
 }
 
 // Combine combines two lists of string in a single one without duplicates.
-func Combine(list1 []string, list2 []string) []string {
-	return append(list1, Filter(list2, list1)...)
+func Combine[T comparable](list1 []T, list2 []T) []T {
+	return append(list1, Difference(list2, list1)...)
 }
 
-// Filter returns the content of list 1 not present in list 2.
+// Difference returns the content of list 1 not present in list 2.
 // list1 - list1 U list2
-func Filter(list1 []string, list2 []string) []string {
-	var output []string
+func Difference[T comparable](list1 []T, list2 []T) []T {
+	var output []T
 	for _, item := range list1 {
 		ok := SliceContains(list2, item)
 		if !ok {
@@ -33,6 +33,17 @@ func Filter(list1 []string, list2 []string) []string {
 	}
 	return output
 
+}
+
+func Filter[T any](slice []T, test func(T) bool) []T {
+	out := []T{}
+	for _, item := range slice {
+		if test(item) {
+			out = append(out, item)
+		}
+	}
+
+	return out
 }
 
 // IsEqual compares two slices and returns true if they both contains the same set of items.

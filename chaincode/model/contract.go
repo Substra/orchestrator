@@ -157,37 +157,6 @@ func (s *SmartContract) GetComputeTaskOutputModels(ctx ledger.TransactionContext
 	return wrapped, nil
 }
 
-func (s *SmartContract) GetComputeTaskInputModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	provider, err := ctx.GetProvider()
-	if err != nil {
-		return nil, err
-	}
-	service := provider.GetModelService()
-
-	param := new(asset.GetComputeTaskModelsParam)
-	err = wrapper.Unwrap(param)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to unwrap param")
-		return nil, err
-	}
-
-	models, err := service.GetComputeTaskInputModels(param.ComputeTaskKey)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to get input models for compute task")
-		return nil, err
-	}
-	response := &asset.GetComputeTaskModelsResponse{
-		Models: models,
-	}
-
-	wrapped, err := communication.Wrap(ctx.GetContext(), response)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to wrap response")
-		return nil, err
-	}
-	return wrapped, nil
-}
-
 func (s *SmartContract) CanDisableModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {

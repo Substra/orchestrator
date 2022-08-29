@@ -79,22 +79,6 @@ func (s *ModelServer) GetComputeTaskOutputModels(ctx context.Context, param *ass
 	}, nil
 }
 
-func (s *ModelServer) GetComputeTaskInputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
-	services, err := interceptors.ExtractProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	models, err := services.GetModelService().GetComputeTaskInputModels(param.ComputeTaskKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return &asset.GetComputeTaskModelsResponse{
-		Models: models,
-	}, nil
-}
-
 func (s *ModelServer) CanDisableModel(ctx context.Context, param *asset.CanDisableModelParam) (*asset.CanDisableModelResponse, error) {
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {

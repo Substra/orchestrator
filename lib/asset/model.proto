@@ -84,9 +84,6 @@ service ModelService {
   rpc GetModel(GetModelParam) returns (Model);
   rpc QueryModels(QueryModelsParam) returns (QueryModelsResponse);
   rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse);
-  rpc GetComputeTaskInputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse) {
-    option deprecated = true;
-  };
   rpc CanDisableModel(CanDisableModelParam) returns (CanDisableModelResponse);
   rpc DisableModel(DisableModelParam) returns (DisableModelResponse);
 }

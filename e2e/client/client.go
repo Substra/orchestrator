@@ -503,18 +503,6 @@ func (c *TestClient) QueryPerformances(filter *asset.PerformanceQueryFilter, pag
 	return resp
 }
 
-func (c *TestClient) GetInputModels(taskRef string) []*asset.Model {
-	param := &asset.GetComputeTaskModelsParam{
-		ComputeTaskKey: c.ks.GetKey(taskRef),
-	}
-	c.logger.Debug().Str("task key", c.ks.GetKey(taskRef)).Msg("GetComputeTaskInputModels")
-	resp, err := c.modelService.GetComputeTaskInputModels(c.ctx, param)
-	if err != nil {
-		c.logger.Fatal().Err(err).Msg("Task input model retrieval failed")
-	}
-	return resp.Models
-}
-
 func (c *TestClient) GetTaskInputAssets(taskRef string) []*asset.ComputeTaskInputAsset {
 	c.logger.Debug().Str("task key", c.ks.GetKey(taskRef)).Msg("GetComputeTaskInputAssets")
 	assets, err := c.FailableGetTaskInputAssets(taskRef)

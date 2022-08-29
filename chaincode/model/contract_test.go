@@ -49,30 +49,6 @@ func TestGetTaskOutputModels(t *testing.T) {
 	assert.Len(t, resp.Models, 2)
 }
 
-func TestGetTaskInputModels(t *testing.T) {
-	contract := &SmartContract{}
-
-	param := &asset.GetComputeTaskModelsParam{
-		ComputeTaskKey: "uuid",
-	}
-	wrapper, err := communication.Wrap(context.Background(), param)
-	assert.NoError(t, err)
-
-	ctx := new(ledger.MockTransactionContext)
-
-	service := getMockedService(ctx)
-	service.On("GetComputeTaskInputModels", "uuid").Return([]*asset.Model{{}, {}}, nil).Once()
-
-	wrapped, err := contract.GetComputeTaskInputModels(ctx, wrapper)
-	assert.NoError(t, err)
-
-	resp := new(asset.GetComputeTaskModelsResponse)
-	err = wrapped.Unwrap(resp)
-	assert.NoError(t, err)
-
-	assert.Len(t, resp.Models, 2)
-}
-
 func TestRegisterModel(t *testing.T) {
 	contract := &SmartContract{}
 

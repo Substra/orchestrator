@@ -9,10 +9,12 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/e2e/client"
 	e2erequire "github.com/substra/orchestrator/e2e/require"
 	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/utils"
 )
 
 // TestRegisterComputePlan registers a compute plan and ensure an event containing the compute plan is recorded.
@@ -100,37 +102,37 @@ func TestCancelComputePlan(t *testing.T) {
 // TestMultiStageComputePlan is the "canonical" example of FL with 2 organizations aggregating their trunks
 // This does not check multi-organization setup though!
 //
-//	 ,========,                ,========,
-//	 | ORG A  |                | ORG B  |
-//	 *========*                *========*
+//   ,========,                ,========,
+//   | ORG A  |                | ORG B  |
+//   *========*                *========*
 //
-//	   ø     ø                  ø      ø
-//	   |     |                  |      |
-//	   hd    tr                 tr     hd
-//	 -----------              -----------
-//	| Composite |            | Composite |      STEP 1
-//	 -----------              -----------
-//	   hd    tr                 tr     hd
-//	   |      \   ,========,   /      |
-//	   |       \  | ORG C  |  /       |
-//	   |        \ *========* /        |
-//	   |       ----------------       |
-//	   |      |    Aggregate   |      |         STEP 2
-//	   |       ----------------       |
-//	   |              |               |
-//	   |     ,_______/ \_______       |
-//	   |     |                 |      |
-//	   hd    tr                tr     hd
-//	 -----------             -----------
-//	| Composite |           | Composite |       STEP 3
-//	 -----------             -----------
-//	   hd    tr                 tr     hd
-//	          \                /
-//	           \              /
-//	            \            /
-//	           ----------------
-//	          |    Aggregate   |                STEP 4
-//	           ----------------
+//     ø     ø                  ø      ø
+//     |     |                  |      |
+//     hd    tr                 tr     hd
+//   -----------              -----------
+//  | Composite |            | Composite |      STEP 1
+//   -----------              -----------
+//     hd    tr                 tr     hd
+//     |      \   ,========,   /      |
+//     |       \  | ORG C  |  /       |
+//     |        \ *========* /        |
+//     |       ----------------       |
+//     |      |    Aggregate   |      |         STEP 2
+//     |       ----------------       |
+//     |              |               |
+//     |     ,_______/ \_______       |
+//     |     |                 |      |
+//    hd    tr                tr     hd
+//   -----------             -----------
+//  | Composite |           | Composite |       STEP 3
+//   -----------             -----------
+//    hd    tr                 tr     hd
+//            \                /
+//             \              /
+//              \            /
+//             ----------------
+//            |    Aggregate   |                STEP 4
+//             ----------------
 func TestMultiStageComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
@@ -431,8 +433,11 @@ func TestAggregateComposite(t *testing.T) {
 
 	appClient.StartTask("c3")
 
-	inputs := appClient.GetInputModels("c3")
-	require.Equal(t, 2, len(inputs), "composite should have 2 input models")
+	inputs := appClient.GetTaskInputAssets("c3")
+	inputModels := utils.Filter(inputs, func(input *asset.ComputeTaskInputAsset) bool {
+		return input.GetModel() != nil
+	})
+	assert.Len(t, inputModels, 2)
 }
 
 func TestFailLargeComputePlan(t *testing.T) {
@@ -586,12 +591,15 @@ func TestCompositeParentChild(t *testing.T) {
 			WithAlgoRef("algoComp").
 			WithParentsRef("comp1", "comp2").
 			WithInput("local", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "local"}).
-			WithInput("shared", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}))
+			WithInput("shared", &client.TaskOutputRef{TaskRef: "comp2", Identifier: "shared"}))
 
-	inputs := appClient.GetInputModels("comp3")
-	require.Len(t, inputs, 2, "composite task should have 2 input models")
-	require.Equal(t, appClient.GetKeyStore().GetKey("model1H"), inputs[0].Key, "first model should be HEAD from comp1")
-	require.Equal(t, appClient.GetKeyStore().GetKey("model2T"), inputs[1].Key, "second model should be TRUNK from comp2")
+	inputs := appClient.GetTaskInputAssets("comp3")
+	models := utils.Filter(inputs, func(input *asset.ComputeTaskInputAsset) bool {
+		return input.GetModel() != nil
+	})
+	require.Len(t, models, 2, "composite task should have 2 input models")
+	require.Equal(t, appClient.GetKeyStore().GetKey("model1H"), models[0].GetModel().Key, "first model should be HEAD from comp1")
+	require.Equal(t, appClient.GetKeyStore().GetKey("model2T"), models[1].GetModel().Key, "second model should be TRUNK from comp2")
 }
 
 // TestUpdateComputePlan updates mutable fieds of a compute plan and ensure an event containing the compute plan is recorded. List of mutable fields: name.
