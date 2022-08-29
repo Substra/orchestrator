@@ -54,9 +54,6 @@ General rules are:
 - A task with no parents has a rank of `0`
 - A task with parents has a rank of `max(parentRanks) + 1`
 
-However, for **Test** compute tasks, the rank is set to the one of tested parent.
-eg: if a test has an aggregate parent with rank 2, the test will also have a rank 2.
-
 Since parents are set during task definition, the rank is an immutable property.
 
 ## Status

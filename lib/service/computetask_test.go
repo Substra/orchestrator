@@ -768,7 +768,6 @@ func TestSetTestData(t *testing.T) {
 	err := service.setTestData(specificInput, task, parents)
 	assert.NoError(t, err)
 	assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
-	assert.Equal(t, int32(2), task.Rank, "test task should have the same rank than its parent")
 	assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
 	assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
 

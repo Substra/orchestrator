@@ -878,9 +878,6 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 		return orcerrors.NewInvalidAsset("invalid number of parents")
 	}
 	task.ComputePlanKey = parentTasks[0].ComputePlanKey
-	// In case of test tasks there is only one parent (see isCompatibleWithParents)
-	// and the test task should have the same rank
-	task.Rank = parentTasks[0].Rank
 
 	return nil
 }

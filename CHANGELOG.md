@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - ModelService.GetComputeTaskInputModels, use ComputeTaskAPI.GetInputAssets instead
+- Test task rank special case: rank is not inherited from parent task anymore
 
 ## [0.25.0] - 2022-08-29
 
