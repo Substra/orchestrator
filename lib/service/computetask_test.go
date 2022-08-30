@@ -30,6 +30,11 @@ var newTrainTask = &asset.NewComputeTask{
 			DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
 		},
 	},
+	Inputs: []*asset.ComputeTaskInput{
+		{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "85e39014-ae2e-4fa4-b05b-4437076a4fa7"}},
+		{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"}},
+		{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6"}},
+	},
 	Outputs: map[string]*asset.NewComputeTaskOutput{
 		"model": {
 			Permissions: newPerms,
@@ -218,7 +223,7 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
-	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Twice().Return(nil)
 
 	// Cannot train on test data
 	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
@@ -228,6 +233,10 @@ func TestRegisterTrainTask(t *testing.T) {
 		Permissions: &asset.Permissions{
 			Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
 			Download: &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
+		},
+		Inputs: map[string]*asset.AlgoInput{
+			"data":   {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
+			"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"model": {
@@ -254,7 +263,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
 		Status:         asset.ComputeTaskStatus_STATUS_TODO,
-		ParentTaskKeys: newTrainTask.ParentTaskKeys,
+		ParentTaskKeys: []string{},
 		Worker:         dataManager.Owner,
 		Data: &asset.ComputeTask_Train{
 			Train: &asset.TrainTaskData{
@@ -262,6 +271,7 @@ func TestRegisterTrainTask(t *testing.T) {
 				DataSampleKeys: dataSampleKeys,
 			},
 		},
+		Inputs:         newTrainTask.Inputs,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
 		LogsPermission: dataManager.LogsPermission,
 		Outputs: map[string]*asset.ComputeTaskOutput{
@@ -312,7 +322,20 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
-		ParentTaskKeys: []string{"aaaaaaaa-cccc-bbbb-eeee-111111111111", "aaaaaaaa-cccc-bbbb-eeee-222222222222"},
+		Inputs: []*asset.ComputeTaskInput{
+			{Identifier: "local", Ref: &asset.ComputeTaskInput_ParentTaskOutput{
+				ParentTaskOutput: &asset.ParentTaskOutputRef{
+					OutputIdentifier: "local",
+					ParentTaskKey:    "aaaaaaaa-cccc-bbbb-eeee-111111111111",
+				},
+			}},
+			{Identifier: "shared", Ref: &asset.ComputeTaskInput_ParentTaskOutput{
+				ParentTaskOutput: &asset.ParentTaskOutputRef{
+					OutputIdentifier: "shared",
+					ParentTaskKey:    "aaaaaaaa-cccc-bbbb-eeee-222222222222",
+				},
+			}},
+		},
 		Data: &asset.NewComputeTask_Composite{
 			Composite: &asset.NewCompositeTrainTaskData{
 				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
@@ -336,6 +359,12 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
 		Data:           &asset.ComputeTask_Composite{Composite: &asset.CompositeTrainTaskData{}},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"local":  {Kind: asset.AssetKind_ASSET_MODEL},
+				"shared": {Kind: asset.AssetKind_ASSET_MODEL},
+			},
+		},
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
 			"local":  {Permissions: localPerms},
@@ -347,6 +376,12 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
 		Data:           &asset.ComputeTask_Composite{Composite: &asset.CompositeTrainTaskData{}},
+		Algo: &asset.Algo{
+			Outputs: map[string]*asset.AlgoOutput{
+				"local":  {Kind: asset.AssetKind_ASSET_MODEL},
+				"shared": {Kind: asset.AssetKind_ASSET_MODEL},
+			},
+		},
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
 			"local":  {Permissions: localPerms},
@@ -381,9 +416,13 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	// Checking existing task
 	dbal.On("GetExistingComputeTaskKeys", []string{newTask.Key}).Once().Return([]string{}, nil)
 	// All parents already exist
-	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return(newTask.ParentTaskKeys, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{parent1.Key, parent2.Key}).Once().Return([]string{parent1.Key, parent2.Key}, nil)
 
-	dbal.On("GetComputeTasks", newTask.ParentTaskKeys).Once().Return([]*asset.ComputeTask{parent1, parent2}, nil)
+	// TODO: we fetch the same data several times
+	// Since this will change with task category removal, let's revisit later
+	dbal.On("GetComputeTasks", []string{parent1.Key, parent2.Key}).Once().Return([]*asset.ComputeTask{parent1, parent2}, nil)
+	dbal.On("GetComputeTask", parent1.Key).Once().Return(parent1, nil)
+	dbal.On("GetComputeTask", parent2.Key).Once().Return(parent2, nil)
 
 	dataManagerKey := newTask.Data.(*asset.NewComputeTask_Composite).Composite.DataManagerKey
 	dataSampleKeys := newTask.Data.(*asset.NewComputeTask_Composite).Composite.DataSampleKeys
@@ -411,6 +450,10 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	algo := &asset.Algo{
 		Category:    asset.AlgoCategory_ALGO_COMPOSITE,
 		Permissions: permissions,
+		Inputs: map[string]*asset.AlgoInput{
+			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
+			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
+		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
@@ -420,9 +463,11 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	as.On("GetAlgo", newTask.AlgoKey).Once().Return(algo, nil)
 	ps.On("CanProcess", algo.Permissions, "testOwner").Once().Return(true)
 
+	// TODO called twice: first in input validation, then in checkCanProcessParents.
+	// The later will be removed eventually.
 	// Parent processing check -> requester is the task worker, so the datamanager owner here
-	ps.On("CanProcess", parent1.Outputs["local"].Permissions, dataManager.Owner).Once().Return(true)
-	ps.On("CanProcess", parent1.Outputs["shared"].Permissions, dataManager.Owner).Once().Return(true)
+	ps.On("CanProcess", parent1.Outputs["local"].Permissions, dataManager.Owner).Twice().Return(true)
+	ps.On("CanProcess", parent2.Outputs["shared"].Permissions, dataManager.Owner).Twice().Return(true)
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTask.Key,
@@ -432,7 +477,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		ComputePlanKey: newTask.ComputePlanKey,
 		Metadata:       newTask.Metadata,
 		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
-		ParentTaskKeys: newTask.ParentTaskKeys,
+		ParentTaskKeys: []string{parent1.Key, parent2.Key},
 		Worker:         dataManager.Owner,
 		Rank:           1,
 		Data: &asset.ComputeTask_Composite{
@@ -442,6 +487,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 			},
 		},
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+		Inputs:       newTask.Inputs,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
 			"local":  {Permissions: localPerms},
@@ -482,7 +528,12 @@ func TestRegisterFailedTask(t *testing.T) {
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
-		ParentTaskKeys: []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"},
+		Inputs: []*asset.ComputeTaskInput{
+			{Identifier: "test", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+				ParentTaskKey:    "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
+				OutputIdentifier: "test",
+			}}},
+		},
 		Data: &asset.NewComputeTask_Train{
 			Train: &asset.NewTrainTaskData{
 				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
@@ -501,7 +552,7 @@ func TestRegisterFailedTask(t *testing.T) {
 	// Checking existing task
 	dbal.On("GetExistingComputeTaskKeys", []string{newTask.Key}).Once().Return([]string{}, nil)
 
-	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 
 	parentPerms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 	parentTask := &asset.ComputeTask{
@@ -540,7 +591,14 @@ func TestRegisterDeletedModel(t *testing.T) {
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
-		ParentTaskKeys: []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"},
+		Inputs: []*asset.ComputeTaskInput{
+			{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{
+				ParentTaskOutput: &asset.ParentTaskOutputRef{
+					OutputIdentifier: "model",
+					ParentTaskKey:    "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
+				},
+			}},
+		},
 		Data: &asset.NewComputeTask_Train{
 			Train: &asset.NewTrainTaskData{
 				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
@@ -560,7 +618,7 @@ func TestRegisterDeletedModel(t *testing.T) {
 	// Checking existing task
 	dbal.On("GetExistingComputeTaskKeys", []string{newTask.Key}).Once().Return([]string{}, nil)
 
-	dbal.On("GetExistingComputeTaskKeys", newTask.ParentTaskKeys).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
+	dbal.On("GetExistingComputeTaskKeys", []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
 
 	parentPerms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 	parentTask := &asset.ComputeTask{
@@ -1309,16 +1367,20 @@ func TestIsParentCompatible(t *testing.T) {
 }
 
 func createNode(parent string, key string) *asset.NewComputeTask {
+	inputs := []*asset.ComputeTaskInput{}
 	if parent != "" {
-		return &asset.NewComputeTask{
-			Key:            key,
-			ParentTaskKeys: []string{parent},
-		}
+		inputs = append(inputs, &asset.ComputeTaskInput{
+			Identifier: "test",
+			Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+				ParentTaskKey:    parent,
+				OutputIdentifier: "test",
+			}},
+		})
 	}
 
 	return &asset.NewComputeTask{
-		Key:            key,
-		ParentTaskKeys: []string{},
+		Key:    key,
+		Inputs: inputs,
 	}
 }
 
@@ -1334,8 +1396,7 @@ func TestSortTasks(t *testing.T) {
 	//              +-->Leaf4
 
 	root := &asset.NewComputeTask{
-		Key:            "root",
-		ParentTaskKeys: []string{},
+		Key: "root",
 	}
 
 	leaf1 := createNode(root.Key, "leaf1")
@@ -1371,8 +1432,7 @@ func TestSortTasksWithCircularDependency(t *testing.T) {
 	//           +------------+
 
 	root := &asset.NewComputeTask{
-		Key:            "root",
-		ParentTaskKeys: []string{},
+		Key: "root",
 	}
 
 	leaf1 := createNode(root.Key, "leaf1")
@@ -1381,7 +1441,13 @@ func TestSortTasksWithCircularDependency(t *testing.T) {
 	leaf4 := createNode(node2.Key, "leaf4")
 	leaf5 := createNode(node3.Key, "leaf5")
 
-	node2.ParentTaskKeys = []string{root.Key, leaf4.Key}
+	node2.Inputs = append(node2.Inputs, &asset.ComputeTaskInput{
+		Identifier: "test",
+		Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+			ParentTaskKey:    leaf4.Key,
+			OutputIdentifier: "test",
+		}},
+	})
 
 	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
 	existingKeys := []string{}
@@ -1408,8 +1474,16 @@ func TestSortDependencyWithExistingTasks(t *testing.T) {
 	existing2 := "exist2"
 
 	root := &asset.NewComputeTask{
-		Key:            "root",
-		ParentTaskKeys: []string{existing1},
+		Key: "root",
+		Inputs: []*asset.ComputeTaskInput{
+			{
+				Identifier: "test",
+				Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+					ParentTaskKey:    existing1,
+					OutputIdentifier: "test",
+				}},
+			},
+		},
 	}
 
 	leaf1 := createNode(root.Key, "leaf1")
@@ -1418,7 +1492,13 @@ func TestSortDependencyWithExistingTasks(t *testing.T) {
 	leaf4 := createNode(node2.Key, "leaf4")
 	leaf5 := createNode(node3.Key, "leaf5")
 
-	leaf1.ParentTaskKeys = []string{existing2, root.Key}
+	leaf1.Inputs = append(leaf1.Inputs, &asset.ComputeTaskInput{
+		Identifier: "test",
+		Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+			ParentTaskKey:    existing2,
+			OutputIdentifier: "test",
+		}},
+	})
 
 	nodes := []*asset.NewComputeTask{root, leaf5, leaf4, node2, node3, leaf1}
 	existingKeys := []string{existing1, existing2}
@@ -1445,8 +1525,15 @@ func TestSortTasksUnknownRef(t *testing.T) {
 	//                  +-->Leaf4
 
 	root := &asset.NewComputeTask{
-		Key:            "root",
-		ParentTaskKeys: []string{"unknown"},
+		Key: "root",
+		Inputs: []*asset.ComputeTaskInput{
+			{
+				Identifier: "test",
+				Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
+					ParentTaskKey: "unknown",
+				}},
+			},
+		},
 	}
 
 	leaf1 := createNode(root.Key, "leaf1")
@@ -2243,4 +2330,36 @@ func TestGetInputAssets(t *testing.T) {
 	dss.AssertExpectations(t)
 	dms.AssertExpectations(t)
 	ms.AssertExpectations(t)
+}
+
+func TestGetParentTaskKeys(t *testing.T) {
+	cases := []struct {
+		inputs []*asset.ComputeTaskInput
+		keys   []string
+	}{
+		{
+			inputs: []*asset.ComputeTaskInput{
+				{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:ds"}},
+				{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm"}},
+				{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "uuid:parent", OutputIdentifier: "aggregate"}}},
+			},
+			keys: []string{"uuid:parent"},
+		},
+		{
+			inputs: []*asset.ComputeTaskInput{
+				{Identifier: "local", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "uuid:parent", OutputIdentifier: "local"}}},
+				{Identifier: "shared", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "uuid:parent", OutputIdentifier: "shared"}}},
+			},
+			keys: []string{"uuid:parent"},
+		},
+	}
+
+	for i, c := range cases {
+		t.Run(
+			fmt.Sprintf("parent task keys from inputs case %d", i),
+			func(t *testing.T) {
+				assert.Equal(t, c.keys, getParentTaskKeys(c.inputs))
+			},
+		)
+	}
 }
