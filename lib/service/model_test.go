@@ -7,9 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -765,33 +763,6 @@ func TestDisableModel(t *testing.T) {
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
-}
-
-func TestQueryModels(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	provider := newMockedProvider()
-	provider.On("GetModelDBAL").Return(dbal)
-	service := NewModelService(provider)
-
-	model1 := asset.Model{
-		Key:      "model1",
-		Category: asset.ModelCategory_MODEL_SIMPLE,
-	}
-	model2 := asset.Model{
-		Key:      "model2",
-		Category: asset.ModelCategory_MODEL_SIMPLE,
-	}
-
-	pagination := common.NewPagination("", 12)
-
-	dbal.On("QueryModels", asset.ModelCategory_MODEL_SIMPLE, pagination).Return([]*asset.Model{&model1, &model2}, "nextPage", nil).Once()
-
-	r, token, err := service.QueryModels(asset.ModelCategory_MODEL_SIMPLE, pagination)
-	require.Nil(t, err)
-
-	assert.Len(t, r, 2)
-	assert.Equal(t, r[0].Key, model1.Key)
-	assert.Equal(t, "nextPage", token, "next page token should be returned")
 }
 
 func TestAreAllOutputsRegistered(t *testing.T) {

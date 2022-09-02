@@ -2,7 +2,6 @@ package dbal
 
 import (
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/jackc/pgtype"
@@ -10,7 +9,6 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -68,62 +66,6 @@ func (d *DBAL) GetModel(key string) (*asset.Model, error) {
 	}
 
 	return m.toModel(), nil
-}
-
-func (d *DBAL) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
-	offset, err := getOffset(p.Token)
-	if err != nil {
-		return nil, "", err
-	}
-
-	stmt := getStatementBuilder().
-		Select("key", "compute_task_key", "category", "address", "checksum", "permissions", "owner", "creation_date").
-		From("expanded_models").
-		Where(sq.Eq{"channel": d.channel}).
-		OrderByClause("creation_date ASC, key").
-		Offset(uint64(offset)).
-		// Fetch page size + 1 elements to determine whether there is a next page
-		Limit(uint64(p.Size + 1))
-
-	if c != asset.ModelCategory_MODEL_UNKNOWN {
-		stmt = stmt.Where(sq.Eq{"category": c.String()})
-	}
-
-	rows, err := d.query(stmt)
-	if err != nil {
-		return nil, "", err
-	}
-	defer rows.Close()
-
-	var models []*asset.Model
-	var count int
-
-	for rows.Next() {
-		m := new(sqlModel)
-
-		err = rows.Scan(&m.Key, &m.ComputeTaskKey, &m.Category, &m.Address, &m.Checksum, &m.Permissions, &m.Owner, &m.CreationDate)
-		if err != nil {
-			return nil, "", err
-		}
-
-		models = append(models, m.toModel())
-		count++
-
-		if count == int(p.Size) {
-			break
-		}
-	}
-	if err = rows.Err(); err != nil {
-		return nil, "", err
-	}
-
-	bookmark := ""
-	if count == int(p.Size) && rows.Next() {
-		// there is more to fetch
-		bookmark = strconv.Itoa(offset + count)
-	}
-
-	return models, bookmark, nil
 }
 
 func (d *DBAL) ModelExists(key string) (bool, error) {

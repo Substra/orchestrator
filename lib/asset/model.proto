@@ -63,17 +63,6 @@ message GetModelParam {
   string key = 1;
 }
 
-message QueryModelsParam {
-  ModelCategory category = 1;
-  string page_token = 2;
-  uint32 page_size = 3;
-}
-
-message QueryModelsResponse {
-  repeated Model models = 1;
-  string next_page_token = 2;
-}
-
 message DisableModelResponse {}
 
 service ModelService {
@@ -82,7 +71,6 @@ service ModelService {
   };
   rpc RegisterModels(RegisterModelsParam) returns (RegisterModelsResponse);
   rpc GetModel(GetModelParam) returns (Model);
-  rpc QueryModels(QueryModelsParam) returns (QueryModelsResponse);
   rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse);
   rpc CanDisableModel(CanDisableModelParam) returns (CanDisableModelResponse);
   rpc DisableModel(DisableModelParam) returns (DisableModelResponse);

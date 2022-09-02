@@ -56,21 +56,6 @@ func (a *ModelAdapter) GetModel(ctx context.Context, param *asset.GetModelParam)
 	return response, err
 }
 
-// QueryModels returns all known models
-func (a *ModelAdapter) QueryModels(ctx context.Context, query *asset.QueryModelsParam) (*asset.QueryModelsResponse, error) {
-	invocator, err := interceptors.ExtractInvocator(ctx)
-	if err != nil {
-		return nil, err
-	}
-	method := "orchestrator.model:QueryModels"
-
-	response := &asset.QueryModelsResponse{}
-
-	err = invocator.Call(ctx, method, query, response)
-
-	return response, err
-}
-
 func (a *ModelAdapter) GetComputeTaskOutputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
 	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {

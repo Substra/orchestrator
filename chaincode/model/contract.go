@@ -7,7 +7,6 @@ import (
 	"github.com/substra/orchestrator/chaincode/communication"
 	"github.com/substra/orchestrator/chaincode/ledger"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/substra/orchestrator/lib/common"
 	commonserv "github.com/substra/orchestrator/server/common"
 )
 
@@ -85,40 +84,6 @@ func (s *SmartContract) GetModel(ctx ledger.TransactionContext, wrapper *communi
 	}
 
 	wrapped, err := communication.Wrap(ctx.GetContext(), model)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to wrap response")
-		return nil, err
-	}
-	return wrapped, nil
-}
-
-// QueryModels returns the models
-func (s *SmartContract) QueryModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
-	provider, err := ctx.GetProvider()
-	if err != nil {
-		return nil, err
-	}
-	service := provider.GetModelService()
-
-	params := new(asset.QueryModelsParam)
-	err = wrapper.Unwrap(params)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to unwrap param")
-		return nil, err
-	}
-
-	models, nextPage, err := service.QueryModels(params.Category, common.NewPagination(params.GetPageToken(), params.GetPageSize()))
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to query models")
-		return nil, err
-	}
-
-	resp := &asset.QueryModelsResponse{
-		Models:        models,
-		NextPageToken: nextPage,
-	}
-
-	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err

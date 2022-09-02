@@ -1,10 +1,7 @@
 package ledger
 
 import (
-	"encoding/json"
-
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/substra/orchestrator/lib/common"
 	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -72,66 +69,6 @@ func (db *DB) AddModel(model *asset.Model, identifier string) error {
 	}
 
 	return db.createIndex(modelTaskKeyIndex, []string{asset.ModelKind, model.GetComputeTaskKey(), model.GetKey()})
-}
-
-func (db *DB) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
-	logger := db.logger.With().
-		Interface("pagination", p).
-		Str("model_category", c.String()).
-		Logger()
-	logger.Debug().Msg("get models")
-
-	query := richQuerySelector{
-		Selector: couchAssetQuery{
-			DocType: asset.ModelKind,
-		},
-	}
-
-	assetFilter := map[string]interface{}{}
-	if c != asset.ModelCategory_MODEL_UNKNOWN {
-		assetFilter["category"] = c.String()
-	}
-	if len(assetFilter) > 0 {
-		query.Selector.Asset = assetFilter
-	}
-
-	b, err := json.Marshal(query)
-	if err != nil {
-		return nil, "", err
-	}
-
-	queryString := string(b)
-
-	logger.Debug().Str("couchQuery", queryString).Msg("mango query")
-
-	resultsIterator, bookmark, err := db.getQueryResultWithPagination(queryString, int32(p.Size), p.Token)
-	if err != nil {
-		return nil, "", err
-	}
-	defer resultsIterator.Close()
-
-	models := make([]*asset.Model, 0)
-
-	for resultsIterator.HasNext() {
-		queryResult, err := resultsIterator.Next()
-		if err != nil {
-			return nil, "", err
-		}
-		var storedAsset storedAsset
-		err = json.Unmarshal(queryResult.Value, &storedAsset)
-		if err != nil {
-			return nil, "", err
-		}
-		model := &asset.Model{}
-		err = protojson.Unmarshal(storedAsset.Asset, model)
-		if err != nil {
-			return nil, "", err
-		}
-
-		models = append(models, model)
-	}
-
-	return models, bookmark.Bookmark, nil
 }
 
 func (db *DB) UpdateModel(model *asset.Model) error {

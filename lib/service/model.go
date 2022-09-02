@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/substra/orchestrator/lib/common"
 	"github.com/substra/orchestrator/lib/errors"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/persistence"
@@ -17,7 +16,6 @@ type ModelAPI interface {
 	// DisableModel removes a model address and emit a "disabled" event
 	DisableModel(key string, requester string) error
 	GetModel(key string) (*asset.Model, error)
-	QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error)
 	RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error)
 	GetCheckedModel(key string, worker string) (*asset.Model, error)
 	disable(assetKey string) error
@@ -65,10 +63,6 @@ func (s *ModelService) GetCheckedModel(key string, worker string) (*asset.Model,
 		return nil, orcerrors.NewPermissionDenied(fmt.Sprintf("not authorized to process model %q", model.Key))
 	}
 	return model, nil
-}
-
-func (s *ModelService) QueryModels(c asset.ModelCategory, p *common.Pagination) ([]*asset.Model, common.PaginationToken, error) {
-	return s.GetModelDBAL().QueryModels(c, p)
 }
 
 func (s *ModelService) registerModel(newModel *asset.NewModel, requester string, outputCounter persistence.ComputeTaskOutputCounter, task *asset.ComputeTask) (*asset.Model, error) {

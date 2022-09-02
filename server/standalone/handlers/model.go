@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/substra/orchestrator/lib/asset"
-	libCommon "github.com/substra/orchestrator/lib/common"
 	commonInterceptors "github.com/substra/orchestrator/server/common/interceptors"
 	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
@@ -43,24 +42,6 @@ func (s *ModelServer) GetModel(ctx context.Context, in *asset.GetModelParam) (*a
 		return nil, err
 	}
 	return services.GetModelService().GetModel(in.Key)
-}
-
-// QueryModels returns a paginated list of all known models
-func (s *ModelServer) QueryModels(ctx context.Context, params *asset.QueryModelsParam) (*asset.QueryModelsResponse, error) {
-	services, err := interceptors.ExtractProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	models, paginationToken, err := services.GetModelService().QueryModels(params.Category, libCommon.NewPagination(params.PageToken, params.PageSize))
-	if err != nil {
-		return nil, err
-	}
-
-	return &asset.QueryModelsResponse{
-		Models:        models,
-		NextPageToken: paginationToken,
-	}, nil
 }
 
 func (s *ModelServer) GetComputeTaskOutputModels(ctx context.Context, param *asset.GetComputeTaskModelsParam) (*asset.GetComputeTaskModelsResponse, error) {
