@@ -99,7 +99,6 @@ func TestRegisterOnNonDoingTask(t *testing.T) {
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_SIMPLE,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "test",
 		Address: &asset.Addressable{
@@ -131,7 +130,6 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_SIMPLE,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "test",
 		Address: &asset.Addressable{
@@ -200,7 +198,6 @@ func TestRegisterTrainModel(t *testing.T) {
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_SIMPLE,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{
@@ -300,7 +297,6 @@ func TestRegisterAggregateModel(t *testing.T) {
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_SIMPLE,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{
@@ -354,7 +350,6 @@ func TestRegisterDuplicateModel(t *testing.T) {
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_SIMPLE,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{
@@ -460,7 +455,6 @@ func TestRegisterHeadModel(t *testing.T) {
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_HEAD,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "local",
 		Address: &asset.Addressable{
@@ -518,66 +512,12 @@ func TestRegisterHeadModel(t *testing.T) {
 	ts.AssertExpectations(t)
 }
 
-func TestRegisterWrongModelType(t *testing.T) {
-	provider := newMockedProvider()
-	service := NewModelService(provider)
-
-	model := &asset.NewModel{
-		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_HEAD, // cannot register a HEAD model on aggregate task
-		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		ComputeTaskOutputIdentifier: "model",
-		Address: &asset.Addressable{
-			StorageAddress: "https://somewhere",
-			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
-		},
-	}
-
-	_, err := service.registerModel(
-		model,
-		"test",
-		persistence.ComputeTaskOutputCounter{},
-		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
-			Worker:   "test",
-			Outputs: map[string]*asset.ComputeTaskOutput{
-				"model": {
-					Permissions: &asset.Permissions{
-						Process: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
-						Download: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
-					}},
-			},
-			Algo: &asset.Algo{
-				Outputs: map[string]*asset.AlgoOutput{
-					"model": {
-						Kind: asset.AssetKind_ASSET_MODEL,
-					},
-				},
-			},
-		})
-	assert.Error(t, err)
-	orcError := new(orcerrors.OrcError)
-	assert.True(t, errors.As(err, &orcError))
-	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)
-
-	provider.AssertExpectations(t)
-}
-
 func TestRegisterMultipleHeads(t *testing.T) {
 	provider := newMockedProvider()
 	service := NewModelService(provider)
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_HEAD,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "local",
 		Address: &asset.Addressable{
@@ -671,7 +611,6 @@ func TestRegisterInvalidOutput(t *testing.T) {
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_HEAD,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "invalid",
 		Address: &asset.Addressable{
@@ -702,59 +641,6 @@ func TestRegisterInvalidOutput(t *testing.T) {
 	assert.Equal(t, orcerrors.ErrIncompatibleKind, orcError.Kind)
 
 	provider.AssertExpectations(t)
-}
-
-func TestAreAllOutputsRegistered(t *testing.T) {
-	cases := map[string]struct {
-		task    *asset.ComputeTask
-		models  []*asset.Model
-		outcome bool
-	}{
-		"train without model": {
-			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_TRAIN},
-			models:  []*asset.Model{},
-			outcome: false,
-		},
-		"unhandled task category": {
-			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_TEST},
-			models:  []*asset.Model{},
-			outcome: false,
-		},
-		"train with model": {
-			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_TRAIN},
-			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}},
-			outcome: true,
-		},
-		"aggregate with model": {
-			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_AGGREGATE},
-			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}},
-			outcome: true,
-		},
-		"composite with head": {
-			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_COMPOSITE},
-			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_HEAD}},
-			outcome: false,
-		},
-		"composite with simple": {
-			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_COMPOSITE},
-			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}},
-			outcome: false,
-		},
-		"composite with head & simple": {
-			task:    &asset.ComputeTask{Category: asset.ComputeTaskCategory_TASK_COMPOSITE},
-			models:  []*asset.Model{{Category: asset.ModelCategory_MODEL_SIMPLE}, {Category: asset.ModelCategory_MODEL_HEAD}},
-			outcome: true,
-		},
-	}
-
-	provider := newMockedProvider()
-	service := NewModelService(provider)
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.outcome, service.AreAllOutputsRegistered(tc.task, tc.models))
-		})
-	}
 }
 
 func TestRegisterModelsTrainTask(t *testing.T) {
@@ -805,7 +691,6 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 	models := []*asset.NewModel{
 		{
 			Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-			Category:                    asset.ModelCategory_MODEL_SIMPLE,
 			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			ComputeTaskOutputIdentifier: "model",
 			Address: &asset.Addressable{
@@ -920,7 +805,6 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 	models := []*asset.NewModel{
 		{
 			Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-			Category:                    asset.ModelCategory_MODEL_HEAD,
 			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			ComputeTaskOutputIdentifier: "local",
 			Address: &asset.Addressable{
@@ -930,7 +814,6 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 		},
 		{
 			Key:                         "7d2c6aa1-18b9-4ffd-a6e3-dfdc740d64dd",
-			Category:                    asset.ModelCategory_MODEL_SIMPLE,
 			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			ComputeTaskOutputIdentifier: "shared",
 			Address: &asset.Addressable{
@@ -1032,7 +915,6 @@ func TestRegisterMissingOutput(t *testing.T) {
 
 	model := &asset.NewModel{
 		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_SIMPLE,
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "model",
 		Address: &asset.Addressable{

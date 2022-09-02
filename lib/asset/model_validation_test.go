@@ -44,6 +44,12 @@ func TestModelValidate(t *testing.T) {
 			ComputeTaskOutputIdentifier: "auc",
 			Address:                     validAddressable,
 		}, false},
+		"missing category": {&NewModel{
+			Key:                         "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			ComputeTaskOutputIdentifier: "auc",
+			Address:                     validAddressable,
+		}, true},
 	}
 
 	for name, c := range cases {
