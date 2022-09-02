@@ -208,7 +208,6 @@ func TestRegisterTrainModel(t *testing.T) {
 
 	storedModel := &asset.Model{
 		Key:            model.Key,
-		Category:       model.Category,
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address:        model.Address,
 		Permissions: &asset.Permissions{
@@ -307,7 +306,6 @@ func TestRegisterAggregateModel(t *testing.T) {
 
 	storedModel := &asset.Model{
 		Key:            model.Key,
-		Category:       model.Category,
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address:        model.Address,
 		Permissions: &asset.Permissions{
@@ -465,7 +463,6 @@ func TestRegisterHeadModel(t *testing.T) {
 
 	storedModel := &asset.Model{
 		Key:            model.Key,
-		Category:       model.Category,
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address:        model.Address,
 		Permissions: &asset.Permissions{
@@ -702,7 +699,6 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 
 	storedModel := &asset.Model{
 		Key:            models[0].Key,
-		Category:       models[0].Category,
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address:        models[0].Address,
 		Permissions: &asset.Permissions{
@@ -825,7 +821,6 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 
 	storedHead := &asset.Model{
 		Key:            models[0].Key,
-		Category:       models[0].Category,
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address:        models[0].Address,
 		Permissions: &asset.Permissions{
@@ -845,7 +840,6 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 
 	storedSimple := &asset.Model{
 		Key:            models[1].Key,
-		Category:       models[1].Category,
 		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Address:        models[0].Address,
 		Permissions: &asset.Permissions{
