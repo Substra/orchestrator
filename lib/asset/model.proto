@@ -15,7 +15,8 @@ enum ModelCategory {
 
 message Model {
   string key = 1;
-  ModelCategory category = 2;
+  // model category is unused and is due to removal
+  ModelCategory category = 2 [deprecated=true];
   string compute_task_key = 3;
   Addressable address = 4;
   Permissions permissions = 5;
@@ -25,6 +26,7 @@ message Model {
 
 message NewModel {
   string key = 1;
+  // model category is unused and is due to removal
   ModelCategory category = 2 [deprecated=true];
   string compute_task_key = 3;
   string compute_task_output_identifier = 5;
