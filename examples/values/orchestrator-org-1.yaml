@@ -34,8 +34,9 @@ postgresql:
   primary:
     persistence:
       enabled: false
-    extendedConfiguration: |
+    extendedConfiguration: |-
       log_min_duration_statement = 0
+      tcp_keepalives_idle = 5
 
 ingress:
   enabled: true

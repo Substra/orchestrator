@@ -62,14 +62,15 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 
 ### PostgreSQL settings
 
-| Name                                 | Description                                                                | Value          |
-| ------------------------------------ | -------------------------------------------------------------------------- | -------------- |
-| `postgresql.enabled`                 | If true, deploy PostgreSQL                                                 | `true`         |
-| `postgresql.auth.enablePostgresUser` | creates a PostgreSQL user                                                  | `true`         |
-| `postgresql.auth.postgresPassword`   | password for the postgres admin user                                       | `postgres`     |
-| `postgresql.auth.username`           | PostgreSQL user (creates a non-admin user when username is not `postgres`) | `postgres`     |
-| `postgresql.auth.password`           | PostgreSQL user password                                                   | `postgres`     |
-| `postgresql.auth.database`           | PostgreSQL database the orchestrator should use                            | `orchestrator` |
+| Name                                       | Description                                                                   | Value                     |
+| ------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------- |
+| `postgresql.enabled`                       | If true, deploy PostgreSQL                                                    | `true`                    |
+| `postgresql.auth.enablePostgresUser`       | creates a PostgreSQL user                                                     | `true`                    |
+| `postgresql.auth.postgresPassword`         | password for the postgres admin user                                          | `postgres`                |
+| `postgresql.auth.username`                 | PostgreSQL user (creates a non-admin user when username is not `postgres`)    | `postgres`                |
+| `postgresql.auth.password`                 | PostgreSQL user password                                                      | `postgres`                |
+| `postgresql.auth.database`                 | PostgreSQL database the orchestrator should use                               | `orchestrator`            |
+| `postgresql.primary.extendedConfiguration` | Extended PostgreSQL configuration (appended to main or default configuration) | `tcp_keepalives_idle = 5` |
 
 
 ### Hyperledger Fabric settings

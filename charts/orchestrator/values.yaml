@@ -182,6 +182,11 @@ postgresql:
     ## @param postgresql.auth.database PostgreSQL database the orchestrator should use
     ##
     database: orchestrator
+  primary:
+    ## @param postgresql.primary.extendedConfiguration Extended PostgreSQL configuration (appended to main or default configuration)
+    ##
+    extendedConfiguration: |-
+      tcp_keepalives_idle = 5
 
 ## @section Hyperledger Fabric settings
 ##

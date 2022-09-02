@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.3.0] - 2022-09-01
+
+- enable TCP keepalive on PostgreSQL
+
 ## [7.2.3] - 2022-08-29
 
 ### Changed
