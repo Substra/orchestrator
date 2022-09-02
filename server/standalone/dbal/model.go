@@ -15,7 +15,6 @@ import (
 
 type sqlModel struct {
 	Key            string
-	Category       asset.ModelCategory
 	ComputeTaskKey string
 	Address        pgtype.Text
 	Checksum       pgtype.Text
@@ -27,7 +26,6 @@ type sqlModel struct {
 func (m *sqlModel) toModel() *asset.Model {
 	model := &asset.Model{
 		Key:            m.Key,
-		Category:       m.Category,
 		ComputeTaskKey: m.ComputeTaskKey,
 		Permissions:    &m.Permissions,
 		Owner:          m.Owner,
@@ -46,7 +44,7 @@ func (m *sqlModel) toModel() *asset.Model {
 
 func (d *DBAL) GetModel(key string) (*asset.Model, error) {
 	stmt := getStatementBuilder().
-		Select("key", "compute_task_key", "category", "address", "checksum", "permissions", "owner", "creation_date").
+		Select("key", "compute_task_key", "address", "checksum", "permissions", "owner", "creation_date").
 		From("expanded_models").
 		Where(sq.Eq{"channel": d.channel, "key": key})
 
@@ -56,7 +54,7 @@ func (d *DBAL) GetModel(key string) (*asset.Model, error) {
 	}
 
 	m := new(sqlModel)
-	err = row.Scan(&m.Key, &m.ComputeTaskKey, &m.Category, &m.Address, &m.Checksum, &m.Permissions, &m.Owner, &m.CreationDate)
+	err = row.Scan(&m.Key, &m.ComputeTaskKey, &m.Address, &m.Checksum, &m.Permissions, &m.Owner, &m.CreationDate)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -87,7 +85,7 @@ func (d *DBAL) ModelExists(key string) (bool, error) {
 
 func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 	stmt := getStatementBuilder().
-		Select("key", "compute_task_key", "category", "address", "checksum", "permissions", "owner", "creation_date").
+		Select("key", "compute_task_key", "address", "checksum", "permissions", "owner", "creation_date").
 		From("expanded_models").
 		Where(sq.Eq{"channel": d.channel, "compute_task_key": key})
 
@@ -101,7 +99,7 @@ func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 	for rows.Next() {
 		m := new(sqlModel)
 
-		err = rows.Scan(&m.Key, &m.ComputeTaskKey, &m.Category, &m.Address, &m.Checksum, &m.Permissions, &m.Owner, &m.CreationDate)
+		err = rows.Scan(&m.Key, &m.ComputeTaskKey, &m.Address, &m.Checksum, &m.Permissions, &m.Owner, &m.CreationDate)
 		if err != nil {
 			return nil, err
 		}
@@ -123,8 +121,8 @@ func (d *DBAL) AddModel(model *asset.Model, identifier string) error {
 
 	stmt := getStatementBuilder().
 		Insert("models").
-		Columns("key", "channel", "compute_task_key", "category", "address", "permissions", "owner", "creation_date").
-		Values(model.Key, d.channel, model.ComputeTaskKey, model.Category, model.Address.StorageAddress, model.Permissions, model.Owner, model.CreationDate.AsTime())
+		Columns("key", "channel", "compute_task_key", "address", "permissions", "owner", "creation_date").
+		Values(model.Key, d.channel, model.ComputeTaskKey, model.Address.StorageAddress, model.Permissions, model.Owner, model.CreationDate.AsTime())
 
 	return d.exec(stmt)
 }
@@ -149,7 +147,6 @@ func (d *DBAL) UpdateModel(model *asset.Model) error {
 	updateStmt := getStatementBuilder().
 		Update("models").
 		Set("compute_task_key", model.ComputeTaskKey).
-		Set("category", model.Category).
 		Set("address", nil).
 		Set("permissions", model.Permissions).
 		Set("owner", model.Owner).

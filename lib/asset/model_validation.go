@@ -12,7 +12,6 @@ func (m *NewModel) Validate() error {
 		validation.Field(&m.Key, validation.Required, is.UUID),
 		validation.Field(&m.ComputeTaskKey, validation.Required, is.UUID),
 		validation.Field(&m.ComputeTaskOutputIdentifier, validation.Required),
-		validation.Field(&m.Category, validation.In(ModelCategory_MODEL_SIMPLE, ModelCategory_MODEL_HEAD)),
 		validation.Field(&m.Address, validation.Required),
 	)
 }

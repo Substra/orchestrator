@@ -99,8 +99,6 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 		Key:            newModel.Key,
 		ComputeTaskKey: task.Key,
 		Address:        newModel.Address,
-		// This is deprecated but not yet removed
-		Category: newModel.Category, // nolint:staticcheck
 	}
 
 	model.Permissions = taskOutput.Permissions
@@ -227,24 +225,4 @@ func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([
 	}
 
 	return registeredModels, nil
-}
-
-type modelCount struct {
-	simple uint
-	head   uint
-}
-
-func countModels(models []*asset.Model) modelCount {
-	count := modelCount{}
-
-	for _, m := range models {
-		switch m.Category {
-		case asset.ModelCategory_MODEL_SIMPLE:
-			count.simple++
-		case asset.ModelCategory_MODEL_HEAD:
-			count.head++
-		}
-	}
-
-	return count
 }

@@ -19,32 +19,16 @@ func TestModelValidate(t *testing.T) {
 		"empty": {&NewModel{}, false},
 		"invalid key": {&NewModel{
 			Key:                         "not36chars",
-			Category:                    ModelCategory_MODEL_SIMPLE,
 			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			ComputeTaskOutputIdentifier: "auc",
 			Address:                     validAddressable,
 		}, false},
 		"missing output": {&NewModel{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Category:       ModelCategory_MODEL_SIMPLE,
 			ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Address:        validAddressable,
 		}, false},
 		"valid": {&NewModel{
-			Key:                         "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Category:                    ModelCategory_MODEL_SIMPLE,
-			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			ComputeTaskOutputIdentifier: "auc",
-			Address:                     validAddressable,
-		}, true},
-		"invalid category": {&NewModel{
-			Key:                         "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Category:                    ModelCategory_MODEL_UNKNOWN,
-			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			ComputeTaskOutputIdentifier: "auc",
-			Address:                     validAddressable,
-		}, false},
-		"missing category": {&NewModel{
 			Key:                         "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			ComputeTaskOutputIdentifier: "auc",
