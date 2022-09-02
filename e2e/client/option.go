@@ -93,7 +93,6 @@ type ModelOptions struct {
 	KeyRef     string
 	TaskRef    string
 	TaskOutput string
-	Category   asset.ModelCategory
 }
 
 type PerformanceOptions struct {
@@ -556,7 +555,6 @@ func DefaultModelOptions() *ModelOptions {
 		KeyRef:     DefaultModelRef,
 		TaskRef:    DefaultTrainTaskRef,
 		TaskOutput: "model",
-		Category:   asset.ModelCategory_MODEL_SIMPLE,
 	}
 }
 
@@ -572,11 +570,6 @@ func (o *ModelOptions) WithTaskRef(ref string) *ModelOptions {
 
 func (o *ModelOptions) WithTaskOutput(output string) *ModelOptions {
 	o.TaskOutput = output
-	return o
-}
-
-func (o *ModelOptions) WithCategory(category asset.ModelCategory) *ModelOptions {
-	o.Category = category
 	return o
 }
 

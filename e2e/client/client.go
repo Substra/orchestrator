@@ -659,7 +659,6 @@ func (c *TestClient) makeNewModel(o *ModelOptions) *asset.NewModel {
 		ComputeTaskKey:              c.ks.GetKey(o.TaskRef),
 		ComputeTaskOutputIdentifier: o.TaskOutput,
 		Key:                         c.ks.GetKey(o.KeyRef),
-		Category:                    o.Category,
 		Address: &asset.Addressable{
 			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
 			StorageAddress: "http://somewhere.online/model/" + uuid.NewString(),
