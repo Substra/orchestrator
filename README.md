@@ -101,10 +101,10 @@ Choose a tag (example uses `dev`).
 
 ```bash
 # If you use minikube, run `eval $(minikube -p minikube docker-env)` before the `docker build` command
-# If you use kind, run `kind load docker-image gcr.io/connect-314908/orchestrator-chaincode:dev` after the `docker build` command
-# If you use k3d, run `k3d image import gcr.io/connect-314908/orchestrator-chaincode:dev`
-docker build -f docker/orchestrator-chaincode/Dockerfile -t gcr.io/connect-314908/orchestrator-chaincode:dev .
-docker build -f docker/orchestrator-chaincode-init/Dockerfile -t gcr.io/connect-314908/orchestrator-chaincode-init:dev .
+# If you use kind, run `kind load docker-image ghcr.io/substra/orchestrator-chaincode:dev` after the `docker build` command
+# If you use k3d, run `k3d image import ghcr.io/substra/orchestrator-chaincode:dev`
+docker build -f docker/orchestrator-chaincode/Dockerfile -t ghcr.io/substra/orchestrator-chaincode:dev .
+docker build -f docker/orchestrator-chaincode-init/Dockerfile -t ghcr.io/substra/orchestrator-chaincode-init:dev .
 ```
 
 Update hlf-k8s' values so that it uses your `dev` image instead of `latest`.

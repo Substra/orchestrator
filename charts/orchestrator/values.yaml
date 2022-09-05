@@ -261,16 +261,16 @@ orchestrator:
   image:
     ## @param orchestrator.image.registry `orchestrator` image repository
     ##
-    registry: gcr.io
+    registry: ghcr.io
     ## @param orchestrator.image.repository `orchestrator` image repository
     ##
-    repository: connect-314908/orchestrator-server
+    repository: substra/orchestrator-server
     ## @param orchestrator.image.pullPolicy `orchestrator` image pull policy
     ##
     pullPolicy: IfNotPresent
     ## @param orchestrator.image.tag `orchestrator` image tag
     ##
-    tag: 0.25.0
+    tag: latest
 
   ## @param orchestrator.fullnameOverride String to fully override the `orchestrator.server.fullname`
   ##
