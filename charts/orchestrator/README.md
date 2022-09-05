@@ -1,6 +1,6 @@
 # Orchestrator
 
-Orchestrator implements the orchestration components used by the [Substra](https://github.com/SubstraFoundation/substra) platform.
+Orchestrator implements the orchestration components used by the [Substra](https://github.com/Substra/substra) platform.
 
 ## Prerequisites
 
