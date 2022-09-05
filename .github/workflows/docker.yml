@@ -16,6 +16,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  REGISTRY: ghcr.io
+
 jobs:
   build:
     strategy:
@@ -45,15 +48,15 @@ jobs:
       uses: docker/login-action@v2
       if: ${{ github.event_name != 'pull_request' }}
       with:
-        registry: gcr.io
-        username: _json_key
-        password: ${{ secrets.GCP_SA_KEY }}
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Docker metadata
       id: docker-metadata
       uses: docker/metadata-action@v4
       with:
-        images: 'gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{matrix.dockerfile}}'
+        images: '${{ env.REGISTRY }}/${{matrix.dockerfile}}'
         flavor: |
           latest=${{ env.LATEST }}
 
