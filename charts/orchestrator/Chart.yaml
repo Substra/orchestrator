@@ -6,6 +6,7 @@ type: application
 version: 7.4.0
 appVersion: 0.25.0
 kubeVersion: ">= 1.19.0-0"
+icon: https://avatars.githubusercontent.com/u/84009910?s=400
 
 keywords:
   - substra
