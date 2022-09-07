@@ -81,17 +81,17 @@ jobs:
         run: make orchestrator
 
       - name: Authenticate to Google Cloud
-        if: steps.changed_migrations.outputs.any_changed == 'true'
+        if: steps.changed_migrations.outputs.any_changed == 'true' || github.ref_type == 'tag'
         uses: google-github-actions/auth@v0
         with:
           credentials_json: '${{ secrets.GCP_BUCKET_SECRET }}'
 
       - name: Set up Google Cloud CLI
-        if: steps.changed_migrations.outputs.any_changed == 'true'
+        if: steps.changed_migrations.outputs.any_changed == 'true' || github.ref_type == 'tag'
         uses: google-github-actions/setup-gcloud@v0
 
       - name: Install psql
-        if: steps.changed_migrations.outputs.any_changed == 'true'
+        if: steps.changed_migrations.outputs.any_changed == 'true' || github.ref_type == 'tag'
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends postgresql-client
