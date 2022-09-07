@@ -3,8 +3,8 @@ name: orchestrator
 description: substra orchestration
 
 type: application
-version: 7.4.0
-appVersion: 0.25.0
+version: 7.4.1
+appVersion: 0.26.0
 kubeVersion: ">= 1.19.0-0"
 icon: https://avatars.githubusercontent.com/u/84009910?s=400
 
