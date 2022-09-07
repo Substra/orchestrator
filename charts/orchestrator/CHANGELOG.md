@@ -6,12 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.4.1] - 2022-09-05
+
+### Changed
+- bump app version to `0.26.0`
+
 ## [7.4.0] - 2022-09-05
 
+### Changed
 - update image registry
 
 ## [7.3.0] - 2022-09-01
 
+### Changed
 - enable TCP keepalive on PostgreSQL
 
 ## [7.2.3] - 2022-08-29
