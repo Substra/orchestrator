@@ -190,7 +190,7 @@ func (s *SmartContract) GetTaskInputAssets(ctx ledger.TransactionContext, wrappe
 	return wrapped, nil
 }
 
-func (s *SmartContract) DeleteOutput(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+func (s *SmartContract) DisableOutput(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err

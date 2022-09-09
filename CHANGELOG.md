@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Images are built using `protoc-gen-go` v1.18.1, `grpc_health_probe` v0.4.12 and `migrate` v1.28.1
 
+### Fixed
+
+- Disable output RPC on distributed mode
 
 ## [0.26.0] - 2022-09-07
 
