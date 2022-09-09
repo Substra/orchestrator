@@ -14,13 +14,13 @@ ARG VERSION=dev
 ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/orchestrator
 
-RUN wget -q https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.11/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe && chmod +x /bin/grpc_health_probe
+RUN wget -q https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.12/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe && chmod +x /bin/grpc_health_probe
 
 # Install migration tool
-RUN wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.15.1/migrate.linux-amd64.tar.gz | tar xzf - -C /bin/
+RUN wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xzf - -C /bin/
 
 # Install protobuf codegen dependencies
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0 && \
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1 && \
     go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
 
 WORKDIR ${SRC_DIR}
