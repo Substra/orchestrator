@@ -340,31 +340,6 @@ func TestNewTestTaskDataValidation(t *testing.T) {
 	}
 }
 
-func TestNewAggregateTrainTaskDataValidation(t *testing.T) {
-	valid := &NewAggregateTrainTaskData{
-		Worker: "MyORG2MSP",
-	}
-	empty := &NewAggregateTrainTaskData{}
-
-	cases := map[string]struct {
-		valid bool
-		data  *NewAggregateTrainTaskData
-	}{
-		"valid": {valid: true, data: valid},
-		"empty": {valid: false, data: empty},
-	}
-
-	for name, c := range cases {
-		t.Run(name, func(t *testing.T) {
-			if c.valid {
-				assert.NoError(t, c.data.Validate())
-			} else {
-				assert.Error(t, c.data.Validate())
-			}
-		})
-	}
-}
-
 func TestNewCompositeTrainTaskDataValidation(t *testing.T) {
 	valid := &NewCompositeTrainTaskData{
 		DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",

@@ -31,7 +31,8 @@ func (t *NewComputeTask) Validate() error {
 	case *NewComputeTask_Composite:
 		return d.Composite.Validate()
 	case *NewComputeTask_Aggregate:
-		return d.Aggregate.Validate()
+		// Nothing to validate, worker should be passed as NewComputeTask.Worker
+		return nil
 	case *NewComputeTask_Test:
 		return d.Test.Validate()
 	case *NewComputeTask_Train:
@@ -69,12 +70,6 @@ func (t *NewPredictTaskData) Validate() error {
 		validation.Field(&t.DataManagerKey, validation.Required, is.UUID),
 		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)))
 
-}
-
-func (t *NewAggregateTrainTaskData) Validate() error {
-	return validation.ValidateStruct(t,
-		validation.Field(&t.Worker, validation.Required),
-	)
 }
 
 func (p *ApplyTaskActionParam) Validate() error {
