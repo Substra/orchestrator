@@ -1,4 +1,4 @@
-# Backend charts
+# Orchestrator charts
 
 ## Update the chart Readme
 If you update the values in the chart `values.yaml` file you will want to update the documentation related to these values in the `README.md` file.
