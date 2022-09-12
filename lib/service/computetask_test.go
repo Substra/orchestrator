@@ -189,6 +189,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
+	os := new(MockOrganizationAPI)
 
 	provider.On("GetComputePlanService").Return(cps)
 	provider.On("GetEventService").Return(es)
@@ -198,6 +199,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
+	provider.On("GetOrganizationService").Return(os)
 
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.Key, Owner: "testOwner"}, nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
@@ -220,6 +222,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		},
 		LogsPermission: &asset.Permission{Public: true},
 	}
+	os.On("GetOrganization", dataManager.Owner).Once().Return(&asset.Organization{Id: dataManager.Owner}, nil)
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
@@ -404,6 +407,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
+	os := new(MockOrganizationAPI)
 
 	provider.On("GetComputePlanService").Return(cps)
 	provider.On("GetEventService").Return(es)
@@ -413,6 +417,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
+	provider.On("GetOrganizationService").Return(os)
 
 	cps.On("GetPlan", newTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTask.ComputePlanKey, Owner: "testOwner"}, nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
@@ -438,6 +443,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 			Download: &asset.Permission{Public: true},
 		},
 	}
+	os.On("GetOrganization", dataManager.Owner).Once().Return(&asset.Organization{Id: dataManager.Owner}, nil)
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
@@ -2267,14 +2273,34 @@ func TestGetTaskWorker(t *testing.T) {
 			},
 			worker: "worker",
 		},
+		"unknown organization": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
+				},
+				Worker: "unknown",
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"model": {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+			err: "OE0002: organization with key \"unknown\" not found",
+		},
 	}
 
 	dms := new(MockDataManagerAPI)
+	os := new(MockOrganizationAPI)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerService").Return(dms)
+	provider.On("GetOrganizationService").Return(os)
 
 	dms.On("GetDataManager", "uuid:dm1").Return(&asset.DataManager{Owner: "owner1"}, nil)
 	dms.On("GetDataManager", "uuid:dm2").Return(&asset.DataManager{Owner: "owner2"}, nil)
+	os.On("GetOrganization", "owner1").Return(nil, nil)
+	os.On("GetOrganization", "worker").Return(nil, nil)
+	os.On("GetOrganization", "unknown").Return(nil, orcerrors.NewNotFound("organization", "unknown"))
 
 	for name, c := range cases {
 		t.Run(

@@ -1082,6 +1082,12 @@ func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *as
 		inferredWorker = input.Worker
 	}
 
+	// Make sure the organization exists
+	_, err := s.GetOrganizationService().GetOrganization(inferredWorker)
+	if err != nil {
+		return "", err
+	}
+
 	return inferredWorker, nil
 }
 
