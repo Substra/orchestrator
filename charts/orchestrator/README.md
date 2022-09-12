@@ -8,7 +8,7 @@ Orchestrator implements the orchestration components used by the [Substra](https
 
 ## Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md)
+See [CHANGELOG.md](https://github.com/Substra/orchestrator/blob/main/charts/orchestrator/CHANGELOG.md)
 
 ## Installing the chart
 
