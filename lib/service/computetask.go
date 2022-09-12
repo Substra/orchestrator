@@ -396,6 +396,11 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		}
 	}
 
+	worker, err := s.getTaskWorker(input, algo)
+	if err != nil {
+		return nil, err
+	}
+
 	task := &asset.ComputeTask{
 		Key:            input.Key,
 		Algo:           algo,
@@ -409,6 +414,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
 		Inputs:         input.Inputs,
 		Outputs:        outputs,
+		Worker:         worker,
 	}
 
 	switch x := input.Data.(type) {
@@ -747,7 +753,6 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 	task.Data = &asset.ComputeTask_Composite{
 		Composite: taskData,
 	}
-	task.Worker = datamanager.Owner
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -773,7 +778,10 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 	task.Data = &asset.ComputeTask_Aggregate{
 		Aggregate: taskData,
 	}
-	task.Worker = organization.Id
+	if task.Worker == "" {
+		// Temporary fallback, while all consumers adapt to pass the worker in task field
+		task.Worker = organization.Id
+	}
 	task.LogsPermission = logsPermission
 
 	return nil
@@ -806,7 +814,6 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 	task.Data = &asset.ComputeTask_Train{
 		Train: taskData,
 	}
-	task.Worker = datamanager.Owner
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -830,7 +837,6 @@ func (s *ComputeTaskService) setPredictData(taskInput *asset.NewComputeTask, spe
 	task.Data = &asset.ComputeTask_Predict{
 		Predict: taskData,
 	}
-	task.Worker = datamanager.Owner
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -855,7 +861,6 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 	task.Data = &asset.ComputeTask_Test{
 		Test: taskData,
 	}
-	task.Worker = datamanager.Owner
 	task.LogsPermission = datamanager.LogsPermission
 
 	// Should not happen since it is validated by the NewTrain
@@ -1036,6 +1041,43 @@ func (s *ComputeTaskService) getInputAsset(kind asset.AssetKind, key, identifier
 	}
 
 	return nil, orcerrors.NewUnimplemented(fmt.Sprintf("unsupported input kind: %q", kind.String()))
+}
+
+// getTaskWorker will determine the worker on which the task should execute
+func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *asset.Algo) (string, error) {
+	var (
+		inferredWorker string
+	)
+	for _, input := range input.Inputs {
+		algoInput, ok := algo.Inputs[input.Identifier]
+		if !ok {
+			return "", orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", input.Identifier))
+		}
+		if algoInput.Kind != asset.AssetKind_ASSET_DATA_MANAGER {
+			continue
+		}
+
+		dm, err := s.getCachedDataManager(input.GetAssetKey())
+		if err != nil {
+			return "", err
+		}
+
+		if inferredWorker != "" && inferredWorker != dm.Owner {
+			return "", orcerrors.NewInvalidAsset("Task cannot depend on two datamanager with different owners")
+		}
+
+		inferredWorker = dm.Owner
+	}
+
+	if inferredWorker == "" {
+		if input.Worker == "" {
+			return "", orcerrors.NewBadRequest("Worker cannot be inferred and must be explicitly set")
+		} else {
+			inferredWorker = input.Worker
+		}
+	}
+
+	return inferredWorker, nil
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory

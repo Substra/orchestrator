@@ -317,6 +317,9 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 	}
 
+	dataManagerKey := "2837f0b7-cb0e-4a98-9df2-68c116f65ad6"
+	dataSampleKeys := []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"}
+
 	newTask := &asset.NewComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-ffffffffffff",
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
@@ -335,11 +338,14 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 					ParentTaskKey:    "aaaaaaaa-cccc-bbbb-eeee-222222222222",
 				},
 			}},
+			{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataManagerKey}},
+			{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[0]}},
+			{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[1]}},
 		},
 		Data: &asset.NewComputeTask_Composite{
 			Composite: &asset.NewCompositeTrainTaskData{
-				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
-				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+				DataManagerKey: dataManagerKey,
+				DataSampleKeys: dataSampleKeys,
 			},
 		},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
@@ -424,9 +430,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	dbal.On("GetComputeTask", parent1.Key).Once().Return(parent1, nil)
 	dbal.On("GetComputeTask", parent2.Key).Once().Return(parent2, nil)
 
-	dataManagerKey := newTask.Data.(*asset.NewComputeTask_Composite).Composite.DataManagerKey
-	dataSampleKeys := newTask.Data.(*asset.NewComputeTask_Composite).Composite.DataSampleKeys
-
 	dataManager := &asset.DataManager{
 		Key:   dataManagerKey,
 		Owner: "dm-owner",
@@ -438,7 +441,8 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
-	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
+	// Checked twice while we still deal with task specific data
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Twice().Return(nil)
 
 	// Cannot train on test data
 	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
@@ -453,6 +457,8 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Inputs: map[string]*asset.AlgoInput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
+			"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+			"data":   {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
@@ -735,7 +741,6 @@ func TestSetCompositeData(t *testing.T) {
 	err := service.setCompositeData(taskInput, specificInput, task)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "dmOwner", task.Worker)
 	assert.Equal(t, "dmUuid", task.Data.(*asset.ComputeTask_Composite).Composite.DataManagerKey)
 
 	dms.AssertExpectations(t)
@@ -2192,6 +2197,97 @@ func TestGetParentTaskKeys(t *testing.T) {
 			fmt.Sprintf("parent task keys from inputs case %d", i),
 			func(t *testing.T) {
 				assert.Equal(t, c.keys, getParentTaskKeys(c.inputs))
+			},
+		)
+	}
+}
+
+func TestGetTaskWorker(t *testing.T) {
+	cases := map[string]struct {
+		newTask *asset.NewComputeTask
+		algo    *asset.Algo
+		err     string
+		worker  string
+	}{
+		"datamanager": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm1"}},
+				},
+				Worker: "worker",
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+				},
+			},
+			worker: "owner1",
+		},
+		"conflicting datamanagers": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "opener1", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm1"}},
+					{Identifier: "opener2", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm2"}},
+				},
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"opener1": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+					"opener2": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+				},
+			},
+			err: "OE0101: Task cannot depend on two datamanager with different owners",
+		},
+		"aggregation missing worker": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
+				},
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"model": {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+			err: "OE0003: Worker cannot be inferred and must be explicitly set",
+		},
+		"aggregation with worker": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
+				},
+				Worker: "worker",
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"model": {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+			worker: "worker",
+		},
+	}
+
+	dms := new(MockDataManagerAPI)
+	provider := newMockedProvider()
+	provider.On("GetDataManagerService").Return(dms)
+
+	dms.On("GetDataManager", "uuid:dm1").Return(&asset.DataManager{Owner: "owner1"}, nil)
+	dms.On("GetDataManager", "uuid:dm2").Return(&asset.DataManager{Owner: "owner2"}, nil)
+
+	for name, c := range cases {
+		t.Run(
+			name,
+			func(t *testing.T) {
+				service := NewComputeTaskService(provider)
+
+				worker, err := service.getTaskWorker(c.newTask, c.algo)
+				if c.err != "" {
+					assert.Error(t, err)
+					assert.EqualError(t, err, c.err)
+				}
+				assert.Equal(t, c.worker, worker)
 			},
 		)
 	}
