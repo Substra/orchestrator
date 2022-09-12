@@ -72,6 +72,7 @@ type ComputeTaskService struct {
 	taskStore        map[string]*asset.ComputeTask
 	planStore        map[string]*asset.ComputePlan
 	dataManagerStore map[string]*asset.DataManager
+	orgStore         map[string]*asset.Organization
 }
 
 // NewComputeTaskService creates a new service
@@ -82,6 +83,7 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 		taskStore:                     make(map[string]*asset.ComputeTask),
 		planStore:                     make(map[string]*asset.ComputePlan),
 		dataManagerStore:              make(map[string]*asset.DataManager),
+		orgStore:                      make(map[string]*asset.Organization),
 	}
 }
 
@@ -1014,6 +1016,17 @@ func (s *ComputeTaskService) getCachedDataManager(key string) (*asset.DataManage
 	return s.dataManagerStore[key], nil
 }
 
+func (s *ComputeTaskService) getCachedOrganization(key string) (*asset.Organization, error) {
+	if _, ok := s.orgStore[key]; !ok {
+		org, err := s.GetOrganizationService().GetOrganization(key)
+		if err != nil {
+			return nil, err
+		}
+		s.orgStore[key] = org
+	}
+	return s.orgStore[key], nil
+}
+
 // getInputAsset returns an input asset with the appropriate requested asset kind
 func (s *ComputeTaskService) getInputAsset(kind asset.AssetKind, key, identifier string) (*asset.ComputeTaskInputAsset, error) {
 	inputAsset := &asset.ComputeTaskInputAsset{
@@ -1083,7 +1096,7 @@ func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *as
 	}
 
 	// Make sure the organization exists
-	_, err := s.GetOrganizationService().GetOrganization(inferredWorker)
+	_, err := s.getCachedOrganization(inferredWorker)
 	if err != nil {
 		return "", err
 	}
