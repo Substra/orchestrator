@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Worker field on NewComputeTask mandatory for tasks without input data
+
+### Deprecated
+
+- NewAggregateTrainTaskData.worker: use NewComputeTask.Worker field instead
+
 ## [0.26.1] - 2022-09-12
 
 ### Changed
