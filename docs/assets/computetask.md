@@ -106,6 +106,6 @@ Basically:
 A task is processed on a specific worker.
 
 Most of the time, the worker can be inferred from task inputs: it should be where the data is, ie. the datamanager's owner.
-In those cases, the `NewComputeTask.Worker` field is **ignored**.
+In those cases, the `NewComputeTask.Worker` field is optional and an error will be returned if the specified worker does not match the data owner.
 
 For tasks without data input (such as model aggregation tasks), the worker **MUST** explicitly be set on task creation.

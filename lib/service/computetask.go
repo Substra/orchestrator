@@ -408,6 +408,11 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 			return nil, err
 		}
 	}
+	// Make sure the organization exists
+	_, err = s.getCachedOrganization(worker)
+	if err != nil {
+		return nil, err
+	}
 
 	task := &asset.ComputeTask{
 		Key:            input.Key,
@@ -1064,44 +1069,30 @@ func (s *ComputeTaskService) getInputAsset(kind asset.AssetKind, key, identifier
 
 // getTaskWorker will determine the worker on which the task should execute
 func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *asset.Algo) (string, error) {
-	var (
-		inferredWorker string
-	)
-	for _, input := range input.Inputs {
-		algoInput, ok := algo.Inputs[input.Identifier]
+	for _, taskInput := range input.Inputs {
+		algoInput, ok := algo.Inputs[taskInput.Identifier]
 		if !ok {
-			return "", orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", input.Identifier))
+			return "", orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", taskInput.Identifier))
 		}
 		if algoInput.Kind != asset.AssetKind_ASSET_DATA_MANAGER {
 			continue
 		}
 
-		dm, err := s.getCachedDataManager(input.GetAssetKey())
+		dm, err := s.getCachedDataManager(taskInput.GetAssetKey())
 		if err != nil {
 			return "", err
 		}
-
-		if inferredWorker != "" && inferredWorker != dm.Owner {
-			return "", orcerrors.NewInvalidAsset("Task cannot depend on two datamanager with different owners")
+		if input.Worker != "" && input.Worker != dm.Owner {
+			return "", orcerrors.NewBadRequest(fmt.Sprintf("Specified worker %q does not match data manager owner: %q", input.Worker, dm.Owner))
 		}
-
-		inferredWorker = dm.Owner
+		return dm.Owner, nil
 	}
 
-	if inferredWorker == "" {
-		if input.Worker == "" {
-			return "", orcerrors.NewBadRequest("Worker cannot be inferred and must be explicitly set")
-		}
-		inferredWorker = input.Worker
+	if input.Worker == "" {
+		return "", orcerrors.NewBadRequest("Worker cannot be inferred and must be explicitly set")
 	}
 
-	// Make sure the organization exists
-	_, err := s.getCachedOrganization(inferredWorker)
-	if err != nil {
-		return "", err
-	}
-
-	return inferredWorker, nil
+	return input.Worker, nil
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory

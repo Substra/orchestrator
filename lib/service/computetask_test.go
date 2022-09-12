@@ -2220,7 +2220,6 @@ func TestGetTaskWorker(t *testing.T) {
 				Inputs: []*asset.ComputeTaskInput{
 					{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm1"}},
 				},
-				Worker: "worker",
 			},
 			algo: &asset.Algo{
 				Inputs: map[string]*asset.AlgoInput{
@@ -2229,20 +2228,19 @@ func TestGetTaskWorker(t *testing.T) {
 			},
 			worker: "owner1",
 		},
-		"conflicting datamanagers": {
+		"worker mismatch": {
 			newTask: &asset.NewComputeTask{
 				Inputs: []*asset.ComputeTaskInput{
-					{Identifier: "opener1", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm1"}},
-					{Identifier: "opener2", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm2"}},
+					{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm1"}},
 				},
+				Worker: "worker",
 			},
 			algo: &asset.Algo{
 				Inputs: map[string]*asset.AlgoInput{
-					"opener1": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
-					"opener2": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+					"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 				},
 			},
-			err: "OE0101: Task cannot depend on two datamanager with different owners",
+			err: "OE0003: Specified worker \"worker\" does not match data manager owner: \"owner1\"",
 		},
 		"aggregation missing worker": {
 			newTask: &asset.NewComputeTask{
@@ -2273,34 +2271,14 @@ func TestGetTaskWorker(t *testing.T) {
 			},
 			worker: "worker",
 		},
-		"unknown organization": {
-			newTask: &asset.NewComputeTask{
-				Inputs: []*asset.ComputeTaskInput{
-					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
-					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
-				},
-				Worker: "unknown",
-			},
-			algo: &asset.Algo{
-				Inputs: map[string]*asset.AlgoInput{
-					"model": {Kind: asset.AssetKind_ASSET_MODEL},
-				},
-			},
-			err: "OE0002: organization with key \"unknown\" not found",
-		},
 	}
 
 	dms := new(MockDataManagerAPI)
-	os := new(MockOrganizationAPI)
 	provider := newMockedProvider()
 	provider.On("GetDataManagerService").Return(dms)
-	provider.On("GetOrganizationService").Return(os)
 
 	dms.On("GetDataManager", "uuid:dm1").Return(&asset.DataManager{Owner: "owner1"}, nil)
 	dms.On("GetDataManager", "uuid:dm2").Return(&asset.DataManager{Owner: "owner2"}, nil)
-	os.On("GetOrganization", "owner1").Return(nil, nil)
-	os.On("GetOrganization", "worker").Return(nil, nil)
-	os.On("GetOrganization", "unknown").Return(nil, orcerrors.NewNotFound("organization", "unknown"))
 
 	for name, c := range cases {
 		t.Run(
