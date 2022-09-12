@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/substra/orchestrator/lib/asset"
@@ -398,7 +399,12 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 	worker, err := s.getTaskWorker(input, algo)
 	if err != nil {
-		return nil, err
+		// While we still support task specific data, do not raise if worker is not defined for aggregate tasks
+		// Worker will be set by the special setAggregateData handler
+		var orcError *orcerrors.OrcError
+		if ok := errors.As(err, &orcError); !(ok && orcError.Kind == orcerrors.ErrBadRequest && input.Category == asset.ComputeTaskCategory_TASK_AGGREGATE) {
+			return nil, err
+		}
 	}
 
 	task := &asset.ComputeTask{
@@ -760,7 +766,7 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 
 // setAggregateData hydrates task specific AggregateTrainTaskData from input
 func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, input *asset.NewAggregateTrainTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
-	organization, err := s.GetOrganizationService().GetOrganization(input.Worker)
+	organization, err := s.GetOrganizationService().GetOrganization(input.Worker) //  nolint: staticcheck
 	if err != nil {
 		return err
 	}
@@ -1072,9 +1078,8 @@ func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *as
 	if inferredWorker == "" {
 		if input.Worker == "" {
 			return "", orcerrors.NewBadRequest("Worker cannot be inferred and must be explicitly set")
-		} else {
-			inferredWorker = input.Worker
 		}
+		inferredWorker = input.Worker
 	}
 
 	return inferredWorker, nil
