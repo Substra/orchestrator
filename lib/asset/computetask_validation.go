@@ -17,7 +17,6 @@ func (t *NewComputeTask) Validate() error {
 		validation.Field(&t.AlgoKey, validation.Required, is.UUID),
 		validation.Field(&t.ComputePlanKey, validation.Required, is.UUID),
 		validation.Field(&t.Metadata, validation.By(validateMetadata)),
-		validation.Field(&t.ParentTaskKeys, validation.Each(is.UUID)),
 		validation.Field(&t.Data, validation.Required),
 		validation.Field(&t.Inputs, validation.By(validateTaskInputs)),
 		validation.Field(&t.Outputs, validation.By(validateTaskOutputs)),
