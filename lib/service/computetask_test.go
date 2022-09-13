@@ -813,32 +813,6 @@ func TestSetTestData(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
-func TestIsAlgoCompatible(t *testing.T) {
-	cases := []struct {
-		t asset.ComputeTaskCategory
-		a asset.AlgoCategory
-		o bool
-	}{
-		{t: asset.ComputeTaskCategory_TASK_AGGREGATE, a: asset.AlgoCategory_ALGO_AGGREGATE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_AGGREGATE, a: asset.AlgoCategory_ALGO_COMPOSITE, o: false},
-		{t: asset.ComputeTaskCategory_TASK_COMPOSITE, a: asset.AlgoCategory_ALGO_COMPOSITE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_TRAIN, a: asset.AlgoCategory_ALGO_SIMPLE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_TRAIN, a: asset.AlgoCategory_ALGO_COMPOSITE, o: false},
-		{t: asset.ComputeTaskCategory_TASK_TEST, a: asset.AlgoCategory_ALGO_COMPOSITE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_TEST, a: asset.AlgoCategory_ALGO_AGGREGATE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_TEST, a: asset.AlgoCategory_ALGO_SIMPLE, o: true},
-	}
-
-	for _, c := range cases {
-		t.Run(
-			fmt.Sprintf("task %s and algo %s compat: %t", c.t.String(), c.a.String(), c.o),
-			func(t *testing.T) {
-				assert.Equal(t, c.o, isAlgoCompatible(c.t, c.a))
-			},
-		)
-	}
-}
-
 func TestValidateTaskInputs(t *testing.T) {
 
 	type dependenciesErrors struct {

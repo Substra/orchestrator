@@ -545,10 +545,6 @@ func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string, taskCa
 		return nil, orcerrors.NewPermissionDenied(fmt.Sprintf("not authorized to process algo %q", algo.Key))
 	}
 
-	if !isAlgoCompatible(taskCategory, algo.Category) {
-		return nil, orcerrors.NewInvalidAsset("algo category is not compatible with task category")
-	}
-
 	return algo, nil
 }
 
@@ -1081,25 +1077,6 @@ func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *as
 	}
 
 	return input.Worker, nil
-}
-
-// isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory
-func isAlgoCompatible(taskCategory asset.ComputeTaskCategory, algoCategory asset.AlgoCategory) bool {
-	switch taskCategory {
-	case asset.ComputeTaskCategory_TASK_AGGREGATE:
-		return algoCategory == asset.AlgoCategory_ALGO_AGGREGATE
-	case asset.ComputeTaskCategory_TASK_COMPOSITE:
-		return algoCategory == asset.AlgoCategory_ALGO_COMPOSITE
-	case asset.ComputeTaskCategory_TASK_TEST:
-		return true
-	case asset.ComputeTaskCategory_TASK_TRAIN:
-		return algoCategory == asset.AlgoCategory_ALGO_SIMPLE
-	case asset.ComputeTaskCategory_TASK_PREDICT:
-		return algoCategory == asset.AlgoCategory_ALGO_PREDICT
-	default:
-		// should not happen, that means we probably don't known how to deal with task/algo couple
-		return false
-	}
 }
 
 // getRank determines the rank of a task from its parents.
