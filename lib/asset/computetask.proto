@@ -86,6 +86,7 @@ message NewComputeTask {
   ComputeTaskCategory category = 2;
   string algo_key = 3;
   string compute_plan_key = 4;
+  string worker = 6;
   // This property is now ignored, task parents are determined from the inputs.
   repeated string parent_task_keys = 5 [deprecated=true];
   oneof data {
@@ -164,7 +165,8 @@ message AggregateTrainTaskData {
 }
 
 message NewAggregateTrainTaskData {
-  string worker = 2;
+  // worker property is deprecated, pass the worker through NewComputeTask.Worker
+  string worker = 2 [deprecated=true];
 }
 
 message RegisterTasksParam {

@@ -71,6 +71,7 @@ type ComputeTaskService struct {
 	taskStore        map[string]*asset.ComputeTask
 	planStore        map[string]*asset.ComputePlan
 	dataManagerStore map[string]*asset.DataManager
+	orgStore         map[string]*asset.Organization
 }
 
 // NewComputeTaskService creates a new service
@@ -81,6 +82,7 @@ func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskS
 		taskStore:                     make(map[string]*asset.ComputeTask),
 		planStore:                     make(map[string]*asset.ComputePlan),
 		dataManagerStore:              make(map[string]*asset.DataManager),
+		orgStore:                      make(map[string]*asset.Organization),
 	}
 }
 
@@ -396,6 +398,16 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		}
 	}
 
+	worker, err := s.getTaskWorker(input, algo)
+	if err != nil {
+		return nil, err
+	}
+	// Make sure the organization exists
+	_, err = s.getCachedOrganization(worker)
+	if err != nil {
+		return nil, err
+	}
+
 	task := &asset.ComputeTask{
 		Key:            input.Key,
 		Algo:           algo,
@@ -409,6 +421,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
 		Inputs:         input.Inputs,
 		Outputs:        outputs,
+		Worker:         worker,
 	}
 
 	switch x := input.Data.(type) {
@@ -747,7 +760,6 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 	task.Data = &asset.ComputeTask_Composite{
 		Composite: taskData,
 	}
-	task.Worker = datamanager.Owner
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -755,11 +767,6 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 
 // setAggregateData hydrates task specific AggregateTrainTaskData from input
 func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, input *asset.NewAggregateTrainTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
-	organization, err := s.GetOrganizationService().GetOrganization(input.Worker)
-	if err != nil {
-		return err
-	}
-
 	logsPermission, err := s.GetPermissionService().CreatePermission(task.Owner, &asset.NewPermissions{Public: false})
 	if err != nil {
 		return err
@@ -773,7 +780,6 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 	task.Data = &asset.ComputeTask_Aggregate{
 		Aggregate: taskData,
 	}
-	task.Worker = organization.Id
 	task.LogsPermission = logsPermission
 
 	return nil
@@ -806,7 +812,6 @@ func (s *ComputeTaskService) setTrainData(taskInput *asset.NewComputeTask, speci
 	task.Data = &asset.ComputeTask_Train{
 		Train: taskData,
 	}
-	task.Worker = datamanager.Owner
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -830,7 +835,6 @@ func (s *ComputeTaskService) setPredictData(taskInput *asset.NewComputeTask, spe
 	task.Data = &asset.ComputeTask_Predict{
 		Predict: taskData,
 	}
-	task.Worker = datamanager.Owner
 	task.LogsPermission = datamanager.LogsPermission
 
 	return nil
@@ -855,7 +859,6 @@ func (s *ComputeTaskService) setTestData(input *asset.NewTestTaskData, task *ass
 	task.Data = &asset.ComputeTask_Test{
 		Test: taskData,
 	}
-	task.Worker = datamanager.Owner
 	task.LogsPermission = datamanager.LogsPermission
 
 	// Should not happen since it is validated by the NewTrain
@@ -1003,6 +1006,17 @@ func (s *ComputeTaskService) getCachedDataManager(key string) (*asset.DataManage
 	return s.dataManagerStore[key], nil
 }
 
+func (s *ComputeTaskService) getCachedOrganization(key string) (*asset.Organization, error) {
+	if _, ok := s.orgStore[key]; !ok {
+		org, err := s.GetOrganizationService().GetOrganization(key)
+		if err != nil {
+			return nil, err
+		}
+		s.orgStore[key] = org
+	}
+	return s.orgStore[key], nil
+}
+
 // getInputAsset returns an input asset with the appropriate requested asset kind
 func (s *ComputeTaskService) getInputAsset(kind asset.AssetKind, key, identifier string) (*asset.ComputeTaskInputAsset, error) {
 	inputAsset := &asset.ComputeTaskInputAsset{
@@ -1036,6 +1050,38 @@ func (s *ComputeTaskService) getInputAsset(kind asset.AssetKind, key, identifier
 	}
 
 	return nil, orcerrors.NewUnimplemented(fmt.Sprintf("unsupported input kind: %q", kind.String()))
+}
+
+// getTaskWorker will determine the worker on which the task should execute
+func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *asset.Algo) (string, error) {
+	for _, taskInput := range input.Inputs {
+		algoInput, ok := algo.Inputs[taskInput.Identifier]
+		if !ok {
+			return "", orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", taskInput.Identifier))
+		}
+		if algoInput.Kind != asset.AssetKind_ASSET_DATA_MANAGER {
+			continue
+		}
+
+		dm, err := s.getCachedDataManager(taskInput.GetAssetKey())
+		if err != nil {
+			return "", err
+		}
+		if input.Worker != "" && input.Worker != dm.Owner {
+			return "", orcerrors.NewBadRequest(fmt.Sprintf("Specified worker %q does not match data manager owner: %q", input.Worker, dm.Owner))
+		}
+		return dm.Owner, nil
+	}
+
+	if agg, ok := input.Data.(*asset.NewComputeTask_Aggregate); ok {
+		return agg.Aggregate.Worker, nil //  nolint: staticcheck
+	}
+
+	if input.Worker == "" {
+		return "", orcerrors.NewBadRequest("Worker cannot be inferred and must be explicitly set")
+	}
+
+	return input.Worker, nil
 }
 
 // isAlgoCompatible checks if the given algorithm has an appropriate category wrt taskCategory

@@ -189,6 +189,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
+	os := new(MockOrganizationAPI)
 
 	provider.On("GetComputePlanService").Return(cps)
 	provider.On("GetEventService").Return(es)
@@ -198,6 +199,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
+	provider.On("GetOrganizationService").Return(os)
 
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.Key, Owner: "testOwner"}, nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
@@ -220,6 +222,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		},
 		LogsPermission: &asset.Permission{Public: true},
 	}
+	os.On("GetOrganization", dataManager.Owner).Once().Return(&asset.Organization{Id: dataManager.Owner}, nil)
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
@@ -317,6 +320,9 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 	}
 
+	dataManagerKey := "2837f0b7-cb0e-4a98-9df2-68c116f65ad6"
+	dataSampleKeys := []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"}
+
 	newTask := &asset.NewComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-ffffffffffff",
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
@@ -335,11 +341,14 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 					ParentTaskKey:    "aaaaaaaa-cccc-bbbb-eeee-222222222222",
 				},
 			}},
+			{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataManagerKey}},
+			{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[0]}},
+			{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[1]}},
 		},
 		Data: &asset.NewComputeTask_Composite{
 			Composite: &asset.NewCompositeTrainTaskData{
-				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
-				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+				DataManagerKey: dataManagerKey,
+				DataSampleKeys: dataSampleKeys,
 			},
 		},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
@@ -398,6 +407,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
+	os := new(MockOrganizationAPI)
 
 	provider.On("GetComputePlanService").Return(cps)
 	provider.On("GetEventService").Return(es)
@@ -407,6 +417,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
+	provider.On("GetOrganizationService").Return(os)
 
 	cps.On("GetPlan", newTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTask.ComputePlanKey, Owner: "testOwner"}, nil)
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
@@ -424,9 +435,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	dbal.On("GetComputeTask", parent1.Key).Once().Return(parent1, nil)
 	dbal.On("GetComputeTask", parent2.Key).Once().Return(parent2, nil)
 
-	dataManagerKey := newTask.Data.(*asset.NewComputeTask_Composite).Composite.DataManagerKey
-	dataSampleKeys := newTask.Data.(*asset.NewComputeTask_Composite).Composite.DataSampleKeys
-
 	dataManager := &asset.DataManager{
 		Key:   dataManagerKey,
 		Owner: "dm-owner",
@@ -435,10 +443,12 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 			Download: &asset.Permission{Public: true},
 		},
 	}
+	os.On("GetOrganization", dataManager.Owner).Once().Return(&asset.Organization{Id: dataManager.Owner}, nil)
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
-	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
+	// Checked twice while we still deal with task specific data
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Twice().Return(nil)
 
 	// Cannot train on test data
 	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
@@ -453,6 +463,8 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Inputs: map[string]*asset.AlgoInput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
+			"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+			"data":   {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 		},
 		Outputs: map[string]*asset.AlgoOutput{
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
@@ -735,7 +747,6 @@ func TestSetCompositeData(t *testing.T) {
 	err := service.setCompositeData(taskInput, specificInput, task)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "dmOwner", task.Worker)
 	assert.Equal(t, "dmUuid", task.Data.(*asset.ComputeTask_Composite).Composite.DataManagerKey)
 
 	dms.AssertExpectations(t)
@@ -776,8 +787,6 @@ func TestSetAggregateData(t *testing.T) {
 		},
 	}
 
-	// check organization existence
-	ns.On("GetOrganization", "org3").Once().Return(&asset.Organization{Id: "org3"}, nil)
 	// used by permissions service
 	ns.On("GetAllOrganizations").Once().Return([]*asset.Organization{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
 
@@ -786,7 +795,6 @@ func TestSetAggregateData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "org3", task.Worker)
 	assert.ElementsMatch(t, task.LogsPermission.AuthorizedIds, []string{"org1", "org2", "org4"})
 
 	ns.AssertExpectations(t)
@@ -2192,6 +2200,114 @@ func TestGetParentTaskKeys(t *testing.T) {
 			fmt.Sprintf("parent task keys from inputs case %d", i),
 			func(t *testing.T) {
 				assert.Equal(t, c.keys, getParentTaskKeys(c.inputs))
+			},
+		)
+	}
+}
+
+func TestGetTaskWorker(t *testing.T) {
+	cases := map[string]struct {
+		newTask *asset.NewComputeTask
+		algo    *asset.Algo
+		err     string
+		worker  string
+	}{
+		"datamanager": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm1"}},
+				},
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+				},
+			},
+			worker: "owner1",
+		},
+		"worker mismatch": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm1"}},
+				},
+				Worker: "worker",
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+				},
+			},
+			err: "OE0003: Specified worker \"worker\" does not match data manager owner: \"owner1\"",
+		},
+		"aggregation missing worker": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
+				},
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"model": {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+			err: "OE0003: Worker cannot be inferred and must be explicitly set",
+		},
+		"aggregation with worker": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
+				},
+				Worker: "worker",
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"model": {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+			worker: "worker",
+		},
+		"aggregation with legacy worker field": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
+				},
+				Data: &asset.NewComputeTask_Aggregate{
+					Aggregate: &asset.NewAggregateTrainTaskData{
+						Worker: "worker", //  nolint: staticcheck
+					},
+				},
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"model": {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+			worker: "worker",
+		},
+	}
+
+	dms := new(MockDataManagerAPI)
+	provider := newMockedProvider()
+	provider.On("GetDataManagerService").Return(dms)
+
+	dms.On("GetDataManager", "uuid:dm1").Return(&asset.DataManager{Owner: "owner1"}, nil)
+	dms.On("GetDataManager", "uuid:dm2").Return(&asset.DataManager{Owner: "owner2"}, nil)
+
+	for name, c := range cases {
+		t.Run(
+			name,
+			func(t *testing.T) {
+				service := NewComputeTaskService(provider)
+
+				worker, err := service.getTaskWorker(c.newTask, c.algo)
+				if c.err != "" {
+					assert.Error(t, err)
+					assert.EqualError(t, err, c.err)
+				}
+				assert.Equal(t, c.worker, worker)
 			},
 		)
 	}
