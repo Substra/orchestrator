@@ -787,8 +787,6 @@ func TestSetAggregateData(t *testing.T) {
 		},
 	}
 
-	// check organization existence
-	ns.On("GetOrganization", "org3").Once().Return(&asset.Organization{Id: "org3"}, nil)
 	// used by permissions service
 	ns.On("GetAllOrganizations").Once().Return([]*asset.Organization{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
 
@@ -797,7 +795,6 @@ func TestSetAggregateData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "org3", task.Worker)
 	assert.ElementsMatch(t, task.LogsPermission.AuthorizedIds, []string{"org1", "org2", "org4"})
 
 	ns.AssertExpectations(t)
@@ -2263,6 +2260,25 @@ func TestGetTaskWorker(t *testing.T) {
 					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
 				},
 				Worker: "worker",
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"model": {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+			worker: "worker",
+		},
+		"aggregation with legacy worker field": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
+				},
+				Data: &asset.NewComputeTask_Aggregate{
+					Aggregate: &asset.NewAggregateTrainTaskData{
+						Worker: "worker", //  nolint: staticcheck
+					},
+				},
 			},
 			algo: &asset.Algo{
 				Inputs: map[string]*asset.AlgoInput{

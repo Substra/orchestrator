@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/substra/orchestrator/lib/asset"
@@ -401,12 +400,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 	worker, err := s.getTaskWorker(input, algo)
 	if err != nil {
-		// While we still support task specific data, do not raise if worker is not defined for aggregate tasks
-		// Worker will be set by the special setAggregateData handler
-		var orcError *orcerrors.OrcError
-		if ok := errors.As(err, &orcError); !(ok && orcError.Kind == orcerrors.ErrBadRequest && input.Category == asset.ComputeTaskCategory_TASK_AGGREGATE) {
-			return nil, err
-		}
+		return nil, err
 	}
 	// Make sure the organization exists
 	_, err = s.getCachedOrganization(worker)
@@ -773,11 +767,6 @@ func (s *ComputeTaskService) setCompositeData(taskInput *asset.NewComputeTask, s
 
 // setAggregateData hydrates task specific AggregateTrainTaskData from input
 func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, input *asset.NewAggregateTrainTaskData, task *asset.ComputeTask, parentTasks []*asset.ComputeTask) error {
-	organization, err := s.GetOrganizationService().GetOrganization(input.Worker) //  nolint: staticcheck
-	if err != nil {
-		return err
-	}
-
 	logsPermission, err := s.GetPermissionService().CreatePermission(task.Owner, &asset.NewPermissions{Public: false})
 	if err != nil {
 		return err
@@ -790,10 +779,6 @@ func (s *ComputeTaskService) setAggregateData(taskInput *asset.NewComputeTask, i
 	taskData := &asset.AggregateTrainTaskData{}
 	task.Data = &asset.ComputeTask_Aggregate{
 		Aggregate: taskData,
-	}
-	if task.Worker == "" {
-		// Temporary fallback, while all consumers adapt to pass the worker in task field
-		task.Worker = organization.Id
 	}
 	task.LogsPermission = logsPermission
 
@@ -1086,6 +1071,10 @@ func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *as
 			return "", orcerrors.NewBadRequest(fmt.Sprintf("Specified worker %q does not match data manager owner: %q", input.Worker, dm.Owner))
 		}
 		return dm.Owner, nil
+	}
+
+	if agg, ok := input.Data.(*asset.NewComputeTask_Aggregate); ok {
+		return agg.Aggregate.Worker, nil //  nolint: staticcheck
 	}
 
 	if input.Worker == "" {
