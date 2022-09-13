@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `NewComputeTask.parent_task_keys` which was deprecated since 0.26.0
+- Restriction on algo-task category matching
+- Restriction on parent task category
 
 ## [0.26.1] - 2022-09-12
 
