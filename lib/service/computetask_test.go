@@ -2287,6 +2287,24 @@ func TestGetTaskWorker(t *testing.T) {
 			},
 			worker: "worker",
 		},
+		"aggregation without legacy worker field": {
+			newTask: &asset.NewComputeTask{
+				Inputs: []*asset.ComputeTaskInput{
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
+					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
+				},
+				Data: &asset.NewComputeTask_Aggregate{
+					Aggregate: &asset.NewAggregateTrainTaskData{},
+				},
+				Worker: "worker",
+			},
+			algo: &asset.Algo{
+				Inputs: map[string]*asset.AlgoInput{
+					"model": {Kind: asset.AssetKind_ASSET_MODEL},
+				},
+			},
+			worker: "worker",
+		},
 	}
 
 	dms := new(MockDataManagerAPI)
