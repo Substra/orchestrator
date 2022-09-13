@@ -367,9 +367,6 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	if err != nil {
 		return nil, err
 	}
-	if !s.isCompatibleWithParents(input.Category, parentTasks) {
-		return nil, orcerrors.NewInvalidAsset("incompatible models from parent tasks")
-	}
 
 	status := getInitialStatusFromParents(parentTasks)
 
@@ -922,40 +919,6 @@ func (s *ComputeTaskService) getExistingParentKeys(tasks []*asset.NewComputeTask
 	}
 
 	return s.GetComputeTaskDBAL().GetExistingComputeTaskKeys(parents)
-}
-
-// isCompatibleWithParents checks task compatibility with parents tasks
-func (s *ComputeTaskService) isCompatibleWithParents(category asset.ComputeTaskCategory, parents []*asset.ComputeTask) bool {
-	inputs := map[asset.ComputeTaskCategory]uint32{}
-
-	for _, p := range parents {
-		inputs[p.Category]++
-	}
-
-	s.GetLogger().Debug().Str("category", category.String()).Interface("parents", inputs).Msg("checking parent compatibility")
-
-	noTest := inputs[asset.ComputeTaskCategory_TASK_TEST] == 0
-	noTrain := inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0
-	noComposite := inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 0
-	noParent := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0
-	compositeOnly := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 0 && inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 1
-	compositeAndAggregate := inputs[asset.ComputeTaskCategory_TASK_AGGREGATE] == 1 && inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 1
-	twoComposites := inputs[asset.ComputeTaskCategory_TASK_COMPOSITE] == 2 && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE] == 0
-
-	switch category {
-	case asset.ComputeTaskCategory_TASK_TRAIN:
-		return noTest && noComposite
-	case asset.ComputeTaskCategory_TASK_TEST:
-		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN]+inputs[asset.ComputeTaskCategory_TASK_PREDICT] == 1
-	case asset.ComputeTaskCategory_TASK_AGGREGATE:
-		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] >= 1
-	case asset.ComputeTaskCategory_TASK_COMPOSITE:
-		return noTest && noTrain && (noParent || compositeOnly || compositeAndAggregate || twoComposites)
-	case asset.ComputeTaskCategory_TASK_PREDICT:
-		return noTest && inputs[asset.ComputeTaskCategory_TASK_AGGREGATE]+inputs[asset.ComputeTaskCategory_TASK_COMPOSITE]+inputs[asset.ComputeTaskCategory_TASK_TRAIN] == 1
-	default:
-		return false
-	}
 }
 
 // allModelsAvailable checks that all parent models are available to the task
