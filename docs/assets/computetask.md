@@ -23,7 +23,7 @@ with the exception of outputs of kind "performance" which are always public and 
 
 ## Compatibility
 
-Tasks receives explicit inputs, they can be either:
+Tasks receive explicit inputs, they can be either:
 
 - a direct reference to an existing asset
 - or a reference to another task's output
@@ -32,9 +32,10 @@ On task creation, inputs should match the expectations of the algorithm used:
 
 - mandatory inputs should be defined
 - asset kind should match
-- permissions should allow processing
 
-For legacy reasons, a task cannot receive more than one datamanager
+Permissions are checked on each asset to ensure that processing and access is allowed.
+
+A task cannot have more than one datamanager as an input
 and all its datasamples should be associated with this datamanager.
 
 ## Rank
