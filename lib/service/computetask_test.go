@@ -813,32 +813,6 @@ func TestSetTestData(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
-func TestIsAlgoCompatible(t *testing.T) {
-	cases := []struct {
-		t asset.ComputeTaskCategory
-		a asset.AlgoCategory
-		o bool
-	}{
-		{t: asset.ComputeTaskCategory_TASK_AGGREGATE, a: asset.AlgoCategory_ALGO_AGGREGATE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_AGGREGATE, a: asset.AlgoCategory_ALGO_COMPOSITE, o: false},
-		{t: asset.ComputeTaskCategory_TASK_COMPOSITE, a: asset.AlgoCategory_ALGO_COMPOSITE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_TRAIN, a: asset.AlgoCategory_ALGO_SIMPLE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_TRAIN, a: asset.AlgoCategory_ALGO_COMPOSITE, o: false},
-		{t: asset.ComputeTaskCategory_TASK_TEST, a: asset.AlgoCategory_ALGO_COMPOSITE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_TEST, a: asset.AlgoCategory_ALGO_AGGREGATE, o: true},
-		{t: asset.ComputeTaskCategory_TASK_TEST, a: asset.AlgoCategory_ALGO_SIMPLE, o: true},
-	}
-
-	for _, c := range cases {
-		t.Run(
-			fmt.Sprintf("task %s and algo %s compat: %t", c.t.String(), c.a.String(), c.o),
-			func(t *testing.T) {
-				assert.Equal(t, c.o, isAlgoCompatible(c.t, c.a))
-			},
-		)
-	}
-}
-
 func TestValidateTaskInputs(t *testing.T) {
 
 	type dependenciesErrors struct {
@@ -1241,106 +1215,6 @@ func TestValidateTaskOutputs(t *testing.T) {
 				} else {
 					assert.ErrorContains(t, err, c.expectedError)
 				}
-			},
-		)
-	}
-}
-
-func TestIsParentCompatible(t *testing.T) {
-	cases := []struct {
-		n string
-		t asset.ComputeTaskCategory
-		p []*asset.ComputeTask
-		o bool
-	}{
-		{
-			"Top train task",
-			asset.ComputeTaskCategory_TASK_TRAIN,
-			[]*asset.ComputeTask{},
-			true, // Train can have no parent
-		},
-		{
-			"Train task with test parent",
-			asset.ComputeTaskCategory_TASK_TRAIN,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_TEST}},
-			false, // Cannot train with a test parent
-		},
-		{
-			"Train task with composite parent",
-			asset.ComputeTaskCategory_TASK_TRAIN,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_COMPOSITE}},
-			false, // Cannot train with a composite parent
-		},
-		{
-			"Test task with composite parent",
-			asset.ComputeTaskCategory_TASK_TEST,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_COMPOSITE}},
-			true,
-		},
-		{
-			"Test task with train parent",
-			asset.ComputeTaskCategory_TASK_TEST,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_TRAIN}},
-			true,
-		},
-		{
-			"Test task with train and composite parent",
-			asset.ComputeTaskCategory_TASK_TEST,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_TRAIN}, {Category: asset.ComputeTaskCategory_TASK_COMPOSITE}},
-			false,
-		},
-		{
-			"Aggregate task with train and composite parent",
-			asset.ComputeTaskCategory_TASK_AGGREGATE,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_TRAIN}, {Category: asset.ComputeTaskCategory_TASK_COMPOSITE}},
-			true,
-		},
-		{
-			"Composite task with train and composite parent",
-			asset.ComputeTaskCategory_TASK_COMPOSITE,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_TRAIN}, {Category: asset.ComputeTaskCategory_TASK_COMPOSITE}},
-			false,
-		},
-		{
-			"Composite task with train and composite parent",
-			asset.ComputeTaskCategory_TASK_COMPOSITE,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_COMPOSITE}},
-			true,
-		},
-		{
-			"Composite task with aggregate and composite parent",
-			asset.ComputeTaskCategory_TASK_COMPOSITE,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_COMPOSITE}, {Category: asset.ComputeTaskCategory_TASK_AGGREGATE}},
-			true,
-		},
-		{
-			"Composite task without parents",
-			asset.ComputeTaskCategory_TASK_COMPOSITE,
-			[]*asset.ComputeTask{},
-			true,
-		},
-		{
-			"Composite task with two composite parents",
-			asset.ComputeTaskCategory_TASK_COMPOSITE,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_COMPOSITE}, {Category: asset.ComputeTaskCategory_TASK_COMPOSITE}},
-			true,
-		},
-		{
-			"Composite task with two composite parents and aggregate",
-			asset.ComputeTaskCategory_TASK_COMPOSITE,
-			[]*asset.ComputeTask{{Category: asset.ComputeTaskCategory_TASK_COMPOSITE}, {Category: asset.ComputeTaskCategory_TASK_COMPOSITE}, {Category: asset.ComputeTaskCategory_TASK_AGGREGATE}},
-			false,
-		},
-	}
-
-	provider := newMockedProvider()
-	service := NewComputeTaskService(provider)
-
-	for _, c := range cases {
-		t.Run(
-			fmt.Sprintf("%s: %t", c.n, c.o),
-			func(t *testing.T) {
-				assert.Equal(t, c.o, service.isCompatibleWithParents(c.t, c.p))
 			},
 		)
 	}

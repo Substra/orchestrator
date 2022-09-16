@@ -16,33 +16,27 @@ Those models will have different [permissions](./permissions.md), which will be 
 
 ## Compute task outputs
 
-Upon successful execution, compute task should generate *outputs* which correspond to the outputs defined in their [Algo](./algo.md). Each compute task output has a separate set of [Permissions](../permissions.md). The permissions must be set for each output at task creation, with the exception of outputs of kind "performance" which are always public and for which setting specific permissions is not allowed.
+Upon successful execution, compute task should generate *outputs* which correspond to the outputs defined in their [Algo](./algo.md).
+Each compute task output has a separate set of [Permissions](../permissions.md).
+The permissions must be set for each output at task creation,
+with the exception of outputs of kind "performance" which are always public and for which setting specific permissions is not allowed.
 
 ## Compatibility
 
-Since a compute task will receive models from their parents,
-there are some restrictions on which parents are allowed for each task.
+Tasks receive explicit inputs, they can be either:
 
-Here is the expected cardinality for each task category:
+- a direct reference to an existing asset
+- or a reference to another task's output
 
-**Note**:
+On task creation, inputs should match the expectations of the algorithm used:
 
-- the asterisk denotes an exclusive link, ie a *Test* task can only have **one** parent at most
-- parenthesis denotes optional dependencies
-- no parents may be a valid input
+- mandatory inputs should be defined
+- asset kind should match
 
-| children ↓ / parent → | Train | Test | Aggregate | Composite | Predict |
-|-----------------------|-------|------|-----------|-----------|---------|
-| Train                 | n     | 0    | n         | 0         | 0       |
-| Test                  | 1*    | 0    | 1*        | 1*        | 1*      |
-| Aggregate             | n     | 0    | n         | n         | 0       |
-| Composite             | 0     | 0    | (1)       | 1, (2)    | 0       |
-| Predict               | 1*    | 0    | 1*        | 1*        | 0       |
+Permissions are checked on each asset to ensure that processing and access is allowed.
 
-A Composite task may have:
-- no parents
-- an aggregate and a composite (head will come from the composite)
-- two composites (head will come from the **first parent task**)
+A task cannot have more than one datamanager as an input
+and all its datasamples should be associated with this datamanager.
 
 ## Rank
 
