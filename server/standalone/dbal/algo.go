@@ -16,7 +16,6 @@ import (
 type sqlAlgo struct {
 	Key          string
 	Name         string
-	Category     asset.AlgoCategory
 	Description  asset.Addressable
 	Algorithm    asset.Addressable
 	Permissions  asset.Permissions
@@ -29,7 +28,6 @@ func (a *sqlAlgo) toAlgo() *asset.Algo {
 	return &asset.Algo{
 		Key:          a.Key,
 		Name:         a.Name,
-		Category:     a.Category,
 		Description:  &a.Description,
 		Algorithm:    &a.Algorithm,
 		Permissions:  &a.Permissions,
@@ -53,8 +51,8 @@ func (d *DBAL) AddAlgo(algo *asset.Algo) error {
 
 	stmt := getStatementBuilder().
 		Insert("algos").
-		Columns("key", "channel", "name", "category", "description", "algorithm", "permissions", "owner", "creation_date", "metadata").
-		Values(algo.Key, d.channel, algo.Name, algo.Category, algo.Description.StorageAddress, algo.Algorithm.StorageAddress, algo.Permissions, algo.Owner, algo.CreationDate.AsTime(), algo.Metadata)
+		Columns("key", "channel", "name", "description", "algorithm", "permissions", "owner", "creation_date", "metadata").
+		Values(algo.Key, d.channel, algo.Name, algo.Description.StorageAddress, algo.Algorithm.StorageAddress, algo.Permissions, algo.Owner, algo.CreationDate.AsTime(), algo.Metadata)
 
 	err = d.exec(stmt)
 	if err != nil {
@@ -77,7 +75,7 @@ func (d *DBAL) AddAlgo(algo *asset.Algo) error {
 // GetAlgo implements persistence.AlgoDBAL
 func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 	stmt := getStatementBuilder().
-		Select("key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		Select("key", "name", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
 		From("expanded_algos").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
@@ -87,7 +85,7 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 	}
 
 	al := sqlAlgo{}
-	err = row.Scan(&al.Key, &al.Name, &al.Category, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
+	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -146,7 +144,7 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		Select("key", "name", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
 		From("expanded_algos").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").
@@ -175,7 +173,7 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	for rows.Next() {
 		al := sqlAlgo{}
 
-		err = rows.Scan(&al.Key, &al.Name, &al.Category, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
+		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
 		if err != nil {
 			return nil, "", err
 		}

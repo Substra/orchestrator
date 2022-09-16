@@ -66,15 +66,6 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register performance for task with status %q", task.Status.String()))
 	}
 
-	algo, err := s.GetAlgoService().GetAlgo(newPerf.MetricKey)
-	if err != nil {
-		return nil, err
-	}
-
-	if algo.Category != asset.AlgoCategory_ALGO_METRIC {
-		return nil, errors.NewInvalidAsset(fmt.Sprintf("MetricKey should point to an Algo with category %s", asset.AlgoCategory_ALGO_METRIC.String()))
-	}
-
 	if _, ok := task.Outputs[newPerf.ComputeTaskOutputIdentifier]; !ok {
 		return nil, errors.NewMissingTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier)
 	}

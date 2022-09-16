@@ -53,6 +53,14 @@ func TestAlgoValidate(t *testing.T) {
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 		}, true},
+		"valid_no_category": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+		}, true},
+
 		"invalid_input_kind": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",

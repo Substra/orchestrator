@@ -32,7 +32,7 @@ message AlgoOutput {
 message Algo {
   string key = 1;
   string name = 2;
-  AlgoCategory category = 3;
+  AlgoCategory category = 3 [deprecated=true];
   Addressable description = 4;
   Addressable algorithm = 5;
   Permissions permissions = 6;
@@ -48,7 +48,7 @@ message Algo {
 message NewAlgo {
   string key = 1;
   string name = 2;
-  AlgoCategory category = 3;
+  AlgoCategory category = 3 [deprecated=true];
   Addressable description = 4;
   Addressable algorithm = 5;
   NewPermissions new_permissions = 6;

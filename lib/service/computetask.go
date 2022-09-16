@@ -378,7 +378,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
-	algo, err := s.getCheckedAlgo(input.AlgoKey, owner, input.Category)
+	algo, err := s.getCheckedAlgo(input.AlgoKey, owner)
 	if err != nil {
 		return nil, err
 	}
@@ -526,8 +526,8 @@ func (s *ComputeTaskService) addComputeTaskOutputAsset(output *asset.ComputeTask
 }
 
 // getCheckedAlgo returns the Algo identified by given key,
-// it will return an error if the algorithm is not processable by the owner or not compatible with the task.
-func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string, taskCategory asset.ComputeTaskCategory) (*asset.Algo, error) {
+// it will return an error if the algorithm is not processable by the owner.
+func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string) (*asset.Algo, error) {
 	if _, ok := s.algoStore[algoKey]; !ok {
 		algo, err := s.GetAlgoService().GetAlgo(algoKey)
 		if err != nil {
