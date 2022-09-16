@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 
 - NewAggregateTrainTaskData.worker: use NewComputeTask.Worker field instead
+- Algo.category: You should not rely on categories anymore, all algo categories will be returned as UNKNOWN
+- NewAlgo.category: No category is expected
 
 ### Removed
 
