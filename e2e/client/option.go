@@ -429,9 +429,7 @@ func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Worker:         o.Worker,
 		Data: &asset.NewComputeTask_Aggregate{
-			Aggregate: &asset.NewAggregateTrainTaskData{
-				Worker: o.Worker,
-			},
+			Aggregate: &asset.NewAggregateTrainTaskData{},
 		},
 		Inputs:  GetNewTaskInputs(ks, o.Inputs),
 		Outputs: o.Outputs,
