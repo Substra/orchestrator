@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2022-09-19
+
 ### Added
 
 - Worker field on NewComputeTask mandatory for tasks without input data
