@@ -738,9 +738,7 @@ func TestSetAggregateData(t *testing.T) {
 	taskInput := &asset.NewComputeTask{
 		AlgoKey: "algoUuid",
 	}
-	specificInput := &asset.NewAggregateTrainTaskData{
-		Worker: "org3",
-	}
+	specificInput := &asset.NewAggregateTrainTaskData{}
 	task := &asset.ComputeTask{
 		Owner:    "org1",
 		Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
@@ -2106,43 +2104,6 @@ func TestGetTaskWorker(t *testing.T) {
 				Inputs: []*asset.ComputeTaskInput{
 					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
 					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
-				},
-				Worker: "worker",
-			},
-			algo: &asset.Algo{
-				Inputs: map[string]*asset.AlgoInput{
-					"model": {Kind: asset.AssetKind_ASSET_MODEL},
-				},
-			},
-			worker: "worker",
-		},
-		"aggregation with legacy worker field": {
-			newTask: &asset.NewComputeTask{
-				Inputs: []*asset.ComputeTaskInput{
-					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
-					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
-				},
-				Data: &asset.NewComputeTask_Aggregate{
-					Aggregate: &asset.NewAggregateTrainTaskData{
-						Worker: "worker", //  nolint: staticcheck
-					},
-				},
-			},
-			algo: &asset.Algo{
-				Inputs: map[string]*asset.AlgoInput{
-					"model": {Kind: asset.AssetKind_ASSET_MODEL},
-				},
-			},
-			worker: "worker",
-		},
-		"aggregation without legacy worker field": {
-			newTask: &asset.NewComputeTask{
-				Inputs: []*asset.ComputeTaskInput{
-					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model1"}},
-					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
-				},
-				Data: &asset.NewComputeTask_Aggregate{
-					Aggregate: &asset.NewAggregateTrainTaskData{},
 				},
 				Worker: "worker",
 			},

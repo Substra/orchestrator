@@ -166,8 +166,8 @@ message AggregateTrainTaskData {
 }
 
 message NewAggregateTrainTaskData {
-  // worker property is deprecated, pass the worker through NewComputeTask.Worker
-  string worker = 2 [deprecated=true];
+  reserved 2;
+  reserved "worker";
 }
 
 message RegisterTasksParam {
