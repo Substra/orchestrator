@@ -270,7 +270,7 @@ orchestrator:
     pullPolicy: IfNotPresent
     ## @param orchestrator.image.tag `orchestrator` image tag
     ##
-    tag: 0.26.1
+    tag: 0.27.0
 
   ## @param orchestrator.fullnameOverride String to fully override the `orchestrator.server.fullname`
   ##
