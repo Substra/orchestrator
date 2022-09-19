@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Task outputs events come after their referenced asset creation event
+
 ## [0.27.0] - 2022-09-19
 
 ### Added

@@ -107,16 +107,6 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, err
 	}
 
-	outputAsset := &asset.ComputeTaskOutputAsset{
-		ComputeTaskKey:              newPerf.ComputeTaskKey,
-		ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
-		AssetKind:                   asset.AssetKind_ASSET_PERFORMANCE,
-		AssetKey:                    perf.GetKey(),
-	}
-	err = s.GetComputeTaskService().addComputeTaskOutputAsset(outputAsset)
-	if err != nil {
-		return nil, err
-	}
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  perf.GetKey(),
@@ -124,6 +114,16 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		Asset:     &asset.Event_Performance{Performance: perf},
 	}
 	err = s.GetEventService().RegisterEvents(event)
+	if err != nil {
+		return nil, err
+	}
+	outputAsset := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              newPerf.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_PERFORMANCE,
+		AssetKey:                    perf.GetKey(),
+	}
+	err = s.GetComputeTaskService().addComputeTaskOutputAsset(outputAsset)
 	if err != nil {
 		return nil, err
 	}
