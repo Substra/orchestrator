@@ -29,7 +29,7 @@ func TestRegisterModel(t *testing.T) {
 
 	taskEvents := appClient.QueryEvents(&asset.EventQueryFilter{AssetKey: appClient.GetKeyStore().GetKey(client.DefaultTrainTaskRef)}, "", 10)
 
-	// 3 events: start, model creation, task output asset creation
+	// 3 events: creation, start, task output asset creation
 	require.Equalf(t, 3, len(taskEvents.Events), "events: %v", taskEvents.Events)
 
 	retrievedModel := appClient.GetModel(client.DefaultModelRef)

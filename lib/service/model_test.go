@@ -235,7 +235,6 @@ func TestRegisterTrainModel(t *testing.T) {
 		AssetKind:                   asset.AssetKind_ASSET_MODEL,
 		AssetKey:                    model.Key,
 	}
-	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_MODEL,
@@ -243,7 +242,10 @@ func TestRegisterTrainModel(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Asset:     &asset.Event_Model{Model: storedModel},
 	}
-	es.On("RegisterEvents", event).Once().Return(nil)
+
+	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil).NotBefore(
+		es.On("RegisterEvents", event).Once().Return(nil),
+	)
 
 	_, err := service.registerModel(model, "test", persistence.ComputeTaskOutputCounter{}, task)
 	assert.NoError(t, err)

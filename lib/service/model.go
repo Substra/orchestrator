@@ -124,16 +124,6 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 		return nil, err
 	}
 
-	outputAsset := &asset.ComputeTaskOutputAsset{
-		ComputeTaskKey:              newModel.ComputeTaskKey,
-		ComputeTaskOutputIdentifier: newModel.ComputeTaskOutputIdentifier,
-		AssetKind:                   asset.AssetKind_ASSET_MODEL,
-		AssetKey:                    newModel.Key,
-	}
-	err = s.GetComputeTaskService().addComputeTaskOutputAsset(outputAsset)
-	if err != nil {
-		return nil, err
-	}
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  model.Key,
@@ -141,6 +131,16 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 		Asset:     &asset.Event_Model{Model: model},
 	}
 	err = s.GetEventService().RegisterEvents(event)
+	if err != nil {
+		return nil, err
+	}
+	outputAsset := &asset.ComputeTaskOutputAsset{
+		ComputeTaskKey:              newModel.ComputeTaskKey,
+		ComputeTaskOutputIdentifier: newModel.ComputeTaskOutputIdentifier,
+		AssetKind:                   asset.AssetKind_ASSET_MODEL,
+		AssetKey:                    newModel.Key,
+	}
+	err = s.GetComputeTaskService().addComputeTaskOutputAsset(outputAsset)
 	if err != nil {
 		return nil, err
 	}

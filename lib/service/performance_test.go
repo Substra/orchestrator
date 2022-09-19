@@ -74,7 +74,6 @@ func TestRegisterPerformance(t *testing.T) {
 		AssetKind:                   asset.AssetKind_ASSET_PERFORMANCE,
 		AssetKey:                    stored.GetKey(),
 	}
-	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
 
 	event := &asset.Event{
 		AssetKind: asset.AssetKind_ASSET_PERFORMANCE,
@@ -82,7 +81,10 @@ func TestRegisterPerformance(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Asset:     &asset.Event_Performance{Performance: stored},
 	}
-	es.On("RegisterEvents", event).Once().Return(nil)
+
+	cts.On("addComputeTaskOutputAsset", output).Once().Return(nil).NotBefore(
+		es.On("RegisterEvents", event).Once().Return(nil),
+	)
 
 	_, err := service.RegisterPerformance(perf, "test")
 	assert.NoError(t, err)
