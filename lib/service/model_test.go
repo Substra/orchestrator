@@ -728,45 +728,6 @@ func TestCanDisableModel(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
-func TestDisableModel(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
-	es := new(MockEventAPI)
-	provider := newMockedProvider()
-	provider.On("GetModelDBAL").Return(dbal)
-	provider.On("GetComputeTaskService").Return(cts)
-	provider.On("GetEventService").Return(es)
-	service := NewModelService(provider)
-
-	cts.On("canDisableModels", "taskKey", "requester").Return(true, nil)
-
-	model := &asset.Model{
-		Key:            "modelUuid",
-		ComputeTaskKey: "taskKey",
-		Address:        &asset.Addressable{Checksum: "sha", StorageAddress: "http://there"},
-	}
-	dbal.On("GetModel", "modelUuid").Return(model, nil)
-
-	updatedModel := &asset.Model{Key: "modelUuid", ComputeTaskKey: "taskKey"}
-	dbal.On("UpdateModel", updatedModel).Return(nil)
-
-	event := &asset.Event{
-		AssetKind: asset.AssetKind_ASSET_MODEL,
-		AssetKey:  "modelUuid",
-		EventKind: asset.EventKind_EVENT_ASSET_DISABLED,
-		Asset:     &asset.Event_Model{Model: updatedModel},
-	}
-	es.On("RegisterEvents", event).Once().Return(nil)
-
-	err := service.DisableModel("modelUuid", "requester")
-	assert.NoError(t, err)
-
-	cts.AssertExpectations(t)
-	dbal.AssertExpectations(t)
-	provider.AssertExpectations(t)
-	es.AssertExpectations(t)
-}
-
 func TestAreAllOutputsRegistered(t *testing.T) {
 	cases := map[string]struct {
 		task    *asset.ComputeTask

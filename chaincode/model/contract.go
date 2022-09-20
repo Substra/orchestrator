@@ -155,35 +155,6 @@ func (s *SmartContract) CanDisableModel(ctx ledger.TransactionContext, wrapper *
 	return wrapped, nil
 }
 
-func (s *SmartContract) DisableModel(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
-	provider, err := ctx.GetProvider()
-	if err != nil {
-		return err
-	}
-	service := provider.GetModelService()
-
-	params := new(asset.DisableModelParam)
-	err = wrapper.Unwrap(params)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to unwrap param")
-		return err
-	}
-
-	requester, err := ledger.GetTxCreator(ctx.GetStub())
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to extract tx creator")
-		return err
-	}
-
-	err = service.DisableModel(params.ModelKey, requester)
-	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to check whether model can be disabled")
-		return err
-	}
-
-	return nil
-}
-
 func (s *SmartContract) RegisterModels(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {

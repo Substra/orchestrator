@@ -13,8 +13,6 @@ import (
 type ModelAPI interface {
 	GetComputeTaskOutputModels(key string) ([]*asset.Model, error)
 	CanDisableModel(key, requester string) (bool, error)
-	// DisableModel removes a model address and emit a "disabled" event
-	DisableModel(key string, requester string) error
 	GetModel(key string) (*asset.Model, error)
 	RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error)
 	GetCheckedModel(key string, worker string) (*asset.Model, error)
@@ -199,43 +197,6 @@ func (s *ModelService) CanDisableModel(key string, requester string) (bool, erro
 
 func (s *ModelService) canDisableModel(model *asset.Model, requester string) (bool, error) {
 	return s.GetComputeTaskService().canDisableModels(model.ComputeTaskKey, requester)
-}
-
-// DisableModel removes model's address and emit an "disabled" event
-func (s *ModelService) DisableModel(key string, requester string) error {
-	s.GetLogger().Debug().Str("modelKey", key).Msg("disabling model")
-	model, err := s.GetModelDBAL().GetModel(key)
-	if err != nil {
-		return err
-	}
-
-	canClean, err := s.canDisableModel(model, requester)
-	if err != nil {
-		return err
-	}
-	if !canClean {
-		return errors.NewCannotDisableModel("cannot disable a model in use")
-	}
-
-	model.Address = nil
-
-	err = s.GetModelDBAL().UpdateModel(model)
-	if err != nil {
-		return err
-	}
-
-	event := &asset.Event{
-		EventKind: asset.EventKind_EVENT_ASSET_DISABLED,
-		AssetKey:  model.Key,
-		AssetKind: asset.AssetKind_ASSET_MODEL,
-		Asset:     &asset.Event_Model{Model: model},
-	}
-	err = s.GetEventService().RegisterEvents(event)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (s *ModelService) disable(assetKey string) error {
