@@ -420,15 +420,6 @@ func (c *TestClient) CanDisableModel(modelRef string) bool {
 	return resp.CanDisable
 }
 
-func (c *TestClient) DisableModel(modelRef string) {
-	modelKey := c.ks.GetKey(modelRef)
-	c.logger.Debug().Str("modelKey", modelKey).Msg("disabling model")
-	_, err := c.modelService.DisableModel(c.ctx, &asset.DisableModelParam{ModelKey: modelKey})
-	if err != nil {
-		c.logger.Fatal().Err(err).Msg("DisableModel failed")
-	}
-}
-
 func (c *TestClient) DisableOutput(taskRef string, identifier string) {
 	taskKey := c.ks.GetKey(taskRef)
 	c.logger.Debug().Str("taskKey", taskKey).Str("identifier", identifier).Msg("disabling output")
