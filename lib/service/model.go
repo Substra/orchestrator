@@ -12,7 +12,6 @@ import (
 
 type ModelAPI interface {
 	GetComputeTaskOutputModels(key string) ([]*asset.Model, error)
-	CanDisableModel(key, requester string) (bool, error)
 	GetModel(key string) (*asset.Model, error)
 	RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error)
 	GetCheckedModel(key string, worker string) (*asset.Model, error)
@@ -182,21 +181,6 @@ func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requeste
 	}
 
 	return model, nil
-}
-
-// CanDisableModel returns true if the model can be disabled
-func (s *ModelService) CanDisableModel(key string, requester string) (bool, error) {
-	s.GetLogger().Debug().Str("modelKey", key).Msg("checking whether model can be disabled")
-	model, err := s.GetModelDBAL().GetModel(key)
-	if err != nil {
-		return false, err
-	}
-
-	return s.canDisableModel(model, requester)
-}
-
-func (s *ModelService) canDisableModel(model *asset.Model, requester string) (bool, error) {
-	return s.GetComputeTaskService().canDisableModels(model.ComputeTaskKey, requester)
 }
 
 func (s *ModelService) disable(assetKey string) error {

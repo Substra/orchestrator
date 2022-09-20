@@ -60,26 +60,6 @@ func (s *ModelServer) GetComputeTaskOutputModels(ctx context.Context, param *ass
 	}, nil
 }
 
-func (s *ModelServer) CanDisableModel(ctx context.Context, param *asset.CanDisableModelParam) (*asset.CanDisableModelResponse, error) {
-	mspid, err := commonInterceptors.ExtractMSPID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	services, err := interceptors.ExtractProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	can, err := services.GetModelService().CanDisableModel(param.ModelKey, mspid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &asset.CanDisableModelResponse{
-		CanDisable: can,
-	}, nil
-}
-
 func (s *ModelServer) RegisterModels(ctx context.Context, param *asset.RegisterModelsParam) (*asset.RegisterModelsResponse, error) {
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {

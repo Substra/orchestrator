@@ -33,9 +33,6 @@ type ComputeTaskAPI interface {
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
 	GetInputAssets(key string) ([]*asset.ComputeTaskInputAsset, error)
 	DisableOutput(taskKey string, identifier string, requester string) error
-	// canDisableModels is internal only (exposed only to other services).
-	// it will return true if models produced by the task can be disabled
-	canDisableModels(key, requester string) (bool, error)
 	// applyTaskAction is internal only, it will trigger a task status update.
 	applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error
 	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
@@ -302,6 +299,7 @@ func (s *ComputeTaskService) sortTasks(newTasks []*asset.NewComputeTask, existin
 	for i := 0; i < len(unsortedTasks); i++ {
 		unsortedParentsCount[unsortedTasks[i].Key] = 0
 		// We count the number of parents that are not already registered in the persistence layer
+
 		for _, parent := range getParentTaskKeys(unsortedTasks[i].Inputs) {
 			if !utils.SliceContains(existingTasks, parent) {
 				unsortedParentsCount[unsortedTasks[i].Key]++
@@ -451,62 +449,6 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	s.taskStore[task.Key] = task
 
 	return task, nil
-}
-
-// Models produced by a task can only be disabled if all those conditions are met:
-// - the compute plan has the DeleteIntermediaryModel set
-// - task has train children, ie: not at the tip of the compute plan (test/predict children are ignored)
-// - task is in a terminal state (done, failed, canceled)
-// - all children are in a terminal state
-func (s *ComputeTaskService) canDisableModels(key string, requester string) (bool, error) {
-	logger := s.GetLogger().With().Str("taskKey", key).Logger()
-	task, err := s.GetTask(key)
-	if err != nil {
-		return false, err
-	}
-	if task.Worker != requester {
-		return false, orcerrors.NewPermissionDenied("only the worker can disable a task outputs")
-	}
-
-	state := newState(&dumbUpdater, task)
-	if len(state.AvailableTransitions()) > 0 {
-		logger.Debug().Str("status", state.Current()).Msg("skip model disable: task not in final state")
-		return false, nil
-	}
-
-	planAllowIntermediary, err := s.GetComputePlanService().canDeleteModels(task.ComputePlanKey)
-	if err != nil {
-		return false, err
-	}
-	if !planAllowIntermediary {
-		logger.Debug().Str("computePlanKey", task.ComputePlanKey).Msg("skip model disable: DeleteIntermediaryModels is false")
-		return false, nil
-	}
-
-	children, err := s.GetComputeTaskDBAL().GetComputeTaskChildren(key)
-	if err != nil {
-		return false, err
-	}
-
-	trainChildren := 0
-
-	for _, child := range children {
-		if child.Category != asset.ComputeTaskCategory_TASK_TEST && child.Category != asset.ComputeTaskCategory_TASK_PREDICT {
-			trainChildren++
-		}
-		state := newState(&dumbUpdater, child)
-		if len(state.AvailableTransitions()) > 0 {
-			logger.Debug().Str("childKey", child.Key).Msg("cannot disable model: task has active children")
-			return false, nil
-		}
-	}
-
-	if trainChildren == 0 {
-		logger.Debug().Msg("cannot disable model: task has no children")
-		return false, nil
-	}
-
-	return true, nil
 }
 
 func (s *ComputeTaskService) addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error {

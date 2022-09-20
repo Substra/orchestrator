@@ -704,30 +704,6 @@ func TestRegisterInvalidOutput(t *testing.T) {
 	provider.AssertExpectations(t)
 }
 
-func TestCanDisableModel(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	cts := new(MockComputeTaskAPI)
-	provider := newMockedProvider()
-	provider.On("GetModelDBAL").Return(dbal)
-	provider.On("GetComputeTaskService").Return(cts)
-	service := NewModelService(provider)
-
-	cts.On("canDisableModels", "taskKey", "requester").Once().Return(true, nil)
-
-	dbal.On("GetModel", "modelUuid").Once().Return(&asset.Model{
-		Key:            "modelUuid",
-		ComputeTaskKey: "taskKey",
-	}, nil)
-
-	can, err := service.CanDisableModel("modelUuid", "requester")
-	assert.NoError(t, err)
-	assert.True(t, can)
-
-	cts.AssertExpectations(t)
-	dbal.AssertExpectations(t)
-	provider.AssertExpectations(t)
-}
-
 func TestAreAllOutputsRegistered(t *testing.T) {
 	cases := map[string]struct {
 		task    *asset.ComputeTask
