@@ -78,19 +78,3 @@ func TestCanDisableModel(t *testing.T) {
 	p.AssertExpectations(t)
 	ms.AssertExpectations(t)
 }
-
-func TestDisableModel(t *testing.T) {
-	ctx, p := getContext()
-	ms := new(service.MockModelAPI)
-
-	server := NewModelServer()
-
-	p.On("GetModelService").Return(ms)
-	ms.On("DisableModel", "uuid", "requester").Once().Return(nil)
-
-	_, err := server.DisableModel(ctx, &asset.DisableModelParam{ModelKey: "uuid"})
-	assert.NoError(t, err)
-
-	p.AssertExpectations(t)
-	ms.AssertExpectations(t)
-}

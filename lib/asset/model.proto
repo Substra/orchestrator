@@ -55,15 +55,9 @@ message CanDisableModelResponse {
   bool can_disable = 1;
 }
 
-message DisableModelParam {
-  string model_key = 1;
-}
-
 message GetModelParam {
   string key = 1;
 }
-
-message DisableModelResponse {}
 
 service ModelService {
   rpc RegisterModel(NewModel) returns (Model) {
@@ -73,5 +67,4 @@ service ModelService {
   rpc GetModel(GetModelParam) returns (Model);
   rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse);
   rpc CanDisableModel(CanDisableModelParam) returns (CanDisableModelResponse);
-  rpc DisableModel(DisableModelParam) returns (DisableModelResponse);
 }

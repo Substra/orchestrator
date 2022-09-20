@@ -90,21 +90,6 @@ func (a *ModelAdapter) CanDisableModel(ctx context.Context, param *asset.CanDisa
 	return response, nil
 }
 
-func (a *ModelAdapter) DisableModel(ctx context.Context, param *asset.DisableModelParam) (*asset.DisableModelResponse, error) {
-	invocator, err := interceptors.ExtractInvocator(ctx)
-	if err != nil {
-		return nil, err
-	}
-	method := "orchestrator.model:DisableModel"
-
-	err = invocator.Call(ctx, method, param, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return &asset.DisableModelResponse{}, nil
-}
-
 func (a *ModelAdapter) RegisterModels(ctx context.Context, param *asset.RegisterModelsParam) (*asset.RegisterModelsResponse, error) {
 	Invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {

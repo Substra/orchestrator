@@ -80,24 +80,6 @@ func (s *ModelServer) CanDisableModel(ctx context.Context, param *asset.CanDisab
 	}, nil
 }
 
-func (s *ModelServer) DisableModel(ctx context.Context, param *asset.DisableModelParam) (*asset.DisableModelResponse, error) {
-	mspid, err := commonInterceptors.ExtractMSPID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	services, err := interceptors.ExtractProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = services.GetModelService().DisableModel(param.ModelKey, mspid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &asset.DisableModelResponse{}, nil
-}
-
 func (s *ModelServer) RegisterModels(ctx context.Context, param *asset.RegisterModelsParam) (*asset.RegisterModelsResponse, error) {
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {

@@ -106,25 +106,3 @@ func TestCanDisableModel(t *testing.T) {
 
 	assert.True(t, resp.CanDisable)
 }
-
-func TestDisableModel(t *testing.T) {
-	contract := &SmartContract{}
-
-	mspid := "org"
-
-	wrapper, err := communication.Wrap(context.Background(), &asset.CanDisableModelParam{ModelKey: "uuid"})
-	assert.NoError(t, err)
-
-	ctx := new(ledger.MockTransactionContext)
-
-	service := getMockedService(ctx)
-	service.On("DisableModel", "uuid", mspid).Return(nil).Once()
-
-	stub := new(testHelper.MockedStub)
-	ctx.On("GetStub").Return(stub).Once()
-
-	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
-
-	err = contract.DisableModel(ctx, wrapper)
-	assert.NoError(t, err)
-}
