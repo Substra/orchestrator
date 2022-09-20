@@ -47,58 +47,6 @@ func TestRegisterModel(t *testing.T) {
 	e2erequire.ProtoEqual(t, registeredModel, eventModel)
 }
 
-// TestDeleteIntermediary registers 3 successive tasks, start and register models then check for model deletion
-func TestDeleteIntermediary(t *testing.T) {
-	appClient := factory.NewTestClient()
-
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
-	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
-	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
-	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithDeleteIntermediaryModels(true))
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
-
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().
-		WithKeyRef("child1").
-		WithParentsRef(client.DefaultTrainTaskRef).
-		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().
-		WithKeyRef("child2").
-		WithParentsRef("child1").
-		WithInput("model", &client.TaskOutputRef{TaskRef: "child1", Identifier: "model"}))
-
-	// First task done
-	appClient.StartTask(client.DefaultTrainTaskRef)
-	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model0"))
-	appClient.DoneTask(client.DefaultTrainTaskRef)
-	// second done
-	appClient.StartTask("child1")
-	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model1").WithTaskRef("child1"))
-	appClient.DoneTask("child1")
-	// last task
-	appClient.StartTask("child2")
-	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model2").WithTaskRef("child2"))
-	appClient.DoneTask("child2")
-
-	models := appClient.GetTaskOutputModels(client.DefaultTrainTaskRef)
-	require.Len(t, models, 1, "invalid number of output models")
-	require.NotNil(t, models[0].Address)
-	require.True(t, appClient.CanDisableModel("model0"), "parent model cannot be disabled")
-	require.False(t, appClient.CanDisableModel("model2"), "final model can be disabled")
-
-	appClient.DisableModel("model0")
-	models = appClient.GetTaskOutputModels(client.DefaultTrainTaskRef)
-	require.Nil(t, models[0].Address, "model has not been disabled")
-
-	_, err := appClient.FailableRegisterTasks(client.DefaultPredictTaskOptions().
-		WithKeyRef("badinput").
-		WithParentsRef(client.DefaultTrainTaskRef).
-		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
-
-	require.ErrorContains(t, err, "OE0101", "registering a task with disabled input models should fail")
-
-	log.Debug().Err(err).Msg("Failed to register task, as expected")
-}
-
 func TestRegisterTwoSimpleModelsForTrainTask(t *testing.T) {
 	appClient := factory.NewTestClient()
 
