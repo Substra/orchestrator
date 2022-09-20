@@ -14,17 +14,22 @@ import (
 
 func TestRegisterPerformance(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
+	as := new(MockAlgoAPI)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetAlgoService").Return(as)
 	provider.On("GetPerformanceDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
 	service := NewPerformanceService(provider)
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
+
+	metric := &asset.Algo{Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275", Category: asset.AlgoCategory_ALGO_METRIC}
+	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
 	task := &asset.ComputeTask{
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
@@ -82,6 +87,7 @@ func TestRegisterPerformance(t *testing.T) {
 	_, err := service.RegisterPerformance(perf, "test")
 	assert.NoError(t, err)
 
+	as.AssertExpectations(t)
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	ts.AssertExpectations(t)
@@ -114,10 +120,15 @@ func TestRegisterPerformanceInvalidTask(t *testing.T) {
 }
 
 func TestRegisterPerformanceInvalidOutput(t *testing.T) {
+	as := new(MockAlgoAPI)
 	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
+	provider.On("GetAlgoService").Return(as)
 	service := NewPerformanceService(provider)
+
+	metric := &asset.Algo{Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275", Category: asset.AlgoCategory_ALGO_METRIC}
+	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
 	task := &asset.ComputeTask{
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
@@ -158,6 +169,7 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrIncompatibleKind, orcError.Kind)
 
+	as.AssertExpectations(t)
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }

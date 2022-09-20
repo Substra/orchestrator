@@ -66,6 +66,11 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register performance for task with status %q", task.Status.String()))
 	}
 
+	_, err = s.GetAlgoService().GetAlgo(newPerf.MetricKey)
+	if err != nil {
+		return nil, err
+	}
+
 	if _, ok := task.Outputs[newPerf.ComputeTaskOutputIdentifier]; !ok {
 		return nil, errors.NewMissingTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier)
 	}
