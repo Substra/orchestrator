@@ -1033,9 +1033,6 @@ func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *as
 	}
 
 	if input.Worker == "" {
-		if agg, ok := input.Data.(*asset.NewComputeTask_Aggregate); ok {
-			return agg.Aggregate.Worker, nil //  nolint: staticcheck
-		}
 		return "", orcerrors.NewBadRequest("Worker cannot be inferred and must be explicitly set")
 	}
 

@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Task outputs events come after their referenced asset creation event
 
+### Removed
+
+- Worker field on NewAggregateTrainTaskData, use NewComputeTask.Worker field instead
+
 ## [0.27.0] - 2022-09-19
 
 ### Added
