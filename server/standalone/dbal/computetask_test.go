@@ -40,7 +40,6 @@ func TestToComputeTask(t *testing.T) {
 		Algo: sqlAlgo{
 			Key:         "algo_key",
 			Name:        "algo_name",
-			Category:    asset.AlgoCategory_ALGO_COMPOSITE,
 			Description: asset.Addressable{},
 			Algorithm:   asset.Addressable{},
 			Permissions: asset.Permissions{
@@ -86,13 +85,13 @@ func TestToComputeTask(t *testing.T) {
 func makeTaskRows(taskKeys ...string) *pgxmock.Rows {
 	permissions := []byte(`{"process": {"public": true}, "download": {"public": true}}`)
 	res := pgxmock.NewRows([]string{"key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-		"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_category", "algo_description_address",
+		"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_description_address",
 		"algo_description_checksum", "algo_algorithm_address", "algo_algorithm_checksum", "algo_permissions", "algo_owner",
 		"algo_creation_date", "algo_metadata", "parent_task_keys"})
 
 	for _, key := range taskKeys {
 		res = res.AddRow(key, "cp_key", "STATUS_WAITING", "TASK_TRAIN", "worker", "owner", int32(0), time.Unix(0, 100),
-			[]byte("{}"), []byte("{}"), map[string]string{}, "algo_key", "algo_name", "ALGO_SIMPLE", "https://description.foo",
+			[]byte("{}"), []byte("{}"), map[string]string{}, "algo_key", "algo_name", "https://description.foo",
 			"d3ef77a", "https://algo.foo", "f3ed5a9", permissions, "owner", time.Unix(0, 100), map[string]string{}, []string{})
 	}
 

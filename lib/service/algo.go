@@ -63,7 +63,6 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 	algo := &asset.Algo{
 		Key:          a.Key,
 		Name:         a.Name,
-		Category:     a.Category,
 		Description:  a.Description,
 		Algorithm:    a.Algorithm,
 		Metadata:     a.Metadata,

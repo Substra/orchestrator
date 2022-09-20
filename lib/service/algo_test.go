@@ -42,7 +42,6 @@ func TestRegisterAlgo(t *testing.T) {
 	algo := &asset.NewAlgo{
 		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:           "Test algo",
-		Category:       asset.AlgoCategory_ALGO_SIMPLE,
 		Algorithm:      algorithm,
 		Description:    description,
 		NewPermissions: newPerms,
@@ -56,7 +55,6 @@ func TestRegisterAlgo(t *testing.T) {
 	storedAlgo := &asset.Algo{
 		Key:          "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:         "Test algo",
-		Category:     asset.AlgoCategory_ALGO_SIMPLE,
 		Algorithm:    algorithm,
 		Description:  description,
 		Permissions:  perms,
@@ -111,14 +109,12 @@ func TestQueryAlgos(t *testing.T) {
 	computePlanKey := uuid.NewString()
 
 	algo1 := asset.Algo{
-		Key:      "algo1",
-		Name:     "Test 1",
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Key:  "algo1",
+		Name: "Test 1",
 	}
 	algo2 := asset.Algo{
-		Key:      "algo2",
-		Name:     "Test 2",
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Key:  "algo2",
+		Name: "Test 2",
 	}
 
 	pagination := common.NewPagination("", 12)
@@ -150,7 +146,6 @@ func TestCanDownload(t *testing.T) {
 
 	algo := &asset.Algo{
 		Key:         "837B2E87-35CA-48F9-B83C-B40FB3FBA4E6",
-		Category:    asset.AlgoCategory_ALGO_SIMPLE,
 		Name:        "Test",
 		Permissions: perms,
 	}
@@ -174,10 +169,9 @@ func TestUpdateSingleExistingAlgo(t *testing.T) {
 	service := NewAlgoService(provider)
 
 	existingAlgo := &asset.Algo{
-		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
-		Name:     "algo name",
-		Owner:    "owner",
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name:  "algo name",
+		Owner: "owner",
 	}
 
 	updateAlgoParam := &asset.UpdateAlgoParam{
@@ -186,10 +180,9 @@ func TestUpdateSingleExistingAlgo(t *testing.T) {
 	}
 
 	storedAlgo := &asset.Algo{
-		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
-		Name:     "Updated algo name",
-		Owner:    "owner",
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name:  "Updated algo name",
+		Owner: "owner",
 	}
 
 	e := &asset.Event{

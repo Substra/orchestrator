@@ -18,10 +18,10 @@ import (
 func makeAlgoRows(keys ...string) *pgxmock.Rows {
 	permissions := []byte(`{"process": {"public": true}, "download": {"public": true}}`)
 
-	res := pgxmock.NewRows([]string{"key", "name", "category", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata"})
+	res := pgxmock.NewRows([]string{"key", "name", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata"})
 
 	for _, key := range keys {
-		res.AddRow(key, "name", "ALGO_COMPOSITE", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{})
+		res.AddRow(key, "name", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{})
 	}
 
 	return res
@@ -59,7 +59,7 @@ func TestQueryAlgos(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
 		WithArgs(testChannel, computePlanKey).WillReturnRows(makeAlgoRows("key1", "key2"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1,$2)`)).
@@ -95,7 +95,7 @@ func TestPaginatedQueryAlgos(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
 		WithArgs(testChannel, computePlanKey).WillReturnRows(makeAlgoRows("key1", "key2"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1)`)).
@@ -128,7 +128,7 @@ func TestGetAlgo(t *testing.T) {
 	mock.ExpectBegin()
 
 	uid := "key1"
-	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).WillReturnRows(makeAlgoRows("key1"))
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).WillReturnRows(makeAlgoRows("key1"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1)`)).
 		WithArgs("key1").WillReturnRows(makeAlgoInputRows("key1"))
@@ -156,7 +156,7 @@ func TestGetAlgoFail(t *testing.T) {
 	mock.ExpectBegin()
 
 	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).WillReturnError(pgx.ErrNoRows)
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).WillReturnError(pgx.ErrNoRows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -176,7 +176,7 @@ func TestQueryAlgosByComputePlan(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`SELECT key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos .* key IN \(SELECT DISTINCT`).
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos .* key IN \(SELECT DISTINCT`).
 		WithArgs(testChannel, "CPKey").WillReturnRows(makeAlgoRows("key1", "key2"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1,$2)`)).
@@ -203,7 +203,7 @@ func TestQueryAlgosNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`key, name, category, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
+	mock.ExpectQuery(`key, name, description_address, description_checksum, algorithm_address, algorithm_checksum, permissions, owner, creation_date, metadata FROM expanded_algos`).
 		WithArgs(testChannel).
 		WillReturnRows(makeAlgoRows("key1", "key2"))
 
