@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **WARNING**: Some migrations in this version are destructive once applied you will not be able to restore algo categories.
 
 ### Changed
-- Algo.category: You should not rely on categories anymore, all algo categories will be returned as UNKNOWN
+- (BREAKING) Algo.category: do not rely on categories anymore, all algo categories will be returned as UNKNOWN
 - NewAlgo.category: No category is expected
 
 ## [0.27.0] - 2022-09-19
