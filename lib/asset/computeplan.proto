@@ -18,13 +18,12 @@ enum ComputePlanStatus {
 }
 
 message ComputePlan {
-  reserved 8, 9, 10, 11, 12, 3, 4;
-  reserved "waiting_count", "todo_count", "doing_count" ,"canceled_count", "failed_count", "done_count", "task_count";
+  reserved 8, 9, 10, 11, 12, 3, 4, 6;
+  reserved "waiting_count", "todo_count", "doing_count" ,"canceled_count", "failed_count", "done_count", "task_count", "delete_intermediary_models";
 
   string key = 1;
   string owner = 2;
   ComputePlanStatus status = 5; // Dynamic data, not persisted and set on query
-  bool delete_intermediary_models = 6;
   google.protobuf.Timestamp creation_date = 7;
   string tag = 16;
   string name = 19;
