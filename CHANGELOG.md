@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Worker field on NewAggregateTrainTaskData, use NewComputeTask.Worker field instead
 - DisableModel rpc in Model service, use DisableOutput in ComputeTask service instead
 
+### Added
+
+- `failure_date` field to `ComputePlan` protocol buffer schema 
+- `IsComputePlanRunning` gRPC method in `ComputePlanService`
+
+### Removed
+
+- (BREAKING) compute plan status
+
 ## [0.27.0] - 2022-09-19
 
 ### Added

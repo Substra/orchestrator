@@ -54,7 +54,6 @@ func TestRegisterPlan(t *testing.T) {
 		Name:         "My Test",
 		Owner:        "org1",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
-		Status:       asset.ComputePlanStatus_PLAN_STATUS_EMPTY,
 	}
 
 	dbal.On("AddComputePlan", expected).Once().Return(nil)
@@ -110,7 +109,6 @@ func TestCancelPlan(t *testing.T) {
 			Tag:             plan.Tag,
 			Name:            plan.Name,
 			Owner:           plan.Owner,
-			Status:          asset.ComputePlanStatus_PLAN_STATUS_CANCELED,
 			CancelationDate: timestamppb.New(time.Unix(1337, 0)),
 		}},
 	}
@@ -121,7 +119,7 @@ func TestCancelPlan(t *testing.T) {
 
 	plan.CancelationDate = timestamppb.Now()
 	err = service.cancelPlan(plan)
-	assert.ErrorContains(t, err, "already canceled")
+	assert.ErrorContains(t, err, "compute plan is already terminated")
 
 	ts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
@@ -141,7 +139,7 @@ func TestComputePlanAllowIntermediaryModelDeletion(t *testing.T) {
 		DeleteIntermediaryModels: true,
 	}
 
-	dbal.On("GetRawComputePlan", "uuid").Once().Return(cp, nil)
+	dbal.On("GetComputePlan", "uuid").Once().Return(cp, nil)
 
 	canDelete, err := service.canDeleteModels("uuid")
 	assert.NoError(t, err)
@@ -240,7 +238,7 @@ func TestUpdateSingleExistingComputePlan(t *testing.T) {
 			dbal.On("GetComputePlan", existingComputePlan.GetKey()).Return(existingComputePlan, nil).Once()
 
 			if tc.valid {
-				dbal.On("UpdateComputePlan", storedComputePlan).Return(nil).Once()
+				dbal.On("SetComputePlanName", storedComputePlan, storedComputePlan.Name).Return(nil).Once()
 				es.On("RegisterEvents", e).Once().Return(nil)
 			}
 

@@ -88,3 +88,17 @@ func (a *ComputePlanAdapter) UpdatePlan(ctx context.Context, param *asset.Update
 
 	return response, err
 }
+
+func (a *ComputePlanAdapter) IsComputePlanRunning(ctx context.Context, param *asset.IsComputePlanRunningParam) (*asset.IsComputePlanRunningResponse, error) {
+	invocator, err := interceptors.ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.computeplan:IsComputePlanRunning"
+
+	response := &asset.IsComputePlanRunningResponse{}
+
+	err = invocator.Call(ctx, method, param, response)
+
+	return response, err
+}

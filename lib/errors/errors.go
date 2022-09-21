@@ -66,6 +66,9 @@ var (
 
 	// ErrCannotDisableOutput occurs when attempting to disable an output that is not eligible
 	ErrCannotDisableOutput = "OE0108"
+
+	// ErrTerminatedComputePlan occurs when attempting to cancel or fail an already terminated compute plan
+	ErrTerminatedComputePlan = "OE0109"
 )
 
 // OrcError represents an orchestration error.
@@ -168,13 +171,18 @@ func NewInternal(msg string) *OrcError {
 	return newErrorWithSource(ErrInternal, msg)
 }
 
-// NewNotImplemented returns an ErrUnimplemented kind of OrcError with given message
+// NewUnimplemented returns an ErrUnimplemented kind of OrcError with given message
 func NewUnimplemented(msg string) *OrcError {
 	return newErrorWithSource(ErrUnimplemented, msg)
 }
 
 func NewMissingTaskOutput(taskKey, identifier string) *OrcError {
 	return newErrorWithSource(ErrMissingTaskOutput, fmt.Sprintf("Task %q has no output named %q", taskKey, identifier))
+}
+
+// NewTerminatedComputePlan returns an ErrTerminatedComputePlan kind of OrcError with given message
+func NewTerminatedComputePlan(msg string) *OrcError {
+	return newErrorWithSource(ErrTerminatedComputePlan, msg)
 }
 
 func NewIncompatibleTaskOutput(taskKey, identifier, expected, actual string) *OrcError {

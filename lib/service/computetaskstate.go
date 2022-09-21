@@ -1,11 +1,12 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/looplab/fsm"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/substra/orchestrator/lib/errors"
+	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/metrics"
 )
 
@@ -58,6 +59,9 @@ type taskStateUpdater interface {
 	// Task is received as argument
 	// any error should be registered as e.Err
 	onDone(e *fsm.Event)
+	// Set the compute plan to failed when a task fails.
+	// Task is received as argument, any error should be registered as e.Err.
+	onFailure(e *fsm.Event)
 }
 
 // dumbStateUpdater implements taskStateUpdater but does nothing,
@@ -66,6 +70,7 @@ type dumbStateUpdater struct{}
 
 func (d *dumbStateUpdater) onStateChange(e *fsm.Event) {}
 func (d *dumbStateUpdater) onDone(e *fsm.Event)        {}
+func (d *dumbStateUpdater) onFailure(e *fsm.Event)     {}
 
 var dumbUpdater = dumbStateUpdater{}
 
@@ -74,8 +79,9 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 		task.Status.String(),
 		taskStateEvents,
 		fsm.Callbacks{
-			"enter_state":          updater.onStateChange,
-			"after_transitionDone": updater.onDone,
+			"enter_state":            updater.onStateChange,
+			"after_transitionDone":   updater.onDone,
+			"after_transitionFailed": updater.onFailure,
 		},
 	)
 }
@@ -94,7 +100,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 	case asset.ComputeTaskAction_TASK_ACTION_DONE:
 		transition = transitionDone
 	default:
-		return errors.NewBadRequest("unsupported action")
+		return orcerrors.NewBadRequest("unsupported action")
 	}
 
 	if reason == "" {
@@ -106,7 +112,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 		return err
 	}
 	if !updateAllowed(task, action, requester) {
-		return errors.NewPermissionDenied("only task owner can update it")
+		return orcerrors.NewPermissionDenied("only task owner can update it")
 	}
 
 	return s.applyTaskAction(task, transition, reason)
@@ -129,12 +135,12 @@ func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action tas
 // onDone will iterate over task children to update their statuses
 func (s *ComputeTaskService) onDone(e *fsm.Event) {
 	if len(e.Args) != 2 {
-		e.Err = errors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
+		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
 	}
 	task, ok := e.Args[0].(*asset.ComputeTask)
 	if !ok {
-		e.Err = errors.NewInternal("cannot cast argument into task")
+		e.Err = orcerrors.NewInternal("cannot cast argument into task")
 		return
 	}
 
@@ -209,24 +215,24 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 // onStateChange enqueue an orchestration event and saves the task
 func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 	if len(e.Args) != 2 {
-		e.Err = errors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
+		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
 	}
 	task, ok := e.Args[0].(*asset.ComputeTask)
 	if !ok {
-		e.Err = errors.NewInternal("cannot cast argument into task")
+		e.Err = orcerrors.NewInternal("cannot cast argument into task")
 		return
 	}
 	reason, ok := e.Args[1].(string)
 	if !ok {
-		e.Err = errors.NewInternal(fmt.Sprintf("cannot cast into string: %v", e.Args[1]))
+		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot cast into string: %v", e.Args[1]))
 		return
 	}
 
 	statusVal, ok := asset.ComputeTaskStatus_value[e.Dst]
 	if !ok {
 		// This should not happen since state codes are string representation of statuses
-		e.Err = errors.NewInternal(fmt.Sprintf("unknown task status %q", e.Dst))
+		e.Err = orcerrors.NewInternal(fmt.Sprintf("unknown task status %q", e.Dst))
 		return
 	}
 	task.Status = asset.ComputeTaskStatus(statusVal)
@@ -258,6 +264,39 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 	if err != nil {
 		e.Err = err
 		return
+	}
+}
+
+func (s *ComputeTaskService) onFailure(e *fsm.Event) {
+	if len(e.Args) != 2 {
+		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
+		return
+	}
+	task, ok := e.Args[0].(*asset.ComputeTask)
+	if !ok {
+		e.Err = orcerrors.NewInternal("cannot cast argument into task")
+		return
+	}
+
+	plan, err := s.GetComputePlanService().GetPlan(task.ComputePlanKey)
+	if err != nil {
+		e.Err = err
+		return
+	}
+
+	err = s.GetComputePlanService().FailPlan(plan)
+	if err != nil {
+		orcErr := new(orcerrors.OrcError)
+		if errors.As(err, &orcErr) && orcErr.Kind == orcerrors.ErrTerminatedComputePlan {
+			s.GetLogger().Debug().
+				Str("taskKey", task.Key).
+				Interface("computePlan", plan).
+				Msg("already terminated compute plan won't be set to failed")
+
+			return
+		}
+
+		e.Err = err
 	}
 }
 

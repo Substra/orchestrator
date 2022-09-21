@@ -24,9 +24,6 @@ func TestRegisterComputePlan(t *testing.T) {
 
 	retrievedPlan := appClient.GetComputePlan(client.DefaultPlanRef)
 
-	// Ignore dynamic fields
-	retrievedPlan.Status = asset.ComputePlanStatus_PLAN_STATUS_EMPTY
-
 	e2erequire.ProtoEqual(t, registeredPlan, retrievedPlan)
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
@@ -85,18 +82,20 @@ func TestCancelComputePlan(t *testing.T) {
 
 	// initially, the cp is not canceled
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	require.NotEqual(t, asset.ComputePlanStatus_PLAN_STATUS_CANCELED, plan.Status)
+	require.Nil(t, plan.FailureDate)
 	require.Nil(t, plan.CancelationDate)
 
 	// we cancel the cp
-	appClient.CancelComputePlan(client.DefaultPlanRef)
+	_, err := appClient.CancelComputePlan(client.DefaultPlanRef)
+	require.NoError(t, err)
+
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_CANCELED, plan.Status)
+	require.Nil(t, plan.FailureDate)
 	require.NotNil(t, plan.CancelationDate)
 
 	// we cannot cancel the cp a second time
-	_, err := appClient.CancelComputePlan(client.DefaultPlanRef)
-	require.Errorf(t, err, "already canceled")
+	_, err = appClient.CancelComputePlan(client.DefaultPlanRef)
+	require.Errorf(t, err, "already terminated")
 }
 
 // TestMultiStageComputePlan is the "canonical" example of FL with 2 organizations aggregating their trunks
@@ -224,8 +223,6 @@ func TestMultiStageComputePlan(t *testing.T) {
 			WithTaskOutput("shared"),
 	)
 	appClient.DoneTask("compB1")
-	cp := appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DOING, cp.Status)
 
 	// Start step 2
 	appClient.StartTask("aggC2")
@@ -379,9 +376,6 @@ func TestSmallComputePlan(t *testing.T) {
 			WithParentsRef("predict").
 			WithInput("predictions", &client.TaskOutputRef{TaskRef: "predict", Identifier: "predictions"}),
 	)
-
-	cp := appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_TODO, cp.Status, "unexpected plan status")
 }
 
 func TestAggregateComposite(t *testing.T) {
@@ -514,6 +508,10 @@ func TestFailLargeComputePlan(t *testing.T) {
 	appClient.StartTask("compP1R0")
 	appClient.FailTask("compP1R0")
 	log.Info().Dur("duration", time.Since(start)).Int("nbTasks", nbTasks).Msg("canceled compute plan")
+
+	plan := appClient.GetComputePlan(client.DefaultPlanRef)
+	require.NotNil(t, plan.FailureDate)
+	require.Nil(t, plan.CancelationDate)
 }
 
 func TestQueryComputePlan(t *testing.T) {
@@ -544,15 +542,15 @@ func TestGetComputePlan(t *testing.T) {
 		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, plan.Status, asset.ComputePlanStatus_PLAN_STATUS_TODO)
+	require.Nil(t, plan.FailureDate)
+	require.Nil(t, plan.CancelationDate)
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
-	plan = appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, plan.Status, asset.ComputePlanStatus_PLAN_STATUS_DOING)
 
 	appClient.FailTask("task#1")
 	plan = appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, plan.Status, asset.ComputePlanStatus_PLAN_STATUS_FAILED)
+	require.NotNil(t, plan.FailureDate)
+	require.Nil(t, plan.CancelationDate)
 }
 
 func TestCompositeParentChild(t *testing.T) {
@@ -659,4 +657,58 @@ func TestDisableTransientOutput(t *testing.T) {
 
 	require.ErrorContains(t, err, "OE0101", "registering a task with disabled input models should fail")
 
+}
+
+// TestIsComputePlanRunning ensures that the compute plan is considered as
+// running when there are tasks being executed or waiting to be executed.
+func TestIsComputePlanRunning(t *testing.T) {
+	appClient := factory.NewTestClient()
+	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	resp := appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	require.False(t, resp.IsRunning)
+
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
+
+	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	require.True(t, resp.IsRunning)
+
+	appClient.StartTask(client.DefaultTrainTaskRef)
+
+	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	require.True(t, resp.IsRunning)
+
+	appClient.RegisterModel(client.DefaultModelOptions())
+	appClient.DoneTask(client.DefaultTrainTaskRef)
+
+	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	require.False(t, resp.IsRunning)
+
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task2"))
+
+	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	require.True(t, resp.IsRunning)
+
+	appClient.FailTask("task2")
+
+	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	require.False(t, resp.IsRunning)
+
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp2"))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithPlanRef("cp2").WithKeyRef("task-cp2"))
+	appClient.StartTask("task-cp2")
+
+	_, err := appClient.CancelComputePlan("cp2")
+	require.Nil(t, err)
+
+	resp = appClient.IsComputePlanRunning("cp2")
+	require.True(t, resp.IsRunning)
+
+	appClient.CancelTask("task-cp2")
+
+	resp = appClient.IsComputePlanRunning("cp2")
+	require.False(t, resp.IsRunning)
 }
