@@ -181,7 +181,8 @@ func NewMissingTaskOutput(taskKey, identifier string) *OrcError {
 }
 
 // NewTerminatedComputePlan returns an ErrTerminatedComputePlan kind of OrcError with given message
-func NewTerminatedComputePlan(msg string) *OrcError {
+func NewTerminatedComputePlan(planKey string) *OrcError {
+	msg := fmt.Sprintf("compute plan %s is already terminated", planKey)
 	return newErrorWithSource(ErrTerminatedComputePlan, msg)
 }
 

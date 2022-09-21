@@ -150,7 +150,7 @@ func (s *ComputePlanService) UpdatePlan(a *asset.UpdateComputePlanParam, request
 
 func (s *ComputePlanService) FailPlan(plan *asset.ComputePlan) error {
 	if plan.IsTerminated() {
-		return orcerrors.NewTerminatedComputePlan("compute plan is already terminated")
+		return orcerrors.NewTerminatedComputePlan(plan.Key)
 	}
 
 	failureDate := s.GetTimeService().GetTransactionTime()
@@ -159,7 +159,7 @@ func (s *ComputePlanService) FailPlan(plan *asset.ComputePlan) error {
 
 func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
 	if plan.IsTerminated() {
-		return orcerrors.NewTerminatedComputePlan("compute plan is already terminated")
+		return orcerrors.NewTerminatedComputePlan(plan.Key)
 	}
 
 	cancelationDate := s.GetTimeService().GetTransactionTime()
