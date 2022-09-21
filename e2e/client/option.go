@@ -542,18 +542,12 @@ func (o *AlgoOptions) WithCategory(category asset.AlgoCategory) *AlgoOptions {
 
 func DefaultComputePlanOptions() *ComputePlanOptions {
 	return &ComputePlanOptions{
-		KeyRef:                   DefaultPlanRef,
-		DeleteIntermediaryModels: false,
+		KeyRef: DefaultPlanRef,
 	}
 }
 
 func (o *ComputePlanOptions) WithKeyRef(ref string) *ComputePlanOptions {
 	o.KeyRef = ref
-	return o
-}
-
-func (o *ComputePlanOptions) WithDeleteIntermediaryModels(flag bool) *ComputePlanOptions {
-	o.DeleteIntermediaryModels = flag
 	return o
 }
 
