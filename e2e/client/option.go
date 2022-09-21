@@ -9,8 +9,7 @@ import (
 )
 
 type ComputePlanOptions struct {
-	KeyRef                   string
-	DeleteIntermediaryModels bool
+	KeyRef string
 }
 
 type AlgoOptions struct {
