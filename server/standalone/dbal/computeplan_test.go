@@ -141,7 +141,7 @@ func TestUpdateComputePlan(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestIsComputePlanRunning(t *testing.T) {
+func TestIsPlanRunning(t *testing.T) {
 	mock, err := pgxmock.NewConn(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
 	require.NoError(t, err)
 
@@ -160,7 +160,7 @@ func TestIsComputePlanRunning(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	isRunning, err := dbal.IsComputePlanRunning(cpKey)
+	isRunning, err := dbal.IsPlanRunning(cpKey)
 	assert.NoError(t, err)
 	assert.True(t, isRunning)
 

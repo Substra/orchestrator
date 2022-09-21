@@ -174,7 +174,7 @@ func (db *DB) FailComputePlan(plan *asset.ComputePlan, failureDate time.Time) er
 	return db.updateComputePlan(storablePlan)
 }
 
-func (db *DB) IsComputePlanRunning(key string) (bool, error) {
+func (db *DB) IsPlanRunning(key string) (bool, error) {
 	iterator, err := db.ccStub.GetStateByPartialCompositeKey(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key})
 	if err != nil {
 		return false, err

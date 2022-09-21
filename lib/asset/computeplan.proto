@@ -67,11 +67,11 @@ message UpdateComputePlanParam {
 
 message UpdateComputePlanResponse {}
 
-message IsComputePlanRunningParam {
+message IsPlanRunningParam {
   string key = 1;
 }
 
-message IsComputePlanRunningResponse {
+message IsPlanRunningResponse {
   bool is_running = 1;
 }
 
@@ -81,5 +81,5 @@ service ComputePlanService {
   rpc ApplyPlanAction(ApplyPlanActionParam) returns (ApplyPlanActionResponse);
   rpc QueryPlans(QueryPlansParam) returns (QueryPlansResponse);
   rpc UpdatePlan(UpdateComputePlanParam) returns (UpdateComputePlanResponse);
-  rpc IsComputePlanRunning(IsComputePlanRunningParam) returns (IsComputePlanRunningResponse);
+  rpc IsPlanRunning(IsPlanRunningParam) returns (IsPlanRunningResponse);
 }

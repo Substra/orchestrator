@@ -101,37 +101,37 @@ func TestCancelComputePlan(t *testing.T) {
 // TestMultiStageComputePlan is the "canonical" example of FL with 2 organizations aggregating their trunks
 // This does not check multi-organization setup though!
 //
-//   ,========,                ,========,
-//   | ORG A  |                | ORG B  |
-//   *========*                *========*
+//	 ,========,                ,========,
+//	 | ORG A  |                | ORG B  |
+//	 *========*                *========*
 //
-//     ø     ø                  ø      ø
-//     |     |                  |      |
-//     hd    tr                 tr     hd
-//   -----------              -----------
-//  | Composite |            | Composite |      STEP 1
-//   -----------              -----------
-//     hd    tr                 tr     hd
-//     |      \   ,========,   /      |
-//     |       \  | ORG C  |  /       |
-//     |        \ *========* /        |
-//     |       ----------------       |
-//     |      |    Aggregate   |      |         STEP 2
-//     |       ----------------       |
-//     |              |               |
-//     |     ,_______/ \_______       |
-//     |     |                 |      |
-//    hd    tr                tr     hd
-//   -----------             -----------
-//  | Composite |           | Composite |       STEP 3
-//   -----------             -----------
-//    hd    tr                 tr     hd
-//            \                /
-//             \              /
-//              \            /
-//             ----------------
-//            |    Aggregate   |                STEP 4
-//             ----------------
+//	   ø     ø                  ø      ø
+//	   |     |                  |      |
+//	   hd    tr                 tr     hd
+//	 -----------              -----------
+//	| Composite |            | Composite |      STEP 1
+//	 -----------              -----------
+//	   hd    tr                 tr     hd
+//	   |      \   ,========,   /      |
+//	   |       \  | ORG C  |  /       |
+//	   |        \ *========* /        |
+//	   |       ----------------       |
+//	   |      |    Aggregate   |      |         STEP 2
+//	   |       ----------------       |
+//	   |              |               |
+//	   |     ,_______/ \_______       |
+//	   |     |                 |      |
+//	  hd    tr                tr     hd
+//	 -----------             -----------
+//	| Composite |           | Composite |       STEP 3
+//	 -----------             -----------
+//	  hd    tr                 tr     hd
+//	          \                /
+//	           \              /
+//	            \            /
+//	           ----------------
+//	          |    Aggregate   |                STEP 4
+//	           ----------------
 func TestMultiStageComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 
@@ -659,42 +659,42 @@ func TestDisableTransientOutput(t *testing.T) {
 
 }
 
-// TestIsComputePlanRunning ensures that the compute plan is considered as
+// TestIsPlanRunning ensures that the compute plan is considered as
 // running when there are tasks being executed or waiting to be executed.
-func TestIsComputePlanRunning(t *testing.T) {
+func TestIsPlanRunning(t *testing.T) {
 	appClient := factory.NewTestClient()
 	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
-	resp := appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	resp := appClient.IsPlanRunning(client.DefaultPlanRef)
 	require.False(t, resp.IsRunning)
 
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	resp = appClient.IsPlanRunning(client.DefaultPlanRef)
 	require.True(t, resp.IsRunning)
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
 
-	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	resp = appClient.IsPlanRunning(client.DefaultPlanRef)
 	require.True(t, resp.IsRunning)
 
 	appClient.RegisterModel(client.DefaultModelOptions())
 	appClient.DoneTask(client.DefaultTrainTaskRef)
 
-	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	resp = appClient.IsPlanRunning(client.DefaultPlanRef)
 	require.False(t, resp.IsRunning)
 
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task2"))
 
-	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	resp = appClient.IsPlanRunning(client.DefaultPlanRef)
 	require.True(t, resp.IsRunning)
 
 	appClient.FailTask("task2")
 
-	resp = appClient.IsComputePlanRunning(client.DefaultPlanRef)
+	resp = appClient.IsPlanRunning(client.DefaultPlanRef)
 	require.False(t, resp.IsRunning)
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp2"))
@@ -704,11 +704,11 @@ func TestIsComputePlanRunning(t *testing.T) {
 	_, err := appClient.CancelComputePlan("cp2")
 	require.Nil(t, err)
 
-	resp = appClient.IsComputePlanRunning("cp2")
+	resp = appClient.IsPlanRunning("cp2")
 	require.True(t, resp.IsRunning)
 
 	appClient.CancelTask("task-cp2")
 
-	resp = appClient.IsComputePlanRunning("cp2")
+	resp = appClient.IsPlanRunning("cp2")
 	require.False(t, resp.IsRunning)
 }

@@ -118,7 +118,7 @@ func TestGetComputeTaskOutputAssets(t *testing.T) {
 	stub.AssertExpectations(t)
 }
 
-func TestIsComputePlanRunning(t *testing.T) {
+func TestIsPlanRunning(t *testing.T) {
 	ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, true)
 	stub := new(testHelper.MockedStub)
 	queue := new(MockEventQueue)
@@ -134,7 +134,7 @@ func TestIsComputePlanRunning(t *testing.T) {
 
 	stub.On("SplitCompositeKey", "firstIndexKey").Return("", []string{"indexName", "cpKey", "STATUS_DOING", "taskId"}, nil)
 
-	isRunning, err := db.IsComputePlanRunning("cpKey")
+	isRunning, err := db.IsPlanRunning("cpKey")
 	require.NoError(t, err)
 	assert.True(t, isRunning)
 

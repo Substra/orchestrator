@@ -186,27 +186,27 @@ func (s *SmartContract) UpdatePlan(ctx ledger.TransactionContext, wrapper *commu
 	return nil
 }
 
-func (s *SmartContract) IsComputePlanRunning(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+func (s *SmartContract) IsPlanRunning(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
 	}
 	service := provider.GetComputePlanService()
 
-	param := new(asset.IsComputePlanRunningParam)
+	param := new(asset.IsPlanRunningParam)
 	err = wrapper.Unwrap(param)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
-	isRunning, err := service.IsComputePlanRunning(param.Key)
+	isRunning, err := service.IsPlanRunning(param.Key)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to get compute plan")
 		return nil, err
 	}
 
-	resp := &asset.IsComputePlanRunningResponse{IsRunning: isRunning}
+	resp := &asset.IsPlanRunningResponse{IsRunning: isRunning}
 
 	wrapped, err := communication.Wrap(ctx.GetContext(), resp)
 	if err != nil {

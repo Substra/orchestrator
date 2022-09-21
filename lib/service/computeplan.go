@@ -18,7 +18,7 @@ type ComputePlanAPI interface {
 	FailPlan(plan *asset.ComputePlan) error
 	canDeleteModels(key string) (bool, error)
 	computePlanExists(key string) (bool, error)
-	IsComputePlanRunning(key string) (bool, error)
+	IsPlanRunning(key string) (bool, error)
 }
 
 // ComputePlanServiceProvider defines an object able to provide a ComputePlanAPI instance
@@ -194,8 +194,8 @@ func (s *ComputePlanService) computePlanExists(key string) (bool, error) {
 	return s.GetComputePlanDBAL().ComputePlanExists(key)
 }
 
-// IsComputePlanRunning indicates whether there are tasks belonging to the compute plan
+// IsPlanRunning indicates whether there are tasks belonging to the compute plan
 // being executed or waiting to be executed
-func (s *ComputePlanService) IsComputePlanRunning(key string) (bool, error) {
-	return s.GetComputePlanDBAL().IsComputePlanRunning(key)
+func (s *ComputePlanService) IsPlanRunning(key string) (bool, error) {
+	return s.GetComputePlanDBAL().IsPlanRunning(key)
 }

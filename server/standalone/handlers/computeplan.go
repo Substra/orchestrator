@@ -108,16 +108,16 @@ func (s *ComputePlanServer) UpdatePlan(ctx context.Context, params *asset.Update
 	return &asset.UpdateComputePlanResponse{}, nil
 }
 
-func (s *ComputePlanServer) IsComputePlanRunning(ctx context.Context, param *asset.IsComputePlanRunningParam) (*asset.IsComputePlanRunningResponse, error) {
+func (s *ComputePlanServer) IsPlanRunning(ctx context.Context, param *asset.IsPlanRunningParam) (*asset.IsPlanRunningResponse, error) {
 	provider, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	isRunning, err := provider.GetComputePlanService().IsComputePlanRunning(param.Key)
+	isRunning, err := provider.GetComputePlanService().IsPlanRunning(param.Key)
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.IsComputePlanRunningResponse{IsRunning: isRunning}, nil
+	return &asset.IsPlanRunningResponse{IsRunning: isRunning}, nil
 }

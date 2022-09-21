@@ -14,7 +14,7 @@ type ComputePlanDBAL interface {
 	SetComputePlanName(plan *asset.ComputePlan, name string) error
 	CancelComputePlan(plan *asset.ComputePlan, cancelationDate time.Time) error
 	FailComputePlan(plan *asset.ComputePlan, failureDate time.Time) error
-	IsComputePlanRunning(key string) (bool, error)
+	IsPlanRunning(key string) (bool, error)
 }
 
 type ComputePlanDBALProvider interface {
