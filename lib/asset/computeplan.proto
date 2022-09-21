@@ -32,11 +32,12 @@ message ComputePlan {
 }
 
 message NewComputePlan {
+  reserved 18;
+  reserved "delete_intermediary_models";
   string key = 1;
   string tag = 16;
   string name = 19;
   map<string, string> metadata = 17;
-  bool delete_intermediary_models = 18;
 }
 
 message GetComputePlanParam {
