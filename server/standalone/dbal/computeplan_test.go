@@ -18,10 +18,10 @@ func TestGetComputePlan(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
-		AddRow("uuid", "owner", false, time.Now(), nil, "", "My compute plan", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"}).
+		AddRow("uuid", "owner", false, time.Now(), nil, nil, "", "My compute plan", map[string]string{})
 
-	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, cancelation_date, tag, name, metadata, task_count, waiting_count, todo_count, doing_count, canceled_count, failed_count, done_count`).
+	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, cancelation_date, failure_date, tag, name, metadata`).
 		WithArgs(testChannel, "uuid").
 		WillReturnRows(rows)
 
@@ -30,36 +30,8 @@ func TestGetComputePlan(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	plan, err := dbal.GetComputePlan("uuid")
+	_, err = dbal.GetComputePlan("uuid")
 	assert.NoError(t, err)
-
-	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plan.Status)
-
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestGetRawComputePlan(t *testing.T) {
-	mock, err := pgxmock.NewConn()
-	assert.NoError(t, err)
-
-	mock.ExpectBegin()
-
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata"}).
-		AddRow("uuid", "owner", false, time.Now(), nil, "", "My compute plan", map[string]string{})
-
-	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, cancelation_date, tag, name, metadata FROM compute_plans`).
-		WithArgs(testChannel, "uuid").
-		WillReturnRows(rows)
-
-	tx, err := mock.Begin(context.Background())
-	require.NoError(t, err)
-
-	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
-
-	plan, err := dbal.GetRawComputePlan("uuid")
-	assert.NoError(t, err)
-
-	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_UNKNOWN, plan.Status)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -70,10 +42,10 @@ func TestQueryComputePlans(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"}).
-		AddRow("uuid", "owner", false, time.Now(), nil, "", "My compute plan", map[string]string{}, uint32(21), uint32(1), uint32(2), uint32(3), uint32(4), uint32(5), uint32(6))
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"}).
+		AddRow("uuid", "owner", false, time.Now(), nil, nil, "", "My compute plan", map[string]string{})
 
-	mock.ExpectQuery(`SELECT key,.* FROM expanded_compute_plans .* ORDER BY creation_date ASC, key ASC`).
+	mock.ExpectQuery(`SELECT key,.* FROM compute_plans .* ORDER BY creation_date ASC, key ASC`).
 		WithArgs(testChannel, "owner").
 		WillReturnRows(rows)
 
@@ -87,9 +59,7 @@ func TestQueryComputePlans(t *testing.T) {
 		&asset.PlanQueryFilter{Owner: "owner"},
 	)
 	assert.NoError(t, err)
-
 	assert.Len(t, plans, 1)
-	assert.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plans[0].Status)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -100,9 +70,9 @@ func TestQueryComputePlansNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count"})
+	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"})
 
-	mock.ExpectQuery(`SELECT key,.* FROM expanded_compute_plans .* ORDER BY creation_date ASC, key`).
+	mock.ExpectQuery(`SELECT key,.* FROM compute_plans .* ORDER BY creation_date ASC, key`).
 		WithArgs(testChannel).
 		WillReturnRows(rows)
 
@@ -131,8 +101,8 @@ func TestCancelComputePlan(t *testing.T) {
 	mock.ExpectBegin()
 
 	mock.
-		ExpectExec(`UPDATE compute_plans SET cancelation_date = $1 WHERE key = $2`).
-		WithArgs(cancelationDate, cpKey).
+		ExpectExec(`UPDATE compute_plans SET cancelation_date = $1 WHERE channel = $2 AND key = $3`).
+		WithArgs(cancelationDate, testChannel, cpKey).
 		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
 
 	tx, err := mock.Begin(context.Background())
@@ -165,7 +135,34 @@ func TestUpdateComputePlan(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	err = dbal.UpdateComputePlan(&asset.ComputePlan{Key: cpKey, Name: name})
+	plan := &asset.ComputePlan{Key: cpKey, Name: name}
+	err = dbal.SetComputePlanName(plan, plan.Name)
 	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestIsPlanRunning(t *testing.T) {
+	mock, err := pgxmock.NewConn(pgxmock.QueryMatcherOption(pgxmock.QueryMatcherEqual))
+	require.NoError(t, err)
+
+	cpKey := "abc"
+
+	mock.ExpectBegin()
+
+	rows := pgxmock.NewRows([]string{"count"}).AddRow(1)
+	mock.
+		ExpectQuery(`SELECT COUNT(*) FROM compute_tasks WHERE channel = $1 AND compute_plan_key = $2 AND status IN ($3,$4,$5)`).
+		WithArgs(testChannel, cpKey, "STATUS_WAITING", "STATUS_TODO", "STATUS_DOING").
+		WillReturnRows(rows)
+
+	tx, err := mock.Begin(context.Background())
+	require.NoError(t, err)
+
+	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
+
+	isRunning, err := dbal.IsPlanRunning(cpKey)
+	assert.NoError(t, err)
+	assert.True(t, isRunning)
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -15,8 +15,10 @@ type ComputePlanAPI interface {
 	QueryPlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error)
 	ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error
 	UpdatePlan(computePlan *asset.UpdateComputePlanParam, requester string) error
+	failPlan(key string) error
 	canDeleteModels(key string) (bool, error)
 	computePlanExists(key string) (bool, error)
+	IsPlanRunning(key string) (bool, error)
 }
 
 // ComputePlanServiceProvider defines an object able to provide a ComputePlanAPI instance
@@ -66,7 +68,6 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 		Metadata:                 input.Metadata,
 		DeleteIntermediaryModels: input.DeleteIntermediaryModels,
 		CreationDate:             timestamppb.New(s.GetTimeService().GetTransactionTime()),
-		Status:                   asset.ComputePlanStatus_PLAN_STATUS_EMPTY,
 	}
 
 	err = s.GetComputePlanDBAL().AddComputePlan(plan)
@@ -121,11 +122,9 @@ func (s *ComputePlanService) UpdatePlan(a *asset.UpdateComputePlanParam, request
 		return orcerrors.FromValidationError(asset.ComputePlanKind, err)
 	}
 
-	planKey := a.Key
-
-	plan, err := s.GetComputePlanDBAL().GetComputePlan(planKey)
+	plan, err := s.GetComputePlanDBAL().GetComputePlan(a.Key)
 	if err != nil {
-		return orcerrors.NewNotFound(asset.ComputePlanKind, planKey)
+		return orcerrors.NewNotFound(asset.ComputePlanKind, a.Key)
 	}
 
 	if requester != plan.Owner {
@@ -135,35 +134,46 @@ func (s *ComputePlanService) UpdatePlan(a *asset.UpdateComputePlanParam, request
 	// Update compute plan name
 	plan.Name = a.Name
 
+	err = s.GetComputePlanDBAL().SetComputePlanName(plan, plan.Name)
+	if err != nil {
+		return err
+	}
+
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
-		AssetKey:  planKey,
+		AssetKey:  plan.Key,
 		AssetKind: asset.AssetKind_ASSET_COMPUTE_PLAN,
 		Asset:     &asset.Event_ComputePlan{ComputePlan: plan},
 	}
-	err = s.GetEventService().RegisterEvents(event)
+	return s.GetEventService().RegisterEvents(event)
+}
+
+func (s *ComputePlanService) failPlan(key string) error {
+	plan, err := s.GetPlan(key)
 	if err != nil {
 		return err
 	}
 
-	return s.GetComputePlanDBAL().UpdateComputePlan(plan)
+	if plan.IsTerminated() {
+		return orcerrors.NewTerminatedComputePlan(plan.Key)
+	}
+
+	failureDate := s.GetTimeService().GetTransactionTime()
+	return s.GetComputePlanDBAL().FailComputePlan(plan, failureDate)
 }
 
 func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
-
-	if plan.CancelationDate != nil {
-		return orcerrors.NewBadRequest("compute plan is already canceled")
+	if plan.IsTerminated() {
+		return orcerrors.NewTerminatedComputePlan(plan.Key)
 	}
 
-	txTimestamp := s.GetTimeService().GetTransactionTime()
-
-	err := s.GetComputePlanDBAL().CancelComputePlan(plan, txTimestamp)
+	cancelationDate := s.GetTimeService().GetTransactionTime()
+	err := s.GetComputePlanDBAL().CancelComputePlan(plan, cancelationDate)
 	if err != nil {
 		return err
 	}
 
-	plan.CancelationDate = timestamppb.New(txTimestamp)
-	plan.Status = asset.ComputePlanStatus_PLAN_STATUS_CANCELED
+	plan.CancelationDate = timestamppb.New(cancelationDate)
 
 	event := &asset.Event{
 		AssetKey:  plan.Key,
@@ -177,7 +187,7 @@ func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
 
 // canDeleteModels returns true if the compute plan allows intermediary models deletion.
 func (s *ComputePlanService) canDeleteModels(key string) (bool, error) {
-	plan, err := s.GetComputePlanDBAL().GetRawComputePlan(key)
+	plan, err := s.GetComputePlanDBAL().GetComputePlan(key)
 	if err != nil {
 		return false, err
 	}
@@ -187,4 +197,10 @@ func (s *ComputePlanService) canDeleteModels(key string) (bool, error) {
 
 func (s *ComputePlanService) computePlanExists(key string) (bool, error) {
 	return s.GetComputePlanDBAL().ComputePlanExists(key)
+}
+
+// IsPlanRunning indicates whether there are tasks belonging to the compute plan
+// being executed or waiting to be executed
+func (s *ComputePlanService) IsPlanRunning(key string) (bool, error) {
+	return s.GetComputePlanDBAL().IsPlanRunning(key)
 }

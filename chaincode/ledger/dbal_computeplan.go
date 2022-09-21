@@ -7,7 +7,6 @@ import (
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	"github.com/substra/orchestrator/lib/errors"
-	"github.com/substra/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -21,9 +20,10 @@ type storableComputePlan struct {
 	Name                     string            `json:"name"`
 	Metadata                 map[string]string `json:"metadata"`
 	CancelationDate          *time.Time        `json:"cancelation_date"`
+	FailureDate              *time.Time        `json:"failure_date"`
 }
 
-// newStorableComputePlan returns a storableComputePlan without its computed properties.
+// newStorableComputePlan returns a storableComputePlan
 func newStorableComputePlan(plan *asset.ComputePlan) *storableComputePlan {
 	storablePlan := &storableComputePlan{
 		Key:                      plan.Key,
@@ -75,34 +75,8 @@ func (db *DB) ComputePlanExists(key string) (bool, error) {
 	return exists, nil
 }
 
-// GetComputePlan returns a ComputePlan by its key
+// GetComputePlan returns a compute plan
 func (db *DB) GetComputePlan(key string) (*asset.ComputePlan, error) {
-	plan, err := db.GetRawComputePlan(key)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.computePlanProperties(plan)
-	if err != nil {
-		return nil, err
-	}
-
-	return plan, nil
-}
-
-func (db *DB) computePlanProperties(plan *asset.ComputePlan) error {
-	count, err := db.getTaskCounts(plan.Key)
-	if err != nil {
-		return err
-	}
-
-	plan.Status = persistence.GetPlanStatus(plan, count)
-
-	return nil
-}
-
-// GetRawComputePlan returns a compute plan without its computed properties
-func (db *DB) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
 	plan := new(asset.ComputePlan)
 
 	b, err := db.getState(asset.ComputePlanKind, key)
@@ -167,77 +141,64 @@ func (db *DB) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFil
 			return nil, "", err
 		}
 
-		err = db.computePlanProperties(plan)
-		if err != nil {
-			return nil, "", err
-		}
-
 		plans = append(plans, plan)
 	}
 
 	return plans, bookmark.Bookmark, nil
 }
 
-func (db *DB) CancelComputePlan(cp *asset.ComputePlan, ts time.Time) error {
-	storablePlan := newStorableComputePlan(cp)
-	storablePlan.CancelationDate = &ts
-
+func (db *DB) updateComputePlan(storablePlan *storableComputePlan) error {
 	bytes, err := json.Marshal(storablePlan)
 	if err != nil {
 		return err
 	}
 
-	return db.putState(asset.ComputePlanKind, cp.GetKey(), bytes)
+	return db.putState(asset.ComputePlanKind, storablePlan.Key, bytes)
 }
 
-// UpdateComputePlan implements persistence.ComputePlanDBAL
-func (db *DB) UpdateComputePlan(cp *asset.ComputePlan) error {
-	storablePlan := newStorableComputePlan(cp)
-
-	bytes, err := json.Marshal(storablePlan)
-	if err != nil {
-		return err
-	}
-
-	return db.putState(asset.ComputePlanKind, cp.GetKey(), bytes)
+func (db *DB) SetComputePlanName(plan *asset.ComputePlan, name string) error {
+	storablePlan := newStorableComputePlan(plan)
+	storablePlan.Name = name
+	return db.updateComputePlan(storablePlan)
 }
 
-// getTaskCounts returns the count of plan's tasks by status.
-func (db *DB) getTaskCounts(key string) (*persistence.ComputePlanTaskCount, error) {
-	count := persistence.ComputePlanTaskCount{}
+func (db *DB) CancelComputePlan(plan *asset.ComputePlan, cancelationDate time.Time) error {
+	storablePlan := newStorableComputePlan(plan)
+	storablePlan.CancelationDate = &cancelationDate
+	return db.updateComputePlan(storablePlan)
+}
 
+func (db *DB) FailComputePlan(plan *asset.ComputePlan, failureDate time.Time) error {
+	storablePlan := newStorableComputePlan(plan)
+	storablePlan.FailureDate = &failureDate
+	return db.updateComputePlan(storablePlan)
+}
+
+func (db *DB) IsPlanRunning(key string) (bool, error) {
 	iterator, err := db.ccStub.GetStateByPartialCompositeKey(computePlanTaskStatusIndex, []string{asset.ComputePlanKind, key})
 	if err != nil {
-		return &count, err
+		return false, err
 	}
 	defer iterator.Close()
 
 	for iterator.HasNext() {
 		compositeKey, err := iterator.Next()
 		if err != nil {
-			return &count, err
+			return false, err
 		}
+
 		_, keyParts, err := db.ccStub.SplitCompositeKey(compositeKey.Key)
 		if err != nil {
-			return &count, err
-		}
-		switch keyParts[2] {
-		case asset.ComputeTaskStatus_STATUS_CANCELED.String():
-			count.Canceled++
-		case asset.ComputeTaskStatus_STATUS_DONE.String():
-			count.Done++
-		case asset.ComputeTaskStatus_STATUS_FAILED.String():
-			count.Failed++
-		case asset.ComputeTaskStatus_STATUS_WAITING.String():
-			count.Waiting++
-		case asset.ComputeTaskStatus_STATUS_DOING.String():
-			count.Doing++
-		case asset.ComputeTaskStatus_STATUS_TODO.String():
-			count.Todo++
+			return false, err
 		}
 
-		count.Total++
+		taskStatus := keyParts[2]
+		if taskStatus == asset.ComputeTaskStatus_STATUS_WAITING.String() ||
+			taskStatus == asset.ComputeTaskStatus_STATUS_TODO.String() ||
+			taskStatus == asset.ComputeTaskStatus_STATUS_DOING.String() {
+			return true, nil
+		}
 	}
 
-	return &count, nil
+	return false, nil
 }

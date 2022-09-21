@@ -641,6 +641,20 @@ func (c *TestClient) UpdateComputePlan(computePlanRef string, name string) *asse
 	return resp
 }
 
+func (c *TestClient) IsPlanRunning(computePlanRef string) *asset.IsPlanRunningResponse {
+	param := &asset.IsPlanRunningParam{
+		Key: c.ks.GetKey(computePlanRef),
+	}
+
+	c.logger.Debug().Str("compute plan key", computePlanRef).Msg("getting compute plan running status")
+
+	resp, err := c.computePlanService.IsPlanRunning(c.ctx, param)
+	if err != nil {
+		c.logger.Fatal().Err(err).Msg("IsPlanRunning failed")
+	}
+	return resp
+}
+
 func (c *TestClient) makeNewModel(o *ModelOptions) *asset.NewModel {
 	return &asset.NewModel{
 		ComputeTaskKey:              c.ks.GetKey(o.TaskRef),

@@ -11,7 +11,6 @@ import (
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
-	"github.com/substra/orchestrator/lib/persistence"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -21,14 +20,14 @@ type sqlComputePlan struct {
 	DeleteIntermediaryModels bool
 	CreationDate             time.Time
 	CancelationDate          sql.NullTime
+	FailureDate              sql.NullTime
 	Tag                      string
 	Name                     string
 	Metadata                 map[string]string
-	TaskCounts               persistence.ComputePlanTaskCount
 }
 
-// toRawComputePlan returns a compute plan without its computed properties.
-func (cp *sqlComputePlan) toRawComputePlan() *asset.ComputePlan {
+// toComputePlan returns a compute plan.
+func (cp *sqlComputePlan) toComputePlan() *asset.ComputePlan {
 	res := &asset.ComputePlan{
 		Key:                      cp.Key,
 		Owner:                    cp.Owner,
@@ -38,17 +37,13 @@ func (cp *sqlComputePlan) toRawComputePlan() *asset.ComputePlan {
 		Name:                     cp.Name,
 		Metadata:                 cp.Metadata,
 	}
+
 	if cp.CancelationDate.Valid {
 		res.CancelationDate = timestamppb.New(cp.CancelationDate.Time)
+	} else if cp.FailureDate.Valid {
+		res.FailureDate = timestamppb.New(cp.FailureDate.Time)
 	}
 	return res
-}
-
-// toComputePlan returns a compute plan with its computed properties.
-func (cp *sqlComputePlan) toComputePlan() *asset.ComputePlan {
-	plan := cp.toRawComputePlan()
-	plan.Status = persistence.GetPlanStatus(plan, &cp.TaskCounts)
-	return plan
 }
 
 // ComputePlanExists returns true if a ComputePlan with the given key already exists
@@ -79,11 +74,11 @@ func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 	return d.exec(stmt)
 }
 
-// GetComputePlan returns a ComputePlan by its key
+// GetComputePlan fetches a given compute plan
 func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	stmt := getStatementBuilder().
-		Select("key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count").
-		From("expanded_compute_plans").
+		Select("key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata").
+		From("compute_plans").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
 	row, err := d.queryRow(stmt)
@@ -92,8 +87,7 @@ func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	}
 
 	pl := new(sqlComputePlan)
-
-	err = row.Scan(&pl.Key, &pl.Owner, &pl.DeleteIntermediaryModels, &pl.CreationDate, &pl.CancelationDate, &pl.Tag, &pl.Name, &pl.Metadata, &pl.TaskCounts.Total, &pl.TaskCounts.Waiting, &pl.TaskCounts.Todo, &pl.TaskCounts.Doing, &pl.TaskCounts.Canceled, &pl.TaskCounts.Failed, &pl.TaskCounts.Done)
+	err = row.Scan(&pl.Key, &pl.Owner, &pl.DeleteIntermediaryModels, &pl.CreationDate, &pl.CancelationDate, &pl.FailureDate, &pl.Tag, &pl.Name, &pl.Metadata)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("computeplan", key)
@@ -104,30 +98,6 @@ func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	return pl.toComputePlan(), nil
 }
 
-// GetRawComputePlan returns a compute plan without its computed properties.
-func (d *DBAL) GetRawComputePlan(key string) (*asset.ComputePlan, error) {
-	stmt := getStatementBuilder().
-		Select("key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata").
-		From("compute_plans").
-		Where(sq.Eq{"key": key, "channel": d.channel})
-
-	row, err := d.queryRow(stmt)
-	if err != nil {
-		return nil, err
-	}
-
-	pl := new(sqlComputePlan)
-	err = row.Scan(&pl.Key, &pl.Owner, &pl.DeleteIntermediaryModels, &pl.CreationDate, &pl.CancelationDate, &pl.Tag, &pl.Name, &pl.Metadata)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, orcerrors.NewNotFound("computeplan", key)
-		}
-		return nil, err
-	}
-
-	return pl.toRawComputePlan(), nil
-}
-
 func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error) {
 	offset, err := getOffset(p.Token)
 	if err != nil {
@@ -135,8 +105,8 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "tag", "name", "metadata", "task_count", "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count").
-		From("expanded_compute_plans").
+		Select("key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata").
+		From("compute_plans").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderBy("creation_date ASC, key ASC").
 		Offset(uint64(offset)).
@@ -159,7 +129,7 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 	for rows.Next() {
 		pl := new(sqlComputePlan)
 
-		err = rows.Scan(&pl.Key, &pl.Owner, &pl.DeleteIntermediaryModels, &pl.CreationDate, &pl.CancelationDate, &pl.Tag, &pl.Name, &pl.Metadata, &pl.TaskCounts.Total, &pl.TaskCounts.Waiting, &pl.TaskCounts.Todo, &pl.TaskCounts.Doing, &pl.TaskCounts.Canceled, &pl.TaskCounts.Failed, &pl.TaskCounts.Done)
+		err = rows.Scan(&pl.Key, &pl.Owner, &pl.DeleteIntermediaryModels, &pl.CreationDate, &pl.CancelationDate, &pl.FailureDate, &pl.Tag, &pl.Name, &pl.Metadata)
 		if err != nil {
 			return nil, "", err
 		}
@@ -184,21 +154,44 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 	return plans, bookmark, nil
 }
 
-func (d *DBAL) CancelComputePlan(cp *asset.ComputePlan, ts time.Time) error {
+func (d *DBAL) updateComputePlan(key string, column string, value interface{}) error {
 	stmt := getStatementBuilder().
 		Update("compute_plans").
-		Set("cancelation_date", ts).
-		Where(sq.Eq{"key": cp.GetKey()})
+		Set(column, value).
+		Where(sq.Eq{"channel": d.channel, "key": key})
 
 	return d.exec(stmt)
 }
 
-// UpdateComputePlan updates the mutable fields of a compute plan in the DB. List of mutable fields: name.
-func (d *DBAL) UpdateComputePlan(plan *asset.ComputePlan) error {
-	stmt := getStatementBuilder().
-		Update("compute_plans").
-		Set("name", plan.Name).
-		Where(sq.Eq{"channel": d.channel, "key": plan.Key})
+func (d *DBAL) SetComputePlanName(plan *asset.ComputePlan, name string) error {
+	return d.updateComputePlan(plan.Key, "name", name)
+}
 
-	return d.exec(stmt)
+func (d *DBAL) CancelComputePlan(plan *asset.ComputePlan, cancelationDate time.Time) error {
+	return d.updateComputePlan(plan.Key, "cancelation_date", cancelationDate)
+}
+
+func (d *DBAL) FailComputePlan(plan *asset.ComputePlan, failureDate time.Time) error {
+	return d.updateComputePlan(plan.Key, "failure_date", failureDate)
+}
+
+func (d *DBAL) IsPlanRunning(key string) (bool, error) {
+	stmt := getStatementBuilder().
+		Select("COUNT(*)").
+		From("compute_tasks").
+		Where(sq.Eq{
+			"status":           []string{"STATUS_WAITING", "STATUS_TODO", "STATUS_DOING"},
+			"compute_plan_key": key,
+			"channel":          d.channel,
+		})
+
+	row, err := d.queryRow(stmt)
+	if err != nil {
+		return false, err
+	}
+
+	var count int
+	err = row.Scan(&count)
+
+	return count > 0, err
 }

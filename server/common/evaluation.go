@@ -19,7 +19,7 @@ var ReadOnlyMethods = map[string][]string{
 	"DataSample":    {"GetDataSample", "QueryDataSamples"},
 	"DataManager":   {"GetDataManager", "QueryDataManagers"},
 	"ComputeTask":   {"QueryTasks", "GetTask", "GetTaskInputAssets"},
-	"ComputePlan":   {"GetPlan", "QueryPlans"},
+	"ComputePlan":   {"GetPlan", "QueryPlans", "IsPlanRunning"},
 	"Performance":   {"QueryPerformances"},
 	"Info":          {"QueryVersion"},
 	"FailureReport": {"GetFailureReport"},

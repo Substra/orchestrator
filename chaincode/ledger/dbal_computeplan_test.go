@@ -3,7 +3,6 @@ package ledger
 import (
 	"context"
 	"encoding/json"
-	"reflect"
 	"testing"
 
 	"github.com/hyperledger/fabric-protos-go/ledger/queryresult"
@@ -13,7 +12,6 @@ import (
 	testHelper "github.com/substra/orchestrator/chaincode/testing"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
-	"github.com/substra/orchestrator/utils"
 )
 
 func TestQueryComputePlans(t *testing.T) {
@@ -32,18 +30,6 @@ func TestQueryComputePlans(t *testing.T) {
 	queryString := `{"selector":{"doc_type":"computeplan","asset":{"owner":"owner"}}}`
 	stub.On("GetQueryResultWithPagination", queryString, int32(1), "").
 		Return(resp, &peer.QueryResponseMetadata{Bookmark: "", FetchedRecordsCount: 1}, nil)
-
-	// CP tasks index
-	index := &testHelper.MockedStateQueryIterator{}
-	index.On("Close").Return(nil)
-	index.On("HasNext").Twice().Return(true)
-	index.On("HasNext").Once().Return(false)
-	index.On("Next").Return(&queryresult.KV{Key: "firstIndexKey"}, nil)
-
-	stub.On("SplitCompositeKey", "firstIndexKey").Return("", []string{"indexName", "uuid", "STATUS_FAILED", "taskId"}, nil)
-
-	stub.On("GetStateByPartialCompositeKey", computePlanTaskStatusIndex, []string{asset.ComputePlanKind, "uuid"}).
-		Return(index, nil)
 
 	_, _, err := db.QueryComputePlans(
 		common.NewPagination("", 1),
@@ -76,42 +62,6 @@ func TestQueryComputePlansNilFilter(t *testing.T) {
 	assert.NoError(t, err)
 
 	stub.AssertExpectations(t)
-}
-
-// TestStorableComputePlanFields should fail if the storable struct is not updated after a new field is added to the compute plan.
-func TestStorableComputePlanFields(t *testing.T) {
-	var publicPlanFields, publicStorablePlanFields int
-
-	// Represents the list of compute plan dynamically computed fields.
-	// planComputedFields should be updated after adding a new dynamic field to the compute plan.
-	planComputedFields := []string{
-		"WaitingCount",
-		"TodoCount",
-		"DoingCount",
-		"CanceledCount",
-		"FailedCount",
-		"DoneCount",
-		"TaskCount",
-		"Status",
-	}
-
-	planType := reflect.TypeOf(asset.ComputePlan{})
-	planFields := reflect.VisibleFields(planType)
-	for _, f := range planFields {
-		if f.IsExported() && !utils.SliceContains(planComputedFields, f.Name) {
-			publicPlanFields++
-		}
-	}
-
-	storableType := reflect.TypeOf(storableComputePlan{})
-	storableFields := reflect.VisibleFields(storableType)
-	for _, f := range storableFields {
-		if f.IsExported() {
-			publicStorablePlanFields++
-		}
-	}
-
-	assert.GreaterOrEqual(t, publicStorablePlanFields, publicPlanFields, "storable struct should have at least as many fields than the asset it represents")
 }
 
 func TestStorableComputeTaskOutputAsset(t *testing.T) {
@@ -164,6 +114,29 @@ func TestGetComputeTaskOutputAssets(t *testing.T) {
 
 	assert.Len(t, outputs, 1)
 	assert.Equal(t, expectedOutput, outputs[0])
+
+	stub.AssertExpectations(t)
+}
+
+func TestIsPlanRunning(t *testing.T) {
+	ctx := context.WithValue(context.Background(), ctxIsEvaluateTransaction, true)
+	stub := new(testHelper.MockedStub)
+	queue := new(MockEventQueue)
+	db := NewDB(ctx, stub, queue)
+
+	iterator := &testHelper.MockedStateQueryIterator{}
+	iterator.On("Close").Return(nil)
+	iterator.On("HasNext").Once().Return(true)
+	iterator.On("Next").Return(&queryresult.KV{Key: "firstIndexKey"}, nil)
+
+	stub.On("GetStateByPartialCompositeKey", computePlanTaskStatusIndex, []string{asset.ComputePlanKind, "cpKey"}).
+		Return(iterator, nil)
+
+	stub.On("SplitCompositeKey", "firstIndexKey").Return("", []string{"indexName", "cpKey", "STATUS_DOING", "taskId"}, nil)
+
+	isRunning, err := db.IsPlanRunning("cpKey")
+	require.NoError(t, err)
+	assert.True(t, isRunning)
 
 	stub.AssertExpectations(t)
 }

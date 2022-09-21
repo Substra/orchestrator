@@ -10,18 +10,6 @@ import (
 	"github.com/substra/orchestrator/lib/persistence"
 )
 
-type mockStateUpdater struct {
-	mock.Mock
-}
-
-func (m *mockStateUpdater) onStateChange(e *fsm.Event) {
-	m.Called(e)
-}
-
-func (m *mockStateUpdater) onDone(e *fsm.Event) {
-	m.Called(e)
-}
-
 func TestGetInitialStatusFromParents(t *testing.T) {
 	cases := map[string]struct {
 		parents []*asset.ComputeTask
@@ -61,7 +49,7 @@ func TestGetInitialStatusFromParents(t *testing.T) {
 }
 
 func TestOnStateChange(t *testing.T) {
-	updater := new(mockStateUpdater)
+	updater := new(mockTaskStateUpdater)
 	updater.On("onStateChange", mock.Anything).Once()
 
 	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_TODO, Key: "uuid"})
@@ -74,7 +62,7 @@ func TestOnStateChange(t *testing.T) {
 
 // Make sure fsm returns expected errors
 func TestFailedStateChange(t *testing.T) {
-	updater := new(mockStateUpdater)
+	updater := new(mockTaskStateUpdater)
 
 	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DOING, Key: "uuid"})
 

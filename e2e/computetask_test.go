@@ -138,7 +138,8 @@ func TestCascadeCancel(t *testing.T) {
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_CANCELED, plan.Status)
+	require.Nil(t, plan.CancelationDate)
+	require.Nil(t, plan.FailureDate)
 }
 
 // TestCascadeTodo registers 10 tasks and set their parent as done
@@ -167,7 +168,8 @@ func TestCascadeTodo(t *testing.T) {
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_DOING, plan.Status)
+	require.Nil(t, plan.CancelationDate)
+	require.Nil(t, plan.FailureDate)
 }
 
 // TestCascadeFailure registers 10 tasks and set their parent as failed
@@ -196,7 +198,8 @@ func TestCascadeFailure(t *testing.T) {
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
-	require.Equal(t, asset.ComputePlanStatus_PLAN_STATUS_FAILED, plan.Status)
+	require.NotNil(t, plan.FailureDate)
+	require.Nil(t, plan.CancelationDate)
 }
 
 func TestPropagateLogsPermission(t *testing.T) {
