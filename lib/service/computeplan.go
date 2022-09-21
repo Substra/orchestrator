@@ -15,7 +15,7 @@ type ComputePlanAPI interface {
 	QueryPlans(p *common.Pagination, filter *asset.PlanQueryFilter) ([]*asset.ComputePlan, common.PaginationToken, error)
 	ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error
 	UpdatePlan(computePlan *asset.UpdateComputePlanParam, requester string) error
-	FailPlan(plan *asset.ComputePlan) error
+	failPlan(key string) error
 	canDeleteModels(key string) (bool, error)
 	computePlanExists(key string) (bool, error)
 	IsPlanRunning(key string) (bool, error)
@@ -148,7 +148,12 @@ func (s *ComputePlanService) UpdatePlan(a *asset.UpdateComputePlanParam, request
 	return s.GetEventService().RegisterEvents(event)
 }
 
-func (s *ComputePlanService) FailPlan(plan *asset.ComputePlan) error {
+func (s *ComputePlanService) failPlan(key string) error {
+	plan, err := s.GetPlan(key)
+	if err != nil {
+		return err
+	}
+
 	if plan.IsTerminated() {
 		return orcerrors.NewTerminatedComputePlan(plan.Key)
 	}

@@ -278,19 +278,13 @@ func (s *ComputeTaskService) onFailure(e *fsm.Event) {
 		return
 	}
 
-	plan, err := s.GetComputePlanService().GetPlan(task.ComputePlanKey)
-	if err != nil {
-		e.Err = err
-		return
-	}
-
-	err = s.GetComputePlanService().FailPlan(plan)
+	err := s.GetComputePlanService().failPlan(task.ComputePlanKey)
 	if err != nil {
 		orcErr := new(orcerrors.OrcError)
 		if errors.As(err, &orcErr) && orcErr.Kind == orcerrors.ErrTerminatedComputePlan {
 			s.GetLogger().Debug().
 				Str("taskKey", task.Key).
-				Interface("computePlan", plan).
+				Str("computePlanKey", task.ComputePlanKey).
 				Msg("already terminated compute plan won't be set to failed")
 
 			return
