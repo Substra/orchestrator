@@ -47,14 +47,6 @@ message GetComputeTaskModelsResponse {
   repeated Model models = 1;
 }
 
-message CanDisableModelParam {
-  string model_key = 1;
-}
-
-message CanDisableModelResponse {
-  bool can_disable = 1;
-}
-
 message GetModelParam {
   string key = 1;
 }
@@ -66,5 +58,4 @@ service ModelService {
   rpc RegisterModels(RegisterModelsParam) returns (RegisterModelsResponse);
   rpc GetModel(GetModelParam) returns (Model);
   rpc GetComputeTaskOutputModels(GetComputeTaskModelsParam) returns (GetComputeTaskModelsResponse);
-  rpc CanDisableModel(CanDisableModelParam) returns (CanDisableModelResponse);
 }

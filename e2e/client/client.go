@@ -411,15 +411,6 @@ func (c *TestClient) GetTaskOutputModels(taskRef string) []*asset.Model {
 	return resp.Models
 }
 
-func (c *TestClient) CanDisableModel(modelRef string) bool {
-	resp, err := c.modelService.CanDisableModel(c.ctx, &asset.CanDisableModelParam{ModelKey: c.ks.GetKey(modelRef)})
-	if err != nil {
-		c.logger.Fatal().Err(err).Msg("CanDisableModel failed")
-	}
-
-	return resp.CanDisable
-}
-
 func (c *TestClient) DisableOutput(taskRef string, identifier string) {
 	taskKey := c.ks.GetKey(taskRef)
 	c.logger.Debug().Str("taskKey", taskKey).Str("identifier", identifier).Msg("disabling output")

@@ -61,20 +61,3 @@ func TestGetComputeTaskOutputModels(t *testing.T) {
 	p.AssertExpectations(t)
 	ms.AssertExpectations(t)
 }
-
-func TestCanDisableModel(t *testing.T) {
-	ctx, p := getContext()
-	ms := new(service.MockModelAPI)
-
-	server := NewModelServer()
-
-	p.On("GetModelService").Return(ms)
-	ms.On("CanDisableModel", "uuid", "requester").Once().Return(true, nil)
-
-	resp, err := server.CanDisableModel(ctx, &asset.CanDisableModelParam{ModelKey: "uuid"})
-	assert.NoError(t, err)
-	assert.True(t, resp.CanDisable)
-
-	p.AssertExpectations(t)
-	ms.AssertExpectations(t)
-}

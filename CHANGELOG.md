@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Worker field on NewAggregateTrainTaskData, use NewComputeTask.Worker field instead
 - DisableModel rpc in Model service, use DisableOutput in ComputeTask service instead
+- CanDisableModel rpc in Model service.
 
 ## [0.27.0] - 2022-09-19
 
