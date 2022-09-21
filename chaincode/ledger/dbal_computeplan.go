@@ -13,25 +13,23 @@ import (
 
 // storableComputePlan is a custom representation of asset.ComputePlan to enforce storing without its computed properties.
 type storableComputePlan struct {
-	Key                      string            `json:"key"`
-	Owner                    string            `json:"owner"`
-	DeleteIntermediaryModels bool              `json:"delete_intermediary_models"`
-	CreationDate             *time.Time        `json:"creation_date"`
-	Tag                      string            `json:"tag"`
-	Name                     string            `json:"name"`
-	Metadata                 map[string]string `json:"metadata"`
-	CancelationDate          *time.Time        `json:"cancelation_date"`
+	Key             string            `json:"key"`
+	Owner           string            `json:"owner"`
+	CreationDate    *time.Time        `json:"creation_date"`
+	Tag             string            `json:"tag"`
+	Name            string            `json:"name"`
+	Metadata        map[string]string `json:"metadata"`
+	CancelationDate *time.Time        `json:"cancelation_date"`
 }
 
 // newStorableComputePlan returns a storableComputePlan without its computed properties.
 func newStorableComputePlan(plan *asset.ComputePlan) *storableComputePlan {
 	storablePlan := &storableComputePlan{
-		Key:                      plan.Key,
-		Owner:                    plan.Owner,
-		DeleteIntermediaryModels: plan.DeleteIntermediaryModels,
-		Tag:                      plan.Tag,
-		Name:                     plan.Name,
-		Metadata:                 plan.Metadata,
+		Key:      plan.Key,
+		Owner:    plan.Owner,
+		Tag:      plan.Tag,
+		Name:     plan.Name,
+		Metadata: plan.Metadata,
 	}
 
 	if plan.CreationDate != nil {
