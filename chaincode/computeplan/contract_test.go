@@ -111,6 +111,7 @@ func TestEvaluateTransactions(t *testing.T) {
 	queries := []string{
 		"GetPlan",
 		"QueryPlans",
+		"IsComputePlanRunning",
 	}
 
 	assert.Equal(t, queries, contract.GetEvaluateTransactions(), "All non-commit transactions should be flagged")

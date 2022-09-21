@@ -119,7 +119,7 @@ func TestCancelPlan(t *testing.T) {
 
 	plan.CancelationDate = timestamppb.Now()
 	err = service.cancelPlan(plan)
-	assert.ErrorContains(t, err, "compute plan is already terminated")
+	assert.ErrorContains(t, err, "compute plan "+plan.Key+" is already terminated")
 
 	ts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
