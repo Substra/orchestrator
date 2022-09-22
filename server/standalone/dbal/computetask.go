@@ -221,9 +221,7 @@ func (d *DBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
 func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-			"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_description_address",
-			"algo_description_checksum", "algo_algorithm_address", "algo_algorithm_checksum", "algo_permissions", "algo_owner",
-			"algo_creation_date", "algo_metadata", "parent_task_keys").
+			"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys").
 		From("expanded_compute_tasks").
 		Where(sq.Eq{"channel": d.channel, "key": key})
 
@@ -234,9 +232,7 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 
 	ct := new(sqlComputeTask)
 	err = row.Scan(&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Category, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
-		&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.Algo.Key, &ct.Algo.Name, &ct.Algo.Description.StorageAddress,
-		&ct.Algo.Description.Checksum, &ct.Algo.Algorithm.StorageAddress, &ct.Algo.Algorithm.Checksum, &ct.Algo.Permissions, &ct.Algo.Owner,
-		&ct.Algo.CreationDate, &ct.Algo.Metadata, &ct.ParentTaskKeys)
+		&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("computetask", key)
@@ -262,9 +258,7 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-			"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_description_address",
-			"algo_description_checksum", "algo_algorithm_address", "algo_algorithm_checksum", "algo_permissions", "algo_owner",
-			"algo_creation_date", "algo_metadata", "parent_task_keys").
+			"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys").
 		From("expanded_compute_tasks t").
 		Join("compute_task_parents p ON t.key = p.child_task_key").
 		Where(sq.Eq{"t.channel": d.channel, "p.parent_task_key": key}).
@@ -282,9 +276,7 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 
 		err = rows.Scan(
 			&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Category, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
-			&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.Algo.Key, &ct.Algo.Name, &ct.Algo.Description.StorageAddress,
-			&ct.Algo.Description.Checksum, &ct.Algo.Algorithm.StorageAddress, &ct.Algo.Algorithm.Checksum, &ct.Algo.Permissions, &ct.Algo.Owner,
-			&ct.Algo.CreationDate, &ct.Algo.Metadata, &ct.ParentTaskKeys)
+			&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -367,9 +359,7 @@ func (d *DBAL) CountComputeTaskRegisteredOutputs(key string) (persistence.Comput
 func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-			"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_description_address",
-			"algo_description_checksum", "algo_algorithm_address", "algo_algorithm_checksum", "algo_permissions", "algo_owner",
-			"algo_creation_date", "algo_metadata", "parent_task_keys").
+			"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys").
 		From("expanded_compute_tasks").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key")
@@ -410,9 +400,7 @@ func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer fun
 
 		err = rows.Scan(
 			&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Category, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
-			&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.Algo.Key, &ct.Algo.Name, &ct.Algo.Description.StorageAddress,
-			&ct.Algo.Description.Checksum, &ct.Algo.Algorithm.StorageAddress, &ct.Algo.Algorithm.Checksum, &ct.Algo.Permissions, &ct.Algo.Owner,
-			&ct.Algo.CreationDate, &ct.Algo.Metadata, &ct.ParentTaskKeys)
+			&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
 		if err != nil {
 			return nil, "", err
 		}

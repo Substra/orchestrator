@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Worker field on NewAggregateTrainTaskData, use NewComputeTask.Worker field instead
 - DisableModel rpc in Model service, use DisableOutput in ComputeTask service instead
 - CanDisableModel rpc in Model service.
+- (BREAKING): Removed fields related to algo (except `algo_key`) in view `expanded_compute_tasks`
 
 ### Added
 
