@@ -598,13 +598,13 @@ func (s *ComputeTaskService) validateInputRef(algoInput *asset.AlgoInput, taskIn
 			return err
 		}
 
-		parentTask_algo, err := s.getCachedAlgo(parentTask.AlgoKey)
+		parentTaskAlgo, err := s.getCachedAlgo(parentTask.AlgoKey)
 		if err != nil {
 			return err
 		}
 
 		var algoOutput *asset.AlgoOutput
-		if algoOutput, ok = parentTask_algo.Outputs[inputRef.ParentTaskOutput.OutputIdentifier]; !ok {
+		if algoOutput, ok = parentTaskAlgo.Outputs[inputRef.ParentTaskOutput.OutputIdentifier]; !ok {
 			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: parent task %v: algo output not found: %q", identifier, inputRef.ParentTaskOutput.ParentTaskKey, inputRef.ParentTaskOutput.OutputIdentifier))
 		}
 		if algoOutput.Kind != algoInput.Kind {
