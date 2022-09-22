@@ -23,7 +23,7 @@ const computeTaskOutputAssetsTable = "compute_task_output_assets"
 type sqlComputeTask struct {
 	Key            string
 	Category       asset.ComputeTaskCategory
-	Algo           sqlAlgo
+	AlgoKey        string
 	Owner          string
 	ComputePlanKey string
 	ParentTaskKeys []string
@@ -47,7 +47,7 @@ func (t *sqlComputeTask) toComputeTask() (*asset.ComputeTask, error) {
 
 	task.Key = t.Key
 	task.Category = t.Category
-	task.Algo = t.Algo.toAlgo()
+	task.AlgoKey = t.AlgoKey
 	task.Owner = t.Owner
 	task.ComputePlanKey = t.ComputePlanKey
 	task.ParentTaskKeys = t.ParentTaskKeys
@@ -103,7 +103,7 @@ func getCopyableComputeTaskValues(channel string, task *asset.ComputeTask) ([]in
 		return nil, err
 	}
 
-	algoKey, err := uuid.Parse(task.Algo.Key)
+	algoKey, err := uuid.Parse(task.AlgoKey)
 	if err != nil {
 		return nil, err
 	}
@@ -245,11 +245,6 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	}
 
 	res, err := ct.toComputeTask()
-	if err != nil {
-		return nil, err
-	}
-
-	err = d.populateAlgosIO(res.Algo)
 	if err != nil {
 		return nil, err
 	}
@@ -449,16 +444,6 @@ func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer fun
 
 func (d *DBAL) queryComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	tasks, bookmark, err := d.queryBaseComputeTasks(pagination, filterer)
-	if err != nil {
-		return nil, "", err
-	}
-
-	algos := make([]*asset.Algo, 0, len(tasks))
-	for _, task := range tasks {
-		algos = append(algos, task.Algo)
-	}
-
-	err = d.populateAlgosIO(algos...)
 	if err != nil {
 		return nil, "", err
 	}

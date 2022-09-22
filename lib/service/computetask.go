@@ -178,9 +178,13 @@ func (s *ComputeTaskService) GetInputAssets(key string) ([]*asset.ComputeTaskInp
 	}
 
 	inputAssets := make([]*asset.ComputeTaskInputAsset, 0, len(task.Inputs))
+	algo, err := s.GetAlgoService().GetAlgo(task.AlgoKey)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, input := range task.Inputs {
-		algoInput, ok := task.Algo.Inputs[input.Identifier]
+		algoInput, ok := algo.Inputs[input.Identifier]
 		if !ok {
 			// This should not happen since this is checked on registration
 			return nil, orcerrors.NewError(orcerrors.ErrInternal, "missing algo input")
@@ -405,7 +409,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 	task := &asset.ComputeTask{
 		Key:            input.Key,
-		Algo:           algo,
+		AlgoKey:        algo.Key,
 		Category:       input.Category,
 		Owner:          owner,
 		ComputePlanKey: input.ComputePlanKey,
@@ -438,11 +442,11 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
-	if err := s.validateInputs(task.Inputs, task.Algo.Inputs, task.Owner, task.Worker); err != nil {
+	if err := s.validateInputs(task.Inputs, algo.Inputs, task.Owner, task.Worker); err != nil {
 		return nil, err
 	}
 
-	if err := s.validateOutputs(task.Key, task.Outputs, task.Algo.Outputs); err != nil {
+	if err := s.validateOutputs(task.Key, task.Outputs, algo.Outputs); err != nil {
 		return nil, err
 	}
 
@@ -470,14 +474,10 @@ func (s *ComputeTaskService) addComputeTaskOutputAsset(output *asset.ComputeTask
 // getCheckedAlgo returns the Algo identified by given key,
 // it will return an error if the algorithm is not processable by the owner.
 func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string) (*asset.Algo, error) {
-	if _, ok := s.algoStore[algoKey]; !ok {
-		algo, err := s.GetAlgoService().GetAlgo(algoKey)
-		if err != nil {
-			return nil, err
-		}
-		s.algoStore[algoKey] = algo
+	algo, err := s.getCachedAlgo(algoKey)
+	if err != nil {
+		return nil, err
 	}
-	algo := s.algoStore[algoKey]
 
 	canProcess := s.GetPermissionService().CanProcess(algo.Permissions, owner)
 	if !canProcess {
@@ -597,8 +597,14 @@ func (s *ComputeTaskService) validateInputRef(algoInput *asset.AlgoInput, taskIn
 			}
 			return err
 		}
+
+		parentTask_algo, err := s.getCachedAlgo(parentTask.AlgoKey)
+		if err != nil {
+			return err
+		}
+
 		var algoOutput *asset.AlgoOutput
-		if algoOutput, ok = parentTask.Algo.Outputs[inputRef.ParentTaskOutput.OutputIdentifier]; !ok {
+		if algoOutput, ok = parentTask_algo.Outputs[inputRef.ParentTaskOutput.OutputIdentifier]; !ok {
 			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: parent task %v: algo output not found: %q", identifier, inputRef.ParentTaskOutput.ParentTaskKey, inputRef.ParentTaskOutput.OutputIdentifier))
 		}
 		if algoOutput.Kind != algoInput.Kind {
@@ -881,6 +887,20 @@ func (s *ComputeTaskService) allModelsAvailable(parents []*asset.ComputeTask) er
 	}
 
 	return nil
+}
+
+// getCachedAlgo returns a cached version of an algo
+// we cache the result to avoid multiple dbal queries on batch registration
+func (s *ComputeTaskService) getCachedAlgo(algoKey string) (*asset.Algo, error) {
+	if _, ok := s.algoStore[algoKey]; !ok {
+		algo, err := s.GetAlgoService().GetAlgo(algoKey)
+		if err != nil {
+			return nil, err
+		}
+		s.algoStore[algoKey] = algo
+	}
+	algo := s.algoStore[algoKey]
+	return algo, nil
 }
 
 // getCachedCP returns a cached version of a compute plan

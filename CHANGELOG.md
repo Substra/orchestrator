@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - (BREAKING) Algo.category: do not rely on categories anymore, all algo categories will be returned as UNKNOWN
 - NewAlgo.category: No category is expected
+- (BREAKING): Replaced `algo` by `algo_key` in ComputeTask
 
 ### Fixed
 

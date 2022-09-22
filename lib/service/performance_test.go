@@ -31,7 +31,16 @@ func TestRegisterPerformance(t *testing.T) {
 	metric := &asset.Algo{Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275", Category: asset.AlgoCategory_ALGO_METRIC}
 	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
+	algo := &asset.Algo{
+		Outputs: map[string]*asset.AlgoOutput{
+			"auc": {
+				Kind: asset.AssetKind_ASSET_PERFORMANCE,
+			},
+		},
+	}
+	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
 	task := &asset.ComputeTask{
+		Key:      "taskTest",
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Worker:   "test",
 		Category: asset.ComputeTaskCategory_TASK_TEST,
@@ -41,13 +50,7 @@ func TestRegisterPerformance(t *testing.T) {
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
 		},
-		Algo: &asset.Algo{
-			Outputs: map[string]*asset.AlgoOutput{
-				"auc": {
-					Kind: asset.AssetKind_ASSET_PERFORMANCE,
-				},
-			},
-		},
+		AlgoKey: algo.Key,
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 
@@ -132,6 +135,16 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 	metric := &asset.Algo{Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275", Category: asset.AlgoCategory_ALGO_METRIC}
 	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
+	algo := &asset.Algo{
+		Key: "eb8dab0c-929d-4053-a145-a487da645ef8",
+		Outputs: map[string]*asset.AlgoOutput{
+			"auc": {
+				Kind: asset.AssetKind_ASSET_UNKNOWN,
+			},
+		},
+	}
+	as.On("GetAlgo", algo.Key).Return(algo, nil)
+
 	task := &asset.ComputeTask{
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Worker:   "test",
@@ -142,13 +155,7 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
 		},
-		Algo: &asset.Algo{
-			Outputs: map[string]*asset.AlgoOutput{
-				"auc": {
-					Kind: asset.AssetKind_ASSET_UNKNOWN,
-				},
-			},
-		},
+		AlgoKey: algo.Key,
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 

@@ -74,7 +74,12 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 	if _, ok := task.Outputs[newPerf.ComputeTaskOutputIdentifier]; !ok {
 		return nil, errors.NewMissingTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier)
 	}
-	algoOutput, ok := task.Algo.Outputs[newPerf.ComputeTaskOutputIdentifier]
+	algoTask, err := s.GetAlgoService().GetAlgo(task.AlgoKey)
+	if err != nil {
+		return nil, err
+	}
+
+	algoOutput, ok := algoTask.Outputs[newPerf.ComputeTaskOutputIdentifier]
 	if !ok {
 		// This should never happen since task outputs are checked against algo on registration
 		return nil, errors.NewInternal(fmt.Sprintf("missing algo output %q for task %q", newPerf.ComputeTaskOutputIdentifier, task.Key))

@@ -3,7 +3,6 @@ syntax = "proto3";
 package orchestrator;
 
 import "google/protobuf/timestamp.proto";
-import "algo.proto";
 import "model.proto";
 import "datamanager.proto";
 import "datasample.proto";
@@ -57,9 +56,12 @@ message NewComputeTaskOutput {
 // ComputeTask is a computation step in a ComputePlan.
 // It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
 message ComputeTask {
+  reserved 3;
+  reserved "algo";
+
   string key = 1;
   ComputeTaskCategory category = 2;
-  Algo algo = 3;
+  string algo_key = 20;
   string owner = 4;
   string compute_plan_key = 5;
   // Keys of parent ComputeTasks
