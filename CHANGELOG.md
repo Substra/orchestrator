@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 **WARNING**: Some migrations in this version are destructive once applied you will not be able to restore algo categories.
 
+### Added
+
+- Prevent use of `__` in asset metadata keys
+
 ### Changed
+
 - (BREAKING) Algo.category: do not rely on categories anymore, all algo categories will be returned as UNKNOWN
 - NewAlgo.category: No category is expected
 

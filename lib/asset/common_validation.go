@@ -2,6 +2,7 @@ package asset
 
 import (
 	"fmt"
+	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -40,6 +41,9 @@ func validateMetadata(input interface{}) error {
 		}
 		if len(v) > 100 {
 			return errors.NewInvalidAsset(fmt.Sprintf("metadata value for key %q is too long", k))
+		}
+		if strings.Contains(k, "__") {
+			return errors.NewInvalidAsset(fmt.Sprintf("'__' cannot be used in a metadata key, please use simple underscore instead for key %q", k))
 		}
 	}
 
