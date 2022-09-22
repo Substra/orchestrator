@@ -38,6 +38,16 @@ func TestDataManagerValidate(t *testing.T) {
 			Type:           "test",
 			LogsPermission: validPermissions,
 		}, false},
+		"invalidMetadata": {&NewDataManager{
+			Key:            "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+			Name:           "Test Data Manager",
+			Metadata:       map[string]string{"wrong__key": "value"},
+			NewPermissions: validPermissions,
+			Description:    validAddressable,
+			Opener:         validAddressable,
+			Type:           "test",
+			LogsPermission: validPermissions,
+		}, false},
 		"valid": {&NewDataManager{
 			Key:            "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 			Name:           "Test Data Manager",

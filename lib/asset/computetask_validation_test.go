@@ -230,6 +230,37 @@ func TestNewComputeTaskValidation(t *testing.T) {
 			},
 		},
 	}
+	invalidMetadata := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Metadata:       map[string]string{"wrong__key": "value"},
+		Data: &NewComputeTask_Train{
+			Train: &NewTrainTaskData{
+				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
+				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
+			},
+		},
+		Inputs: []*ComputeTaskInput{
+			{
+				Identifier: "model",
+				Ref: &ComputeTaskInput_AssetKey{
+					AssetKey: "867852b4-8419-4d52-8862-d5db823095be",
+				},
+			},
+			{
+				Identifier: "model2",
+				Ref: &ComputeTaskInput_ParentTaskOutput{
+					ParentTaskOutput: &ParentTaskOutputRef{
+						ParentTaskKey:    "867852b4-8419-4d52-8862-d5db823095be",
+						OutputIdentifier: "model",
+					},
+				},
+			},
+		},
+		Outputs: validOutputs,
+	}
 
 	cases := map[string]struct {
 		valid   bool
@@ -247,6 +278,7 @@ func TestNewComputeTaskValidation(t *testing.T) {
 		"invalid intput task output key":        {valid: false, newTask: invalidInputTaskOutputKey},
 		"missing input task output identifier":  {valid: false, newTask: missingInputTaskOutputIdentifier},
 		"invalid output permissions identifier": {valid: false, newTask: invalidOutputPermissionsIdentifier},
+		"invalidMetadata":                       {valid: false, newTask: invalidMetadata},
 	}
 
 	for name, c := range cases {

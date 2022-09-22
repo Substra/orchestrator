@@ -21,6 +21,11 @@ func TestValidateNewComputePlan(t *testing.T) {
 			Key:  "not36chars",
 			Name: "The name of my compute plan",
 		}, false},
+		"invalidMetadata": {&NewComputePlan{
+			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:     "The name of my compute plan",
+			Metadata: map[string]string{"wrong__key": "value"},
+		}, false},
 		"valid": {&NewComputePlan{
 			Key:  "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name: "The name of my compute plan",

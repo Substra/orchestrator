@@ -34,3 +34,11 @@ func TestPermissionsValidation(t *testing.T) {
 	assert.Error(t, emptyPermissions.Validate(), "empty object is invalid")
 	assert.NoError(t, complete.Validate())
 }
+
+func TestMetadataValidation(t *testing.T) {
+	invalidMetadata := map[string]string{"not__allowed": "indeed"}
+	validMetadata := map[string]string{"allowed": "indeed"}
+
+	assert.Error(t, validateMetadata(invalidMetadata), "'__' cannot be used in a metadata key, please use simple underscore instead for key \"not__allowed\"")
+	assert.NoError(t, validateMetadata(validMetadata))
+}
