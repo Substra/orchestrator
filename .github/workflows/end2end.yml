@@ -36,6 +36,8 @@ jobs:
       ORCHESTRATOR_MODE: standalone
       ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
       ORCHESTRATOR_TX_RETRY_BUDGET: 500ms
+      ORCHESTRATOR_GRPC_KEEPALIVE_POLICY_MIN_TIME: 30s
+      ORCHESTRATOR_GRPC_KEEPALIVE_POLICY_PERMIT_WITHOUT_STREAM: false
       DB_DUMPS_BUCKET_NAME: substra-orchestrator-dumps
     steps:
       - name: Check out repository code
