@@ -70,3 +70,12 @@ func MustParseInt(s string) int {
 	}
 	return res
 }
+
+// MustParseBool parse input as bool or log and exit
+func MustParseBool(s string) bool {
+	res, err := strconv.ParseBool(s)
+	if err != nil {
+		log.Fatal().Str("input", s).Msg("Cannot parse boolean")
+	}
+	return res
+}
