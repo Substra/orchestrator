@@ -20,3 +20,9 @@ FROM compute_tasks t
     FROM compute_task_parents
     GROUP BY child_task_key
 ) p ON p.child_task_key = t.key;
+
+
+UPDATE events
+/* Only update algo.key. Don't update the other algo.* fields (too complex) */
+SET asset = jsonb_set(asset, '{algo_key}', asset->'algo'->'key') #- '{algo}'
+WHERE asset_kind = 'ASSET_COMPUTE_TASK';
