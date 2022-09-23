@@ -23,6 +23,5 @@ FROM compute_tasks t
 
 
 UPDATE events
-/* Only update algo.key. Don't update the other algo.* fields (too complex) */
 SET asset = jsonb_set(asset, '{algo_key}', asset->'algo'->'key') #- '{algo}'
 WHERE asset_kind = 'ASSET_COMPUTE_TASK';
