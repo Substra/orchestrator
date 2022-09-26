@@ -45,15 +45,19 @@ spec:
             exec:
               command:
                 - "/bin/grpc_health_probe"
+                - "-v"
                 - "-addr=:9000"
-               {{- if $.Values.orchestrator.tls.enabled }}
+                {{- if .Values.orchestrator.tls.enabled }}
                 - "-tls"
                 - "-tls-ca-cert=/var/orchestrator/tls/server/cacert/ca.crt"
+                {{- if .Values.ingress.hostname }}
+                - "-tls-server-name={{ .Values.ingress.hostname}}" 
+                {{- else }}
                 - "-tls-server-name={{ include "orchestrator.server.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
-                {{- if $.Values.orchestrator.tls.mtls.enabled }}
+                {{- end }}
+                {{- if .Values.orchestrator.tls.mtls.enabled }}
                 - "-tls-client-key=/var/orchestrator/tls/server/pair/tls.key"
                 - "-tls-client-cert=/var/orchestrator/tls/server/pair/tls.crt"
-                - "-v"
                 {{- end }}
                 {{- end }}
             periodSeconds: 10
@@ -62,15 +66,19 @@ spec:
             exec:
               command:
                 - "/bin/grpc_health_probe"
+                - "-v"
                 - "-addr=:9000"
                {{- if $.Values.orchestrator.tls.enabled }}
                 - "-tls"
                 - "-tls-ca-cert=/var/orchestrator/tls/server/cacert/ca.crt"
+                {{- if .Values.ingress.hostname }}
+                - "-tls-server-name={{ .Values.ingress.hostname}}" 
+                {{- else }}
                 - "-tls-server-name={{ include "orchestrator.server.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+                {{- end }}
                 {{- if $.Values.orchestrator.tls.mtls.enabled }}
                 - "-tls-client-key=/var/orchestrator/tls/server/pair/tls.key"
                 - "-tls-client-cert=/var/orchestrator/tls/server/pair/tls.crt"
-                - "-v"
                 {{- end }}
                 {{- end }}
             periodSeconds: 10

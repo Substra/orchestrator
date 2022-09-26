@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.4.5] - 2022-09-26
+
+### Changed
+- health probe now chech liveness and readiness with `ingress.hostname` instead of an internal service hostname.
+
 ## [7.4.4] - 2022-09-26
 
 ### Changed
