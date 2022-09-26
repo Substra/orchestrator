@@ -31,17 +31,8 @@ FROM compute_tasks t
     GROUP BY child_task_key
 ) p ON p.child_task_key = t.key;
 
-UPDATE events AS e
-SET asset = jsonb_set(asset, '{algo}', jsonb_build_object('key', asset->>'algoKey'
-                                        , 'algo_name', a.name
-                                        , 'algo_description_address', a.description_address
-                                        , 'algo_description_checksum', a.description_checksum
-                                        , 'algo_algorithm_address', a.algorithm_address
-                                        , 'algo_algorithm_checksum', a.algorithm_checksum
-                                        , 'algo_permissions', a.permissions
-                                        , 'algo_owner', a.owner
-                                        , 'algo_creation_date', a.creation_date
-                                        , 'algo_metadata', a.metadata)) #- '{algoKey}'
-FROM expanded_algos AS a
-WHERE uuid(e.asset->>'algoKey') = a.key AND
-    e.asset_kind = 'ASSET_COMPUTE_TASK';
+UPDATE events AS e1
+SET asset = jsonb_set(e1.asset, '{algo}', e2.asset) #- '{algoKey}'
+FROM events AS e2
+WHERE e1.asset->>'algoKey' = e2.asset->>'key' AND
+    e1.asset_kind = 'ASSET_COMPUTE_TASK';
