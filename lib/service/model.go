@@ -134,44 +134,6 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 	return model, nil
 }
 
-func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester string, task *asset.ComputeTask) (*asset.Model, error) {
-	// This should be checked by caller, but better safe than sorry
-	if !(task.Category == asset.ComputeTaskCategory_TASK_TRAIN || task.Category == asset.ComputeTaskCategory_TASK_AGGREGATE || task.Category == asset.ComputeTaskCategory_TASK_PREDICT) {
-		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register train model for %q task", task.Category.String()))
-	}
-	if newModel.Category != asset.ModelCategory_MODEL_SIMPLE {
-		return nil, errors.NewBadRequest("cannot register non-simple model")
-	}
-
-	model := &asset.Model{
-		Key:            newModel.Key,
-		Category:       newModel.Category,
-		ComputeTaskKey: task.Key,
-		Address:        newModel.Address,
-	}
-
-	return model, nil
-}
-
-func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requester string, task *asset.ComputeTask) (*asset.Model, error) {
-	// This should be checked by caller, but better safe than sorry
-	if task.Category != asset.ComputeTaskCategory_TASK_COMPOSITE {
-		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register composite model for %q task", task.Category.String()))
-	}
-	if !(newModel.Category == asset.ModelCategory_MODEL_HEAD || newModel.Category == asset.ModelCategory_MODEL_SIMPLE) {
-		return nil, errors.NewBadRequest("cannot register non-composite model")
-	}
-
-	model := &asset.Model{
-		Key:            newModel.Key,
-		Category:       newModel.Category,
-		ComputeTaskKey: task.Key,
-		Address:        newModel.Address,
-	}
-
-	return model, nil
-}
-
 func (s *ModelService) disable(assetKey string) error {
 	s.GetLogger().Debug().Str("modelKey", assetKey).Msg("disabling model")
 	model, err := s.GetModelDBAL().GetModel(assetKey)
