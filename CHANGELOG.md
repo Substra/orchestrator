@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- (BREAKING) `delete_intermediary_models` property in `ComputePlan` and `NewComputePlan`
+
 ## [0.28.0] - 2022-09-26
 **WARNING**: Some migrations in this version are destructive once applied you will not be able to restore algo categories.
 
