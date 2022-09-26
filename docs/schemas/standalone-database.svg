@@ -286,47 +286,44 @@
 <!-- public.compute_plans -->
 <g id="node8" class="node">
 <title>public.compute_plans</title>
-<polygon fill="#efefef" stroke="transparent" points="972,-634.5 972,-669.5 1261,-669.5 1261,-634.5 972,-634.5"/>
-<polygon fill="none" stroke="#000000" points="972,-634.5 972,-669.5 1261,-669.5 1261,-634.5 972,-634.5"/>
-<text text-anchor="start" x="980.8494" y="-647.3" font-family="Arial Bold" font-size="18.00" fill="#000000">public.compute_plans</text>
-<text text-anchor="start" x="1154.8968" y="-647.3" font-family="Arial" font-size="14.00" fill="#000000"> </text>
-<text text-anchor="start" x="1158.7874" y="-647.3" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
-<polygon fill="none" stroke="#000000" points="972,-604.5 972,-634.5 1261,-634.5 1261,-604.5 972,-604.5"/>
-<text text-anchor="start" x="979" y="-615.9" font-family="Arial" font-size="14.00" fill="#000000">key </text>
-<text text-anchor="start" x="1004.6732" y="-615.9" font-family="Arial" font-size="14.00" fill="#666666">[uuid]</text>
-<polygon fill="none" stroke="#000000" points="972,-574.5 972,-604.5 1261,-604.5 1261,-574.5 972,-574.5"/>
-<text text-anchor="start" x="979" y="-585.9" font-family="Arial" font-size="14.00" fill="#000000">channel </text>
-<text text-anchor="start" x="1031.9102" y="-585.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="972,-544.5 972,-574.5 1261,-574.5 1261,-544.5 972,-544.5"/>
-<text text-anchor="start" x="979" y="-555.9" font-family="Arial" font-size="14.00" fill="#000000">owner </text>
-<text text-anchor="start" x="1021.0056" y="-555.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="972,-514.5 972,-544.5 1261,-544.5 1261,-514.5 972,-514.5"/>
-<text text-anchor="start" x="979" y="-525.9" font-family="Arial" font-size="14.00" fill="#000000">delete_intermediary_models </text>
-<text text-anchor="start" x="1158.697" y="-525.9" font-family="Arial" font-size="14.00" fill="#666666">[boolean]</text>
-<polygon fill="none" stroke="#000000" points="972,-484.5 972,-514.5 1261,-514.5 1261,-484.5 972,-484.5"/>
-<text text-anchor="start" x="979" y="-495.9" font-family="Arial" font-size="14.00" fill="#000000">creation_date </text>
-<text text-anchor="start" x="1067.6998" y="-495.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
-<polygon fill="none" stroke="#000000" points="972,-454.5 972,-484.5 1261,-484.5 1261,-454.5 972,-454.5"/>
-<text text-anchor="start" x="979" y="-465.9" font-family="Arial" font-size="14.00" fill="#000000">tag </text>
-<text text-anchor="start" x="1002.3464" y="-465.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="972,-424.5 972,-454.5 1261,-454.5 1261,-424.5 972,-424.5"/>
-<text text-anchor="start" x="979" y="-435.9" font-family="Arial" font-size="14.00" fill="#000000">metadata </text>
-<text text-anchor="start" x="1041.2454" y="-435.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
-<polygon fill="none" stroke="#000000" points="972,-394.5 972,-424.5 1261,-424.5 1261,-394.5 972,-394.5"/>
-<text text-anchor="start" x="979" y="-405.9" font-family="Arial" font-size="14.00" fill="#000000">name </text>
-<text text-anchor="start" x="1017.899" y="-405.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="972,-364.5 972,-394.5 1261,-394.5 1261,-364.5 972,-364.5"/>
-<text text-anchor="start" x="978.8023" y="-375.9" font-family="Arial" font-size="14.00" fill="#000000">cancelation_date </text>
-<text text-anchor="start" x="1088.5133" y="-375.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
-<polygon fill="none" stroke="#000000" points="972,-334.5 972,-364.5 1261,-364.5 1261,-334.5 972,-334.5"/>
-<text text-anchor="start" x="979" y="-345.9" font-family="Arial" font-size="14.00" fill="#000000">failure_date </text>
-<text text-anchor="start" x="1056.0238" y="-345.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
+<polygon fill="#efefef" stroke="transparent" points="972,-619.5 972,-654.5 1261,-654.5 1261,-619.5 972,-619.5"/>
+<polygon fill="none" stroke="#000000" points="972,-619.5 972,-654.5 1261,-654.5 1261,-619.5 972,-619.5"/>
+<text text-anchor="start" x="980.8494" y="-632.3" font-family="Arial Bold" font-size="18.00" fill="#000000">public.compute_plans</text>
+<text text-anchor="start" x="1154.8968" y="-632.3" font-family="Arial" font-size="14.00" fill="#000000"> </text>
+<text text-anchor="start" x="1158.7874" y="-632.3" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
+<polygon fill="none" stroke="#000000" points="972,-589.5 972,-619.5 1261,-619.5 1261,-589.5 972,-589.5"/>
+<text text-anchor="start" x="979" y="-600.9" font-family="Arial" font-size="14.00" fill="#000000">key </text>
+<text text-anchor="start" x="1004.6732" y="-600.9" font-family="Arial" font-size="14.00" fill="#666666">[uuid]</text>
+<polygon fill="none" stroke="#000000" points="972,-559.5 972,-589.5 1261,-589.5 1261,-559.5 972,-559.5"/>
+<text text-anchor="start" x="979" y="-570.9" font-family="Arial" font-size="14.00" fill="#000000">channel </text>
+<text text-anchor="start" x="1031.9102" y="-570.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="972,-529.5 972,-559.5 1261,-559.5 1261,-529.5 972,-529.5"/>
+<text text-anchor="start" x="979" y="-540.9" font-family="Arial" font-size="14.00" fill="#000000">owner </text>
+<text text-anchor="start" x="1021.0056" y="-540.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="972,-499.5 972,-529.5 1261,-529.5 1261,-499.5 972,-499.5"/>
+<text text-anchor="start" x="979" y="-510.9" font-family="Arial" font-size="14.00" fill="#000000">creation_date </text>
+<text text-anchor="start" x="1067.6998" y="-510.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
+<polygon fill="none" stroke="#000000" points="972,-469.5 972,-499.5 1261,-499.5 1261,-469.5 972,-469.5"/>
+<text text-anchor="start" x="979" y="-480.9" font-family="Arial" font-size="14.00" fill="#000000">tag </text>
+<text text-anchor="start" x="1002.3464" y="-480.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="972,-439.5 972,-469.5 1261,-469.5 1261,-439.5 972,-439.5"/>
+<text text-anchor="start" x="979" y="-450.9" font-family="Arial" font-size="14.00" fill="#000000">metadata </text>
+<text text-anchor="start" x="1041.2454" y="-450.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
+<polygon fill="none" stroke="#000000" points="972,-409.5 972,-439.5 1261,-439.5 1261,-409.5 972,-409.5"/>
+<text text-anchor="start" x="979" y="-420.9" font-family="Arial" font-size="14.00" fill="#000000">name </text>
+<text text-anchor="start" x="1017.899" y="-420.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="972,-379.5 972,-409.5 1261,-409.5 1261,-379.5 972,-379.5"/>
+<text text-anchor="start" x="978.8023" y="-390.9" font-family="Arial" font-size="14.00" fill="#000000">cancelation_date </text>
+<text text-anchor="start" x="1088.5133" y="-390.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
+<polygon fill="none" stroke="#000000" points="972,-349.5 972,-379.5 1261,-379.5 1261,-349.5 972,-349.5"/>
+<text text-anchor="start" x="979" y="-360.9" font-family="Arial" font-size="14.00" fill="#000000">failure_date </text>
+<text text-anchor="start" x="1056.0238" y="-360.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
 </g>
 <!-- public.compute_tasks&#45;&gt;public.compute_plans -->
 <g id="edge11" class="edge">
 <title>public.compute_tasks:compute_plan_key&#45;&gt;public.compute_plans:key</title>
-<path fill="none" stroke="#000000" d="M1042.6241,-1121.152C896.8622,-1111.1106 957.1371,-886.2073 1053,-764 1111.7464,-689.1093 1202.2536,-787.8907 1261,-713 1286.6479,-680.3037 1302.5556,-619.5 1261,-619.5"/>
-<polygon fill="#000000" stroke="#000000" points="1043.0056,-1121.1647 1052.8491,-1125.9975 1048.0028,-1121.3323 1053,-1121.5 1053,-1121.5 1053,-1121.5 1048.0028,-1121.3323 1053.1509,-1117.0025 1043.0056,-1121.1647 1043.0056,-1121.1647"/>
+<path fill="none" stroke="#000000" d="M1042.6303,-1121.1567C897.048,-1111.2513 961.2721,-889.3409 1053,-764 1110.2777,-685.7333 1203.7223,-776.2667 1261,-698 1285.5416,-664.4653 1302.5556,-604.5 1261,-604.5"/>
+<polygon fill="#000000" stroke="#000000" points="1043.0055,-1121.1691 1052.8511,-1125.9975 1048.0027,-1121.3345 1053,-1121.5 1053,-1121.5 1053,-1121.5 1048.0027,-1121.3345 1053.1489,-1117.0025 1043.0055,-1121.1691 1043.0055,-1121.1691"/>
 <text text-anchor="start" x="721.2015" y="-1131.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (compute_plan_key) REFERENCES compute_plans(key)</text>
 </g>
 <!-- public.compute_task_categories -->
@@ -443,9 +440,9 @@
 <!-- public.compute_plans&#45;&gt;public.organizations -->
 <g id="edge18" class="edge">
 <title>public.compute_plans:owner&#45;&gt;public.organizations:id</title>
-<path fill="none" stroke="#000000" d="M1271.0975,-557.4776C1340.7053,-526.3962 1203.9515,-147.5 1292,-147.5"/>
-<polygon fill="#000000" stroke="#000000" points="1270.8053,-557.536 1260.1162,-555.0876 1265.9026,-558.518 1261,-559.5 1261,-559.5 1261,-559.5 1265.9026,-558.518 1261.8838,-563.9124 1270.8053,-557.536 1270.8053,-557.536"/>
-<text text-anchor="start" x="1181.286" y="-543.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (owner, channel) REFERENCES organizations(id, channel)</text>
+<path fill="none" stroke="#000000" d="M1271.2664,-544.0059C1424.9453,-528.3838 1118.648,-147.5 1292,-147.5"/>
+<polygon fill="#000000" stroke="#000000" points="1270.9884,-544.0192 1260.7837,-540.0052 1265.9942,-544.2596 1261,-544.5 1261,-544.5 1261,-544.5 1265.9942,-544.2596 1261.2163,-548.9948 1270.9884,-544.0192 1270.9884,-544.0192"/>
+<text text-anchor="start" x="1268.036" y="-554.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (owner, channel) REFERENCES organizations(id, channel)</text>
 </g>
 <!-- public.performances -->
 <g id="node9" class="node">

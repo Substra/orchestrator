@@ -16,7 +16,6 @@ type ComputePlanAPI interface {
 	ApplyPlanAction(key string, action asset.ComputePlanAction, requester string) error
 	UpdatePlan(computePlan *asset.UpdateComputePlanParam, requester string) error
 	failPlan(key string) error
-	canDeleteModels(key string) (bool, error)
 	computePlanExists(key string) (bool, error)
 	IsPlanRunning(key string) (bool, error)
 }
@@ -61,13 +60,12 @@ func (s *ComputePlanService) RegisterPlan(input *asset.NewComputePlan, owner str
 	}
 
 	plan := &asset.ComputePlan{
-		Key:                      input.Key,
-		Owner:                    owner,
-		Tag:                      input.Tag,
-		Name:                     input.Name,
-		Metadata:                 input.Metadata,
-		DeleteIntermediaryModels: input.DeleteIntermediaryModels,
-		CreationDate:             timestamppb.New(s.GetTimeService().GetTransactionTime()),
+		Key:          input.Key,
+		Owner:        owner,
+		Tag:          input.Tag,
+		Name:         input.Name,
+		Metadata:     input.Metadata,
+		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 
 	err = s.GetComputePlanDBAL().AddComputePlan(plan)
@@ -183,16 +181,6 @@ func (s *ComputePlanService) cancelPlan(plan *asset.ComputePlan) error {
 	}
 
 	return s.GetEventService().RegisterEvents(event)
-}
-
-// canDeleteModels returns true if the compute plan allows intermediary models deletion.
-func (s *ComputePlanService) canDeleteModels(key string) (bool, error) {
-	plan, err := s.GetComputePlanDBAL().GetComputePlan(key)
-	if err != nil {
-		return false, err
-	}
-
-	return plan.DeleteIntermediaryModels, nil
 }
 
 func (s *ComputePlanService) computePlanExists(key string) (bool, error) {

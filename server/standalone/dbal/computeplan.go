@@ -15,27 +15,25 @@ import (
 )
 
 type sqlComputePlan struct {
-	Key                      string
-	Owner                    string
-	DeleteIntermediaryModels bool
-	CreationDate             time.Time
-	CancelationDate          sql.NullTime
-	FailureDate              sql.NullTime
-	Tag                      string
-	Name                     string
-	Metadata                 map[string]string
+	Key             string
+	Owner           string
+	CreationDate    time.Time
+	CancelationDate sql.NullTime
+	FailureDate     sql.NullTime
+	Tag             string
+	Name            string
+	Metadata        map[string]string
 }
 
 // toComputePlan returns a compute plan.
 func (cp *sqlComputePlan) toComputePlan() *asset.ComputePlan {
 	res := &asset.ComputePlan{
-		Key:                      cp.Key,
-		Owner:                    cp.Owner,
-		DeleteIntermediaryModels: cp.DeleteIntermediaryModels,
-		CreationDate:             timestamppb.New(cp.CreationDate),
-		Tag:                      cp.Tag,
-		Name:                     cp.Name,
-		Metadata:                 cp.Metadata,
+		Key:          cp.Key,
+		Owner:        cp.Owner,
+		CreationDate: timestamppb.New(cp.CreationDate),
+		Tag:          cp.Tag,
+		Name:         cp.Name,
+		Metadata:     cp.Metadata,
 	}
 
 	if cp.CancelationDate.Valid {
@@ -68,8 +66,8 @@ func (d *DBAL) ComputePlanExists(key string) (bool, error) {
 func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 	stmt := getStatementBuilder().
 		Insert("compute_plans").
-		Columns("key", "channel", "owner", "delete_intermediary_models", "creation_date", "tag", "name", "metadata").
-		Values(plan.Key, d.channel, plan.Owner, plan.DeleteIntermediaryModels, plan.CreationDate.AsTime(), plan.Tag, plan.Name, plan.Metadata)
+		Columns("key", "channel", "owner", "creation_date", "tag", "name", "metadata").
+		Values(plan.Key, d.channel, plan.Owner, plan.CreationDate.AsTime(), plan.Tag, plan.Name, plan.Metadata)
 
 	return d.exec(stmt)
 }
@@ -77,7 +75,7 @@ func (d *DBAL) AddComputePlan(plan *asset.ComputePlan) error {
 // GetComputePlan fetches a given compute plan
 func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	stmt := getStatementBuilder().
-		Select("key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata").
+		Select("key", "owner", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata").
 		From("compute_plans").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
@@ -87,7 +85,7 @@ func (d *DBAL) GetComputePlan(key string) (*asset.ComputePlan, error) {
 	}
 
 	pl := new(sqlComputePlan)
-	err = row.Scan(&pl.Key, &pl.Owner, &pl.DeleteIntermediaryModels, &pl.CreationDate, &pl.CancelationDate, &pl.FailureDate, &pl.Tag, &pl.Name, &pl.Metadata)
+	err = row.Scan(&pl.Key, &pl.Owner, &pl.CreationDate, &pl.CancelationDate, &pl.FailureDate, &pl.Tag, &pl.Name, &pl.Metadata)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("computeplan", key)
@@ -105,7 +103,7 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata").
+		Select("key", "owner", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata").
 		From("compute_plans").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderBy("creation_date ASC, key ASC").
@@ -129,7 +127,7 @@ func (d *DBAL) QueryComputePlans(p *common.Pagination, filter *asset.PlanQueryFi
 	for rows.Next() {
 		pl := new(sqlComputePlan)
 
-		err = rows.Scan(&pl.Key, &pl.Owner, &pl.DeleteIntermediaryModels, &pl.CreationDate, &pl.CancelationDate, &pl.FailureDate, &pl.Tag, &pl.Name, &pl.Metadata)
+		err = rows.Scan(&pl.Key, &pl.Owner, &pl.CreationDate, &pl.CancelationDate, &pl.FailureDate, &pl.Tag, &pl.Name, &pl.Metadata)
 		if err != nil {
 			return nil, "", err
 		}
