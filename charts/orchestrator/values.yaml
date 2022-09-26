@@ -334,7 +334,6 @@ orchestrator:
       ##
       clientCACerts: {}
 
-
 ## @section Channels settings
 ## @param channels List of channels and their members (MSPID)
 ## e.g:
