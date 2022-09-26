@@ -44,6 +44,19 @@ Example:
 CREATE INDEX IF NOT EXISTS ix_compute_tasks_compute_plan_id_status ON compute_tasks (compute_plan_id, status);
 ```
 
+### Check constraints
+
+Check contraints should be prefixed with `ck_` and follow the rule of `ck_<table>_<columns>` where there can be several `<columns>` separated by underscores (`_`).
+
+Example:
+
+```sql
+ALTER TABLE failure_reports ADD CONSTRAINT ck_error_type_log_address CHECK (
+    (error_type = 'ERROR_TYPE_EXECUTION' AND logs_address IS NOT NULL) OR
+    (error_type ! 'ERROR_TYPE_EXECUTION' AND logs_address IS NULL)
+);
+```
+
 ### Sequences
 
 Sequences should be prefixed with `seq_` and follow the naming pattern `seq_<table>_<column>`.

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - (BREAKING) `delete_intermediary_models` property in `ComputePlan` and `NewComputePlan`
 
+### Changed
+- failure reports: Build errors now have a logs address
+
+
 ## [0.28.0] - 2022-09-26
 **WARNING**: Some migrations in this version are destructive once applied you will not be able to restore algo categories.
 
@@ -28,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `failure_date` field to `ComputePlan` protocol buffer schema 
+- `failure_date` field to `ComputePlan` protocol buffer schema
 - `IsComputePlanRunning` gRPC method in `ComputePlanService`
 
 ### Removed
