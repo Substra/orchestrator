@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - (BREAKING) `delete_intermediary_models` property in `ComputePlan` and `NewComputePlan`
+- (BREAKING) ModelCategory and associated Model & NewModel fields
 
 ## [0.28.0] - 2022-09-26
 
@@ -71,7 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING) ModelService.GetComputeTaskInputModels, use ComputeTaskAPI.GetInputAssets instead
 - Test task rank special case: rank is not inherited from parent task anymore
 - (BREAKING) QueryModels from model service: it was unused and model category will soon be deprecated
-- (BREAKING) ModelCategory and associated Model & NewModel fields
 
 ### Deprecated
 
