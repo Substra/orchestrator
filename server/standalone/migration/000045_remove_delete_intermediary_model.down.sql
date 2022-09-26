@@ -1,8 +1,5 @@
 ALTER TABLE compute_plans
-ADD COLUMN IF NOT EXISTS delete_intermediary_models bool DEFAULT false;
-
-ALTER TABLE compute_plans
-ALTER COLUMN delete_intermediary_models SET NOT NULL; 
+ADD COLUMN IF NOT EXISTS delete_intermediary_models bool NOT NULL DEFAULT false;
 
 UPDATE events
 SET asset = asset::jsonb || '{"delete_intermediary_models": false}'::jsonb
