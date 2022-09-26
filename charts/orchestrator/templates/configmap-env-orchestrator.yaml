@@ -36,7 +36,3 @@ data:
   ORCHESTRATOR_TLS_CLIENT_CA_CERT_DIR: /var/orchestrator/tls/client/
   {{- end }}
   {{- end }}
-
-  # gRPC settings
-  ORCHESTRATOR_GRPC_KEEPALIVE_POLICY_MIN_TIME: "{{ $.Values.orchestrator.grpc.keepalive.enforcementPolicy.minTime }}"
-  ORCHESTRATOR_GRPC_KEEPALIVE_POLICY_PERMIT_WITHOUT_STREAM: "{{ $.Values.orchestrator.grpc.keepalive.enforcementPolicy.permitWithoutStream }}"

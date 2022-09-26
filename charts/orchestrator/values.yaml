@@ -334,16 +334,6 @@ orchestrator:
       ##
       clientCACerts: {}
 
-  grpc:
-    keepalive:
-      enforcementPolicy:
-        ## @param orchestrator.grpc.keepalive.enforcementPolicy.minTime The minimum amount of time a client should wait before sending a keepalive ping.
-        ##
-        minTime: 30s
-        ## @param orchestrator.grpc.keepalive.enforcementPolicy.permitWithoutStream If true, server allows keepalive pings even when there are no active streams (RPCs).
-        ## If false, and client sends ping when there are no active streams, server will send GOAWAY and close the connection.
-        ##
-        permitWithoutStream: false
 
 ## @section Channels settings
 ## @param channels List of channels and their members (MSPID)

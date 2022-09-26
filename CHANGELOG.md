@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- allow setting gRPC keepalive enforcement policy
+
 ### Removed
 - (BREAKING) `delete_intermediary_models` property in `ComputePlan` and `NewComputePlan`
 
@@ -30,7 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `failure_date` field to `ComputePlan` protocol buffer schema 
 - `IsComputePlanRunning` gRPC method in `ComputePlanService`
-- allow setting gRPC keepalive enforcement policy
 
 ### Removed
 
