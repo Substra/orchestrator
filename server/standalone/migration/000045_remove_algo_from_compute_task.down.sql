@@ -1,1 +1,1 @@
-/* intentionnaly empty */
+/* intentionally empty */
