@@ -126,29 +126,6 @@ func TestCancelPlan(t *testing.T) {
 	es.AssertExpectations(t)
 }
 
-func TestComputePlanAllowIntermediaryModelDeletion(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	provider := newMockedProvider()
-
-	provider.On("GetComputePlanDBAL").Return(dbal)
-
-	service := NewComputePlanService(provider)
-
-	cp := &asset.ComputePlan{
-		Key:                      "uuid",
-		DeleteIntermediaryModels: true,
-	}
-
-	dbal.On("GetComputePlan", "uuid").Once().Return(cp, nil)
-
-	canDelete, err := service.canDeleteModels("uuid")
-	assert.NoError(t, err)
-
-	assert.True(t, canDelete)
-
-	dbal.AssertExpectations(t)
-}
-
 func TestQueryPlans(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()

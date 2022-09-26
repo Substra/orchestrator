@@ -18,10 +18,10 @@ func TestGetComputePlan(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"}).
-		AddRow("uuid", "owner", false, time.Now(), nil, nil, "", "My compute plan", map[string]string{})
+	rows := pgxmock.NewRows([]string{"key", "owner", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"}).
+		AddRow("uuid", "owner", time.Now(), nil, nil, "", "My compute plan", map[string]string{})
 
-	mock.ExpectQuery(`SELECT key, owner, delete_intermediary_models, creation_date, cancelation_date, failure_date, tag, name, metadata`).
+	mock.ExpectQuery(`SELECT key, owner, creation_date, cancelation_date, failure_date, tag, name, metadata`).
 		WithArgs(testChannel, "uuid").
 		WillReturnRows(rows)
 
@@ -42,8 +42,8 @@ func TestQueryComputePlans(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"}).
-		AddRow("uuid", "owner", false, time.Now(), nil, nil, "", "My compute plan", map[string]string{})
+	rows := pgxmock.NewRows([]string{"key", "owner", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"}).
+		AddRow("uuid", "owner", time.Now(), nil, nil, "", "My compute plan", map[string]string{})
 
 	mock.ExpectQuery(`SELECT key,.* FROM compute_plans .* ORDER BY creation_date ASC, key ASC`).
 		WithArgs(testChannel, "owner").
@@ -70,7 +70,7 @@ func TestQueryComputePlansNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"key", "owner", "delete_intermediary_models", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"})
+	rows := pgxmock.NewRows([]string{"key", "owner", "creation_date", "cancelation_date", "failure_date", "tag", "name", "metadata"})
 
 	mock.ExpectQuery(`SELECT key,.* FROM compute_plans .* ORDER BY creation_date ASC, key`).
 		WithArgs(testChannel).

@@ -7,12 +7,11 @@ option go_package = "github.com/substra/orchestrator/lib/asset";
 import "google/protobuf/timestamp.proto";
 
 message ComputePlan {
-  reserved 8, 9, 10, 11, 12, 3, 4, 5;
-  reserved "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count", "task_count", "status";
+  reserved 8, 9, 10, 11, 12, 3, 4, 5, 6;
+  reserved "waiting_count", "todo_count", "doing_count", "canceled_count", "failed_count", "done_count", "task_count", "status", "delete_intermediary_models";
 
   string key = 1;
   string owner = 2;
-  bool delete_intermediary_models = 6;
   google.protobuf.Timestamp creation_date = 7;
   string tag = 16;
   string name = 19;
@@ -22,11 +21,12 @@ message ComputePlan {
 }
 
 message NewComputePlan {
+  reserved 18;
+  reserved "delete_intermediary_models";
   string key = 1;
   string tag = 16;
   string name = 19;
   map<string, string> metadata = 17;
-  bool delete_intermediary_models = 18;
 }
 
 message GetComputePlanParam {

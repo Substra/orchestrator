@@ -422,9 +422,8 @@ func (c *TestClient) DisableOutput(taskRef string, identifier string) {
 
 func (c *TestClient) RegisterComputePlan(o *ComputePlanOptions) *asset.ComputePlan {
 	newCp := &asset.NewComputePlan{
-		Key:                      c.ks.GetKey(o.KeyRef),
-		Name:                     "Compute plan test",
-		DeleteIntermediaryModels: o.DeleteIntermediaryModels,
+		Key:  c.ks.GetKey(o.KeyRef),
+		Name: "Compute plan test",
 	}
 	c.logger.Debug().Interface("plan", newCp).Msg("registering compute plan")
 	plan, err := c.computePlanService.RegisterPlan(c.ctx, newCp)
