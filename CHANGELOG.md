@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - failure reports: Build errors now have a logs address
+- (BREAKING): Replaced `algo` by `algo_key` in ComputeTask
 
 
 ## [0.28.0] - 2022-09-26
