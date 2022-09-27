@@ -56,7 +56,6 @@ func TestRegisterModel(t *testing.T) {
 
 	newModel := &asset.NewModel{
 		Key:            "uuid",
-		Category:       asset.ModelCategory_MODEL_SIMPLE,
 		ComputeTaskKey: "taskUuid",
 		Address:        &asset.Addressable{},
 	}

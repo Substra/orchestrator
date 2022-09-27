@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - (BREAKING) `delete_intermediary_models` property in `ComputePlan` and `NewComputePlan`
+- (BREAKING) ModelCategory and associated Model & NewModel fields
 
 ## [0.28.0] - 2022-09-26
 

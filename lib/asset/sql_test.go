@@ -91,20 +91,6 @@ func TestErrorTypeValue(t *testing.T) {
 	assert.Equal(t, errorType, scanned)
 }
 
-func TestModelCategoryValue(t *testing.T) {
-	cat := ModelCategory_MODEL_SIMPLE
-	category := &cat
-
-	value, err := category.Value()
-	assert.NoError(t, err, "model category serialization should not fail")
-
-	scanned := new(ModelCategory)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "model category scan should not fail")
-
-	assert.Equal(t, category, scanned)
-}
-
 func TestAssetKindValue(t *testing.T) {
 	k := AssetKind_ASSET_ORGANIZATION
 	kind := &k

@@ -95,21 +95,10 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 		return nil, errors.NewError(orcerrors.ErrConflict, fmt.Sprintf("compute task %q already has its unique output %q registered", task.Key, newModel.ComputeTaskOutputIdentifier))
 	}
 
-	var model *asset.Model
-
-	switch task.Category {
-	case asset.ComputeTaskCategory_TASK_TRAIN, asset.ComputeTaskCategory_TASK_AGGREGATE, asset.ComputeTaskCategory_TASK_PREDICT:
-		model, err = s.registerSimpleModel(newModel, requester, task)
-		if err != nil {
-			return nil, err
-		}
-	case asset.ComputeTaskCategory_TASK_COMPOSITE:
-		model, err = s.registerCompositeModel(newModel, requester, task)
-		if err != nil {
-			return nil, err
-		}
-	default:
-		return nil, errors.NewUnimplemented("unhandled model category")
+	model := &asset.Model{
+		Key:            newModel.Key,
+		ComputeTaskKey: task.Key,
+		Address:        newModel.Address,
 	}
 
 	model.Permissions = taskOutput.Permissions
@@ -145,44 +134,6 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 	return model, nil
 }
 
-func (s *ModelService) registerSimpleModel(newModel *asset.NewModel, requester string, task *asset.ComputeTask) (*asset.Model, error) {
-	// This should be checked by caller, but better safe than sorry
-	if !(task.Category == asset.ComputeTaskCategory_TASK_TRAIN || task.Category == asset.ComputeTaskCategory_TASK_AGGREGATE || task.Category == asset.ComputeTaskCategory_TASK_PREDICT) {
-		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register train model for %q task", task.Category.String()))
-	}
-	if newModel.Category != asset.ModelCategory_MODEL_SIMPLE {
-		return nil, errors.NewBadRequest("cannot register non-simple model")
-	}
-
-	model := &asset.Model{
-		Key:            newModel.Key,
-		Category:       newModel.Category,
-		ComputeTaskKey: task.Key,
-		Address:        newModel.Address,
-	}
-
-	return model, nil
-}
-
-func (s *ModelService) registerCompositeModel(newModel *asset.NewModel, requester string, task *asset.ComputeTask) (*asset.Model, error) {
-	// This should be checked by caller, but better safe than sorry
-	if task.Category != asset.ComputeTaskCategory_TASK_COMPOSITE {
-		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register composite model for %q task", task.Category.String()))
-	}
-	if !(newModel.Category == asset.ModelCategory_MODEL_HEAD || newModel.Category == asset.ModelCategory_MODEL_SIMPLE) {
-		return nil, errors.NewBadRequest("cannot register non-composite model")
-	}
-
-	model := &asset.Model{
-		Key:            newModel.Key,
-		Category:       newModel.Category,
-		ComputeTaskKey: task.Key,
-		Address:        newModel.Address,
-	}
-
-	return model, nil
-}
-
 func (s *ModelService) disable(assetKey string) error {
 	s.GetLogger().Debug().Str("modelKey", assetKey).Msg("disabling model")
 	model, err := s.GetModelDBAL().GetModel(assetKey)
@@ -204,26 +155,6 @@ func (s *ModelService) disable(assetKey string) error {
 		Asset:     &asset.Event_Model{Model: model},
 	}
 	return s.GetEventService().RegisterEvents(event)
-}
-
-// AreAllOutputsRegistered is based on the cardinality of existingModels to return whether all
-// expected outputs are registered or not.
-func (s *ModelService) AreAllOutputsRegistered(task *asset.ComputeTask, existingModels []*asset.Model) bool {
-	count := countModels(existingModels)
-
-	switch task.Category {
-	case asset.ComputeTaskCategory_TASK_TRAIN:
-		return count.simple == 1
-	case asset.ComputeTaskCategory_TASK_COMPOSITE:
-		return count.head == 1 && count.simple == 1
-	case asset.ComputeTaskCategory_TASK_AGGREGATE:
-		return count.simple == 1
-	case asset.ComputeTaskCategory_TASK_PREDICT:
-		return count.simple == 1
-	default:
-		s.GetLogger().Warn().Str("taskKey", task.Key).Str("category", task.Category.String()).Msg("unexpected output model check")
-		return false
-	}
 }
 
 func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([]*asset.Model, error) {
@@ -256,24 +187,4 @@ func (s *ModelService) RegisterModels(models []*asset.NewModel, owner string) ([
 	}
 
 	return registeredModels, nil
-}
-
-type modelCount struct {
-	simple uint
-	head   uint
-}
-
-func countModels(models []*asset.Model) modelCount {
-	count := modelCount{}
-
-	for _, m := range models {
-		switch m.Category {
-		case asset.ModelCategory_MODEL_SIMPLE:
-			count.simple++
-		case asset.ModelCategory_MODEL_HEAD:
-			count.head++
-		}
-	}
-
-	return count
 }

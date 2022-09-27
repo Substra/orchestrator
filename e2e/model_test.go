@@ -77,8 +77,8 @@ func TestRegisterAllModelsForCompositeTask(t *testing.T) {
 
 	appClient.StartTask(client.DefaultCompositeTaskRef)
 	appClient.RegisterModels(
-		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_HEAD).WithKeyRef("mod1").WithTaskOutput("local"),
-		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithKeyRef("mod2").WithTaskOutput("shared"),
+		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithKeyRef("mod1").WithTaskOutput("local"),
+		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithKeyRef("mod2").WithTaskOutput("shared"),
 	)
 	appClient.DoneTask(client.DefaultCompositeTaskRef)
 

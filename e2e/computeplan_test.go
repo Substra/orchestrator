@@ -76,8 +76,8 @@ func TestCancelComputePlan(t *testing.T) {
 	appClient.StartTask("cmp2")
 
 	appClient.RegisterModels(
-		client.DefaultModelOptions().WithTaskRef("cmp1").WithTaskOutput("local").WithKeyRef("cmp1h").WithCategory(asset.ModelCategory_MODEL_HEAD),
-		client.DefaultModelOptions().WithTaskRef("cmp1").WithTaskOutput("shared").WithKeyRef("cmp1s").WithCategory(asset.ModelCategory_MODEL_SIMPLE),
+		client.DefaultModelOptions().WithTaskRef("cmp1").WithTaskOutput("local").WithKeyRef("cmp1h"),
+		client.DefaultModelOptions().WithTaskRef("cmp1").WithTaskOutput("shared").WithKeyRef("cmp1s"),
 	)
 
 	// initially, the cp is not canceled
@@ -197,14 +197,12 @@ func TestMultiStageComputePlan(t *testing.T) {
 		client.DefaultModelOptions().
 			WithTaskRef("compA1").
 			WithKeyRef("modelA1H").
-			WithCategory(asset.ModelCategory_MODEL_HEAD).
 			WithTaskOutput("local"),
 	)
 	appClient.RegisterModel(
 		client.DefaultModelOptions().
 			WithTaskRef("compA1").
 			WithKeyRef("modelA1T").
-			WithCategory(asset.ModelCategory_MODEL_SIMPLE).
 			WithTaskOutput("shared"),
 	)
 	appClient.DoneTask("compA1")
@@ -212,14 +210,12 @@ func TestMultiStageComputePlan(t *testing.T) {
 		client.DefaultModelOptions().
 			WithTaskRef("compB1").
 			WithKeyRef("modelB1H").
-			WithCategory(asset.ModelCategory_MODEL_HEAD).
 			WithTaskOutput("local"),
 	)
 	appClient.RegisterModel(
 		client.DefaultModelOptions().
 			WithTaskRef("compB1").
 			WithKeyRef("modelB1T").
-			WithCategory(asset.ModelCategory_MODEL_SIMPLE).
 			WithTaskOutput("shared"),
 	)
 	appClient.DoneTask("compB1")
@@ -229,8 +225,7 @@ func TestMultiStageComputePlan(t *testing.T) {
 	appClient.RegisterModel(
 		client.DefaultModelOptions().
 			WithTaskRef("aggC2").
-			WithKeyRef("modelC2").
-			WithCategory(asset.ModelCategory_MODEL_SIMPLE),
+			WithKeyRef("modelC2"),
 	)
 	appClient.DoneTask("aggC2")
 
@@ -242,14 +237,12 @@ func TestMultiStageComputePlan(t *testing.T) {
 		client.DefaultModelOptions().
 			WithTaskRef("compA3").
 			WithKeyRef("modelA3H").
-			WithCategory(asset.ModelCategory_MODEL_HEAD).
 			WithTaskOutput("local"),
 	)
 	appClient.RegisterModel(
 		client.DefaultModelOptions().
 			WithTaskRef("compA3").
 			WithKeyRef("modelA3T").
-			WithCategory(asset.ModelCategory_MODEL_SIMPLE).
 			WithTaskOutput("shared"),
 	)
 	appClient.DoneTask("compA3")
@@ -257,21 +250,19 @@ func TestMultiStageComputePlan(t *testing.T) {
 		client.DefaultModelOptions().
 			WithTaskRef("compB3").
 			WithKeyRef("modelB3H").
-			WithCategory(asset.ModelCategory_MODEL_HEAD).
 			WithTaskOutput("local"),
 	)
 	appClient.RegisterModel(
 		client.DefaultModelOptions().
 			WithTaskRef("compB3").
 			WithKeyRef("modelB3T").
-			WithCategory(asset.ModelCategory_MODEL_SIMPLE).
 			WithTaskOutput("shared"),
 	)
 	appClient.DoneTask("compB3")
 
 	// Start step 4
 	appClient.StartTask("aggC4")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("aggC4").WithKeyRef("modelC4"))
 	appClient.DoneTask("aggC4")
 }
 
@@ -410,19 +401,19 @@ func TestAggregateComposite(t *testing.T) {
 
 	appClient.StartTask("c1")
 	models := []*client.ModelOptions{
-		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1H").WithCategory(asset.ModelCategory_MODEL_HEAD).WithTaskOutput("local"),
-		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithTaskOutput("shared"),
+		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1H").WithTaskOutput("local"),
+		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1T").WithTaskOutput("shared"),
 	}
 	appClient.RegisterModels(models...)
 	appClient.DoneTask("c1")
 
 	appClient.StartTask("c2")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2H").WithCategory(asset.ModelCategory_MODEL_HEAD).WithTaskOutput("local"))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2T").WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithTaskOutput("shared"))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2H").WithTaskOutput("local"))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("c2").WithKeyRef("m2T").WithTaskOutput("shared"))
 	appClient.DoneTask("c2")
 
 	appClient.StartTask("a1")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("a1").WithKeyRef("mAgg").WithCategory(asset.ModelCategory_MODEL_SIMPLE))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("a1").WithKeyRef("mAgg"))
 	appClient.DoneTask("a1")
 
 	appClient.StartTask("c3")
@@ -573,13 +564,13 @@ func TestCompositeParentChild(t *testing.T) {
 			WithInput("shared", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}))
 
 	appClient.StartTask("comp1")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1H").WithCategory(asset.ModelCategory_MODEL_HEAD).WithTaskOutput("local"))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1T").WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithTaskOutput("shared"))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1H").WithTaskOutput("local"))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1T").WithTaskOutput("shared"))
 	appClient.DoneTask("comp1")
 
 	appClient.StartTask("comp2")
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2H").WithCategory(asset.ModelCategory_MODEL_HEAD).WithTaskOutput("local"))
-	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2T").WithCategory(asset.ModelCategory_MODEL_SIMPLE).WithTaskOutput("shared"))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2H").WithTaskOutput("local"))
+	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp2").WithKeyRef("model2T").WithTaskOutput("shared"))
 	appClient.DoneTask("comp2")
 
 	// Register a composite task with 2 composite parents
