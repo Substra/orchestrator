@@ -49,7 +49,7 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `ingress.enabled`                          | Enable ingress for Orchestrator service                                       | `false`                  |
 | `ingress.ingressClassName`                 | Ingress class name                                                            | `nil`                    |
 | `ingress.path`                             | path of the deault host                                                       | `/`                      |
-| `ingress.hostname`                         | hostname of the default host                                                  | `orchestrator.org-1.com` |
+| `ingress.hostname`                         | hostname of the default host                                                  | `""`                     |
 | `ingress.extraPaths`                       | The list of extra paths to be created for the default host                    | `[]`                     |
 | `ingress.pathType`                         | Ingress path type                                                             | `ImplementationSpecific` |
 | `ingress.extraHosts`                       | The list of additional hostnames to be covered with this ingress record       | `[]`                     |

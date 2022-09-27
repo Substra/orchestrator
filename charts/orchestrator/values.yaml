@@ -101,7 +101,7 @@ ingress:
   ##
   path: /
   ## @param ingress.hostname hostname of the default host
-  hostname: orchestrator.org-1.com
+  hostname: ""
   ## @param ingress.extraPaths The list of extra paths to be created for the default host
   ## e.g:
   ## extraPaths:
