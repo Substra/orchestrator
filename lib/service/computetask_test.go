@@ -870,6 +870,7 @@ func TestValidateTaskInputs(t *testing.T) {
 		task               []*asset.ComputeTaskInput
 		dependenciesErrors dependenciesErrors
 		expectedError      string
+		algoFetched        bool
 	}{
 		{
 			name: "ok",
@@ -889,17 +890,20 @@ func TestValidateTaskInputs(t *testing.T) {
 				}}},
 				{Identifier: "other model", Ref: validRef},
 			},
+			algoFetched: true,
 		},
 		{
-			name: "optional input",
-			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
-			task: []*asset.ComputeTaskInput{},
+			name:        "optional input",
+			algo:        map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
+			task:        []*asset.ComputeTaskInput{},
+			algoFetched: false,
 		},
 		{
 			name:          "missing input",
 			algo:          map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task:          []*asset.ComputeTaskInput{},
 			expectedError: "missing task input",
+			algoFetched:   false,
 		},
 		{
 			name: "duplicate input",
@@ -909,6 +913,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				{Identifier: "model", Ref: validRef},
 			},
 			expectedError: "duplicate task input",
+			algoFetched: false,
 		},
 		{
 			name: "unknown input",
@@ -917,6 +922,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				{Identifier: "foo", Ref: validRef},
 			},
 			expectedError: "unknown task input",
+			algoFetched: false,
 		},
 		{
 			name: "error in GetCheckedModel",
@@ -931,6 +937,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				getCheckedModel: errors.New("model error, e.g. permission error"),
 			},
 			expectedError: "model error",
+			algoFetched: false,
 		},
 		{
 			name: "error in GetComputeTask",
@@ -945,6 +952,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				getComputeTask: errors.New("task error, e.g. task not found"),
 			},
 			expectedError: "task error",
+			algoFetched: false,
 		},
 		{
 			name: "mismatching asset kinds",
@@ -959,6 +967,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "mismatching task input asset kinds",
+			algoFetched: true,
 		},
 		{
 			name: "parent task output not found",
@@ -973,6 +982,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "algo output not found",
+			algoFetched: true,
 		},
 		{
 			name: "multiple output used as single input",
@@ -987,6 +997,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "multiple task output used as single task input",
+			algoFetched: true,
 		},
 		{
 			name: "input data manager referenced using parent task output",
@@ -1008,6 +1019,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "openers must be referenced using an asset key",
+			algoFetched: false,
 		},
 		{
 			name: "error in GetCheckedDataManager",
@@ -1029,6 +1041,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				checkDataManager: errors.New("data manager error, e.g. permission error"),
 			},
 			expectedError: "data manager error",
+			algoFetched: false,
 		},
 		{
 			name: "input data sample referenced using parent task output",
@@ -1050,6 +1063,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "data samples must be referenced using an asset key",
+			algoFetched: false,
 		},
 		{
 			name: "worker is not authorized to process parent task output",
@@ -1067,6 +1081,7 @@ func TestValidateTaskInputs(t *testing.T) {
 			},
 			expectedError: "doesn't have permission",
 			worker:        "org3",
+			algoFetched: true,
 		},
 	}
 
@@ -1094,8 +1109,9 @@ func TestValidateTaskInputs(t *testing.T) {
 				} else {
 					ms.On("GetCheckedModel", mock.Anything, mock.Anything).Return(nil, c.dependenciesErrors.getCheckedModel)
 				}
-
-				as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+				if c.algoFetched {
+					as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+				}
 
 				dataManager := &asset.DataManager{}
 				dms.On("GetDataManager", mock.Anything).Once().Return(dataManager, nil)
