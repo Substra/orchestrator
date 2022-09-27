@@ -913,7 +913,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				{Identifier: "model", Ref: validRef},
 			},
 			expectedError: "duplicate task input",
-			algoFetched: false,
+			algoFetched:   false,
 		},
 		{
 			name: "unknown input",
@@ -922,7 +922,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				{Identifier: "foo", Ref: validRef},
 			},
 			expectedError: "unknown task input",
-			algoFetched: false,
+			algoFetched:   false,
 		},
 		{
 			name: "error in GetCheckedModel",
@@ -937,7 +937,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				getCheckedModel: errors.New("model error, e.g. permission error"),
 			},
 			expectedError: "model error",
-			algoFetched: false,
+			algoFetched:   false,
 		},
 		{
 			name: "error in GetComputeTask",
@@ -952,7 +952,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				getComputeTask: errors.New("task error, e.g. task not found"),
 			},
 			expectedError: "task error",
-			algoFetched: false,
+			algoFetched:   false,
 		},
 		{
 			name: "mismatching asset kinds",
@@ -967,7 +967,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "mismatching task input asset kinds",
-			algoFetched: true,
+			algoFetched:   true,
 		},
 		{
 			name: "parent task output not found",
@@ -982,7 +982,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "algo output not found",
-			algoFetched: true,
+			algoFetched:   true,
 		},
 		{
 			name: "multiple output used as single input",
@@ -997,7 +997,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "multiple task output used as single task input",
-			algoFetched: true,
+			algoFetched:   true,
 		},
 		{
 			name: "input data manager referenced using parent task output",
@@ -1019,7 +1019,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "openers must be referenced using an asset key",
-			algoFetched: false,
+			algoFetched:   false,
 		},
 		{
 			name: "error in GetCheckedDataManager",
@@ -1041,7 +1041,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				checkDataManager: errors.New("data manager error, e.g. permission error"),
 			},
 			expectedError: "data manager error",
-			algoFetched: false,
+			algoFetched:   false,
 		},
 		{
 			name: "input data sample referenced using parent task output",
@@ -1063,7 +1063,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "data samples must be referenced using an asset key",
-			algoFetched: false,
+			algoFetched:   false,
 		},
 		{
 			name: "worker is not authorized to process parent task output",
@@ -1081,7 +1081,7 @@ func TestValidateTaskInputs(t *testing.T) {
 			},
 			expectedError: "doesn't have permission",
 			worker:        "org3",
-			algoFetched: true,
+			algoFetched:   true,
 		},
 	}
 
