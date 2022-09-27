@@ -502,6 +502,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
+	as.AssertExpectations(t)
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
 	ps.AssertExpectations(t)
@@ -1117,6 +1118,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				} else {
 					assert.ErrorContains(t, err, c.expectedError)
 				}
+				as.AssertExpectations(t)
 			},
 		)
 	}
@@ -1820,6 +1822,7 @@ func TestGetInputAssets(t *testing.T) {
 	assert.Equal(t, expectedInputs, inputAssets)
 
 	provider.AssertExpectations(t)
+	as.AssertExpectations(t)
 	db.AssertExpectations(t)
 	dss.AssertExpectations(t)
 	dms.AssertExpectations(t)

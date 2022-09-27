@@ -253,6 +253,7 @@ func TestRegisterTrainModel(t *testing.T) {
 
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
+	as.AssertExpectations(t)
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
 }
@@ -346,6 +347,7 @@ func TestRegisterAggregateModel(t *testing.T) {
 	_, err := service.registerModel(model, "test", persistence.ComputeTaskOutputCounter{}, task)
 	assert.NoError(t, err)
 
+	as.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
@@ -408,6 +410,7 @@ func TestRegisterDuplicateModel(t *testing.T) {
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
 
+	as.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
@@ -584,6 +587,7 @@ func TestRegisterWrongModelType(t *testing.T) {
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)
 
+	as.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
@@ -655,6 +659,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrConflict, orcError.Kind)
 
+	as.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
@@ -725,6 +730,7 @@ func TestRegisterInvalidOutput(t *testing.T) {
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrIncompatibleKind, orcError.Kind)
 
+	as.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
@@ -828,6 +834,7 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 	_, err := service.RegisterModels(models, "test")
 	assert.NoError(t, err)
 
+	as.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)
@@ -837,7 +844,6 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 
 func TestRegisterHeadAndTrunkModel(t *testing.T) {
 	as := new(MockAlgoAPI)
-
 	dbal := new(persistence.MockDBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
@@ -986,6 +992,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 	_, err := service.RegisterModels(models, "test")
 	assert.NoError(t, err)
 
+	as.AssertExpectations(t)
 	cts.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
