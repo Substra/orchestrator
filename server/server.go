@@ -85,6 +85,7 @@ func main() {
 	if tlsOptions := common.GetTLSOptions(); tlsOptions != nil {
 		serverOptions = append(serverOptions, tlsOptions)
 	}
+	serverOptions = append(serverOptions, common.GetKeepAliveOptions())
 
 	orchestrationConfig := common.NewConfig(common.MustGetEnv("CHANNEL_CONFIG"))
 
