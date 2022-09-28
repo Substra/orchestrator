@@ -24,4 +24,4 @@ FROM compute_tasks t
 
 UPDATE events
 SET asset = jsonb_set(asset, '{algoKey}', asset->'algo'->'key') #- '{algo}'
-WHERE asset_kind = 'ASSET_COMPUTE_TASK';
+WHERE asset_kind = 'ASSET_COMPUTE_TASK' AND NOT(algo.asset ? 'algoKey');
