@@ -28,10 +28,17 @@ func TestRegisterPerformance(t *testing.T) {
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
-	metric := &asset.Algo{Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275", Category: asset.AlgoCategory_ALGO_METRIC}
+	metric := &asset.Algo{
+		Key:      "1da600d4-f8ad-45d7-92a0-7ff752a82275",
+		Category: asset.AlgoCategory_ALGO_METRIC, Outputs: map[string]*asset.AlgoOutput{
+			"auc": {
+				Kind: asset.AssetKind_ASSET_PERFORMANCE,
+			},
+		}}
 	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
 	task := &asset.ComputeTask{
+		Key:      "taskTest",
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Worker:   "test",
 		Category: asset.ComputeTaskCategory_TASK_TEST,
@@ -41,13 +48,7 @@ func TestRegisterPerformance(t *testing.T) {
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
 		},
-		Algo: &asset.Algo{
-			Outputs: map[string]*asset.AlgoOutput{
-				"auc": {
-					Kind: asset.AssetKind_ASSET_PERFORMANCE,
-				},
-			},
-		},
+		AlgoKey: metric.Key,
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 
@@ -129,7 +130,14 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 	provider.On("GetAlgoService").Return(as)
 	service := NewPerformanceService(provider)
 
-	metric := &asset.Algo{Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275", Category: asset.AlgoCategory_ALGO_METRIC}
+	metric := &asset.Algo{
+		Key:      "1da600d4-f8ad-45d7-92a0-7ff752a82275",
+		Category: asset.AlgoCategory_ALGO_METRIC,
+		Outputs: map[string]*asset.AlgoOutput{
+			"auc": {
+				Kind: asset.AssetKind_ASSET_UNKNOWN,
+			},
+		}}
 	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
 	task := &asset.ComputeTask{
@@ -142,20 +150,14 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
 		},
-		Algo: &asset.Algo{
-			Outputs: map[string]*asset.AlgoOutput{
-				"auc": {
-					Kind: asset.AssetKind_ASSET_UNKNOWN,
-				},
-			},
-		},
+		AlgoKey: metric.Key,
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 
 	perf := &asset.NewPerformance{
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "foo",
-		MetricKey:                   "1da600d4-f8ad-45d7-92a0-7ff752a82275",
+		MetricKey:                   metric.Key,
 		PerformanceValue:            0.36492,
 	}
 
@@ -170,7 +172,6 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 	orcError = new(orcerrors.OrcError)
 	assert.True(t, errors.As(err, &orcError))
 	assert.Equal(t, orcerrors.ErrIncompatibleKind, orcError.Kind)
-
 	as.AssertExpectations(t)
 	cts.AssertExpectations(t)
 	provider.AssertExpectations(t)

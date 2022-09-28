@@ -3,7 +3,6 @@ package dbal
 import (
 	"context"
 	"errors"
-	"regexp"
 	"testing"
 	"time"
 
@@ -34,22 +33,23 @@ func TestToComputeTask(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when marshalling task data", err)
 	}
 
-	ct := sqlComputeTask{
-		Key:      "task_key",
-		Category: asset.ComputeTaskCategory_TASK_TRAIN,
-		Algo: sqlAlgo{
-			Key:         "algo_key",
-			Name:        "algo_name",
-			Description: asset.Addressable{},
-			Algorithm:   asset.Addressable{},
-			Permissions: asset.Permissions{
-				Download: &asset.Permission{},
-				Process:  &asset.Permission{},
-			},
-			Owner:        "algo_owner",
-			CreationDate: time.Unix(111, 12).UTC(),
-			Metadata:     map[string]string{},
+	algo := sqlAlgo{
+		Key:         "algo_key",
+		Name:        "algo_name",
+		Description: asset.Addressable{},
+		Algorithm:   asset.Addressable{},
+		Permissions: asset.Permissions{
+			Download: &asset.Permission{},
+			Process:  &asset.Permission{},
 		},
+		Owner:        "algo_owner",
+		CreationDate: time.Unix(111, 12).UTC(),
+		Metadata:     map[string]string{},
+	}
+	ct := sqlComputeTask{
+		Key:            "task_key",
+		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
+		AlgoKey:        algo.Key,
 		Owner:          "owner",
 		ComputePlanKey: "cp_key",
 		ParentTaskKeys: []string{},
@@ -69,7 +69,7 @@ func TestToComputeTask(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, ct.Key, res.Key)
 	assert.Equal(t, ct.Category, res.Category)
-	assert.Equal(t, ct.Algo.Key, res.Algo.Key)
+	assert.Equal(t, ct.AlgoKey, res.AlgoKey)
 	assert.Equal(t, ct.Owner, res.Owner)
 	assert.Equal(t, ct.ComputePlanKey, res.ComputePlanKey)
 	assert.Equal(t, ct.ParentTaskKeys, res.ParentTaskKeys)
@@ -83,16 +83,12 @@ func TestToComputeTask(t *testing.T) {
 }
 
 func makeTaskRows(taskKeys ...string) *pgxmock.Rows {
-	permissions := []byte(`{"process": {"public": true}, "download": {"public": true}}`)
 	res := pgxmock.NewRows([]string{"key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-		"logs_permission", "task_data", "metadata", "algo_key", "algo_name", "algo_description_address",
-		"algo_description_checksum", "algo_algorithm_address", "algo_algorithm_checksum", "algo_permissions", "algo_owner",
-		"algo_creation_date", "algo_metadata", "parent_task_keys"})
+		"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys"})
 
 	for _, key := range taskKeys {
 		res = res.AddRow(key, "cp_key", "STATUS_WAITING", "TASK_TRAIN", "worker", "owner", int32(0), time.Unix(0, 100),
-			[]byte("{}"), []byte("{}"), map[string]string{}, "algo_key", "algo_name", "https://description.foo",
-			"d3ef77a", "https://algo.foo", "f3ed5a9", permissions, "owner", time.Unix(0, 100), map[string]string{}, []string{})
+			[]byte("{}"), []byte("{}"), map[string]string{}, "algo_key", []string{})
 	}
 
 	return res
@@ -159,12 +155,6 @@ func TestGetTasks(t *testing.T) {
 		WithArgs(testChannel, keys[0], keys[1]).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1,$2)`)).
-		WithArgs("algo_key", "algo_key").WillReturnRows(makeAlgoInputRows("algo_key", "algo_key"))
-
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple FROM algo_outputs WHERE algo_key IN ($1,$2)`)).
-		WithArgs("algo_key", "algo_key").WillReturnRows(makeAlgoOutputRows("algo_key", "algo_key"))
-
 	mock.ExpectQuery(`SELECT .* FROM compute_task_inputs`).
 		WithArgs(keys[0], keys[1]).
 		WillReturnRows(makeTaskInputRows(keys...))
@@ -220,12 +210,6 @@ func TestQueryComputeTasks(t *testing.T) {
 	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
 		WithArgs(testChannel, "testWorker", asset.ComputeTaskStatus_STATUS_DONE.String()).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
-
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1)`)).
-		WithArgs("algo_key").WillReturnRows(makeAlgoInputRows("algo_key"))
-
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple FROM algo_outputs WHERE algo_key IN ($1)`)).
-		WithArgs("algo_key").WillReturnRows(makeAlgoOutputRows("algo_key"))
 
 	mock.ExpectQuery(`SELECT .* FROM compute_task_inputs`).
 		WithArgs(keys[0]).
@@ -399,12 +383,6 @@ func TestQueryComputeTasksNilFilter(t *testing.T) {
 	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
 		WithArgs(testChannel).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
-
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple, optional FROM algo_inputs WHERE algo_key IN ($1)`)).
-		WithArgs("algo_key").WillReturnRows(makeAlgoInputRows("algo_key"))
-
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT algo_key, identifier, kind, multiple FROM algo_outputs WHERE algo_key IN ($1)`)).
-		WithArgs("algo_key").WillReturnRows(makeAlgoOutputRows("algo_key"))
 
 	mock.ExpectQuery(`SELECT .* FROM compute_task_inputs`).
 		WithArgs(keys[0]).

@@ -167,7 +167,7 @@ func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		uniqueKeys[task.Algo.Key] = struct{}{}
+		uniqueKeys[task.AlgoKey] = struct{}{}
 	}
 
 	keys := make([]string, len(uniqueKeys))

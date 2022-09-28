@@ -28,6 +28,7 @@ type ModelDependencyProvider interface {
 	PermissionServiceProvider
 	ComputeTaskServiceProvider
 	ComputePlanServiceProvider
+	AlgoServiceProvider
 	EventServiceProvider
 	TimeServiceProvider
 }
@@ -82,7 +83,11 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 	if !ok {
 		return nil, errors.NewMissingTaskOutput(task.Key, newModel.ComputeTaskOutputIdentifier)
 	}
-	algoOutput, ok := task.Algo.Outputs[newModel.ComputeTaskOutputIdentifier]
+	algo, err := s.GetAlgoService().GetAlgo(task.AlgoKey)
+	if err != nil {
+		return nil, err
+	}
+	algoOutput, ok := algo.Outputs[newModel.ComputeTaskOutputIdentifier]
 	if !ok {
 		// This should never happen since task outputs are checked against algo on registration
 		return nil, errors.NewInternal(fmt.Sprintf("missing algo output %q for task %q", newModel.ComputeTaskOutputIdentifier, task.Key))
