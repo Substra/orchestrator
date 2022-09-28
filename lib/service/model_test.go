@@ -532,65 +532,6 @@ func TestRegisterHeadModel(t *testing.T) {
 	ts.AssertExpectations(t)
 }
 
-func TestRegisterWrongModelType(t *testing.T) {
-	provider := newMockedProvider()
-	as := new(MockAlgoAPI)
-	provider.On("GetAlgoService").Return(as)
-	service := NewModelService(provider)
-
-	model := &asset.NewModel{
-		Key:                         "18680966-97ae-4573-8b2d-6c4db2b3c532",
-		Category:                    asset.ModelCategory_MODEL_HEAD, // cannot register a HEAD model on aggregate task
-		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		ComputeTaskOutputIdentifier: "model",
-		Address: &asset.Addressable{
-			StorageAddress: "https://somewhere",
-			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
-		},
-	}
-
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
-			"model": {
-				Kind: asset.AssetKind_ASSET_MODEL,
-			},
-		},
-	}
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
-
-	_, err := service.registerModel(
-		model,
-		"test",
-		persistence.ComputeTaskOutputCounter{},
-		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
-			Worker:   "test",
-			Outputs: map[string]*asset.ComputeTaskOutput{
-				"model": {
-					Permissions: &asset.Permissions{
-						Process: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
-						Download: &asset.Permission{
-							Public:        true,
-							AuthorizedIds: []string{},
-						},
-					}},
-			},
-			AlgoKey: algo.Key,
-		})
-	assert.Error(t, err)
-	orcError := new(orcerrors.OrcError)
-	assert.True(t, errors.As(err, &orcError))
-	assert.Equal(t, orcerrors.ErrBadRequest, orcError.Kind)
-
-	as.AssertExpectations(t)
-	provider.AssertExpectations(t)
-}
-
 func TestRegisterMultipleHeads(t *testing.T) {
 	provider := newMockedProvider()
 	as := new(MockAlgoAPI)
