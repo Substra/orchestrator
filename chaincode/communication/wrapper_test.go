@@ -10,10 +10,7 @@ import (
 )
 
 func TestWrapUnwrap(t *testing.T) {
-	msg := &asset.NewAlgo{
-		Key:      "uuid",
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
-	}
+	msg := &asset.NewAlgo{Key: "uuid"}
 
 	wrapped, err := Wrap(context.Background(), msg)
 	assert.NoError(t, err)

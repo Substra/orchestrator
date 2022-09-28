@@ -39,7 +39,6 @@ func TestRegistration(t *testing.T) {
 	newObj := &asset.NewAlgo{
 		Key:            "uuid1",
 		Name:           "Algo name",
-		Category:       asset.AlgoCategory_ALGO_COMPOSITE,
 		Description:    addressable,
 		Algorithm:      addressable,
 		Metadata:       metadata,
@@ -71,8 +70,8 @@ func TestQueryAlgos(t *testing.T) {
 	computePlanKey := uuid.NewString()
 
 	algos := []*asset.Algo{
-		{Name: "test", Category: asset.AlgoCategory_ALGO_SIMPLE},
-		{Name: "test2", Category: asset.AlgoCategory_ALGO_SIMPLE},
+		{Name: "test"},
+		{Name: "test2"},
 	}
 
 	filter := &asset.AlgoQueryFilter{

@@ -14,7 +14,6 @@ func (a *NewAlgo) Validate() error {
 	return validation.ValidateStruct(a,
 		validation.Field(&a.Key, validation.Required, is.UUID),
 		validation.Field(&a.Name, nameValidationRules...),
-		validation.Field(&a.Category, validation.In(AlgoCategory_ALGO_SIMPLE, AlgoCategory_ALGO_COMPOSITE, AlgoCategory_ALGO_AGGREGATE, AlgoCategory_ALGO_METRIC, AlgoCategory_ALGO_PREDICT)),
 		validation.Field(&a.Description, validation.Required),
 		validation.Field(&a.Algorithm, validation.Required),
 		validation.Field(&a.Metadata, validation.By(validateMetadata)),

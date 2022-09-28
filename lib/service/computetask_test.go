@@ -206,8 +206,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
 
 	algo := &asset.Algo{
-		Key:      "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		Key: "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
 		Permissions: &asset.Permissions{
 			Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
 			Download: &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
@@ -438,7 +437,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	ps.On("CreatePermissions", "testOwner", localPermsNew).Return(localPerms, nil)
 
 	algo := &asset.Algo{
-		Category:    asset.AlgoCategory_ALGO_COMPOSITE,
 		Permissions: permissions,
 		Inputs: map[string]*asset.AlgoInput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
