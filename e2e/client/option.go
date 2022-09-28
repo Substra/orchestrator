@@ -13,10 +13,9 @@ type ComputePlanOptions struct {
 }
 
 type AlgoOptions struct {
-	KeyRef   string
-	Category asset.AlgoCategory
-	Inputs   map[string]*asset.AlgoInput
-	Outputs  map[string]*asset.AlgoOutput
+	KeyRef  string
+	Inputs  map[string]*asset.AlgoInput
+	Outputs map[string]*asset.AlgoOutput
 }
 
 type DataSampleOptions struct {
@@ -436,8 +435,7 @@ func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 
 func DefaultSimpleAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
-		KeyRef:   DefaultSimpleAlgoRef,
-		Category: asset.AlgoCategory_ALGO_SIMPLE,
+		KeyRef: DefaultSimpleAlgoRef,
 		Inputs: map[string]*asset.AlgoInput{
 			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
@@ -451,8 +449,7 @@ func DefaultSimpleAlgoOptions() *AlgoOptions {
 
 func DefaultCompositeAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
-		KeyRef:   DefaultCompositeAlgoRef,
-		Category: asset.AlgoCategory_ALGO_COMPOSITE,
+		KeyRef: DefaultCompositeAlgoRef,
 		Inputs: map[string]*asset.AlgoInput{
 			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
@@ -468,8 +465,7 @@ func DefaultCompositeAlgoOptions() *AlgoOptions {
 
 func DefaultAggregateAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
-		KeyRef:   DefaultAggregateAlgoRef,
-		Category: asset.AlgoCategory_ALGO_AGGREGATE,
+		KeyRef: DefaultAggregateAlgoRef,
 		Inputs: map[string]*asset.AlgoInput{
 			"model": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true, Optional: true},
 		},
@@ -481,8 +477,7 @@ func DefaultAggregateAlgoOptions() *AlgoOptions {
 
 func DefaultPredictAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
-		KeyRef:   DefaultPredictAlgoRef,
-		Category: asset.AlgoCategory_ALGO_PREDICT,
+		KeyRef: DefaultPredictAlgoRef,
 		Inputs: map[string]*asset.AlgoInput{
 			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
@@ -496,8 +491,7 @@ func DefaultPredictAlgoOptions() *AlgoOptions {
 
 func DefaultMetricAlgoOptions() *AlgoOptions {
 	return &AlgoOptions{
-		KeyRef:   DefaultMetricAlgoRef,
-		Category: asset.AlgoCategory_ALGO_METRIC,
+		KeyRef: DefaultMetricAlgoRef,
 		Inputs: map[string]*asset.AlgoInput{
 			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
@@ -531,11 +525,6 @@ func (o *AlgoOptions) SetOutputs(outputs map[string]*asset.AlgoOutput) *AlgoOpti
 
 func (o *AlgoOptions) WithKeyRef(ref string) *AlgoOptions {
 	o.KeyRef = ref
-	return o
-}
-
-func (o *AlgoOptions) WithCategory(category asset.AlgoCategory) *AlgoOptions {
-	o.Category = category
 	return o
 }
 

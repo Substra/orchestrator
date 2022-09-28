@@ -29,8 +29,8 @@ func TestRegisterPerformance(t *testing.T) {
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
 	metric := &asset.Algo{
-		Key:      "1da600d4-f8ad-45d7-92a0-7ff752a82275",
-		Category: asset.AlgoCategory_ALGO_METRIC, Outputs: map[string]*asset.AlgoOutput{
+		Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275",
+		Outputs: map[string]*asset.AlgoOutput{
 			"auc": {
 				Kind: asset.AssetKind_ASSET_PERFORMANCE,
 			},
@@ -131,8 +131,7 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 	service := NewPerformanceService(provider)
 
 	metric := &asset.Algo{
-		Key:      "1da600d4-f8ad-45d7-92a0-7ff752a82275",
-		Category: asset.AlgoCategory_ALGO_METRIC,
+		Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275",
 		Outputs: map[string]*asset.AlgoOutput{
 			"auc": {
 				Kind: asset.AssetKind_ASSET_UNKNOWN,

@@ -42,29 +42,6 @@ func (p *Permission) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer interface.
-// Simply returns the string representation of the AlgoCategory.
-func (c *AlgoCategory) Value() (driver.Value, error) {
-	return c.String(), nil
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes a string into the AlgoCategory.
-func (c *AlgoCategory) Scan(value interface{}) error {
-	s, ok := value.(string)
-	if !ok {
-		return errors.NewError(errors.ErrInternal, "cannot scan algo category")
-	}
-
-	v, ok := AlgoCategory_value[s]
-	if !ok {
-		return errors.NewError(errors.ErrInternal, "cannot scan algo category")
-	}
-	*c = AlgoCategory(v)
-
-	return nil
-}
-
-// Value implements the driver.Valuer interface.
 // Simply returns the string representation of the ComputeTaskStatus.
 func (ts *ComputeTaskStatus) Value() (driver.Value, error) {
 	return ts.String(), nil

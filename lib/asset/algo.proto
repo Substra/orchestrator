@@ -7,15 +7,6 @@ import "common.proto";
 
 option go_package = "github.com/substra/orchestrator/lib/asset";
 
-enum AlgoCategory {
-  ALGO_UNKNOWN = 0;
-  ALGO_SIMPLE = 1;
-  ALGO_AGGREGATE = 2;
-  ALGO_COMPOSITE = 3;
-  ALGO_METRIC = 4;
-  ALGO_PREDICT = 5;
-}
-
 message AlgoInput {
   AssetKind kind = 1;
   bool multiple = 2;
@@ -30,9 +21,11 @@ message AlgoOutput {
 // Algo represents the algorithm code which will be used
 // to produce or test a model.
 message Algo {
+  reserved 3;
+  reserved "category";
+
   string key = 1;
   string name = 2;
-  AlgoCategory category = 3 [deprecated=true];
   Addressable description = 4;
   Addressable algorithm = 5;
   Permissions permissions = 6;
@@ -46,9 +39,11 @@ message Algo {
 // NewAlgo is used to register an Algo.
 // It will be processed into an Algo.
 message NewAlgo {
+  reserved 3;
+  reserved "category";
+
   string key = 1;
   string name = 2;
-  AlgoCategory category = 3 [deprecated=true];
   Addressable description = 4;
   Addressable algorithm = 5;
   NewPermissions new_permissions = 6;

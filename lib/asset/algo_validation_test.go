@@ -32,15 +32,6 @@ func TestAlgoValidate(t *testing.T) {
 		"invalidKey": {&NewAlgo{
 			Key:            "not36chars",
 			Name:           "invalid key",
-			Category:       AlgoCategory_ALGO_SIMPLE,
-			Algorithm:      validAddressable,
-			Description:    validAddressable,
-			NewPermissions: validPerms,
-		}, false},
-		"invalidCategory": {&NewAlgo{
-			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Name:           "invalid category",
-			Category:       23,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -48,23 +39,13 @@ func TestAlgoValidate(t *testing.T) {
 		"valid": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_AGGREGATE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 		}, true},
-		"valid_no_category": {&NewAlgo{
-			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Name:           "Test algo",
-			Algorithm:      validAddressable,
-			Description:    validAddressable,
-			NewPermissions: validPerms,
-		}, true},
-
 		"invalid_input_kind": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -75,7 +56,6 @@ func TestAlgoValidate(t *testing.T) {
 		"invalid_output_kind": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -86,7 +66,6 @@ func TestAlgoValidate(t *testing.T) {
 		"invalid_input: data manager + optional": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -97,7 +76,6 @@ func TestAlgoValidate(t *testing.T) {
 		"invalid_input: data manager + multiple": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -108,7 +86,6 @@ func TestAlgoValidate(t *testing.T) {
 		"invalid_output: performance + multiple": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -119,7 +96,6 @@ func TestAlgoValidate(t *testing.T) {
 		"invalid inputs: multiple data managers": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -131,7 +107,6 @@ func TestAlgoValidate(t *testing.T) {
 		"invalid inputs: data manager without data sample": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
@@ -142,7 +117,6 @@ func TestAlgoValidate(t *testing.T) {
 		"invalid inputs: data sample without data manager": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test algo",
-			Category:       AlgoCategory_ALGO_SIMPLE,
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,

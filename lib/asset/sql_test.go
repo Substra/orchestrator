@@ -35,20 +35,6 @@ func TestPermissionValue(t *testing.T) {
 	assert.Equal(t, permission, scanned)
 }
 
-func TestAlgoCategoryValue(t *testing.T) {
-	cat := AlgoCategory_ALGO_SIMPLE
-	category := &cat
-
-	value, err := category.Value()
-	assert.NoError(t, err, "algo category serialization should not fail")
-
-	scanned := new(AlgoCategory)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "algo category scan should not fail")
-
-	assert.Equal(t, category, scanned)
-}
-
 func TestComputeTaskStatusValue(t *testing.T) {
 	s := ComputeTaskStatus_STATUS_DOING
 	status := &s

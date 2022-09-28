@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - (BREAKING) `delete_intermediary_models` property in `ComputePlan` and `NewComputePlan`
 - (BREAKING) ModelCategory and associated Model & NewModel fields
+- (BREAKING) AlgoCategory and associated Algo and NewAlgo fields
 
 ### Changed
 - failure reports: Build errors now have a logs address
