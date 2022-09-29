@@ -59,7 +59,7 @@ SELECT execute($$
         'EVENT_ASSET_CREATED',
         now(),
         JSONB_BUILD_OBJECT(
-            'assetKey', o.compute_task_key,
+            'assetKey', o.asset_key,
             'assetKind', o.asset_kind,
             'computeTaskKey', o.compute_task_key,
             'computeTaskOutputIdentifier', o.compute_task_output_identifier
