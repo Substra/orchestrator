@@ -85,3 +85,18 @@ func (s *DataManagerAdapter) UpdateDataManager(ctx context.Context, params *asse
 
 	return response, err
 }
+
+// ArchiveDataManager will archive a DataManager from the state
+func (s *DataManagerAdapter) ArchiveDataManager(ctx context.Context, param *asset.ArchiveDataManagerParam) (*asset.ArchiveDataManagerResponse, error) {
+	invocator, err := interceptors.ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.datamanager:ArchiveDataManager"
+
+	response := &asset.ArchiveDataManagerResponse{}
+
+	err = invocator.Call(ctx, method, param, nil)
+
+	return response, err
+}

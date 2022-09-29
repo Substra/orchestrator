@@ -288,3 +288,72 @@ func TestUpdateSingleExistingDataManager(t *testing.T) {
 		})
 	}
 }
+
+func TestArchiveSingleExistingDataManager(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	provider := newMockedProvider()
+	es := new(MockEventAPI)
+	provider.On("GetEventService").Return(es)
+	provider.On("GetDataManagerDBAL").Return(dbal)
+	service := NewDataManagerService(provider)
+
+	existingDataManager := &asset.DataManager{
+		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Archived: false,
+		Owner:    "owner",
+	}
+
+	archivedDataManagerParam := &asset.ArchiveDataManagerParam{
+		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Archived: true,
+	}
+
+	storedDataManager := &asset.DataManager{
+		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Archived: true,
+		Owner:    "owner",
+	}
+
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
+		AssetKey:  storedDataManager.Key,
+		Asset:     &asset.Event_DataManager{DataManager: storedDataManager},
+	}
+
+	cases := map[string]struct {
+		requester string
+		valid     bool
+	}{
+		"update successful": {
+			requester: "owner",
+			valid:     true,
+		},
+		"update rejected: requester is not owner": {
+			requester: "user",
+			valid:     false,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			dbal.On("GetDataManager", existingDataManager.GetKey()).Return(existingDataManager, nil).Once()
+
+			if tc.valid {
+				dbal.On("ArchiveDataManager", storedDataManager).Return(nil).Once()
+				es.On("RegisterEvents", e).Once().Return(nil)
+			}
+
+			err := service.ArchiveDataManager(archivedDataManagerParam, tc.requester)
+
+			if tc.valid {
+				assert.NoError(t, err, "Archiving the data manager should not fail")
+			} else {
+				assert.Error(t, err, "Archiving the data manager should fail")
+			}
+
+			dbal.AssertExpectations(t)
+			es.AssertExpectations(t)
+		})
+	}
+}

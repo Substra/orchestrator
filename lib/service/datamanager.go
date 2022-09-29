@@ -18,6 +18,7 @@ type DataManagerAPI interface {
 	CheckOwner(keys []string, requester string) error
 	CheckDataManager(datamanager *asset.DataManager, dataSampleKeys []string, owner string) error
 	UpdateDataManager(a *asset.UpdateDataManagerParam, requester string) error
+	ArchiveDataManager(dm *asset.ArchiveDataManagerParam, requester string) error
 }
 
 // DataManagerServiceProvider defines an object able to provide an DataManagerAPI instance
@@ -185,4 +186,41 @@ func (s *DataManagerService) UpdateDataManager(a *asset.UpdateDataManagerParam, 
 		return err
 	}
 	return s.GetDataManagerDBAL().UpdateDataManager(dataManager)
+}
+
+// ArchiveDataManager archives or unset the archived DataManager
+func (s *DataManagerService) ArchiveDataManager(dm *asset.ArchiveDataManagerParam, requester string) error {
+	s.GetLogger().Debug().Str("requester", requester).Interface("dataManagerArchive", dm).Msg("Archiving data manager")
+	err := dm.Validate()
+	if err != nil {
+		return orcerrors.FromValidationError(asset.DataManagerKind, err)
+	}
+
+	dataManagerKey := dm.GetKey()
+
+	dataManager, err := s.GetDataManagerDBAL().GetDataManager(dataManagerKey)
+	if err != nil {
+		return orcerrors.NewNotFound(asset.DataManagerKind, dataManagerKey)
+	}
+
+	if dataManager.GetOwner() != requester {
+		return orcerrors.NewPermissionDenied("requester does not own the algo")
+	}
+
+	// Update datamanager archived value
+	dataManager.Archived = dm.GetArchived()
+
+	event := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKey:  dataManagerKey,
+		AssetKind: asset.AssetKind_ASSET_DATA_MANAGER,
+		Asset:     &asset.Event_DataManager{DataManager: dataManager},
+	}
+
+	err = s.GetEventService().RegisterEvents(event)
+	if err != nil {
+		return err
+	}
+
+	return s.GetDataManagerDBAL().ArchiveDataManager(dataManager)
 }

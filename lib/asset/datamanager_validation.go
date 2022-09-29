@@ -28,3 +28,12 @@ func (o *UpdateDataManagerParam) Validate() error {
 		validation.Field(&o.Name, nameValidationRules...),
 	)
 }
+
+// Validate returns an error if the archived datamanager is not valid:
+// missing required data, incompatible values, etc.
+func (o *ArchiveDataManagerParam) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Key, validation.Required, is.UUID),
+		validation.Field(&o.Archived, validation.Required, validation.NotNil),
+	)
+}

@@ -104,3 +104,13 @@ func (db *DB) UpdateDataManager(plan *asset.DataManager) error {
 
 	return db.putState(asset.DataManagerKind, plan.GetKey(), planBytes)
 }
+
+// ArchiveDataManager implements persistence.AlgoDBAL
+func (db *DB) ArchiveDataManager(dm *asset.DataManager) error {
+	dmBytes, err := marshaller.Marshal(dm)
+	if err != nil {
+		return err
+	}
+
+	return db.putState(asset.DataManagerKind, dm.GetKey(), dmBytes)
+}

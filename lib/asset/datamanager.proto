@@ -18,6 +18,7 @@ message DataManager {
   google.protobuf.Timestamp creation_date = 9;
   Permission logs_permission = 10;
   map <string, string> metadata = 16;
+  bool archived = 17;
 }
 
 message NewDataManager {
@@ -50,11 +51,19 @@ message UpdateDataManagerParam {
   string name = 2;
 }
 
+message ArchiveDataManagerParam {
+  string key = 1;
+  bool archived = 2;
+}
+
 message UpdateDataManagerResponse {}
+
+message ArchiveDataManagerResponse {}
 
 service DataManagerService {
   rpc RegisterDataManager(NewDataManager) returns (DataManager);
   rpc GetDataManager(GetDataManagerParam) returns (DataManager);
   rpc QueryDataManagers(QueryDataManagersParam) returns (QueryDataManagersResponse);
   rpc UpdateDataManager(UpdateDataManagerParam) returns (UpdateDataManagerResponse);
+  rpc ArchiveDataManager(ArchiveDataManagerParam) returns (ArchiveDataManagerResponse);
 }

@@ -193,11 +193,13 @@ func getTaskOutputRows(taskKey uuid.UUID, outputs map[string]*asset.ComputeTaskO
 
 // getTaskInputs returns the ComputeTaskInputs for the given compute task keys.
 // The returned map has a key for each input compute task key, e.g.
-// {
-//   "dcab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": [ &ComputeTaskInput, &ComputeTaskInput ],
-//   "abcdef01-2345-6789-abcd-ef0123456789": [ &ComputeTaskInput ],
-//   "cdab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": [ &ComputeTaskInput, &ComputeTaskInput, &ComputeTaskInput ],
-// }
+//
+//	{
+//	  "dcab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": [ &ComputeTaskInput, &ComputeTaskInput ],
+//	  "abcdef01-2345-6789-abcd-ef0123456789": [ &ComputeTaskInput ],
+//	  "cdab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": [ &ComputeTaskInput, &ComputeTaskInput, &ComputeTaskInput ],
+//	}
+//
 // If a compute task has no inputs, the corresponding entry in the returned map is an empty list of ComputeTaskInputs.
 func (d *DBAL) getTaskInputs(taskKeys ...string) (map[string][]*asset.ComputeTaskInput, error) {
 
@@ -249,11 +251,13 @@ func (d *DBAL) getTaskInputs(taskKeys ...string) (map[string][]*asset.ComputeTas
 
 // getTaskOutputs returns the ComputeTaskOutputs for the given compute task keys.
 // The returned map has a key for each input compute task key, e.g.
-// {
-//   "dcab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &ComputeTaskInput, "model2": &ComputeTaskInput },
-//   "abcdef01-2345-6789-abcd-ef0123456789": { "model": &ComputeTaskInput },
-//   "cdab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &ComputeTaskInput, "model2": &ComputeTaskInput, "model3": &ComputeTaskInput },
-// }
+//
+//	{
+//	  "dcab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &ComputeTaskInput, "model2": &ComputeTaskInput },
+//	  "abcdef01-2345-6789-abcd-ef0123456789": { "model": &ComputeTaskInput },
+//	  "cdab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &ComputeTaskInput, "model2": &ComputeTaskInput, "model3": &ComputeTaskInput },
+//	}
+//
 // If a compute task has no outputs, the corresponding entry in the returned map is an empty list of ComputeTaskOutputs.
 func (d *DBAL) getTaskOutputs(taskKeys ...string) (map[string]map[string]*asset.ComputeTaskOutput, error) {
 

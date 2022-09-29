@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TASK_UNKNOWN is a valid category
 - Allow registration of performances on any task category
 
+### Added
+
+- archive datamanager
+
 ## [0.29.0] - 2022-10-03
 
 ### Added

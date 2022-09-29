@@ -119,3 +119,27 @@ func TestUpdate(t *testing.T) {
 	err = contract.UpdateDataManager(ctx, wrapper)
 	assert.NoError(t, err, "Smart contract execution should not fail")
 }
+
+func TestArchive(t *testing.T) {
+	contract := &SmartContract{}
+
+	mspid := "org"
+	archiveDataManagerParam := &asset.ArchiveDataManagerParam{
+		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Archived: true,
+	}
+	wrapper, err := communication.Wrap(context.Background(), archiveDataManagerParam)
+	assert.NoError(t, err)
+
+	ctx := new(ledger.MockTransactionContext)
+
+	service := getMockedService(ctx)
+	service.On("ArchiveDataManager", archiveDataManagerParam, mspid).Return(nil).Once()
+
+	stub := new(testHelper.MockedStub)
+	ctx.On("GetStub").Return(stub).Once()
+	stub.On("GetCreator").Return(testHelper.FakeTxCreator(t, mspid), nil).Once()
+
+	err = contract.ArchiveDataManager(ctx, wrapper)
+	assert.NoError(t, err, "Smart contract execution should not fail")
+}
