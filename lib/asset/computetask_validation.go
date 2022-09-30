@@ -11,64 +11,15 @@ import (
 // Validate returns an error if the NewComputeTask is not valid:
 // missing required data, incompatible values, etc.
 func (t *NewComputeTask) Validate() error {
-	baseTaskErr := validation.ValidateStruct(t,
+	return validation.ValidateStruct(t,
 		validation.Field(&t.Key, validation.Required, is.UUID),
 		validation.Field(&t.Category, validation.Required, validation.In(ComputeTaskCategory_TASK_TRAIN, ComputeTaskCategory_TASK_COMPOSITE, ComputeTaskCategory_TASK_AGGREGATE, ComputeTaskCategory_TASK_TEST, ComputeTaskCategory_TASK_PREDICT)),
 		validation.Field(&t.AlgoKey, validation.Required, is.UUID),
 		validation.Field(&t.ComputePlanKey, validation.Required, is.UUID),
 		validation.Field(&t.Metadata, validation.By(validateMetadata)),
-		validation.Field(&t.Data, validation.Required),
 		validation.Field(&t.Inputs, validation.By(validateTaskInputs)),
 		validation.Field(&t.Outputs, validation.By(validateTaskOutputs)),
 	)
-
-	if baseTaskErr != nil {
-		return baseTaskErr
-	}
-
-	switch d := t.Data.(type) {
-	case *NewComputeTask_Composite:
-		return d.Composite.Validate()
-	case *NewComputeTask_Aggregate:
-		// Nothing to validate, worker should be passed as NewComputeTask.Worker
-		return nil
-	case *NewComputeTask_Test:
-		return d.Test.Validate()
-	case *NewComputeTask_Train:
-		return d.Train.Validate()
-	case *NewComputeTask_Predict:
-		return d.Predict.Validate()
-	default:
-		return errors.NewInvalidAsset(fmt.Sprintf("unknown task data %T", d))
-	}
-}
-
-func (t *NewTestTaskData) Validate() error {
-	return validation.ValidateStruct(t,
-		validation.Field(&t.DataManagerKey, validation.Required, is.UUID),
-		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)),
-	)
-}
-
-func (t *NewTrainTaskData) Validate() error {
-	return validation.ValidateStruct(t,
-		validation.Field(&t.DataManagerKey, validation.Required, is.UUID),
-		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)),
-	)
-}
-
-func (t *NewCompositeTrainTaskData) Validate() error {
-	return validation.ValidateStruct(t,
-		validation.Field(&t.DataManagerKey, validation.Required, is.UUID),
-		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)),
-	)
-}
-
-func (t *NewPredictTaskData) Validate() error {
-	return validation.ValidateStruct(t,
-		validation.Field(&t.DataManagerKey, validation.Required, is.UUID),
-		validation.Field(&t.DataSampleKeys, validation.Required, validation.Each(validation.Required, is.UUID)))
-
 }
 
 func (p *ApplyTaskActionParam) Validate() error {

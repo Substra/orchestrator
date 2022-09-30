@@ -32,18 +32,11 @@ type sqlComputeTask struct {
 	Worker         string
 	CreationDate   time.Time
 	LogsPermission asset.Permission
-	Data           []byte
 	Metadata       map[string]string
 }
 
 func (t *sqlComputeTask) toComputeTask() (*asset.ComputeTask, error) {
 	task := new(asset.ComputeTask)
-
-	// task data is stored as a marshalled task object
-	err := protojson.Unmarshal(t.Data, task)
-	if err != nil {
-		return nil, err
-	}
 
 	task.Key = t.Key
 	task.Category = t.Category
@@ -88,7 +81,7 @@ func (d *DBAL) insertTasks(tasks []*asset.ComputeTask) error {
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"compute_tasks"},
-		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"},
+		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "metadata"},
 		pgx.CopyFromSlice(len(tasks), func(i int) ([]interface{}, error) {
 			return getCopyableComputeTaskValues(d.channel, tasks[i])
 		}),
@@ -118,12 +111,6 @@ func getCopyableComputeTaskValues(channel string, task *asset.ComputeTask) ([]in
 		return nil, err
 	}
 
-	// store task data in a marshalled task object, empty fields will be omitted
-	taskData, err := protojson.Marshal(&asset.ComputeTask{Data: task.Data})
-	if err != nil {
-		return nil, err
-	}
-
 	return []interface{}{
 		key,
 		channel,
@@ -136,7 +123,6 @@ func getCopyableComputeTaskValues(channel string, task *asset.ComputeTask) ([]in
 		task.Worker,
 		task.CreationDate.AsTime(),
 		logsPermission,
-		taskData,
 		task.Metadata,
 	}, nil
 }
@@ -221,7 +207,7 @@ func (d *DBAL) GetExistingComputeTaskKeys(keys []string) ([]string, error) {
 func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-			"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys").
+			"logs_permission", "metadata", "algo_key", "parent_task_keys").
 		From("expanded_compute_tasks").
 		Where(sq.Eq{"channel": d.channel, "key": key})
 
@@ -232,7 +218,7 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 
 	ct := new(sqlComputeTask)
 	err = row.Scan(&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Category, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
-		&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
+		&ct.LogsPermission, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("computetask", key)
@@ -258,7 +244,7 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-			"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys").
+			"logs_permission", "metadata", "algo_key", "parent_task_keys").
 		From("expanded_compute_tasks t").
 		Join("compute_task_parents p ON t.key = p.child_task_key").
 		Where(sq.Eq{"t.channel": d.channel, "p.parent_task_key": key}).
@@ -276,7 +262,7 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 
 		err = rows.Scan(
 			&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Category, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
-			&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
+			&ct.LogsPermission, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
 		if err != nil {
 			return nil, err
 		}
@@ -359,7 +345,7 @@ func (d *DBAL) CountComputeTaskRegisteredOutputs(key string) (persistence.Comput
 func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer func(sq.SelectBuilder) sq.SelectBuilder) ([]*asset.ComputeTask, common.PaginationToken, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-			"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys").
+			"logs_permission", "metadata", "algo_key", "parent_task_keys").
 		From("expanded_compute_tasks").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key")
@@ -400,7 +386,7 @@ func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer fun
 
 		err = rows.Scan(
 			&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Category, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
-			&ct.LogsPermission, &ct.Data, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
+			&ct.LogsPermission, &ct.Metadata, &ct.AlgoKey, &ct.ParentTaskKeys)
 		if err != nil {
 			return nil, "", err
 		}
