@@ -317,43 +317,6 @@ func TestStableTaskSort(t *testing.T) {
 	}
 }
 
-// TestGetSortedParentTaskKeys will check that parent task keys are returned in the same order they were registered
-func TestGetSortedParentTaskKeys(t *testing.T) {
-	appClient := factory.NewTestClient()
-
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("trainAlgo"))
-	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
-	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
-	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-
-	const nbParents int = 10
-	parentTaskRefs := make([]string, nbParents)
-	for i := 0; i < nbParents; i++ {
-		parentTaskRefs[i] = fmt.Sprint("parent", i)
-		appClient.RegisterTasks(
-			client.DefaultTrainTaskOptions().WithKeyRef(parentTaskRefs[i]).WithAlgoRef("trainAlgo"),
-		)
-	}
-
-	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("aggAlgo"))
-	agg := client.
-		DefaultAggregateTaskOptions().
-		WithAlgoRef("aggAlgo").
-		WithKeyRef("aggTask").
-		WithParentsRef(parentTaskRefs...)
-	for _, parent := range parentTaskRefs {
-		agg.WithInput("model", &client.TaskOutputRef{TaskRef: parent, Identifier: "model"})
-	}
-	appClient.RegisterTasks(agg)
-
-	task := appClient.GetComputeTask("aggTask")
-	require.Equal(t, len(parentTaskRefs), len(task.ParentTaskKeys))
-
-	for i, taskRef := range parentTaskRefs {
-		require.Equal(t, task.ParentTaskKeys[i], appClient.GetKeyStore().GetKey(taskRef), "unexpected ParentTaskKeys ordering")
-	}
-}
-
 func TestQueryTaskInputs(t *testing.T) {
 	appClient := factory.NewTestClient()
 	ks := appClient.GetKeyStore()
