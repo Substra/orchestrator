@@ -23,7 +23,6 @@ SELECT execute($$
     ) p ON p.child_task_key = t.key;
 
     ALTER TABLE compute_tasks DROP COLUMN category;
-    DROP CONSTRAINT compute_tasks_category_fkey;
     DROP TABLE compute_task_categories;
 
     UPDATE events SET asset = asset #- '{category}'
