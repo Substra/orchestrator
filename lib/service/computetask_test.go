@@ -158,7 +158,6 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	cps := new(MockComputePlanAPI)
 	dms := new(MockDataManagerAPI)
-	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
@@ -168,7 +167,6 @@ func TestRegisterTrainTask(t *testing.T) {
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
-	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
@@ -196,10 +194,7 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
-	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Twice().Return(nil)
-
-	// Cannot train on test data
-	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
 	algo := &asset.Algo{
 		Key: "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
@@ -261,10 +256,14 @@ func TestRegisterTrainTask(t *testing.T) {
 	assert.NoError(t, err)
 
 	cps.AssertExpectations(t)
+	dms.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	provider.AssertExpectations(t)
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
+	as.AssertExpectations(t)
+	ps.AssertExpectations(t)
+	os.AssertExpectations(t)
 }
 
 func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
@@ -361,7 +360,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	cps := new(MockComputePlanAPI)
 	dms := new(MockDataManagerAPI)
-	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
@@ -371,7 +369,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
-	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
@@ -406,10 +403,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
 	// Checked twice while we still deal with task specific data
-	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Twice().Return(nil)
-
-	// Cannot train on test data
-	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
 	// create permissions
 	ps.On("CreatePermissions", "testOwner", sharedPermsNew).Return(sharedPerms, nil)
@@ -477,7 +471,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
 	ps.AssertExpectations(t)
-	dss.AssertExpectations(t)
 	dms.AssertExpectations(t)
 	cps.AssertExpectations(t)
 }
