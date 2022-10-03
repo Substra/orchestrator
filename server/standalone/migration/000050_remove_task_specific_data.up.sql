@@ -23,6 +23,6 @@ SELECT execute($$
 
     ALTER TABLE compute_tasks DROP COLUMN task_data;
 
-    UPDATE events SET asset = asset #- '{task_data}'
+    UPDATE events SET asset = asset - '{train,composite,aggregate,predict,test}'::text[]
     WHERE asset_kind = 'ASSET_COMPUTE_TASK';
 $$) WHERE column_exists('public', 'compute_tasks', 'task_data');
