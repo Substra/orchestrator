@@ -1,5 +1,5 @@
 SELECT execute($$
-    DROP TABLE compute_task_categories;
+
     DROP VIEW IF EXISTS expanded_compute_tasks;
     CREATE VIEW expanded_compute_tasks AS
     SELECT t.key AS key,
@@ -22,6 +22,8 @@ SELECT execute($$
     ) p ON p.child_task_key = t.key;
 
     ALTER TABLE compute_tasks DROP COLUMN category;
+    DROP CONSTRAINT compute_tasks_category_fkey;
+    DROP TABLE compute_task_categories;
 
     UPDATE events SET asset = asset #- '{category}'
     WHERE asset_kind = 'ASSET_COMPUTE_TASK';
