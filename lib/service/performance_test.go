@@ -38,10 +38,9 @@ func TestRegisterPerformance(t *testing.T) {
 	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
 	task := &asset.ComputeTask{
-		Key:      "taskTest",
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Worker:   "test",
-		Category: asset.ComputeTaskCategory_TASK_TEST,
+		Key:    "taskTest",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 		Data: &asset.ComputeTask_Test{
 			Test: &asset.TestTaskData{},
 		},
@@ -103,9 +102,8 @@ func TestRegisterPerformanceInvalidTask(t *testing.T) {
 	service := NewPerformanceService(provider)
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(&asset.ComputeTask{
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Worker:   "test",
-		Category: asset.ComputeTaskCategory_TASK_TRAIN,
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 	}, nil)
 
 	perf := &asset.NewPerformance{
@@ -140,9 +138,8 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
 	task := &asset.ComputeTask{
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Worker:   "test",
-		Category: asset.ComputeTaskCategory_TASK_TEST,
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 		Data: &asset.ComputeTask_Test{
 			Test: &asset.TestTaskData{},
 		},

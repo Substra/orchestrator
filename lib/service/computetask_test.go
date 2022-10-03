@@ -21,7 +21,6 @@ var newPerms = &asset.NewPermissions{
 
 var newTrainTask = &asset.NewComputeTask{
 	Key:            "867852b4-8419-4d52-8862-d5db823095be",
-	Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 	AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 	ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 	Data: &asset.NewComputeTask_Train{
@@ -234,7 +233,6 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTrainTask.Key,
-		Category:       newTrainTask.Category,
 		AlgoKey:        algo.Key,
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
@@ -299,7 +297,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-ffffffffffff",
-		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
@@ -353,7 +350,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	parent1 := &asset.ComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-111111111111",
-		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
 		Data:           &asset.ComputeTask_Composite{Composite: &asset.CompositeTrainTaskData{}},
@@ -365,7 +361,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	}
 	parent2 := &asset.ComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-222222222222",
-		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
 		Data:           &asset.ComputeTask_Composite{Composite: &asset.CompositeTrainTaskData{}},
@@ -461,7 +456,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTask.Key,
-		Category:       newTask.Category,
 		AlgoKey:        algo.Key,
 		Owner:          "testOwner",
 		ComputePlanKey: newTask.ComputePlanKey,
@@ -516,7 +510,6 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
@@ -579,7 +572,6 @@ func TestRegisterDeletedModel(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
@@ -665,9 +657,8 @@ func TestSetPredictData(t *testing.T) {
 		}}
 
 	task := &asset.ComputeTask{
-		AlgoKey:  "1814e4af-0ca7-4476-a956-a486ec37de34",
-		Owner:    "org1",
-		Category: asset.ComputeTaskCategory_TASK_PREDICT,
+		AlgoKey: "1814e4af-0ca7-4476-a956-a486ec37de34",
+		Owner:   "org1",
 	}
 
 	dms := new(MockDataManagerAPI)
@@ -695,9 +686,8 @@ func TestSetCompositeData(t *testing.T) {
 	}
 
 	task := &asset.ComputeTask{
-		Owner:    "org1",
-		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
-		AlgoKey:  "d31cb674-5bc0-474c-9583-5799dfa962f1",
+		Owner:   "org1",
+		AlgoKey: "d31cb674-5bc0-474c-9583-5799dfa962f1",
 	}
 
 	dms := new(MockDataManagerAPI)
@@ -737,9 +727,8 @@ func TestSetAggregateData(t *testing.T) {
 	}
 	specificInput := &asset.NewAggregateTrainTaskData{}
 	task := &asset.ComputeTask{
-		Owner:    "org1",
-		Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
-		AlgoKey:  "74804c66-b468-423c-a1ba-61b07030485f",
+		Owner:   "org1",
+		AlgoKey: "74804c66-b468-423c-a1ba-61b07030485f",
 	}
 
 	parents := []*asset.ComputeTask{
@@ -775,9 +764,8 @@ func TestSetTestData(t *testing.T) {
 	}
 	algoKey := "86652d5b-c730-4878-86d8-276fe3a47627"
 	task := &asset.ComputeTask{
-		AlgoKey:  algoKey,
-		Owner:    "org1",
-		Category: asset.ComputeTaskCategory_TASK_TEST,
+		AlgoKey: algoKey,
+		Owner:   "org1",
 	}
 	parents := []*asset.ComputeTask{
 		{

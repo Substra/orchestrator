@@ -48,7 +48,6 @@ func TestToComputeTask(t *testing.T) {
 	}
 	ct := sqlComputeTask{
 		Key:            "task_key",
-		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        algo.Key,
 		Owner:          "owner",
 		ComputePlanKey: "cp_key",
@@ -68,7 +67,6 @@ func TestToComputeTask(t *testing.T) {
 	res, err := ct.toComputeTask()
 	assert.NoError(t, err)
 	assert.Equal(t, ct.Key, res.Key)
-	assert.Equal(t, ct.Category, res.Category)
 	assert.Equal(t, ct.AlgoKey, res.AlgoKey)
 	assert.Equal(t, ct.Owner, res.Owner)
 	assert.Equal(t, ct.ComputePlanKey, res.ComputePlanKey)
@@ -83,11 +81,11 @@ func TestToComputeTask(t *testing.T) {
 }
 
 func makeTaskRows(taskKeys ...string) *pgxmock.Rows {
-	res := pgxmock.NewRows([]string{"key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
+	res := pgxmock.NewRows([]string{"key", "compute_plan_key", "status", "worker", "owner", "rank", "creation_date",
 		"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys"})
 
 	for _, key := range taskKeys {
-		res = res.AddRow(key, "cp_key", "STATUS_WAITING", "TASK_TRAIN", "worker", "owner", int32(0), time.Unix(0, 100),
+		res = res.AddRow(key, "cp_key", "STATUS_WAITING", "worker", "owner", int32(0), time.Unix(0, 100),
 			[]byte("{}"), []byte("{}"), map[string]string{}, "algo_key", []string{})
 	}
 
@@ -126,7 +124,7 @@ func TestTaskFilterToQuery(t *testing.T) {
 		"empty":         {&asset.TaskQueryFilter{}, "", nil},
 		"single filter": {&asset.TaskQueryFilter{Worker: "myorganization"}, "worker = $1", []interface{}{"myorganization"}},
 		"two filter":    {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE}, "worker = $1 AND status = $2", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String()}},
-		"three filter":  {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE, Category: asset.ComputeTaskCategory_TASK_TRAIN}, "worker = $1 AND status = $2 AND category = $3", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String(), asset.ComputeTaskCategory_TASK_TRAIN.String()}},
+		"three filter":  {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE, AlgoKey: "c14b4e4b-132b-4321-972d-b1506f82e5cd"}, "worker = $1 AND status = $2 AND algo_key = $3", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String(), "c14b4e4b-132b-4321-972d-b1506f82e5cd"}},
 	}
 
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
@@ -237,7 +235,6 @@ func TestQueryComputeTasks(t *testing.T) {
 func TestAddComputeTask(t *testing.T) {
 	newTask := &asset.ComputeTask{
 		Key:            "8d9fc421-15a6-4c3d-9082-3337a5436e83",
-		Category:       asset.ComputeTaskCategory_TASK_TEST,
 		ComputePlanKey: "b16dcd88-32ca-4971-89a7-734b4ad1d778",
 		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 		Worker:         "testOrg",
@@ -270,7 +267,7 @@ func TestAddComputeTask(t *testing.T) {
 
 	// Insert task
 	mock.ExpectCopyFrom(`"compute_tasks"`,
-		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"}).
+		[]string{"key", "channel", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"}).
 		WillReturnResult(1)
 	// Insert parents relationships
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(2)
@@ -294,7 +291,6 @@ func TestAddComputeTasks(t *testing.T) {
 	newTasks := []*asset.ComputeTask{
 		{
 			Key:            "8d9fc421-15a6-4c3d-9082-3337a5436e83",
-			Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 			ComputePlanKey: "899e7403-7e23-4c95-bb3f-7eb9e6d86b04",
 			Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 			Worker:         "testOrg",
@@ -321,7 +317,6 @@ func TestAddComputeTasks(t *testing.T) {
 		},
 		{
 			Key:            "99d44ec9-d642-4afa-bad0-00dda84a6b9d",
-			Category:       asset.ComputeTaskCategory_TASK_TEST,
 			ComputePlanKey: "899e7403-7e23-4c95-bb3f-7eb9e6d86b04",
 			Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 			Worker:         "testOrg",
@@ -352,7 +347,7 @@ func TestAddComputeTasks(t *testing.T) {
 
 	// Insert task
 	mock.ExpectCopyFrom(`"compute_tasks"`,
-		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"}).
+		[]string{"key", "channel", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"}).
 		WillReturnResult(2)
 	// Insert parents relationships
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(3)

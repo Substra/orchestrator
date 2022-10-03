@@ -65,29 +65,6 @@ func (ts *ComputeTaskStatus) Scan(value interface{}) error {
 }
 
 // Value implements the driver.Valuer interface.
-// Simply returns the string representation of the ComputeTaskCategory.
-func (c *ComputeTaskCategory) Value() (driver.Value, error) {
-	return c.String(), nil
-}
-
-// Scan implements the sql.Scanner interface.
-// Simply decodes a string into the ComputeTaskCategory.
-func (c *ComputeTaskCategory) Scan(value interface{}) error {
-	s, ok := value.(string)
-	if !ok {
-		return errors.NewInternal("cannot scan task category: invalid string")
-	}
-
-	v, ok := ComputeTaskCategory_value[s]
-	if !ok {
-		return errors.NewInternal("cannot scan task category: unknown value")
-	}
-	*c = ComputeTaskCategory(v)
-
-	return nil
-}
-
-// Value implements the driver.Valuer interface.
 // Simply returns the string representation of the ErrorType.
 func (e *ErrorType) Value() (driver.Value, error) {
 	return e.String(), nil
