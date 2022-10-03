@@ -868,7 +868,7 @@ func (s *ComputeTaskService) getLogsPermission(owner string, parentTasks []*asse
 			if dmKey == "" {
 				return nil, orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: openers must be referenced using an asset key", taskInput.Identifier))
 			}
-			datamanager, err := s.getCachedDataManager(taskInput.GetAssetKey())
+			datamanager, err := s.getCachedDataManager(dmKey)
 			if err != nil {
 				return nil, err
 			}
