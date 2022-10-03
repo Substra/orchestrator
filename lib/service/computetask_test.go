@@ -26,7 +26,6 @@ var (
 
 var newTrainTask = &asset.NewComputeTask{
 	Key:            "867852b4-8419-4d52-8862-d5db823095be",
-	Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 	AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 	ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 	Inputs: []*asset.ComputeTaskInput{
@@ -225,7 +224,6 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTrainTask.Key,
-		Category:       newTrainTask.Category,
 		AlgoKey:        algo.Key,
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
@@ -284,7 +282,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-ffffffffffff",
-		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
@@ -332,7 +329,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	parent1 := &asset.ComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-111111111111",
-		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
 		AlgoKey:        algoParent1.Key,
@@ -343,7 +339,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	}
 	parent2 := &asset.ComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-222222222222",
-		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
 		AlgoKey:        algoParent2.Key,
@@ -433,7 +428,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTask.Key,
-		Category:       newTask.Category,
 		AlgoKey:        algo.Key,
 		Owner:          "testOwner",
 		ComputePlanKey: newTask.ComputePlanKey,
@@ -480,7 +474,6 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
@@ -534,7 +527,6 @@ func TestRegisterDeletedModel(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{

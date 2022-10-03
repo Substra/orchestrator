@@ -49,20 +49,6 @@ func TestComputeTaskStatusValue(t *testing.T) {
 	assert.Equal(t, status, scanned)
 }
 
-func TestComputeTaskCategoryValue(t *testing.T) {
-	cat := ComputeTaskCategory_TASK_TRAIN
-	category := &cat
-
-	value, err := category.Value()
-	assert.NoError(t, err, "task category serialization should not fail")
-
-	scanned := new(ComputeTaskCategory)
-	err = scanned.Scan(value)
-	assert.NoError(t, err, "task category scan should not fail")
-
-	assert.Equal(t, category, scanned)
-}
-
 func TestErrorTypeValue(t *testing.T) {
 	e := ErrorType_ERROR_TYPE_EXECUTION
 	errorType := &e
