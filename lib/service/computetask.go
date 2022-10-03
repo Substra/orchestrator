@@ -407,6 +407,11 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
+	logsPermissions, err := s.getLogsPermission(owner, parentTasks, input.Inputs, algo.Inputs)
+	if err != nil {
+		return nil, err
+	}
+
 	task := &asset.ComputeTask{
 		Key:            input.Key,
 		AlgoKey:        algo.Key,
@@ -421,9 +426,8 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		Inputs:         input.Inputs,
 		Outputs:        outputs,
 		Worker:         worker,
+		LogsPermission: logsPermissions,
 	}
-
-	return nil, orcerrors.NewUnimplemented("TODO set logPermissions")
 
 	if err := s.validateInputs(task.Inputs, algo.Inputs, task.Owner, task.Worker); err != nil {
 		return nil, err
@@ -845,6 +849,44 @@ func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *as
 	}
 
 	return input.Worker, nil
+}
+
+// getLogsPermission determines log permission based on datamanager presence.
+// If there is a datamanager in inputs, log permission inherit the datamanager's permission.
+// If there is no datamanager, log permission is the union of parents log permissions.
+func (s *ComputeTaskService) getLogsPermission(owner string, parentTasks []*asset.ComputeTask, taskInputs []*asset.ComputeTaskInput, algoInputs map[string]*asset.AlgoInput) (*asset.Permission, error) {
+	// Check for datamanager as input
+	for _, taskInput := range taskInputs {
+		identifier := taskInput.Identifier
+		algoInput, ok := algoInputs[identifier]
+		if !ok {
+			return nil, orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", identifier))
+		}
+
+		if algoInput.Kind == asset.AssetKind_ASSET_DATA_MANAGER {
+			dmKey := taskInput.GetAssetKey()
+			if dmKey == "" {
+				return nil, orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: openers must be referenced using an asset key", taskInput.Identifier))
+			}
+			datamanager, err := s.getCachedDataManager(taskInput.GetAssetKey())
+			if err != nil {
+				return nil, err
+			}
+
+			return datamanager.LogsPermission, nil
+		}
+	}
+
+	// Fallback on parent union
+	logsPermission, err := s.GetPermissionService().CreatePermission(owner, &asset.NewPermissions{Public: false})
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range parentTasks {
+		logsPermission = s.GetPermissionService().UnionPermission(p.LogsPermission, logsPermission)
+	}
+
+	return logsPermission, nil
 }
 
 // getRank determines the rank of a task from its parents.

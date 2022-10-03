@@ -1755,3 +1755,72 @@ func TestGetTaskWorker(t *testing.T) {
 		)
 	}
 }
+
+func TestGetLogsPermission(t *testing.T) {
+	dm := &asset.DataManager{
+		LogsPermission: &asset.Permission{
+			AuthorizedIds: []string{"test"},
+			Public:        false,
+		},
+	}
+
+	dms := new(MockDataManagerAPI)
+	os := new(MockOrganizationAPI)
+	os.On("GetAllOrganizations").Return([]*asset.Organization{
+		{Id: "org1"}, {Id: "org2"}, {Id: "org3"},
+	}, nil)
+
+	provider := newMockedProvider()
+	provider.On("GetDataManagerService").Return(dms)
+	provider.On("GetOrganizationService").Return(os)
+	provider.On("GetPermissionService").Return(NewPermissionService(provider))
+
+	dms.On("GetDataManager", "dmuuid").Return(dm, nil)
+
+	cases := map[string]struct {
+		owner       string
+		parentTasks []*asset.ComputeTask
+		taskInputs  []*asset.ComputeTaskInput
+		algoInputs  map[string]*asset.AlgoInput
+		outcome     *asset.Permission
+	}{
+		"with datamanager": {
+			taskInputs: []*asset.ComputeTaskInput{
+				{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "dmuuid"}},
+			},
+			algoInputs: map[string]*asset.AlgoInput{
+				"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
+			},
+			outcome: dm.LogsPermission,
+		},
+		"with parents": {
+			owner: "test",
+			taskInputs: []*asset.ComputeTaskInput{
+				{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "parent1", OutputIdentifier: "model"}}},
+				{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "parent2", OutputIdentifier: "model"}}},
+			},
+			algoInputs: map[string]*asset.AlgoInput{
+				"model": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true},
+			},
+			parentTasks: []*asset.ComputeTask{
+				{Key: "parent1", LogsPermission: &asset.Permission{AuthorizedIds: []string{"org1"}}},
+				{Key: "parent2", LogsPermission: &asset.Permission{AuthorizedIds: []string{"org2"}}},
+			},
+			outcome: &asset.Permission{AuthorizedIds: []string{"test", "org1", "org2"}},
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(
+			name,
+			func(t *testing.T) {
+				service := NewComputeTaskService(provider)
+
+				permission, err := service.getLogsPermission(c.owner, c.parentTasks, c.taskInputs, c.algoInputs)
+				assert.NoError(t, err)
+				assert.ElementsMatch(t, c.outcome.AuthorizedIds, permission.AuthorizedIds)
+				assert.Equal(t, c.outcome.Public, permission.Public)
+			},
+		)
+	}
+}
