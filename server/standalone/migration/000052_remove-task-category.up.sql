@@ -1,6 +1,5 @@
-
-
 SELECT execute($$
+    DROP TABLE compute_task_categories;
     DROP VIEW IF EXISTS expanded_compute_tasks;
     CREATE VIEW expanded_compute_tasks AS
     SELECT t.key AS key,
