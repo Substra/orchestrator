@@ -34,6 +34,7 @@ message Algo {
   map<string, string> metadata = 16;
   map<string, AlgoInput> inputs = 17;
   map<string, AlgoOutput> outputs = 18;
+  repeated string command = 19;
 }
 
 // NewAlgo is used to register an Algo.
@@ -50,6 +51,7 @@ message NewAlgo {
   map<string, string> metadata = 17;
   map<string, AlgoInput> inputs = 18;
   map<string, AlgoOutput> outputs = 19;
+  repeated string command = 20;
 }
 
 message GetAlgoParam {

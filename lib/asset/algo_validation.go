@@ -20,6 +20,7 @@ func (a *NewAlgo) Validate() error {
 		validation.Field(&a.NewPermissions, validation.Required),
 		validation.Field(&a.Inputs, validation.By(validateInputs)),
 		validation.Field(&a.Outputs, validation.By(validateOutputs)),
+		validation.Field(&a.Command, validation.Required, validation.Each(validation.Required, validation.Length(1, 100))),
 	)
 }
 

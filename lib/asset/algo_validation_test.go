@@ -35,6 +35,7 @@ func TestAlgoValidate(t *testing.T) {
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
+			Command:        []string{"python"},
 		}, false},
 		"valid": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -42,6 +43,7 @@ func TestAlgoValidate(t *testing.T) {
 			Algorithm:      validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
+			Command:        []string{"python"},
 		}, true},
 		"invalid_input_kind": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -52,6 +54,7 @@ func TestAlgoValidate(t *testing.T) {
 			Inputs: map[string]*AlgoInput{
 				"test": {Kind: AssetKind_ASSET_COMPUTE_PLAN, Optional: false, Multiple: false},
 			},
+			Command: []string{"python"},
 		}, false},
 		"invalid_output_kind": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -62,6 +65,7 @@ func TestAlgoValidate(t *testing.T) {
 			Outputs: map[string]*AlgoOutput{
 				"test": {Kind: AssetKind_ASSET_COMPUTE_PLAN, Multiple: false},
 			},
+			Command: []string{"python"},
 		}, false},
 		"invalid_input: data manager + optional": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -72,6 +76,7 @@ func TestAlgoValidate(t *testing.T) {
 			Inputs: map[string]*AlgoInput{
 				"test": {Kind: AssetKind_ASSET_DATA_MANAGER, Optional: true, Multiple: false},
 			},
+			Command: []string{"python"},
 		}, false},
 		"invalid_input: data manager + multiple": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -82,6 +87,7 @@ func TestAlgoValidate(t *testing.T) {
 			Inputs: map[string]*AlgoInput{
 				"test": {Kind: AssetKind_ASSET_DATA_MANAGER, Optional: false, Multiple: true},
 			},
+			Command: []string{"python"},
 		}, false},
 		"invalid_output: performance + multiple": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -92,6 +98,7 @@ func TestAlgoValidate(t *testing.T) {
 			Outputs: map[string]*AlgoOutput{
 				"test": {Kind: AssetKind_ASSET_PERFORMANCE, Multiple: true},
 			},
+			Command: []string{"python"},
 		}, false},
 		"invalid inputs: multiple data managers": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -103,6 +110,7 @@ func TestAlgoValidate(t *testing.T) {
 				"datamanager":  {Kind: AssetKind_ASSET_DATA_MANAGER},
 				"datamanager2": {Kind: AssetKind_ASSET_DATA_MANAGER},
 			},
+			Command: []string{"python"},
 		}, false},
 		"invalid inputs: data manager without data sample": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -113,6 +121,7 @@ func TestAlgoValidate(t *testing.T) {
 			Inputs: map[string]*AlgoInput{
 				"datamanager": {Kind: AssetKind_ASSET_DATA_MANAGER},
 			},
+			Command: []string{"python"},
 		}, false},
 		"invalid inputs: data sample without data manager": {&NewAlgo{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -123,6 +132,22 @@ func TestAlgoValidate(t *testing.T) {
 			Inputs: map[string]*AlgoInput{
 				"datasamples": {Kind: AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			},
+			Command: []string{"python"},
+		}, false},
+		"invalid inputs: missing command": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+		}, false},
+		"invalid inputs: empty command item": {&NewAlgo{
+			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Name:           "Test algo",
+			Algorithm:      validAddressable,
+			Description:    validAddressable,
+			NewPermissions: validPerms,
+			Command:        []string{"ii", ""},
 		}, false},
 	}
 
