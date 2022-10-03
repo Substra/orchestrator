@@ -11,7 +11,7 @@ var (
 			Name: "orc_task_registered_total",
 			Help: "Number of registered tasks",
 		},
-		[]string{"channel", "category"},
+		[]string{"channel"},
 	)
 
 	// TaskRegistrationBatchSize monitors the usual batch size when registering tasks
