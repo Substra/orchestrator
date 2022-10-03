@@ -67,7 +67,6 @@ func TestTrainTaskLifecycle(t *testing.T) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").
-		WithParentsRef(client.DefaultTrainTaskRef).
 		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	appClient.StartTask(client.DefaultTrainTaskRef)
 }
@@ -86,14 +85,12 @@ func TestPredictTaskLifecycle(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("train").WithAlgoRef("train_algo"))
 
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
-		WithParentsRef("train").
 		WithInput("model", &client.TaskOutputRef{TaskRef: "train", Identifier: "model"}).
 		WithAlgoRef("predict_algo").
 		WithKeyRef("predict"))
 
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().
 		WithKeyRef("test").
-		WithParentsRef("predict").
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predict", Identifier: "predictions"}).
 		WithAlgoRef("metric"))
 
@@ -125,7 +122,6 @@ func TestCascadeCancel(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).
-			WithParentsRef(client.DefaultTrainTaskRef).
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
@@ -154,7 +150,6 @@ func TestCascadeTodo(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).
-			WithParentsRef(client.DefaultTrainTaskRef).
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
@@ -185,7 +180,6 @@ func TestCascadeFailure(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef(fmt.Sprintf("task%d", i)).
-			WithParentsRef(client.DefaultTrainTaskRef).
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
@@ -255,14 +249,12 @@ func TestConcurrency(t *testing.T) {
 		go func(i int) {
 			client1.RegisterTasks(client.DefaultTrainTaskOptions().
 				WithKeyRef(fmt.Sprintf("task1%d", i)).
-				WithParentsRef("parent1").
 				WithInput("model", &client.TaskOutputRef{TaskRef: "parent1", Identifier: "model"}))
 			wg.Done()
 		}(i)
 		go func(i int) {
 			client2.RegisterTasks(client.DefaultTrainTaskOptions().
 				WithKeyRef(fmt.Sprintf("task2%d", i)).
-				WithParentsRef("parent2").
 				WithInput("model", &client.TaskOutputRef{TaskRef: "parent2", Identifier: "model"}))
 			wg.Done()
 		}(i)
@@ -288,7 +280,6 @@ func TestStableTaskSort(t *testing.T) {
 	for i := 0; i < nbTasks; i++ {
 		newTasks = append(newTasks, client.DefaultTrainTaskOptions().
 			WithKeyRef(fmt.Sprintf("task%d", i)).
-			WithParentsRef(client.DefaultTrainTaskRef).
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 	appClient.RegisterTasks(newTasks...)
@@ -507,7 +498,6 @@ func TestWorkerCancelTaskInFailedComputePlan(t *testing.T) {
 	client1.RegisterTasks(client.DefaultAggregateTaskOptions().
 		WithAlgoRef("aggAlgo").
 		WithKeyRef("aggTask").
-		WithParentsRef("trainTask1").
 		WithInput("model", &client.TaskOutputRef{TaskRef: "trainTask1", Identifier: "model"}).
 		WithWorker("MyOrg2MSP"))
 
@@ -562,7 +552,6 @@ func TestGetTaskInputAssets(t *testing.T) {
 	)
 	appClient.RegisterTasks(
 		client.DefaultAggregateTaskOptions().
-			WithParentsRef("train", "train2"). // This won't be necessary soon
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "train", Identifier: "model"}).
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "train2", Identifier: "model"}).
 			WithKeyRef("aggregate").
@@ -634,7 +623,6 @@ func TestGetTaskInputAssetsFromComposite(t *testing.T) {
 	)
 	appClient.RegisterTasks(
 		client.DefaultAggregateTaskOptions().
-			WithParentsRef("comp1", "comp2"). // This won't be necessary soon
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}).
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "comp2", Identifier: "shared"}).
 			WithKeyRef("aggregate").
