@@ -118,7 +118,7 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `orchestrator.tls.secrets.pair`                  | A secret containing the server TLS cert/key pair `tls.crt` and `tls.key`                                                                                                 | `orchestrator-tls-server-pair` |
 | `orchestrator.tls.cacert`                        | A ConfigMap containing the server TLS CA cert `cat.crt`                                                                                                                  | `orchestrator-tls-cacert`      |
 | `orchestrator.tls.mtls.enabled`                  | If true, enable TLS client verification                                                                                                                                  | `false`                        |
-| `orchestrator.tls.mtls.clientCACerts`            | A map whose keys are names of the CAs, and values are a list of secrets containing CA certificates                                                                       | `{}`                           |
+| `orchestrator.tls.mtls.clientCACerts`            | A map whose keys are names of the CAs, and values are a list of configmaps containing CA certificates                                                                    | `{}`                           |
 
 
 ### Channels settings
