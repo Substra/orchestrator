@@ -137,7 +137,7 @@ func (s *ComputeTaskService) RegisterTasks(tasks []*asset.NewComputeTask, owner 
 		if err != nil {
 			return nil, err
 		}
-		metrics.TaskRegisteredTotal.WithLabelValues(s.GetChannel(), task.Category.String()).Inc()
+		metrics.TaskRegisteredTotal.WithLabelValues(s.GetChannel()).Inc()
 		registeredTasks = append(registeredTasks, task)
 
 		event := &asset.Event{
@@ -415,7 +415,6 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	task := &asset.ComputeTask{
 		Key:            input.Key,
 		AlgoKey:        algo.Key,
-		Category:       input.Category,
 		Owner:          owner,
 		ComputePlanKey: input.ComputePlanKey,
 		Metadata:       input.Metadata,

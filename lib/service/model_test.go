@@ -180,10 +180,9 @@ func TestRegisterTrainModel(t *testing.T) {
 	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
 
 	task := &asset.ComputeTask{
-		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Category: asset.ComputeTaskCategory_TASK_TRAIN,
-		Worker:   "test",
+		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
 				Permissions: &asset.Permissions{
@@ -284,10 +283,9 @@ func TestRegisterAggregateModel(t *testing.T) {
 	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
 
 	task := &asset.ComputeTask{
-		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
-		Worker:   "test",
+		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
 				Permissions: &asset.Permissions{
@@ -384,10 +382,9 @@ func TestRegisterDuplicateModel(t *testing.T) {
 		"test",
 		persistence.ComputeTaskOutputCounter{"model": 1},
 		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_TRAIN,
-			Worker:   "test",
+			Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Worker: "test",
 			Outputs: map[string]*asset.ComputeTaskOutput{
 				"model": {
 					Permissions: &asset.Permissions{
@@ -443,10 +440,9 @@ func TestRegisterHeadModel(t *testing.T) {
 	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
 
 	task := &asset.ComputeTask{
-		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
-		Worker:   "test",
+		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {
 				Permissions: &asset.Permissions{
@@ -565,10 +561,9 @@ func TestRegisterMultipleHeads(t *testing.T) {
 		"test",
 		persistence.ComputeTaskOutputCounter{"local": 1},
 		&asset.ComputeTask{
-			Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status:   asset.ComputeTaskStatus_STATUS_DOING,
-			Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
-			Worker:   "test",
+			Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
+			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Worker: "test",
 			Outputs: map[string]*asset.ComputeTaskOutput{
 				"shared": {
 					Permissions: &asset.Permissions{
@@ -620,10 +615,9 @@ func TestRegisterInvalidOutput(t *testing.T) {
 	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
 
 	task := &asset.ComputeTask{
-		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Category: asset.ComputeTaskCategory_TASK_TRAIN,
-		Worker:   "test",
+		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
 				Permissions: &asset.Permissions{
@@ -701,10 +695,9 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
 
 	task := &asset.ComputeTask{
-		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Category: asset.ComputeTaskCategory_TASK_TRAIN,
-		Worker:   "test",
+		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
 				Permissions: &asset.Permissions{
@@ -810,10 +803,9 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 	}
 
 	task := &asset.ComputeTask{
-		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
-		Worker:   "test",
+		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {
 				Permissions: &asset.Permissions{
@@ -946,11 +938,10 @@ func TestRegisterMissingOutput(t *testing.T) {
 	service := NewModelService(provider)
 
 	task := &asset.ComputeTask{
-		Key:      "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status:   asset.ComputeTaskStatus_STATUS_DOING,
-		Category: asset.ComputeTaskCategory_TASK_TRAIN,
-		Worker:   "test",
-		Outputs:  map[string]*asset.ComputeTaskOutput{},
+		Key:     "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		Status:  asset.ComputeTaskStatus_STATUS_DOING,
+		Worker:  "test",
+		Outputs: map[string]*asset.ComputeTaskOutput{},
 	}
 
 	model := &asset.NewModel{

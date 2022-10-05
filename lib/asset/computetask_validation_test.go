@@ -17,7 +17,6 @@ func TestNewComputeTaskValidation(t *testing.T) {
 
 	validTrainTask := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*ComputeTaskInput{
@@ -39,28 +38,18 @@ func TestNewComputeTaskValidation(t *testing.T) {
 		},
 		Outputs: validOutputs,
 	}
-	invalidCategory := &NewComputeTask{
-		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_UNKNOWN,
-		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
-		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
-		Metadata:       map[string]string{"test": "indeed"},
-	}
 	missingAlgo := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Metadata:       map[string]string{"test": "indeed"},
 	}
 	missingComputePlan := &NewComputeTask{
 		Key:      "867852b4-8419-4d52-8862-d5db823095be",
-		Category: ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:  "867852b4-8419-4d52-8862-d5db823095be",
 		Metadata: map[string]string{"test": "indeed"},
 	}
 	invalidOutputPermissionsIdentifier := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Outputs: map[string]*NewComputeTaskOutput{
@@ -73,7 +62,6 @@ func TestNewComputeTaskValidation(t *testing.T) {
 	}
 	missingInputIdentifier := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*ComputeTaskInput{
@@ -87,14 +75,12 @@ func TestNewComputeTaskValidation(t *testing.T) {
 	}
 	missingInputRef := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs:         []*ComputeTaskInput{{Identifier: "model"}},
 	}
 	invalidInputRef := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*ComputeTaskInput{
@@ -108,7 +94,6 @@ func TestNewComputeTaskValidation(t *testing.T) {
 	}
 	missingInputTaskOutputKey := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*ComputeTaskInput{
@@ -125,7 +110,6 @@ func TestNewComputeTaskValidation(t *testing.T) {
 	}
 	invalidInputTaskOutputKey := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*ComputeTaskInput{
@@ -142,7 +126,6 @@ func TestNewComputeTaskValidation(t *testing.T) {
 	}
 	missingInputTaskOutputIdentifier := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		Category:       ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*ComputeTaskInput{
@@ -163,7 +146,6 @@ func TestNewComputeTaskValidation(t *testing.T) {
 		newTask *NewComputeTask
 	}{
 		"valid":                                 {valid: true, newTask: validTrainTask},
-		"invalid category":                      {valid: false, newTask: invalidCategory},
 		"missing algokey":                       {valid: false, newTask: missingAlgo},
 		"missing compute plan":                  {valid: false, newTask: missingComputePlan},
 		"missing input identifier":              {valid: false, newTask: missingInputIdentifier},
