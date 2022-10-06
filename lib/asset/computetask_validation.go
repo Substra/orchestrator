@@ -13,17 +13,21 @@ import (
 func (t *NewComputeTask) Validate() error {
 	baseTaskErr := validation.ValidateStruct(t,
 		validation.Field(&t.Key, validation.Required, is.UUID),
-		validation.Field(&t.Category, validation.Required, validation.In(ComputeTaskCategory_TASK_TRAIN, ComputeTaskCategory_TASK_COMPOSITE, ComputeTaskCategory_TASK_AGGREGATE, ComputeTaskCategory_TASK_TEST, ComputeTaskCategory_TASK_PREDICT)),
+		validation.Field(&t.Category, validation.In(ComputeTaskCategory_TASK_TRAIN, ComputeTaskCategory_TASK_COMPOSITE, ComputeTaskCategory_TASK_AGGREGATE, ComputeTaskCategory_TASK_TEST, ComputeTaskCategory_TASK_PREDICT, ComputeTaskCategory_TASK_UNKNOWN)),
 		validation.Field(&t.AlgoKey, validation.Required, is.UUID),
 		validation.Field(&t.ComputePlanKey, validation.Required, is.UUID),
 		validation.Field(&t.Metadata, validation.By(validateMetadata)),
-		validation.Field(&t.Data, validation.Required),
+		validation.Field(&t.Data, validation.Required.When(t.Category != ComputeTaskCategory_TASK_UNKNOWN)),
 		validation.Field(&t.Inputs, validation.By(validateTaskInputs)),
 		validation.Field(&t.Outputs, validation.By(validateTaskOutputs)),
 	)
 
 	if baseTaskErr != nil {
 		return baseTaskErr
+	}
+
+	if t.Category == ComputeTaskCategory_TASK_UNKNOWN {
+		return nil
 	}
 
 	switch d := t.Data.(type) {
