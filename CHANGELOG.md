@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - TASK_UNKNOWN is a valid category
+- Allow registration of performances on any task category
 
 ## [0.29.0] - 2022-10-03
 
