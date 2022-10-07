@@ -325,11 +325,11 @@ func TestArchiveSingleExistingDataManager(t *testing.T) {
 		requester string
 		valid     bool
 	}{
-		"update successful": {
+		"archiving successful": {
 			requester: "owner",
 			valid:     true,
 		},
-		"update rejected: requester is not owner": {
+		"archiving rejected: requester is not owner": {
 			requester: "user",
 			valid:     false,
 		},
