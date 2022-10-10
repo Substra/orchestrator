@@ -137,11 +137,13 @@ func (d *DBAL) getAlgoInputs(algoKeys ...string) (map[string]map[string]*asset.A
 
 // getAlgoOutputs returns the AlgoOutputs for the given algo keys.
 // The returned map has a key for each output algo key, e.g.
-// {
-//   "dcab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &AlgoOutput, "othermodel": &AlgoOutput },
-//   "abcdef01-2345-6789-abcd-ef0123456789": { "model": &AlgoOutput, "othermodel": &AlgoOutput },
-//   "cdab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &AlgoOutput, "othermodel": &AlgoOutput },
-// }
+//
+//	{
+//	  "dcab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &AlgoOutput, "othermodel": &AlgoOutput },
+//	  "abcdef01-2345-6789-abcd-ef0123456789": { "model": &AlgoOutput, "othermodel": &AlgoOutput },
+//	  "cdab4f8f-f8f8-4f8f-8f8f-f8f8f8f8f8f8": { "model": &AlgoOutput, "othermodel": &AlgoOutput },
+//	}
+//
 // If an algo has no outputs, the corresponding entry in the returned map is an empty map of AlgoOutputs.
 func (d *DBAL) getAlgoOutputs(algoKeys ...string) (map[string]map[string]*asset.AlgoOutput, error) {
 

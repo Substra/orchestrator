@@ -12,9 +12,9 @@ import (
 )
 
 func makeDataManagerRows() *pgxmock.Rows {
-	return pgxmock.NewRows([]string{"key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata"}).
-		AddRow("key1", "name", "owner", []byte("{}"), "https://example.com/desc", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "https://example.com/chksm", "993b6d90e0ed15d80e7e39c6fb298855d9544420be07faec52935649780e8f19", "", time.Unix(12, 0), []byte("{}"), map[string]string{}).
-		AddRow("key2", "name", "owner", []byte("{}"), "https://example.com/desc", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "https://example.com/chksm", "993b6d90e0ed15d80e7e39c6fb298855d9544420be07faec52935649780e8f19", "", time.Unix(12, 0), []byte("{}"), map[string]string{})
+	return pgxmock.NewRows([]string{"key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata", "archived"}).
+		AddRow("key1", "name", "owner", []byte("{}"), "https://example.com/desc", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "https://example.com/chksm", "993b6d90e0ed15d80e7e39c6fb298855d9544420be07faec52935649780e8f19", "", time.Unix(12, 0), []byte("{}"), map[string]string{}, false).
+		AddRow("key2", "name", "owner", []byte("{}"), "https://example.com/desc", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "https://example.com/chksm", "993b6d90e0ed15d80e7e39c6fb298855d9544420be07faec52935649780e8f19", "", time.Unix(12, 0), []byte("{}"), map[string]string{}, false)
 }
 
 func TestQueryDataManagers(t *testing.T) {

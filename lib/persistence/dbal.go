@@ -46,6 +46,7 @@ type DataManagerDBAL interface {
 	QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, common.PaginationToken, error)
 	DataManagerExists(key string) (bool, error)
 	UpdateDataManager(dm *asset.DataManager) error
+	ArchiveDataManager(dm *asset.DataManager) error
 }
 
 // OrganizationDBALProvider represents an object capable of providing an OrganizationDBAL

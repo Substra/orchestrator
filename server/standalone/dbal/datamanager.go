@@ -24,6 +24,7 @@ type sqlDataManager struct {
 	CreationDate   time.Time
 	LogsPermission asset.Permission
 	Metadata       map[string]string
+	Archived       bool
 }
 
 func (dm *sqlDataManager) toDataManager() *asset.DataManager {
@@ -38,6 +39,7 @@ func (dm *sqlDataManager) toDataManager() *asset.DataManager {
 		CreationDate:   timestamppb.New(dm.CreationDate),
 		LogsPermission: &dm.LogsPermission,
 		Metadata:       dm.Metadata,
+		Archived:       dm.Archived,
 	}
 }
 
@@ -55,8 +57,8 @@ func (d *DBAL) AddDataManager(datamanager *asset.DataManager) error {
 
 	stmt := getStatementBuilder().
 		Insert("datamanagers").
-		Columns("key", "channel", "name", "owner", "permissions", "description", "opener", "type", "creation_date", "logs_permission", "metadata").
-		Values(datamanager.Key, d.channel, datamanager.Name, datamanager.Owner, datamanager.Permissions, datamanager.Description.StorageAddress, datamanager.Opener.StorageAddress, datamanager.Type, datamanager.CreationDate.AsTime(), datamanager.LogsPermission, datamanager.Metadata)
+		Columns("key", "channel", "name", "owner", "permissions", "description", "opener", "type", "creation_date", "logs_permission", "metadata", "archived").
+		Values(datamanager.Key, d.channel, datamanager.Name, datamanager.Owner, datamanager.Permissions, datamanager.Description.StorageAddress, datamanager.Opener.StorageAddress, datamanager.Type, datamanager.CreationDate.AsTime(), datamanager.LogsPermission, datamanager.Metadata, datamanager.Archived)
 
 	return d.exec(stmt)
 }
@@ -82,7 +84,7 @@ func (d *DBAL) DataManagerExists(key string) (bool, error) {
 // GetDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 	stmt := getStatementBuilder().
-		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata").
+		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata", "archived").
 		From("expanded_datamanagers").
 		Where(sq.Eq{"channel": d.channel, "key": key})
 
@@ -92,7 +94,7 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 	}
 
 	dm := new(sqlDataManager)
-	err = row.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.Type, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata)
+	err = row.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.Type, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata, &dm.Archived)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -112,7 +114,7 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata").
+		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata", "archived").
 		From("expanded_datamanagers").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").
@@ -132,7 +134,7 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 	for rows.Next() {
 		dm := new(sqlDataManager)
 
-		err = rows.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.Type, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata)
+		err = rows.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.Type, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata, &dm.Archived)
 		if err != nil {
 			return nil, "", err
 		}
@@ -161,6 +163,16 @@ func (d *DBAL) UpdateDataManager(datamanager *asset.DataManager) error {
 	stmt := getStatementBuilder().
 		Update("datamanagers").
 		Set("name", datamanager.Name).
+		Where(sq.Eq{"channel": d.channel, "key": datamanager.Key})
+
+	return d.exec(stmt)
+}
+
+// ArchiveDataManager implements persistence.DataManagerDBAL
+func (d *DBAL) ArchiveDataManager(datamanager *asset.DataManager) error {
+	stmt := getStatementBuilder().
+		Update("datamanagers").
+		Set("archived", datamanager.Archived).
 		Where(sq.Eq{"channel": d.channel, "key": datamanager.Key})
 
 	return d.exec(stmt)

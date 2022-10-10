@@ -83,3 +83,22 @@ func TestUpdateDataManager(t *testing.T) {
 	_, err := adapter.UpdateDataManager(ctx, updatedA)
 	assert.NoError(t, err, "Update should pass")
 }
+
+func TestArchiveDataManager(t *testing.T) {
+	adapter := NewDataManagerAdapter()
+
+	archiveDM := &asset.ArchiveDataManagerParam{
+		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Archived: true,
+	}
+
+	newCtx := context.TODO()
+	invocator := &chaincode.MockInvocator{}
+
+	invocator.On("Call", utils.AnyContext, "orchestrator.datamanager:ArchiveDataManager", archiveDM, nil).Return(nil)
+
+	ctx := interceptors.WithInvocator(newCtx, invocator)
+
+	_, err := adapter.ArchiveDataManager(ctx, archiveDM)
+	assert.NoError(t, err, "Archive should pass")
+}

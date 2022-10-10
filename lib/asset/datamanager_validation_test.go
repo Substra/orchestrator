@@ -16,6 +16,11 @@ type updateDataManagerTestCase struct {
 	valid       bool
 }
 
+type archiveDataManagerTestCase struct {
+	dataManager *ArchiveDataManagerParam
+	valid       bool
+}
+
 func TestDataManagerValidate(t *testing.T) {
 	validAddressable := &Addressable{
 		StorageAddress: "http://somewhere",
@@ -68,6 +73,28 @@ func TestUpdateDataManagerValidate(t *testing.T) {
 		"valid": {&UpdateDataManagerParam{
 			Key:  "834f47c3-2d95-4ccd-a718-7143b64e61c0",
 			Name: "DataManager Name",
+		}, true},
+	}
+
+	for name, tc := range cases {
+		if tc.valid {
+			assert.NoError(t, tc.dataManager.Validate(), name+" should be valid")
+		} else {
+			assert.Error(t, tc.dataManager.Validate(), name+" should be invalid")
+		}
+	}
+}
+
+func TestArchiveDataManagerValidate(t *testing.T) {
+	cases := map[string]archiveDataManagerTestCase{
+		"empty": {&ArchiveDataManagerParam{}, false},
+		"invalidAlgoKey": {&ArchiveDataManagerParam{
+			Key:      "not36chars",
+			Archived: true,
+		}, false},
+		"valid": {&ArchiveDataManagerParam{
+			Key:      "834f47c3-2d95-4ccd-a718-7143b64e61c0",
+			Archived: true,
 		}, true},
 	}
 

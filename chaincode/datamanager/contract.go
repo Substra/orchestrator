@@ -164,3 +164,34 @@ func (s *SmartContract) UpdateDataManager(ctx ledger.TransactionContext, wrapper
 
 	return nil
 }
+
+// ArchiveDataManager archive an datamanager in world state
+// If the key does not exist, it will throw an error
+func (s *SmartContract) ArchiveDataManager(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetDataManagerService()
+
+	params := new(asset.ArchiveDataManagerParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
+		return err
+	}
+
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to extract tx creator")
+		return err
+	}
+
+	err = service.ArchiveDataManager(params, requester)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to archive DataManager")
+		return err
+	}
+
+	return nil
+}
