@@ -37,7 +37,6 @@ type TaskInputOptions struct {
 type TrainTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
-	ParentsRef     []string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -48,7 +47,6 @@ type TrainTaskOptions struct {
 type TestTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
-	ParentsRef     []string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -59,7 +57,6 @@ type TestTaskOptions struct {
 type PredictTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
-	ParentsRef     []string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -70,7 +67,6 @@ type PredictTaskOptions struct {
 type CompositeTaskOptions struct {
 	KeyRef         string
 	AlgoRef        string
-	ParentsRef     []string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -79,13 +75,12 @@ type CompositeTaskOptions struct {
 }
 
 type AggregateTaskOptions struct {
-	KeyRef     string
-	AlgoRef    string
-	ParentsRef []string
-	PlanRef    string
-	Worker     string
-	Inputs     []*TaskInputOptions
-	Outputs    map[string]*asset.NewComputeTaskOutput
+	KeyRef  string
+	AlgoRef string
+	PlanRef string
+	Worker  string
+	Inputs  []*TaskInputOptions
+	Outputs map[string]*asset.NewComputeTaskOutput
 }
 
 type ModelOptions struct {
@@ -109,7 +104,6 @@ func DefaultTestTaskOptions() *TestTaskOptions {
 	return &TestTaskOptions{
 		KeyRef:         DefaultTestTaskRef,
 		AlgoRef:        DefaultMetricAlgoRef,
-		ParentsRef:     []string{DefaultPredictTaskRef},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -146,16 +140,7 @@ func (o *TestTaskOptions) WithAlgoRef(ref string) *TestTaskOptions {
 	return o
 }
 
-func (o *TestTaskOptions) WithParentsRef(p ...string) *TestTaskOptions {
-	o.ParentsRef = p
-	return o
-}
-
 func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = ks.GetKey(ref)
-	}
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_TEST,
@@ -170,7 +155,6 @@ func DefaultTrainTaskOptions() *TrainTaskOptions {
 	return &TrainTaskOptions{
 		KeyRef:         DefaultTrainTaskRef,
 		AlgoRef:        DefaultSimpleAlgoRef,
-		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -200,11 +184,6 @@ func (o *TrainTaskOptions) WithPlanRef(ref string) *TrainTaskOptions {
 	return o
 }
 
-func (o *TrainTaskOptions) WithParentsRef(p ...string) *TrainTaskOptions {
-	o.ParentsRef = p
-	return o
-}
-
 func (o *TrainTaskOptions) WithAlgoRef(ref string) *TrainTaskOptions {
 	o.AlgoRef = ref
 	return o
@@ -225,12 +204,6 @@ func (o *TrainTaskOptions) SetOutputs(outputs map[string]*asset.NewComputeTaskOu
 }
 
 func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
-
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = ks.GetKey(ref)
-	}
-
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
@@ -245,7 +218,6 @@ func DefaultPredictTaskOptions() *PredictTaskOptions {
 	return &PredictTaskOptions{
 		KeyRef:         DefaultPredictTaskRef,
 		AlgoRef:        DefaultPredictAlgoRef,
-		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -265,11 +237,6 @@ func DefaultPredictTaskOptions() *PredictTaskOptions {
 	}
 }
 
-func (o *PredictTaskOptions) WithParentsRef(p ...string) *PredictTaskOptions {
-	o.ParentsRef = p
-	return o
-}
-
 func (o *PredictTaskOptions) WithAlgoRef(ref string) *PredictTaskOptions {
 	o.AlgoRef = ref
 	return o
@@ -286,11 +253,6 @@ func (o *PredictTaskOptions) WithDataSampleRef(ref string) *PredictTaskOptions {
 }
 
 func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = ks.GetKey(ref)
-	}
-
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_PREDICT,
@@ -305,7 +267,6 @@ func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 	return &CompositeTaskOptions{
 		KeyRef:         DefaultCompositeTaskRef,
 		AlgoRef:        DefaultCompositeAlgoRef,
-		ParentsRef:     []string{},
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -331,21 +292,12 @@ func (o *CompositeTaskOptions) WithKeyRef(ref string) *CompositeTaskOptions {
 	return o
 }
 
-func (o *CompositeTaskOptions) WithParentsRef(p ...string) *CompositeTaskOptions {
-	o.ParentsRef = p
-	return o
-}
-
 func (o *CompositeTaskOptions) WithAlgoRef(ref string) *CompositeTaskOptions {
 	o.AlgoRef = ref
 	return o
 }
 
 func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = ks.GetKey(ref)
-	}
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
@@ -358,12 +310,11 @@ func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 
 func DefaultAggregateTaskOptions() *AggregateTaskOptions {
 	return &AggregateTaskOptions{
-		KeyRef:     DefaultAggregateTaskRef,
-		AlgoRef:    DefaultAggregateAlgoRef,
-		ParentsRef: []string{},
-		PlanRef:    DefaultPlanRef,
-		Worker:     "MyOrg1MSP",
-		Inputs:     []*TaskInputOptions{},
+		KeyRef:  DefaultAggregateTaskRef,
+		AlgoRef: DefaultAggregateAlgoRef,
+		PlanRef: DefaultPlanRef,
+		Worker:  "MyOrg1MSP",
+		Inputs:  []*TaskInputOptions{},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
 			"model": {Permissions: &asset.NewPermissions{Public: true}},
 		},
@@ -372,11 +323,6 @@ func DefaultAggregateTaskOptions() *AggregateTaskOptions {
 
 func (o *AggregateTaskOptions) WithKeyRef(ref string) *AggregateTaskOptions {
 	o.KeyRef = ref
-	return o
-}
-
-func (o *AggregateTaskOptions) WithParentsRef(p ...string) *AggregateTaskOptions {
-	o.ParentsRef = p
 	return o
 }
 
@@ -391,10 +337,6 @@ func (o *AggregateTaskOptions) WithAlgoRef(ref string) *AggregateTaskOptions {
 }
 
 func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
-	parentKeys := make([]string, len(o.ParentsRef))
-	for i, ref := range o.ParentsRef {
-		parentKeys[i] = ks.GetKey(ref)
-	}
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
 		Category:       asset.ComputeTaskCategory_TASK_AGGREGATE,

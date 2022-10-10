@@ -41,6 +41,13 @@ func TestNewComputeTaskValidation(t *testing.T) {
 	}
 	invalidCategory := &NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
+		Category:       88,
+		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
+		Metadata:       map[string]string{"test": "indeed"},
+	}
+	unknownCategory := &NewComputeTask{
+		Key:            "867852b4-8419-4d52-8862-d5db823095be",
 		Category:       ComputeTaskCategory_TASK_UNKNOWN,
 		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
@@ -164,6 +171,7 @@ func TestNewComputeTaskValidation(t *testing.T) {
 	}{
 		"valid":                                 {valid: true, newTask: validTrainTask},
 		"invalid category":                      {valid: false, newTask: invalidCategory},
+		"unknown category":                      {valid: true, newTask: unknownCategory},
 		"missing algokey":                       {valid: false, newTask: missingAlgo},
 		"missing compute plan":                  {valid: false, newTask: missingComputePlan},
 		"missing input identifier":              {valid: false, newTask: missingInputIdentifier},

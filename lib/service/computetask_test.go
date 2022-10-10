@@ -262,8 +262,8 @@ func TestRegisterTrainTask(t *testing.T) {
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
 	as.AssertExpectations(t)
-	ps.AssertExpectations(t)
 	os.AssertExpectations(t)
+	ps.AssertExpectations(t)
 }
 
 func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {

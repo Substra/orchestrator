@@ -326,7 +326,7 @@ orchestrator:
       ## @param orchestrator.tls.mtls.enabled If true, enable TLS client verification
       ##
       enabled: false
-      ## @param orchestrator.tls.mtls.clientCACerts A map whose keys are names of the CAs, and values are a list of secrets containing CA certificates
+      ## @param orchestrator.tls.mtls.clientCACerts A map whose keys are names of the CAs, and values are a list of configmaps containing CA certificates
       ## Here you should provide the orchestrator clients ca certs if you are using a private certificate authority
       ## e.g:
       ## orchestrator-ca:

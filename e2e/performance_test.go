@@ -6,11 +6,11 @@ package e2e
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/e2e/client"
 	e2erequire "github.com/substra/orchestrator/e2e/require"
 	"github.com/substra/orchestrator/lib/asset"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
-	"github.com/stretchr/testify/require"
 )
 
 // TestRegisterPerformance registers a test task, start it, register its performance,
@@ -33,7 +33,6 @@ func TestRegisterPerformance(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithKeyRef("predictTask").
 		WithDataSampleRef("testds").
-		WithParentsRef(client.DefaultTrainTaskRef).
 		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	appClient.StartTask("predictTask")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predictTask").WithKeyRef("predictions").WithTaskOutput("predictions"))
@@ -44,7 +43,6 @@ func TestRegisterPerformance(t *testing.T) {
 		WithKeyRef("testTask").
 		WithAlgoRef("testmetric").
 		WithDataSampleRef("testds").
-		WithParentsRef("predictTask").
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predictTask", Identifier: "predictions"}))
 	appClient.StartTask("testTask")
 
@@ -91,7 +89,6 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithKeyRef("predictTask").
 		WithDataSampleRef("testds").
-		WithParentsRef(client.DefaultTrainTaskRef).
 		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	appClient.StartTask("predictTask")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predictTask").WithKeyRef("predictions").WithTaskOutput("predictions"))
@@ -101,7 +98,6 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().
 		WithKeyRef("testTask").
 		WithDataSampleRef("testds").
-		WithParentsRef("predictTask").
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predictTask", Identifier: "predictions"}).
 		WithAlgoRef("testmetric"))
 	appClient.StartTask("testTask")
@@ -132,7 +128,6 @@ func TestRegisterMultiplePerformancesForSameMetric(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithKeyRef("predictTask").
 		WithDataSampleRef("testds").
-		WithParentsRef(client.DefaultTrainTaskRef).
 		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	appClient.StartTask("predictTask")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("predictTask").WithKeyRef("predictions").WithTaskOutput("predictions"))
@@ -143,7 +138,6 @@ func TestRegisterMultiplePerformancesForSameMetric(t *testing.T) {
 		WithKeyRef("testTask").
 		WithAlgoRef("testmetric").
 		WithDataSampleRef("testds").
-		WithParentsRef("predictTask").
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predictTask", Identifier: "predictions"}))
 	appClient.StartTask("testTask")
 
@@ -178,7 +172,6 @@ func TestQueryPerformances(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithKeyRef("predictTask").
 		WithDataSampleRef("testds").
-		WithParentsRef(client.DefaultTrainTaskRef).
 		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}).
 		WithAlgoRef("predictAlgo"))
 	appClient.StartTask("predictTask")
@@ -189,7 +182,6 @@ func TestQueryPerformances(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().
 		WithKeyRef("testTask").
 		WithDataSampleRef("testds").
-		WithParentsRef("predictTask").
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predictTask", Identifier: "predictions"}).
 		WithAlgoRef("testmetric"))
 	appClient.StartTask("testTask")

@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/e2e/client"
 	e2erequire "github.com/substra/orchestrator/e2e/require"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -31,7 +31,6 @@ func TestEventTSFilter(t *testing.T) {
 	for i := 0; i < nbTasks; i++ {
 		newTasks = append(newTasks, client.DefaultTrainTaskOptions().
 			WithKeyRef(fmt.Sprintf("task%d", i)).
-			WithParentsRef(client.DefaultTrainTaskRef).
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 	appClient.RegisterTasks(newTasks...)
