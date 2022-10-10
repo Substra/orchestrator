@@ -411,11 +411,6 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
-	logsPermissions, err := s.getLogsPermission(owner, parentTasks, input.Inputs, algo.Inputs)
-	if err != nil {
-		return nil, err
-	}
-
 	task := &asset.ComputeTask{
 		Key:            input.Key,
 		AlgoKey:        algo.Key,
