@@ -42,9 +42,6 @@ func TestRegisterPerformance(t *testing.T) {
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Worker:   "test",
 		Category: asset.ComputeTaskCategory_TASK_TEST,
-		Data: &asset.ComputeTask_Test{
-			Test: &asset.TestTaskData{},
-		},
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
 		},
@@ -143,9 +140,6 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 		Status:   asset.ComputeTaskStatus_STATUS_DOING,
 		Worker:   "test",
 		Category: asset.ComputeTaskCategory_TASK_TEST,
-		Data: &asset.ComputeTask_Test{
-			Test: &asset.TestTaskData{},
-		},
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
 		},

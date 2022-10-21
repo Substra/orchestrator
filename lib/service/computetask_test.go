@@ -19,21 +19,20 @@ var newPerms = &asset.NewPermissions{
 	AuthorizedIds: []string{"testOwner"},
 }
 
+var (
+	dataManagerKey = "2837f0b7-cb0e-4a98-9df2-68c116f65ad6"
+	dataSampleKeys = []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"}
+)
+
 var newTrainTask = &asset.NewComputeTask{
 	Key:            "867852b4-8419-4d52-8862-d5db823095be",
 	Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 	AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
 	ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
-	Data: &asset.NewComputeTask_Train{
-		Train: &asset.NewTrainTaskData{
-			DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
-			DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
-		},
-	},
 	Inputs: []*asset.ComputeTaskInput{
-		{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "85e39014-ae2e-4fa4-b05b-4437076a4fa7"}},
-		{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"}},
-		{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6"}},
+		{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[0]}},
+		{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[1]}},
+		{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataManagerKey}},
 	},
 	Outputs: map[string]*asset.NewComputeTaskOutput{
 		"model": {
@@ -159,7 +158,6 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	cps := new(MockComputePlanAPI)
 	dms := new(MockDataManagerAPI)
-	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
@@ -169,7 +167,6 @@ func TestRegisterTrainTask(t *testing.T) {
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
-	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
@@ -184,9 +181,6 @@ func TestRegisterTrainTask(t *testing.T) {
 	dbal.On("GetExistingComputeTaskKeys", []string{newTrainTask.Key}).Once().Return([]string{}, nil)
 	dbal.On("GetExistingComputeTaskKeys", []string{}).Once().Return([]string{}, nil)
 
-	dataManagerKey := newTrainTask.Data.(*asset.NewComputeTask_Train).Train.DataManagerKey
-	dataSampleKeys := newTrainTask.Data.(*asset.NewComputeTask_Train).Train.DataSampleKeys
-
 	dataManager := &asset.DataManager{
 		Key:   dataManagerKey,
 		Owner: "dm-owner",
@@ -194,16 +188,13 @@ func TestRegisterTrainTask(t *testing.T) {
 			Process:  &asset.Permission{Public: true},
 			Download: &asset.Permission{Public: true},
 		},
-		LogsPermission: &asset.Permission{Public: true},
+		LogsPermission: &asset.Permission{Public: false, AuthorizedIds: []string{"org1"}},
 	}
 	os.On("GetOrganization", dataManager.Owner).Once().Return(&asset.Organization{Id: dataManager.Owner}, nil)
 
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
-	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Twice().Return(nil)
-
-	// Cannot train on test data
-	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
 	algo := &asset.Algo{
 		Key: "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
@@ -242,12 +233,6 @@ func TestRegisterTrainTask(t *testing.T) {
 		Status:         asset.ComputeTaskStatus_STATUS_TODO,
 		ParentTaskKeys: []string{},
 		Worker:         dataManager.Owner,
-		Data: &asset.ComputeTask_Train{
-			Train: &asset.TrainTaskData{
-				DataManagerKey: dataManagerKey,
-				DataSampleKeys: dataSampleKeys,
-			},
-		},
 		Inputs:         newTrainTask.Inputs,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
 		LogsPermission: dataManager.LogsPermission,
@@ -298,9 +283,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Download: &asset.Permission{AuthorizedIds: []string{"testOwner"}},
 	}
 
-	dataManagerKey := "2837f0b7-cb0e-4a98-9df2-68c116f65ad6"
-	dataSampleKeys := []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"}
-
 	newTask := &asset.NewComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-ffffffffffff",
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
@@ -322,12 +304,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 			{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataManagerKey}},
 			{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[0]}},
 			{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[1]}},
-		},
-		Data: &asset.NewComputeTask_Composite{
-			Composite: &asset.NewCompositeTrainTaskData{
-				DataManagerKey: dataManagerKey,
-				DataSampleKeys: dataSampleKeys,
-			},
 		},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
 			"shared": {Permissions: sharedPermsNew},
@@ -360,7 +336,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
-		Data:           &asset.ComputeTask_Composite{Composite: &asset.CompositeTrainTaskData{}},
 		AlgoKey:        algoParent1.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
@@ -372,7 +347,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
-		Data:           &asset.ComputeTask_Composite{Composite: &asset.CompositeTrainTaskData{}},
 		AlgoKey:        algoParent2.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
@@ -386,7 +360,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	cps := new(MockComputePlanAPI)
 	dms := new(MockDataManagerAPI)
-	dss := new(MockDataSampleAPI)
 	ps := new(MockPermissionAPI)
 	as := new(MockAlgoAPI)
 	ts := new(MockTimeAPI)
@@ -396,7 +369,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	provider.On("GetEventService").Return(es)
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
-	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetPermissionService").Return(ps)
 	provider.On("GetAlgoService").Return(as)
 	provider.On("GetTimeService").Return(ts)
@@ -431,10 +403,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	// Checking datamanager permissions
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
 	// Checked twice while we still deal with task specific data
-	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Twice().Return(nil)
-
-	// Cannot train on test data
-	dss.On("ContainsTestSample", dataSampleKeys).Once().Return(false, nil)
+	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
 	// create permissions
 	ps.On("CreatePermissions", "testOwner", sharedPermsNew).Return(sharedPerms, nil)
@@ -474,14 +443,8 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		ParentTaskKeys: []string{parent1.Key, parent2.Key},
 		Worker:         dataManager.Owner,
 		Rank:           1,
-		Data: &asset.ComputeTask_Composite{
-			Composite: &asset.CompositeTrainTaskData{
-				DataManagerKey: dataManagerKey,
-				DataSampleKeys: dataSampleKeys,
-			},
-		},
-		CreationDate: timestamppb.New(time.Unix(1337, 0)),
-		Inputs:       newTask.Inputs,
+		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
+		Inputs:         newTask.Inputs,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
 			"local":  {Permissions: localPerms},
@@ -508,7 +471,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	es.AssertExpectations(t)
 	ts.AssertExpectations(t)
 	ps.AssertExpectations(t)
-	dss.AssertExpectations(t)
 	dms.AssertExpectations(t)
 	cps.AssertExpectations(t)
 }
@@ -529,12 +491,6 @@ func TestRegisterFailedTask(t *testing.T) {
 				OutputIdentifier: "test",
 			}}},
 		},
-		Data: &asset.NewComputeTask_Train{
-			Train: &asset.NewTrainTaskData{
-				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
-				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
-			},
-		},
 	}
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
@@ -553,9 +509,6 @@ func TestRegisterFailedTask(t *testing.T) {
 	parentTask := &asset.ComputeTask{
 		Status: asset.ComputeTaskStatus_STATUS_FAILED,
 		Key:    "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
-		Data: &asset.ComputeTask_Train{
-			Train: &asset.TrainTaskData{},
-		},
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {Permissions: parentPerms},
 		},
@@ -594,12 +547,6 @@ func TestRegisterDeletedModel(t *testing.T) {
 				},
 			}},
 		},
-		Data: &asset.NewComputeTask_Train{
-			Train: &asset.NewTrainTaskData{
-				DataManagerKey: "2837f0b7-cb0e-4a98-9df2-68c116f65ad6",
-				DataSampleKeys: []string{"85e39014-ae2e-4fa4-b05b-4437076a4fa7", "8a90a6e3-2e7e-4c9d-9ed3-47b99942d0a8"},
-			},
-		},
 	}
 
 	provider.On("GetComputeTaskDBAL").Return(dbal)
@@ -620,9 +567,6 @@ func TestRegisterDeletedModel(t *testing.T) {
 		Status:         asset.ComputeTaskStatus_STATUS_DONE,
 		Key:            "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db82309fff",
-		Data: &asset.ComputeTask_Train{
-			Train: &asset.TrainTaskData{},
-		},
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {Permissions: parentPerms},
 		},
@@ -645,169 +589,6 @@ func TestRegisterDeletedModel(t *testing.T) {
 	dbal.AssertExpectations(t)
 	cps.AssertExpectations(t)
 	ms.AssertExpectations(t)
-	provider.AssertExpectations(t)
-}
-
-func TestSetPredictData(t *testing.T) {
-	taskInput := &asset.NewComputeTask{
-		AlgoKey: "algoUuid",
-	}
-	specificInput := &asset.NewPredictTaskData{
-		DataManagerKey: "dmUuid",
-		DataSampleKeys: []string{"ds1", "ds2", "ds3"},
-	}
-	dataManager := &asset.DataManager{Key: "dmUuid", Owner: "dmOwner",
-		Permissions: &asset.Permissions{
-			Process: &asset.Permission{
-				Public:        false,
-				AuthorizedIds: []string{"org1"},
-			},
-			Download: &asset.Permission{
-				Public:        false,
-				AuthorizedIds: []string{"org1"},
-			},
-		}}
-
-	task := &asset.ComputeTask{
-		AlgoKey:  "1814e4af-0ca7-4476-a956-a486ec37de34",
-		Owner:    "org1",
-		Category: asset.ComputeTaskCategory_TASK_PREDICT,
-	}
-
-	dms := new(MockDataManagerAPI)
-	provider := newMockedProvider()
-	provider.On("GetDataManagerService").Return(dms)
-
-	dms.On("GetDataManager", "dmUuid").Once().Return(dataManager, nil)
-	dms.On("CheckDataManager", dataManager, specificInput.DataSampleKeys, task.Owner).Once().Return(nil)
-
-	service := NewComputeTaskService(provider)
-
-	err := service.setPredictData(taskInput, specificInput, task)
-	assert.NoError(t, err)
-	provider.AssertExpectations(t)
-	dms.AssertExpectations(t)
-}
-
-func TestSetCompositeData(t *testing.T) {
-	taskInput := &asset.NewComputeTask{
-		AlgoKey: "algoUuid",
-	}
-	specificInput := &asset.NewCompositeTrainTaskData{
-		DataManagerKey: "dmUuid",
-		DataSampleKeys: []string{"ds1", "ds2", "ds3"},
-	}
-
-	task := &asset.ComputeTask{
-		Owner:    "org1",
-		Category: asset.ComputeTaskCategory_TASK_COMPOSITE,
-		AlgoKey:  "d31cb674-5bc0-474c-9583-5799dfa962f1",
-	}
-
-	dms := new(MockDataManagerAPI)
-	dss := new(MockDataSampleAPI)
-	provider := newMockedProvider()
-	provider.On("GetDataSampleService").Return(dss)
-	provider.On("GetDataManagerService").Return(dms)
-
-	// Checking datamanager permissions
-	dataManager := &asset.DataManager{Key: "dmUuid", Owner: "dmOwner"}
-	dms.On("GetDataManager", "dmUuid").Once().Return(dataManager, nil)
-	dms.On("CheckDataManager", dataManager, specificInput.DataSampleKeys, task.Owner).Once().Return(nil)
-
-	dss.On("ContainsTestSample", specificInput.DataSampleKeys).Once().Return(false, nil)
-
-	service := NewComputeTaskService(provider)
-
-	err := service.setCompositeData(taskInput, specificInput, task)
-	assert.NoError(t, err)
-
-	assert.Equal(t, "dmUuid", task.Data.(*asset.ComputeTask_Composite).Composite.DataManagerKey)
-
-	dms.AssertExpectations(t)
-	dss.AssertExpectations(t)
-	provider.AssertExpectations(t)
-}
-
-func TestSetAggregateData(t *testing.T) {
-	ns := new(MockOrganizationAPI)
-	provider := newMockedProvider()
-	provider.On("GetOrganizationService").Return(ns)
-	// Use the real permission service
-	provider.On("GetPermissionService").Return(NewPermissionService(provider))
-
-	taskInput := &asset.NewComputeTask{
-		AlgoKey: "algoUuid",
-	}
-	specificInput := &asset.NewAggregateTrainTaskData{}
-	task := &asset.ComputeTask{
-		Owner:    "org1",
-		Category: asset.ComputeTaskCategory_TASK_AGGREGATE,
-		AlgoKey:  "74804c66-b468-423c-a1ba-61b07030485f",
-	}
-
-	parents := []*asset.ComputeTask{
-		{
-
-			Data:           &asset.ComputeTask_Composite{Composite: &asset.CompositeTrainTaskData{}},
-			LogsPermission: &asset.Permission{Public: false, AuthorizedIds: []string{"org2"}},
-		},
-		{
-			Data:           &asset.ComputeTask_Composite{Composite: &asset.CompositeTrainTaskData{}},
-			LogsPermission: &asset.Permission{Public: false, AuthorizedIds: []string{"org4"}},
-		},
-	}
-
-	// used by permissions service
-	ns.On("GetAllOrganizations").Once().Return([]*asset.Organization{{Id: "org1"}, {Id: "org2"}, {Id: "org3"}}, nil)
-
-	service := NewComputeTaskService(provider)
-	err := service.setAggregateData(taskInput, specificInput, task, parents)
-
-	assert.NoError(t, err)
-
-	assert.ElementsMatch(t, task.LogsPermission.AuthorizedIds, []string{"org1", "org2", "org4"})
-
-	ns.AssertExpectations(t)
-	provider.AssertExpectations(t)
-}
-
-func TestSetTestData(t *testing.T) {
-	specificInput := &asset.NewTestTaskData{
-		DataManagerKey: "cdmKey",
-		DataSampleKeys: []string{"sample1", "sample2"},
-	}
-	algoKey := "86652d5b-c730-4878-86d8-276fe3a47627"
-	task := &asset.ComputeTask{
-		AlgoKey:  algoKey,
-		Owner:    "org1",
-		Category: asset.ComputeTaskCategory_TASK_TEST,
-	}
-	parents := []*asset.ComputeTask{
-		{
-			AlgoKey:        algoKey,
-			ComputePlanKey: "cpKey",
-			Rank:           2,
-		},
-	}
-
-	dms := new(MockDataManagerAPI)
-	provider := newMockedProvider()
-	provider.On("GetDataManagerService").Return(dms)
-	service := NewComputeTaskService(provider)
-
-	// single metric
-	dataManager := &asset.DataManager{Key: "cdmKey", Permissions: &asset.Permissions{Process: &asset.Permission{Public: true}}, Owner: "dmowner"}
-	dms.On("GetDataManager", "cdmKey").Once().Return(dataManager, nil)
-	dms.On("CheckDataManager", dataManager, specificInput.DataSampleKeys, task.Owner).Once().Return(nil)
-
-	err := service.setTestData(specificInput, task, parents)
-	assert.NoError(t, err)
-	assert.Equal(t, parents[0].ComputePlanKey, task.ComputePlanKey)
-	assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataManagerKey, specificInput.DataManagerKey)
-	assert.Equal(t, task.Data.(*asset.ComputeTask_Test).Test.DataSampleKeys, specificInput.DataSampleKeys)
-
-	dms.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 

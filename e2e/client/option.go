@@ -146,14 +146,8 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 		Category:       asset.ComputeTaskCategory_TASK_TEST,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
-		Data: &asset.NewComputeTask_Test{
-			Test: &asset.NewTestTaskData{
-				DataManagerKey: ks.GetKey(o.DataManagerRef),
-				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
-			},
-		},
-		Inputs:  GetNewTaskInputs(ks, o.Inputs),
-		Outputs: o.Outputs,
+		Inputs:         GetNewTaskInputs(ks, o.Inputs),
+		Outputs:        o.Outputs,
 	}
 }
 
@@ -215,14 +209,8 @@ func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
-		Data: &asset.NewComputeTask_Train{
-			Train: &asset.NewTrainTaskData{
-				DataManagerKey: ks.GetKey(o.DataManagerRef),
-				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
-			},
-		},
-		Inputs:  GetNewTaskInputs(ks, o.Inputs),
-		Outputs: o.Outputs,
+		Inputs:         GetNewTaskInputs(ks, o.Inputs),
+		Outputs:        o.Outputs,
 	}
 }
 
@@ -270,14 +258,8 @@ func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 		Category:       asset.ComputeTaskCategory_TASK_PREDICT,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
-		Data: &asset.NewComputeTask_Predict{
-			Predict: &asset.NewPredictTaskData{
-				DataManagerKey: ks.GetKey(o.DataManagerRef),
-				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
-			},
-		},
-		Inputs:  GetNewTaskInputs(ks, o.Inputs),
-		Outputs: o.Outputs,
+		Inputs:         GetNewTaskInputs(ks, o.Inputs),
+		Outputs:        o.Outputs,
 	}
 }
 
@@ -321,14 +303,8 @@ func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
-		Data: &asset.NewComputeTask_Composite{
-			Composite: &asset.NewCompositeTrainTaskData{
-				DataManagerKey: ks.GetKey(o.DataManagerRef),
-				DataSampleKeys: []string{ks.GetKey(o.DataSampleRef)},
-			},
-		},
-		Inputs:  GetNewTaskInputs(ks, o.Inputs),
-		Outputs: o.Outputs,
+		Inputs:         GetNewTaskInputs(ks, o.Inputs),
+		Outputs:        o.Outputs,
 	}
 }
 
@@ -367,11 +343,8 @@ func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Worker:         o.Worker,
-		Data: &asset.NewComputeTask_Aggregate{
-			Aggregate: &asset.NewAggregateTrainTaskData{},
-		},
-		Inputs:  GetNewTaskInputs(ks, o.Inputs),
-		Outputs: o.Outputs,
+		Inputs:         GetNewTaskInputs(ks, o.Inputs),
+		Outputs:        o.Outputs,
 	}
 }
 

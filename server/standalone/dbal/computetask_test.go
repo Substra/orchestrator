@@ -14,25 +14,9 @@ import (
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func TestToComputeTask(t *testing.T) {
-	taskData := &asset.ComputeTask_Test{
-		Test: &asset.TestTaskData{
-			DataManagerKey: "dmkey",
-			DataSampleKeys: []string{"dskey1", "dskey2"},
-		},
-	}
-
-	marshalledTaskData, err := protojson.Marshal(&asset.ComputeTask{
-		Data: taskData,
-	})
-
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when marshalling task data", err)
-	}
-
 	algo := sqlAlgo{
 		Key:         "algo_key",
 		Name:        "algo_name",
@@ -61,7 +45,6 @@ func TestToComputeTask(t *testing.T) {
 			Public:        false,
 			AuthorizedIds: []string{},
 		},
-		Data:     marshalledTaskData,
 		Metadata: map[string]string{},
 	}
 
@@ -79,16 +62,15 @@ func TestToComputeTask(t *testing.T) {
 	assert.Equal(t, ct.CreationDate, res.CreationDate.AsTime())
 	assert.Equal(t, &ct.LogsPermission, res.LogsPermission)
 	assert.Equal(t, ct.Metadata, res.Metadata)
-	assert.Equal(t, taskData, res.Data)
 }
 
 func makeTaskRows(taskKeys ...string) *pgxmock.Rows {
 	res := pgxmock.NewRows([]string{"key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-		"logs_permission", "task_data", "metadata", "algo_key", "parent_task_keys"})
+		"logs_permission", "metadata", "algo_key", "parent_task_keys"})
 
 	for _, key := range taskKeys {
 		res = res.AddRow(key, "cp_key", "STATUS_WAITING", "TASK_TRAIN", "worker", "owner", int32(0), time.Unix(0, 100),
-			[]byte("{}"), []byte("{}"), map[string]string{}, "algo_key", []string{})
+			[]byte("{}"), map[string]string{}, "algo_key", []string{})
 	}
 
 	return res
@@ -270,7 +252,7 @@ func TestAddComputeTask(t *testing.T) {
 
 	// Insert task
 	mock.ExpectCopyFrom(`"compute_tasks"`,
-		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"}).
+		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "metadata"}).
 		WillReturnResult(1)
 	// Insert parents relationships
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(2)
@@ -352,7 +334,7 @@ func TestAddComputeTasks(t *testing.T) {
 
 	// Insert task
 	mock.ExpectCopyFrom(`"compute_tasks"`,
-		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "task_data", "metadata"}).
+		[]string{"key", "channel", "category", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "metadata"}).
 		WillReturnResult(2)
 	// Insert parents relationships
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(3)

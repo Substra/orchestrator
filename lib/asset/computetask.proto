@@ -56,8 +56,8 @@ message NewComputeTaskOutput {
 // ComputeTask is a computation step in a ComputePlan.
 // It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
 message ComputeTask {
-  reserved 3;
-  reserved "algo";
+  reserved 3, 12, 13, 14, 15, 18;
+  reserved "algo", "data", "test", "train", "composite", "aggregate", "predict";
 
   string key = 1;
   ComputeTaskCategory category = 2;
@@ -70,13 +70,6 @@ message ComputeTask {
   string worker = 9;
   google.protobuf.Timestamp creation_date = 10;
   Permission logs_permission = 11;
-  oneof data {
-    TestTaskData test = 12;
-    TrainTaskData train = 13;
-    CompositeTrainTaskData composite = 14;
-    AggregateTrainTaskData aggregate = 15;
-    PredictTaskData predict = 18;
-  }
   map<string, string> metadata = 16;
   repeated ComputeTaskInput inputs = 17;
   map<string, ComputeTaskOutput> outputs = 19;
@@ -84,92 +77,17 @@ message ComputeTask {
 }
 
 message NewComputeTask {
-  reserved 5;
-  reserved "parent_task_keys";
+  reserved 5, 12, 13, 14, 15, 18;
+  reserved "parent_task_keys", "data", "test", "train", "composite", "aggregate", "predict";
 
   string key = 1;
   ComputeTaskCategory category = 2;
   string algo_key = 3;
   string compute_plan_key = 4;
   string worker = 6;
-  oneof data {
-    NewTestTaskData test = 12;
-    NewTrainTaskData train = 13;
-    NewCompositeTrainTaskData composite = 14;
-    NewAggregateTrainTaskData aggregate = 15;
-    NewPredictTaskData predict = 18;
-  }
   map<string, string> metadata = 16;
   repeated ComputeTaskInput inputs = 17;
   map<string, NewComputeTaskOutput> outputs = 19;
-}
-
-message TrainTaskData {
-  reserved 4;
-  reserved "model_permissions";
-
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
-}
-
-message NewTrainTaskData {
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
-}
-
-message PredictTaskData {
-  reserved 3;
-  reserved "prediction_permissions";
-
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
-}
-
-message NewPredictTaskData {
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
-}
-
-message TestTaskData {
-  string data_manager_key = 1;
-  reserved 3;
-  reserved "metric_keys";
-
-  repeated string data_sample_keys = 2;
-}
-
-message NewTestTaskData {
-  reserved 3;
-  reserved "metric_keys";
-
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
-}
-
-message CompositeTrainTaskData {
-  reserved 5, 6;
-  reserved "head_permissions", "trunk_permissions";
-
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
-}
-
-message NewCompositeTrainTaskData {
-  reserved 4;
-  reserved "trunk_permissions";
-
-  string data_manager_key = 1;
-  repeated string data_sample_keys = 2;
-}
-
-message AggregateTrainTaskData {
-  reserved 2;
-  reserved "model_permissions";
-}
-
-message NewAggregateTrainTaskData {
-  reserved 2;
-  reserved "worker";
 }
 
 message RegisterTasksParam {
