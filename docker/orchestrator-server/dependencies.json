@@ -1,7 +1,7 @@
 [
   {
     "name": "git",
-    "version": "2.36.2-r0"
+    "version": "2.36.3-r0"
   },
   {
     "name": "make",
@@ -9,10 +9,10 @@
   },
   {
     "name": "protoc",
-    "version": "3.18.1-r2"
+    "version": "3.18.1-r3"
   },
   {
     "name": "protobuf-dev",
-    "version": "3.18.1-r2"
+    "version": "3.18.1-r3"
   }
 ]
