@@ -27,6 +27,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: "chore(deps): update apt/apk dependencies in Dockerfile ${{ matrix.dockerfile }}"
+          signoff: true
           branch: chore/update-dockerfile-dependencies-${{ matrix.dockerfile }}
           title: "chore(deps): update apt/apk dependencies in Dockerfile ${{ matrix.dockerfile }}"
           body: Updated dependencies.json
