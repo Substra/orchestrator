@@ -82,7 +82,7 @@ jobs:
 
       - name: Authenticate to Google Cloud
         if: steps.changed_migrations.outputs.any_changed == 'true' || github.ref_type == 'tag'
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GCP_BUCKET_SECRET }}'
 
