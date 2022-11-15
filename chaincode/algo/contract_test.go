@@ -9,7 +9,7 @@ import (
 	"github.com/substra/orchestrator/chaincode/communication"
 	"github.com/substra/orchestrator/chaincode/ledger"
 	testHelper "github.com/substra/orchestrator/chaincode/testing"
-	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/asset"emptu
 	"github.com/substra/orchestrator/lib/common"
 	"github.com/substra/orchestrator/lib/service"
 )
