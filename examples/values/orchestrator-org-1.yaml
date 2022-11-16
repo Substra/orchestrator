@@ -11,7 +11,7 @@ orchestrator:
         - "orchestrator-org-1-server.org-1.svc.cluster.local"
       duration: 2160h
       issuer: substra-issuer
-    enabled: true
+    enabled: false
     secrets:
       pair: orchestrator-tls-server-pair
     cacert: orchestrator-tls-cacert
