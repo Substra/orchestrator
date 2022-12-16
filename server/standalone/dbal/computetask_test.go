@@ -104,7 +104,7 @@ func TestTaskFilterToQuery(t *testing.T) {
 		"empty":         {&asset.TaskQueryFilter{}, "", nil},
 		"single filter": {&asset.TaskQueryFilter{Worker: "myorganization"}, "worker = $1", []interface{}{"myorganization"}},
 		"two filter":    {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE}, "worker = $1 AND status = $2", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String()}},
-		"three filter":  {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE, AlgoKey: "c14b4e4b-132b-4321-972d-b1506f82e5cd"}, "worker = $1 AND status = $2 AND algo_key = $3", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String(), "c14b4e4b-132b-4321-972d-b1506f82e5cd"}},
+		"three filter":  {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE, AlgoKey: "test-key"}, "worker = $1 AND status = $2 AND algo_key = $3", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String(), "test-key"}},
 	}
 
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
