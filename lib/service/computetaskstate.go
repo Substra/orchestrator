@@ -184,7 +184,7 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 	}
 
 	// loop over parent, only change status if all parents are DONE
-	for _, parentKey := range child.ParentTaskKeys {
+	for _, parentKey := range GetParentTaskKeys(child.Inputs) {
 		if parentKey == triggeringParent.Key {
 			// We already know this one is DONE
 			continue

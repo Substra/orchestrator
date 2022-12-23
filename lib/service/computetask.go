@@ -304,7 +304,7 @@ func (s *ComputeTaskService) sortTasks(newTasks []*asset.NewComputeTask, existin
 		unsortedParentsCount[unsortedTasks[i].Key] = 0
 		// We count the number of parents that are not already registered in the persistence layer
 
-		for _, parent := range getParentTaskKeys(unsortedTasks[i].Inputs) {
+		for _, parent := range GetParentTaskKeys(unsortedTasks[i].Inputs) {
 			if !utils.SliceContains(existingTasks, parent) {
 				unsortedParentsCount[unsortedTasks[i].Key]++
 			}
@@ -326,7 +326,7 @@ func (s *ComputeTaskService) sortTasks(newTasks []*asset.NewComputeTask, existin
 		sortedTasksCount++
 
 		for i := 0; i < len(unsortedTasks); i++ {
-			for _, key := range getParentTaskKeys(unsortedTasks[i].Inputs) {
+			for _, key := range GetParentTaskKeys(unsortedTasks[i].Inputs) {
 				if key == currentTask.Key {
 					unsortedParentsCount[unsortedTasks[i].Key]--
 					if unsortedParentsCount[unsortedTasks[i].Key] == 0 {
@@ -365,7 +365,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, orcerrors.NewPermissionDenied("Cannot register tasks to a compute plan you don't own")
 	}
 
-	parentTasks, err := s.getRegisteredTasks(getParentTaskKeys(input.Inputs)...)
+	parentTasks, err := s.getRegisteredTasks(GetParentTaskKeys(input.Inputs)...)
 	if err != nil {
 		return nil, err
 	}
@@ -420,7 +420,6 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		Metadata:       input.Metadata,
 		Status:         status,
 		Rank:           getRank(parentTasks),
-		ParentTaskKeys: getParentTaskKeys(input.Inputs),
 		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
 		Inputs:         input.Inputs,
 		Outputs:        outputs,
@@ -712,7 +711,7 @@ func (s *ComputeTaskService) getExistingParentKeys(tasks []*asset.NewComputeTask
 	parents := []string{}
 
 	for _, task := range tasks {
-		parents = append(parents, getParentTaskKeys(task.Inputs)...)
+		parents = append(parents, GetParentTaskKeys(task.Inputs)...)
 	}
 
 	return s.GetComputeTaskDBAL().GetExistingComputeTaskKeys(parents)
@@ -910,8 +909,8 @@ func (s *ComputeTaskService) getTaskOutputCounter(taskKey string) (persistence.C
 	return s.GetComputeTaskDBAL().CountComputeTaskRegisteredOutputs(taskKey)
 }
 
-// getParentTaskKeys returns the parent task keys based on task inputs
-func getParentTaskKeys(inputs []*asset.ComputeTaskInput) []string {
+// GetParentTaskKeys returns the parent task keys based on task inputs
+func GetParentTaskKeys(inputs []*asset.ComputeTaskInput) []string {
 	seen := make(map[string]struct{})
 	parentKeys := []string{}
 	for _, input := range inputs {

@@ -56,15 +56,13 @@ message NewComputeTaskOutput {
 // ComputeTask is a computation step in a ComputePlan.
 // It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
 message ComputeTask {
-  reserved 3, 12, 13, 14, 15, 18;
-  reserved "algo", "data", "test", "train", "composite", "aggregate", "predict";
+  reserved 3, 6, 12, 13, 14, 15, 18;
+  reserved "algo", "data", "test", "train", "composite", "aggregate", "parent_task_keys", "predict";
 
   string key = 1;
   ComputeTaskCategory category = 2;
   string owner = 4;
   string compute_plan_key = 5;
-  // Keys of parent ComputeTasks
-  repeated string parent_task_keys = 6;
   int32 rank = 7;
   ComputeTaskStatus status = 8; // mutable
   string worker = 9;
