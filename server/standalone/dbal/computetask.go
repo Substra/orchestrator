@@ -208,7 +208,7 @@ func (d *DBAL) GetComputeTask(key string) (*asset.ComputeTask, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
 			"logs_permission", "metadata", "algo_key").
-		From("expanded_compute_tasks").
+		From("compute_tasks").
 		Where(sq.Eq{"channel": d.channel, "key": key})
 
 	row, err := d.queryRow(stmt)
@@ -245,7 +245,7 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
 			"logs_permission", "metadata", "algo_key").
-		From("expanded_compute_tasks t").
+		From("compute_tasks t").
 		Join("compute_task_parents p ON t.key = p.child_task_key").
 		Where(sq.Eq{"t.channel": d.channel, "p.parent_task_key": key}).
 		OrderByClause("p.position ASC")
@@ -346,7 +346,7 @@ func (d *DBAL) queryBaseComputeTasks(pagination *common.Pagination, filterer fun
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
 			"logs_permission", "metadata", "algo_key").
-		From("expanded_compute_tasks").
+		From("compute_tasks").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key")
 

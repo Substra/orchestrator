@@ -131,7 +131,7 @@ func TestGetTasks(t *testing.T) {
 
 	keys := []string{"93733214-02b6-4d69-90a8-4e3518a63470", "32f7be0b-b432-41e5-8225-8c53580ccc58"}
 
-	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+	mock.ExpectQuery(`SELECT .* FROM compute_tasks`).
 		WithArgs(testChannel, keys[0], keys[1]).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
@@ -161,7 +161,7 @@ func TestGetNoTask(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+	mock.ExpectQuery(`SELECT .* FROM compute_tasks`).
 		WithArgs(testChannel, "uuid").
 		WillReturnError(pgx.ErrNoRows)
 
@@ -187,7 +187,7 @@ func TestQueryComputeTasks(t *testing.T) {
 
 	keys := []string{"93733214-02b6-4d69-90a8-4e3518a63470", "32f7be0b-b432-41e5-8225-8c53580ccc58"}
 
-	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+	mock.ExpectQuery(`SELECT .* FROM compute_tasks`).
 		WithArgs(testChannel, "testWorker", asset.ComputeTaskStatus_STATUS_DONE.String()).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
@@ -357,7 +357,7 @@ func TestQueryComputeTasksNilFilter(t *testing.T) {
 
 	keys := []string{"93733214-02b6-4d69-90a8-4e3518a63470", "32f7be0b-b432-41e5-8225-8c53580ccc58"}
 
-	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+	mock.ExpectQuery(`SELECT .* FROM compute_tasks`).
 		WithArgs(testChannel).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
