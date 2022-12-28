@@ -10,15 +10,6 @@ import "common.proto";
 
 option go_package = "github.com/substra/orchestrator/lib/asset";
 
-enum ComputeTaskCategory {
-  TASK_UNKNOWN = 0;
-  TASK_TRAIN = 1;
-  TASK_AGGREGATE = 2;
-  TASK_COMPOSITE = 3;
-  TASK_TEST = 4;
-  TASK_PREDICT = 5;
-}
-
 enum ComputeTaskStatus {
   STATUS_UNKNOWN = 0;
   STATUS_WAITING = 1;
@@ -56,11 +47,10 @@ message NewComputeTaskOutput {
 // ComputeTask is a computation step in a ComputePlan.
 // It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
 message ComputeTask {
-  reserved 3, 12, 13, 14, 15, 18;
-  reserved "algo", "data", "test", "train", "composite", "aggregate", "predict";
+  reserved 2, 3, 12, 13, 14, 15, 18;
+  reserved "category", "algo", "data", "test", "train", "composite", "aggregate", "predict";
 
   string key = 1;
-  ComputeTaskCategory category = 2;
   string owner = 4;
   string compute_plan_key = 5;
   // Keys of parent ComputeTasks
@@ -77,11 +67,10 @@ message ComputeTask {
 }
 
 message NewComputeTask {
-  reserved 5, 12, 13, 14, 15, 18;
-  reserved "parent_task_keys", "data", "test", "train", "composite", "aggregate", "predict";
+  reserved 2, 5, 12, 13, 14, 15, 18;
+  reserved "category", "parent_task_keys", "data", "test", "train", "composite", "aggregate", "predict";
 
   string key = 1;
-  ComputeTaskCategory category = 2;
   string algo_key = 3;
   string compute_plan_key = 4;
   string worker = 6;
@@ -99,9 +88,11 @@ message RegisterTasksResponse {
 }
 
 message TaskQueryFilter {
+  reserved 3;
+  reserved "category";
+
   string worker = 1;
   ComputeTaskStatus status = 2;
-  ComputeTaskCategory category = 3;
   string compute_plan_key = 4;
   string algo_key = 5;
 }

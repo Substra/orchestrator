@@ -1,10 +1,6 @@
 erDiagram
     DataManager }|--o{ DataSample : opens
     ComputeTask }o--|| ComputePlan : "belongs to"
-    ComputeTask {
-        ComputeTaskCategory category
-    }
-
     ComputeTask }o--|| Algo : execute
     Algo {}
 
