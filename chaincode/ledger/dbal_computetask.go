@@ -38,6 +38,12 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 	if err != nil {
 		return err
 	}
+	for _, parentTask := range t.ParentTaskKeys {
+		err = db.createIndex(computeTaskParentIndex, []string{asset.ComputeTaskKind, parentTask, t.Key})
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
