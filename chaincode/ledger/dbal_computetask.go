@@ -9,6 +9,7 @@ import (
 	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/persistence"
+	"github.com/substra/orchestrator/lib/service"
 	"github.com/substra/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -38,7 +39,7 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 	if err != nil {
 		return err
 	}
-	for _, parentTask := range t.ParentTaskKeys {
+	for _, parentTask := range service.GetParentTaskKeys(t.Inputs) {
 		err = db.createIndex(computeTaskParentIndex, []string{asset.ComputeTaskKind, parentTask, t.Key})
 		if err != nil {
 			return err
