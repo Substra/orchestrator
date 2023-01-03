@@ -64,6 +64,7 @@ type storedAsset struct {
 // dbal indexes
 const computePlanTaskStatusIndex = "computePlan~computePlanKey~status~task"
 const computeTaskParentIndex = "computeTask~parentTask~key"
+const computeTaskChildIndex = "computeTask~childTask~key"
 const modelTaskKeyIndex = "model~taskKey~modelKey"
 const performanceIndex = "performance~taskKey~metricKey"
 const allOrganizationsIndex = "organizations~id"

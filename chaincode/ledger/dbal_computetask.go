@@ -44,6 +44,10 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 		if err != nil {
 			return err
 		}
+		err = db.createIndex(computeTaskChildIndex, []string{asset.ComputeTaskKind, t.Key, parentTask})
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -159,6 +163,27 @@ func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 	}
 
 	db.logger.Debug().Int("numChildren", len(elementKeys)).Msg("GetComputeTaskChildren")
+
+	tasks := []*asset.ComputeTask{}
+	for _, childKey := range elementKeys {
+		task, err := db.GetComputeTask(childKey)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
+
+// GetComputeTaskChildren returns the children of the task identified by the given key
+func (db *DB) GetComputeTaskParents(key string) ([]*asset.ComputeTask, error) {
+	elementKeys, err := db.getIndexKeys(computeTaskChildIndex, []string{asset.ComputeTaskKind, key})
+	if err != nil {
+		return nil, err
+	}
+
+	db.logger.Debug().Int("numChildren", len(elementKeys)).Msg("GetComputeTaskParents")
 
 	tasks := []*asset.ComputeTask{}
 	for _, childKey := range elementKeys {

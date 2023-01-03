@@ -281,6 +281,46 @@ func (d *DBAL) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) 
 	return tasks, nil
 }
 
+func (d *DBAL) GetComputeTaskParents(key string) ([]*asset.ComputeTask, error) {
+	stmt := getStatementBuilder().
+		Select("key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
+			"logs_permission", "metadata", "algo_key").
+		From("compute_tasks t").
+		Join("compute_task_parents p ON t.key = p.parent_task_key").
+		Where(sq.Eq{"t.channel": d.channel, "p.child_task_key": key}).
+		OrderByClause("p.position ASC")
+
+	rows, err := d.query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tasks := []*asset.ComputeTask{}
+	for rows.Next() {
+		ct := new(sqlComputeTask)
+
+		err = rows.Scan(
+			&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Category, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
+			&ct.LogsPermission, &ct.Metadata, &ct.AlgoKey)
+		if err != nil {
+			return nil, err
+		}
+
+		task, err := ct.toComputeTask()
+		if err != nil {
+			return nil, err
+		}
+
+		tasks = append(tasks, task)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
 // GetComputePlanTasksKeys returns the list of task keys from the provided compute plan
 func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 	stmt := getStatementBuilder().
