@@ -176,18 +176,18 @@ func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 	return tasks, nil
 }
 
-// GetComputeTaskChildren returns the children of the task identified by the given key
+// GetComputeTaskParents returns the children of the task identified by the given key
 func (db *DB) GetComputeTaskParents(key string) ([]*asset.ComputeTask, error) {
 	elementKeys, err := db.getIndexKeys(computeTaskChildIndex, []string{asset.ComputeTaskKind, key})
 	if err != nil {
 		return nil, err
 	}
 
-	db.logger.Debug().Int("numChildren", len(elementKeys)).Msg("GetComputeTaskParents")
+	db.logger.Debug().Int("numParents", len(elementKeys)).Msg("GetComputeTaskParents")
 
 	tasks := []*asset.ComputeTask{}
-	for _, childKey := range elementKeys {
-		task, err := db.GetComputeTask(childKey)
+	for _, parentKey := range elementKeys {
+		task, err := db.GetComputeTask(parentKey)
 		if err != nil {
 			return nil, err
 		}
