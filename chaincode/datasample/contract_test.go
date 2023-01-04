@@ -33,7 +33,6 @@ func TestRegistration(t *testing.T) {
 		{
 			Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 			DataManagerKeys: []string{"0b4b4466-9a81-4084-9bab-80939b78addd"},
-			TestOnly:        false,
 		},
 	}
 	param := &asset.RegisterDataSamplesParam{Samples: newSamples}
