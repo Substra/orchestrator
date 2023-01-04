@@ -20,7 +20,6 @@ type AlgoOptions struct {
 
 type DataSampleOptions struct {
 	KeyRef   string
-	TestOnly bool
 }
 
 type TaskOutputRef struct {
@@ -499,17 +498,11 @@ func (o *PerformanceOptions) WithMetricRef(ref string) *PerformanceOptions {
 func DefaultDataSampleOptions() *DataSampleOptions {
 	return &DataSampleOptions{
 		KeyRef:   "ds",
-		TestOnly: false,
 	}
 }
 
 func (o *DataSampleOptions) WithKeyRef(ref string) *DataSampleOptions {
 	o.KeyRef = ref
-	return o
-}
-
-func (o *DataSampleOptions) WithTestOnly(flag bool) *DataSampleOptions {
-	o.TestOnly = flag
 	return o
 }
 

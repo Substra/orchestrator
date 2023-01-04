@@ -126,7 +126,6 @@ func (db *DB) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) (
 						"$eq": dataManagerKey,
 					},
 				},
-				"test_only": testOnly,
 			},
 		},
 		Fields: []string{"asset.key"},
