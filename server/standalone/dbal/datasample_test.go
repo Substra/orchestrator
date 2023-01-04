@@ -16,7 +16,7 @@ func TestGetDataSampleFail(t *testing.T) {
 	mock.ExpectBegin()
 
 	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`SELECT key, owner, test_only, checksum, creation_date, datamanager_keys FROM expanded_datasamples`).
+	mock.ExpectQuery(`SELECT key, owner, checksum, creation_date, datamanager_keys FROM expanded_datasamples`).
 		WithArgs(testChannel, uid)
 
 	tx, err := mock.Begin(context.Background())
