@@ -49,7 +49,7 @@ func (s *DatasetService) GetDataset(id string) (*asset.Dataset, error) {
 	}
 
 	dataset := &asset.Dataset{
-		DataManager:         datamanager,za
+		DataManager:         datamanager,
 		TrainDataSampleKeys: trainDataSampleKeys,
 		TestDataSampleKeys:  testDataSampleKeys,
 	}

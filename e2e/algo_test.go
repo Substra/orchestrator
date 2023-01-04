@@ -38,7 +38,7 @@ func TestQueryAlgos(t *testing.T) {
 	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
-	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample"))
 	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
 	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
 
