@@ -116,7 +116,7 @@ func (db *DB) QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQue
 }
 
 // GetDataSampleKeysByManager returns sample keys linked to given manager.
-func (db *DB) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) ([]string, error) {
+func (db *DB) GetDataSampleKeysByManager(dataManagerKey string) ([]string, error) {
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
 			DocType: asset.DataSampleKind,

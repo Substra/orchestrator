@@ -335,7 +335,7 @@ func TestSmallComputePlan(t *testing.T) {
 	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
-	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample"))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
 	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
@@ -364,7 +364,7 @@ func TestAggregateComposite(t *testing.T) {
 	appClient.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("aggAlgo"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
-	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample").WithTestOnly(true))
+	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample"))
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
 

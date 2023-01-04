@@ -18,7 +18,6 @@ import (
 type sqlDataSample struct {
 	Key             string
 	Owner           string
-	TestOnly        bool
 	Checksum        string
 	CreationDate    time.Time
 	DataManagerKeys []string
@@ -29,7 +28,6 @@ func (ds *sqlDataSample) toDataSample() *asset.DataSample {
 		Key:             ds.Key,
 		DataManagerKeys: ds.DataManagerKeys,
 		Owner:           ds.Owner,
-		TestOnly:        ds.TestOnly,
 		Checksum:        ds.Checksum,
 		CreationDate:    timestamppb.New(ds.CreationDate),
 	}
@@ -79,7 +77,7 @@ func (d *DBAL) insertDataSamples(datasamples []*asset.DataSample) error {
 				return nil, err
 			}
 
-			return []interface{}{key, d.channel, ds.Owner, ds.TestOnly, ds.Checksum, ds.CreationDate.AsTime()}, nil
+			return []interface{}{key, d.channel, ds.Owner, ds.Checksum, ds.CreationDate.AsTime()}, nil
 		}),
 	)
 
@@ -160,7 +158,7 @@ func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
 
 	ds := new(sqlDataSample)
 
-	err = row.Scan(&ds.Key, &ds.Owner, &ds.TestOnly, &ds.Checksum, &ds.CreationDate, &ds.DataManagerKeys)
+	err = row.Scan(&ds.Key, &ds.Owner, &ds.Checksum, &ds.CreationDate, &ds.DataManagerKeys)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("datasample", key)
@@ -203,7 +201,7 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQu
 	for rows.Next() {
 		ds := new(sqlDataSample)
 
-		err = rows.Scan(&ds.Key, &ds.Owner, &ds.TestOnly, &ds.Checksum, &ds.CreationDate, &ds.DataManagerKeys)
+		err = rows.Scan(&ds.Key, &ds.Owner, &ds.Checksum, &ds.CreationDate, &ds.DataManagerKeys)
 		if err != nil {
 			return nil, "", err
 		}
