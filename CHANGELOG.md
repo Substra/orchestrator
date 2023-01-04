@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Removed
 
-- field `parent_task_keys` in `ComputeTask`
-- view `expanded_compute_tasks`
+- field `parent_task_keys` in `ComputeTask` ([#112](https://github.com/Substra/orchestrator/pull/112))
+- view `expanded_compute_tasks` ([#112](https://github.com/Substra/orchestrator/pull/112))
 
 ## [0.31.0] - 2022-12-19
 
