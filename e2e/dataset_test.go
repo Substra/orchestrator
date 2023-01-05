@@ -19,6 +19,5 @@ func TestDatasetSampleKeys(t *testing.T) {
 
 	dataset := appClient.GetDataset(client.DefaultDataManagerRef)
 
-	require.Equal(t, 1, len(dataset.TestDataSampleKeys), "dataset should contain a single data sample")
-	require.Equal(t, 2, len(dataset.TrainDataSampleKeys), "dataset should contain 2 data samples")
+	require.Equal(t, 2, len(dataset.DataSampleKeys), "dataset should contain 2 data samples")
 }
