@@ -38,20 +38,14 @@ func (s *DatasetService) GetDataset(id string) (*asset.Dataset, error) {
 		return nil, err
 	}
 
-	trainDataSampleKeys, err := s.GetDataSampleService().GetDataSampleKeysByManager(id)
-	if err != nil {
-		return nil, err
-	}
-
-	testDataSampleKeys, err := s.GetDataSampleService().GetDataSampleKeysByManager(id)
+	dataSampleKeys, err := s.GetDataSampleService().GetDataSampleKeysByManager(id)
 	if err != nil {
 		return nil, err
 	}
 
 	dataset := &asset.Dataset{
 		DataManager:         datamanager,
-		TrainDataSampleKeys: trainDataSampleKeys,
-		TestDataSampleKeys:  testDataSampleKeys,
+		DataSampleKeys: dataSampleKeys,
 	}
 
 	return dataset, nil
