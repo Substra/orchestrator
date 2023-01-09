@@ -270,7 +270,6 @@ func (c *TestClient) RegisterDataSample(o *DataSampleOptions) *asset.DataSample 
 	newDs := &asset.NewDataSample{
 		Key:             c.ks.GetKey(o.KeyRef),
 		DataManagerKeys: []string{c.ks.GetKey(DefaultDataManagerRef)},
-		TestOnly:        o.TestOnly,
 		Checksum:        "7e87a07aeb05e0e66918ce1c93155acf54649eec453060b75caf494bc0bc0b9c",
 	}
 	c.logger.Debug().Interface("datasample", newDs).Msg("registering datasample")

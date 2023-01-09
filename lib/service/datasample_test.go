@@ -31,7 +31,6 @@ func TestRegisterSingleDataSample(t *testing.T) {
 	datasample := &asset.NewDataSample{
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-		TestOnly:        false,
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 
@@ -39,7 +38,6 @@ func TestRegisterSingleDataSample(t *testing.T) {
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
-		TestOnly:        false,
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		CreationDate:    timestamppb.New(time.Unix(1337, 0)),
 	}
@@ -75,7 +73,6 @@ func TestRegisterSingleDataSampleUnknownDataManager(t *testing.T) {
 	datasample := &asset.NewDataSample{
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-		TestOnly:        false,
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 
@@ -106,13 +103,11 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 		{
 			Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 			DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-			TestOnly:        false,
 			Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		},
 		{
 			Key:             "0b4b4466-9a81-4084-9bab-80939b78addd",
 			DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-			TestOnly:        false,
 			Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		},
 	}
@@ -121,7 +116,6 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
-		TestOnly:        false,
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		CreationDate:    timestamppb.New(time.Unix(1337, 0)),
 	}
@@ -130,7 +124,6 @@ func TestRegisterMultipleDataSamples(t *testing.T) {
 		Key:             "0b4b4466-9a81-4084-9bab-80939b78addd",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
-		TestOnly:        false,
 		Checksum:        "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		CreationDate:    timestamppb.New(time.Unix(1337, 0)),
 	}
@@ -165,7 +158,6 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
-		TestOnly:        false,
 	}
 
 	updatedDataSample := &asset.UpdateDataSamplesParam{
@@ -177,7 +169,6 @@ func TestUpdateSingleExistingDataSample(t *testing.T) {
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
 		Owner:           "owner",
-		TestOnly:        false,
 	}
 
 	dbal.On("GetDataSample", existingDataSample.GetKey()).Return(existingDataSample, nil).Once()
@@ -214,14 +205,12 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
-		TestOnly:        false,
 	}
 
 	existingDataSample2 := &asset.DataSample{
 		Key:             "0b4b4466-9a81-4084-9bab-80939b78addd",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
-		TestOnly:        false,
 	}
 
 	updatedDataSample := &asset.UpdateDataSamplesParam{
@@ -233,14 +222,12 @@ func TestUpdateMultipleExistingDataSample(t *testing.T) {
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
 		Owner:           "owner",
-		TestOnly:        false,
 	}
 
 	storedDataSample2 := &asset.DataSample{
 		Key:             "0b4b4466-9a81-4084-9bab-80939b78addd",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
 		Owner:           "owner",
-		TestOnly:        false,
 	}
 
 	dbal.On("GetDataSample", existingDataSample1.GetKey()).Return(existingDataSample1, nil).Once()
@@ -289,12 +276,10 @@ func TestQueryDataSamples(t *testing.T) {
 	service := NewDataSampleService(provider)
 
 	ds1 := asset.DataSample{
-		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		TestOnly: true,
+		Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 	}
 	ds2 := asset.DataSample{
-		Key:      "9eef1e88-951a-44fb-944a-c3dbd1d72d85",
-		TestOnly: true,
+		Key: "9eef1e88-951a-44fb-944a-c3dbd1d72d85",
 	}
 
 	pagination := common.NewPagination("", 10)
@@ -322,14 +307,12 @@ func TestCheckSameManager(t *testing.T) {
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
 		Owner:           "owner",
-		TestOnly:        false,
 	}
 
 	ds2 := &asset.DataSample{
 		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
 		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
 		Owner:           "owner",
-		TestOnly:        false,
 	}
 
 	dbal.On("GetDataSample", ds1.GetKey()).Return(ds1, nil)
@@ -342,46 +325,6 @@ func TestCheckSameManager(t *testing.T) {
 	assert.Error(t, err, "samples do not share a common manager")
 }
 
-func TestIsTestOnly(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	provider := newMockedProvider()
-	provider.On("GetDataSampleDBAL").Return(dbal)
-	service := NewDataSampleService(provider)
-
-	ds1 := &asset.DataSample{
-		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-		Owner:           "owner",
-		TestOnly:        true,
-	}
-
-	ds2 := &asset.DataSample{
-		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
-		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
-		Owner:           "owner",
-		TestOnly:        true,
-	}
-
-	ds3 := &asset.DataSample{
-		Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a85",
-		DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85", "4da124eb-4da3-45e2-bc61-1924be259032"},
-		Owner:           "owner",
-		TestOnly:        false,
-	}
-
-	dbal.On("GetDataSample", ds1.GetKey()).Return(ds1, nil)
-	dbal.On("GetDataSample", ds2.GetKey()).Return(ds2, nil)
-	dbal.On("GetDataSample", ds3.GetKey()).Return(ds3, nil)
-
-	testOnly, err := service.IsTestOnly([]string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a85"})
-	assert.NoError(t, err, "check on usage should not fail")
-	assert.False(t, testOnly)
-
-	testOnly, err = service.IsTestOnly([]string{"4c67ad88-309a-48b4-8bc4-c2e2c1a87a83", "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84"})
-	assert.NoError(t, err, "check on usage should not fail")
-	assert.True(t, testOnly)
-}
-
 func TestGetDataSample(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
@@ -389,9 +332,8 @@ func TestGetDataSample(t *testing.T) {
 	service := NewDataSampleService(provider)
 
 	ds1 := asset.DataSample{
-		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
-		Owner:    "owner",
-		TestOnly: true,
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
+		Owner: "owner",
 	}
 
 	dbal.On("GetDataSample", ds1.GetKey()).Return(&ds1, nil).Once()

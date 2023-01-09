@@ -19,9 +19,9 @@ func TestGetDataSampleKeysByManager(t *testing.T) {
 	resp.On("HasNext").Once().Return(false)
 	resp.On("Next").Once().Return(&queryresult.KV{}, nil)
 
-	queryString := `{"selector":{"doc_type":"datasample","asset":{"data_manager_keys":{"$elemMatch":{"$eq":"dmkey"}},"test_only":false}},"fields":["asset.key"]}`
+	queryString := `{"selector":{"doc_type":"datasample","asset":{"data_manager_keys":{"$elemMatch":{"$eq":"dmkey"}}}},"fields":["asset.key"]}`
 	stub.On("GetQueryResult", queryString).Return(resp, nil)
 
-	_, err := db.GetDataSampleKeysByManager("dmkey", false)
+	_, err := db.GetDataSampleKeysByManager("dmkey")
 	assert.NoError(t, err)
 }
