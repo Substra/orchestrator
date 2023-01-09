@@ -44,8 +44,8 @@ func (s *DatasetService) GetDataset(id string) (*asset.Dataset, error) {
 	}
 
 	dataset := &asset.Dataset{
-		DataManager:         datamanager,
-		DataSampleKeys:      dataSampleKeys,
+		DataManager:    datamanager,
+		DataSampleKeys: dataSampleKeys,
 	}
 
 	return dataset, nil

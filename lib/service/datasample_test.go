@@ -276,10 +276,10 @@ func TestQueryDataSamples(t *testing.T) {
 	service := NewDataSampleService(provider)
 
 	ds1 := asset.DataSample{
-		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Key: "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 	}
 	ds2 := asset.DataSample{
-		Key:      "9eef1e88-951a-44fb-944a-c3dbd1d72d85",
+		Key: "9eef1e88-951a-44fb-944a-c3dbd1d72d85",
 	}
 
 	pagination := common.NewPagination("", 10)
@@ -332,8 +332,8 @@ func TestGetDataSample(t *testing.T) {
 	service := NewDataSampleService(provider)
 
 	ds1 := asset.DataSample{
-		Key:      "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
-		Owner:    "owner",
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
+		Owner: "owner",
 	}
 
 	dbal.On("GetDataSample", ds1.GetKey()).Return(&ds1, nil).Once()
