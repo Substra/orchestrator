@@ -12,7 +12,7 @@ SELECT execute($$
         GROUP BY datasamples.key;
 
         ALTER TABLE datasamples
-        DROP COLUMN IF EXISTS test_only;
+        DROP COLUMN test_only;
 
         UPDATE events SET asset = asset - 'testOnly'
         WHERE asset_kind = 'ASSET_DATA_SAMPLE';
