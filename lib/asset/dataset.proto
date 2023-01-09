@@ -9,8 +9,7 @@ option go_package = "github.com/substra/orchestrator/lib/asset";
 // Dataset references several related samples
 message Dataset {
   DataManager data_manager = 1;
-  repeated string train_data_sample_keys = 2;
-  repeated string test_data_sample_keys = 3;
+  repeated string data_sample_keys = 2;
 }
 
 message GetDatasetParam {
