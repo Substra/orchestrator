@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+## [0.32.0](https://github.com/Substra/orchestrator/releases/tag/0.32.0) - 2023-01-09
+
 ## Removed
 
 - field `parent_task_keys` in `ComputeTask` ([#112](https://github.com/Substra/orchestrator/pull/112))
