@@ -9,6 +9,7 @@ import (
 	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 	"github.com/substra/orchestrator/lib/persistence"
+	"github.com/substra/orchestrator/lib/service"
 	"github.com/substra/orchestrator/utils"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -38,8 +39,12 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 	if err != nil {
 		return err
 	}
-	for _, parentTask := range t.ParentTaskKeys {
+	for _, parentTask := range service.GetParentTaskKeys(t.Inputs) {
 		err = db.createIndex(computeTaskParentIndex, []string{asset.ComputeTaskKind, parentTask, t.Key})
+		if err != nil {
+			return err
+		}
+		err = db.createIndex(computeTaskChildIndex, []string{asset.ComputeTaskKind, t.Key, parentTask})
 		if err != nil {
 			return err
 		}
@@ -162,6 +167,27 @@ func (db *DB) GetComputeTaskChildren(key string) ([]*asset.ComputeTask, error) {
 	tasks := []*asset.ComputeTask{}
 	for _, childKey := range elementKeys {
 		task, err := db.GetComputeTask(childKey)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
+
+// GetComputeTaskParents returns the children of the task identified by the given key
+func (db *DB) GetComputeTaskParents(key string) ([]*asset.ComputeTask, error) {
+	elementKeys, err := db.getIndexKeys(computeTaskChildIndex, []string{asset.ComputeTaskKind, key})
+	if err != nil {
+		return nil, err
+	}
+
+	db.logger.Debug().Int("numParents", len(elementKeys)).Msg("GetComputeTaskParents")
+
+	tasks := []*asset.ComputeTask{}
+	for _, parentKey := range elementKeys {
+		task, err := db.GetComputeTask(parentKey)
 		if err != nil {
 			return nil, err
 		}

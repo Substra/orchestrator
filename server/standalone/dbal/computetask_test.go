@@ -36,7 +36,6 @@ func TestToComputeTask(t *testing.T) {
 		AlgoKey:        algo.Key,
 		Owner:          "owner",
 		ComputePlanKey: "cp_key",
-		ParentTaskKeys: []string{},
 		Rank:           0,
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
 		Worker:         "worker",
@@ -55,7 +54,6 @@ func TestToComputeTask(t *testing.T) {
 	assert.Equal(t, ct.AlgoKey, res.AlgoKey)
 	assert.Equal(t, ct.Owner, res.Owner)
 	assert.Equal(t, ct.ComputePlanKey, res.ComputePlanKey)
-	assert.Equal(t, ct.ParentTaskKeys, res.ParentTaskKeys)
 	assert.Equal(t, ct.Rank, res.Rank)
 	assert.Equal(t, ct.Status, res.Status)
 	assert.Equal(t, ct.Worker, res.Worker)
@@ -66,11 +64,11 @@ func TestToComputeTask(t *testing.T) {
 
 func makeTaskRows(taskKeys ...string) *pgxmock.Rows {
 	res := pgxmock.NewRows([]string{"key", "compute_plan_key", "status", "category", "worker", "owner", "rank", "creation_date",
-		"logs_permission", "metadata", "algo_key", "parent_task_keys"})
+		"logs_permission", "metadata", "algo_key"})
 
 	for _, key := range taskKeys {
 		res = res.AddRow(key, "cp_key", "STATUS_WAITING", "TASK_TRAIN", "worker", "owner", int32(0), time.Unix(0, 100),
-			[]byte("{}"), map[string]string{}, "algo_key", []string{})
+			[]byte("{}"), map[string]string{}, "algo_key")
 	}
 
 	return res
@@ -133,7 +131,7 @@ func TestGetTasks(t *testing.T) {
 
 	keys := []string{"93733214-02b6-4d69-90a8-4e3518a63470", "32f7be0b-b432-41e5-8225-8c53580ccc58"}
 
-	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+	mock.ExpectQuery(`SELECT .* FROM compute_tasks`).
 		WithArgs(testChannel, keys[0], keys[1]).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
@@ -163,7 +161,7 @@ func TestGetNoTask(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+	mock.ExpectQuery(`SELECT .* FROM compute_tasks`).
 		WithArgs(testChannel, "uuid").
 		WillReturnError(pgx.ErrNoRows)
 
@@ -189,7 +187,7 @@ func TestQueryComputeTasks(t *testing.T) {
 
 	keys := []string{"93733214-02b6-4d69-90a8-4e3518a63470", "32f7be0b-b432-41e5-8225-8c53580ccc58"}
 
-	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+	mock.ExpectQuery(`SELECT .* FROM compute_tasks`).
 		WithArgs(testChannel, "testWorker", asset.ComputeTaskStatus_STATUS_DONE.String()).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 
@@ -223,7 +221,6 @@ func TestAddComputeTask(t *testing.T) {
 		ComputePlanKey: "b16dcd88-32ca-4971-89a7-734b4ad1d778",
 		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 		Worker:         "testOrg",
-		ParentTaskKeys: []string{"f7743332-17f5-4d20-9e29-55312a081c9d", "b09c3fbf-9f92-460b-a87c-37f7f3bd4c63"},
 		Inputs: []*asset.ComputeTaskInput{
 			{
 				Identifier: "opener",
@@ -280,7 +277,6 @@ func TestAddComputeTasks(t *testing.T) {
 			ComputePlanKey: "899e7403-7e23-4c95-bb3f-7eb9e6d86b04",
 			Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 			Worker:         "testOrg",
-			ParentTaskKeys: []string{"46830c5b-5a42-4cd8-8c29-6b66cc1ef348", "46830c5b-5a42-4cd8-8c29-6b66cc1ef349"},
 			Inputs: []*asset.ComputeTaskInput{
 				{
 					Identifier: "opener",
@@ -307,7 +303,6 @@ func TestAddComputeTasks(t *testing.T) {
 			ComputePlanKey: "899e7403-7e23-4c95-bb3f-7eb9e6d86b04",
 			Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 			Worker:         "testOrg",
-			ParentTaskKeys: []string{"8d9fc421-15a6-4c3d-9082-3337a5436e83"},
 			Inputs: []*asset.ComputeTaskInput{
 				{
 					Identifier: "model",
@@ -362,7 +357,7 @@ func TestQueryComputeTasksNilFilter(t *testing.T) {
 
 	keys := []string{"93733214-02b6-4d69-90a8-4e3518a63470", "32f7be0b-b432-41e5-8225-8c53580ccc58"}
 
-	mock.ExpectQuery(`SELECT .* FROM expanded_compute_tasks`).
+	mock.ExpectQuery(`SELECT .* FROM compute_tasks`).
 		WithArgs(testChannel).
 		WillReturnRows(makeTaskRows(keys[0], keys[1]))
 

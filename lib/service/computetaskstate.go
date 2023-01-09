@@ -183,17 +183,12 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 		return nil
 	}
 
-	// loop over parent, only change status if all parents are DONE
-	for _, parentKey := range child.ParentTaskKeys {
-		if parentKey == triggeringParent.Key {
-			// We already know this one is DONE
-			continue
-		}
-		parent, err := s.GetComputeTaskDBAL().GetComputeTask(parentKey)
-		if err != nil {
-			return err
-		}
+	parents, err := s.GetComputeTaskDBAL().GetComputeTaskParents(child.Key)
+	if err != nil {
+		return err
+	}
 
+	for _, parent := range parents {
 		if parent.Status != asset.ComputeTaskStatus_STATUS_DONE {
 			logger.Debug().
 				Str("parent", parent.Key).
@@ -204,7 +199,7 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 			return nil
 		}
 	}
-	err := s.applyTaskAction(child, transitionTodo, fmt.Sprintf("Last parent task %s done", triggeringParent.Key))
+	err = s.applyTaskAction(child, transitionTodo, fmt.Sprintf("Last parent task %s done", triggeringParent.Key))
 	if err != nil {
 		return err
 	}

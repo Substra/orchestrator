@@ -194,6 +194,9 @@ func TestCascadeStatusDone(t *testing.T) {
 		Worker: "worker",
 	}
 	// Check for children to be updated
+	dbal.On("GetComputeTaskParents", "child").Return([]*asset.ComputeTask{
+		{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE},
+	}, nil)
 	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
 		{Key: "child", Status: asset.ComputeTaskStatus_STATUS_WAITING},
 	}, nil)

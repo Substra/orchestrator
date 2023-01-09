@@ -231,7 +231,6 @@ func TestRegisterTrainTask(t *testing.T) {
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
 		Status:         asset.ComputeTaskStatus_STATUS_TODO,
-		ParentTaskKeys: []string{},
 		Worker:         dataManager.Owner,
 		Inputs:         newTrainTask.Inputs,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
@@ -440,7 +439,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		ComputePlanKey: newTask.ComputePlanKey,
 		Metadata:       newTask.Metadata,
 		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
-		ParentTaskKeys: []string{parent1.Key, parent2.Key},
 		Worker:         dataManager.Owner,
 		Rank:           1,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
@@ -1654,7 +1652,7 @@ func TestGetParentTaskKeys(t *testing.T) {
 		t.Run(
 			fmt.Sprintf("parent task keys from inputs case %d", i),
 			func(t *testing.T) {
-				assert.Equal(t, c.keys, getParentTaskKeys(c.inputs))
+				assert.Equal(t, c.keys, GetParentTaskKeys(c.inputs))
 			},
 		)
 	}
