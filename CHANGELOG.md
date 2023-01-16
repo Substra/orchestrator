@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+### Added
+
+- Contributing, contributors & code of conduct files (#123)
+
 ### Removed
 
 - Test Only field for data samples ([#116](https://github.com/Substra/orchestrator/pull/116))
@@ -546,7 +550,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Automatic generation of graphviz documentation from *.proto file definition
+- Automatic generation of graphviz documentation from \*.proto file definition
 - asset management
 - asset event dispatch
 - standalone database (postgresql) support
