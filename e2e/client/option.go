@@ -143,7 +143,6 @@ func (o *TestTaskOptions) WithAlgoRef(ref string) *TestTaskOptions {
 func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_TEST,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
@@ -206,7 +205,6 @@ func (o *TrainTaskOptions) SetOutputs(outputs map[string]*asset.NewComputeTaskOu
 func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_TRAIN,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
@@ -255,7 +253,6 @@ func (o *PredictTaskOptions) WithDataSampleRef(ref string) *PredictTaskOptions {
 func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_PREDICT,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
@@ -300,7 +297,6 @@ func (o *CompositeTaskOptions) WithAlgoRef(ref string) *CompositeTaskOptions {
 func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_COMPOSITE,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
@@ -339,7 +335,6 @@ func (o *AggregateTaskOptions) WithAlgoRef(ref string) *AggregateTaskOptions {
 func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		Category:       asset.ComputeTaskCategory_TASK_AGGREGATE,
 		AlgoKey:        ks.GetKey(o.AlgoRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Worker:         o.Worker,

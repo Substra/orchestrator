@@ -244,9 +244,6 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 	if filter != nil {
 		assetFilter := map[string]interface{}{}
 
-		if filter.Category != asset.ComputeTaskCategory_TASK_UNKNOWN {
-			assetFilter["category"] = filter.Category.String()
-		}
 		if filter.Status != asset.ComputeTaskStatus_STATUS_UNKNOWN {
 			assetFilter["status"] = filter.Status.String()
 		}
