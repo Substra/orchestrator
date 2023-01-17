@@ -1,10 +1,15 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]()
+
+### Removed
+
+- Test Only field for data samples ([#116](https://github.com/Substra/orchestrator/pull/116))
 
 ## [0.31.1](https://github.com/Substra/orchestrator/releases/tag/0.31.1) - 2023-01-09
 
@@ -49,9 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING) AlgoCategory and associated Algo and NewAlgo fields
 
 ### Changed
+
 - failure reports: Build errors now have a logs address
 - (BREAKING): Replaced `algo` by `algo_key` in ComputeTask
-
 
 ### Fixed
 
@@ -538,7 +543,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input models for composite child of aggregate
 
 ## [0.0.1] - 2021-06-29
-
 
 ### Added
 
