@@ -16,9 +16,7 @@ type DataSampleAPI interface {
 	UpdateDataSamples(datasample *asset.UpdateDataSamplesParam, owner string) error
 	QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQueryFilter) ([]*asset.DataSample, common.PaginationToken, error)
 	CheckSameManager(managerKey string, sampleKeys []string) error
-	IsTestOnly(sampleKeys []string) (bool, error)
-	ContainsTestSample(sampleKeys []string) (bool, error)
-	GetDataSampleKeysByManager(managerKey string, testOnly bool) ([]string, error)
+	GetDataSampleKeysByManager(managerKey string) ([]string, error)
 	GetDataSample(string) (*asset.DataSample, error)
 }
 
@@ -105,7 +103,6 @@ func (s *DataSampleService) createDataSample(sample *asset.NewDataSample, owner 
 	datasample := &asset.DataSample{
 		Key:             sample.Key,
 		DataManagerKeys: sample.GetDataManagerKeys(),
-		TestOnly:        sample.GetTestOnly(),
 		Owner:           owner,
 		Checksum:        sample.Checksum,
 		CreationDate:    timestamppb.New(s.GetTimeService().GetTransactionTime()),
@@ -178,34 +175,8 @@ func (s *DataSampleService) CheckSameManager(managerKey string, sampleKeys []str
 	return nil
 }
 
-// IsTestOnly returns if givens samples are for sanctuarized test data
-func (s *DataSampleService) IsTestOnly(sampleKeys []string) (bool, error) {
-	testOnly := true
-	for _, sampleKey := range sampleKeys {
-		dataSample, err := s.GetDataSampleDBAL().GetDataSample(sampleKey)
-		if err != nil {
-			return false, err
-		}
-		testOnly = testOnly && dataSample.TestOnly
-	}
-	return testOnly, nil
-}
-
-// ContainsTestSample returns true if there is at least a test sample in the list
-func (s *DataSampleService) ContainsTestSample(sampleKeys []string) (bool, error) {
-	hasTest := false
-	for _, sampleKey := range sampleKeys {
-		dataSample, err := s.GetDataSampleDBAL().GetDataSample(sampleKey)
-		if err != nil {
-			return false, err
-		}
-		hasTest = hasTest || dataSample.TestOnly
-	}
-	return hasTest, nil
-}
-
-func (s *DataSampleService) GetDataSampleKeysByManager(managerKey string, testOnly bool) ([]string, error) {
-	return s.GetDataSampleDBAL().GetDataSampleKeysByManager(managerKey, testOnly)
+func (s *DataSampleService) GetDataSampleKeysByManager(managerKey string) ([]string, error) {
+	return s.GetDataSampleDBAL().GetDataSampleKeysByManager(managerKey)
 }
 
 // GetDataSample retrieves an datasample by its key

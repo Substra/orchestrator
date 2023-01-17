@@ -26,7 +26,6 @@ func TestRegisterDataSample(t *testing.T) {
 			{
 				Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 				DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-				TestOnly:        false,
 			},
 		},
 	}
@@ -86,7 +85,6 @@ func TestHandleDataSampleConflictAfterTimeout(t *testing.T) {
 			{
 				Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 				DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-				TestOnly:        false,
 			},
 		},
 	}
@@ -115,12 +113,10 @@ func TestHandleDataSampleBatchConflictAfterTimeout(t *testing.T) {
 			{
 				Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 				DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-				TestOnly:        false,
 			},
 			{
 				Key:             "4c67ad88-309a-48b4-8bc4-c2e2c1a87a84",
 				DataManagerKeys: []string{"9eef1e88-951a-44fb-944a-c3dbd1d72d85"},
-				TestOnly:        false,
 			},
 		},
 	}

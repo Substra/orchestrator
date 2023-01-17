@@ -18,7 +18,6 @@ import (
 type sqlDataSample struct {
 	Key             string
 	Owner           string
-	TestOnly        bool
 	Checksum        string
 	CreationDate    time.Time
 	DataManagerKeys []string
@@ -29,7 +28,6 @@ func (ds *sqlDataSample) toDataSample() *asset.DataSample {
 		Key:             ds.Key,
 		DataManagerKeys: ds.DataManagerKeys,
 		Owner:           ds.Owner,
-		TestOnly:        ds.TestOnly,
 		Checksum:        ds.Checksum,
 		CreationDate:    timestamppb.New(ds.CreationDate),
 	}
@@ -69,7 +67,7 @@ func (d *DBAL) insertDataSamples(datasamples []*asset.DataSample) error {
 	_, err := d.tx.CopyFrom(
 		d.ctx,
 		pgx.Identifier{"datasamples"},
-		[]string{"key", "channel", "owner", "test_only", "checksum", "creation_date"},
+		[]string{"key", "channel", "owner", "checksum", "creation_date"},
 		pgx.CopyFromSlice(len(datasamples), func(i int) ([]interface{}, error) {
 			ds := datasamples[i]
 
@@ -79,7 +77,7 @@ func (d *DBAL) insertDataSamples(datasamples []*asset.DataSample) error {
 				return nil, err
 			}
 
-			return []interface{}{key, d.channel, ds.Owner, ds.TestOnly, ds.Checksum, ds.CreationDate.AsTime()}, nil
+			return []interface{}{key, d.channel, ds.Owner, ds.Checksum, ds.CreationDate.AsTime()}, nil
 		}),
 	)
 
@@ -140,7 +138,6 @@ func (d *DBAL) UpdateDataSample(dataSample *asset.DataSample) error {
 	stmt := getStatementBuilder().
 		Update("datasamples").
 		Set("owner", dataSample.Owner).
-		Set("test_only", dataSample.TestOnly).
 		Set("checksum", dataSample.Checksum).
 		Where(sq.Eq{"channel": d.channel, "key": dataSample.Key})
 
@@ -150,7 +147,7 @@ func (d *DBAL) UpdateDataSample(dataSample *asset.DataSample) error {
 // GetDataSample implements persistence.DataSample
 func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
 	stmt := getStatementBuilder().
-		Select("key", "owner", "test_only", "checksum", "creation_date", "datamanager_keys").
+		Select("key", "owner", "checksum", "creation_date", "datamanager_keys").
 		From("expanded_datasamples").
 		Where(sq.Eq{"channel": d.channel, "key": key})
 
@@ -161,7 +158,7 @@ func (d *DBAL) GetDataSample(key string) (*asset.DataSample, error) {
 
 	ds := new(sqlDataSample)
 
-	err = row.Scan(&ds.Key, &ds.Owner, &ds.TestOnly, &ds.Checksum, &ds.CreationDate, &ds.DataManagerKeys)
+	err = row.Scan(&ds.Key, &ds.Owner, &ds.Checksum, &ds.CreationDate, &ds.DataManagerKeys)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, orcerrors.NewNotFound("datasample", key)
@@ -180,7 +177,7 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQu
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "owner", "test_only", "checksum", "creation_date", "datamanager_keys").
+		Select("key", "owner", "checksum", "creation_date", "datamanager_keys").
 		From("expanded_datasamples").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").
@@ -204,7 +201,7 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQu
 	for rows.Next() {
 		ds := new(sqlDataSample)
 
-		err = rows.Scan(&ds.Key, &ds.Owner, &ds.TestOnly, &ds.Checksum, &ds.CreationDate, &ds.DataManagerKeys)
+		err = rows.Scan(&ds.Key, &ds.Owner, &ds.Checksum, &ds.CreationDate, &ds.DataManagerKeys)
 		if err != nil {
 			return nil, "", err
 		}
@@ -230,12 +227,11 @@ func (d *DBAL) QueryDataSamples(p *common.Pagination, filter *asset.DataSampleQu
 }
 
 // GetDataSampleKeysByManager returns sample keys linked to a given manager.
-func (d *DBAL) GetDataSampleKeysByManager(dataManagerKey string, testOnly bool) ([]string, error) {
+func (d *DBAL) GetDataSampleKeysByManager(dataManagerKey string) ([]string, error) {
 	stmt := getStatementBuilder().
 		Select("datasample_key").
 		From("datasample_datamanagers").
 		Join("datasamples ds ON ds.key = datasample_datamanagers.datasample_key").
-		Where(sq.Eq{"ds.test_only": testOnly}).
 		Where(sq.Eq{"datamanager_key": dataManagerKey}).
 		OrderByClause("creation_date ASC, key")
 
