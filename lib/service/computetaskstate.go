@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -79,11 +80,17 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 		task.Status.String(),
 		taskStateEvents,
 		fsm.Callbacks{
-			"enter_state":            updater.onStateChange,
-			"after_transitionDone":   updater.onDone,
-			"after_transitionFailed": updater.onFailure,
+			"enter_state":            wrapFsmCallbackContext(updater.onStateChange),
+			"after_transitionDone":   wrapFsmCallbackContext(updater.onDone),
+			"after_transitionFailed": wrapFsmCallbackContext(updater.onFailure),
 		},
 	)
+}
+
+// wrapFsmCallbackContext wrap our previous updater function with an empty fsm Context (became an argument in v1.0.0)
+// We couldn't add this empty parameter in the interface as it would break mock (calling `m.Called(_, e)“)
+func wrapFsmCallbackContext(f func(*fsm.Event)) func(context.Context, *fsm.Event) {
+	return func(_ context.Context, e *fsm.Event) { f(e) }
 }
 
 // ApplyTaskAction apply an asset.ComputeTaskAction to the task.
@@ -123,7 +130,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
 	s.GetLogger().Debug().Str("taskKey", task.Key).Str("action", string(action)).Str("reason", reason).Msg("Applying task action")
 	state := newState(s, task)
-	err := state.Event(string(action), task, reason)
+	err := state.Event(context.Background(), string(action), task, reason)
 
 	if err == nil {
 		metrics.TaskUpdatedTotal.WithLabelValues(s.GetChannel(), state.Current()).Inc()

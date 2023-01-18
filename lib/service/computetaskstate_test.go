@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/looplab/fsm"
@@ -54,7 +55,7 @@ func TestOnStateChange(t *testing.T) {
 
 	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_TODO, Key: "uuid"})
 
-	err := state.Event(string(transitionDoing), &asset.ComputeTask{})
+	err := state.Event(context.Background(), string(transitionDoing), &asset.ComputeTask{})
 
 	assert.NoError(t, err)
 	updater.AssertExpectations(t)
@@ -66,11 +67,11 @@ func TestFailedStateChange(t *testing.T) {
 
 	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DOING, Key: "uuid"})
 
-	err := state.Event(string(transitionDoing), &asset.ComputeTask{})
+	err := state.Event(context.Background(), string(transitionDoing), &asset.ComputeTask{})
 	assert.IsType(t, fsm.InvalidEventError{}, err)
 
 	state = newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DONE, Key: "uuid"})
-	err = state.Event(string(transitionCanceled), &asset.ComputeTask{})
+	err = state.Event(context.Background(), string(transitionCanceled), &asset.ComputeTask{})
 	assert.IsType(t, fsm.InvalidEventError{}, err)
 	updater.AssertExpectations(t)
 }
