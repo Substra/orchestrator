@@ -87,7 +87,7 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 	)
 }
 
-// wrapFsmCallbackContext wrap our previous updater funciton with an empty fsm Context (became an argument in v1.0.0)
+// wrapFsmCallbackContext wrap our previous updater function with an empty fsm Context (became an argument in v1.0.0)
 // We couldn't add this empty parameter in the interface as it would break mock (calling `m.Called(_, e)“)
 func wrapFsmCallbackContext(f func(*fsm.Event)) func(context.Context, *fsm.Event) {
 	return func(_ context.Context, e *fsm.Event) { f(e) }
