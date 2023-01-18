@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- (BREAKING) Context in fsm calls ([#127](https://github.com/Substra/orchestrator/pull/127))
 - Contributing, contributors & code of conduct files (#123)
 
 ### Removed
