@@ -18,7 +18,7 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgtype v1.13.0
 	github.com/jackc/pgx/v4 v4.17.2
-	github.com/looplab/fsm v0.3.0
+	github.com/looplab/fsm v1.0.0
 	github.com/pashagolub/pgxmock v1.8.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.28.0
