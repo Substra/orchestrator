@@ -55,23 +55,23 @@ type taskStateUpdater interface {
 	// On state change will receive the ORIGINAL (before transition) task as first argument
 	// and the transition reason as second argument
 	// any error should be registered as e.Err
-	onStateChange(_ context.Context, e *fsm.Event)
+	onStateChange(e *fsm.Event)
 	// Recompute children status according to all its parents
 	// Task is received as argument
 	// any error should be registered as e.Err
-	onDone(_ context.Context, e *fsm.Event)
+	onDone(e *fsm.Event)
 	// Set the compute plan to failed when a task fails.
 	// Task is received as argument, any error should be registered as e.Err.
-	onFailure(_ context.Context, e *fsm.Event)
+	onFailure(e *fsm.Event)
 }
 
 // dumbStateUpdater implements taskStateUpdater but does nothing,
 // it can be used to evaluate a task state without risking to accidentally update it
 type dumbStateUpdater struct{}
 
-func (d *dumbStateUpdater) onStateChange(_ context.Context, e *fsm.Event) {}
-func (d *dumbStateUpdater) onDone(_ context.Context, e *fsm.Event)        {}
-func (d *dumbStateUpdater) onFailure(_ context.Context, e *fsm.Event)     {}
+func (d *dumbStateUpdater) onStateChange(e *fsm.Event) {}
+func (d *dumbStateUpdater) onDone(e *fsm.Event)        {}
+func (d *dumbStateUpdater) onFailure(e *fsm.Event)     {}
 
 var dumbUpdater = dumbStateUpdater{}
 
@@ -80,11 +80,17 @@ func newState(updater taskStateUpdater, task *asset.ComputeTask) *fsm.FSM {
 		task.Status.String(),
 		taskStateEvents,
 		fsm.Callbacks{
-			"enter_state":            updater.onStateChange,
-			"after_transitionDone":   updater.onDone,
-			"after_transitionFailed": updater.onFailure,
+			"enter_state":            wrapFsmCallbackContext(updater.onStateChange),
+			"after_transitionDone":   wrapFsmCallbackContext(updater.onDone),
+			"after_transitionFailed": wrapFsmCallbackContext(updater.onFailure),
 		},
 	)
+}
+
+// wrapFsmCallbackContext wrap our previous updater funciton with an empty fsm Context (became an argument in v1.0.0)
+// We couldn't add this empty parameter in the interface as it would break mock (calling `m.Called(_, e)“)
+func wrapFsmCallbackContext(f func(*fsm.Event)) func(context.Context, *fsm.Event) {
+	return func(_ context.Context, e *fsm.Event) { f(e) }
 }
 
 // ApplyTaskAction apply an asset.ComputeTaskAction to the task.
@@ -134,7 +140,7 @@ func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action tas
 }
 
 // onDone will iterate over task children to update their statuses
-func (s *ComputeTaskService) onDone(_ context.Context, e *fsm.Event) {
+func (s *ComputeTaskService) onDone(e *fsm.Event) {
 	if len(e.Args) != 2 {
 		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
@@ -209,7 +215,7 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 }
 
 // onStateChange enqueue an orchestration event and saves the task
-func (s *ComputeTaskService) onStateChange(_ context.Context, e *fsm.Event) {
+func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 	if len(e.Args) != 2 {
 		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
@@ -263,7 +269,7 @@ func (s *ComputeTaskService) onStateChange(_ context.Context, e *fsm.Event) {
 	}
 }
 
-func (s *ComputeTaskService) onFailure(_ context.Context, e *fsm.Event) {
+func (s *ComputeTaskService) onFailure(e *fsm.Event) {
 	if len(e.Args) != 2 {
 		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
