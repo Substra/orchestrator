@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -54,23 +55,23 @@ type taskStateUpdater interface {
 	// On state change will receive the ORIGINAL (before transition) task as first argument
 	// and the transition reason as second argument
 	// any error should be registered as e.Err
-	onStateChange(e *fsm.Event)
+	onStateChange(_ context.Context, e *fsm.Event)
 	// Recompute children status according to all its parents
 	// Task is received as argument
 	// any error should be registered as e.Err
-	onDone(e *fsm.Event)
+	onDone(_ context.Context, e *fsm.Event)
 	// Set the compute plan to failed when a task fails.
 	// Task is received as argument, any error should be registered as e.Err.
-	onFailure(e *fsm.Event)
+	onFailure(_ context.Context, e *fsm.Event)
 }
 
 // dumbStateUpdater implements taskStateUpdater but does nothing,
 // it can be used to evaluate a task state without risking to accidentally update it
 type dumbStateUpdater struct{}
 
-func (d *dumbStateUpdater) onStateChange(e *fsm.Event) {}
-func (d *dumbStateUpdater) onDone(e *fsm.Event)        {}
-func (d *dumbStateUpdater) onFailure(e *fsm.Event)     {}
+func (d *dumbStateUpdater) onStateChange(_ context.Context, e *fsm.Event) {}
+func (d *dumbStateUpdater) onDone(_ context.Context, e *fsm.Event)        {}
+func (d *dumbStateUpdater) onFailure(_ context.Context, e *fsm.Event)     {}
 
 var dumbUpdater = dumbStateUpdater{}
 
@@ -123,7 +124,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
 	s.GetLogger().Debug().Str("taskKey", task.Key).Str("action", string(action)).Str("reason", reason).Msg("Applying task action")
 	state := newState(s, task)
-	err := state.Event(string(action), task, reason)
+	err := state.Event(context.Background(), string(action), task, reason)
 
 	if err == nil {
 		metrics.TaskUpdatedTotal.WithLabelValues(s.GetChannel(), state.Current()).Inc()
@@ -133,7 +134,7 @@ func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action tas
 }
 
 // onDone will iterate over task children to update their statuses
-func (s *ComputeTaskService) onDone(e *fsm.Event) {
+func (s *ComputeTaskService) onDone(_ context.Context, e *fsm.Event) {
 	if len(e.Args) != 2 {
 		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
@@ -208,7 +209,7 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 }
 
 // onStateChange enqueue an orchestration event and saves the task
-func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
+func (s *ComputeTaskService) onStateChange(_ context.Context, e *fsm.Event) {
 	if len(e.Args) != 2 {
 		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
@@ -262,7 +263,7 @@ func (s *ComputeTaskService) onStateChange(e *fsm.Event) {
 	}
 }
 
-func (s *ComputeTaskService) onFailure(e *fsm.Event) {
+func (s *ComputeTaskService) onFailure(_ context.Context, e *fsm.Event) {
 	if len(e.Args) != 2 {
 		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
