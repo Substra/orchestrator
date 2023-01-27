@@ -21,7 +21,7 @@ require (
 	github.com/looplab/fsm v1.0.0
 	github.com/pashagolub/pgxmock v1.8.0
 	github.com/prometheus/client_golang v1.14.0
-	github.com/rs/zerolog v1.28.0
+	github.com/rs/zerolog v1.29.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	google.golang.org/grpc v1.52.3
