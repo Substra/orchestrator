@@ -15,8 +15,8 @@ sources:
   - https://github.com/Substra/orchestrator/
 
 maintainers:
-  - email: matthieu.blottiere@owkin.com
-    name: Matthieu Blottière
+  - name: Substra Team
+    email: support@substra.org
 
 dependencies:
   - name: postgresql
