@@ -3,7 +3,7 @@ name: orchestrator
 description: substra orchestration
 
 type: application
-version: 7.4.8
+version: 7.4.9
 appVersion: 0.31.1
 kubeVersion: ">= 1.19.0-0"
 icon: https://avatars.githubusercontent.com/u/84009910?s=400
@@ -15,8 +15,8 @@ sources:
   - https://github.com/Substra/orchestrator/
 
 maintainers:
-  - email: matthieu.blottiere@owkin.com
-    name: Matthieu Blottière
+  - name: Substra Team
+    email: support@substra.org
 
 dependencies:
   - name: postgresql
