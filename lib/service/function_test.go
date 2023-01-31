@@ -33,7 +33,7 @@ func TestRegisterFunction(t *testing.T) {
 		StorageAddress: "ftp://127.0.0.1/test",
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
-	function_location := &asset.Addressable{
+	functionLocation := &asset.Addressable{
 		StorageAddress: "ftp://127.0.0.1/test",
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
@@ -42,7 +42,7 @@ func TestRegisterFunction(t *testing.T) {
 	function := &asset.NewFunction{
 		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:           "Test function",
-		Function:      function_location,
+		Function:      functionLocation,
 		Description:    description,
 		NewPermissions: newPerms,
 	}
@@ -55,7 +55,7 @@ func TestRegisterFunction(t *testing.T) {
 	storedFunction := &asset.Function{
 		Key:          "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:         "Test function",
-		Function:    function_location,
+		Function:    functionLocation,
 		Description:  description,
 		Permissions:  perms,
 		Owner:        "owner",
