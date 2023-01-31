@@ -1,3 +1,6 @@
+ALTER TABLE algos
+RENAME TO functions;
+
 DROP VIEW IF EXISTS expanded_compute_tasks;
 CREATE VIEW expanded_compute_tasks AS
 SELECT t.key AS key,
@@ -14,3 +17,19 @@ SELECT t.key AS key,
        t.metadata AS metadata,
        t.algo_key AS function_key,
        COALESCE(p.parent_task_keys, '[]'::jsonb) AS parent_task_keys
+
+
+DROP VIEW IF EXISTS expanded_algos;
+CREATE VIEW expanded_functions AS
+SELECT 	key,
+        name,
+        description_address AS description_address,
+        description_checksum AS description_checksum,
+        algorithm_address AS function_address,
+        algorithm_checksum AS function_checksum,
+	permissions,
+        owner,
+        creation_date,
+        metadata,
+        channel
+FROM functions
