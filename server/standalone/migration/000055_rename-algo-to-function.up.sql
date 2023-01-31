@@ -40,3 +40,34 @@ SELECT 	key,
         metadata,
         channel
 FROM functions;
+
+
+UPDATE events e
+SET asset = JSONB_BUILD_OBJECT(
+            'key', t.key,
+            'category', t.category,
+            'function', build_algo_jsonb(
+                    t.function_key,
+                    t.function_name,
+                    t.function_category,
+                    t.function_description_checksum,
+                    t.function_description_address,
+                    t.function_function_checksum,
+                    t.function_function_address,
+                    t.function_permissions,
+                    t.function_owner,
+                    t.function_creation_date,
+                    t.function_metadata
+                ),
+            'owner', t.owner,
+            'computePlanKey', t.compute_plan_key,
+            'parentTaskKeys', t.parent_task_keys,
+            'rank', t.rank,
+            'status', t.status,
+            'worker', t.worker,
+            'creationDate', to_rfc_3339(t.creation_date),
+            'logsPermission', t.logs_permission,
+            'metadata', t.metadata
+        ) || t.task_data
+FROM expanded_compute_tasks t
+WHERE e.asset_key = t.key::text AND e.asset_kind = 'ASSET_COMPUTE_TASK';
