@@ -7,6 +7,18 @@ RENAME TO functions;
 ALTER TABLE compute_tasks
 RENAME COLUMN algo_key TO function_key;
 
+ALTER TABLE algo_outputs
+RENAME COLUMN algo_key TO function_key;
+
+ALTER TABLE algo_outputs
+RENAME TO function_outputs;
+
+ALTER TABLE algo_inputs
+RENAME COLUMN algo_key TO function_key;
+
+ALTER TABLE algo_inputs
+RENAME TO function_inputs;
+
 DROP VIEW IF EXISTS expanded_compute_tasks;
 
 DROP VIEW IF EXISTS expanded_algos;
@@ -45,3 +57,5 @@ FROM compute_tasks t
     FROM compute_task_parents
     GROUP BY child_task_key
 ) p ON p.child_task_key = t.key;
+
+
