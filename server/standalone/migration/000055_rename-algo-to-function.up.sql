@@ -12,7 +12,6 @@ SELECT t.key AS key,
        t.rank AS rank,
        t.creation_date AS creation_date,
        t.logs_permission AS logs_permission,
-       t.task_data AS task_data,
        t.metadata AS metadata,
        t.algo_key AS function_key,
        COALESCE(p.parent_task_keys, '[]'::jsonb) AS parent_task_keys
