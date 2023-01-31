@@ -1,5 +1,5 @@
 ALTER TABLE algos
-RENAME COLUMN algorithm TO function;
+RENAME COLUMN algorithm TO functionLocation;
 
 ALTER TABLE algos
 RENAME TO functions;
@@ -15,7 +15,7 @@ SELECT 	key,
         name,
         description       AS description_address,
         desc_add.checksum AS description_checksum,
-        function         AS function_address,
+        functionLocation         AS function_address,
         function_add.checksum AS function_checksum,
 	    permissions,
         owner,
