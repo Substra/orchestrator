@@ -17,6 +17,13 @@ SELECT t.key AS key,
        t.metadata AS metadata,
        t.algo_key AS function_key,
        COALESCE(p.parent_task_keys, '[]'::jsonb) AS parent_task_keys
+FROM compute_tasks t
+         LEFT JOIN expanded_algos a ON a.key = t.algo_key
+         LEFT JOIN (
+    SELECT child_task_key, JSONB_AGG(parent_task_key ORDER BY position) AS parent_task_keys
+    FROM compute_task_parents
+    GROUP BY child_task_key
+) p ON p.child_task_key = t.key;
 
 
 DROP VIEW IF EXISTS expanded_algos;
