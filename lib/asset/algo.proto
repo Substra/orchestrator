@@ -7,80 +7,80 @@ import "common.proto";
 
 option go_package = "github.com/substra/orchestrator/lib/asset";
 
-message AlgoInput {
+message FunctionInput {
   AssetKind kind = 1;
   bool multiple = 2;
   bool optional = 3;
 }
 
-message AlgoOutput {
+message FunctionOutput {
   AssetKind kind = 1;
   bool multiple = 2;
 }
 
-// Algo represents the algorithm code which will be used
+// Function represents the algorithm code which will be used
 // to produce or test a model.
-message Algo {
+message Function {
   reserved 3;
   reserved "category";
 
   string key = 1;
   string name = 2;
   Addressable description = 4;
-  Addressable algorithm = 5;
+  Addressable function = 5;
   Permissions permissions = 6;
   string owner = 7;
   google.protobuf.Timestamp creation_date = 8;
   map<string, string> metadata = 16;
-  map<string, AlgoInput> inputs = 17;
-  map<string, AlgoOutput> outputs = 18;
+  map<string, FunctionInput> inputs = 17;
+  map<string, FunctionOutput> outputs = 18;
 }
 
-// NewAlgo is used to register an Algo.
-// It will be processed into an Algo.
-message NewAlgo {
+// NewFunction is used to register an Function.
+// It will be processed into an Function.
+message NewFunction {
   reserved 3;
   reserved "category";
 
   string key = 1;
   string name = 2;
   Addressable description = 4;
-  Addressable algorithm = 5;
+  Addressable function = 5;
   NewPermissions new_permissions = 6;
   map<string, string> metadata = 17;
-  map<string, AlgoInput> inputs = 18;
-  map<string, AlgoOutput> outputs = 19;
+  map<string, FunctionInput> inputs = 18;
+  map<string, FunctionOutput> outputs = 19;
 }
 
-message GetAlgoParam {
+message GetFunctionParam {
   string key = 1;
 }
 
-message QueryAlgosResponse {
-  repeated Algo Algos = 1;
+message QueryFunctionsResponse {
+  repeated Function Functions = 1;
   string next_page_token = 2;
 }
 
-message AlgoQueryFilter {
+message FunctionQueryFilter {
   string compute_plan_key = 2;
 }
 
-message QueryAlgosParam {
+message QueryFunctionsParam {
   string page_token = 1;
   uint32 page_size = 2;
-  AlgoQueryFilter filter = 3;
+  FunctionQueryFilter filter = 3;
 }
 
-message UpdateAlgoParam {
+message UpdateFunctionParam {
   string key = 1;
   string name = 2;
 }
 
-message UpdateAlgoResponse {}
+message UpdateFunctionResponse {}
 
-service AlgoService {
-  rpc RegisterAlgo(NewAlgo) returns (Algo);
-  rpc GetAlgo(GetAlgoParam) returns (Algo);
-  rpc QueryAlgos(QueryAlgosParam) returns (QueryAlgosResponse);
-  rpc UpdateAlgo(UpdateAlgoParam) returns (UpdateAlgoResponse);
+service FunctionService {
+  rpc RegisterFunction(NewFunction) returns (Function);
+  rpc GetFunction(GetFunctionParam) returns (Function);
+  rpc QueryFunctions(QueryFunctionsParam) returns (QueryFunctionsResponse);
+  rpc UpdateFunction(UpdateFunctionParam) returns (UpdateFunctionResponse);
 }

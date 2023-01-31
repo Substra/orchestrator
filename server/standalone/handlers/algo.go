@@ -10,19 +10,19 @@ import (
 	"github.com/substra/orchestrator/server/standalone/interceptors"
 )
 
-// AlgoServer is the gRPC facade to Algo manipulation
-type AlgoServer struct {
-	asset.UnimplementedAlgoServiceServer
+// FunctionServer is the gRPC facade to Function manipulation
+type FunctionServer struct {
+	asset.UnimplementedFunctionServiceServer
 }
 
-// NewAlgoServer creates a grpc server
-func NewAlgoServer() *AlgoServer {
-	return &AlgoServer{}
+// NewFunctionServer creates a grpc server
+func NewFunctionServer() *FunctionServer {
+	return &FunctionServer{}
 }
 
-// RegisterAlgo will persist a new algo
-func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset.Algo, error) {
-	log.Ctx(ctx).Debug().Interface("algo", a).Msg("Register Algo")
+// RegisterFunction will persist a new function
+func (s *FunctionServer) RegisterFunction(ctx context.Context, a *asset.NewFunction) (*asset.Function, error) {
+	log.Ctx(ctx).Debug().Interface("function", a).Msg("Register Function")
 
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
@@ -33,39 +33,39 @@ func (s *AlgoServer) RegisterAlgo(ctx context.Context, a *asset.NewAlgo) (*asset
 		return nil, err
 	}
 
-	return services.GetAlgoService().RegisterAlgo(a, mspid)
+	return services.GetFunctionService().RegisterFunction(a, mspid)
 }
 
-// GetAlgo fetches an algo by its key
-func (s *AlgoServer) GetAlgo(ctx context.Context, params *asset.GetAlgoParam) (*asset.Algo, error) {
+// GetFunction fetches an function by its key
+func (s *FunctionServer) GetFunction(ctx context.Context, params *asset.GetFunctionParam) (*asset.Function, error) {
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return services.GetAlgoService().GetAlgo(params.Key)
+	return services.GetFunctionService().GetFunction(params.Key)
 }
 
-// QueryAlgos returns a paginated list of all known algos
-func (s *AlgoServer) QueryAlgos(ctx context.Context, params *asset.QueryAlgosParam) (*asset.QueryAlgosResponse, error) {
+// QueryFunctions returns a paginated list of all known functions
+func (s *FunctionServer) QueryFunctions(ctx context.Context, params *asset.QueryFunctionsParam) (*asset.QueryFunctionsResponse, error) {
 	services, err := interceptors.ExtractProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	algos, paginationToken, err := services.GetAlgoService().QueryAlgos(libCommon.NewPagination(params.PageToken, params.PageSize), params.Filter)
+	functions, paginationToken, err := services.GetFunctionService().QueryFunctions(libCommon.NewPagination(params.PageToken, params.PageSize), params.Filter)
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.QueryAlgosResponse{
-		Algos:         algos,
+	return &asset.QueryFunctionsResponse{
+		Functions:         functions,
 		NextPageToken: paginationToken,
 	}, nil
 }
 
-// UpdateAlgo will update mutable fields of the existing Algo. List of mutable fields: name.
-func (s *AlgoServer) UpdateAlgo(ctx context.Context, params *asset.UpdateAlgoParam) (*asset.UpdateAlgoResponse, error) {
-	log.Ctx(ctx).Debug().Interface("algo", params).Msg("Update Algo")
+// UpdateFunction will update mutable fields of the existing Function. List of mutable fields: name.
+func (s *FunctionServer) UpdateFunction(ctx context.Context, params *asset.UpdateFunctionParam) (*asset.UpdateFunctionResponse, error) {
+	log.Ctx(ctx).Debug().Interface("function", params).Msg("Update Function")
 
 	mspid, err := commonInterceptors.ExtractMSPID(ctx)
 	if err != nil {
@@ -76,10 +76,10 @@ func (s *AlgoServer) UpdateAlgo(ctx context.Context, params *asset.UpdateAlgoPar
 		return nil, err
 	}
 
-	err = services.GetAlgoService().UpdateAlgo(params, mspid)
+	err = services.GetFunctionService().UpdateFunction(params, mspid)
 	if err != nil {
 		return nil, err
 	}
 
-	return &asset.UpdateAlgoResponse{}, nil
+	return &asset.UpdateFunctionResponse{}, nil
 }

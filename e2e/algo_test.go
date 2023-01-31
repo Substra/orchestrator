@@ -12,48 +12,48 @@ import (
 	"github.com/substra/orchestrator/lib/asset"
 )
 
-// TestRegisterAlgo registers an algo and ensure an event containing the algo is recorded.
-func TestRegisterAlgo(t *testing.T) {
+// TestRegisterFunction registers an function and ensure an event containing the function is recorded.
+func TestRegisterFunction(t *testing.T) {
 	appClient := factory.NewTestClient()
-	registeredAlgo := appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	registeredFunction := appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 
-	retrievedAlgo := appClient.GetAlgo(client.DefaultSimpleAlgoRef)
-	e2erequire.ProtoEqual(t, registeredAlgo, retrievedAlgo)
+	retrievedFunction := appClient.GetFunction(client.DefaultSimpleFunctionRef)
+	e2erequire.ProtoEqual(t, registeredFunction, retrievedFunction)
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
-		AssetKey:  registeredAlgo.Key,
+		AssetKey:  registeredFunction.Key,
 		AssetKind: asset.AssetKind_ASSET_ALGO,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}, "", 100)
 
 	require.Len(t, resp.Events, 1, "Unexpected number of events")
 
-	eventAlgo := resp.Events[0].GetAlgo()
-	e2erequire.ProtoEqual(t, registeredAlgo, eventAlgo)
+	eventFunction := resp.Events[0].GetFunction()
+	e2erequire.ProtoEqual(t, registeredFunction, eventFunction)
 }
 
-func TestQueryAlgos(t *testing.T) {
+func TestQueryFunctions(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("objSample"))
-	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions())
-	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions())
+	appClient.RegisterFunction(client.DefaultPredictFunctionOptions())
+	appClient.RegisterFunction(client.DefaultMetricFunctionOptions())
 
-	resp := appClient.QueryAlgos(&asset.AlgoQueryFilter{}, "", 100)
+	resp := appClient.QueryFunctions(&asset.FunctionQueryFilter{}, "", 100)
 
 	// We cannot check for equality since this test may run after others,
-	// we will probably have more than the registered algo above.
-	require.GreaterOrEqual(t, len(resp.Algos), 1, "Unexpected total number of algo")
+	// we will probably have more than the registered function above.
+	require.GreaterOrEqual(t, len(resp.Functions), 1, "Unexpected total number of function")
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	planKey := appClient.GetKeyStore().GetKey(client.DefaultPlanRef)
 
-	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)
+	resp = appClient.QueryFunctions(&asset.FunctionQueryFilter{ComputePlanKey: planKey}, "", 100)
 
-	require.Equal(t, 0, len(resp.Algos), "Unexpected number algo used in compute plan without tasks")
+	require.Equal(t, 0, len(resp.Functions), "Unexpected number function used in compute plan without tasks")
 
 	appClient.RegisterTasks(
 		client.DefaultTrainTaskOptions().WithKeyRef("train1"),
@@ -70,18 +70,18 @@ func TestQueryAlgos(t *testing.T) {
 			WithInput("predictions", &client.TaskOutputRef{TaskRef: "predict", Identifier: "predictions"}),
 	)
 
-	resp = appClient.QueryAlgos(&asset.AlgoQueryFilter{ComputePlanKey: planKey}, "", 100)
-	require.Equal(t, 3, len(resp.Algos), "Unexpected number of algo used in compute plan with tasks")
+	resp = appClient.QueryFunctions(&asset.FunctionQueryFilter{ComputePlanKey: planKey}, "", 100)
+	require.Equal(t, 3, len(resp.Functions), "Unexpected number of function used in compute plan with tasks")
 }
 
-func TestQueryAlgosInputOutputs(t *testing.T) {
+func TestQueryFunctionsInputOutputs(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	keyRef := "test-algos-input-outputs"
+	keyRef := "test-functions-input-outputs"
 	key := appClient.GetKeyStore().GetKey(keyRef)
 
-	algoOptions := client.DefaultSimpleAlgoOptions().WithKeyRef(keyRef)
-	algoOptions.Inputs = map[string]*asset.AlgoInput{
+	functionOptions := client.DefaultSimpleFunctionOptions().WithKeyRef(keyRef)
+	functionOptions.Inputs = map[string]*asset.FunctionInput{
 		"data manager": {
 			Kind: asset.AssetKind_ASSET_DATA_MANAGER,
 		},
@@ -94,7 +94,7 @@ func TestQueryAlgosInputOutputs(t *testing.T) {
 			Optional: true,
 		},
 	}
-	algoOptions.Outputs = map[string]*asset.AlgoOutput{
+	functionOptions.Outputs = map[string]*asset.FunctionOutput{
 		"model": {
 			Kind:     asset.AssetKind_ASSET_MODEL,
 			Multiple: true,
@@ -103,50 +103,50 @@ func TestQueryAlgosInputOutputs(t *testing.T) {
 			Kind: asset.AssetKind_ASSET_PERFORMANCE,
 		},
 	}
-	appClient.RegisterAlgo(algoOptions)
+	appClient.RegisterFunction(functionOptions)
 
-	// test QueryAlgos
-	resp := appClient.QueryAlgos(nil, "", 10000)
+	// test QueryFunctions
+	resp := appClient.QueryFunctions(nil, "", 10000)
 	found := false
-	for _, algo := range resp.Algos {
-		if algo.Key == key {
+	for _, function := range resp.Functions {
+		if function.Key == key {
 			found = true
-			e2erequire.ProtoMapEqual(t, algo.Inputs, algoOptions.Inputs)
-			e2erequire.ProtoMapEqual(t, algo.Outputs, algoOptions.Outputs)
+			e2erequire.ProtoMapEqual(t, function.Inputs, functionOptions.Inputs)
+			e2erequire.ProtoMapEqual(t, function.Outputs, functionOptions.Outputs)
 			break
 		}
 	}
-	require.True(t, found, "Could not find expected algo with key ref "+keyRef)
+	require.True(t, found, "Could not find expected function with key ref "+keyRef)
 
-	// test GetAlgo
-	respAlgo := appClient.GetAlgo(keyRef)
+	// test GetFunction
+	respFunction := appClient.GetFunction(keyRef)
 
-	e2erequire.ProtoMapEqual(t, respAlgo.Inputs, algoOptions.Inputs)
-	e2erequire.ProtoMapEqual(t, respAlgo.Outputs, algoOptions.Outputs)
+	e2erequire.ProtoMapEqual(t, respFunction.Inputs, functionOptions.Inputs)
+	e2erequire.ProtoMapEqual(t, respFunction.Outputs, functionOptions.Outputs)
 }
 
-// TestUpdateAlgo updates mutable fieds of an algo and ensure an event containing the algo is recorded. List of mutable fields: name.
-func TestUpdateAlgo(t *testing.T) {
+// TestUpdateFunction updates mutable fieds of an function and ensure an event containing the function is recorded. List of mutable fields: name.
+func TestUpdateFunction(t *testing.T) {
 	appClient := factory.NewTestClient()
-	keyRef := "algo_filter_simple"
-	registeredAlgo := appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef(keyRef))
+	keyRef := "function_filter_simple"
+	registeredFunction := appClient.RegisterFunction(client.DefaultSimpleFunctionOptions().WithKeyRef(keyRef))
 
-	appClient.UpdateAlgo(keyRef, "new algo name")
+	appClient.UpdateFunction(keyRef, "new function name")
 
-	expectedAlgo := registeredAlgo
-	expectedAlgo.Name = "new algo name"
+	expectedFunction := registeredFunction
+	expectedFunction.Name = "new function name"
 
-	retrievedAlgo := appClient.GetAlgo(keyRef)
-	e2erequire.ProtoEqual(t, expectedAlgo, retrievedAlgo)
+	retrievedFunction := appClient.GetFunction(keyRef)
+	e2erequire.ProtoEqual(t, expectedFunction, retrievedFunction)
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
-		AssetKey:  registeredAlgo.Key,
+		AssetKey:  registeredFunction.Key,
 		AssetKind: asset.AssetKind_ASSET_ALGO,
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 	}, "", 100)
 
 	require.Len(t, resp.Events, 1, "Unexpected number of events")
 
-	eventAlgo := resp.Events[0].GetAlgo()
-	e2erequire.ProtoEqual(t, expectedAlgo, eventAlgo)
+	eventFunction := resp.Events[0].GetFunction()
+	e2erequire.ProtoEqual(t, expectedFunction, eventFunction)
 }

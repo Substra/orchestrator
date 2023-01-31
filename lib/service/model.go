@@ -28,7 +28,7 @@ type ModelDependencyProvider interface {
 	PermissionServiceProvider
 	ComputeTaskServiceProvider
 	ComputePlanServiceProvider
-	AlgoServiceProvider
+	FunctionServiceProvider
 	EventServiceProvider
 	TimeServiceProvider
 }
@@ -83,20 +83,20 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 	if !ok {
 		return nil, errors.NewMissingTaskOutput(task.Key, newModel.ComputeTaskOutputIdentifier)
 	}
-	algo, err := s.GetAlgoService().GetAlgo(task.AlgoKey)
+	function, err := s.GetFunctionService().GetFunction(task.FunctionKey)
 	if err != nil {
 		return nil, err
 	}
-	algoOutput, ok := algo.Outputs[newModel.ComputeTaskOutputIdentifier]
+	functionOutput, ok := function.Outputs[newModel.ComputeTaskOutputIdentifier]
 	if !ok {
-		// This should never happen since task outputs are checked against algo on registration
-		return nil, errors.NewInternal(fmt.Sprintf("missing algo output %q for task %q", newModel.ComputeTaskOutputIdentifier, task.Key))
+		// This should never happen since task outputs are checked against function on registration
+		return nil, errors.NewInternal(fmt.Sprintf("missing function output %q for task %q", newModel.ComputeTaskOutputIdentifier, task.Key))
 	}
-	if algoOutput.Kind != asset.AssetKind_ASSET_MODEL {
-		return nil, errors.NewIncompatibleTaskOutput(task.Key, newModel.ComputeTaskOutputIdentifier, algoOutput.Kind.String(), asset.AssetKind_ASSET_MODEL.String())
+	if functionOutput.Kind != asset.AssetKind_ASSET_MODEL {
+		return nil, errors.NewIncompatibleTaskOutput(task.Key, newModel.ComputeTaskOutputIdentifier, functionOutput.Kind.String(), asset.AssetKind_ASSET_MODEL.String())
 	}
 
-	if outputCounter[newModel.ComputeTaskOutputIdentifier] >= 1 && !algoOutput.Multiple {
+	if outputCounter[newModel.ComputeTaskOutputIdentifier] >= 1 && !functionOutput.Multiple {
 		return nil, errors.NewError(orcerrors.ErrConflict, fmt.Sprintf("compute task %q already has its unique output %q registered", task.Key, newModel.ComputeTaskOutputIdentifier))
 	}
 

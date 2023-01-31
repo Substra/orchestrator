@@ -13,23 +13,23 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type sqlAlgo struct {
+type sqlFunction struct {
 	Key          string
 	Name         string
 	Description  asset.Addressable
-	Algorithm    asset.Addressable
+	Function    asset.Addressable
 	Permissions  asset.Permissions
 	Owner        string
 	CreationDate time.Time
 	Metadata     map[string]string
 }
 
-func (a *sqlAlgo) toAlgo() *asset.Algo {
-	return &asset.Algo{
+func (a *sqlFunction) toFunction() *asset.Function {
+	return &asset.Function{
 		Key:          a.Key,
 		Name:         a.Name,
 		Description:  &a.Description,
-		Algorithm:    &a.Algorithm,
+		Function:    &a.Function,
 		Permissions:  &a.Permissions,
 		Owner:        a.Owner,
 		CreationDate: timestamppb.New(a.CreationDate),
@@ -37,34 +37,34 @@ func (a *sqlAlgo) toAlgo() *asset.Algo {
 	}
 }
 
-// AddAlgo implements persistence.AlgoDBAL
-func (d *DBAL) AddAlgo(algo *asset.Algo) error {
-	err := d.addAddressable(algo.Description)
+// AddFunction implements persistence.FunctionDBAL
+func (d *DBAL) AddFunction(function *asset.Function) error {
+	err := d.addAddressable(function.Description)
 	if err != nil {
 		return err
 	}
 
-	err = d.addAddressable(algo.Algorithm)
+	err = d.addAddressable(function.Function)
 	if err != nil {
 		return err
 	}
 
 	stmt := getStatementBuilder().
-		Insert("algos").
-		Columns("key", "channel", "name", "description", "algorithm", "permissions", "owner", "creation_date", "metadata").
-		Values(algo.Key, d.channel, algo.Name, algo.Description.StorageAddress, algo.Algorithm.StorageAddress, algo.Permissions, algo.Owner, algo.CreationDate.AsTime(), algo.Metadata)
+		Insert("functions").
+		Columns("key", "channel", "name", "description", "functionrithm", "permissions", "owner", "creation_date", "metadata").
+		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Function.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata)
 
 	err = d.exec(stmt)
 	if err != nil {
 		return err
 	}
 
-	err = d.insertAlgoInputs(algo.Key, algo.Inputs)
+	err = d.insertFunctionInputs(function.Key, function.Inputs)
 	if err != nil {
 		return err
 	}
 
-	err = d.insertAlgoOutputs(algo.Key, algo.Outputs)
+	err = d.insertFunctionOutputs(function.Key, function.Outputs)
 	if err != nil {
 		return err
 	}
@@ -72,11 +72,11 @@ func (d *DBAL) AddAlgo(algo *asset.Algo) error {
 	return nil
 }
 
-// GetAlgo implements persistence.AlgoDBAL
-func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
+// GetFunction implements persistence.FunctionDBAL
+func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
-		From("expanded_algos").
+		Select("key", "name", "description_address", "description_checksum", "functionrithm_address", "functionrithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		From("expanded_functions").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
 	row, err := d.queryRow(stmt)
@@ -84,19 +84,19 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 		return nil, err
 	}
 
-	al := sqlAlgo{}
-	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
+	al := sqlFunction{}
+	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, orcerrors.NewNotFound(asset.AlgoKind, key)
+			return nil, orcerrors.NewNotFound(asset.FunctionKind, key)
 		}
 		return nil, err
 	}
 
-	res := al.toAlgo()
+	res := al.toFunction()
 
-	err = d.populateAlgosIO(res)
+	err = d.populateFunctionsIO(res)
 	if err != nil {
 		return nil, err
 	}
@@ -104,26 +104,26 @@ func (d *DBAL) GetAlgo(key string) (*asset.Algo, error) {
 	return res, nil
 }
 
-// QueryAlgos implements persistence.AlgoDBAL
-func (d *DBAL) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
-	algos, bookmark, err := d.queryAlgos(p, filter)
+// QueryFunctions implements persistence.FunctionDBAL
+func (d *DBAL) QueryFunctions(p *common.Pagination, filter *asset.FunctionQueryFilter) ([]*asset.Function, common.PaginationToken, error) {
+	functions, bookmark, err := d.queryFunctions(p, filter)
 	if err != nil {
 		return nil, "", err
 	}
 
-	err = d.populateAlgosIO(algos...)
+	err = d.populateFunctionsIO(functions...)
 	if err != nil {
 		return nil, "", err
 	}
 
-	return algos, bookmark, nil
+	return functions, bookmark, nil
 }
 
-// AlgoExists implements persistence.AlgoDBAL
-func (d *DBAL) AlgoExists(key string) (bool, error) {
+// FunctionExists implements persistence.FunctionDBAL
+func (d *DBAL) FunctionExists(key string) (bool, error) {
 	stmt := getStatementBuilder().
 		Select("COUNT(key)").
-		From("algos").
+		From("functions").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
 	row, err := d.queryRow(stmt)
@@ -137,15 +137,15 @@ func (d *DBAL) AlgoExists(key string) (bool, error) {
 	return count == 1, err
 }
 
-func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
+func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryFilter) ([]*asset.Function, common.PaginationToken, error) {
 	offset, err := getOffset(p.Token)
 	if err != nil {
 		return nil, "", err
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "algorithm_address", "algorithm_checksum", "permissions", "owner", "creation_date", "metadata").
-		From("expanded_algos").
+		Select("key", "name", "description_address", "description_checksum", "functionrithm_address", "functionrithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		From("expanded_functions").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").
 		Offset(uint64(offset)).
@@ -155,7 +155,7 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	if filter != nil {
 		if filter.ComputePlanKey != "" {
 			stmt = stmt.Where(sq.Expr(
-				"key IN (SELECT DISTINCT(algo_key) FROM compute_tasks WHERE compute_plan_key = ?)",
+				"key IN (SELECT DISTINCT(function_key) FROM compute_tasks WHERE compute_plan_key = ?)",
 				filter.ComputePlanKey,
 			))
 		}
@@ -167,18 +167,18 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 	}
 	defer rows.Close()
 
-	algos := make([]*asset.Algo, 0, p.Size)
+	functions := make([]*asset.Function, 0, p.Size)
 	var count int
 
 	for rows.Next() {
-		al := sqlAlgo{}
+		al := sqlFunction{}
 
-		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Algorithm.StorageAddress, &al.Algorithm.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
+		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
 		if err != nil {
 			return nil, "", err
 		}
 
-		algos = append(algos, al.toAlgo())
+		functions = append(functions, al.toFunction())
 		count++
 
 		if count == int(p.Size) {
@@ -195,15 +195,15 @@ func (d *DBAL) queryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) (
 		bookmark = strconv.Itoa(offset + count)
 	}
 
-	return algos, bookmark, nil
+	return functions, bookmark, nil
 }
 
-// UpdateAlgo updates the mutable fields of an algo in the DB. List of mutable fields: name.
-func (d *DBAL) UpdateAlgo(algo *asset.Algo) error {
+// UpdateFunction updates the mutable fields of an function in the DB. List of mutable fields: name.
+func (d *DBAL) UpdateFunction(function *asset.Function) error {
 	stmt := getStatementBuilder().
-		Update("algos").
-		Set("name", algo.Name).
-		Where(sq.Eq{"channel": d.channel, "key": algo.Key})
+		Update("functions").
+		Set("name", function.Name).
+		Where(sq.Eq{"channel": d.channel, "key": function.Key})
 
 	return d.exec(stmt)
 }

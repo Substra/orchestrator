@@ -9,21 +9,21 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-// AddAlgo stores a new algo
-func (db *DB) AddAlgo(algo *asset.Algo) error {
-	exists, err := db.hasKey(asset.AlgoKind, algo.GetKey())
+// AddFunction stores a new function
+func (db *DB) AddFunction(function *asset.Function) error {
+	exists, err := db.hasKey(asset.FunctionKind, function.GetKey())
 	if err != nil {
 		return err
 	}
 	if exists {
-		return errors.NewConflict(asset.AlgoKind, algo.Key)
+		return errors.NewConflict(asset.FunctionKind, function.Key)
 	}
 
-	algoBytes, err := marshaller.Marshal(algo)
+	functionBytes, err := marshaller.Marshal(function)
 	if err != nil {
 		return err
 	}
-	err = db.putState(asset.AlgoKind, algo.GetKey(), algoBytes)
+	err = db.putState(asset.FunctionKind, function.GetKey(), functionBytes)
 	if err != nil {
 		return err
 	}
@@ -31,11 +31,11 @@ func (db *DB) AddAlgo(algo *asset.Algo) error {
 	return nil
 }
 
-// GetAlgo retrieves an algo by its key
-func (db *DB) GetAlgo(key string) (*asset.Algo, error) {
-	a := asset.Algo{}
+// GetFunction retrieves an function by its key
+func (db *DB) GetFunction(key string) (*asset.Function, error) {
+	a := asset.Function{}
 
-	b, err := db.getState(asset.AlgoKind, key)
+	b, err := db.getState(asset.FunctionKind, key)
 	if err != nil {
 		return &a, err
 	}
@@ -44,18 +44,18 @@ func (db *DB) GetAlgo(key string) (*asset.Algo, error) {
 	return &a, err
 }
 
-// QueryAlgos retrieves all algos
-func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
+// QueryFunctions retrieves all functions
+func (db *DB) QueryFunctions(p *common.Pagination, filter *asset.FunctionQueryFilter) ([]*asset.Function, common.PaginationToken, error) {
 	logger := db.logger.With().
 		Interface("pagination", p).
 		Interface("filter", filter).
 		Logger()
 
-	logger.Debug().Msg("get algos")
+	logger.Debug().Msg("get functions")
 
 	query := richQuerySelector{
 		Selector: couchAssetQuery{
-			DocType: asset.AlgoKind,
+			DocType: asset.FunctionKind,
 		},
 	}
 
@@ -63,12 +63,12 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 		assetFilter := map[string]interface{}{}
 
 		if filter.ComputePlanKey != "" {
-			algoKeys, err := db.getComputePlanAlgoKeys(filter.ComputePlanKey)
+			functionKeys, err := db.getComputePlanFunctionKeys(filter.ComputePlanKey)
 			if err != nil {
 				return nil, "", err
 			}
 			assetFilter["key"] = map[string]interface{}{
-				"$in": algoKeys,
+				"$in": functionKeys,
 			}
 		}
 
@@ -92,7 +92,7 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 	}
 	defer resultsIterator.Close()
 
-	algos := make([]*asset.Algo, 0)
+	functions := make([]*asset.Function, 0)
 
 	for resultsIterator.HasNext() {
 		queryResult, err := resultsIterator.Next()
@@ -104,25 +104,25 @@ func (db *DB) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([
 		if err != nil {
 			return nil, "", err
 		}
-		algo := &asset.Algo{}
-		err = protojson.Unmarshal(storedAsset.Asset, algo)
+		function := &asset.Function{}
+		err = protojson.Unmarshal(storedAsset.Asset, function)
 		if err != nil {
 			return nil, "", err
 		}
 
-		algos = append(algos, algo)
+		functions = append(functions, function)
 	}
 
-	return algos, bookmark.Bookmark, nil
+	return functions, bookmark.Bookmark, nil
 }
 
-// AlgoExists implements persistence.AlgoDBAL
-func (db *DB) AlgoExists(key string) (bool, error) {
-	return db.hasKey(asset.AlgoKind, key)
+// FunctionExists implements persistence.FunctionDBAL
+func (db *DB) FunctionExists(key string) (bool, error) {
+	return db.hasKey(asset.FunctionKind, key)
 }
 
-// getComputePlanAlgoKeys returns keys of Algo in use in a ComputePlan
-func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
+// getComputePlanFunctionKeys returns keys of Function in use in a ComputePlan
+func (db *DB) getComputePlanFunctionKeys(planKey string) ([]string, error) {
 	logger := db.logger.With().Str("computePlan", planKey).Logger()
 
 	query := richQuerySelector{
@@ -132,7 +132,7 @@ func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
 				"compute_plan_key": planKey,
 			},
 		},
-		Fields: []string{"asset.algo.key"},
+		Fields: []string{"asset.function.key"},
 	}
 
 	b, err := json.Marshal(query)
@@ -149,7 +149,7 @@ func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
 	}
 	defer resultsIterator.Close()
 
-	// Using a map to deduplicate algo keys
+	// Using a map to deduplicate function keys
 	uniqueKeys := make(map[string]interface{})
 
 	for resultsIterator.HasNext() {
@@ -167,7 +167,7 @@ func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		uniqueKeys[task.AlgoKey] = struct{}{}
+		uniqueKeys[task.FunctionKey] = struct{}{}
 	}
 
 	keys := make([]string, len(uniqueKeys))
@@ -180,12 +180,12 @@ func (db *DB) getComputePlanAlgoKeys(planKey string) ([]string, error) {
 	return keys, nil
 }
 
-// UpdateAlgo implements persistence.AlgoDBAL
-func (db *DB) UpdateAlgo(algo *asset.Algo) error {
-	algoBytes, err := marshaller.Marshal(algo)
+// UpdateFunction implements persistence.FunctionDBAL
+func (db *DB) UpdateFunction(function *asset.Function) error {
+	functionBytes, err := marshaller.Marshal(function)
 	if err != nil {
 		return err
 	}
 
-	return db.putState(asset.AlgoKind, algo.GetKey(), algoBytes)
+	return db.putState(asset.FunctionKind, function.GetKey(), functionBytes)
 }

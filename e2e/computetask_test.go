@@ -21,7 +21,7 @@ func TestRegisterComputeTask(t *testing.T) {
 	computePlanRef := "register task cp"
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef(computePlanRef))
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -41,7 +41,7 @@ func TestRegisterTaskWithTransientOutput(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
@@ -57,7 +57,7 @@ func TestRegisterTaskWithTransientOutput(t *testing.T) {
 func TestTrainTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
@@ -74,25 +74,25 @@ func TestTrainTaskLifecycle(t *testing.T) {
 func TestPredictTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("train_algo"))
-	appClient.RegisterAlgo(client.DefaultPredictAlgoOptions().WithKeyRef("predict_algo"))
-	appClient.RegisterAlgo(client.DefaultMetricAlgoOptions().WithKeyRef("metric"))
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions().WithKeyRef("train_function"))
+	appClient.RegisterFunction(client.DefaultPredictFunctionOptions().WithKeyRef("predict_function"))
+	appClient.RegisterFunction(client.DefaultMetricFunctionOptions().WithKeyRef("metric"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
-	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("train").WithAlgoRef("train_algo"))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("train").WithFunctionRef("train_function"))
 
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithInput("model", &client.TaskOutputRef{TaskRef: "train", Identifier: "model"}).
-		WithAlgoRef("predict_algo").
+		WithFunctionRef("predict_function").
 		WithKeyRef("predict"))
 
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().
 		WithKeyRef("test").
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predict", Identifier: "predictions"}).
-		WithAlgoRef("metric"))
+		WithFunctionRef("metric"))
 
 	appClient.StartTask("train")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_end"))
@@ -114,7 +114,7 @@ func TestPredictTaskLifecycle(t *testing.T) {
 func TestCascadeCancel(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -142,7 +142,7 @@ func TestCascadeCancel(t *testing.T) {
 func TestCascadeTodo(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -172,7 +172,7 @@ func TestCascadeTodo(t *testing.T) {
 func TestCascadeFailure(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -199,7 +199,7 @@ func TestCascadeFailure(t *testing.T) {
 func TestPropagateLogsPermission(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 
 	logsPermission := &asset.NewPermissions{Public: false, AuthorizedIds: []string{appClient.MSPID}}
 	datamanager := client.DefaultDataManagerOptions().WithLogsPermission(logsPermission)
@@ -217,13 +217,13 @@ func TestPropagateLogsPermission(t *testing.T) {
 func TestQueryTasks(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
-	resp := appClient.QueryTasks(&asset.TaskQueryFilter{AlgoKey: appClient.GetKeyStore().GetKey(client.DefaultSimpleAlgoRef)}, "", 10)
+	resp := appClient.QueryTasks(&asset.TaskQueryFilter{FunctionKey: appClient.GetKeyStore().GetKey(client.DefaultSimpleFunctionRef)}, "", 10)
 	require.Equal(t, 1, len(resp.Tasks))
 }
 
@@ -234,7 +234,7 @@ func TestConcurrency(t *testing.T) {
 	// Share the same key store for both clients
 	client2.WithKeyStore(client1.GetKeyStore())
 
-	client1.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	client1.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	client1.RegisterDataManager(client.DefaultDataManagerOptions())
 	client1.RegisterDataSample(client.DefaultDataSampleOptions())
 	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -270,7 +270,7 @@ func TestStableTaskSort(t *testing.T) {
 	nbTasks := 1000
 	nbQuery := 10
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -314,25 +314,25 @@ func TestQueryTaskInputs(t *testing.T) {
 
 	taskRef := "task with inputs"
 	cpRef := "CP with inputs"
-	parentAlgoRef := "parent algo"
-	childAlgoRef := "child algo"
+	parentFunctionRef := "parent function"
+	childFunctionRef := "child function"
 	parentTaskRef := "parent task"
 	otherTaskRef := "other task"
 	inputModelRef := "input model"
 
-	parentAlgoOptions := client.
-		DefaultSimpleAlgoOptions().
-		WithKeyRef(parentAlgoRef).
+	parentFunctionOptions := client.
+		DefaultSimpleFunctionOptions().
+		WithKeyRef(parentFunctionRef).
 		WithOutput("output model", asset.AssetKind_ASSET_MODEL, false)
 
-	childAlgoOptions := client.
-		DefaultSimpleAlgoOptions().
-		WithKeyRef(childAlgoRef).
+	childFunctionOptions := client.
+		DefaultSimpleFunctionOptions().
+		WithKeyRef(childFunctionRef).
 		WithOutput("other model", asset.AssetKind_ASSET_MODEL, true)
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
-	appClient.RegisterAlgo(parentAlgoOptions)
-	appClient.RegisterAlgo(childAlgoOptions)
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.RegisterFunction(parentFunctionOptions)
+	appClient.RegisterFunction(childFunctionOptions)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef(cpRef))
@@ -340,7 +340,7 @@ func TestQueryTaskInputs(t *testing.T) {
 	parentTaskOptions := client.
 		DefaultTrainTaskOptions().
 		WithKeyRef(parentTaskRef).
-		WithAlgoRef(parentAlgoRef).
+		WithFunctionRef(parentFunctionRef).
 		WithPlanRef(cpRef).
 		WithOutput("output model", &asset.NewPermissions{
 			Public:        false,
@@ -355,7 +355,7 @@ func TestQueryTaskInputs(t *testing.T) {
 
 	taskOptions := client.
 		DefaultTrainTaskOptions().
-		WithAlgoRef(childAlgoRef).
+		WithFunctionRef(childFunctionRef).
 		WithKeyRef(taskRef).
 		WithPlanRef(cpRef).
 		WithInputAsset("model", inputModelRef).
@@ -451,7 +451,7 @@ func TestQueryTaskInputs(t *testing.T) {
 func TestEventsDuringComputeTaskLifecycle(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -484,19 +484,19 @@ func TestWorkerCancelTaskInFailedComputePlan(t *testing.T) {
 	client1 := factory.WithMSPID("MyOrg1MSP").NewTestClient()
 	client2 := factory.WithMSPID("MyOrg2MSP").NewTestClient().WithKeyStore(client1.GetKeyStore())
 
-	client1.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("trainAlgo"))
+	client1.RegisterFunction(client.DefaultSimpleFunctionOptions().WithKeyRef("trainFunction"))
 	client1.RegisterDataManager(client.DefaultDataManagerOptions())
 	client1.RegisterDataSample(client.DefaultDataSampleOptions())
 	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
 
 	client1.RegisterTasks(
-		client.DefaultTrainTaskOptions().WithAlgoRef("trainAlgo").WithKeyRef("trainTask1"),
-		client.DefaultTrainTaskOptions().WithAlgoRef("trainAlgo").WithKeyRef("trainTask2"),
+		client.DefaultTrainTaskOptions().WithFunctionRef("trainFunction").WithKeyRef("trainTask1"),
+		client.DefaultTrainTaskOptions().WithFunctionRef("trainFunction").WithKeyRef("trainTask2"),
 	)
 
-	client1.RegisterAlgo(client.DefaultAggregateAlgoOptions().WithKeyRef("aggAlgo"))
+	client1.RegisterFunction(client.DefaultAggregateFunctionOptions().WithKeyRef("aggFunction"))
 	client1.RegisterTasks(client.DefaultAggregateTaskOptions().
-		WithAlgoRef("aggAlgo").
+		WithFunctionRef("aggFunction").
 		WithKeyRef("aggTask").
 		WithInput("model", &client.TaskOutputRef{TaskRef: "trainTask1", Identifier: "model"}).
 		WithWorker("MyOrg2MSP"))
@@ -517,13 +517,13 @@ func TestGetTaskInputAssets(t *testing.T) {
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions().WithKeyRef("train_algo"))
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions().WithKeyRef("train_function"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
 	appClient.RegisterTasks(
-		client.DefaultTrainTaskOptions().WithKeyRef("train").WithAlgoRef("train_algo"),
-		client.DefaultTrainTaskOptions().WithKeyRef("train2").WithAlgoRef("train_algo"), // Make sure we have several models as aggregate input to check order
+		client.DefaultTrainTaskOptions().WithKeyRef("train").WithFunctionRef("train_function"),
+		client.DefaultTrainTaskOptions().WithKeyRef("train2").WithFunctionRef("train_function"), // Make sure we have several models as aggregate input to check order
 	)
 
 	// Check that train has expected inputs
@@ -543,19 +543,19 @@ func TestGetTaskInputAssets(t *testing.T) {
 		}
 	}
 
-	appClient.RegisterAlgo(
-		client.DefaultAggregateAlgoOptions().
-			SetInputs(map[string]*asset.AlgoInput{
+	appClient.RegisterFunction(
+		client.DefaultAggregateFunctionOptions().
+			SetInputs(map[string]*asset.FunctionInput{
 				"sink": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true},
 			}).
-			WithKeyRef("aggregate_algo"),
+			WithKeyRef("aggregate_function"),
 	)
 	appClient.RegisterTasks(
 		client.DefaultAggregateTaskOptions().
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "train", Identifier: "model"}).
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "train2", Identifier: "model"}).
 			WithKeyRef("aggregate").
-			WithAlgoRef("aggregate_algo"),
+			WithFunctionRef("aggregate_function"),
 	)
 
 	// Fetching inputs for a task not in TODO should return an error
@@ -588,13 +588,13 @@ func TestGetTaskInputAssetsFromComposite(t *testing.T) {
 
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 
-	appClient.RegisterAlgo(client.DefaultCompositeAlgoOptions().WithKeyRef("comp_algo"))
+	appClient.RegisterFunction(client.DefaultCompositeFunctionOptions().WithKeyRef("comp_function"))
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
 	appClient.RegisterTasks(
-		client.DefaultCompositeTaskOptions().WithKeyRef("comp1").WithAlgoRef("comp_algo"),
-		client.DefaultCompositeTaskOptions().WithKeyRef("comp2").WithAlgoRef("comp_algo"),
+		client.DefaultCompositeTaskOptions().WithKeyRef("comp1").WithFunctionRef("comp_function"),
+		client.DefaultCompositeTaskOptions().WithKeyRef("comp2").WithFunctionRef("comp_function"),
 	)
 
 	// Check that composite has expected inputs
@@ -614,19 +614,19 @@ func TestGetTaskInputAssetsFromComposite(t *testing.T) {
 		}
 	}
 
-	appClient.RegisterAlgo(
-		client.DefaultAggregateAlgoOptions().
-			SetInputs(map[string]*asset.AlgoInput{
+	appClient.RegisterFunction(
+		client.DefaultAggregateFunctionOptions().
+			SetInputs(map[string]*asset.FunctionInput{
 				"sink": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true},
 			}).
-			WithKeyRef("aggregate_algo"),
+			WithKeyRef("aggregate_function"),
 	)
 	appClient.RegisterTasks(
 		client.DefaultAggregateTaskOptions().
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}).
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "comp2", Identifier: "shared"}).
 			WithKeyRef("aggregate").
-			WithAlgoRef("aggregate_algo"),
+			WithFunctionRef("aggregate_function"),
 	)
 
 	// Fetching inputs for a task not in TODO should return an error

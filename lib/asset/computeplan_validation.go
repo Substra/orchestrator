@@ -16,7 +16,7 @@ func (t *NewComputePlan) Validate() error {
 	)
 }
 
-// Validate returns an error if the updated algo is not valid:
+// Validate returns an error if the updated function is not valid:
 // missing required data, incompatible values, etc.
 func (o *UpdateComputePlanParam) Validate() error {
 	return validation.ValidateStruct(o,

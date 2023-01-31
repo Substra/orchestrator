@@ -67,7 +67,7 @@ func GetServer(dbURL string, params common.AppParameters, healthcheck *health.Se
 	// Register application services
 	asset.RegisterOrganizationServiceServer(server, handlers.NewOrganizationServer())
 	asset.RegisterDataSampleServiceServer(server, handlers.NewDataSampleServer())
-	asset.RegisterAlgoServiceServer(server, handlers.NewAlgoServer())
+	asset.RegisterFunctionServiceServer(server, handlers.NewFunctionServer())
 	asset.RegisterDataManagerServiceServer(server, handlers.NewDataManagerServer())
 	asset.RegisterDatasetServiceServer(server, handlers.NewDatasetServer())
 	asset.RegisterComputeTaskServiceServer(server, handlers.NewComputeTaskServer())

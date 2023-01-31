@@ -10,12 +10,12 @@ import (
 )
 
 func TestWrapUnwrap(t *testing.T) {
-	msg := &asset.NewAlgo{Key: "uuid"}
+	msg := &asset.NewFunction{Key: "uuid"}
 
 	wrapped, err := Wrap(context.Background(), msg)
 	assert.NoError(t, err)
 
-	out := new(asset.NewAlgo)
+	out := new(asset.NewFunction)
 	err = wrapped.Unwrap(out)
 	assert.NoError(t, err)
 	assert.Equal(t, msg, out)
@@ -23,7 +23,7 @@ func TestWrapUnwrap(t *testing.T) {
 	serialized, err := json.Marshal(wrapped)
 	assert.NoError(t, err)
 
-	out = new(asset.NewAlgo)
+	out = new(asset.NewFunction)
 	err = Unwrap(serialized, out)
 	assert.NoError(t, err)
 	assert.Equal(t, msg, out)

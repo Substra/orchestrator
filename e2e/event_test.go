@@ -21,7 +21,7 @@ func TestEventTSFilter(t *testing.T) {
 
 	nbTasks := 10
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -61,7 +61,7 @@ func TestEventTSFilter(t *testing.T) {
 func TestSubscribeReplayEvents(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	plan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -88,7 +88,7 @@ func TestSubscribeReplayEvents(t *testing.T) {
 func TestSubscribeEventsEmittedWhileSubscribed(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	plan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -114,7 +114,7 @@ func TestSubscribeEventsEmittedWhileSubscribed(t *testing.T) {
 // it is possible to listen to new events.
 func TestSubscribeReplayThenListen(t *testing.T) {
 	appClient := factory.NewTestClient()
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	manager := appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 
 	replayedSamples := make([]*asset.DataSample, 5)
@@ -146,7 +146,7 @@ func TestSubscribeReplayThenListen(t *testing.T) {
 // to events without providing a startEventID param.
 func TestSubscribeWithoutStartEventID(t *testing.T) {
 	appClient := factory.NewTestClient()
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 
 	stream, cancel := appClient.SubscribeToEvents("")
 	defer cancel()
@@ -168,8 +168,8 @@ func TestSubscribeCheckEventStreamConsistency(t *testing.T) {
 	client1 := factory.WithChaincode("mycc").WithChannel("mychannel").NewTestClient()
 	client2 := factory.WithChaincode("yourcc").WithChannel("yourchannel").NewTestClient()
 
-	algo := client1.RegisterAlgo(client.DefaultSimpleAlgoOptions())
-	client2.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	function := client1.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	client2.RegisterFunction(client.DefaultSimpleFunctionOptions())
 
 	client1.RegisterDataManager(client.DefaultDataManagerOptions())
 	client2.RegisterDataManager(client.DefaultDataManagerOptions())
@@ -180,7 +180,7 @@ func TestSubscribeCheckEventStreamConsistency(t *testing.T) {
 	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
 	client2.RegisterComputePlan(client.DefaultComputePlanOptions())
 
-	startEvent := client1.GetAssetCreationEvent(algo.Key)
+	startEvent := client1.GetAssetCreationEvent(function.Key)
 	stream, cancel := client1.SubscribeToEvents(startEvent.Id)
 	defer cancel()
 
@@ -214,7 +214,7 @@ func TestSubscribeParallel(t *testing.T) {
 	client1 := factory.NewTestClient()
 	client2 := factory.NewTestClient()
 
-	client1.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	client1.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	client1.RegisterDataManager(client.DefaultDataManagerOptions())
 	client1.RegisterDataSample(client.DefaultDataSampleOptions())
 	plan := client1.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -274,7 +274,7 @@ func TestSubscribeSpeedSingleClient(t *testing.T) {
 
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	plan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -308,7 +308,7 @@ func TestSubscribeSpeedMultipleClients(t *testing.T) {
 
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	plan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())

@@ -7,7 +7,7 @@ import (
 	"github.com/substra/orchestrator/lib/asset"
 )
 
-func TestAlgoServerImplementServer(t *testing.T) {
-	server := NewAlgoServer()
-	assert.Implementsf(t, (*asset.AlgoServiceServer)(nil), server, "AlgoServer should implements AlgoServiceServer")
+func TestFunctionServerImplementServer(t *testing.T) {
+	server := NewFunctionServer()
+	assert.Implementsf(t, (*asset.FunctionServiceServer)(nil), server, "FunctionServer should implements FunctionServiceServer")
 }

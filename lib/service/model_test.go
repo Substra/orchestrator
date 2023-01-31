@@ -155,13 +155,13 @@ func TestRegisterModelWrongPermissions(t *testing.T) {
 }
 
 func TestRegisterTrainModel(t *testing.T) {
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
@@ -170,14 +170,14 @@ func TestRegisterTrainModel(t *testing.T) {
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
+	function := &asset.Function{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
 		},
 	}
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+	as.On("GetFunction", function.Key).Once().Return(function, nil)
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -197,7 +197,7 @@ func TestRegisterTrainModel(t *testing.T) {
 				},
 			},
 		},
-		AlgoKey: algo.Key,
+		FunctionKey: function.Key,
 	}
 
 	model := &asset.NewModel{
@@ -258,13 +258,13 @@ func TestRegisterTrainModel(t *testing.T) {
 }
 
 func TestRegisterAggregateModel(t *testing.T) {
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
@@ -273,14 +273,14 @@ func TestRegisterAggregateModel(t *testing.T) {
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
+	function := &asset.Function{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
 		},
 	}
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+	as.On("GetFunction", function.Key).Once().Return(function, nil)
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -300,7 +300,7 @@ func TestRegisterAggregateModel(t *testing.T) {
 				},
 			},
 		},
-		AlgoKey: algo.Key,
+		FunctionKey: function.Key,
 	}
 
 	model := &asset.NewModel{
@@ -353,10 +353,10 @@ func TestRegisterAggregateModel(t *testing.T) {
 }
 
 func TestRegisterDuplicateModel(t *testing.T) {
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 
 	provider := newMockedProvider()
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	service := NewModelService(provider)
 
 	model := &asset.NewModel{
@@ -368,14 +368,14 @@ func TestRegisterDuplicateModel(t *testing.T) {
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		},
 	}
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
+	function := &asset.Function{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
 		},
 	}
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+	as.On("GetFunction", function.Key).Once().Return(function, nil)
 
 	_, err := service.registerModel(
 		model,
@@ -399,7 +399,7 @@ func TestRegisterDuplicateModel(t *testing.T) {
 					},
 				},
 			},
-			AlgoKey: algo.Key,
+			FunctionKey: function.Key,
 		},
 	)
 	assert.Error(t, err)
@@ -412,13 +412,13 @@ func TestRegisterDuplicateModel(t *testing.T) {
 }
 
 func TestRegisterHeadModel(t *testing.T) {
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
@@ -427,8 +427,8 @@ func TestRegisterHeadModel(t *testing.T) {
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
+	function := &asset.Function{
+		Outputs: map[string]*asset.FunctionOutput{
 			"local": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
@@ -437,7 +437,7 @@ func TestRegisterHeadModel(t *testing.T) {
 			},
 		},
 	}
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+	as.On("GetFunction", function.Key).Once().Return(function, nil)
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -467,7 +467,7 @@ func TestRegisterHeadModel(t *testing.T) {
 					},
 				}},
 		},
-		AlgoKey: algo.Key,
+		FunctionKey: function.Key,
 	}
 
 	model := &asset.NewModel{
@@ -530,8 +530,8 @@ func TestRegisterHeadModel(t *testing.T) {
 
 func TestRegisterMultipleHeads(t *testing.T) {
 	provider := newMockedProvider()
-	as := new(MockAlgoAPI)
-	provider.On("GetAlgoService").Return(as)
+	as := new(MockFunctionAPI)
+	provider.On("GetFunctionService").Return(as)
 	service := NewModelService(provider)
 
 	model := &asset.NewModel{
@@ -544,8 +544,8 @@ func TestRegisterMultipleHeads(t *testing.T) {
 		},
 	}
 
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
+	function := &asset.Function{
+		Outputs: map[string]*asset.FunctionOutput{
 			"local": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
@@ -554,7 +554,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 			},
 		},
 	}
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+	as.On("GetFunction", function.Key).Once().Return(function, nil)
 
 	_, err := service.registerModel(
 		model,
@@ -588,7 +588,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 						},
 					}},
 			},
-			AlgoKey: algo.Key,
+			FunctionKey: function.Key,
 		})
 	assert.Error(t, err)
 	orcError := new(orcerrors.OrcError)
@@ -601,18 +601,18 @@ func TestRegisterMultipleHeads(t *testing.T) {
 
 func TestRegisterInvalidOutput(t *testing.T) {
 	provider := newMockedProvider()
-	as := new(MockAlgoAPI)
-	provider.On("GetAlgoService").Return(as)
+	as := new(MockFunctionAPI)
+	provider.On("GetFunctionService").Return(as)
 	service := NewModelService(provider)
 
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
+	function := &asset.Function{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {
 				Kind: asset.AssetKind_ASSET_UNKNOWN,
 			},
 		},
 	}
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+	as.On("GetFunction", function.Key).Once().Return(function, nil)
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -631,7 +631,7 @@ func TestRegisterInvalidOutput(t *testing.T) {
 					},
 				}},
 		},
-		AlgoKey: algo.Key,
+		FunctionKey: function.Key,
 	}
 
 	model := &asset.NewModel{
@@ -670,13 +670,13 @@ func TestRegisterInvalidOutput(t *testing.T) {
 }
 
 func TestRegisterModelsTrainTask(t *testing.T) {
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	dbal := new(persistence.MockDBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -685,14 +685,14 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
+	function := &asset.Function{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
 		},
 	}
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+	as.On("GetFunction", function.Key).Once().Return(function, nil)
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
@@ -712,7 +712,7 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 				},
 			},
 		},
-		AlgoKey: algo.Key,
+		FunctionKey: function.Key,
 	}
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Once().Return(task, nil)
@@ -777,13 +777,13 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 }
 
 func TestRegisterHeadAndTrunkModel(t *testing.T) {
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	dbal := new(persistence.MockDBAL)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetComputeTaskService").Return(cts)
 	provider.On("GetModelDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
@@ -791,8 +791,8 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 	service := NewModelService(provider)
 
 	ts.On("GetTransactionTime").Times(2).Return(time.Unix(1337, 0))
-	algo := &asset.Algo{
-		Outputs: map[string]*asset.AlgoOutput{
+	function := &asset.Function{
+		Outputs: map[string]*asset.FunctionOutput{
 			"local": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
@@ -830,7 +830,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 					},
 				}},
 		},
-		AlgoKey: algo.Key,
+		FunctionKey: function.Key,
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Times(2).Return(task, nil)
 
@@ -902,7 +902,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 			AssetKind:                   asset.AssetKind_ASSET_MODEL,
 			AssetKey:                    model.Key,
 		}
-		as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+		as.On("GetFunction", function.Key).Once().Return(function, nil)
 		cts.On("addComputeTaskOutputAsset", output).Once().Return(nil)
 	}
 

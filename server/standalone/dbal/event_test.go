@@ -137,7 +137,7 @@ func TestReplayBatchOfEvents(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   testChannel,
 		Timestamp: timestamppb.New(time.Unix(15000, 0)),
-		Asset:     &asset.Event_Algo{Algo: &asset.Algo{}},
+		Asset:     &asset.Event_Function{Function: &asset.Function{}},
 		Metadata:  map[string]string{},
 	}
 
@@ -213,7 +213,7 @@ func TestForwardEventNotification(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   testChannel,
 		Timestamp: timestamppb.New(time.Unix(15000, 0)),
-		Asset:     &asset.Event_Algo{Algo: &asset.Algo{}},
+		Asset:     &asset.Event_Function{Function: &asset.Function{}},
 		Metadata:  map[string]string{},
 	}
 
@@ -314,7 +314,7 @@ func TestGetEventByPosition(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   testChannel,
 		Timestamp: timestamppb.New(time.Unix(15000, 0)),
-		Asset:     &asset.Event_Algo{Algo: &asset.Algo{}},
+		Asset:     &asset.Event_Function{Function: &asset.Function{}},
 		Metadata:  map[string]string{},
 	}
 

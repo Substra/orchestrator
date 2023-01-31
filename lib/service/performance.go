@@ -23,7 +23,7 @@ type PerformanceDependencyProvider interface {
 	LoggerProvider
 	persistence.PerformanceDBALProvider
 	ComputeTaskServiceProvider
-	AlgoServiceProvider
+	FunctionServiceProvider
 	EventServiceProvider
 	TimeServiceProvider
 }
@@ -62,11 +62,11 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register performance for task with status %q", task.Status.String()))
 	}
 
-	if newPerf.MetricKey != task.AlgoKey {
-		return nil, errors.NewBadRequest(fmt.Sprintf("Algo used for metric with key %s should be the same than the one in task with key %s", newPerf.MetricKey, task.AlgoKey))
+	if newPerf.MetricKey != task.FunctionKey {
+		return nil, errors.NewBadRequest(fmt.Sprintf("Function used for metric with key %s should be the same than the one in task with key %s", newPerf.MetricKey, task.FunctionKey))
 	}
 
-	algoPerf, err := s.GetAlgoService().GetAlgo(newPerf.MetricKey)
+	functionPerf, err := s.GetFunctionService().GetFunction(newPerf.MetricKey)
 	if err != nil {
 		return nil, err
 	}
@@ -75,13 +75,13 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewMissingTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier)
 	}
 
-	algoOutput, ok := algoPerf.Outputs[newPerf.ComputeTaskOutputIdentifier]
+	functionOutput, ok := functionPerf.Outputs[newPerf.ComputeTaskOutputIdentifier]
 	if !ok {
-		// This should never happen since task outputs are checked against algo on registration
-		return nil, errors.NewInternal(fmt.Sprintf("missing algo output %q for task %q", newPerf.ComputeTaskOutputIdentifier, task.Key))
+		// This should never happen since task outputs are checked against function on registration
+		return nil, errors.NewInternal(fmt.Sprintf("missing function output %q for task %q", newPerf.ComputeTaskOutputIdentifier, task.Key))
 	}
-	if algoOutput.Kind != asset.AssetKind_ASSET_PERFORMANCE {
-		return nil, errors.NewIncompatibleTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier, algoOutput.Kind.String(), asset.AssetKind_ASSET_PERFORMANCE.String())
+	if functionOutput.Kind != asset.AssetKind_ASSET_PERFORMANCE {
+		return nil, errors.NewIncompatibleTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier, functionOutput.Kind.String(), asset.AssetKind_ASSET_PERFORMANCE.String())
 	}
 
 	perf := &asset.Performance{

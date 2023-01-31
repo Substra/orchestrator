@@ -12,10 +12,10 @@ type ComputePlanOptions struct {
 	KeyRef string
 }
 
-type AlgoOptions struct {
+type FunctionOptions struct {
 	KeyRef  string
-	Inputs  map[string]*asset.AlgoInput
-	Outputs map[string]*asset.AlgoOutput
+	Inputs  map[string]*asset.FunctionInput
+	Outputs map[string]*asset.FunctionOutput
 }
 
 type DataSampleOptions struct {
@@ -35,7 +35,7 @@ type TaskInputOptions struct {
 
 type TrainTaskOptions struct {
 	KeyRef         string
-	AlgoRef        string
+	FunctionRef        string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -45,7 +45,7 @@ type TrainTaskOptions struct {
 
 type TestTaskOptions struct {
 	KeyRef         string
-	AlgoRef        string
+	FunctionRef        string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -55,7 +55,7 @@ type TestTaskOptions struct {
 
 type PredictTaskOptions struct {
 	KeyRef         string
-	AlgoRef        string
+	FunctionRef        string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -65,7 +65,7 @@ type PredictTaskOptions struct {
 
 type CompositeTaskOptions struct {
 	KeyRef         string
-	AlgoRef        string
+	FunctionRef        string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -75,7 +75,7 @@ type CompositeTaskOptions struct {
 
 type AggregateTaskOptions struct {
 	KeyRef  string
-	AlgoRef string
+	FunctionRef string
 	PlanRef string
 	Worker  string
 	Inputs  []*TaskInputOptions
@@ -102,7 +102,7 @@ type DataManagerOptions struct {
 func DefaultTestTaskOptions() *TestTaskOptions {
 	return &TestTaskOptions{
 		KeyRef:         DefaultTestTaskRef,
-		AlgoRef:        DefaultMetricAlgoRef,
+		FunctionRef:        DefaultMetricFunctionRef,
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -134,15 +134,15 @@ func (o *TestTaskOptions) WithKeyRef(ref string) *TestTaskOptions {
 	return o
 }
 
-func (o *TestTaskOptions) WithAlgoRef(ref string) *TestTaskOptions {
-	o.AlgoRef = ref
+func (o *TestTaskOptions) WithFunctionRef(ref string) *TestTaskOptions {
+	o.FunctionRef = ref
 	return o
 }
 
 func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		AlgoKey:        ks.GetKey(o.AlgoRef),
+		FunctionKey:        ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
 		Outputs:        o.Outputs,
@@ -152,7 +152,7 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 func DefaultTrainTaskOptions() *TrainTaskOptions {
 	return &TrainTaskOptions{
 		KeyRef:         DefaultTrainTaskRef,
-		AlgoRef:        DefaultSimpleAlgoRef,
+		FunctionRef:        DefaultSimpleFunctionRef,
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -182,8 +182,8 @@ func (o *TrainTaskOptions) WithPlanRef(ref string) *TrainTaskOptions {
 	return o
 }
 
-func (o *TrainTaskOptions) WithAlgoRef(ref string) *TrainTaskOptions {
-	o.AlgoRef = ref
+func (o *TrainTaskOptions) WithFunctionRef(ref string) *TrainTaskOptions {
+	o.FunctionRef = ref
 	return o
 }
 
@@ -204,7 +204,7 @@ func (o *TrainTaskOptions) SetOutputs(outputs map[string]*asset.NewComputeTaskOu
 func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		AlgoKey:        ks.GetKey(o.AlgoRef),
+		FunctionKey:        ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
 		Outputs:        o.Outputs,
@@ -214,7 +214,7 @@ func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 func DefaultPredictTaskOptions() *PredictTaskOptions {
 	return &PredictTaskOptions{
 		KeyRef:         DefaultPredictTaskRef,
-		AlgoRef:        DefaultPredictAlgoRef,
+		FunctionRef:        DefaultPredictFunctionRef,
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -234,8 +234,8 @@ func DefaultPredictTaskOptions() *PredictTaskOptions {
 	}
 }
 
-func (o *PredictTaskOptions) WithAlgoRef(ref string) *PredictTaskOptions {
-	o.AlgoRef = ref
+func (o *PredictTaskOptions) WithFunctionRef(ref string) *PredictTaskOptions {
+	o.FunctionRef = ref
 	return o
 }
 
@@ -252,7 +252,7 @@ func (o *PredictTaskOptions) WithDataSampleRef(ref string) *PredictTaskOptions {
 func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		AlgoKey:        ks.GetKey(o.AlgoRef),
+		FunctionKey:        ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
 		Outputs:        o.Outputs,
@@ -262,7 +262,7 @@ func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 	return &CompositeTaskOptions{
 		KeyRef:         DefaultCompositeTaskRef,
-		AlgoRef:        DefaultCompositeAlgoRef,
+		FunctionRef:        DefaultCompositeFunctionRef,
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -288,15 +288,15 @@ func (o *CompositeTaskOptions) WithKeyRef(ref string) *CompositeTaskOptions {
 	return o
 }
 
-func (o *CompositeTaskOptions) WithAlgoRef(ref string) *CompositeTaskOptions {
-	o.AlgoRef = ref
+func (o *CompositeTaskOptions) WithFunctionRef(ref string) *CompositeTaskOptions {
+	o.FunctionRef = ref
 	return o
 }
 
 func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		AlgoKey:        ks.GetKey(o.AlgoRef),
+		FunctionKey:        ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
 		Outputs:        o.Outputs,
@@ -306,7 +306,7 @@ func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 func DefaultAggregateTaskOptions() *AggregateTaskOptions {
 	return &AggregateTaskOptions{
 		KeyRef:  DefaultAggregateTaskRef,
-		AlgoRef: DefaultAggregateAlgoRef,
+		FunctionRef: DefaultAggregateFunctionRef,
 		PlanRef: DefaultPlanRef,
 		Worker:  "MyOrg1MSP",
 		Inputs:  []*TaskInputOptions{},
@@ -326,15 +326,15 @@ func (o *AggregateTaskOptions) WithWorker(w string) *AggregateTaskOptions {
 	return o
 }
 
-func (o *AggregateTaskOptions) WithAlgoRef(ref string) *AggregateTaskOptions {
-	o.AlgoRef = ref
+func (o *AggregateTaskOptions) WithFunctionRef(ref string) *AggregateTaskOptions {
+	o.FunctionRef = ref
 	return o
 }
 
 func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		AlgoKey:        ks.GetKey(o.AlgoRef),
+		FunctionKey:        ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Worker:         o.Worker,
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
@@ -342,78 +342,78 @@ func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	}
 }
 
-func DefaultSimpleAlgoOptions() *AlgoOptions {
-	return &AlgoOptions{
-		KeyRef: DefaultSimpleAlgoRef,
-		Inputs: map[string]*asset.AlgoInput{
+func DefaultSimpleFunctionOptions() *FunctionOptions {
+	return &FunctionOptions{
+		KeyRef: DefaultSimpleFunctionRef,
+		Inputs: map[string]*asset.FunctionInput{
 			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			"model":       {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true, Optional: true},
 		},
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
 }
 
-func DefaultCompositeAlgoOptions() *AlgoOptions {
-	return &AlgoOptions{
-		KeyRef: DefaultCompositeAlgoRef,
-		Inputs: map[string]*asset.AlgoInput{
+func DefaultCompositeFunctionOptions() *FunctionOptions {
+	return &FunctionOptions{
+		KeyRef: DefaultCompositeFunctionRef,
+		Inputs: map[string]*asset.FunctionInput{
 			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			"shared":      {Kind: asset.AssetKind_ASSET_MODEL, Optional: true},
 			"local":       {Kind: asset.AssetKind_ASSET_MODEL, Optional: true},
 		},
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
 }
 
-func DefaultAggregateAlgoOptions() *AlgoOptions {
-	return &AlgoOptions{
-		KeyRef: DefaultAggregateAlgoRef,
-		Inputs: map[string]*asset.AlgoInput{
+func DefaultAggregateFunctionOptions() *FunctionOptions {
+	return &FunctionOptions{
+		KeyRef: DefaultAggregateFunctionRef,
+		Inputs: map[string]*asset.FunctionInput{
 			"model": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true, Optional: true},
 		},
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
 }
 
-func DefaultPredictAlgoOptions() *AlgoOptions {
-	return &AlgoOptions{
-		KeyRef: DefaultPredictAlgoRef,
-		Inputs: map[string]*asset.AlgoInput{
+func DefaultPredictFunctionOptions() *FunctionOptions {
+	return &FunctionOptions{
+		KeyRef: DefaultPredictFunctionRef,
+		Inputs: map[string]*asset.FunctionInput{
 			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			"model":       {Kind: asset.AssetKind_ASSET_MODEL},
 		},
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"predictions": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
 }
 
-func DefaultMetricAlgoOptions() *AlgoOptions {
-	return &AlgoOptions{
-		KeyRef: DefaultMetricAlgoRef,
-		Inputs: map[string]*asset.AlgoInput{
+func DefaultMetricFunctionOptions() *FunctionOptions {
+	return &FunctionOptions{
+		KeyRef: DefaultMetricFunctionRef,
+		Inputs: map[string]*asset.FunctionInput{
 			"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			"predictions": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE},
 		},
 	}
 }
 
-func (o *AlgoOptions) WithOutput(identifier string, kind asset.AssetKind, multiple bool) *AlgoOptions {
-	o.Outputs[identifier] = &asset.AlgoOutput{
+func (o *FunctionOptions) WithOutput(identifier string, kind asset.AssetKind, multiple bool) *FunctionOptions {
+	o.Outputs[identifier] = &asset.FunctionOutput{
 		Kind:     kind,
 		Multiple: multiple,
 	}
@@ -421,18 +421,18 @@ func (o *AlgoOptions) WithOutput(identifier string, kind asset.AssetKind, multip
 }
 
 // SetInputs will override existing inputs with provided argument
-func (o *AlgoOptions) SetInputs(inputs map[string]*asset.AlgoInput) *AlgoOptions {
+func (o *FunctionOptions) SetInputs(inputs map[string]*asset.FunctionInput) *FunctionOptions {
 	o.Inputs = inputs
 	return o
 }
 
 // SetOutputs will override existing outputs with provided argument
-func (o *AlgoOptions) SetOutputs(outputs map[string]*asset.AlgoOutput) *AlgoOptions {
+func (o *FunctionOptions) SetOutputs(outputs map[string]*asset.FunctionOutput) *FunctionOptions {
 	o.Outputs = outputs
 	return o
 }
 
-func (o *AlgoOptions) WithKeyRef(ref string) *AlgoOptions {
+func (o *FunctionOptions) WithKeyRef(ref string) *FunctionOptions {
 	o.KeyRef = ref
 	return o
 }
@@ -475,7 +475,7 @@ func DefaultPerformanceOptions() *PerformanceOptions {
 	return &PerformanceOptions{
 		ComputeTaskKeyRef: DefaultTrainTaskRef,
 		ComputeTaskOutput: "performance",
-		MetricKeyRef:      DefaultMetricAlgoRef,
+		MetricKeyRef:      DefaultMetricFunctionRef,
 		PerformanceValue:  0.5,
 	}
 }

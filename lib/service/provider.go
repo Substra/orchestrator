@@ -22,7 +22,7 @@ type DependenciesProvider interface {
 	persistence.DBALProvider
 	OrganizationServiceProvider
 	DataSampleServiceProvider
-	AlgoServiceProvider
+	FunctionServiceProvider
 	PermissionServiceProvider
 	DataManagerServiceProvider
 	DatasetServiceProvider
@@ -49,7 +49,7 @@ type Provider struct {
 	organization  OrganizationAPI
 	permission    PermissionAPI
 	datasample    DataSampleAPI
-	algo          AlgoAPI
+	function          FunctionAPI
 	datamanager   DataManagerAPI
 	dataset       DatasetAPI
 	computeTask   ComputeTaskAPI
@@ -99,8 +99,8 @@ func (sc *Provider) GetDataManagerDBAL() persistence.DataManagerDBAL {
 	return sc.dbal
 }
 
-// GetAlgoDBAL returns the database abstraction layer for Algos
-func (sc *Provider) GetAlgoDBAL() persistence.AlgoDBAL {
+// GetFunctionDBAL returns the database abstraction layer for Functions
+func (sc *Provider) GetFunctionDBAL() persistence.FunctionDBAL {
 	return sc.dbal
 }
 
@@ -168,13 +168,13 @@ func (sc *Provider) GetDatasetService() DatasetAPI {
 	return sc.dataset
 }
 
-// GetAlgoService returns an AlgoAPI instance.
+// GetFunctionService returns an FunctionAPI instance.
 // The service will be instanciated if needed.
-func (sc *Provider) GetAlgoService() AlgoAPI {
-	if sc.algo == nil {
-		sc.algo = NewAlgoService(sc)
+func (sc *Provider) GetFunctionService() FunctionAPI {
+	if sc.function == nil {
+		sc.function = NewFunctionService(sc)
 	}
-	return sc.algo
+	return sc.function
 }
 
 // GetPermissionService returns a PermissionAPI instance.

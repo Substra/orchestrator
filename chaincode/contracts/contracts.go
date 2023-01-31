@@ -2,7 +2,7 @@ package contracts
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/substra/orchestrator/chaincode/algo"
+	"github.com/substra/orchestrator/chaincode/function"
 	"github.com/substra/orchestrator/chaincode/computeplan"
 	"github.com/substra/orchestrator/chaincode/computetask"
 	"github.com/substra/orchestrator/chaincode/datamanager"
@@ -20,7 +20,7 @@ import (
 var AllContracts []contractapi.ContractInterface = []contractapi.ContractInterface{
 	organization.NewSmartContract(),
 	datasample.NewSmartContract(),
-	algo.NewSmartContract(),
+	function.NewSmartContract(),
 	datamanager.NewSmartContract(),
 	dataset.NewSmartContract(),
 	computetask.NewSmartContract(),

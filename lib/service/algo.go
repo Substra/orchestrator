@@ -9,62 +9,62 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// AlgoAPI defines the methods to act on Algos
-type AlgoAPI interface {
-	RegisterAlgo(algo *asset.NewAlgo, owner string) (*asset.Algo, error)
-	GetAlgo(string) (*asset.Algo, error)
-	QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error)
+// FunctionAPI defines the methods to act on Functions
+type FunctionAPI interface {
+	RegisterFunction(function *asset.NewFunction, owner string) (*asset.Function, error)
+	GetFunction(string) (*asset.Function, error)
+	QueryFunctions(p *common.Pagination, filter *asset.FunctionQueryFilter) ([]*asset.Function, common.PaginationToken, error)
 	CanDownload(key string, requester string) (bool, error)
-	AlgoExists(key string) (bool, error)
-	UpdateAlgo(algo *asset.UpdateAlgoParam, requester string) error
+	FunctionExists(key string) (bool, error)
+	UpdateFunction(function *asset.UpdateFunctionParam, requester string) error
 }
 
-// AlgoServiceProvider defines an object able to provide an AlgoAPI instance
-type AlgoServiceProvider interface {
-	GetAlgoService() AlgoAPI
+// FunctionServiceProvider defines an object able to provide an FunctionAPI instance
+type FunctionServiceProvider interface {
+	GetFunctionService() FunctionAPI
 }
 
-// AlgoDependencyProvider defines what the AlgoService needs to perform its duty
-type AlgoDependencyProvider interface {
+// FunctionDependencyProvider defines what the FunctionService needs to perform its duty
+type FunctionDependencyProvider interface {
 	LoggerProvider
-	persistence.AlgoDBALProvider
+	persistence.FunctionDBALProvider
 	EventServiceProvider
 	PermissionServiceProvider
 	TimeServiceProvider
 }
 
-// AlgoService is the algo manipulation entry point
+// FunctionService is the function manipulation entry point
 // it implements the API interface
-type AlgoService struct {
-	AlgoDependencyProvider
+type FunctionService struct {
+	FunctionDependencyProvider
 }
 
-// NewAlgoService will create a new service with given persistence layer
-func NewAlgoService(provider AlgoDependencyProvider) *AlgoService {
-	return &AlgoService{provider}
+// NewFunctionService will create a new service with given persistence layer
+func NewFunctionService(provider FunctionDependencyProvider) *FunctionService {
+	return &FunctionService{provider}
 }
 
-// RegisterAlgo persist an algo
-func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo, error) {
-	s.GetLogger().Debug().Str("owner", owner).Interface("newAlgo", a).Msg("Registering algo")
+// RegisterFunction persist an function
+func (s *FunctionService) RegisterFunction(a *asset.NewFunction, owner string) (*asset.Function, error) {
+	s.GetLogger().Debug().Str("owner", owner).Interface("newFunction", a).Msg("Registering function")
 	err := a.Validate()
 	if err != nil {
-		return nil, orcerrors.FromValidationError(asset.AlgoKind, err)
+		return nil, orcerrors.FromValidationError(asset.FunctionKind, err)
 	}
 
-	exists, err := s.GetAlgoDBAL().AlgoExists(a.Key)
+	exists, err := s.GetFunctionDBAL().FunctionExists(a.Key)
 	if err != nil {
 		return nil, err
 	}
 	if exists {
-		return nil, orcerrors.NewConflict(asset.AlgoKind, a.Key)
+		return nil, orcerrors.NewConflict(asset.FunctionKind, a.Key)
 	}
 
-	algo := &asset.Algo{
+	function := &asset.Function{
 		Key:          a.Key,
 		Name:         a.Name,
 		Description:  a.Description,
-		Algorithm:    a.Algorithm,
+		Function:    a.Function,
 		Metadata:     a.Metadata,
 		Owner:        owner,
 		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
@@ -72,7 +72,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		Outputs:      a.Outputs,
 	}
 
-	algo.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)
+	function.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  a.Key,
 		AssetKind: asset.AssetKind_ASSET_ALGO,
-		Asset:     &asset.Event_Algo{Algo: algo},
+		Asset:     &asset.Event_Function{Function: function},
 	}
 	err = s.GetEventService().RegisterEvents(event)
 
@@ -89,28 +89,28 @@ func (s *AlgoService) RegisterAlgo(a *asset.NewAlgo, owner string) (*asset.Algo,
 		return nil, err
 	}
 
-	err = s.GetAlgoDBAL().AddAlgo(algo)
+	err = s.GetFunctionDBAL().AddFunction(function)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return algo, nil
+	return function, nil
 }
 
-// GetAlgo retrieves an algo by its key
-func (s *AlgoService) GetAlgo(key string) (*asset.Algo, error) {
-	return s.GetAlgoDBAL().GetAlgo(key)
+// GetFunction retrieves an function by its key
+func (s *FunctionService) GetFunction(key string) (*asset.Function, error) {
+	return s.GetFunctionDBAL().GetFunction(key)
 }
 
-// QueryAlgos returns all stored algos
-func (s *AlgoService) QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error) {
-	return s.GetAlgoDBAL().QueryAlgos(p, filter)
+// QueryFunctions returns all stored functions
+func (s *FunctionService) QueryFunctions(p *common.Pagination, filter *asset.FunctionQueryFilter) ([]*asset.Function, common.PaginationToken, error) {
+	return s.GetFunctionDBAL().QueryFunctions(p, filter)
 }
 
-// CanDownload checks if the requester can download the algo corresponding to the provided key
-func (s *AlgoService) CanDownload(key string, requester string) (bool, error) {
-	obj, err := s.GetAlgo(key)
+// CanDownload checks if the requester can download the function corresponding to the provided key
+func (s *FunctionService) CanDownload(key string, requester string) (bool, error) {
+	obj, err := s.GetFunction(key)
 
 	if err != nil {
 		return false, err
@@ -119,43 +119,43 @@ func (s *AlgoService) CanDownload(key string, requester string) (bool, error) {
 	return obj.Permissions.Download.Public || utils.SliceContains(obj.Permissions.Download.AuthorizedIds, requester), nil
 }
 
-// AlgoExists returns true if the algo exists
-func (s *AlgoService) AlgoExists(key string) (bool, error) {
-	return s.GetAlgoDBAL().AlgoExists(key)
+// FunctionExists returns true if the function exists
+func (s *FunctionService) FunctionExists(key string) (bool, error) {
+	return s.GetFunctionDBAL().FunctionExists(key)
 }
 
-// UpdateAlgo updates mutable fields of an algo. List of mutable fields : name.
-func (s *AlgoService) UpdateAlgo(a *asset.UpdateAlgoParam, requester string) error {
-	s.GetLogger().Debug().Str("requester", requester).Interface("algoUpdate", a).Msg("Updating algo")
+// UpdateFunction updates mutable fields of an function. List of mutable fields : name.
+func (s *FunctionService) UpdateFunction(a *asset.UpdateFunctionParam, requester string) error {
+	s.GetLogger().Debug().Str("requester", requester).Interface("functionUpdate", a).Msg("Updating function")
 	err := a.Validate()
 	if err != nil {
-		return orcerrors.FromValidationError(asset.AlgoKind, err)
+		return orcerrors.FromValidationError(asset.FunctionKind, err)
 	}
 
-	algoKey := a.Key
+	functionKey := a.Key
 
-	algo, err := s.GetAlgoDBAL().GetAlgo(algoKey)
+	function, err := s.GetFunctionDBAL().GetFunction(functionKey)
 	if err != nil {
-		return orcerrors.NewNotFound(asset.AlgoKind, algoKey)
+		return orcerrors.NewNotFound(asset.FunctionKind, functionKey)
 	}
 
-	if algo.GetOwner() != requester {
-		return orcerrors.NewPermissionDenied("requester does not own the algo")
+	if function.GetOwner() != requester {
+		return orcerrors.NewPermissionDenied("requester does not own the function")
 	}
 
-	// Update algo name
-	algo.Name = a.Name
+	// Update function name
+	function.Name = a.Name
 
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
-		AssetKey:  algoKey,
+		AssetKey:  functionKey,
 		AssetKind: asset.AssetKind_ASSET_ALGO,
-		Asset:     &asset.Event_Algo{Algo: algo},
+		Asset:     &asset.Event_Function{Function: function},
 	}
 	err = s.GetEventService().RegisterEvents(event)
 	if err != nil {
 		return err
 	}
 
-	return s.GetAlgoDBAL().UpdateAlgo(algo)
+	return s.GetFunctionDBAL().UpdateFunction(function)
 }

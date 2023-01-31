@@ -19,8 +19,8 @@ func TestPerformanceNotFound(t *testing.T) {
 
 	taskKey := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
 	metricKey := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	rows := pgxmock.NewRows([]string{"compute_task_key", "algo_key", "performance_value", "creation_date"})
-	mock.ExpectQuery(`SELECT compute_task_key, algo_key, performance_value, creation_date FROM performances`).
+	rows := pgxmock.NewRows([]string{"compute_task_key", "function_key", "performance_value", "creation_date"})
+	mock.ExpectQuery(`SELECT compute_task_key, function_key, performance_value, creation_date FROM performances`).
 		WithArgs(testChannel, taskKey, metricKey).
 		WillReturnRows(rows)
 
@@ -45,8 +45,8 @@ func TestQueryPerformancesNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"compute_task_key", "algo_key", "performance_value", "creation_date"})
-	mock.ExpectQuery(`SELECT compute_task_key, algo_key, performance_value, creation_date FROM performances`).
+	rows := pgxmock.NewRows([]string{"compute_task_key", "function_key", "performance_value", "creation_date"})
+	mock.ExpectQuery(`SELECT compute_task_key, function_key, performance_value, creation_date FROM performances`).
 		WithArgs(testChannel).
 		WillReturnRows(rows)
 

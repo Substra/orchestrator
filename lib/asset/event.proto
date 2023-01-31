@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package orchestrator;
 
-import "algo.proto";
+import "function.proto";
 import "common.proto";
 import "computeplan.proto";
 import "computetask.proto";
@@ -33,7 +33,7 @@ message Event {
   string channel = 5;
   google.protobuf.Timestamp timestamp = 6;
   oneof asset {
-    Algo algo = 7;
+    Function function = 7;
     ComputePlan compute_plan = 8;
     ComputeTask compute_task = 9;
     DataManager data_manager = 10;

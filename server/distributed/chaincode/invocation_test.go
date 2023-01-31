@@ -34,7 +34,7 @@ func TestParamWrapping(t *testing.T) {
 	invocator := NewContractInvocator(requester, "channel", "chaincode")
 
 	// Invocation param is a protoreflect.ProtoMessage
-	param := &asset.QueryAlgosParam{PageToken: "uuid", PageSize: 20}
+	param := &asset.QueryFunctionsParam{PageToken: "uuid", PageSize: 20}
 	wrapper, err := communication.Wrap(context.Background(), param)
 	require.NoError(t, err)
 
@@ -43,7 +43,7 @@ func TestParamWrapping(t *testing.T) {
 	require.NoError(t, err)
 
 	// Response is also a wrapper
-	response := &asset.QueryAlgosResponse{Algos: []*asset.Algo{}, NextPageToken: "test"}
+	response := &asset.QueryFunctionsResponse{Functions: []*asset.Function{}, NextPageToken: "test"}
 	wrappedResponse, err := communication.Wrap(context.Background(), response)
 	require.NoError(t, err)
 	// Then serialized to match contractapi
@@ -57,12 +57,12 @@ func TestParamWrapping(t *testing.T) {
 		resChan <- serializedResponse
 	}()
 
-	requester.On("Request", utils.AnyContext, "channel", "chaincode", "orchestrator.algo:QueryAlgos", serializedInput).
+	requester.On("Request", utils.AnyContext, "channel", "chaincode", "orchestrator.function:QueryFunctions", serializedInput).
 		Once().
 		Return((<-chan []byte)(resChan), (<-chan error)(errChan))
 
-	output := &asset.QueryAlgosResponse{}
-	err = invocator.Call(context.TODO(), "orchestrator.algo:QueryAlgos", param, output)
+	output := &asset.QueryFunctionsResponse{}
+	err = invocator.Call(context.TODO(), "orchestrator.function:QueryFunctions", param, output)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "test", output.NextPageToken, "response should be properly unwrapped")

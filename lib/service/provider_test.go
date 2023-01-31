@@ -31,7 +31,7 @@ func TestServiceProviderInit(t *testing.T) {
 	assert.Implements(t, (*DataSampleServiceProvider)(nil), provider, "service provider should provide DataSampleService")
 	assert.Implements(t, (*DataManagerDependencyProvider)(nil), provider, "service provider should provide DataManagerService")
 	assert.Implements(t, (*DatasetDependencyProvider)(nil), provider, "service provider should provide DatasetService")
-	assert.Implements(t, (*AlgoServiceProvider)(nil), provider, "service provider should provide AlgoService")
+	assert.Implements(t, (*FunctionServiceProvider)(nil), provider, "service provider should provide FunctionService")
 	assert.Implements(t, (*ComputeTaskServiceProvider)(nil), provider)
 	assert.Implements(t, (*ComputePlanServiceProvider)(nil), provider)
 	assert.Implements(t, (*EventServiceProvider)(nil), provider)

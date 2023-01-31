@@ -9,9 +9,9 @@ import (
 
 func TestMarshalUnmarshalEventAsset(t *testing.T) {
 	cases := map[string]*Event{
-		"algo": {
+		"function": {
 			AssetKind: AssetKind_ASSET_ALGO,
-			Asset:     &Event_Algo{Algo: &Algo{Key: "algo"}},
+			Asset:     &Event_Function{Function: &Function{Key: "function"}},
 		},
 		"computePlan": {
 			AssetKind: AssetKind_ASSET_COMPUTE_PLAN,

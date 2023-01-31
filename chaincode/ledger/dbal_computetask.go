@@ -253,8 +253,8 @@ func (db *DB) QueryComputeTasks(p *common.Pagination, filter *asset.TaskQueryFil
 		if filter.ComputePlanKey != "" {
 			assetFilter["compute_plan_key"] = filter.ComputePlanKey
 		}
-		if filter.AlgoKey != "" {
-			assetFilter["algo_key"] = json.RawMessage(fmt.Sprintf(`{"key": "%s"}`, filter.AlgoKey))
+		if filter.FunctionKey != "" {
+			assetFilter["function_key"] = json.RawMessage(fmt.Sprintf(`{"key": "%s"}`, filter.FunctionKey))
 		}
 
 		if len(assetFilter) > 0 {

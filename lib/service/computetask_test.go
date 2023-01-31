@@ -26,7 +26,7 @@ var (
 
 var newTrainTask = &asset.NewComputeTask{
 	Key:            "867852b4-8419-4d52-8862-d5db823095be",
-	AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+	FunctionKey:        "867852b4-8419-4d52-8862-d5db823095be",
 	ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 	Inputs: []*asset.ComputeTaskInput{
 		{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[0]}},
@@ -158,7 +158,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	cps := new(MockComputePlanAPI)
 	dms := new(MockDataManagerAPI)
 	ps := new(MockPermissionAPI)
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	ts := new(MockTimeAPI)
 	os := new(MockOrganizationAPI)
 
@@ -167,7 +167,7 @@ func TestRegisterTrainTask(t *testing.T) {
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetPermissionService").Return(ps)
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetTimeService").Return(ts)
 	provider.On("GetOrganizationService").Return(os)
 
@@ -195,25 +195,25 @@ func TestRegisterTrainTask(t *testing.T) {
 	dms.On("GetDataManager", dataManagerKey).Once().Return(dataManager, nil)
 	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
-	algo := &asset.Algo{
+	function := &asset.Function{
 		Key: "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
 		Permissions: &asset.Permissions{
 			Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
 			Download: &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
 		},
-		Inputs: map[string]*asset.AlgoInput{
+		Inputs: map[string]*asset.FunctionInput{
 			"data":   {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 		},
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
 		},
 	}
-	// check algo matching
-	as.On("GetAlgo", newTrainTask.AlgoKey).Once().Return(algo, nil)
-	ps.On("CanProcess", algo.Permissions, "testOwner").Once().Return(true)
+	// check function matching
+	as.On("GetFunction", newTrainTask.FunctionKey).Once().Return(function, nil)
+	ps.On("CanProcess", function.Permissions, "testOwner").Once().Return(true)
 
 	// create new permissions
 	modelPerms := &asset.Permissions{
@@ -224,7 +224,7 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTrainTask.Key,
-		AlgoKey:        algo.Key,
+		FunctionKey:        function.Key,
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
@@ -282,7 +282,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-ffffffffffff",
-		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		FunctionKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
 			{Identifier: "local", Ref: &asset.ComputeTaskInput_ParentTaskOutput{
@@ -312,16 +312,16 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Download: &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
 	}
 
-	algoParent1 := &asset.Algo{
+	functionParent1 := &asset.Function{
 		Key: "d29118a9-f989-41af-ae02-90f0c4aaffe3",
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
-	algoParent2 := &asset.Algo{
+	functionParent2 := &asset.Function{
 		Key: "cc765417-1e14-41c8-9f7b-653ed335d30d",
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
@@ -331,7 +331,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-111111111111",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
-		AlgoKey:        algoParent1.Key,
+		FunctionKey:        functionParent1.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
 			"local":  {Permissions: localPerms},
@@ -341,7 +341,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-222222222222",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
-		AlgoKey:        algoParent2.Key,
+		FunctionKey:        functionParent2.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
 			"local":  {Permissions: localPerms},
@@ -355,7 +355,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	cps := new(MockComputePlanAPI)
 	dms := new(MockDataManagerAPI)
 	ps := new(MockPermissionAPI)
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	ts := new(MockTimeAPI)
 	os := new(MockOrganizationAPI)
 
@@ -364,7 +364,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetDataManagerService").Return(dms)
 	provider.On("GetPermissionService").Return(ps)
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetTimeService").Return(ts)
 	provider.On("GetOrganizationService").Return(os)
 
@@ -403,32 +403,32 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	ps.On("CreatePermissions", "testOwner", sharedPermsNew).Return(sharedPerms, nil)
 	ps.On("CreatePermissions", "testOwner", localPermsNew).Return(localPerms, nil)
 
-	algo := &asset.Algo{
+	function := &asset.Function{
 		Permissions: permissions,
-		Inputs: map[string]*asset.AlgoInput{
+		Inputs: map[string]*asset.FunctionInput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 			"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"data":   {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 		},
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
-	// check algo matching
-	as.On("GetAlgo", newTask.AlgoKey).Once().Return(algo, nil)
-	ps.On("CanProcess", algo.Permissions, "testOwner").Once().Return(true)
+	// check function matching
+	as.On("GetFunction", newTask.FunctionKey).Once().Return(function, nil)
+	ps.On("CanProcess", function.Permissions, "testOwner").Once().Return(true)
 
 	// Parent processing check -> requester is the task worker, so the datamanager owner here
-	as.On("GetAlgo", parent1.AlgoKey).Once().Return(algoParent1, nil)
+	as.On("GetFunction", parent1.FunctionKey).Once().Return(functionParent1, nil)
 	ps.On("CanProcess", parent1.Outputs["local"].Permissions, dataManager.Owner).Once().Return(true)
-	as.On("GetAlgo", parent2.AlgoKey).Once().Return(algoParent2, nil)
+	as.On("GetFunction", parent2.FunctionKey).Once().Return(functionParent2, nil)
 	ps.On("CanProcess", parent2.Outputs["shared"].Permissions, dataManager.Owner).Once().Return(true)
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTask.Key,
-		AlgoKey:        algo.Key,
+		FunctionKey:        function.Key,
 		Owner:          "testOwner",
 		ComputePlanKey: newTask.ComputePlanKey,
 		Metadata:       newTask.Metadata,
@@ -474,7 +474,7 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		FunctionKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
 			{Identifier: "test", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
@@ -527,7 +527,7 @@ func TestRegisterDeletedModel(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		AlgoKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		FunctionKey:        "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
 			{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{
@@ -601,9 +601,9 @@ func TestValidateTaskInputs(t *testing.T) {
 		AuthorizedIds: []string{owner, defaultWorker},
 	}
 
-	algo := &asset.Algo{
+	function := &asset.Function{
 		Key: "c9913ccb-3669-48bb-a6e6-4c84c1cf869a",
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"model": {
 				Kind: asset.AssetKind_ASSET_MODEL,
 			},
@@ -619,7 +619,7 @@ func TestValidateTaskInputs(t *testing.T) {
 
 	validTask := &asset.ComputeTask{
 		Key:     "valid_key",
-		AlgoKey: algo.Key,
+		FunctionKey: function.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
 				Permissions: &asset.Permissions{
@@ -639,15 +639,15 @@ func TestValidateTaskInputs(t *testing.T) {
 	cases := []struct {
 		name               string
 		worker             string
-		algo               map[string]*asset.AlgoInput
+		function               map[string]*asset.FunctionInput
 		task               []*asset.ComputeTaskInput
 		dependenciesErrors dependenciesErrors
 		expectedError      string
-		algoFetched        bool
+		functionFetched        bool
 	}{
 		{
 			name: "ok",
-			algo: map[string]*asset.AlgoInput{
+			function: map[string]*asset.FunctionInput{
 				"opener":      {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 				"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 				"model":       {Kind: asset.AssetKind_ASSET_MODEL},
@@ -663,43 +663,43 @@ func TestValidateTaskInputs(t *testing.T) {
 				}}},
 				{Identifier: "other model", Ref: validRef},
 			},
-			algoFetched: true,
+			functionFetched: true,
 		},
 		{
 			name:        "optional input",
-			algo:        map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
+			function:        map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
 			task:        []*asset.ComputeTaskInput{},
-			algoFetched: false,
+			functionFetched: false,
 		},
 		{
 			name:          "missing input",
-			algo:          map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function:          map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task:          []*asset.ComputeTaskInput{},
 			expectedError: "missing task input",
-			algoFetched:   false,
+			functionFetched:   false,
 		},
 		{
 			name: "duplicate input",
-			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{Identifier: "model", Ref: validRef},
 				{Identifier: "model", Ref: validRef},
 			},
 			expectedError: "duplicate task input",
-			algoFetched:   false,
+			functionFetched:   false,
 		},
 		{
 			name: "unknown input",
-			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
+			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
 			task: []*asset.ComputeTaskInput{
 				{Identifier: "foo", Ref: validRef},
 			},
 			expectedError: "unknown task input",
-			algoFetched:   false,
+			functionFetched:   false,
 		},
 		{
 			name: "error in GetCheckedModel",
-			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
 					Identifier: "model",
@@ -710,11 +710,11 @@ func TestValidateTaskInputs(t *testing.T) {
 				getCheckedModel: errors.New("model error, e.g. permission error"),
 			},
 			expectedError: "model error",
-			algoFetched:   false,
+			functionFetched:   false,
 		},
 		{
 			name: "error in GetComputeTask",
-			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
 					Identifier: "model",
@@ -725,11 +725,11 @@ func TestValidateTaskInputs(t *testing.T) {
 				getComputeTask: errors.New("task error, e.g. task not found"),
 			},
 			expectedError: "task error",
-			algoFetched:   false,
+			functionFetched:   false,
 		},
 		{
 			name: "mismatching asset kinds",
-			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
 					Identifier: "model",
@@ -740,11 +740,11 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "mismatching task input asset kinds",
-			algoFetched:   true,
+			functionFetched:   true,
 		},
 		{
 			name: "parent task output not found",
-			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
 					Identifier: "model",
@@ -754,12 +754,12 @@ func TestValidateTaskInputs(t *testing.T) {
 					}},
 				},
 			},
-			expectedError: "algo output not found",
-			algoFetched:   true,
+			expectedError: "function output not found",
+			functionFetched:   true,
 		},
 		{
 			name: "multiple output used as single input",
-			algo: map[string]*asset.AlgoInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
 					Identifier: "model",
@@ -770,11 +770,11 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "multiple task output used as single task input",
-			algoFetched:   true,
+			functionFetched:   true,
 		},
 		{
 			name: "input data manager referenced using parent task output",
-			algo: map[string]*asset.AlgoInput{
+			function: map[string]*asset.FunctionInput{
 				"datamanager": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 				"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			},
@@ -792,11 +792,11 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "openers must be referenced using an asset key",
-			algoFetched:   false,
+			functionFetched:   false,
 		},
 		{
 			name: "error in GetCheckedDataManager",
-			algo: map[string]*asset.AlgoInput{
+			function: map[string]*asset.FunctionInput{
 				"datamanager": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 				"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			},
@@ -814,11 +814,11 @@ func TestValidateTaskInputs(t *testing.T) {
 				checkDataManager: errors.New("data manager error, e.g. permission error"),
 			},
 			expectedError: "data manager error",
-			algoFetched:   false,
+			functionFetched:   false,
 		},
 		{
 			name: "input data sample referenced using parent task output",
-			algo: map[string]*asset.AlgoInput{
+			function: map[string]*asset.FunctionInput{
 				"datamanager": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 				"datasamples": {Kind: asset.AssetKind_ASSET_DATA_SAMPLE, Multiple: true},
 			},
@@ -836,11 +836,11 @@ func TestValidateTaskInputs(t *testing.T) {
 				},
 			},
 			expectedError: "data samples must be referenced using an asset key",
-			algoFetched:   false,
+			functionFetched:   false,
 		},
 		{
 			name: "worker is not authorized to process parent task output",
-			algo: map[string]*asset.AlgoInput{
+			function: map[string]*asset.FunctionInput{
 				"model": {Kind: asset.AssetKind_ASSET_MODEL},
 			},
 			task: []*asset.ComputeTaskInput{
@@ -854,7 +854,7 @@ func TestValidateTaskInputs(t *testing.T) {
 			},
 			expectedError: "doesn't have permission",
 			worker:        "org3",
-			algoFetched:   true,
+			functionFetched:   true,
 		},
 	}
 
@@ -866,7 +866,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				provider := newMockedProvider()
 				service := NewComputeTaskService(provider)
 
-				as := new(MockAlgoAPI)
+				as := new(MockFunctionAPI)
 				ctdbal := new(persistence.MockComputeTaskDBAL)
 				ms := new(MockModelAPI)
 				dms := new(MockDataManagerAPI)
@@ -882,8 +882,8 @@ func TestValidateTaskInputs(t *testing.T) {
 				} else {
 					ms.On("GetCheckedModel", mock.Anything, mock.Anything).Return(nil, c.dependenciesErrors.getCheckedModel)
 				}
-				if c.algoFetched {
-					as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+				if c.functionFetched {
+					as.On("GetFunction", function.Key).Once().Return(function, nil)
 				}
 
 				dataManager := &asset.DataManager{}
@@ -893,7 +893,7 @@ func TestValidateTaskInputs(t *testing.T) {
 				provider.On("GetDataManagerService").Return(dms)
 				provider.On("GetModelService").Return(ms)
 				provider.On("GetComputeTaskDBAL").Return(ctdbal)
-				provider.On("GetAlgoService").Return(as)
+				provider.On("GetFunctionService").Return(as)
 				provider.On("GetPermissionService").Return(NewPermissionService(provider))
 
 				worker := defaultWorker
@@ -901,7 +901,7 @@ func TestValidateTaskInputs(t *testing.T) {
 					worker = c.worker
 				}
 
-				err := service.validateInputs(c.task, c.algo, owner, worker)
+				err := service.validateInputs(c.task, c.function, owner, worker)
 				if c.expectedError == "" {
 					assert.NoError(t, err)
 				} else {
@@ -916,13 +916,13 @@ func TestValidateTaskInputs(t *testing.T) {
 func TestValidateTaskOutputs(t *testing.T) {
 	cases := []struct {
 		name          string
-		algo          map[string]*asset.AlgoOutput
+		function          map[string]*asset.FunctionOutput
 		task          map[string]*asset.ComputeTaskOutput
 		expectedError string
 	}{
 		{
 			name: "ok",
-			algo: map[string]*asset.AlgoOutput{
+			function: map[string]*asset.FunctionOutput{
 				"model": {Kind: asset.AssetKind_ASSET_MODEL},
 			},
 			task: map[string]*asset.ComputeTaskOutput{
@@ -931,13 +931,13 @@ func TestValidateTaskOutputs(t *testing.T) {
 		},
 		{
 			name:          "missing output",
-			algo:          map[string]*asset.AlgoOutput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function:          map[string]*asset.FunctionOutput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task:          map[string]*asset.ComputeTaskOutput{},
 			expectedError: "missing task output",
 		},
 		{
 			name: "unknown output",
-			algo: map[string]*asset.AlgoOutput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function: map[string]*asset.FunctionOutput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"foo": {},
 			},
@@ -945,7 +945,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 		},
 		{
 			name: "performance permissions",
-			algo: map[string]*asset.AlgoOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
+			function: map[string]*asset.FunctionOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"performance": {Permissions: &asset.Permissions{
 					Process:  &asset.Permission{},
@@ -956,7 +956,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 		},
 		{
 			name: "performance transient",
-			algo: map[string]*asset.AlgoOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
+			function: map[string]*asset.FunctionOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"performance": {
 					Permissions: &asset.Permissions{
@@ -970,7 +970,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 		},
 		{
 			name: "performance non transient",
-			algo: map[string]*asset.AlgoOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
+			function: map[string]*asset.FunctionOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"performance": {
 					Permissions: &asset.Permissions{
@@ -983,7 +983,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 		},
 		{
 			name: "public performance",
-			algo: map[string]*asset.AlgoOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
+			function: map[string]*asset.FunctionOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"performance": {Permissions: &asset.Permissions{
 					Process:  &asset.Permission{Public: true},
@@ -1001,7 +1001,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 				provider := newMockedProvider()
 				service := NewComputeTaskService(provider)
 
-				err := service.validateOutputs("uuid", c.task, c.algo)
+				err := service.validateOutputs("uuid", c.task, c.function)
 				if c.expectedError == "" {
 					assert.NoError(t, err)
 				} else {
@@ -1538,12 +1538,12 @@ func TestGetInputAssetsTaskUnready(t *testing.T) {
 
 func TestGetInputAssets(t *testing.T) {
 	provider := newMockedProvider()
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	db := new(persistence.MockComputeTaskDBAL)
 	dss := new(MockDataSampleAPI)
 	dms := new(MockDataManagerAPI)
 	ms := new(MockModelAPI)
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetComputeTaskDBAL").Return(db)
 	provider.On("GetDataSampleService").Return(dss)
 	provider.On("GetDataManagerService").Return(dms)
@@ -1551,16 +1551,16 @@ func TestGetInputAssets(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	algo := &asset.Algo{
+	function := &asset.Function{
 		Key: "10c97337-e495-4bfd-b189-275b30be8de2",
-		Inputs: map[string]*asset.AlgoInput{
+		Inputs: map[string]*asset.FunctionInput{
 			"data":   {Kind: asset.AssetKind_ASSET_DATA_SAMPLE},
 			"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			"model":  {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
 
-	as.On("GetAlgo", algo.Key).Once().Return(algo, nil)
+	as.On("GetFunction", function.Key).Once().Return(function, nil)
 	db.On("GetComputeTask", "uuid").
 		Once().
 		Return(&asset.ComputeTask{
@@ -1571,7 +1571,7 @@ func TestGetInputAssets(t *testing.T) {
 				{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm"}},
 				{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "uuid:parent", OutputIdentifier: "aggregate"}}},
 			},
-			AlgoKey: algo.Key,
+			FunctionKey: function.Key,
 		}, nil)
 
 	dataSample := &asset.DataSample{Key: "uuid:ds"}
@@ -1653,7 +1653,7 @@ func TestGetParentTaskKeys(t *testing.T) {
 func TestGetTaskWorker(t *testing.T) {
 	cases := map[string]struct {
 		newTask *asset.NewComputeTask
-		algo    *asset.Algo
+		function    *asset.Function
 		err     string
 		worker  string
 	}{
@@ -1663,8 +1663,8 @@ func TestGetTaskWorker(t *testing.T) {
 					{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm1"}},
 				},
 			},
-			algo: &asset.Algo{
-				Inputs: map[string]*asset.AlgoInput{
+			function: &asset.Function{
+				Inputs: map[string]*asset.FunctionInput{
 					"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 				},
 			},
@@ -1677,8 +1677,8 @@ func TestGetTaskWorker(t *testing.T) {
 				},
 				Worker: "worker",
 			},
-			algo: &asset.Algo{
-				Inputs: map[string]*asset.AlgoInput{
+			function: &asset.Function{
+				Inputs: map[string]*asset.FunctionInput{
 					"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 				},
 			},
@@ -1691,8 +1691,8 @@ func TestGetTaskWorker(t *testing.T) {
 					{Identifier: "model", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:model2"}},
 				},
 			},
-			algo: &asset.Algo{
-				Inputs: map[string]*asset.AlgoInput{
+			function: &asset.Function{
+				Inputs: map[string]*asset.FunctionInput{
 					"model": {Kind: asset.AssetKind_ASSET_MODEL},
 				},
 			},
@@ -1706,8 +1706,8 @@ func TestGetTaskWorker(t *testing.T) {
 				},
 				Worker: "worker",
 			},
-			algo: &asset.Algo{
-				Inputs: map[string]*asset.AlgoInput{
+			function: &asset.Function{
+				Inputs: map[string]*asset.FunctionInput{
 					"model": {Kind: asset.AssetKind_ASSET_MODEL},
 				},
 			},
@@ -1728,7 +1728,7 @@ func TestGetTaskWorker(t *testing.T) {
 			func(t *testing.T) {
 				service := NewComputeTaskService(provider)
 
-				worker, err := service.getTaskWorker(c.newTask, c.algo)
+				worker, err := service.getTaskWorker(c.newTask, c.function)
 				if c.err != "" {
 					assert.Error(t, err)
 					assert.EqualError(t, err, c.err)
@@ -1764,14 +1764,14 @@ func TestGetLogsPermission(t *testing.T) {
 		owner       string
 		parentTasks []*asset.ComputeTask
 		taskInputs  []*asset.ComputeTaskInput
-		algoInputs  map[string]*asset.AlgoInput
+		functionInputs  map[string]*asset.FunctionInput
 		outcome     *asset.Permission
 	}{
 		"with datamanager": {
 			taskInputs: []*asset.ComputeTaskInput{
 				{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "dmuuid"}},
 			},
-			algoInputs: map[string]*asset.AlgoInput{
+			functionInputs: map[string]*asset.FunctionInput{
 				"opener": {Kind: asset.AssetKind_ASSET_DATA_MANAGER},
 			},
 			outcome: dm.LogsPermission,
@@ -1782,7 +1782,7 @@ func TestGetLogsPermission(t *testing.T) {
 				{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "parent1", OutputIdentifier: "model"}}},
 				{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{ParentTaskKey: "parent2", OutputIdentifier: "model"}}},
 			},
-			algoInputs: map[string]*asset.AlgoInput{
+			functionInputs: map[string]*asset.FunctionInput{
 				"model": {Kind: asset.AssetKind_ASSET_MODEL, Multiple: true},
 			},
 			parentTasks: []*asset.ComputeTask{
@@ -1799,7 +1799,7 @@ func TestGetLogsPermission(t *testing.T) {
 			func(t *testing.T) {
 				service := NewComputeTaskService(provider)
 
-				permission, err := service.getLogsPermission(c.owner, c.parentTasks, c.taskInputs, c.algoInputs)
+				permission, err := service.getLogsPermission(c.owner, c.parentTasks, c.taskInputs, c.functionInputs)
 				assert.NoError(t, err)
 				assert.ElementsMatch(t, c.outcome.AuthorizedIds, permission.AuthorizedIds)
 				assert.Equal(t, c.outcome.Public, permission.Public)

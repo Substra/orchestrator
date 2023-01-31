@@ -10,8 +10,8 @@ var (
 	MetricKind = "metric"
 	// DataSampleKind is the type of DataSample assets
 	DataSampleKind = "datasample"
-	// AlgoKind is the type of Algo assets
-	AlgoKind = "algo"
+	// FunctionKind is the type of Function assets
+	FunctionKind = "function"
 	// DataManagerKind is the type of DataManager assets
 	DataManagerKind = "datamanager"
 	// ComputeTaskKind is the type of ComputeTask assets

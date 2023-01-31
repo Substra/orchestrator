@@ -24,7 +24,7 @@ func TestAddEvents(t *testing.T) {
 	queue := new(MockEventQueue)
 	db := NewDB(context.WithValue(context.Background(), ctxIsEvaluateTransaction, true), stub, queue)
 
-	event := &asset.Event{Id: "0", Asset: &asset.Event_Algo{Algo: &asset.Algo{}}}
+	event := &asset.Event{Id: "0", Asset: &asset.Event_Function{Function: &asset.Function{}}}
 
 	queue.On("Enqueue", event).Once().Return(nil)
 	var buff []byte
@@ -98,7 +98,7 @@ func TestProxyConversion(t *testing.T) {
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   "testChannel",
 		Timestamp: timestamppb.New(time.Unix(1337, 1234)),
-		Asset:     &asset.Event_Algo{Algo: new(asset.Algo)},
+		Asset:     &asset.Event_Function{Function: new(asset.Function)},
 		Metadata:  map[string]string{"test": "true"},
 	}
 

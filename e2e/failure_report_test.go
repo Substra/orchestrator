@@ -17,7 +17,7 @@ import (
 func TestRegisterFailureReport(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())

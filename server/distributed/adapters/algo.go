@@ -9,26 +9,26 @@ import (
 	"github.com/substra/orchestrator/server/distributed/interceptors"
 )
 
-// AlgoAdapter is a grpc server exposing the same algo interface than standalone,
+// FunctionAdapter is a grpc server exposing the same function interface than standalone,
 // but relies on a remote chaincode to actually manage the asset.
-type AlgoAdapter struct {
-	asset.UnimplementedAlgoServiceServer
+type FunctionAdapter struct {
+	asset.UnimplementedFunctionServiceServer
 }
 
-// NewAlgoAdapter creates a Server
-func NewAlgoAdapter() *AlgoAdapter {
-	return &AlgoAdapter{}
+// NewFunctionAdapter creates a Server
+func NewFunctionAdapter() *FunctionAdapter {
+	return &FunctionAdapter{}
 }
 
-// RegisterAlgo will add a new Algo to the network
-func (a *AlgoAdapter) RegisterAlgo(ctx context.Context, in *asset.NewAlgo) (*asset.Algo, error) {
+// RegisterFunction will add a new Function to the network
+func (a *FunctionAdapter) RegisterFunction(ctx context.Context, in *asset.NewFunction) (*asset.Function, error) {
 	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.algo:RegisterAlgo"
+	method := "orchestrator.function:RegisterFunction"
 
-	response := &asset.Algo{}
+	response := &asset.Function{}
 
 	err = invocator.Call(ctx, method, in, response)
 
@@ -36,52 +36,52 @@ func (a *AlgoAdapter) RegisterAlgo(ctx context.Context, in *asset.NewAlgo) (*ass
 		// In this very specific case we are in a retry context after a timeout.
 		// We can assume that the previous request succeeded and created the asset.
 		// So we convert the error in a success response.
-		err = invocator.Call(ctx, "orchestrator.algo:GetAlgo", &asset.GetAlgoParam{Key: in.Key}, response)
+		err = invocator.Call(ctx, "orchestrator.function:GetFunction", &asset.GetFunctionParam{Key: in.Key}, response)
 		return response, err
 	}
 
 	return response, err
 }
 
-// GetAlgo returns an algo from its key
-func (a *AlgoAdapter) GetAlgo(ctx context.Context, query *asset.GetAlgoParam) (*asset.Algo, error) {
+// GetFunction returns an function from its key
+func (a *FunctionAdapter) GetFunction(ctx context.Context, query *asset.GetFunctionParam) (*asset.Function, error) {
 	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.algo:GetAlgo"
+	method := "orchestrator.function:GetFunction"
 
-	response := &asset.Algo{}
+	response := &asset.Function{}
 
 	err = invocator.Call(ctx, method, query, response)
 
 	return response, err
 }
 
-// QueryAlgos returns all known algos
-func (a *AlgoAdapter) QueryAlgos(ctx context.Context, query *asset.QueryAlgosParam) (*asset.QueryAlgosResponse, error) {
+// QueryFunctions returns all known functions
+func (a *FunctionAdapter) QueryFunctions(ctx context.Context, query *asset.QueryFunctionsParam) (*asset.QueryFunctionsResponse, error) {
 	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.algo:QueryAlgos"
+	method := "orchestrator.function:QueryFunctions"
 
-	response := &asset.QueryAlgosResponse{}
+	response := &asset.QueryFunctionsResponse{}
 
 	err = invocator.Call(ctx, method, query, response)
 
 	return response, err
 }
 
-// UpdateAlgo will update an Algo
-func (a *AlgoAdapter) UpdateAlgo(ctx context.Context, query *asset.UpdateAlgoParam) (*asset.UpdateAlgoResponse, error) {
+// UpdateFunction will update an Function
+func (a *FunctionAdapter) UpdateFunction(ctx context.Context, query *asset.UpdateFunctionParam) (*asset.UpdateFunctionResponse, error) {
 	invocator, err := interceptors.ExtractInvocator(ctx)
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.algo:UpdateAlgo"
+	method := "orchestrator.function:UpdateFunction"
 
-	response := &asset.UpdateAlgoResponse{}
+	response := &asset.UpdateFunctionResponse{}
 
 	err = invocator.Call(ctx, method, query, nil)
 
