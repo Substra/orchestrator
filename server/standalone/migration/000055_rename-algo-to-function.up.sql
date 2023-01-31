@@ -1,6 +1,9 @@
 ALTER TABLE algos
 RENAME TO functions;
 
+ALTER TABLE compute_tasks
+RENAME COLUMN algo_key TO function_key;
+
 DROP VIEW IF EXISTS expanded_compute_tasks;
 
 DROP VIEW IF EXISTS expanded_algos;
@@ -29,15 +32,9 @@ SELECT t.key AS key,
        t.creation_date AS creation_date,
        t.logs_permission AS logs_permission,
        t.metadata AS metadata,
-       t.algo_key AS function_key,
+       t.function_key AS function_key,
        COALESCE(p.parent_task_keys, '[]'::jsonb) AS parent_task_keys
-FROM compute_tasks t
-         LEFT JOIN expanded_algos a ON a.key = t.algo_key
-         LEFT JOIN (
-    SELECT child_task_key, JSONB_AGG(parent_task_key ORDER BY position) AS parent_task_keys
-    FROM compute_task_parents
-    GROUP BY child_task_key
-) p ON p.child_task_key = t.key;
+FROM compute_tasks t;
 
 
 
