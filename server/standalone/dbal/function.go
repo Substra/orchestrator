@@ -51,7 +51,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 
 	stmt := getStatementBuilder().
 		Insert("functions").
-		Columns("key", "channel", "name", "description", "functionrithm", "permissions", "owner", "creation_date", "metadata").
+		Columns("key", "channel", "name", "description", "functionLocation", "permissions", "owner", "creation_date", "metadata").
 		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Function.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata)
 
 	err = d.exec(stmt)
@@ -75,7 +75,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 // GetFunction implements persistence.FunctionDBAL
 func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "functionrithm_address", "functionrithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata").
 		From("expanded_functions").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
@@ -144,7 +144,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "functionrithm_address", "functionrithm_checksum", "permissions", "owner", "creation_date", "metadata").
+		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata").
 		From("expanded_functions").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").

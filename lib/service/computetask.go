@@ -291,7 +291,7 @@ func (s *ComputeTaskService) DisableOutput(taskKey string, identifier string, re
 // A comes before B in the resulting list of tasks.
 // A topological ordering is possible only if the graph is a DAG and has no cycles. This function will
 // raise an error if there is a cycle in the list of tasks.
-// This sorting function is based on Kahn's functionrithm.
+// This sorting function is based on Kahn's algorithm.
 func (s *ComputeTaskService) sortTasks(newTasks []*asset.NewComputeTask, existingTasks []string) ([]*asset.NewComputeTask, error) {
 	sortedTasks := make([]*asset.NewComputeTask, len(newTasks))
 	unsortedTasks := make([]*asset.NewComputeTask, len(newTasks))
@@ -456,7 +456,7 @@ func (s *ComputeTaskService) addComputeTaskOutputAsset(output *asset.ComputeTask
 }
 
 // getCheckedFunction returns the Function identified by given key,
-// it will return an error if the functionrithm is not processable by the owner.
+// it will return an error if the function is not processable by the owner.
 func (s *ComputeTaskService) getCheckedFunction(functionKey string, owner string) (*asset.Function, error) {
 	function, err := s.getCachedFunction(functionKey)
 	if err != nil {
