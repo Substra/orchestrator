@@ -1,4 +1,7 @@
 ALTER TABLE algos
+RENAME COLUMN algorithm TO function;
+
+ALTER TABLE algos
 RENAME TO functions;
 
 ALTER TABLE compute_tasks
@@ -10,16 +13,18 @@ DROP VIEW IF EXISTS expanded_algos;
 CREATE VIEW expanded_functions AS
 SELECT 	key,
         name,
-        description_address AS description_address,
-        description_checksum AS description_checksum,
-        algorithm_address AS function_address,
-        algorithm_checksum AS function_checksum,
-	permissions,
+        description       AS description_address,
+        desc_add.checksum AS description_checksum,
+        algorithm         AS function_address,
+        function_add.checksum AS function_checksum,
+	    permissions,
         owner,
         creation_date,
         metadata,
         channel
-FROM functions;
+FROM functions
+JOIN addressables desc_add ON functions.description = desc_add.storage_address
+JOIN addressables function_add ON functions.algorithm = function_add.storage_address;
 
 CREATE VIEW expanded_compute_tasks AS
 SELECT t.key AS key,
