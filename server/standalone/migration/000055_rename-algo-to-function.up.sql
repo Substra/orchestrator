@@ -7,7 +7,6 @@ SELECT t.key AS key,
        t.channel AS channel,
        t.compute_plan_key AS compute_plan_key,
        t.status AS status,
-       t.category AS category,
        t.worker AS worker,
        t.owner as owner,
        t.rank AS rank,
@@ -45,7 +44,6 @@ FROM functions;
 UPDATE events e
 SET asset = JSONB_BUILD_OBJECT(
             'key', t.key,
-            'category', t.category,
             'function', build_algo_jsonb(
                     t.function_key,
                     t.function_name,
