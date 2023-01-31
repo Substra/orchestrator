@@ -17,7 +17,7 @@ type sqlFunction struct {
 	Key          string
 	Name         string
 	Description  asset.Addressable
-	Function    asset.Addressable
+	Function     asset.Addressable
 	Permissions  asset.Permissions
 	Owner        string
 	CreationDate time.Time
@@ -29,7 +29,7 @@ func (a *sqlFunction) toFunction() *asset.Function {
 		Key:          a.Key,
 		Name:         a.Name,
 		Description:  &a.Description,
-		Function:    &a.Function,
+		Function:     &a.Function,
 		Permissions:  &a.Permissions,
 		Owner:        a.Owner,
 		CreationDate: timestamppb.New(a.CreationDate),

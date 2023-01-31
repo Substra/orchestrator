@@ -21,7 +21,7 @@ func TestToComputeTask(t *testing.T) {
 		Key:         "function_key",
 		Name:        "function_name",
 		Description: asset.Addressable{},
-		Function:   asset.Addressable{},
+		Function:    asset.Addressable{},
 		Permissions: asset.Permissions{
 			Download: &asset.Permission{},
 			Process:  &asset.Permission{},
@@ -32,7 +32,7 @@ func TestToComputeTask(t *testing.T) {
 	}
 	ct := sqlComputeTask{
 		Key:            "task_key",
-		FunctionKey:        function.Key,
+		FunctionKey:    function.Key,
 		Owner:          "owner",
 		ComputePlanKey: "cp_key",
 		Rank:           0,

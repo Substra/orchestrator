@@ -2,7 +2,6 @@ package contracts
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-	"github.com/substra/orchestrator/chaincode/function"
 	"github.com/substra/orchestrator/chaincode/computeplan"
 	"github.com/substra/orchestrator/chaincode/computetask"
 	"github.com/substra/orchestrator/chaincode/datamanager"
@@ -10,6 +9,7 @@ import (
 	"github.com/substra/orchestrator/chaincode/dataset"
 	"github.com/substra/orchestrator/chaincode/event"
 	"github.com/substra/orchestrator/chaincode/failurereport"
+	"github.com/substra/orchestrator/chaincode/function"
 	"github.com/substra/orchestrator/chaincode/info"
 	"github.com/substra/orchestrator/chaincode/model"
 	"github.com/substra/orchestrator/chaincode/organization"

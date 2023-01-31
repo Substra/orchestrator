@@ -49,7 +49,7 @@ type Provider struct {
 	organization  OrganizationAPI
 	permission    PermissionAPI
 	datasample    DataSampleAPI
-	function          FunctionAPI
+	function      FunctionAPI
 	datamanager   DataManagerAPI
 	dataset       DatasetAPI
 	computeTask   ComputeTaskAPI

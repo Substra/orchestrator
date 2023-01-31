@@ -42,7 +42,7 @@ func TestRegisterFunction(t *testing.T) {
 	function := &asset.NewFunction{
 		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:           "Test function",
-		Function:      functionLocation,
+		Function:       functionLocation,
 		Description:    description,
 		NewPermissions: newPerms,
 	}
@@ -55,7 +55,7 @@ func TestRegisterFunction(t *testing.T) {
 	storedFunction := &asset.Function{
 		Key:          "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:         "Test function",
-		Function:    functionLocation,
+		Function:     functionLocation,
 		Description:  description,
 		Permissions:  perms,
 		Owner:        "owner",

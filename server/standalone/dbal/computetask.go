@@ -23,7 +23,7 @@ const computeTaskOutputAssetsTable = "compute_task_output_assets"
 
 type sqlComputeTask struct {
 	Key            string
-	FunctionKey        string
+	FunctionKey    string
 	Owner          string
 	ComputePlanKey string
 	Rank           int32

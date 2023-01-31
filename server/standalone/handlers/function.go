@@ -58,7 +58,7 @@ func (s *FunctionServer) QueryFunctions(ctx context.Context, params *asset.Query
 	}
 
 	return &asset.QueryFunctionsResponse{
-		Functions:         functions,
+		Functions:     functions,
 		NextPageToken: paginationToken,
 	}, nil
 }

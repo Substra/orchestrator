@@ -64,7 +64,7 @@ func (s *FunctionService) RegisterFunction(a *asset.NewFunction, owner string) (
 		Key:          a.Key,
 		Name:         a.Name,
 		Description:  a.Description,
-		Function:    a.Function,
+		Function:     a.Function,
 		Metadata:     a.Metadata,
 		Owner:        owner,
 		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),

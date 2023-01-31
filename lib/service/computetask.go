@@ -64,7 +64,7 @@ type ComputeTaskDependencyProvider interface {
 type ComputeTaskService struct {
 	ComputeTaskDependencyProvider
 	// Keep a local cache of functions, plans and tasks to be used in batch import
-	functionStore        map[string]*asset.Function
+	functionStore    map[string]*asset.Function
 	taskStore        map[string]*asset.ComputeTask
 	planStore        map[string]*asset.ComputePlan
 	dataManagerStore map[string]*asset.DataManager
@@ -75,7 +75,7 @@ type ComputeTaskService struct {
 func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskService {
 	return &ComputeTaskService{
 		ComputeTaskDependencyProvider: provider,
-		functionStore:                     make(map[string]*asset.Function),
+		functionStore:                 make(map[string]*asset.Function),
 		taskStore:                     make(map[string]*asset.ComputeTask),
 		planStore:                     make(map[string]*asset.ComputePlan),
 		dataManagerStore:              make(map[string]*asset.DataManager),
@@ -413,7 +413,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 
 	task := &asset.ComputeTask{
 		Key:            input.Key,
-		FunctionKey:        function.Key,
+		FunctionKey:    function.Key,
 		Owner:          owner,
 		ComputePlanKey: input.ComputePlanKey,
 		Metadata:       input.Metadata,

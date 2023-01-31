@@ -40,7 +40,7 @@ func TestRegistration(t *testing.T) {
 		Key:            "uuid1",
 		Name:           "Function name",
 		Description:    addressable,
-		Function:      addressable,
+		Function:       addressable,
 		Metadata:       metadata,
 		NewPermissions: newPerms,
 	}

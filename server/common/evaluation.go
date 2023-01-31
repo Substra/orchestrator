@@ -12,7 +12,7 @@ import (
 var ReadOnlyMethods = map[string][]string{
 	"Metric":        {"GetMetric", "QueryMetrics"},
 	"Organization":  {"GetAllOrganizations"},
-	"Function":          {"GetFunction", "QueryFunctions"},
+	"Function":      {"GetFunction", "QueryFunctions"},
 	"Event":         {"QueryEvents"},
 	"Model":         {"GetComputeTaskOutputModels", "CanDisableModel", "GetModel"},
 	"Dataset":       {"GetDataset"},

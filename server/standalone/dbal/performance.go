@@ -12,7 +12,7 @@ import (
 
 type sqlPerformance struct {
 	ComputeTaskKey   string
-	FunctionKey          string
+	FunctionKey      string
 	PerformanceValue float32
 	CreationDate     time.Time
 }

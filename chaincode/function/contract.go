@@ -116,7 +116,7 @@ func (s *SmartContract) QueryFunctions(ctx ledger.TransactionContext, wrapper *c
 	}
 
 	resp := &asset.QueryFunctionsResponse{
-		Functions:         functions,
+		Functions:     functions,
 		NextPageToken: nextPage,
 	}
 

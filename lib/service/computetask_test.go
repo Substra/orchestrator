@@ -26,7 +26,7 @@ var (
 
 var newTrainTask = &asset.NewComputeTask{
 	Key:            "867852b4-8419-4d52-8862-d5db823095be",
-	FunctionKey:        "867852b4-8419-4d52-8862-d5db823095be",
+	FunctionKey:    "867852b4-8419-4d52-8862-d5db823095be",
 	ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 	Inputs: []*asset.ComputeTaskInput{
 		{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: dataSampleKeys[0]}},
@@ -224,7 +224,7 @@ func TestRegisterTrainTask(t *testing.T) {
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTrainTask.Key,
-		FunctionKey:        function.Key,
+		FunctionKey:    function.Key,
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
@@ -282,7 +282,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-ffffffffffff",
-		FunctionKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		FunctionKey:    "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
 			{Identifier: "local", Ref: &asset.ComputeTaskInput_ParentTaskOutput{
@@ -331,7 +331,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-111111111111",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
-		FunctionKey:        functionParent1.Key,
+		FunctionKey:    functionParent1.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
 			"local":  {Permissions: localPerms},
@@ -341,7 +341,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-222222222222",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Status:         asset.ComputeTaskStatus_STATUS_DOING,
-		FunctionKey:        functionParent2.Key,
+		FunctionKey:    functionParent2.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
 			"local":  {Permissions: localPerms},
@@ -428,7 +428,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 
 	storedTask := &asset.ComputeTask{
 		Key:            newTask.Key,
-		FunctionKey:        function.Key,
+		FunctionKey:    function.Key,
 		Owner:          "testOwner",
 		ComputePlanKey: newTask.ComputePlanKey,
 		Metadata:       newTask.Metadata,
@@ -474,7 +474,7 @@ func TestRegisterFailedTask(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		FunctionKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		FunctionKey:    "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
 			{Identifier: "test", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
@@ -527,7 +527,7 @@ func TestRegisterDeletedModel(t *testing.T) {
 
 	newTask := &asset.NewComputeTask{
 		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		FunctionKey:        "867852b4-8419-4d52-8862-d5db823095be",
+		FunctionKey:    "867852b4-8419-4d52-8862-d5db823095be",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
 		Inputs: []*asset.ComputeTaskInput{
 			{Identifier: "model", Ref: &asset.ComputeTaskInput_ParentTaskOutput{
@@ -618,7 +618,7 @@ func TestValidateTaskInputs(t *testing.T) {
 	}
 
 	validTask := &asset.ComputeTask{
-		Key:     "valid_key",
+		Key:         "valid_key",
 		FunctionKey: function.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
@@ -639,11 +639,11 @@ func TestValidateTaskInputs(t *testing.T) {
 	cases := []struct {
 		name               string
 		worker             string
-		function               map[string]*asset.FunctionInput
+		function           map[string]*asset.FunctionInput
 		task               []*asset.ComputeTaskInput
 		dependenciesErrors dependenciesErrors
 		expectedError      string
-		functionFetched        bool
+		functionFetched    bool
 	}{
 		{
 			name: "ok",
@@ -666,39 +666,39 @@ func TestValidateTaskInputs(t *testing.T) {
 			functionFetched: true,
 		},
 		{
-			name:        "optional input",
+			name:            "optional input",
 			function:        map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
-			task:        []*asset.ComputeTaskInput{},
+			task:            []*asset.ComputeTaskInput{},
 			functionFetched: false,
 		},
 		{
-			name:          "missing input",
-			function:          map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
-			task:          []*asset.ComputeTaskInput{},
-			expectedError: "missing task input",
-			functionFetched:   false,
+			name:            "missing input",
+			function:        map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			task:            []*asset.ComputeTaskInput{},
+			expectedError:   "missing task input",
+			functionFetched: false,
 		},
 		{
-			name: "duplicate input",
+			name:     "duplicate input",
 			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{Identifier: "model", Ref: validRef},
 				{Identifier: "model", Ref: validRef},
 			},
-			expectedError: "duplicate task input",
-			functionFetched:   false,
+			expectedError:   "duplicate task input",
+			functionFetched: false,
 		},
 		{
-			name: "unknown input",
+			name:     "unknown input",
 			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL, Optional: true}},
 			task: []*asset.ComputeTaskInput{
 				{Identifier: "foo", Ref: validRef},
 			},
-			expectedError: "unknown task input",
-			functionFetched:   false,
+			expectedError:   "unknown task input",
+			functionFetched: false,
 		},
 		{
-			name: "error in GetCheckedModel",
+			name:     "error in GetCheckedModel",
 			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
@@ -709,11 +709,11 @@ func TestValidateTaskInputs(t *testing.T) {
 			dependenciesErrors: dependenciesErrors{
 				getCheckedModel: errors.New("model error, e.g. permission error"),
 			},
-			expectedError: "model error",
-			functionFetched:   false,
+			expectedError:   "model error",
+			functionFetched: false,
 		},
 		{
-			name: "error in GetComputeTask",
+			name:     "error in GetComputeTask",
 			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
@@ -724,11 +724,11 @@ func TestValidateTaskInputs(t *testing.T) {
 			dependenciesErrors: dependenciesErrors{
 				getComputeTask: errors.New("task error, e.g. task not found"),
 			},
-			expectedError: "task error",
-			functionFetched:   false,
+			expectedError:   "task error",
+			functionFetched: false,
 		},
 		{
-			name: "mismatching asset kinds",
+			name:     "mismatching asset kinds",
 			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
@@ -739,11 +739,11 @@ func TestValidateTaskInputs(t *testing.T) {
 					}},
 				},
 			},
-			expectedError: "mismatching task input asset kinds",
-			functionFetched:   true,
+			expectedError:   "mismatching task input asset kinds",
+			functionFetched: true,
 		},
 		{
-			name: "parent task output not found",
+			name:     "parent task output not found",
 			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
@@ -754,11 +754,11 @@ func TestValidateTaskInputs(t *testing.T) {
 					}},
 				},
 			},
-			expectedError: "function output not found",
-			functionFetched:   true,
+			expectedError:   "function output not found",
+			functionFetched: true,
 		},
 		{
-			name: "multiple output used as single input",
+			name:     "multiple output used as single input",
 			function: map[string]*asset.FunctionInput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: []*asset.ComputeTaskInput{
 				{
@@ -769,8 +769,8 @@ func TestValidateTaskInputs(t *testing.T) {
 					}},
 				},
 			},
-			expectedError: "multiple task output used as single task input",
-			functionFetched:   true,
+			expectedError:   "multiple task output used as single task input",
+			functionFetched: true,
 		},
 		{
 			name: "input data manager referenced using parent task output",
@@ -791,8 +791,8 @@ func TestValidateTaskInputs(t *testing.T) {
 					Ref:        validRef,
 				},
 			},
-			expectedError: "openers must be referenced using an asset key",
-			functionFetched:   false,
+			expectedError:   "openers must be referenced using an asset key",
+			functionFetched: false,
 		},
 		{
 			name: "error in GetCheckedDataManager",
@@ -813,8 +813,8 @@ func TestValidateTaskInputs(t *testing.T) {
 			dependenciesErrors: dependenciesErrors{
 				checkDataManager: errors.New("data manager error, e.g. permission error"),
 			},
-			expectedError: "data manager error",
-			functionFetched:   false,
+			expectedError:   "data manager error",
+			functionFetched: false,
 		},
 		{
 			name: "input data sample referenced using parent task output",
@@ -835,8 +835,8 @@ func TestValidateTaskInputs(t *testing.T) {
 					}},
 				},
 			},
-			expectedError: "data samples must be referenced using an asset key",
-			functionFetched:   false,
+			expectedError:   "data samples must be referenced using an asset key",
+			functionFetched: false,
 		},
 		{
 			name: "worker is not authorized to process parent task output",
@@ -852,9 +852,9 @@ func TestValidateTaskInputs(t *testing.T) {
 					}},
 				},
 			},
-			expectedError: "doesn't have permission",
-			worker:        "org3",
-			functionFetched:   true,
+			expectedError:   "doesn't have permission",
+			worker:          "org3",
+			functionFetched: true,
 		},
 	}
 
@@ -916,7 +916,7 @@ func TestValidateTaskInputs(t *testing.T) {
 func TestValidateTaskOutputs(t *testing.T) {
 	cases := []struct {
 		name          string
-		function          map[string]*asset.FunctionOutput
+		function      map[string]*asset.FunctionOutput
 		task          map[string]*asset.ComputeTaskOutput
 		expectedError string
 	}{
@@ -931,12 +931,12 @@ func TestValidateTaskOutputs(t *testing.T) {
 		},
 		{
 			name:          "missing output",
-			function:          map[string]*asset.FunctionOutput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
+			function:      map[string]*asset.FunctionOutput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task:          map[string]*asset.ComputeTaskOutput{},
 			expectedError: "missing task output",
 		},
 		{
-			name: "unknown output",
+			name:     "unknown output",
 			function: map[string]*asset.FunctionOutput{"model": {Kind: asset.AssetKind_ASSET_MODEL}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"foo": {},
@@ -944,7 +944,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 			expectedError: "unknown task output",
 		},
 		{
-			name: "performance permissions",
+			name:     "performance permissions",
 			function: map[string]*asset.FunctionOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"performance": {Permissions: &asset.Permissions{
@@ -955,7 +955,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 			expectedError: "a PERFORMANCE output should be public",
 		},
 		{
-			name: "performance transient",
+			name:     "performance transient",
 			function: map[string]*asset.FunctionOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"performance": {
@@ -969,7 +969,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 			expectedError: "a PERFORMANCE output cannot be transient",
 		},
 		{
-			name: "performance non transient",
+			name:     "performance non transient",
 			function: map[string]*asset.FunctionOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"performance": {
@@ -982,7 +982,7 @@ func TestValidateTaskOutputs(t *testing.T) {
 			},
 		},
 		{
-			name: "public performance",
+			name:     "public performance",
 			function: map[string]*asset.FunctionOutput{"performance": {Kind: asset.AssetKind_ASSET_PERFORMANCE}},
 			task: map[string]*asset.ComputeTaskOutput{
 				"performance": {Permissions: &asset.Permissions{
@@ -1652,10 +1652,10 @@ func TestGetParentTaskKeys(t *testing.T) {
 
 func TestGetTaskWorker(t *testing.T) {
 	cases := map[string]struct {
-		newTask *asset.NewComputeTask
-		function    *asset.Function
-		err     string
-		worker  string
+		newTask  *asset.NewComputeTask
+		function *asset.Function
+		err      string
+		worker   string
 	}{
 		"datamanager": {
 			newTask: &asset.NewComputeTask{
@@ -1761,11 +1761,11 @@ func TestGetLogsPermission(t *testing.T) {
 	dms.On("GetDataManager", "dmuuid").Return(dm, nil)
 
 	cases := map[string]struct {
-		owner       string
-		parentTasks []*asset.ComputeTask
-		taskInputs  []*asset.ComputeTaskInput
-		functionInputs  map[string]*asset.FunctionInput
-		outcome     *asset.Permission
+		owner          string
+		parentTasks    []*asset.ComputeTask
+		taskInputs     []*asset.ComputeTaskInput
+		functionInputs map[string]*asset.FunctionInput
+		outcome        *asset.Permission
 	}{
 		"with datamanager": {
 			taskInputs: []*asset.ComputeTaskInput{

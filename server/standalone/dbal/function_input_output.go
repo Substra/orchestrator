@@ -8,11 +8,11 @@ import (
 )
 
 type sqlFunctionInput struct {
-	FunctionKey    string
-	Identifier string
-	Kind       asset.AssetKind
-	Multiple   bool
-	Optional   bool
+	FunctionKey string
+	Identifier  string
+	Kind        asset.AssetKind
+	Multiple    bool
+	Optional    bool
 }
 
 func (i *sqlFunctionInput) toFunctionInput() *asset.FunctionInput {
@@ -24,10 +24,10 @@ func (i *sqlFunctionInput) toFunctionInput() *asset.FunctionInput {
 }
 
 type sqlFunctionOutput struct {
-	FunctionKey    string
-	Identifier string
-	Kind       asset.AssetKind
-	Multiple   bool
+	FunctionKey string
+	Identifier  string
+	Kind        asset.AssetKind
+	Multiple    bool
 }
 
 func (o *sqlFunctionOutput) toFunctionOutput() *asset.FunctionOutput {
