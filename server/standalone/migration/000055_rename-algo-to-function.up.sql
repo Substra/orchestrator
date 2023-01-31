@@ -32,4 +32,4 @@ SELECT 	key,
         creation_date,
         metadata,
         channel
-FROM functions
+FROM functions;
