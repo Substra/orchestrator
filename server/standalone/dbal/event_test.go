@@ -58,7 +58,7 @@ func TestEventFilterToQuery(t *testing.T) {
 
 func makeEventRows() *pgxmock.Rows {
 	return pgxmock.NewRows([]string{"id", "asset_key", "asset_kind", "event_kind", "timestamp", "asset", "metadata"}).
-		AddRow("id1", "13e88e4f-a287-4e8f-a96e-ea0c03f91e86", "ASSET_ALGO", "EVENT_ASSET_CREATED", time.Unix(1, 0).UTC(), []byte(`{}`), map[string]string{}).
+		AddRow("id1", "13e88e4f-a287-4e8f-a96e-ea0c03f91e86", "ASSET_FUNCTION", "EVENT_ASSET_CREATED", time.Unix(1, 0).UTC(), []byte(`{}`), map[string]string{}).
 		AddRow("id2", "7623fc2d-33fd-4b00-a6a0-65f5ec2eee20", "ASSET_MODEL", "EVENT_ASSET_UPDATED", time.Unix(2, 0).UTC(), []byte(`{}`), map[string]string{})
 }
 
@@ -133,7 +133,7 @@ func TestReplayBatchOfEvents(t *testing.T) {
 	event := &asset.Event{
 		Id:        "b2b30b36-b7f3-4839-9c6f-36ddafcf19fc",
 		AssetKey:  "56a3dc56-f493-47e5-8a61-46a120e5403c",
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   testChannel,
 		Timestamp: timestamppb.New(time.Unix(15000, 0)),
@@ -209,7 +209,7 @@ func TestForwardEventNotification(t *testing.T) {
 	event := &asset.Event{
 		Id:        "b2b30b36-b7f3-4839-9c6f-36ddafcf19fc",
 		AssetKey:  "56a3dc56-f493-47e5-8a61-46a120e5403c",
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   testChannel,
 		Timestamp: timestamppb.New(time.Unix(15000, 0)),
@@ -310,7 +310,7 @@ func TestGetEventByPosition(t *testing.T) {
 	event := &asset.Event{
 		Id:        "b2b30b36-b7f3-4839-9c6f-36ddafcf19fc",
 		AssetKey:  "56a3dc56-f493-47e5-8a61-46a120e5403c",
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   testChannel,
 		Timestamp: timestamppb.New(time.Unix(15000, 0)),

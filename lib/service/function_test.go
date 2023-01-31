@@ -65,7 +65,7 @@ func TestRegisterFunction(t *testing.T) {
 
 	e := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		AssetKey:  function.Key,
 		Asset:     &asset.Event_Function{Function: storedFunction},
 	}
@@ -187,7 +187,7 @@ func TestUpdateSingleExistingFunction(t *testing.T) {
 
 	e := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		AssetKey:  storedFunction.Key,
 		Asset:     &asset.Event_Function{Function: storedFunction},
 	}

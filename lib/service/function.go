@@ -80,7 +80,7 @@ func (s *FunctionService) RegisterFunction(a *asset.NewFunction, owner string) (
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		AssetKey:  a.Key,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		Asset:     &asset.Event_Function{Function: function},
 	}
 	err = s.GetEventService().RegisterEvents(event)
@@ -149,7 +149,7 @@ func (s *FunctionService) UpdateFunction(a *asset.UpdateFunctionParam, requester
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 		AssetKey:  functionKey,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		Asset:     &asset.Event_Function{Function: function},
 	}
 	err = s.GetEventService().RegisterEvents(event)

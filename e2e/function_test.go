@@ -22,7 +22,7 @@ func TestRegisterFunction(t *testing.T) {
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
 		AssetKey:  registeredFunction.Key,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}, "", 100)
 
@@ -141,7 +141,7 @@ func TestUpdateFunction(t *testing.T) {
 
 	resp := appClient.QueryEvents(&asset.EventQueryFilter{
 		AssetKey:  registeredFunction.Key,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
 	}, "", 100)
 

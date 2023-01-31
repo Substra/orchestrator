@@ -44,7 +44,7 @@ func MarshalEventAsset(event *Event) ([]byte, error) {
 // and stores the result in the Asset field of the provided event.
 func UnmarshalEventAsset(b []byte, event *Event, assetKind AssetKind) error {
 	switch assetKind {
-	case AssetKind_ASSET_ALGO:
+	case AssetKind_ASSET_FUNCTION:
 		function := new(Function)
 		if err := protojson.Unmarshal(b, function); err != nil {
 			return err

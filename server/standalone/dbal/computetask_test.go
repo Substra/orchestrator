@@ -388,7 +388,7 @@ func TestAddComputeTaskOutputAsset(t *testing.T) {
 	output := &asset.ComputeTaskOutputAsset{
 		ComputeTaskKey:              "taskKey",
 		ComputeTaskOutputIdentifier: "identifierOut",
-		AssetKind:                   asset.AssetKind_ASSET_ALGO,
+		AssetKind:                   asset.AssetKind_ASSET_FUNCTION,
 		AssetKey:                    "assetKey",
 	}
 

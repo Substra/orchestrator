@@ -94,7 +94,7 @@ func TestProxyConversion(t *testing.T) {
 	event := &asset.Event{
 		Id:        "test",
 		AssetKey:  "testAsset",
-		AssetKind: asset.AssetKind_ASSET_ALGO,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 		Channel:   "testChannel",
 		Timestamp: timestamppb.New(time.Unix(1337, 1234)),
@@ -143,8 +143,8 @@ func TestEventAssetFilterBuilder(t *testing.T) {
 			output: map[string]interface{}{"asset_key": "test"},
 		},
 		"asset_kind": {
-			input:  &asset.EventQueryFilter{AssetKind: asset.AssetKind_ASSET_ALGO},
-			output: map[string]interface{}{"asset_kind": "ASSET_ALGO"},
+			input:  &asset.EventQueryFilter{AssetKind: asset.AssetKind_ASSET_FUNCTION},
+			output: map[string]interface{}{"asset_kind": "ASSET_FUNCTION"},
 		},
 		"event_kind": {
 			input:  &asset.EventQueryFilter{EventKind: asset.EventKind_EVENT_ASSET_CREATED},
