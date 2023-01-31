@@ -37,5 +37,5 @@ JOIN addressables desc_add ON functions.description = desc_add.storage_address
 JOIN addressables function_add ON functions.functionAdress = function_add.storage_address;
 
 UPDATE events
-SET asset = asset || JSONB_BUILD_OBJECT('function', asset.algo) - 'algo'
+SET asset = asset || JSONB_BUILD_OBJECT('function', asset->>'algo') - 'algo'
 WHERE asset_kind = 'ASSET_COMPUTE_TASK';
