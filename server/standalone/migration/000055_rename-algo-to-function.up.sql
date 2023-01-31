@@ -24,7 +24,7 @@ SELECT 	key,
         channel
 FROM functions
 JOIN addressables desc_add ON functions.description = desc_add.storage_address
-JOIN addressables function_add ON functions.algorithm = function_add.storage_address;
+JOIN addressables function_add ON functions.function = function_add.storage_address;
 
 CREATE VIEW expanded_compute_tasks AS
 SELECT t.key AS key,
