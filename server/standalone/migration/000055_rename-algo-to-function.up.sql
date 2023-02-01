@@ -19,6 +19,9 @@ RENAME COLUMN algo_key TO function_key;
 ALTER TABLE algo_inputs
 RENAME TO function_inputs;
 
+ALTER TABLE performances
+RENAME COLUMN algo_key TO function_key;
+
 DROP VIEW IF EXISTS expanded_algos;
 CREATE VIEW expanded_functions AS
 SELECT 	key,
