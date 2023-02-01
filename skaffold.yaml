@@ -1,101 +1,112 @@
-apiVersion: skaffold/v2beta24
+apiVersion: skaffold/v4beta2
 kind: Config
 requires:
-  - configs: ["cert_manager"]
+- configs:
+  - cert_manager
 build:
   artifacts:
-    - image: substra/orchestrator-server
-      context: .
-      docker:
-        dockerfile: docker/orchestrator-server/Dockerfile
-deploy:
+  - image: substra/orchestrator-server
+    context: .
+    docker:
+      dockerfile: docker/orchestrator-server/Dockerfile
+manifests:
   helm:
     releases:
-      - name: orchestrator-org-1
-        imageStrategy:
-          helm:
-            explicitRegistry: true
-        chartPath: charts/orchestrator
-        namespace: org-1
-        createNamespace: true
-        artifactOverrides:
-          orchestrator.image: substra/orchestrator-server
-        valuesFiles: [ examples/values/orchestrator-org-1.yaml ]
-
+    - name: orchestrator-org-1
+      chartPath: charts/orchestrator
+      valuesFiles:
+      - examples/values/orchestrator-org-1.yaml
+      namespace: org-1
+      setValueTemplates:
+        orchestrator.image.registry: '{{.IMAGE_DOMAIN_substra_orchestrator_server}}'
+        orchestrator.image.repository: '{{.IMAGE_REPO_NO_DOMAIN_substra_orchestrator_server}}'
+        orchestrator.image.tag: '{{.IMAGE_TAG_substra_orchestrator_server}}@{{.IMAGE_DIGEST_substra_orchestrator_server}}'
+      createNamespace: true
+      skipBuildDependencies: true
+  hooks:
+    before:
+      - host:
+        # `skaffold run` does not update chart dependencies:
+        # https://github.com/GoogleContainerTools/skaffold/issues/5445
+        # So we update the dependencies ourselves.
+        command:
+        - 'helm'
+        - 'dep'
+        - 'build'
+        - 'charts/orchestrator'
+        os: [darwin, linux]
+deploy:
+  helm: {}
 profiles:
 - name: distributed
   patches:
   - op: replace
-    path: /deploy/helm/releases/0/valuesFiles
-    value: [ examples/values/orchestrator-org-1-distributed.yaml ]
+    path: /manifests/helm/releases/0/valuesFiles
+    value:
+    - examples/values/orchestrator-org-1-distributed.yaml
   - op: replace
-    path: /deploy/helm/releases/0/artifactOverrides
+    path: /manifests/helm/releases/0/artifactOverrides
     value:
       orchestrator.image: substra/orchestrator-server
   - op: add
-    path: "/deploy/helm/releases/-"
+    path: /manifests/helm/releases/-
     value:
-      name: orchestrator-org-2
+      setValueTemplates:
+        orchestrator.image.registry: '{{.IMAGE_DOMAIN_substra_orchestrator_server}}'
+        orchestrator.image.repository: '{{.IMAGE_REPO_NO_DOMAIN_substra_orchestrator_server}}'
+        orchestrator.image.tag: '{{.IMAGE_TAG_substra_orchestrator_server}}@{{.IMAGE_DIGEST_substra_orchestrator_server}}'
       chartPath: charts/orchestrator
-      namespace: org-2
       createNamespace: true
-      artifactOverrides:
-        orchestrator.image: substra/orchestrator-server
-      imageStrategy:
-        helm:
-          explicitRegistry: true
-      valuesFiles: [ examples/values/orchestrator-org-2-distributed.yaml ]
-      skipBuildDependencies: true # deps already built by other release (org-1)
-- name: nodeps
-  patches:
-    - op: add
-      path: /deploy/helm/releases/0/skipBuildDependencies
-      value: true
-
+      name: orchestrator-org-2
+      namespace: org-2
+      skipBuildDependencies: true
+      valuesFiles:
+      - examples/values/orchestrator-org-2-distributed.yaml
 ---
-
-apiVersion: skaffold/v2beta24
+apiVersion: skaffold/v4beta2
 kind: Config
 metadata:
   name: certificates
 requires:
-  - configs: ["cert_manager"]
+- configs:
+  - cert_manager
+manifests:
+  rawYaml:
+  - examples/k8s/cm-tls-org-1-cacert.yaml
+  - examples/k8s/secret-cacert-certmanager.yaml
+  - examples/k8s/certmanagerca.yaml
+  - examples/k8s/cm-tls-org-2-cacert.yaml
 deploy:
-  kubectl:
-    manifests:
-      - examples/k8s/cm-tls-org-1-cacert.yaml
-      - examples/k8s/secret-cacert-certmanager.yaml
-      - examples/k8s/certmanagerca.yaml
-      - examples/k8s/cm-tls-org-2-cacert.yaml
+  kubectl: {}
 profiles:
 - name: apponly
   patches:
-    - op: remove
-      path: /deploy/kubectl
-
+  - op: remove
+    path: /manifests/rawYaml
 ---
-
-apiVersion: skaffold/v2beta24
+apiVersion: skaffold/v4beta2
 kind: Config
 metadata:
   name: cert_manager
-deploy:
+manifests:
   helm:
     releases:
-      - name: cert-manager
-        remoteChart: jetstack/cert-manager
-        namespace: cert-manager
-        createNamespace: true
-        version: v1.9.1
+    - name: cert-manager
+      remoteChart: jetstack/cert-manager
+      namespace: cert-manager
+      version: v1.9.1
+      createNamespace: true
+deploy:
+  helm:
     hooks:
       before:
-        - host:
-            command:
-              - sh
-              - -c
-              - "kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.9.1/cert-manager.crds.yaml"
+      - host:
+          command:
+          - sh
+          - -c
+          - kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.9.1/cert-manager.crds.yaml
 profiles:
 - name: apponly
   patches:
-    - op: remove
-      path: /deploy/helm
+  - op: remove
+    path: /manifests/helm
