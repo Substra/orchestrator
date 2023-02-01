@@ -18,7 +18,7 @@ message FunctionOutput {
   bool multiple = 2;
 }
 
-// Function represents the algorithm code which will be used
+// Function represents the code which will be used
 // to produce or test a model.
 message Function {
   reserved 3;
