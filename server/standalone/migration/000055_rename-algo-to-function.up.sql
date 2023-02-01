@@ -60,9 +60,9 @@ SET asset = asset - 'algo' || JSONB_BUILD_OBJECT('function', asset->'algo')
 WHERE asset_kind = 'ASSET_COMPUTE_TASK';
 
 UPDATE events
-SET asset = JSONB_SET(asset #- '{function,algorithm}',
+SET asset = JSONB_SET(asset,
                       '{function,function}',
-                      build_addressable_jsonb(f.function_checksum, f.function_address))
+                      build_addressable_jsonb(f.function_checksum, f.function_address)) #- '{function,algorithm}'
 FROM expanded_functions f
 WHERE asset_kind = 'ASSET_COMPUTE_TASK'
     AND asset->'function'?'algorithm';
