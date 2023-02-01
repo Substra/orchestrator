@@ -57,14 +57,12 @@ WHERE kind = 'ASSET_ALGO';
 
 UPDATE events
 SET asset = JSONB_SET(asset,
-                      '{algo,function}',
-                      asset -> 'algo'->> 'algorithm') #- '{algo,algorithm}'
+                      '{function}',
+                      asset -> 'algo') #- '{algo}'
 WHERE asset_kind = 'ASSET_COMPUTE_TASK';
 
 UPDATE events
-SET asset = asset - 'algo' || JSONB_BUILD_OBJECT(
-    'function',
-    asset->'algo'
-    )
+SET asset = JSONB_SET(asset,
+                      '{function,function}',
+                      asset -> 'function'-> 'algorithm') #- '{function,algorithm}'
 WHERE asset_kind = 'ASSET_COMPUTE_TASK';
-
