@@ -60,7 +60,5 @@ SET asset = asset - 'algo' || JSONB_BUILD_OBJECT(
     'function',
     asset->'algo' - 'algorithm' || JSONB_BUILD_OBJECT(
         'function',
-        asset->'algo'->'algorithm',
-        ),
-    )
+        asset->'algo'->'algorithm'))
 WHERE asset_kind = 'ASSET_COMPUTE_TASK';
