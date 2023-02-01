@@ -64,6 +64,6 @@ WHERE asset_kind = 'ASSET_COMPUTE_TASK';
 UPDATE events
 SET asset = JSONB_SET(asset #- '{function,algorithm}',
                       '{function,function}',
-                      asset -> 'function'-> 'algorithm')
+                      COALESCE(asset -> 'function'-> 'algorithm'))
 WHERE asset_kind = 'ASSET_COMPUTE_TASK'
     AND asset->'function'?'algorithm';
