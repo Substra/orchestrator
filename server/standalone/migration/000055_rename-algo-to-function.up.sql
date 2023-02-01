@@ -58,7 +58,7 @@ WHERE kind = 'ASSET_ALGO';
 UPDATE events
 SET asset = asset - 'algo' || JSONB_BUILD_OBJECT(
     'function',
-    asset->'algo'::jsonb - 'algorithm' || JSONB_BUILD_OBJECT(
+    asset->'algo' #- 'algorithm' || JSONB_BUILD_OBJECT(
         'function',
         asset->'algo'->'algorithm'
         )
