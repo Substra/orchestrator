@@ -56,14 +56,14 @@ DELETE FROM asset_kinds
 WHERE kind = 'ASSET_ALGO';
 
 UPDATE events
-SET asset = JSONB_SET(asset  - 'algo',
+SET asset = JSONB_SET(COALESCE(asset,'{}'::jsonb)  - 'algo',
                       '{function}',
                       asset -> 'algo')
 WHERE asset_kind = 'ASSET_COMPUTE_TASK';
 
 UPDATE events
-SET asset = JSONB_SET(asset #- '{function,algorithm}',
+SET asset = JSONB_SET(COALESCE(asset,'{}'::jsonb) #- '{function,algorithm}',
                       '{function,function}',
-                      COALESCE(asset -> 'function'-> 'algorithm'))
+                      asset -> 'function'-> 'algorithm')
 WHERE asset_kind = 'ASSET_COMPUTE_TASK'
     AND asset->'function'?'algorithm';
