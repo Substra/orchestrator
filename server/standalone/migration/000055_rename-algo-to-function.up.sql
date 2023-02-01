@@ -21,6 +21,7 @@ RENAME TO function_inputs;
 
 ALTER TABLE performances
 RENAME COLUMN algo_key TO function_key;
+RENAME CONSTRAINT performances_algo_key_fkey TO performances_function_key_fkey;
 
 DROP VIEW IF EXISTS expanded_algos;
 CREATE VIEW expanded_functions AS
