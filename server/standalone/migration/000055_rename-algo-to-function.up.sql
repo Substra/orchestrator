@@ -1,5 +1,7 @@
 ALTER TABLE algos
-RENAME CONSTRAINT algos_owner_channel_fkey TO functions_owner_channel_fkey
+RENAME CONSTRAINT algos_owner_channel_fkey TO functions_owner_channel_fkey;
+
+ALTER TABLE algos
 RENAME COLUMN algorithm TO functionAdress;
 
 ALTER TABLE algos
@@ -21,7 +23,9 @@ ALTER TABLE algo_inputs
 RENAME TO function_inputs;
 
 ALTER TABLE performances
-RENAME COLUMN algo_key TO function_key
+RENAME COLUMN algo_key TO function_key;
+
+ALTER TABLE performances
 RENAME CONSTRAINT performances_algo_key_fkey TO performances_function_key_fkey;
 
 DROP VIEW IF EXISTS expanded_algos;
