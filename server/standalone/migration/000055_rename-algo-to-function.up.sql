@@ -64,6 +64,4 @@ SET asset = JSONB_SET(asset,
                       '{function,function}',
                       build_addressable_jsonb(f.function_checksum, f.function_address)) #- '{function,algorithm}'
 FROM expanded_functions f
-WHERE asset_kind = 'ASSET_COMPUTE_TASK'
-    AND asset->'function'?'algorithm';
-
+WHERE asset_kind = 'ASSET_COMPUTE_TASK';
