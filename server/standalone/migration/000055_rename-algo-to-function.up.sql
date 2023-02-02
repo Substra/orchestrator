@@ -56,12 +56,8 @@ DELETE FROM asset_kinds
 WHERE kind = 'ASSET_ALGO';
 
 UPDATE events
-SET asset = asset - 'algo' || JSONB_BUILD_OBJECT('function', asset->'algo')
-WHERE asset_kind = 'ASSET_COMPUTE_TASK';
-
-UPDATE events
-SET asset = JSONB_SET(asset,
-                      '{function,function}',
-                      build_addressable_jsonb(f.function_checksum, f.function_address)) #- '{function,algorithm}'
-FROM expanded_functions f
+SET asset = JSONB_SET(asset - 'algo', '{function}',
+                JSONB_SET(asset -> 'algo' - 'algorithm',
+                        '{function}',
+                        asset -> 'algo' -> 'algorithm'))
 WHERE asset_kind = 'ASSET_COMPUTE_TASK';
