@@ -62,4 +62,4 @@ WHERE asset_kind = 'ASSET_COMPUTE_TASK' AND NOT(asset ? 'functionKey');
 UPDATE events
 SET asset = JSONB_SET(asset, '{function}',
                       asset -> 'algorithm') - 'algorithm'
-WHERE asset_kind = 'ASSET_ALGO';
+WHERE asset_kind = 'ASSET_FUNCTION';
