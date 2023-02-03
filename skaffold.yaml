@@ -44,10 +44,6 @@ profiles:
     path: /manifests/helm/releases/0/valuesFiles
     value:
     - examples/values/orchestrator-org-1-distributed.yaml
-  - op: replace
-    path: /manifests/helm/releases/0/artifactOverrides
-    value:
-      orchestrator.image: substra/orchestrator-server
   - op: add
     path: /manifests/helm/releases/-
     value:
