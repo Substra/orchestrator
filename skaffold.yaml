@@ -22,19 +22,6 @@ manifests:
         orchestrator.image.repository: '{{.IMAGE_REPO_NO_DOMAIN_substra_orchestrator_server}}'
         orchestrator.image.tag: '{{.IMAGE_TAG_substra_orchestrator_server}}@{{.IMAGE_DIGEST_substra_orchestrator_server}}'
       createNamespace: true
-      skipBuildDependencies: true
-  hooks:
-    before:
-      - host:
-          # `skaffold run` does not update chart dependencies:
-          # https://github.com/GoogleContainerTools/skaffold/issues/5445
-          # So we update the dependencies ourselves.
-          command:
-          - 'helm'
-          - 'dep'
-          - 'build'
-          - 'charts/orchestrator'
-          os: [darwin, linux]
 deploy:
   helm: {}
 profiles:
@@ -58,6 +45,11 @@ profiles:
       skipBuildDependencies: true
       valuesFiles:
       - examples/values/orchestrator-org-2-distributed.yaml
+- name: nodeps
+  patches:
+    - op: add
+      path: /manifests/helm/releases/0/skipBuildDependencies
+      value: true
 ---
 apiVersion: skaffold/v4beta2
 kind: Config
