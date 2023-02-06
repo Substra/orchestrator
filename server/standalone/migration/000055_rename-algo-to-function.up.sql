@@ -2,7 +2,7 @@ ALTER TABLE algos
 RENAME CONSTRAINT algos_owner_channel_fkey TO functions_owner_channel_fkey;
 
 ALTER TABLE algos
-RENAME COLUMN algorithm TO functionAdress;
+RENAME COLUMN algorithm TO functionAddress;
 
 ALTER TABLE algos
 RENAME TO functions;
@@ -34,7 +34,7 @@ SELECT 	key,
         name,
         description             AS description_address,
         desc_add.checksum       AS description_checksum,
-        functionAdress          AS function_address,
+        functionAddress          AS function_address,
         function_add.checksum   AS function_checksum,
 	    permissions,
         owner,
@@ -43,7 +43,7 @@ SELECT 	key,
         channel
 FROM functions
 JOIN addressables desc_add ON functions.description = desc_add.storage_address
-JOIN addressables function_add ON functions.functionAdress = function_add.storage_address;
+JOIN addressables function_add ON functions.functionAddress = function_add.storage_address;
 
 INSERT INTO asset_kinds(kind)
 VALUES ('ASSET_FUNCTION');

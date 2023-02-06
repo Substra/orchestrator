@@ -51,7 +51,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 
 	stmt := getStatementBuilder().
 		Insert("functions").
-		Columns("key", "channel", "name", "description", "functionAdress", "permissions", "owner", "creation_date", "metadata").
+		Columns("key", "channel", "name", "description", "functionAddress", "permissions", "owner", "creation_date", "metadata").
 		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Function.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata)
 
 	err = d.exec(stmt)
