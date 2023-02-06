@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+## [0.32](https://github.com/Substra/orchestrator/releases/tag/0.32.0) - 2023-01-31
+
 ### Added
 
 - Context in fsm calls ([#127](https://github.com/Substra/orchestrator/pull/127))
