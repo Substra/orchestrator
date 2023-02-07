@@ -22,7 +22,7 @@ An event will hold the following fields:
 
 - organization
 - datasample
-- algo
+- function
 - datamanager
 - computetask
 - computeplan
@@ -38,7 +38,7 @@ An event will hold the following fields:
 
 Some event will hold additional data.
 
-**Task status change**: when a task status is updated, the *asset_updated* event will have the following metadata:
+**Task status change**: when a task status is updated, the _asset_updated_ event will have the following metadata:
 
 - status: string representation of the **new** status (see [ComputeTask](./assets/computetask.md))
 - reason: cause of the status change, this is a sentence which can be shown or logged

@@ -20,7 +20,7 @@ Each action has the same structure:
 
 The following assets have their permissions set by their owner at registration:
 
-- algo
+- function
 - metric
 - [datamanager](./assets/datamanager.md)
 
@@ -30,14 +30,13 @@ This is to make sure the creator of an asset cannot be "locked out".
 Compute tasks bears permissions related to their output models.
 These are generally computed during registration, but follow specific rules depending on the task kind.
 
-**Train Task**: model permissions are the [intersection](#intersection) of algo and datamanager permissions
+**Train Task**: model permissions are the [intersection](#intersection) of function and datamanager permissions
 
 **Composite Task**: this one is more complex since there are two output models.
-The *Simple* model receives its permissions from the task input (i.e. set by the creator of the task), and is owned by the datamanager's owner.
-The *Head* model is restricted to the datamanager's owner only.
+The _Simple_ model receives its permissions from the task input (i.e. set by the creator of the task), and is owned by the datamanager's owner.
+The _Head_ model is restricted to the datamanager's owner only.
 
-**Aggregate Task**: permissions of the output model is the [union](#union) of the permissions of the parent models (only *Simple* model is considered for composite parents).
-
+**Aggregate Task**: permissions of the output model is the [union](#union) of the permissions of the parent models (only _Simple_ model is considered for composite parents).
 
 ## Permissions operations
 
@@ -49,7 +48,7 @@ This is the logical operation `A∧B`.
 To match the resulting permissions, one has to satisfy both A **and** B permissions.
 
 | A                                    | B                                          | A∧B                                  |
-|--------------------------------------|--------------------------------------------|--------------------------------------|
+| ------------------------------------ | ------------------------------------------ | ------------------------------------ |
 | Public: true                         | Public: false, AuthorizedIds: [test]       | Public: false, AuthorizedIds: [test] |
 | Public: false, AuthorizedIds: [org1] | Public: false, AuthorizedIds: [org2]       | Public: false, AuthorizedIds: []     |
 | Public: false, AuthorizedIds: [org1] | Public: false, AuthorizedIds: [org1, org2] | Public: false, AuthorizedIds: [org1] |
@@ -60,7 +59,7 @@ This is the logical operation `A∨B`
 To match the resulting permissions, one has to satisfy A **or** B permissions.
 
 | A                                    | B                                          | A∨B                                        |
-|--------------------------------------|--------------------------------------------|--------------------------------------------|
+| ------------------------------------ | ------------------------------------------ | ------------------------------------------ |
 | Public: true                         | Public: false, AuthorizedIds: [test]       | Public: true                               |
 | Public: false, AuthorizedIds: [org1] | Public: false, AuthorizedIds: [org2]       | Public: false, AuthorizedIds: [org1, org2] |
 | Public: false, AuthorizedIds: [org1] | Public: false, AuthorizedIds: [org1, org2] | Public: false, AuthorizedIds: [org1, org2] |
