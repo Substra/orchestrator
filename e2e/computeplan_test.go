@@ -98,37 +98,37 @@ func TestCancelComputePlan(t *testing.T) {
 // TestMultiStageComputePlan is the "canonical" example of FL with 2 organizations aggregating their trunks
 // This does not check multi-organization setup though!
 //
-//   ,========,                ,========,
-//   | ORG A  |                | ORG B  |
-//   *========*                *========*
+//	 ,========,                ,========,
+//	 | ORG A  |                | ORG B  |
+//	 *========*                *========*
 //
-//     ø     ø                  ø      ø
-//     |     |                  |      |
-//     hd    tr                 tr     hd
-//   -----------              -----------
-//  | Composite |            | Composite |      STEP 1
-//   -----------              -----------
-//     hd    tr                 tr     hd
-//     |      \   ,========,   /      |
-//     |       \  | ORG C  |  /       |
-//     |        \ *========* /        |
-//     |       ----------------       |
-//     |      |    Aggregate   |      |         STEP 2
-//     |       ----------------       |
-//     |              |               |
-//     |     ,_______/ \_______       |
-//     |     |                 |      |
-//    hd    tr                tr     hd
-//   -----------             -----------
-//  | Composite |           | Composite |       STEP 3
-//   -----------             -----------
-//    hd    tr                 tr     hd
-//            \                /
-//             \              /
-//              \            /
-//             ----------------
-//            |    Aggregate   |                STEP 4
-//             ----------------
+//	   ø     ø                  ø      ø
+//	   |     |                  |      |
+//	   hd    tr                 tr     hd
+//	 -----------              -----------
+//	| Composite |            | Composite |      STEP 1
+//	 -----------              -----------
+//	   hd    tr                 tr     hd
+//	   |      \   ,========,   /      |
+//	   |       \  | ORG C  |  /       |
+//	   |        \ *========* /        |
+//	   |       ----------------       |
+//	   |      |    Aggregate   |      |         STEP 2
+//	   |       ----------------       |
+//	   |              |               |
+//	   |     ,_______/ \_______       |
+//	   |     |                 |      |
+//	  hd    tr                tr     hd
+//	 -----------             -----------
+//	| Composite |           | Composite |       STEP 3
+//	 -----------             -----------
+//	  hd    tr                 tr     hd
+//	          \                /
+//	           \              /
+//	            \            /
+//	           ----------------
+//	          |    Aggregate   |                STEP 4
+//	           ----------------
 func TestMultiStageComputePlan(t *testing.T) {
 	appClient := factory.NewTestClient()
 

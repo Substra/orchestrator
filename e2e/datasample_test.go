@@ -6,10 +6,10 @@ package e2e
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/e2e/client"
 	e2erequire "github.com/substra/orchestrator/e2e/require"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/stretchr/testify/require"
 )
 
 // TestRegisterDataSample registers a datasample and ensure an event containing the datasample is recorded.

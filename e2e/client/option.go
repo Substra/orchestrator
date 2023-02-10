@@ -19,7 +19,7 @@ type FunctionOptions struct {
 }
 
 type DataSampleOptions struct {
-	KeyRef   string
+	KeyRef string
 }
 
 type TaskOutputRef struct {
@@ -35,7 +35,7 @@ type TaskInputOptions struct {
 
 type TrainTaskOptions struct {
 	KeyRef         string
-	FunctionRef        string
+	FunctionRef    string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -45,7 +45,7 @@ type TrainTaskOptions struct {
 
 type TestTaskOptions struct {
 	KeyRef         string
-	FunctionRef        string
+	FunctionRef    string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -55,7 +55,7 @@ type TestTaskOptions struct {
 
 type PredictTaskOptions struct {
 	KeyRef         string
-	FunctionRef        string
+	FunctionRef    string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -65,7 +65,7 @@ type PredictTaskOptions struct {
 
 type CompositeTaskOptions struct {
 	KeyRef         string
-	FunctionRef        string
+	FunctionRef    string
 	PlanRef        string
 	DataManagerRef string
 	DataSampleRef  string
@@ -74,12 +74,12 @@ type CompositeTaskOptions struct {
 }
 
 type AggregateTaskOptions struct {
-	KeyRef  string
+	KeyRef      string
 	FunctionRef string
-	PlanRef string
-	Worker  string
-	Inputs  []*TaskInputOptions
-	Outputs map[string]*asset.NewComputeTaskOutput
+	PlanRef     string
+	Worker      string
+	Inputs      []*TaskInputOptions
+	Outputs     map[string]*asset.NewComputeTaskOutput
 }
 
 type ModelOptions struct {
@@ -102,7 +102,7 @@ type DataManagerOptions struct {
 func DefaultTestTaskOptions() *TestTaskOptions {
 	return &TestTaskOptions{
 		KeyRef:         DefaultTestTaskRef,
-		FunctionRef:        DefaultMetricFunctionRef,
+		FunctionRef:    DefaultMetricFunctionRef,
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -142,7 +142,7 @@ func (o *TestTaskOptions) WithFunctionRef(ref string) *TestTaskOptions {
 func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		FunctionKey:        ks.GetKey(o.FunctionRef),
+		FunctionKey:    ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
 		Outputs:        o.Outputs,
@@ -152,7 +152,7 @@ func (o *TestTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 func DefaultTrainTaskOptions() *TrainTaskOptions {
 	return &TrainTaskOptions{
 		KeyRef:         DefaultTrainTaskRef,
-		FunctionRef:        DefaultSimpleFunctionRef,
+		FunctionRef:    DefaultSimpleFunctionRef,
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -204,7 +204,7 @@ func (o *TrainTaskOptions) SetOutputs(outputs map[string]*asset.NewComputeTaskOu
 func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		FunctionKey:        ks.GetKey(o.FunctionRef),
+		FunctionKey:    ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
 		Outputs:        o.Outputs,
@@ -214,7 +214,7 @@ func (o *TrainTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 func DefaultPredictTaskOptions() *PredictTaskOptions {
 	return &PredictTaskOptions{
 		KeyRef:         DefaultPredictTaskRef,
-		FunctionRef:        DefaultPredictFunctionRef,
+		FunctionRef:    DefaultPredictFunctionRef,
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -252,7 +252,7 @@ func (o *PredictTaskOptions) WithDataSampleRef(ref string) *PredictTaskOptions {
 func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		FunctionKey:        ks.GetKey(o.FunctionRef),
+		FunctionKey:    ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
 		Outputs:        o.Outputs,
@@ -262,7 +262,7 @@ func (o *PredictTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 func DefaultCompositeTaskOptions() *CompositeTaskOptions {
 	return &CompositeTaskOptions{
 		KeyRef:         DefaultCompositeTaskRef,
-		FunctionRef:        DefaultCompositeFunctionRef,
+		FunctionRef:    DefaultCompositeFunctionRef,
 		PlanRef:        DefaultPlanRef,
 		DataManagerRef: DefaultDataManagerRef,
 		DataSampleRef:  DefaultDataSampleRef,
@@ -296,7 +296,7 @@ func (o *CompositeTaskOptions) WithFunctionRef(ref string) *CompositeTaskOptions
 func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		FunctionKey:        ks.GetKey(o.FunctionRef),
+		FunctionKey:    ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
 		Outputs:        o.Outputs,
@@ -305,11 +305,11 @@ func (o *CompositeTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 
 func DefaultAggregateTaskOptions() *AggregateTaskOptions {
 	return &AggregateTaskOptions{
-		KeyRef:  DefaultAggregateTaskRef,
+		KeyRef:      DefaultAggregateTaskRef,
 		FunctionRef: DefaultAggregateFunctionRef,
-		PlanRef: DefaultPlanRef,
-		Worker:  "MyOrg1MSP",
-		Inputs:  []*TaskInputOptions{},
+		PlanRef:     DefaultPlanRef,
+		Worker:      "MyOrg1MSP",
+		Inputs:      []*TaskInputOptions{},
 		Outputs: map[string]*asset.NewComputeTaskOutput{
 			"model": {Permissions: &asset.NewPermissions{Public: true}},
 		},
@@ -334,7 +334,7 @@ func (o *AggregateTaskOptions) WithFunctionRef(ref string) *AggregateTaskOptions
 func (o *AggregateTaskOptions) GetNewTask(ks *KeyStore) *asset.NewComputeTask {
 	return &asset.NewComputeTask{
 		Key:            ks.GetKey(o.KeyRef),
-		FunctionKey:        ks.GetKey(o.FunctionRef),
+		FunctionKey:    ks.GetKey(o.FunctionRef),
 		ComputePlanKey: ks.GetKey(o.PlanRef),
 		Worker:         o.Worker,
 		Inputs:         GetNewTaskInputs(ks, o.Inputs),
@@ -497,7 +497,7 @@ func (o *PerformanceOptions) WithMetricRef(ref string) *PerformanceOptions {
 
 func DefaultDataSampleOptions() *DataSampleOptions {
 	return &DataSampleOptions{
-		KeyRef:   "ds",
+		KeyRef: "ds",
 	}
 }
 
