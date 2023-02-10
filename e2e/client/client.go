@@ -78,7 +78,7 @@ type TestClient struct {
 	ks                   *KeyStore
 	logger               zerolog.Logger
 	organizationService  asset.OrganizationServiceClient
-	functionService          asset.FunctionServiceClient
+	functionService      asset.FunctionServiceClient
 	dataManagerService   asset.DataManagerServiceClient
 	dataSampleService    asset.DataSampleServiceClient
 	modelService         asset.ModelServiceClient
@@ -128,7 +128,7 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 		ks:                   NewKeyStore(),
 		logger:               logger,
 		organizationService:  asset.NewOrganizationServiceClient(f.conn),
-		functionService:          asset.NewFunctionServiceClient(f.conn),
+		functionService:      asset.NewFunctionServiceClient(f.conn),
 		dataManagerService:   asset.NewDataManagerServiceClient(f.conn),
 		dataSampleService:    asset.NewDataSampleServiceClient(f.conn),
 		modelService:         asset.NewModelServiceClient(f.conn),
