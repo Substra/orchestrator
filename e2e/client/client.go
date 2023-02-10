@@ -24,11 +24,11 @@ const DefaultPredictTaskRef = "predict task"
 const DefaultTestTaskRef = "test task"
 const DefaultTrainTaskRef = "task"
 
-const DefaultSimpleAlgoRef = "simple algo"
-const DefaultCompositeAlgoRef = "composite algo"
-const DefaultAggregateAlgoRef = "aggregate algo"
-const DefaultPredictAlgoRef = "predict algo"
-const DefaultMetricAlgoRef = "metric algo"
+const DefaultSimpleFunctionRef = "simple function"
+const DefaultCompositeFunctionRef = "composite function"
+const DefaultAggregateFunctionRef = "aggregate function"
+const DefaultPredictFunctionRef = "predict function"
+const DefaultMetricFunctionRef = "metric function"
 
 const DefaultPlanRef = "cp"
 const DefaultDataManagerRef = "dm"
@@ -78,7 +78,7 @@ type TestClient struct {
 	ks                   *KeyStore
 	logger               zerolog.Logger
 	organizationService  asset.OrganizationServiceClient
-	algoService          asset.AlgoServiceClient
+	functionService      asset.FunctionServiceClient
 	dataManagerService   asset.DataManagerServiceClient
 	dataSampleService    asset.DataSampleServiceClient
 	modelService         asset.ModelServiceClient
@@ -128,7 +128,7 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 		ks:                   NewKeyStore(),
 		logger:               logger,
 		organizationService:  asset.NewOrganizationServiceClient(f.conn),
-		algoService:          asset.NewAlgoServiceClient(f.conn),
+		functionService:      asset.NewFunctionServiceClient(f.conn),
 		dataManagerService:   asset.NewDataManagerServiceClient(f.conn),
 		dataSampleService:    asset.NewDataSampleServiceClient(f.conn),
 		modelService:         asset.NewModelServiceClient(f.conn),
@@ -193,28 +193,28 @@ func (c *TestClient) EnsureOrganization() {
 	}
 }
 
-func (c *TestClient) RegisterAlgo(o *AlgoOptions) *asset.Algo {
-	newAlgo := &asset.NewAlgo{
+func (c *TestClient) RegisterFunction(o *FunctionOptions) *asset.Function {
+	newFunction := &asset.NewFunction{
 		Key:  c.ks.GetKey(o.KeyRef),
-		Name: "Algo test",
+		Name: "Function test",
 		Description: &asset.Addressable{
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/desc/" + uuid.NewString(),
 		},
-		Algorithm: &asset.Addressable{
+		Function: &asset.Addressable{
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
-			StorageAddress: "http://somewhere.local/algo/" + uuid.NewString(),
+			StorageAddress: "http://somewhere.local/function/" + uuid.NewString(),
 		},
 		NewPermissions: &asset.NewPermissions{Public: true},
 		Inputs:         o.Inputs,
 		Outputs:        o.Outputs,
 	}
-	c.logger.Debug().Interface("algo", newAlgo).Msg("registering algo")
-	algo, err := c.algoService.RegisterAlgo(c.ctx, newAlgo)
+	c.logger.Debug().Interface("function", newFunction).Msg("registering function")
+	function, err := c.functionService.RegisterFunction(c.ctx, newFunction)
 	if err != nil {
-		c.logger.Fatal().Err(err).Msg("RegisterAlgo failed")
+		c.logger.Fatal().Err(err).Msg("RegisterFunction failed")
 	}
-	return algo
+	return function
 }
 
 func (c *TestClient) RegisterDataManager(o *DataManagerOptions) *asset.DataManager {
@@ -514,23 +514,23 @@ func (c *TestClient) GetDataset(dataManagerRef string) *asset.Dataset {
 	return resp
 }
 
-func (c *TestClient) QueryAlgos(filter *asset.AlgoQueryFilter, pageToken string, pageSize int) *asset.QueryAlgosResponse {
-	resp, err := c.algoService.QueryAlgos(c.ctx, &asset.QueryAlgosParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
+func (c *TestClient) QueryFunctions(filter *asset.FunctionQueryFilter, pageToken string, pageSize int) *asset.QueryFunctionsResponse {
+	resp, err := c.functionService.QueryFunctions(c.ctx, &asset.QueryFunctionsParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
-		c.logger.Fatal().Err(err).Msg("QueryAlgos failed")
+		c.logger.Fatal().Err(err).Msg("QueryFunctions failed")
 	}
 
 	return resp
 }
 
-func (c *TestClient) GetAlgo(algoRef string) *asset.Algo {
-	param := &asset.GetAlgoParam{
-		Key: c.ks.GetKey(algoRef),
+func (c *TestClient) GetFunction(functionRef string) *asset.Function {
+	param := &asset.GetFunctionParam{
+		Key: c.ks.GetKey(functionRef),
 	}
-	c.logger.Debug().Str("algo key", c.ks.GetKey(algoRef)).Msg("GetAlgo")
-	resp, err := c.algoService.GetAlgo(c.ctx, param)
+	c.logger.Debug().Str("function key", c.ks.GetKey(functionRef)).Msg("GetFunction")
+	resp, err := c.functionService.GetFunction(c.ctx, param)
 	if err != nil {
-		c.logger.Fatal().Err(err).Msg("GetAlgo failed")
+		c.logger.Fatal().Err(err).Msg("GetFunction failed")
 	}
 	return resp
 }
@@ -541,15 +541,15 @@ func (c *TestClient) GetAssetCreationEvent(assetKey string) *asset.Event {
 	return resp.Events[0]
 }
 
-func (c *TestClient) UpdateAlgo(algoRef string, name string) *asset.UpdateAlgoResponse {
-	param := &asset.UpdateAlgoParam{
-		Key:  c.ks.GetKey(algoRef),
+func (c *TestClient) UpdateFunction(functionRef string, name string) *asset.UpdateFunctionResponse {
+	param := &asset.UpdateFunctionParam{
+		Key:  c.ks.GetKey(functionRef),
 		Name: name,
 	}
-	c.logger.Debug().Str("algo key", c.ks.GetKey(algoRef)).Msg("UpdateAlgo")
-	resp, err := c.algoService.UpdateAlgo(c.ctx, param)
+	c.logger.Debug().Str("function key", c.ks.GetKey(functionRef)).Msg("UpdateFunction")
+	resp, err := c.functionService.UpdateFunction(c.ctx, param)
 	if err != nil {
-		c.logger.Fatal().Err(err).Msg("UpdateAlgo failed")
+		c.logger.Fatal().Err(err).Msg("UpdateFunction failed")
 	}
 	return resp
 }

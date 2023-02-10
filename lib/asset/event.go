@@ -13,8 +13,8 @@ import (
 func MarshalEventAsset(event *Event) ([]byte, error) {
 	var m proto.Message
 	switch a := event.Asset.(type) {
-	case *Event_Algo:
-		m = event.GetAlgo()
+	case *Event_Function:
+		m = event.GetFunction()
 	case *Event_ComputePlan:
 		m = event.GetComputePlan()
 	case *Event_ComputeTask:
@@ -44,12 +44,12 @@ func MarshalEventAsset(event *Event) ([]byte, error) {
 // and stores the result in the Asset field of the provided event.
 func UnmarshalEventAsset(b []byte, event *Event, assetKind AssetKind) error {
 	switch assetKind {
-	case AssetKind_ASSET_ALGO:
-		algo := new(Algo)
-		if err := protojson.Unmarshal(b, algo); err != nil {
+	case AssetKind_ASSET_FUNCTION:
+		function := new(Function)
+		if err := protojson.Unmarshal(b, function); err != nil {
 			return err
 		}
-		event.Asset = &Event_Algo{Algo: algo}
+		event.Asset = &Event_Function{Function: function}
 	case AssetKind_ASSET_COMPUTE_PLAN:
 		plan := new(ComputePlan)
 		if err := protojson.Unmarshal(b, plan); err != nil {

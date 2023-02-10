@@ -16,7 +16,7 @@ Those models will have different [permissions](./permissions.md), which will be 
 
 ## Compute task outputs
 
-Upon successful execution, compute task should generate *outputs* which correspond to the outputs defined in their [Algo](./algo.md).
+Upon successful execution, compute task should generate _outputs_ which correspond to the outputs defined in their [Function](./function.md).
 Each compute task output has a separate set of [Permissions](../permissions.md).
 The permissions must be set for each output at task creation,
 with the exception of outputs of kind "performance" which are always public and for which setting specific permissions is not allowed.
@@ -28,7 +28,7 @@ Tasks receive explicit inputs, they can be either:
 - a direct reference to an existing asset
 - or a reference to another task's output
 
-On task creation, inputs should match the expectations of the algorithm used:
+On task creation, inputs should match the expectations of the function used:
 
 - mandatory inputs should be defined
 - asset kind should match
@@ -52,7 +52,7 @@ Since parents are set during task definition, the rank is an immutable property.
 
 ## Status
 
-A task can have several status (see *States* below for available transitions):
+A task can have several status (see _States_ below for available transitions):
 
 - WAITING: new task waiting for its parents to be DONE. In this state the task cannot be processed yet.
 - TODO: all dependencies are built (all parents DONE) so the task can be picked up by a worker and processed.
@@ -84,7 +84,7 @@ A status change is a reaction to an action.
 Task actions should match the following restrictions:
 
 | action ↓ / sender → | Owner | Worker | Other |
-|---------------------|-------|--------|-------|
+| ------------------- | ----- | ------ | ----- |
 | DOING               | n     | y      | n     |
 | CANCELED            | y     | n      | n     |
 | FAILED              | n     | y      | n     |

@@ -48,7 +48,7 @@ message NewComputeTaskOutput {
 // It was previously called XXXtuple: Traintuple, CompositeTraintuple, etc
 message ComputeTask {
   reserved 2, 3, 6, 12, 13, 14, 15, 18;
-  reserved "category", "algo", "data", "test", "train", "composite", "aggregate", "parent_task_keys", "predict";
+  reserved "category", "function", "data", "test", "train", "composite", "aggregate", "parent_task_keys", "predict";
 
   string key = 1;
   string owner = 4;
@@ -61,7 +61,7 @@ message ComputeTask {
   map<string, string> metadata = 16;
   repeated ComputeTaskInput inputs = 17;
   map<string, ComputeTaskOutput> outputs = 19;
-  string algo_key = 20;
+  string function_key = 20;
 }
 
 message NewComputeTask {
@@ -69,7 +69,7 @@ message NewComputeTask {
   reserved "category", "parent_task_keys", "data", "test", "train", "composite", "aggregate", "predict";
 
   string key = 1;
-  string algo_key = 3;
+  string function_key = 3;
   string compute_plan_key = 4;
   string worker = 6;
   map<string, string> metadata = 16;
@@ -92,7 +92,7 @@ message TaskQueryFilter {
   string worker = 1;
   ComputeTaskStatus status = 2;
   string compute_plan_key = 4;
-  string algo_key = 5;
+  string function_key = 5;
 }
 
 message QueryTasksParam {

@@ -66,4 +66,4 @@ Sequences should be prefixed with `seq_` and follow the naming pattern `seq_<tab
 Views that join together multiple assets by expanding relationships should be named `expanded_<table>`, where `<table>`
 refers to the main asset.
 
-Example: Prefer `expanded_algos` to `algos_with_addressables`.
+Example: Prefer `expanded_functions` to `functions_with_addressables`.

@@ -6,10 +6,10 @@ package e2e
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/substra/orchestrator/e2e/client"
 	e2erequire "github.com/substra/orchestrator/e2e/require"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/stretchr/testify/require"
 )
 
 // TestRegisterFailureReport registers a task, starts it, fails it, registers a failure report on it,
@@ -17,7 +17,7 @@ import (
 func TestRegisterFailureReport(t *testing.T) {
 	appClient := factory.NewTestClient()
 
-	appClient.RegisterAlgo(client.DefaultSimpleAlgoOptions())
+	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())

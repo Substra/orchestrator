@@ -39,11 +39,11 @@ You are more than welcome to write e2e tests!
 The core component of e2e tests is the TestClient (see e2e/client module).
 This is a grpc client consuming the public API of the orchestrator.
 It deals with asset keys in a way that allows for convenient test writing:
-instead of relying on hardcoded values, use *key references* like `algo` or `model`.
+instead of relying on hardcoded values, use _key references_ like `function` or `model`.
 Then, on each execution your assets will have a new key to deal with repeatability of the scenario.
 
 Some of the client's methods take a `XXXDefaultOptions` value, which follows the builder pattern and allows for easy customization.
-Most of the time you'll use the default value, but sometimes you'll need specific inputs: linking a task to a specific algo, etc.
+Most of the time you'll use the default value, but sometimes you'll need specific inputs: linking a task to a specific function, etc.
 This can be done by chaining the calls, eg:
 
 ```go

@@ -1,4 +1,4 @@
-package algo
+package function
 
 import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -11,7 +11,7 @@ import (
 	commonserv "github.com/substra/orchestrator/server/common"
 )
 
-// SmartContract manages algos
+// SmartContract manages functions
 type SmartContract struct {
 	contractapi.Contract
 	logger zerolog.Logger
@@ -20,7 +20,7 @@ type SmartContract struct {
 // NewSmartContract creates a smart contract to be used in a chaincode
 func NewSmartContract() *SmartContract {
 	contract := &SmartContract{}
-	contract.Name = "orchestrator.algo"
+	contract.Name = "orchestrator.function"
 	contract.TransactionContextHandler = ledger.NewContext()
 	contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
 	contract.AfterTransaction = ledger.AfterTransactionHook
@@ -30,16 +30,16 @@ func NewSmartContract() *SmartContract {
 	return contract
 }
 
-// RegisterAlgo creates a new algo in world state
+// RegisterFunction creates a new function in world state
 // If the key exists, it will override the existing value with the new one
-func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+func (s *SmartContract) RegisterFunction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
 	}
-	service := provider.GetAlgoService()
+	service := provider.GetFunctionService()
 
-	params := new(asset.NewAlgo)
+	params := new(asset.NewFunction)
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to unwrap param")
@@ -52,9 +52,9 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 		return nil, err
 	}
 
-	a, err := service.RegisterAlgo(params, owner)
+	a, err := service.RegisterFunction(params, owner)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to register algo")
+		s.logger.Error().Err(err).Msg("failed to register function")
 		return nil, err
 	}
 	response, err := communication.Wrap(ctx.GetContext(), a)
@@ -65,28 +65,28 @@ func (s *SmartContract) RegisterAlgo(ctx ledger.TransactionContext, wrapper *com
 	return response, nil
 }
 
-// GetAlgo returns the algo with given key
-func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// GetFunction returns the function with given key
+func (s *SmartContract) GetFunction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
 	}
-	service := provider.GetAlgoService()
+	service := provider.GetFunctionService()
 
-	params := new(asset.GetAlgoParam)
+	params := new(asset.GetFunctionParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
-	algo, err := service.GetAlgo(params.GetKey())
+	function, err := service.GetFunction(params.GetKey())
 	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to query algo")
+		s.logger.Error().Err(err).Msg("failed to query function")
 		return nil, err
 	}
 
-	wrapped, err := communication.Wrap(ctx.GetContext(), algo)
+	wrapped, err := communication.Wrap(ctx.GetContext(), function)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to wrap response")
 		return nil, err
@@ -94,29 +94,29 @@ func (s *SmartContract) GetAlgo(ctx ledger.TransactionContext, wrapper *communic
 	return wrapped, nil
 }
 
-// QueryAlgos returns the algos
-func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
+// QueryFunctions returns the functions
+func (s *SmartContract) QueryFunctions(ctx ledger.TransactionContext, wrapper *communication.Wrapper) (*communication.Wrapper, error) {
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return nil, err
 	}
-	service := provider.GetAlgoService()
+	service := provider.GetFunctionService()
 
-	params := new(asset.QueryAlgosParam)
+	params := new(asset.QueryFunctionsParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to unwrap param")
 		return nil, err
 	}
 
-	algos, nextPage, err := service.QueryAlgos(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()}, params.Filter)
+	functions, nextPage, err := service.QueryFunctions(&common.Pagination{Token: params.GetPageToken(), Size: params.GetPageSize()}, params.Filter)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to query algos")
+		s.logger.Error().Err(err).Msg("failed to query functions")
 		return nil, err
 	}
 
-	resp := &asset.QueryAlgosResponse{
-		Algos:         algos,
+	resp := &asset.QueryFunctionsResponse{
+		Functions:     functions,
 		NextPageToken: nextPage,
 	}
 
@@ -128,16 +128,16 @@ func (s *SmartContract) QueryAlgos(ctx ledger.TransactionContext, wrapper *commu
 	return wrapped, nil
 }
 
-// UpdateAlgo updates an algo in world state
+// UpdateFunction updates an function in world state
 // If the key does not exist, it will throw an error
-func (s *SmartContract) UpdateAlgo(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+func (s *SmartContract) UpdateFunction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return err
 	}
-	service := provider.GetAlgoService()
+	service := provider.GetFunctionService()
 
-	params := new(asset.UpdateAlgoParam)
+	params := new(asset.UpdateFunctionParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to unwrap param")
@@ -150,9 +150,9 @@ func (s *SmartContract) UpdateAlgo(ctx ledger.TransactionContext, wrapper *commu
 		return err
 	}
 
-	err = service.UpdateAlgo(params, requester)
+	err = service.UpdateFunction(params, requester)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to update algo")
+		s.logger.Error().Err(err).Msg("failed to update function")
 		return err
 	}
 
@@ -161,5 +161,5 @@ func (s *SmartContract) UpdateAlgo(ctx ledger.TransactionContext, wrapper *commu
 
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
-	return commonserv.ReadOnlyMethods["Algo"]
+	return commonserv.ReadOnlyMethods["Function"]
 }

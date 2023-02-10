@@ -14,13 +14,13 @@ import (
 
 func TestRegisterPerformance(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	cts := new(MockComputeTaskAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	provider.On("GetPerformanceDBAL").Return(dbal)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
@@ -28,14 +28,14 @@ func TestRegisterPerformance(t *testing.T) {
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
-	metric := &asset.Algo{
+	metric := &asset.Function{
 		Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275",
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"auc": {
 				Kind: asset.AssetKind_ASSET_PERFORMANCE,
 			},
 		}}
-	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
+	as.On("GetFunction", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
 	task := &asset.ComputeTask{
 		Key:    "taskTest",
@@ -44,7 +44,7 @@ func TestRegisterPerformance(t *testing.T) {
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
 		},
-		AlgoKey: metric.Key,
+		FunctionKey: metric.Key,
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 
@@ -118,21 +118,21 @@ func TestRegisterPerformanceInvalidTask(t *testing.T) {
 }
 
 func TestRegisterPerformanceInvalidOutput(t *testing.T) {
-	as := new(MockAlgoAPI)
+	as := new(MockFunctionAPI)
 	cts := new(MockComputeTaskAPI)
 	provider := newMockedProvider()
 	provider.On("GetComputeTaskService").Return(cts)
-	provider.On("GetAlgoService").Return(as)
+	provider.On("GetFunctionService").Return(as)
 	service := NewPerformanceService(provider)
 
-	metric := &asset.Algo{
+	metric := &asset.Function{
 		Key: "1da600d4-f8ad-45d7-92a0-7ff752a82275",
-		Outputs: map[string]*asset.AlgoOutput{
+		Outputs: map[string]*asset.FunctionOutput{
 			"auc": {
 				Kind: asset.AssetKind_ASSET_UNKNOWN,
 			},
 		}}
-	as.On("GetAlgo", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
+	as.On("GetFunction", "1da600d4-f8ad-45d7-92a0-7ff752a82275").Return(metric, nil)
 
 	task := &asset.ComputeTask{
 		Status: asset.ComputeTaskStatus_STATUS_DOING,
@@ -140,7 +140,7 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
 		},
-		AlgoKey: metric.Key,
+		FunctionKey: metric.Key,
 	}
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(task, nil)
 

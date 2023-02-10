@@ -5,7 +5,7 @@ import (
 	is "github.com/go-ozzo/ozzo-validation/v4/is"
 )
 
-// Validate returns an error if the new algo is not valid:
+// Validate returns an error if the new function is not valid:
 // missing required data, incompatible values, etc.
 func (a *NewPerformance) Validate() error {
 	return validation.ValidateStruct(a,

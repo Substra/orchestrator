@@ -13,7 +13,7 @@ import (
 func (t *NewComputeTask) Validate() error {
 	return validation.ValidateStruct(t,
 		validation.Field(&t.Key, validation.Required, is.UUID),
-		validation.Field(&t.AlgoKey, validation.Required, is.UUID),
+		validation.Field(&t.FunctionKey, validation.Required, is.UUID),
 		validation.Field(&t.ComputePlanKey, validation.Required, is.UUID),
 		validation.Field(&t.Metadata, validation.By(validateMetadata)),
 		validation.Field(&t.Inputs, validation.By(validateTaskInputs)),

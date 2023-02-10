@@ -20,7 +20,7 @@ func (d *NewDataManager) Validate() error {
 	)
 }
 
-// Validate returns an error if the updated algo is not valid:
+// Validate returns an error if the updated function is not valid:
 // missing required data, incompatible values, etc.
 func (o *UpdateDataManagerParam) Validate() error {
 	return validation.ValidateStruct(o,

@@ -23,7 +23,7 @@ type disabler interface {
 	disable(assetKey string) error
 }
 
-type namedAlgoOutputs = map[string]*asset.AlgoOutput
+type namedFunctionOutputs = map[string]*asset.FunctionOutput
 
 // ComputeTaskAPI defines the methods to act on ComputeTasks
 type ComputeTaskAPI interface {
@@ -50,7 +50,7 @@ type ComputeTaskDependencyProvider interface {
 	ChannelProvider
 	persistence.ComputeTaskDBALProvider
 	EventServiceProvider
-	AlgoServiceProvider
+	FunctionServiceProvider
 	DataManagerServiceProvider
 	DataSampleServiceProvider
 	PermissionServiceProvider
@@ -63,8 +63,8 @@ type ComputeTaskDependencyProvider interface {
 // ComputeTaskService is the compute task manipulation entry point
 type ComputeTaskService struct {
 	ComputeTaskDependencyProvider
-	// Keep a local cache of algos, plans and tasks to be used in batch import
-	algoStore        map[string]*asset.Algo
+	// Keep a local cache of functions, plans and tasks to be used in batch import
+	functionStore    map[string]*asset.Function
 	taskStore        map[string]*asset.ComputeTask
 	planStore        map[string]*asset.ComputePlan
 	dataManagerStore map[string]*asset.DataManager
@@ -75,7 +75,7 @@ type ComputeTaskService struct {
 func NewComputeTaskService(provider ComputeTaskDependencyProvider) *ComputeTaskService {
 	return &ComputeTaskService{
 		ComputeTaskDependencyProvider: provider,
-		algoStore:                     make(map[string]*asset.Algo),
+		functionStore:                 make(map[string]*asset.Function),
 		taskStore:                     make(map[string]*asset.ComputeTask),
 		planStore:                     make(map[string]*asset.ComputePlan),
 		dataManagerStore:              make(map[string]*asset.DataManager),
@@ -178,21 +178,21 @@ func (s *ComputeTaskService) GetInputAssets(key string) ([]*asset.ComputeTaskInp
 	}
 
 	inputAssets := make([]*asset.ComputeTaskInputAsset, 0, len(task.Inputs))
-	algo, err := s.GetAlgoService().GetAlgo(task.AlgoKey)
+	function, err := s.GetFunctionService().GetFunction(task.FunctionKey)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, input := range task.Inputs {
-		algoInput, ok := algo.Inputs[input.Identifier]
+		functionInput, ok := function.Inputs[input.Identifier]
 		if !ok {
 			// This should not happen since this is checked on registration
-			return nil, orcerrors.NewError(orcerrors.ErrInternal, "missing algo input")
+			return nil, orcerrors.NewError(orcerrors.ErrInternal, "missing function input")
 		}
 
 		switch inputRef := input.Ref.(type) {
 		case *asset.ComputeTaskInput_AssetKey:
-			inputAsset, err := s.getInputAsset(algoInput.Kind, inputRef.AssetKey, input.Identifier)
+			inputAsset, err := s.getInputAsset(functionInput.Kind, inputRef.AssetKey, input.Identifier)
 			if err != nil {
 				return nil, err
 			}
@@ -380,7 +380,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
-	algo, err := s.getCheckedAlgo(input.AlgoKey, owner)
+	function, err := s.getCheckedFunction(input.FunctionKey, owner)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +397,7 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		}
 	}
 
-	worker, err := s.getTaskWorker(input, algo)
+	worker, err := s.getTaskWorker(input, function)
 	if err != nil {
 		return nil, err
 	}
@@ -406,14 +406,14 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 	if err != nil {
 		return nil, err
 	}
-	logsPermissions, err := s.getLogsPermission(owner, parentTasks, input.Inputs, algo.Inputs)
+	logsPermissions, err := s.getLogsPermission(owner, parentTasks, input.Inputs, function.Inputs)
 	if err != nil {
 		return nil, err
 	}
 
 	task := &asset.ComputeTask{
 		Key:            input.Key,
-		AlgoKey:        algo.Key,
+		FunctionKey:    function.Key,
 		Owner:          owner,
 		ComputePlanKey: input.ComputePlanKey,
 		Metadata:       input.Metadata,
@@ -426,11 +426,11 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		LogsPermission: logsPermissions,
 	}
 
-	if err := s.validateInputs(task.Inputs, algo.Inputs, task.Owner, task.Worker); err != nil {
+	if err := s.validateInputs(task.Inputs, function.Inputs, task.Owner, task.Worker); err != nil {
 		return nil, err
 	}
 
-	if err := s.validateOutputs(task.Key, task.Outputs, algo.Outputs); err != nil {
+	if err := s.validateOutputs(task.Key, task.Outputs, function.Outputs); err != nil {
 		return nil, err
 	}
 
@@ -455,44 +455,44 @@ func (s *ComputeTaskService) addComputeTaskOutputAsset(output *asset.ComputeTask
 	return s.GetEventService().RegisterEvents(event)
 }
 
-// getCheckedAlgo returns the Algo identified by given key,
-// it will return an error if the algorithm is not processable by the owner.
-func (s *ComputeTaskService) getCheckedAlgo(algoKey string, owner string) (*asset.Algo, error) {
-	algo, err := s.getCachedAlgo(algoKey)
+// getCheckedFunction returns the Function identified by given key,
+// it will return an error if the function is not processable by the owner.
+func (s *ComputeTaskService) getCheckedFunction(functionKey string, owner string) (*asset.Function, error) {
+	function, err := s.getCachedFunction(functionKey)
 	if err != nil {
 		return nil, err
 	}
 
-	canProcess := s.GetPermissionService().CanProcess(algo.Permissions, owner)
+	canProcess := s.GetPermissionService().CanProcess(function.Permissions, owner)
 	if !canProcess {
-		return nil, orcerrors.NewPermissionDenied(fmt.Sprintf("not authorized to process algo %q", algo.Key))
+		return nil, orcerrors.NewPermissionDenied(fmt.Sprintf("not authorized to process function %q", function.Key))
 	}
 
-	return algo, nil
+	return function, nil
 }
 
 // validateInputs validates that:
-// - the task inputs are compatible with the algo inputs
+// - the task inputs are compatible with the function inputs
 // - the assets referenced by the inputs exist and are of the correct kind
 // - the requester has sufficient permissions
-func (s *ComputeTaskService) validateInputs(t []*asset.ComputeTaskInput, a map[string]*asset.AlgoInput, owner string, worker string) error {
+func (s *ComputeTaskService) validateInputs(t []*asset.ComputeTaskInput, a map[string]*asset.FunctionInput, owner string, worker string) error {
 
 	seen := make(map[string]bool, 0)
 
 	// Validate inputs
 	for _, taskInput := range t {
 		identifier := taskInput.Identifier
-		algoInput, ok := a[identifier]
+		functionInput, ok := a[identifier]
 		if !ok {
-			return orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", identifier))
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Function: %q", identifier))
 		}
-		if seen[identifier] && !algoInput.Multiple {
-			return orcerrors.NewInvalidAsset(fmt.Sprintf("duplicate task input: this identifier is present multiple times in the task inputs, but it was not declared as \"Multiple\" in the Algo: %q", identifier))
+		if seen[identifier] && !functionInput.Multiple {
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("duplicate task input: this identifier is present multiple times in the task inputs, but it was not declared as \"Multiple\" in the Function: %q", identifier))
 		}
 
 		seen[identifier] = true
 
-		switch algoInput.Kind {
+		switch functionInput.Kind {
 		case asset.AssetKind_ASSET_DATA_SAMPLE:
 			// Data samples cannot be validated individually. They will be validated with the data manager, see below.
 		case asset.AssetKind_ASSET_DATA_MANAGER:
@@ -500,19 +500,19 @@ func (s *ComputeTaskService) validateInputs(t []*asset.ComputeTaskInput, a map[s
 				return err
 			}
 		default:
-			if err := s.validateInputRef(algoInput, taskInput, worker); err != nil {
+			if err := s.validateInputRef(functionInput, taskInput, worker); err != nil {
 				return err
 			}
 		}
 	}
 
 	// Check there's no required input that was not provided
-	for identifier, algoInput := range a {
-		if algoInput.Optional {
+	for identifier, functionInput := range a {
+		if functionInput.Optional {
 			continue
 		}
 		if _, ok := seen[identifier]; !ok {
-			return orcerrors.NewInvalidAsset(fmt.Sprintf("missing task input: this identifier is required by the Algo: %q", identifier))
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("missing task input: this identifier is required by the Function: %q", identifier))
 		}
 	}
 
@@ -521,7 +521,7 @@ func (s *ComputeTaskService) validateInputs(t []*asset.ComputeTaskInput, a map[s
 
 // validateDataManagerInput validates that the task inputs corresponding to a data manager and data samples are valid, and
 // that the requester has sufficient permissions to create the task.
-func (s *ComputeTaskService) validateDataManagerInput(dataManagerInput *asset.ComputeTaskInput, inputs []*asset.ComputeTaskInput, a map[string]*asset.AlgoInput, owner string) error {
+func (s *ComputeTaskService) validateDataManagerInput(dataManagerInput *asset.ComputeTaskInput, inputs []*asset.ComputeTaskInput, a map[string]*asset.FunctionInput, owner string) error {
 	dmKey := dataManagerInput.GetAssetKey()
 	if dmKey == "" {
 		return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: openers must be referenced using an asset key", dataManagerInput.Identifier))
@@ -531,12 +531,12 @@ func (s *ComputeTaskService) validateDataManagerInput(dataManagerInput *asset.Co
 
 	// Loop through the data samples
 	for _, input := range inputs {
-		algoInput, ok := a[input.Identifier]
+		functionInput, ok := a[input.Identifier]
 		if !ok {
 			return orcerrors.NewInvalidAsset(fmt.Sprintf(
-				"unknown task input: this identifier was not declared in the Algo: %q", input.Identifier))
+				"unknown task input: this identifier was not declared in the Function: %q", input.Identifier))
 		}
-		if algoInput.Kind != asset.AssetKind_ASSET_DATA_SAMPLE {
+		if functionInput.Kind != asset.AssetKind_ASSET_DATA_SAMPLE {
 			continue
 		}
 		datasample := input
@@ -556,7 +556,7 @@ func (s *ComputeTaskService) validateDataManagerInput(dataManagerInput *asset.Co
 }
 
 // validateInputRef validates that the asset referenced by the input exist and is of the correct kind
-func (s *ComputeTaskService) validateInputRef(algoInput *asset.AlgoInput, taskInput *asset.ComputeTaskInput, worker string) error {
+func (s *ComputeTaskService) validateInputRef(functionInput *asset.FunctionInput, taskInput *asset.ComputeTaskInput, worker string) error {
 	var ok bool
 	var err error
 	identifier := taskInput.Identifier
@@ -564,7 +564,7 @@ func (s *ComputeTaskService) validateInputRef(algoInput *asset.AlgoInput, taskIn
 	switch inputRef := taskInput.Ref.(type) {
 
 	case *asset.ComputeTaskInput_AssetKey:
-		switch algoInput.Kind {
+		switch functionInput.Kind {
 		case asset.AssetKind_ASSET_MODEL:
 			if _, err = s.GetModelService().GetCheckedModel(inputRef.AssetKey, worker); err != nil {
 				return err
@@ -582,22 +582,22 @@ func (s *ComputeTaskService) validateInputRef(algoInput *asset.AlgoInput, taskIn
 			return err
 		}
 
-		parentTaskAlgo, err := s.getCachedAlgo(parentTask.AlgoKey)
+		parentTaskFunction, err := s.getCachedFunction(parentTask.FunctionKey)
 		if err != nil {
 			return err
 		}
 
-		var algoOutput *asset.AlgoOutput
-		if algoOutput, ok = parentTaskAlgo.Outputs[inputRef.ParentTaskOutput.OutputIdentifier]; !ok {
-			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: parent task %v: algo output not found: %q", identifier, inputRef.ParentTaskOutput.ParentTaskKey, inputRef.ParentTaskOutput.OutputIdentifier))
+		var functionOutput *asset.FunctionOutput
+		if functionOutput, ok = parentTaskFunction.Outputs[inputRef.ParentTaskOutput.OutputIdentifier]; !ok {
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: parent task %v: function output not found: %q", identifier, inputRef.ParentTaskOutput.ParentTaskKey, inputRef.ParentTaskOutput.OutputIdentifier))
 		}
-		if algoOutput.Kind != algoInput.Kind {
+		if functionOutput.Kind != functionInput.Kind {
 			return orcerrors.NewInvalidAsset(fmt.Sprintf(
 				"invalid task input %q: mismatching task input asset kinds: expecting %v but parent task output has kind %v",
-				inputRef.ParentTaskOutput.OutputIdentifier, algoInput.Kind, algoOutput.Kind,
+				inputRef.ParentTaskOutput.OutputIdentifier, functionInput.Kind, functionOutput.Kind,
 			))
 		}
-		if algoOutput.Multiple && !algoInput.Multiple {
+		if functionOutput.Multiple && !functionInput.Multiple {
 			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: multiple task output used as single task input", identifier))
 		}
 		var o *asset.ComputeTaskOutput
@@ -615,31 +615,31 @@ func (s *ComputeTaskService) validateInputRef(algoInput *asset.AlgoInput, taskIn
 	return nil
 }
 
-// validateOutputs validates that the task outputs are compatible with the algo outputs
+// validateOutputs validates that the task outputs are compatible with the function outputs
 func (s *ComputeTaskService) validateOutputs(
 	taskKey string,
 	computeTaskOutputs map[string]*asset.ComputeTaskOutput,
-	algoOutputs namedAlgoOutputs,
+	functionOutputs namedFunctionOutputs,
 ) error {
-	seen := make(map[string]bool, len(algoOutputs))
+	seen := make(map[string]bool, len(functionOutputs))
 
 	for identifier, output := range computeTaskOutputs {
-		algoOutput, ok := algoOutputs[identifier]
+		functionOutput, ok := functionOutputs[identifier]
 		if !ok {
-			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, unknown task output: this identifier was not declared in the Algo: %q", taskKey, identifier))
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, unknown task output: this identifier was not declared in the Function: %q", taskKey, identifier))
 		}
-		if algoOutput.Kind == asset.AssetKind_ASSET_PERFORMANCE && !output.Permissions.Process.Public {
+		if functionOutput.Kind == asset.AssetKind_ASSET_PERFORMANCE && !output.Permissions.Process.Public {
 			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, invalid task output %q: a PERFORMANCE output should be public", taskKey, identifier))
 		}
-		if algoOutput.Kind == asset.AssetKind_ASSET_PERFORMANCE && output.Transient {
+		if functionOutput.Kind == asset.AssetKind_ASSET_PERFORMANCE && output.Transient {
 			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, invalid task output %q: a PERFORMANCE output cannot be transient", taskKey, identifier))
 		}
 		seen[identifier] = true
 	}
 
-	for identifier := range algoOutputs {
+	for identifier := range functionOutputs {
 		if _, ok := seen[identifier]; !ok {
-			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, missing task output: this identifier is required by the Algo: %q", taskKey, identifier))
+			return orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task %v, missing task output: this identifier is required by the Function: %q", taskKey, identifier))
 		}
 	}
 
@@ -736,18 +736,18 @@ func (s *ComputeTaskService) allModelsAvailable(parents []*asset.ComputeTask) er
 	return nil
 }
 
-// getCachedAlgo returns a cached version of an algo
+// getCachedFunction returns a cached version of an function
 // we cache the result to avoid multiple dbal queries on batch registration
-func (s *ComputeTaskService) getCachedAlgo(algoKey string) (*asset.Algo, error) {
-	if _, ok := s.algoStore[algoKey]; !ok {
-		algo, err := s.GetAlgoService().GetAlgo(algoKey)
+func (s *ComputeTaskService) getCachedFunction(functionKey string) (*asset.Function, error) {
+	if _, ok := s.functionStore[functionKey]; !ok {
+		function, err := s.GetFunctionService().GetFunction(functionKey)
 		if err != nil {
 			return nil, err
 		}
-		s.algoStore[algoKey] = algo
+		s.functionStore[functionKey] = function
 	}
-	algo := s.algoStore[algoKey]
-	return algo, nil
+	function := s.functionStore[functionKey]
+	return function, nil
 }
 
 // getCachedCP returns a cached version of a compute plan
@@ -821,13 +821,13 @@ func (s *ComputeTaskService) getInputAsset(kind asset.AssetKind, key, identifier
 }
 
 // getTaskWorker will determine the worker on which the task should execute
-func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *asset.Algo) (string, error) {
+func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, function *asset.Function) (string, error) {
 	for _, taskInput := range input.Inputs {
-		algoInput, ok := algo.Inputs[taskInput.Identifier]
+		functionInput, ok := function.Inputs[taskInput.Identifier]
 		if !ok {
-			return "", orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", taskInput.Identifier))
+			return "", orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Function: %q", taskInput.Identifier))
 		}
-		if algoInput.Kind != asset.AssetKind_ASSET_DATA_MANAGER {
+		if functionInput.Kind != asset.AssetKind_ASSET_DATA_MANAGER {
 			continue
 		}
 
@@ -851,16 +851,16 @@ func (s *ComputeTaskService) getTaskWorker(input *asset.NewComputeTask, algo *as
 // getLogsPermission determines log permission based on datamanager presence.
 // If there is a datamanager in inputs, log permission inherit the datamanager's permission.
 // If there is no datamanager, log permission is the union of parents log permissions.
-func (s *ComputeTaskService) getLogsPermission(owner string, parentTasks []*asset.ComputeTask, taskInputs []*asset.ComputeTaskInput, algoInputs map[string]*asset.AlgoInput) (*asset.Permission, error) {
+func (s *ComputeTaskService) getLogsPermission(owner string, parentTasks []*asset.ComputeTask, taskInputs []*asset.ComputeTaskInput, functionInputs map[string]*asset.FunctionInput) (*asset.Permission, error) {
 	// Check for datamanager as input
 	for _, taskInput := range taskInputs {
 		identifier := taskInput.Identifier
-		algoInput, ok := algoInputs[identifier]
+		functionInput, ok := functionInputs[identifier]
 		if !ok {
-			return nil, orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Algo: %q", identifier))
+			return nil, orcerrors.NewInvalidAsset(fmt.Sprintf("unknown task input: this identifier was not declared in the Function: %q", identifier))
 		}
 
-		if algoInput.Kind == asset.AssetKind_ASSET_DATA_MANAGER {
+		if functionInput.Kind == asset.AssetKind_ASSET_DATA_MANAGER {
 			dmKey := taskInput.GetAssetKey()
 			if dmKey == "" {
 				return nil, orcerrors.NewInvalidAsset(fmt.Sprintf("invalid task input %q: openers must be referenced using an asset key", taskInput.Identifier))

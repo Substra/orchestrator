@@ -6,8 +6,8 @@ option go_package = "github.com/substra/orchestrator/lib/asset";
 
 import "google/protobuf/timestamp.proto";
 
-// DataSample represent a data sample that will be processed by an
-// algorithm to produce or test a model.
+// DataSample represent a data sample that will be processed by a
+// function to produce or test a model.
 message DataSample {
   string key = 1;
   repeated string data_manager_keys = 2; // mutable

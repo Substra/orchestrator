@@ -1,8 +1,8 @@
 erDiagram
     DataManager }|--o{ DataSample : opens
     ComputeTask }o--|| ComputePlan : "belongs to"
-    ComputeTask }o--|| Algo : execute
-    Algo {}
+    ComputeTask }o--|| Function : execute
+    Function {}
 
     TrainTaskData |o--|| ComputeTask: specializes
     TrainTaskData ||--|| Model: produces
@@ -10,7 +10,7 @@ erDiagram
     TrainTaskData }o--|{ DataSample: uses
 
     TestTaskData |o--|| ComputeTask: specializes
-    TestTaskData }o--|| Algo : evaluates
+    TestTaskData }o--|| Function : evaluates
     TestTaskData ||--|| Performance: produces
     TestTaskData }o--|| DataManager: uses
     TestTaskData }o--|{ DataSample: uses

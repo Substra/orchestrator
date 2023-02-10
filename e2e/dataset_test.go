@@ -6,8 +6,8 @@ package e2e
 import (
 	"testing"
 
-	"github.com/substra/orchestrator/e2e/client"
 	"github.com/stretchr/testify/require"
+	"github.com/substra/orchestrator/e2e/client"
 )
 
 func TestDatasetSampleKeys(t *testing.T) {

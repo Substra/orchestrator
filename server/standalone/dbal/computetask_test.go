@@ -17,22 +17,22 @@ import (
 )
 
 func TestToComputeTask(t *testing.T) {
-	algo := sqlAlgo{
-		Key:         "algo_key",
-		Name:        "algo_name",
+	function := sqlFunction{
+		Key:         "function_key",
+		Name:        "function_name",
 		Description: asset.Addressable{},
-		Algorithm:   asset.Addressable{},
+		Function:    asset.Addressable{},
 		Permissions: asset.Permissions{
 			Download: &asset.Permission{},
 			Process:  &asset.Permission{},
 		},
-		Owner:        "algo_owner",
+		Owner:        "function_owner",
 		CreationDate: time.Unix(111, 12).UTC(),
 		Metadata:     map[string]string{},
 	}
 	ct := sqlComputeTask{
 		Key:            "task_key",
-		AlgoKey:        algo.Key,
+		FunctionKey:    function.Key,
 		Owner:          "owner",
 		ComputePlanKey: "cp_key",
 		Rank:           0,
@@ -49,7 +49,7 @@ func TestToComputeTask(t *testing.T) {
 	res, err := ct.toComputeTask()
 	assert.NoError(t, err)
 	assert.Equal(t, ct.Key, res.Key)
-	assert.Equal(t, ct.AlgoKey, res.AlgoKey)
+	assert.Equal(t, ct.FunctionKey, res.FunctionKey)
 	assert.Equal(t, ct.Owner, res.Owner)
 	assert.Equal(t, ct.ComputePlanKey, res.ComputePlanKey)
 	assert.Equal(t, ct.Rank, res.Rank)
@@ -62,11 +62,11 @@ func TestToComputeTask(t *testing.T) {
 
 func makeTaskRows(taskKeys ...string) *pgxmock.Rows {
 	res := pgxmock.NewRows([]string{"key", "compute_plan_key", "status", "worker", "owner", "rank", "creation_date",
-		"logs_permission", "metadata", "algo_key"})
+		"logs_permission", "metadata", "function_key"})
 
 	for _, key := range taskKeys {
 		res = res.AddRow(key, "cp_key", "STATUS_WAITING", "worker", "owner", int32(0), time.Unix(0, 100),
-			[]byte("{}"), map[string]string{}, "algo_key")
+			[]byte("{}"), map[string]string{}, "function_key")
 	}
 
 	return res
@@ -104,7 +104,7 @@ func TestTaskFilterToQuery(t *testing.T) {
 		"empty":         {&asset.TaskQueryFilter{}, "", nil},
 		"single filter": {&asset.TaskQueryFilter{Worker: "myorganization"}, "worker = $1", []interface{}{"myorganization"}},
 		"two filter":    {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE}, "worker = $1 AND status = $2", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String()}},
-		"three filter":  {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE, AlgoKey: "test-key"}, "worker = $1 AND status = $2 AND algo_key = $3", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String(), "test-key"}},
+		"three filter":  {&asset.TaskQueryFilter{Worker: "myorganization", Status: asset.ComputeTaskStatus_STATUS_DONE, FunctionKey: "test-key"}, "worker = $1 AND status = $2 AND function_key = $3", []interface{}{"myorganization", asset.ComputeTaskStatus_STATUS_DONE.String(), "test-key"}},
 	}
 
 	pgDialect := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
@@ -246,7 +246,7 @@ func TestAddComputeTask(t *testing.T) {
 
 	// Insert task
 	mock.ExpectCopyFrom(`"compute_tasks"`,
-		[]string{"key", "channel", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "metadata"}).
+		[]string{"key", "channel", "function_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "metadata"}).
 		WillReturnResult(1)
 	// Insert parents relationships
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(2)
@@ -324,7 +324,7 @@ func TestAddComputeTasks(t *testing.T) {
 
 	// Insert task
 	mock.ExpectCopyFrom(`"compute_tasks"`,
-		[]string{"key", "channel", "algo_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "metadata"}).
+		[]string{"key", "channel", "function_key", "owner", "compute_plan_key", "rank", "status", "worker", "creation_date", "logs_permission", "metadata"}).
 		WillReturnResult(2)
 	// Insert parents relationships
 	mock.ExpectCopyFrom(`"compute_task_parents"`, []string{"parent_task_key", "child_task_key", "position"}).WillReturnResult(3)
@@ -388,7 +388,7 @@ func TestAddComputeTaskOutputAsset(t *testing.T) {
 	output := &asset.ComputeTaskOutputAsset{
 		ComputeTaskKey:              "taskKey",
 		ComputeTaskOutputIdentifier: "identifierOut",
-		AssetKind:                   asset.AssetKind_ASSET_ALGO,
+		AssetKind:                   asset.AssetKind_ASSET_FUNCTION,
 		AssetKey:                    "assetKey",
 	}
 

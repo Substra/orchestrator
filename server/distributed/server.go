@@ -64,7 +64,7 @@ func GetServer(networkConfig string, certificate string, key string, gatewayTime
 	// Register application services
 	asset.RegisterOrganizationServiceServer(server, adapters.NewOrganizationAdapter())
 	asset.RegisterDataSampleServiceServer(server, adapters.NewDataSampleAdapter())
-	asset.RegisterAlgoServiceServer(server, adapters.NewAlgoAdapter())
+	asset.RegisterFunctionServiceServer(server, adapters.NewFunctionAdapter())
 	asset.RegisterDataManagerServiceServer(server, adapters.NewDataManagerAdapter())
 	asset.RegisterDatasetServiceServer(server, adapters.NewDatasetAdapter())
 	asset.RegisterComputeTaskServiceServer(server, adapters.NewComputeTaskAdapter())

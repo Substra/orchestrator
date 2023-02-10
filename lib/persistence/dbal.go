@@ -30,13 +30,13 @@ type DataSampleDBAL interface {
 	GetDataSampleKeysByManager(managerKey string) ([]string, error)
 }
 
-// AlgoDBAL is the database abstraction layer for Algos
-type AlgoDBAL interface {
-	AddAlgo(obj *asset.Algo) error
-	GetAlgo(key string) (*asset.Algo, error)
-	QueryAlgos(p *common.Pagination, filter *asset.AlgoQueryFilter) ([]*asset.Algo, common.PaginationToken, error)
-	AlgoExists(key string) (bool, error)
-	UpdateAlgo(algo *asset.Algo) error
+// FunctionDBAL is the database abstraction layer for Functions
+type FunctionDBAL interface {
+	AddFunction(obj *asset.Function) error
+	GetFunction(key string) (*asset.Function, error)
+	QueryFunctions(p *common.Pagination, filter *asset.FunctionQueryFilter) ([]*asset.Function, common.PaginationToken, error)
+	FunctionExists(key string) (bool, error)
+	UpdateFunction(function *asset.Function) error
 }
 
 // DataManagerDBAL is the database abstraction layer for DataManagers
@@ -58,9 +58,9 @@ type DataSampleDBALProvider interface {
 	GetDataSampleDBAL() DataSampleDBAL
 }
 
-// AlgoDBALProvider represents an object capable of providing an AlgoDBAL
-type AlgoDBALProvider interface {
-	GetAlgoDBAL() AlgoDBAL
+// FunctionDBALProvider represents an object capable of providing an FunctionDBAL
+type FunctionDBALProvider interface {
+	GetFunctionDBAL() FunctionDBAL
 }
 
 // DataManagerDBALProvider represents an object capable of providing a DataManagerDBAL
@@ -72,7 +72,7 @@ type DataManagerDBALProvider interface {
 type DBAL interface {
 	OrganizationDBAL
 	DataSampleDBAL
-	AlgoDBAL
+	FunctionDBAL
 	DataManagerDBAL
 	ComputeTaskDBAL
 	ModelDBAL
@@ -86,7 +86,7 @@ type DBAL interface {
 type DBALProvider interface {
 	OrganizationDBALProvider
 	DataSampleDBALProvider
-	AlgoDBALProvider
+	FunctionDBALProvider
 	DataManagerDBALProvider
 	ComputeTaskDBALProvider
 	ModelDBALProvider

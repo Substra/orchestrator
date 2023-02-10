@@ -12,7 +12,7 @@ import (
 
 type sqlPerformance struct {
 	ComputeTaskKey   string
-	AlgoKey          string
+	FunctionKey      string
 	PerformanceValue float32
 	CreationDate     time.Time
 }
@@ -20,7 +20,7 @@ type sqlPerformance struct {
 func (p *sqlPerformance) toPerformance() *asset.Performance {
 	return &asset.Performance{
 		ComputeTaskKey:   p.ComputeTaskKey,
-		MetricKey:        p.AlgoKey,
+		MetricKey:        p.FunctionKey,
 		PerformanceValue: p.PerformanceValue,
 		CreationDate:     timestamppb.New(p.CreationDate),
 	}
@@ -29,7 +29,7 @@ func (p *sqlPerformance) toPerformance() *asset.Performance {
 func (d *DBAL) AddPerformance(perf *asset.Performance, identifier string) error {
 	stmt := getStatementBuilder().
 		Insert("performances").
-		Columns("channel", "compute_task_key", "algo_key", "performance_value", "creation_date").
+		Columns("channel", "compute_task_key", "function_key", "performance_value", "creation_date").
 		Values(d.channel, perf.ComputeTaskKey, perf.MetricKey, perf.PerformanceValue, perf.CreationDate.AsTime())
 
 	return d.exec(stmt)
@@ -40,7 +40,7 @@ func (d *DBAL) PerformanceExists(perf *asset.Performance) (bool, error) {
 	stmt := getStatementBuilder().
 		Select("COUNT(*)").
 		From("performances").
-		Where(sq.Eq{"channel": d.channel, "compute_task_key": perf.ComputeTaskKey, "algo_key": perf.MetricKey})
+		Where(sq.Eq{"channel": d.channel, "compute_task_key": perf.ComputeTaskKey, "function_key": perf.MetricKey})
 
 	row, err := d.queryRow(stmt)
 	if err != nil {
@@ -60,10 +60,10 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 	}
 
 	stmt := getStatementBuilder().
-		Select("compute_task_key", "algo_key", "performance_value", "creation_date").
+		Select("compute_task_key", "function_key", "performance_value", "creation_date").
 		From("performances").
 		Where(sq.Eq{"channel": d.channel}).
-		OrderByClause("creation_date ASC, algo_key DESC, compute_task_key DESC").
+		OrderByClause("creation_date ASC, function_key DESC, compute_task_key DESC").
 		Offset(uint64(offset)).
 		// Fetch page size + 1 elements to determine whether there is a next page
 		Limit(uint64(p.Size + 1))
@@ -74,7 +74,7 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 		}
 
 		if filter.MetricKey != "" {
-			stmt = stmt.Where(sq.Eq{"algo_key": filter.MetricKey})
+			stmt = stmt.Where(sq.Eq{"function_key": filter.MetricKey})
 		}
 	}
 
@@ -90,7 +90,7 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 	for rows.Next() {
 		perf := new(sqlPerformance)
 
-		err = rows.Scan(&perf.ComputeTaskKey, &perf.AlgoKey, &perf.PerformanceValue, &perf.CreationDate)
+		err = rows.Scan(&perf.ComputeTaskKey, &perf.FunctionKey, &perf.PerformanceValue, &perf.CreationDate)
 		if err != nil {
 			return nil, "", err
 		}

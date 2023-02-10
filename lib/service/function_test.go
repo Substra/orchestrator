@@ -13,19 +13,19 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestRegisterAlgo(t *testing.T) {
+func TestRegisterFunction(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	mps := new(MockPermissionAPI)
 	es := new(MockEventAPI)
 	ts := new(MockTimeAPI)
 	provider := newMockedProvider()
 
-	provider.On("GetAlgoDBAL").Return(dbal)
+	provider.On("GetFunctionDBAL").Return(dbal)
 	provider.On("GetPermissionService").Return(mps)
 	provider.On("GetEventService").Return(es)
 	provider.On("GetTimeService").Return(ts)
 
-	service := NewAlgoService(provider)
+	service := NewFunctionService(provider)
 
 	ts.On("GetTransactionTime").Once().Return(time.Unix(1337, 0))
 
@@ -33,16 +33,16 @@ func TestRegisterAlgo(t *testing.T) {
 		StorageAddress: "ftp://127.0.0.1/test",
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
-	algorithm := &asset.Addressable{
+	functionAddress := &asset.Addressable{
 		StorageAddress: "ftp://127.0.0.1/test",
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 	newPerms := &asset.NewPermissions{Public: true}
 
-	algo := &asset.NewAlgo{
+	function := &asset.NewFunction{
 		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Name:           "Test algo",
-		Algorithm:      algorithm,
+		Name:           "Test function",
+		Function:       functionAddress,
 		Description:    description,
 		NewPermissions: newPerms,
 	}
@@ -50,31 +50,31 @@ func TestRegisterAlgo(t *testing.T) {
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
 	mps.On("CreatePermissions", "owner", newPerms).Return(perms, nil).Once()
 
-	dbal.On("AlgoExists", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(false, nil).Once()
+	dbal.On("FunctionExists", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(false, nil).Once()
 
-	storedAlgo := &asset.Algo{
+	storedFunction := &asset.Function{
 		Key:          "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Name:         "Test algo",
-		Algorithm:    algorithm,
+		Name:         "Test function",
+		Function:     functionAddress,
 		Description:  description,
 		Permissions:  perms,
 		Owner:        "owner",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 	}
-	dbal.On("AddAlgo", storedAlgo).Return(nil).Once()
+	dbal.On("AddFunction", storedFunction).Return(nil).Once()
 
 	e := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
-		AssetKey:  algo.Key,
-		Asset:     &asset.Event_Algo{Algo: storedAlgo},
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
+		AssetKey:  function.Key,
+		Asset:     &asset.Event_Function{Function: storedFunction},
 	}
 	es.On("RegisterEvents", e).Return(nil)
 
-	o, err := service.RegisterAlgo(algo, "owner")
+	o, err := service.RegisterFunction(function, "owner")
 
-	assert.NoError(t, err, "Registration of valid algo should not fail")
-	assert.NotNil(t, o, "Registration should return an Algo")
+	assert.NoError(t, err, "Registration of valid function should not fail")
+	assert.NotNil(t, o, "Registration should return an Function")
 	assert.Equal(t, perms, o.Permissions, "Permissions should be set")
 	assert.Equal(t, "owner", o.Owner, "Owner should be set")
 
@@ -82,59 +82,59 @@ func TestRegisterAlgo(t *testing.T) {
 	ts.AssertExpectations(t)
 }
 
-func TestGetAlgo(t *testing.T) {
+func TestGetFunction(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
-	provider.On("GetAlgoDBAL").Return(dbal)
-	service := NewAlgoService(provider)
+	provider.On("GetFunctionDBAL").Return(dbal)
+	service := NewFunctionService(provider)
 
-	algo := asset.Algo{
-		Key:  "algoKey",
+	function := asset.Function{
+		Key:  "functionKey",
 		Name: "Test",
 	}
 
-	dbal.On("GetAlgo", "algoKey").Return(&algo, nil).Once()
+	dbal.On("GetFunction", "functionKey").Return(&function, nil).Once()
 
-	o, err := service.GetAlgo("algoKey")
+	o, err := service.GetFunction("functionKey")
 	require.Nil(t, err)
-	assert.Equal(t, o.Name, algo.Name)
+	assert.Equal(t, o.Name, function.Name)
 }
 
-func TestQueryAlgos(t *testing.T) {
+func TestQueryFunctions(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
-	provider.On("GetAlgoDBAL").Return(dbal)
-	service := NewAlgoService(provider)
+	provider.On("GetFunctionDBAL").Return(dbal)
+	service := NewFunctionService(provider)
 
 	computePlanKey := uuid.NewString()
 
-	algo1 := asset.Algo{
-		Key:  "algo1",
+	function1 := asset.Function{
+		Key:  "function1",
 		Name: "Test 1",
 	}
-	algo2 := asset.Algo{
-		Key:  "algo2",
+	function2 := asset.Function{
+		Key:  "function2",
 		Name: "Test 2",
 	}
 
 	pagination := common.NewPagination("", 12)
 
-	dbal.On("QueryAlgos", pagination, &asset.AlgoQueryFilter{ComputePlanKey: computePlanKey}).
-		Return([]*asset.Algo{&algo1, &algo2}, "nextPage", nil).Once()
+	dbal.On("QueryFunctions", pagination, &asset.FunctionQueryFilter{ComputePlanKey: computePlanKey}).
+		Return([]*asset.Function{&function1, &function2}, "nextPage", nil).Once()
 
-	r, token, err := service.QueryAlgos(pagination, &asset.AlgoQueryFilter{ComputePlanKey: computePlanKey})
+	r, token, err := service.QueryFunctions(pagination, &asset.FunctionQueryFilter{ComputePlanKey: computePlanKey})
 	require.Nil(t, err)
 
 	assert.Len(t, r, 2)
-	assert.Equal(t, r[0].Key, algo1.Key)
+	assert.Equal(t, r[0].Key, function1.Key)
 	assert.Equal(t, "nextPage", token, "next page token should be returned")
 }
 
 func TestCanDownload(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
-	provider.On("GetAlgoDBAL").Return(dbal)
-	service := NewAlgoService(provider)
+	provider.On("GetFunctionDBAL").Return(dbal)
+	service := NewFunctionService(provider)
 
 	perms := &asset.Permissions{
 		Process: &asset.Permission{Public: true},
@@ -144,13 +144,13 @@ func TestCanDownload(t *testing.T) {
 		},
 	}
 
-	algo := &asset.Algo{
+	function := &asset.Function{
 		Key:         "837B2E87-35CA-48F9-B83C-B40FB3FBA4E6",
 		Name:        "Test",
 		Permissions: perms,
 	}
 
-	dbal.On("GetAlgo", "obj1").Return(algo, nil).Once()
+	dbal.On("GetFunction", "obj1").Return(function, nil).Once()
 
 	ok, err := service.CanDownload("obj1", "org-2")
 
@@ -160,36 +160,36 @@ func TestCanDownload(t *testing.T) {
 	dbal.AssertExpectations(t)
 }
 
-func TestUpdateSingleExistingAlgo(t *testing.T) {
+func TestUpdateSingleExistingFunction(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	es := new(MockEventAPI)
 	provider.On("GetEventService").Return(es)
-	provider.On("GetAlgoDBAL").Return(dbal)
-	service := NewAlgoService(provider)
+	provider.On("GetFunctionDBAL").Return(dbal)
+	service := NewFunctionService(provider)
 
-	existingAlgo := &asset.Algo{
+	existingFunction := &asset.Function{
 		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		Name:  "algo name",
+		Name:  "function name",
 		Owner: "owner",
 	}
 
-	updateAlgoParam := &asset.UpdateAlgoParam{
+	updateFunctionParam := &asset.UpdateFunctionParam{
 		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		Name: "Updated algo name",
+		Name: "Updated function name",
 	}
 
-	storedAlgo := &asset.Algo{
+	storedFunction := &asset.Function{
 		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		Name:  "Updated algo name",
+		Name:  "Updated function name",
 		Owner: "owner",
 	}
 
 	e := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
-		AssetKind: asset.AssetKind_ASSET_ALGO,
-		AssetKey:  storedAlgo.Key,
-		Asset:     &asset.Event_Algo{Algo: storedAlgo},
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
+		AssetKey:  storedFunction.Key,
+		Asset:     &asset.Event_Function{Function: storedFunction},
 	}
 
 	cases := map[string]struct {
@@ -208,19 +208,19 @@ func TestUpdateSingleExistingAlgo(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			dbal.On("GetAlgo", existingAlgo.GetKey()).Return(existingAlgo, nil).Once()
+			dbal.On("GetFunction", existingFunction.GetKey()).Return(existingFunction, nil).Once()
 
 			if tc.valid {
-				dbal.On("UpdateAlgo", storedAlgo).Return(nil).Once()
+				dbal.On("UpdateFunction", storedFunction).Return(nil).Once()
 				es.On("RegisterEvents", e).Once().Return(nil)
 			}
 
-			err := service.UpdateAlgo(updateAlgoParam, tc.requester)
+			err := service.UpdateFunction(updateFunctionParam, tc.requester)
 
 			if tc.valid {
-				assert.NoError(t, err, "Update of algo should not fail")
+				assert.NoError(t, err, "Update of function should not fail")
 			} else {
-				assert.Error(t, err, "Update of algo should fail")
+				assert.Error(t, err, "Update of function should fail")
 			}
 
 			dbal.AssertExpectations(t)
