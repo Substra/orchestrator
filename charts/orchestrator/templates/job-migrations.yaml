@@ -26,7 +26,7 @@ spec:
       {{- end }}
       containers:
       - name: db-migrations
-        image: {{ include "common.images.name" .Values.orchestrator.image }}
+        image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
         command: ['sh', '-c',  'migrate -source file:///migrations/ -database "${ORCHESTRATOR_DATABASE_URL}" up']
         envFrom:
         - secretRef:
