@@ -14,7 +14,7 @@ require (
 	github.com/hyperledger/fabric-contract-api-go v1.1.2-0.20210104111150-d852efd3f6af
 	github.com/hyperledger/fabric-protos-go v0.0.0-20211118165945-23d738fc3553
 	github.com/hyperledger/fabric-sdk-go v1.0.1-0.20220428154727-e8663655affa
-	github.com/jackc/pgconn v1.13.0
+	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
 	github.com/jackc/pgtype v1.14.0
 	github.com/jackc/pgx/v4 v4.17.2
@@ -23,7 +23,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/zerolog v1.29.0
 	github.com/stretchr/testify v1.8.1
-	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -56,8 +56,8 @@ require (
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.3.1 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
+	github.com/jackc/pgproto3/v2 v2.3.2 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
@@ -88,10 +88,10 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zmap/zcrypto v0.0.0-20190729165852-9051775e6a2e // indirect
 	github.com/zmap/zlint v0.0.0-20190806154020-fd021b4cfbeb // indirect
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
