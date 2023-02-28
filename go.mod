@@ -12,7 +12,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/hyperledger/fabric-chaincode-go v0.0.0-20220720122508-9207360bbddd
 	github.com/hyperledger/fabric-contract-api-go v1.2.0
-	github.com/hyperledger/fabric-protos-go v0.0.0-20220613214546-bf864f01d75e
+	github.com/hyperledger/fabric-protos-go v0.3.0
 	github.com/hyperledger/fabric-sdk-go v1.0.1-0.20220428154727-e8663655affa
 	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451
