@@ -164,6 +164,12 @@ func (m *MockedStub) DelPrivateData(collection, key string) error {
 	return args.Error(0)
 }
 
+// PurgePrivateData is a mock
+func (m *MockedStub) PurgePrivateData(collection string, key string) error {
+	args := m.Called(collection, key)
+	return args.Error(0)
+}
+
 // SetPrivateDataValidationParameter is a mock
 func (m *MockedStub) SetPrivateDataValidationParameter(collection, key string, ep []byte) error {
 	args := m.Called(collection, key)
