@@ -157,13 +157,15 @@ Usage:
 
 
 {{/*
-Return the proper image name
-{{ include "common.images.name" .Values.path.to.the.image }}
+Return the proper image name, with option for a default tag
+example:
+    {{ include "substra-orc.images.name" (dict "img" .Values.path.to.the.image "defaultTag" $.Chart.AppVersion) }}
 */}}
-{{- define "common.images.name" -}}
-{{- if .registry -}}
-{{- printf "%s/%s:%s" .registry .repository .tag -}}
-{{- else -}}
-{{- printf "%s:%s" .repository .tag -}}
-{{- end -}}
+{{- define "substra-orc.images.name" -}}
+    {{- $tag := (.img.tag | default .defaultTag) }}
+    {{- if .img.registry -}}
+    {{- printf "%s/%s:%s" .img.registry .img.repository $tag -}}
+    {{- else -}}
+    {{- printf "%s:%s" .img.repository $tag -}}
+    {{- end -}}
 {{- end -}}

@@ -35,7 +35,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: {{ include "common.images.name" .Values.orchestrator.image }}
+          image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy }}
           ports:
             - name: grpc
