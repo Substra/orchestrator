@@ -157,18 +157,6 @@ Usage:
 
 
 {{/*
-Return the proper image name
-{{ include "common.images.name" .Values.path.to.the.image }}
-*/}}
-{{- define "common.images.name" -}}
-{{- if .registry -}}
-{{- printf "%s/%s:%s" .registry .repository .tag -}}
-{{- else -}}
-{{- printf "%s:%s" .repository .tag -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
 Return the proper image name, with option for a default tag
 example:
     {{ include "substra-orc.images.name" (dict "img" .Values.path.to.the.image "defaultTag" $.Chart.AppVersion) }}
