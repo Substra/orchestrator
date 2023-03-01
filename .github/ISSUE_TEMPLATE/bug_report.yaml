@@ -50,16 +50,6 @@ body:
     validations:
       required: true
   - type: textarea
-    id: os-version
-    attributes:
-      label: Python version
-      description: >
-        Which Python version are you using?
-      placeholder: >
-        python --version
-    validations:
-      required: true
-  - type: textarea
     id: substra-version
     attributes:
       label: Installed Substra versions
