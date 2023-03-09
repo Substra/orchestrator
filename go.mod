@@ -7,7 +7,7 @@ replace github.com/hyperledger/fabric-sdk-go => github.com/owkin/fabric-sdk-go v
 require (
 	github.com/Masterminds/squirrel v1.5.3
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/hyperledger/fabric-chaincode-go v0.0.0-20220720122508-9207360bbddd
