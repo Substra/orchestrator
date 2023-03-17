@@ -5,7 +5,7 @@ go 1.18
 replace github.com/hyperledger/fabric-sdk-go => github.com/owkin/fabric-sdk-go v1.0.1-0.20220727074314-4462385f801d
 
 require (
-	github.com/Masterminds/squirrel v1.5.3
+	github.com/Masterminds/squirrel v1.5.4
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
