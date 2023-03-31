@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+## [0.33.0](https://github.com/Substra/orchestrator/releases/tag/0.33.0) - 2023-03-31
+
 ### Changed
 
 - BREAKING: rename Algo to Function ([#139](https://github.com/Substra/orchestrator/pull/139))
 
-## [0.32](https://github.com/Substra/orchestrator/releases/tag/0.32.0) - 2023-01-31
+## [0.32.0](https://github.com/Substra/orchestrator/releases/tag/0.32.0) - 2023-01-31
 
 ### Added
 
