@@ -19,4 +19,4 @@ jobs:
         images: [orchestrator-server, orchestrator-chaincode, orchestrator-chaincode-init]
     uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
     with:
-      image: ${{ matrix.dockerfile }}
+      image: ${{ matrix.images }}
