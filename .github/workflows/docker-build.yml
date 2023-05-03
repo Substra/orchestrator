@@ -3,17 +3,13 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-  release:
-    types: [published, edited]
-  pull_request:
-    branches: [main]
 
 concurrency: 
   group: "${{ github.workflow_ref }} - ${{ github.ref }} - ${{ github.event_name }}"
   cancel-in-progress: true
 
 jobs:
-  b:
+  build:
     strategy:
       matrix:
         images: [orchestrator-server, orchestrator-chaincode, orchestrator-chaincode-init]
