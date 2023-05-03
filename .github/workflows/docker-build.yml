@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  b:
     strategy:
       matrix:
         images: [orchestrator-server, orchestrator-chaincode, orchestrator-chaincode-init]
