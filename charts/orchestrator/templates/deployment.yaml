@@ -26,10 +26,10 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
-      {{- if .Values.postgresql.enabled }}
+      {{- if eq .Values.orchestrator.mode "standalone" }}
       - name: wait-postgresql
         image: busybox
-        command: ['sh', '-c', 'until nc -vz {{ template "postgresql.serviceName" . }}.{{ .Release.Namespace }} {{ .Values.postgresql.primary.service.ports.postgresql }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+        command: ['sh', '-c', 'until nc -vz {{ template "substra-orc.postgresql.host" . }} {{ template "substra-orc.postgresql.port" . }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       {{- end}}
       containers:
         - name: {{ .Chart.Name }}

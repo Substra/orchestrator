@@ -22,4 +22,4 @@ dependencies:
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
     version: 11.6.2
-    condition: postgresql.enabled
+    condition: postgresql.subchartEnabled

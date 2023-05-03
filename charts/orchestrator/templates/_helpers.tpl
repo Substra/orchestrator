@@ -169,3 +169,24 @@ example:
     {{- printf "%s:%s" .img.repository $tag -}}
     {{- end -}}
 {{- end -}}
+
+
+{{- define "substra-orc.postgresql.host" -}}
+    {{- if .Values.postgresql.host }}
+        {{- .Values.postgresql.host }}
+    {{- else }}
+        {{- template "postgresql.serviceName" . }}.{{ .Release.Namespace }}
+    {{- end }}
+{{- end -}}
+
+{{- define "substra-orc.postgresql.port" -}}
+    {{- .Values.postgresql.port | default .Values.postgresql.primary.service.ports.postgresql }}
+{{- end -}}
+
+{{- define "substra-orc.postgresql.uriParams" -}}
+    {{- if .Values.postgresql.uriParams -}}
+        ?{{ .Values.postgresql.uriParams }}
+    {{- else if .Values.postgresql.subchartEnabled -}}
+        ?sslmode=disable
+    {{- end }}
+{{- end -}}

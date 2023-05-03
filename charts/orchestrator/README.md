@@ -64,7 +64,10 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 
 | Name                                       | Description                                                                   | Value                     |
 | ------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------- |
-| `postgresql.enabled`                       | If true, deploy PostgreSQL                                                    | `true`                    |
+| `postgresql.subchartEnabled`               | If true, deploy PostgreSQL as a subchart                                      | `true`                    |
+| `postgresql.host`                          | Hostname of the database to connect to (defaults to local)                    | `nil`                     |
+| `postgresql.port`                          | Port of an external database to connect to                                    | `nil`                     |
+| `postgresql.uriParams`                     | database URI parameters                                                       | `""`                      |
 | `postgresql.auth.enablePostgresUser`       | creates a PostgreSQL user                                                     | `true`                    |
 | `postgresql.auth.postgresPassword`         | password for the postgres admin user                                          | `postgres`                |
 | `postgresql.auth.username`                 | PostgreSQL user (creates a non-admin user when username is not `postgres`)    | `postgres`                |
@@ -185,3 +188,18 @@ Note: If you use nginx-ingress, use the `--enable-ssl-passthrough`.
 In additional to the protections offered by mutual TLS, the identity of users can be validated with the setting `Values.verifyClientMSPID`. Without this extra check, it is possible for malicious users with a valid certificate to impersonate other valid users. The verification checks that the "Subject Organization" (`O=...`) of the SSL certificate provided by the client matches the  `mspid` gRPC header supplied by the client.
 
 This options needs both `orchestrator.tls.enabled` and `orchestrator.tls.mtls.enabled` to be true.
+
+### External database
+
+In standalone mode, the orchestrator uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
+
+```yaml
+postgresql:
+  subchartEnabled: false
+  host: my.database.host
+  
+  auth:
+    username: my-user
+    password: aStrongPassword
+    database: orchestrator
+```

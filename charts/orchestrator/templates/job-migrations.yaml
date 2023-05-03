@@ -19,11 +19,9 @@ spec:
       {{- end }}
       restartPolicy: OnFailure
       initContainers:
-      {{- if .Values.postgresql.enabled }}  {{/* TODO: enable for external pg instances too */}}
       - name: wait-postgresql
         image: busybox
-        command: ['sh', '-c', 'until nc -vz {{ template "postgresql.serviceName" . }}.{{ .Release.Namespace }} {{ .Values.postgresql.primary.service.ports.postgresql }}; do echo "Waiting for postgresql service"; sleep 2; done;']
-      {{- end }}
+        command: ['sh', '-c', 'until nc -vz {{ template "substra-orc.postgresql.host" . }} {{ template "substra-orc.postgresql.port" . }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       containers:
       - name: db-migrations
         image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}

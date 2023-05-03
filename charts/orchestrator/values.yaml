@@ -163,9 +163,20 @@ affinity: {}
 ## @section PostgreSQL settings
 ##
 postgresql:
-  ## @param postgresql.enabled If true, deploy PostgreSQL
+  ## @param postgresql.subchartEnabled If true, deploy PostgreSQL as a subchart
   ##
-  enabled: true
+  subchartEnabled: true
+  
+  ## @param postgresql.host Hostname of the database to connect to (defaults to local)
+  host: null
+  ## @param postgresql.port Port of an external database to connect to
+  ## (defaults to postgresql.primary.service.ports.postgresql)
+  port: null
+  
+  ## @param postgresql.uriParams database URI parameters
+  ## (https://www.postgresql.org/docs/15/libpq-connect.html#LIBPQ-CONNSTRING)
+  uriParams: ""
+  
   auth:
     ## @param postgresql.auth.enablePostgresUser creates a PostgreSQL user
     ##
