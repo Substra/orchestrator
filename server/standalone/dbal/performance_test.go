@@ -19,9 +19,10 @@ func TestPerformanceNotFound(t *testing.T) {
 
 	taskKey := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
 	metricKey := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	rows := pgxmock.NewRows([]string{"compute_task_key", "function_key", "performance_value", "creation_date"})
-	mock.ExpectQuery(`SELECT compute_task_key, function_key, performance_value, creation_date FROM performances`).
-		WithArgs(testChannel, taskKey, metricKey).
+	taskOutput := "performance"
+	rows := pgxmock.NewRows([]string{"compute_task_key", "function_key", "compute_task_output_identifier", "performance_value", "creation_date"})
+	mock.ExpectQuery(`SELECT compute_task_key, function_key, compute_task_output_identifier, performance_value, creation_date FROM performances`).
+		WithArgs(testChannel, taskKey, metricKey, taskOutput).
 		WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())
@@ -31,8 +32,9 @@ func TestPerformanceNotFound(t *testing.T) {
 
 	pagination := common.NewPagination("", 100)
 	performances, _, err := dbal.QueryPerformances(pagination, &asset.PerformanceQueryFilter{
-		ComputeTaskKey: taskKey,
-		MetricKey:      metricKey,
+		ComputeTaskKey:              taskKey,
+		MetricKey:                   metricKey,
+		ComputeTaskOutputIdentifier: taskOutput,
 	})
 	assert.Len(t, performances, 0)
 	assert.NoError(t, err)
@@ -45,8 +47,8 @@ func TestQueryPerformancesNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"compute_task_key", "function_key", "performance_value", "creation_date"})
-	mock.ExpectQuery(`SELECT compute_task_key, function_key, performance_value, creation_date FROM performances`).
+	rows := pgxmock.NewRows([]string{"compute_task_key", "function_key", "compute_task_output_identifier", "performance_value", "creation_date"})
+	mock.ExpectQuery(`SELECT compute_task_key, function_key, compute_task_output_identifier, performance_value, creation_date FROM performances`).
 		WithArgs(testChannel).
 		WillReturnRows(rows)
 

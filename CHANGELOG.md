@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]()
 
+### Changed
+
+- A Performance in now unique regarding a compute task key, a metric key and a compute task output identifier ([#197](https://github.com/Substra/orchestrator/pull/197))
+
 ## [0.33.0](https://github.com/Substra/orchestrator/releases/tag/0.33.0) - 2023-03-31
 
 ### Changed

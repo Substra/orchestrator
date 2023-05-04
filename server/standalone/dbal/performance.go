@@ -11,26 +11,28 @@ import (
 )
 
 type sqlPerformance struct {
-	ComputeTaskKey   string
-	FunctionKey      string
-	PerformanceValue float32
-	CreationDate     time.Time
+	ComputeTaskKey              string
+	FunctionKey                 string
+	PerformanceValue            float32
+	ComputeTaskOutputIdentifier string
+	CreationDate                time.Time
 }
 
 func (p *sqlPerformance) toPerformance() *asset.Performance {
 	return &asset.Performance{
-		ComputeTaskKey:   p.ComputeTaskKey,
-		MetricKey:        p.FunctionKey,
-		PerformanceValue: p.PerformanceValue,
-		CreationDate:     timestamppb.New(p.CreationDate),
+		ComputeTaskKey:              p.ComputeTaskKey,
+		MetricKey:                   p.FunctionKey,
+		PerformanceValue:            p.PerformanceValue,
+		ComputeTaskOutputIdentifier: p.ComputeTaskOutputIdentifier,
+		CreationDate:                timestamppb.New(p.CreationDate),
 	}
 }
 
 func (d *DBAL) AddPerformance(perf *asset.Performance, identifier string) error {
 	stmt := getStatementBuilder().
 		Insert("performances").
-		Columns("channel", "compute_task_key", "function_key", "performance_value", "creation_date").
-		Values(d.channel, perf.ComputeTaskKey, perf.MetricKey, perf.PerformanceValue, perf.CreationDate.AsTime())
+		Columns("channel", "compute_task_key", "function_key", "compute_task_output_identifier", "performance_value", "creation_date").
+		Values(d.channel, perf.ComputeTaskKey, perf.MetricKey, perf.ComputeTaskOutputIdentifier, perf.PerformanceValue, perf.CreationDate.AsTime())
 
 	return d.exec(stmt)
 }
@@ -40,7 +42,7 @@ func (d *DBAL) PerformanceExists(perf *asset.Performance) (bool, error) {
 	stmt := getStatementBuilder().
 		Select("COUNT(*)").
 		From("performances").
-		Where(sq.Eq{"channel": d.channel, "compute_task_key": perf.ComputeTaskKey, "function_key": perf.MetricKey})
+		Where(sq.Eq{"channel": d.channel, "compute_task_key": perf.ComputeTaskKey, "compute_task_output_identifier": perf.ComputeTaskOutputIdentifier, "function_key": perf.MetricKey})
 
 	row, err := d.queryRow(stmt)
 	if err != nil {
@@ -60,7 +62,7 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 	}
 
 	stmt := getStatementBuilder().
-		Select("compute_task_key", "function_key", "performance_value", "creation_date").
+		Select("compute_task_key", "function_key", "compute_task_output_identifier", "performance_value", "creation_date").
 		From("performances").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, function_key DESC, compute_task_key DESC").
@@ -76,6 +78,10 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 		if filter.MetricKey != "" {
 			stmt = stmt.Where(sq.Eq{"function_key": filter.MetricKey})
 		}
+
+		if filter.ComputeTaskOutputIdentifier != "" {
+			stmt = stmt.Where(sq.Eq{"compute_task_output_identifier": filter.ComputeTaskOutputIdentifier})
+		}
 	}
 
 	rows, err := d.query(stmt)
@@ -90,7 +96,7 @@ func (d *DBAL) QueryPerformances(p *common.Pagination, filter *asset.Performance
 	for rows.Next() {
 		perf := new(sqlPerformance)
 
-		err = rows.Scan(&perf.ComputeTaskKey, &perf.FunctionKey, &perf.PerformanceValue, &perf.CreationDate)
+		err = rows.Scan(&perf.ComputeTaskKey, &perf.FunctionKey, &perf.ComputeTaskOutputIdentifier, &perf.PerformanceValue, &perf.CreationDate)
 		if err != nil {
 			return nil, "", err
 		}

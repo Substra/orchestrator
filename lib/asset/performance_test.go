@@ -8,8 +8,9 @@ import (
 
 func TestPerformanceGetKey(t *testing.T) {
 	perf := &Performance{
-		ComputeTaskKey: "taskKey",
-		MetricKey:      "metricKey",
+		ComputeTaskKey:              "taskKey",
+		MetricKey:                   "metricKey",
+		ComputeTaskOutputIdentifier: "performance",
 	}
-	assert.Equal(t, perf.GetKey(), "taskKey|metricKey")
+	assert.Equal(t, perf.GetKey(), "taskKey|metricKey|performance")
 }

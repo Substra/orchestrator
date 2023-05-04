@@ -56,10 +56,11 @@ func TestRegisterPerformance(t *testing.T) {
 	}
 
 	stored := &asset.Performance{
-		ComputeTaskKey:   perf.ComputeTaskKey,
-		MetricKey:        perf.MetricKey,
-		PerformanceValue: perf.PerformanceValue,
-		CreationDate:     timestamppb.New(time.Unix(1337, 0)),
+		ComputeTaskKey:              perf.ComputeTaskKey,
+		MetricKey:                   perf.MetricKey,
+		ComputeTaskOutputIdentifier: perf.ComputeTaskOutputIdentifier,
+		PerformanceValue:            perf.PerformanceValue,
+		CreationDate:                timestamppb.New(time.Unix(1337, 0)),
 	}
 
 	dbal.On("PerformanceExists", stored).Return(false, nil).Once()
