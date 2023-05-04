@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.0] - 2023-05-04
+
+### Added
+
+- allow using an external database in standalone mode ([#210](https://github.com/Substra/orchestrator/pull/210))
+
+### Changed
+
+- BREAKING: `postgresql.enabled` is now called `postgresql.subchartEnabled`
+
 ## [7.4.13] - 2023-05-11
 
 ### Changed
