@@ -28,8 +28,8 @@ spec:
       initContainers:
       {{- if eq .Values.orchestrator.mode "standalone" }}
       - name: wait-postgresql
-        image: busybox
-        command: ['sh', '-c', 'until nc -vz {{ template "substra-orc.postgresql.host" . }} {{ template "substra-orc.postgresql.port" . }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+        image: postgres
+        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ template "substra-orc.postgresql.port" . }} --dbname={{ .Values.postgresql.auth.database }} --username={{ .Values.postgresql.auth.username }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       {{- end}}
       containers:
         - name: {{ .Chart.Name }}

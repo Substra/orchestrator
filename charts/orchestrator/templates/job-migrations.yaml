@@ -20,12 +20,12 @@ spec:
       restartPolicy: OnFailure
       initContainers:
       - name: wait-postgresql
-        image: busybox
-        command: ['sh', '-c', 'until nc -vz {{ template "substra-orc.postgresql.host" . }} {{ template "substra-orc.postgresql.port" . }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+        image: postgres
+        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ template "substra-orc.postgresql.port" . }} --dbname={{ .Values.postgresql.auth.database }} --username={{ .Values.postgresql.auth.username }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       containers:
       - name: db-migrations
         image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
-        command: ['sh', '-c',  'migrate -source file:///migrations/ -database "${ORCHESTRATOR_DATABASE_URL}" up']
+        command: ['sh', '-c', 'migrate -source file:///migrations/ -database "${ORCHESTRATOR_DATABASE_URL}" up']
         envFrom:
         - secretRef:
             name: {{ template "orchestrator.server.fullname" . }}-secret
