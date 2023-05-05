@@ -8,6 +8,12 @@ SELECT execute($$
         ALTER TABLE performances
         ADD COLUMN compute_task_output_identifier varchar(100);
 
+        UPDATE compute_task_outputs cto
+        SET identifier = f.name
+        FROM functions f, events e
+        WHERE f.key = (e.asset ->> 'functionKey')::uuid
+        AND cto.compute_task_key = (e.asset ->> 'computeTaskKey')::uuid;
+
         UPDATE performances p
         SET compute_task_output_identifier = cto.identifier
         FROM compute_task_outputs cto
