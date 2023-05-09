@@ -46,7 +46,7 @@ func TestRegisterPerformance(t *testing.T) {
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predictTask", Identifier: "predictions"}))
 	appClient.StartTask("testTask")
 
-	registeredPerf, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric").WithTaskOutput("performance"))
+	registeredPerf, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithTaskOutput("performance"))
 	require.NoError(t, err)
 
 	appClient.DoneTask("testTask")
@@ -102,7 +102,7 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 		WithFunctionRef("testmetric"))
 	appClient.StartTask("testTask")
 
-	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric").WithTaskOutput("performance"))
+	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithTaskOutput("performance"))
 	require.NoError(t, err)
 	appClient.DoneTask("testTask")
 
@@ -141,14 +141,14 @@ func TestRegisterMultiplePerformancesForSameMetric(t *testing.T) {
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predictTask", Identifier: "predictions"}))
 	appClient.StartTask("testTask")
 
-	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric").WithTaskOutput("performance"))
+	_, err := appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithTaskOutput("performance"))
 	require.NoError(t, err)
 
 	appClient.DoneTask("testTask")
 	task := appClient.GetComputeTask("testTask")
 	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
 
-	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric").WithTaskOutput("performance"))
+	_, err = appClient.RegisterPerformance(client.DefaultPerformanceOptions().WithTaskRef("testTask").WithTaskOutput("performance"))
 	require.ErrorContains(t, err, orcerrors.ErrBadRequest)
 
 	task = appClient.GetComputeTask("testTask")
@@ -187,7 +187,7 @@ func TestQueryPerformances(t *testing.T) {
 	appClient.StartTask("testTask")
 
 	_, err := appClient.RegisterPerformance(
-		client.DefaultPerformanceOptions().WithTaskRef("testTask").WithMetricRef("testmetric").WithTaskOutput("performance"),
+		client.DefaultPerformanceOptions().WithTaskRef("testTask").WithTaskOutput("performance"),
 	)
 	require.NoError(t, err)
 
