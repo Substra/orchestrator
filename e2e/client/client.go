@@ -462,7 +462,6 @@ func (c *TestClient) RegisterPerformance(o *PerformanceOptions) (*asset.Performa
 	newPerf := &asset.NewPerformance{
 		ComputeTaskKey:              c.ks.GetKey(o.ComputeTaskKeyRef),
 		ComputeTaskOutputIdentifier: o.ComputeTaskOutput,
-		MetricKey:                   c.ks.GetKey(o.MetricKeyRef),
 		PerformanceValue:            o.PerformanceValue,
 	}
 

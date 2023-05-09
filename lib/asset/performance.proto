@@ -15,7 +15,6 @@ message NewPerformance {
 
 message Performance {
   string compute_task_key = 1;
-  string metric_key = 5;
   string compute_task_output_identifier = 6;
   float performance_value = 2;
   google.protobuf.Timestamp creation_date = 3;
@@ -23,7 +22,6 @@ message Performance {
 
 message PerformanceQueryFilter {
   string compute_task_key = 1;
-  string metric_key = 2;
   string compute_task_output_identifier = 3;
 }
 

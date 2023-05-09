@@ -51,13 +51,11 @@ func TestRegisterPerformance(t *testing.T) {
 	perf := &asset.NewPerformance{
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "auc",
-		MetricKey:                   "1da600d4-f8ad-45d7-92a0-7ff752a82275",
 		PerformanceValue:            0.36492,
 	}
 
 	stored := &asset.Performance{
 		ComputeTaskKey:              perf.ComputeTaskKey,
-		MetricKey:                   perf.MetricKey,
 		ComputeTaskOutputIdentifier: perf.ComputeTaskOutputIdentifier,
 		PerformanceValue:            perf.PerformanceValue,
 		CreationDate:                timestamppb.New(time.Unix(1337, 0)),
@@ -107,7 +105,6 @@ func TestRegisterPerformanceInvalidTask(t *testing.T) {
 	perf := &asset.NewPerformance{
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "auc",
-		MetricKey:                   "1da600d4-f8ad-45d7-92a0-7ff752a82275",
 		PerformanceValue:            0.36492,
 	}
 
@@ -148,7 +145,6 @@ func TestRegisterPerformanceInvalidOutput(t *testing.T) {
 	perf := &asset.NewPerformance{
 		ComputeTaskKey:              "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		ComputeTaskOutputIdentifier: "foo",
-		MetricKey:                   metric.Key,
 		PerformanceValue:            0.36492,
 	}
 

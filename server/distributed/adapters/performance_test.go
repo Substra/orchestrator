@@ -60,8 +60,8 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 	invocator := &chaincode.MockInvocator{}
 
 	newPerf := &asset.NewPerformance{
-		ComputeTaskKey: "taskUuid",
-		MetricKey:      "metricUuid",
+		ComputeTaskKey:              "taskUuid",
+		ComputeTaskOutputIdentifier: "my_perf",
 	}
 
 	// register fail
@@ -79,7 +79,6 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 		PageSize:  1,
 		Filter: &asset.PerformanceQueryFilter{
 			ComputeTaskKey: newPerf.ComputeTaskKey,
-			MetricKey:      newPerf.MetricKey,
 		},
 	}
 	invocator.On(
@@ -93,7 +92,6 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 		response.Performances = []*asset.Performance{
 			{
 				ComputeTaskKey: newPerf.ComputeTaskKey,
-				MetricKey:      newPerf.MetricKey,
 			},
 		}
 	}).Return(nil)
