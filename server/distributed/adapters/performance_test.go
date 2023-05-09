@@ -78,7 +78,8 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 		PageToken: "",
 		PageSize:  1,
 		Filter: &asset.PerformanceQueryFilter{
-			ComputeTaskKey: newPerf.ComputeTaskKey,
+			ComputeTaskKey:              newPerf.ComputeTaskKey,
+			ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
 		},
 	}
 	invocator.On(
@@ -91,7 +92,8 @@ func TestHandlePerfConflictAfterTimeout(t *testing.T) {
 		response := args.Get(3).(*asset.QueryPerformancesResponse)
 		response.Performances = []*asset.Performance{
 			{
-				ComputeTaskKey: newPerf.ComputeTaskKey,
+				ComputeTaskKey:              newPerf.ComputeTaskKey,
+				ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
 			},
 		}
 	}).Return(nil)
