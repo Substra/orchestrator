@@ -27,7 +27,7 @@ func (db *DB) AddPerformance(perf *asset.Performance, identifier string) error {
 		return err
 	}
 
-	return db.createIndex(performanceIndex, []string{asset.PerformanceKind, perf.GetComputeTaskKey(), perf.GetMetricKey()})
+	return db.createIndex(performanceIndex, []string{asset.PerformanceKind, perf.GetComputeTaskKey(), perf.GetMetricKey(), perf.GetComputeTaskOutputIdentifier()})
 }
 
 // PerformanceExists implements persistence.PerformanceDBAL
@@ -49,6 +49,9 @@ func (db *DB) QueryPerformances(p *common.Pagination, filter *asset.PerformanceQ
 		}
 		if filter.MetricKey != "" {
 			assetFilter["metric_key"] = filter.MetricKey
+		}
+		if filter.ComputeTaskOutputIdentifier != "" {
+			assetFilter["compute_task_output_identifier"] = filter.ComputeTaskOutputIdentifier
 		}
 		query.Selector.Asset = assetFilter
 	}

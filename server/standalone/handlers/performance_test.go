@@ -28,9 +28,10 @@ func TestRegisterPerformance(t *testing.T) {
 
 	p.On("GetPerformanceService").Return(ps)
 	ps.On("RegisterPerformance", newPerf, "requester").Once().Return(&asset.Performance{
-		ComputeTaskKey:   newPerf.ComputeTaskKey,
-		MetricKey:        newPerf.MetricKey,
-		PerformanceValue: newPerf.PerformanceValue,
+		ComputeTaskKey:              newPerf.ComputeTaskKey,
+		MetricKey:                   newPerf.MetricKey,
+		ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
+		PerformanceValue:            newPerf.PerformanceValue,
 	}, nil)
 
 	_, err := server.RegisterPerformance(ctx, newPerf)
@@ -47,14 +48,16 @@ func TestGetPerformance(t *testing.T) {
 	server := NewPerformanceServer()
 
 	perf := &asset.Performance{
-		ComputeTaskKey:   "taskUuid",
-		MetricKey:        "metricUuid",
-		PerformanceValue: 3.14,
+		ComputeTaskKey:              "taskUuid",
+		MetricKey:                   "metricUuid",
+		ComputeTaskOutputIdentifier: "performance",
+		PerformanceValue:            3.14,
 	}
 	param := &asset.QueryPerformancesParam{
 		Filter: &asset.PerformanceQueryFilter{
-			ComputeTaskKey: perf.ComputeTaskKey,
-			MetricKey:      perf.MetricKey,
+			ComputeTaskKey:              perf.ComputeTaskKey,
+			MetricKey:                   perf.MetricKey,
+			ComputeTaskOutputIdentifier: perf.ComputeTaskOutputIdentifier,
 		},
 		PageToken: "",
 		PageSize:  100,

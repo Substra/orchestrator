@@ -42,6 +42,7 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 	s.GetLogger().Debug().
 		Str("taskKey", newPerf.ComputeTaskKey).
 		Str("metricKey", newPerf.MetricKey).
+		Str("computeTaskOutputIdentifier", newPerf.ComputeTaskOutputIdentifier).
 		Str("requester", requester).
 		Msg("Registering new performance")
 	err := newPerf.Validate()
@@ -85,10 +86,11 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 	}
 
 	perf := &asset.Performance{
-		ComputeTaskKey:   newPerf.ComputeTaskKey,
-		PerformanceValue: newPerf.PerformanceValue,
-		CreationDate:     timestamppb.New(s.GetTimeService().GetTransactionTime()),
-		MetricKey:        newPerf.MetricKey,
+		ComputeTaskKey:              newPerf.ComputeTaskKey,
+		PerformanceValue:            newPerf.PerformanceValue,
+		CreationDate:                timestamppb.New(s.GetTimeService().GetTransactionTime()),
+		MetricKey:                   newPerf.MetricKey,
+		ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
 	}
 
 	exists, err := s.GetPerformanceDBAL().PerformanceExists(perf)
