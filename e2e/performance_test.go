@@ -110,7 +110,7 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 	require.Equal(t, asset.ComputeTaskStatus_STATUS_DONE, task.Status)
 }
 
-func TestRegisterMultiplePerformancesForSameMetric(t *testing.T) {
+func TestRegisterMultiplePerformancesForSameTaskOutput(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
