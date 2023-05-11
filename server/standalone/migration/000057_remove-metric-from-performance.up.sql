@@ -1,7 +1,4 @@
 SELECT execute($$
-        /* To keep differiantiability regarding the performances, we update the output identifier to the metric name */
-        /* on previous performances */
-
         /* Delete constraints regarding the function key */
         ALTER TABLE performances
         DROP CONSTRAINT performances_pkey;
