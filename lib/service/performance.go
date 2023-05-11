@@ -41,7 +41,6 @@ func NewPerformanceService(provider PerformanceDependencyProvider) *PerformanceS
 func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, requester string) (*asset.Performance, error) {
 	s.GetLogger().Debug().
 		Str("taskKey", newPerf.ComputeTaskKey).
-		Str("metricKey", newPerf.MetricKey).
 		Str("computeTaskOutputIdentifier", newPerf.ComputeTaskOutputIdentifier).
 		Str("requester", requester).
 		Msg("Registering new performance")
@@ -63,33 +62,14 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register performance for task with status %q", task.Status.String()))
 	}
 
-	if newPerf.MetricKey != task.FunctionKey {
-		return nil, errors.NewBadRequest(fmt.Sprintf("Function used for metric with key %s should be the same than the one in task with key %s", newPerf.MetricKey, task.FunctionKey))
-	}
-
-	functionPerf, err := s.GetFunctionService().GetFunction(newPerf.MetricKey)
-	if err != nil {
-		return nil, err
-	}
-
 	if _, ok := task.Outputs[newPerf.ComputeTaskOutputIdentifier]; !ok {
 		return nil, errors.NewMissingTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier)
-	}
-
-	functionOutput, ok := functionPerf.Outputs[newPerf.ComputeTaskOutputIdentifier]
-	if !ok {
-		// This should never happen since task outputs are checked against function on registration
-		return nil, errors.NewInternal(fmt.Sprintf("missing function output %q for task %q", newPerf.ComputeTaskOutputIdentifier, task.Key))
-	}
-	if functionOutput.Kind != asset.AssetKind_ASSET_PERFORMANCE {
-		return nil, errors.NewIncompatibleTaskOutput(task.Key, newPerf.ComputeTaskOutputIdentifier, functionOutput.Kind.String(), asset.AssetKind_ASSET_PERFORMANCE.String())
 	}
 
 	perf := &asset.Performance{
 		ComputeTaskKey:              newPerf.ComputeTaskKey,
 		PerformanceValue:            newPerf.PerformanceValue,
 		CreationDate:                timestamppb.New(s.GetTimeService().GetTransactionTime()),
-		MetricKey:                   newPerf.MetricKey,
 		ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
 	}
 

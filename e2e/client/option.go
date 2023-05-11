@@ -490,11 +490,6 @@ func (o *PerformanceOptions) WithTaskOutput(output string) *PerformanceOptions {
 	return o
 }
 
-func (o *PerformanceOptions) WithMetricRef(ref string) *PerformanceOptions {
-	o.MetricKeyRef = ref
-	return o
-}
-
 func DefaultDataSampleOptions() *DataSampleOptions {
 	return &DataSampleOptions{
 		KeyRef: "ds",

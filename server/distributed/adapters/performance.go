@@ -43,8 +43,8 @@ func (a *PerformanceAdapter) RegisterPerformance(ctx context.Context, newPerf *a
 				PageToken: "",
 				PageSize:  1,
 				Filter: &asset.PerformanceQueryFilter{
-					ComputeTaskKey: newPerf.ComputeTaskKey,
-					MetricKey:      newPerf.MetricKey,
+					ComputeTaskKey:              newPerf.ComputeTaskKey,
+					ComputeTaskOutputIdentifier: newPerf.ComputeTaskOutputIdentifier,
 				},
 			},
 			response,
