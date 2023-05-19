@@ -1,7 +1,7 @@
 [
   {
     "name": "curl",
-    "version": "8.1.0-r0"
+    "version": "8.1.0"
   },
   {
     "name": "bash",
