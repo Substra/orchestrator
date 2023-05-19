@@ -107,19 +107,6 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{/*
-Redefine the postgresql service name because we can't use subchart templates directly.
-*/}}
-{{- define "postgresql.serviceName" -}}
-{{- $name := default "postgresql" .Values.postgresql.nameOverride -}}
-{{- $fullname := default (printf "%s-%s" .Release.Name $name) .Values.postgresql.fullnameOverride -}}
-{{- if .Values.postgresql.replication.enabled -}}
-{{- printf "%s-%s" $fullname "primary" | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s" $fullname | trunc 63 | trimSuffix "-" }}
-{{- end -}}
-{{- end -}}
-
 
 {{/*
 Generate ingress backend entry that is compatible with all ports types.
@@ -171,22 +158,35 @@ example:
 {{- end -}}
 
 
+{{/*
+Redefine the postgresql service name because we can't use subchart templates directly.
+*/}}
+{{- define "integrated-postgresql.serviceName" -}}
+    {{- $name := default "postgresql" (index .Values "integrated-postgresql" "nameOverride") -}}
+    {{- $fullname := default (printf "%s-%s" .Release.Name $name) (index .Values "integrated-postgresql" "fullnameOverride") -}}
+    {{- if index .Values "integrated-postgresql" "replication" "enabled" -}}
+        {{- printf "%s-%s" $fullname "primary" | trunc 63 | trimSuffix "-" -}}
+    {{- else -}}
+        {{- printf "%s" $fullname | trunc 63 | trimSuffix "-" }}
+    {{- end -}}
+{{- end -}}
+
 {{- define "substra-orc.postgresql.host" -}}
     {{- if .Values.postgresql.host }}
         {{- .Values.postgresql.host }}
     {{- else }}
-        {{- template "postgresql.serviceName" . }}.{{ .Release.Namespace }}
+        {{- template "integrated-postgresql.serviceName" . }}.{{ .Release.Namespace }}
     {{- end }}
 {{- end -}}
 
 {{- define "substra-orc.postgresql.port" -}}
-    {{- .Values.postgresql.port | default .Values.postgresql.primary.service.ports.postgresql }}
+    {{- .Values.postgresql.port | default (index .Values "integrated-postgresql" "primary" "service" "ports" "postgresql") }}
 {{- end -}}
 
 {{- define "substra-orc.postgresql.uriParams" -}}
     {{- if .Values.postgresql.uriParams -}}
         ?{{ .Values.postgresql.uriParams }}
-    {{- else if .Values.postgresql.subchartEnabled -}}
+    {{- else if index .Values "integrated-postgresql" "enabled" -}}
         ?sslmode=disable
     {{- end }}
 {{- end -}}

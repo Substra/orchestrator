@@ -59,22 +59,28 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `tolerations`                              | Tolerations labels for pod assignment                                         | `[]`                     |
 | `affinity`                                 | Affinity settings for pod assignment                                          | `{}`                     |
 
-
 ### PostgreSQL settings
 
-| Name                                       | Description                                                                   | Value                     |
-| ------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------- |
-| `postgresql.subchartEnabled`               | If true, deploy PostgreSQL as a subchart                                      | `true`                    |
-| `postgresql.host`                          | Hostname of the database to connect to (defaults to local)                    | `nil`                     |
-| `postgresql.port`                          | Port of an external database to connect to                                    | `nil`                     |
-| `postgresql.uriParams`                     | database URI parameters                                                       | `""`                      |
-| `postgresql.auth.enablePostgresUser`       | creates a PostgreSQL user                                                     | `true`                    |
-| `postgresql.auth.postgresPassword`         | password for the postgres admin user                                          | `postgres`                |
-| `postgresql.auth.username`                 | PostgreSQL user (creates a non-admin user when username is not `postgres`)    | `postgres`                |
-| `postgresql.auth.password`                 | PostgreSQL user password                                                      | `postgres`                |
-| `postgresql.auth.database`                 | PostgreSQL database the orchestrator should use                               | `orchestrator`            |
-| `postgresql.primary.extendedConfiguration` | Extended PostgreSQL configuration (appended to main or default configuration) | `tcp_keepalives_idle = 5` |
+| Name                       | Description                                                | Value          |
+| -------------------------- | ---------------------------------------------------------- | -------------- |
+| `postgresql.auth.database` | what DB to connect to                                      | `orchestrator` |
+| `postgresql.auth.username` | what user to connect as                                    | `orchestrator` |
+| `postgresql.auth.password` | what password to use for connecting                        | `orchestrator` |
+| `postgresql.host`          | Hostname of the database to connect to (defaults to local) | `nil`          |
+| `postgresql.port`          | Port of an external database to connect to                 | `nil`          |
+| `postgresql.uriParams`     | database URI parameters                                    | `""`           |
 
+### Integrated PostgreSQL settings
+
+| Name                                                  | Description                                                                   | Value                     |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------- |
+| `integrated-postgresql.enabled`                       | Deploy a PostgreSQL instance along the orchestrator for its use               | `true`                    |
+| `integrated-postgresql.auth.enablePostgresUser`       | enable the "postgres" admin user                                              | `false`                   |
+| `integrated-postgresql.auth.postgresPassword`         | password for the postgres admin user                                          | `postgres`                |
+| `integrated-postgresql.auth.username`                 | PostgreSQL user (creates a non-admin user when username is not `postgres`)    | `orchestrator`            |
+| `integrated-postgresql.auth.password`                 | PostgreSQL user password                                                      | `orchestrator`            |
+| `integrated-postgresql.auth.database`                 | PostgreSQL database the orchestrator should use                               | `orchestrator`            |
+| `integrated-postgresql.primary.extendedConfiguration` | Extended PostgreSQL configuration (appended to main or default configuration) | `tcp_keepalives_idle = 5` |
 
 ### Hyperledger Fabric settings
 
@@ -95,7 +101,6 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `fabric.secrets.user.key`           | Hyperledger Fabric Peer user certificate key                                                           | `hlf-msp-key-user`                                      |
 | `fabric.secrets.peer.tls.client`    | Hyperledger Fabric Peer TLS client key/cert                                                            | `hlf-tls-user`                                          |
 | `fabric.secrets.peer.tls.server`    | Hyperledger Fabric Peer TLS server key/cert                                                            | `hlf-tls-admin`                                         |
-
 
 ### Orchestrator application specific parameters
 
@@ -123,13 +128,11 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `orchestrator.tls.mtls.enabled`                  | If true, enable TLS client verification                                                                                                                                  | `false`                        |
 | `orchestrator.tls.mtls.clientCACerts`            | A map whose keys are names of the CAs, and values are a list of configmaps containing CA certificates                                                                    | `{}`                           |
 
-
 ### Channels settings
 
 | Name       | Description                                | Value |
 | ---------- | ------------------------------------------ | ----- |
 | `channels` | List of channels and their members (MSPID) | `[]`  |
-
 
 ### migration job settings
 
@@ -191,15 +194,17 @@ This options needs both `orchestrator.tls.enabled` and `orchestrator.tls.mtls.en
 
 ### External database
 
-In standalone mode, the orchestrator uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
+In standalone mode (`orchestrator.mode=standalone`), the orchestrator uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
 
 ```yaml
 postgresql:
-  subchartEnabled: false
   host: my.database.host
   
   auth:
     username: my-user
     password: aStrongPassword
     database: orchestrator
+
+integrated-postgresql:
+  enabled: false
 ```

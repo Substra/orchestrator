@@ -161,11 +161,14 @@ tolerations: []
 affinity: {}
 
 ## @section PostgreSQL settings
-##
 postgresql:
-  ## @param postgresql.subchartEnabled If true, deploy PostgreSQL as a subchart
-  ##
-  subchartEnabled: true
+  auth:
+    ## @param postgresql.auth.database what DB to connect to
+    database: &psql-database orchestrator
+    ## @param postgresql.auth.username what user to connect as
+    username: &psql-username postgres
+    ## @param postgresql.auth.password what password to use for connecting
+    password: &psql-password postgres
   
   ## @param postgresql.host Hostname of the database to connect to (defaults to local)
   host: null
@@ -176,25 +179,32 @@ postgresql:
   ## @param postgresql.uriParams database URI parameters
   ## (https://www.postgresql.org/docs/15/libpq-connect.html#LIBPQ-CONNSTRING)
   uriParams: ""
+
+## @section Integrated PostgreSQL settings
+##
+integrated-postgresql:
+  ## @param integrated-postgresql.enabled Deploy a PostgreSQL instance along the orchestrator for its use
+  ##
+  enabled: true
   
   auth:
-    ## @param postgresql.auth.enablePostgresUser creates a PostgreSQL user
+    ## @param integrated-postgresql.auth.enablePostgresUser enable the "postgres" admin user
     ##
     enablePostgresUser: true
-    ## @param postgresql.auth.postgresPassword password for the postgres admin user
+    ## @param integrated-postgresql.auth.postgresPassword password for the postgres admin user
     ##
-    postgresPassword: postgres
-    ## @param postgresql.auth.username PostgreSQL user (creates a non-admin user when username is not `postgres`)
+    postgresPassword: *psql-password
+    ## @param integrated-postgresql.auth.username PostgreSQL user (creates a non-admin user when username is not `postgres`)
     ##
-    username: postgres
-    ## @param postgresql.auth.password PostgreSQL user password
+    username: *psql-username
+    ## @param integrated-postgresql.auth.password PostgreSQL user password
     ##
-    password: postgres
-    ## @param postgresql.auth.database PostgreSQL database the orchestrator should use
+    password: *psql-password
+    ## @param integrated-postgresql.auth.database PostgreSQL database the orchestrator should use
     ##
-    database: orchestrator
+    database: *psql-database
   primary:
-    ## @param postgresql.primary.extendedConfiguration Extended PostgreSQL configuration (appended to main or default configuration)
+    ## @param integrated-postgresql.primary.extendedConfiguration Extended PostgreSQL configuration (appended to main or default configuration)
     ##
     extendedConfiguration: |-
       tcp_keepalives_idle = 5

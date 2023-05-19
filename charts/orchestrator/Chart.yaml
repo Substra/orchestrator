@@ -20,6 +20,7 @@ maintainers:
 
 dependencies:
   - name: postgresql
+    alias: integrated-postgresql
     repository: https://charts.bitnami.com/bitnami
     version: 11.6.2
-    condition: postgresql.subchartEnabled
+    condition: integrated-postgresql.enabled
