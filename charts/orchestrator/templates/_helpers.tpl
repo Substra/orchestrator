@@ -159,30 +159,26 @@ example:
 
 
 {{/*
-Redefine the postgresql service name because we can't use subchart templates directly.
+The hostname we should connect to (external is defined, otherwise integrated)
 */}}
-{{- define "integrated-postgresql.serviceName" -}}
-    {{- $name := default "postgresql" (index .Values "integrated-postgresql" "nameOverride") -}}
-    {{- $fullname := default (printf "%s-%s" .Release.Name $name) (index .Values "integrated-postgresql" "fullnameOverride") -}}
-    {{- if index .Values "integrated-postgresql" "replication" "enabled" -}}
-        {{- printf "%s-%s" $fullname "primary" | trunc 63 | trimSuffix "-" -}}
-    {{- else -}}
-        {{- printf "%s" $fullname | trunc 63 | trimSuffix "-" }}
-    {{- end -}}
-{{- end -}}
-
 {{- define "substra-orc.postgresql.host" -}}
     {{- if .Values.postgresql.host }}
         {{- .Values.postgresql.host }}
     {{- else }}
-        {{- template "integrated-postgresql.serviceName" . }}.{{ .Release.Namespace }}
+        {{- template "postgresql.primary.fullname" (index .Subcharts "integrated-postgresql") }}.{{ .Release.Namespace }}
     {{- end }}
 {{- end -}}
 
+{{/*
+The port we should connect to (external is defined, otherwise integrated)
+*/}}
 {{- define "substra-orc.postgresql.port" -}}
     {{- .Values.postgresql.port | default (index .Values "integrated-postgresql" "primary" "service" "ports" "postgresql") }}
 {{- end -}}
 
+{{/*
+Disable SSL if using the integrated Postgres, otherwise leave users with the option of setting their own.
+*/}}
 {{- define "substra-orc.postgresql.uriParams" -}}
     {{- if .Values.postgresql.uriParams -}}
         ?{{ .Values.postgresql.uriParams }}
