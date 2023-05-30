@@ -9,15 +9,11 @@ import (
 	"github.com/substra/orchestrator/utils"
 )
 
-// envPrefix is the string prefixing environment variables related to the orchestrator
-const envPrefix = "ORCHESTRATOR_"
-
 // MustGetEnv extract environment variable or abort with an error message
-// Every env var is prefixed with ORCHESTRATOR_
 func MustGetEnv(name string) string {
 	v, ok := GetEnv(name)
 	if !ok {
-		log.Fatal().Str("env_var", envPrefix+name).Msg("Missing environment variable")
+		log.Fatal().Str("env_var", name).Msg("Missing environment variable")
 	}
 	return v
 }
@@ -25,26 +21,21 @@ func MustGetEnv(name string) string {
 // MustGetEnvFlag extracts and environment variable and returns a boolean
 // corresponding to its value ("true" is true, anything else is false).
 // If the environment variable is not found, the program panics with an error message.
-// Every env var is prefixed with "ORCHESTRATOR_".
 func MustGetEnvFlag(name string) bool {
-	n := envPrefix + name
-	v, err := utils.GetenvBool(n)
+	v, err := utils.GetenvBool(name)
 	if err != nil {
-		log.Fatal().Str("env_var", envPrefix+name).Err(err).Msg("Failed to determine flag from environment")
+		log.Fatal().Str("env_var", name).Err(err).Msg("Failed to determine flag from environment")
 	}
 	return v
 }
 
 // GetEnv attempts to get an environment variable
-// Every env var is prefixed by ORCHESTRATOR_
 func GetEnv(name string) (string, bool) {
-	n := envPrefix + name
-	return os.LookupEnv(n)
+	return os.LookupEnv(name)
 }
 
 // GetEnvOrFallback attempts to get an environment variable or fallback
 // to the provided default value.
-// Every env var is prefixed by ORCHESTRATOR_.
 func GetEnvOrFallback(name string, fallback string) string {
 	value, ok := GetEnv(name)
 	if !ok {

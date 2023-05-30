@@ -23,6 +23,7 @@ import (
 	"github.com/substra/orchestrator/server/common"
 	"github.com/substra/orchestrator/server/distributed"
 	"github.com/substra/orchestrator/server/standalone"
+	"github.com/substra/orchestrator/server/standalone/dbal"
 	"github.com/substra/orchestrator/utils"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -49,9 +50,20 @@ func getDistributedServer(params common.AppParameters) common.Runnable {
 }
 
 func getStandaloneServer(params common.AppParameters, healthcheck *health.Server) common.Runnable {
-	dbURL := common.MustGetEnv("DATABASE_URL")
+	connString, gotConnString := common.GetEnv("POSTGRESQL_CONNECTION_STRING")
 
-	server, err := standalone.GetServer(dbURL, params, healthcheck)
+	if !gotConnString {
+		connString = dbal.BuildConnectionString(
+			common.MustGetEnv("POSTGRESQL_HOSTNAME"),
+			common.MustParseInt(common.MustGetEnv("POSTGRESQL_PORT")),
+			common.MustGetEnv("POSTGRESQL_DATABASE"),
+			common.MustGetEnv("POSTGRESQL_USERNAME"),
+			common.MustGetEnv("POSTGRESQL_PASSWORD"),
+			common.GetEnvOrFallback("POSTGRESQL_CONNECTION_PARAMETERS", ""),
+		)
+	}
+
+	server, err := standalone.GetServer(connString, params, healthcheck)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create standalone server")
 	}
@@ -71,7 +83,7 @@ func main() {
 
 	flag.Parse()
 
-	mode, ok := common.GetEnv("MODE")
+	mode, ok := common.GetEnv("ORCHESTRATOR_MODE")
 	if ok {
 		switch mode {
 		case "distributed":

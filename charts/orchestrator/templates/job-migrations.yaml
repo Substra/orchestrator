@@ -21,12 +21,23 @@ spec:
       initContainers:
       - name: wait-postgresql
         image: postgres
-        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ template "substra-orc.postgresql.port" . }} --dbname={{ .Values.postgresql.auth.database }} --username={{ .Values.postgresql.auth.username }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ template "substra-orc.postgresql.port" . }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       containers:
       - name: db-migrations
         image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
-        command: ['sh', '-c', 'migrate -source file:///migrations/ -database "${ORCHESTRATOR_DATABASE_URL}" up']
+        command:
+          - sh
+          - -c
+          - |
+            set -eu
+            DATABASE_URI="postgres://$POSTGRESQL_USERNAME:$POSTGRESQL_PASSWORD@$POSTGRESQL_HOSTNAME:$POSTGRESQL_PORT/$POSTGRESQL_DATABASE"
+            if [ -n $POSTGRESQL_CONNECTION_PARAMETERS ]; then
+              DATABASE_URI="$DATABASE_URI?$POSTGRESQL_CONNECTION_PARAMETERS"
+            fi
+            migrate -source file:///migrations/ -database "$DATABASE_URI" up
         envFrom:
+        - configMapRef:
+            name: {{ template "orchestrator.server.fullname" . }}-database
         - secretRef:
-            name: {{ template "orchestrator.server.fullname" . }}-secret
+            name: {{ template "orchestrator.server.fullname" . }}-database
 {{- end }}

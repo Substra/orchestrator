@@ -29,7 +29,7 @@ spec:
       {{- if eq .Values.orchestrator.mode "standalone" }}
       - name: wait-postgresql
         image: postgres
-        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ template "substra-orc.postgresql.port" . }} --dbname={{ .Values.postgresql.auth.database }} --username={{ .Values.postgresql.auth.username }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ template "substra-orc.postgresql.port" . }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       {{- end}}
       containers:
         - name: {{ .Chart.Name }}
@@ -89,8 +89,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ template "orchestrator.server.fullname" . }}-env
+            - configMapRef:
+                name: {{ template "orchestrator.server.fullname" . }}-database
             - secretRef:
-                name: {{ template "orchestrator.server.fullname" . }}-secret
+                name: {{ template "substra-orc.database.secret-name" . }}
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}

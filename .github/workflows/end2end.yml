@@ -30,12 +30,12 @@ jobs:
     env:
       LOG_LEVEL: DEBUG
       NO_COLOR: true
-      ORCHESTRATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
-      ORCHESTRATOR_MIGRATION_DIR: file://./server/standalone/migration/
-      ORCHESTRATOR_TLS_ENABLED: false
+      POSTGRESQL_CONNECTION_STRING: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
+      MIGRATION_DIR: file://./server/standalone/migration/
+      TLS_ENABLED: false
       ORCHESTRATOR_MODE: standalone
-      ORCHESTRATOR_VERIFY_CLIENT_MSP_ID: false
-      ORCHESTRATOR_TX_RETRY_BUDGET: 500ms
+      VERIFY_CLIENT_MSP_ID: false
+      TX_RETRY_BUDGET: 500ms
       DB_DUMPS_BUCKET_NAME: substra-orchestrator-dumps
     steps:
       - name: Check out repository code

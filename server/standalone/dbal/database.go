@@ -2,6 +2,7 @@ package dbal
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -23,6 +24,11 @@ type Database struct {
 
 type SQLLogger struct {
 	verbose bool
+}
+
+// https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+func BuildConnectionString(hostname string, port int, database string, username string, password string, params string) string {
+	return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s %s", hostname, port, database, username, password, params)
 }
 
 func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
