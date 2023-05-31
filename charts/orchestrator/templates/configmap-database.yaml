@@ -6,6 +6,6 @@ metadata:
     {{- include "orchestrator.server.labels" . | nindent 4 }}
 data:
   POSTGRESQL_HOSTNAME: !!str {{ template "substra-orc.postgresql.host" . }}
-  POSTGRESQL_PORT: !!str {{ template "substra-orc.postgresql.port" . }}
-  POSTGRESQL_DATABASE: !!str {{ .Values.postgresql.auth.database | quote }}
+  POSTGRESQL_PORT: !!str {{ .Values.postgresql.auth.port }}
+  POSTGRESQL_DATABASE: !!str {{ .Values.postgresql.auth.database }}
   POSTGRESQL_CONNECTION_PARAMETERS: !!str {{ template "substra-orc.postgresql.connectionParameters" . }}

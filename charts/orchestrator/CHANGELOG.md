@@ -5,15 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [8.0.0] - 2023-05-19
+## [8.0.0] - 2023-05-31
 
 ### Added
 
 - allow using an external database in standalone mode ([#210](https://github.com/Substra/orchestrator/pull/210))
+  
 
 ### Changed
 
-- BREAKING: `postgresql.enabled` is now called `integrated-postgresql.enabled`
+- BREAKING: All integrated postgresql settings are now under the `integrated-postgresql` key in the values (instead of `postgresql`).
+
+  `postgresql` is now for connecting to any PostgreSQL database.
 
 ## [7.4.13] - 2023-05-11
 

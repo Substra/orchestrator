@@ -21,7 +21,7 @@ spec:
       initContainers:
       - name: wait-postgresql
         image: postgres
-        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ template "substra-orc.postgresql.port" . }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ .Values.postgresql.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       containers:
       - name: db-migrations
         image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}

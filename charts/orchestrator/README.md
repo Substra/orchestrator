@@ -192,7 +192,25 @@ In additional to the protections offered by mutual TLS, the identity of users ca
 
 This options needs both `orchestrator.tls.enabled` and `orchestrator.tls.mtls.enabled` to be true.
 
-### External database
+### Database
+
+#### Internal
+
+If you change connection settings for the internal database such as credentials, don't forget to also update the ones used for connecting:
+
+```yaml
+postgresql:
+  auth:
+    password: abcd1234 # the password the backend will use
+
+integrated-postgresql:
+  auth:
+    password: abcd1234 # the password the database expects
+```
+
+(you could use YAML anchors for this)
+
+#### External
 
 In standalone mode (`orchestrator.mode=standalone`), the orchestrator uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
 

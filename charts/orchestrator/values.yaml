@@ -173,8 +173,7 @@ postgresql:
   ## @param postgresql.host Hostname of the database to connect to (defaults to local)
   host: null
   ## @param postgresql.port Port of an external database to connect to
-  ## (defaults to integrated-postgresql.primary.service.ports.postgresql)
-  port: null
+  port: 5432
   
   ## @param postgresql.connectionParameters database URI parameters (`key=value&key=value`)
   ## (https://www.postgresql.org/docs/15/libpq-connect.html#LIBPQ-CONNSTRING)

@@ -109,14 +109,14 @@ jobs:
         run: |
           LATEST_RELEASE_TAG=$(git tag -l | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n 1)
           gsutil cp gs://${DB_DUMPS_BUCKET_NAME}/${LATEST_RELEASE_TAG} dump.sql
-          psql $ORCHESTRATOR_DATABASE_URL < dump.sql
-          INITIAL_MIGRATION_VERSION=$(migrate -source "${ORCHESTRATOR_MIGRATION_DIR}" -database "${ORCHESTRATOR_DATABASE_URL}" version 2>&1 > /dev/null)
+          psql $POSTGRESQL_CONNECTION_STRING < dump.sql
+          INITIAL_MIGRATION_VERSION=$(migrate -source "${ORCHESTRATOR_MIGRATION_DIR}" -database "${POSTGRESQL_CONNECTION_STRING}" version 2>&1 > /dev/null)
           echo "::set-output name=initial_migration_version::$INITIAL_MIGRATION_VERSION"
 
       - name: Migrate db up from previous release data
         if: steps.changed_migrations.outputs.any_changed == 'true'
         run: |
-          migrate -source "${ORCHESTRATOR_MIGRATION_DIR}" -database "${ORCHESTRATOR_DATABASE_URL}" up
+          migrate -source "${ORCHESTRATOR_MIGRATION_DIR}" -database "${POSTGRESQL_CONNECTION_STRING}" up
 
       - name: Setup channel configuration
         run: |
@@ -144,20 +144,20 @@ jobs:
         run: >
           migrate
           -source "${ORCHESTRATOR_MIGRATION_DIR}"
-          -database "${ORCHESTRATOR_DATABASE_URL}"
+          -database "${POSTGRESQL_CONNECTION_STRING}"
           goto ${{ steps.restore_db.outputs.initial_migration_version }}
 
       - name: Reset db
         if: steps.changed_migrations.outputs.any_changed == 'true'
         run: |
-          psql "$ORCHESTRATOR_DATABASE_URL" << EOF
+          psql "$POSTGRESQL_CONNECTION_STRING" << EOF
             DROP SCHEMA public CASCADE;
             CREATE SCHEMA public;
           EOF
 
       - name: Migrate db up
         run: |
-          migrate -source "${ORCHESTRATOR_MIGRATION_DIR}/" -database "${ORCHESTRATOR_DATABASE_URL}" up
+          migrate -source "${ORCHESTRATOR_MIGRATION_DIR}/" -database "${POSTGRESQL_CONNECTION_STRING}" up
 
       - name: Run e2e tests
         env:
@@ -169,7 +169,7 @@ jobs:
       - name: Save db dump in GCS bucket
         if: github.ref_type == 'tag'
         run: |
-          pg_dump "$ORCHESTRATOR_DATABASE_URL" | gsutil cp - gs://${DB_DUMPS_BUCKET_NAME}/${GITHUB_REF_NAME}
+          pg_dump "$POSTGRESQL_CONNECTION_STRING" | gsutil cp - gs://${DB_DUMPS_BUCKET_NAME}/${GITHUB_REF_NAME}
 
       - name: Archive server log
         if: always()

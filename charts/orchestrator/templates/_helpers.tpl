@@ -178,17 +178,6 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- end -}}
 
 {{/*
-The port we should connect to (external if defined, otherwise integrated)
-*/}}
-{{- define "substra-orc.postgresql.port" -}}
-    {{- if .Values.postgresql.port }}
-        {{- .Values.postgresql.port }}
-    {{- else if (index .Subcharts "integrated-postgresql") }}
-        {{- (index .Subcharts "integrated-postgresql" "primary" "service" "ports" "postgresql") }}
-    {{- end }}
-{{- end -}}
-
-{{/*
 Disable SSL if using the integrated Postgres, otherwise leave users with the option of setting their own.
 */}}
 {{- define "substra-orc.postgresql.connectionParameters" -}}
