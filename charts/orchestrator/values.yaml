@@ -185,8 +185,8 @@ postgresql:
   connectionParameters: ""
 
 ## @section Integrated PostgreSQL settings
-## (see Bitnami documentation)
-##
+## @descriptionStart See Bitnami documentation
+## @descriptionEnd
 integrated-postgresql:
   ## @param integrated-postgresql.enabled Deploy a PostgreSQL instance along the orchestrator for its use
   ##

@@ -61,26 +61,23 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 
 ### PostgreSQL settings
 
-| Name                              | Description                                                | Value          |
-| --------------------------------- | ---------------------------------------------------------- | -------------- |
-| `postgresql.auth.database`        | what DB to connect to                                      | `orchestrator` |
-| `postgresql.auth.username`        | what user to connect as                                    | `postgres`     |
-| `postgresql.auth.password`        | what password to use for connecting                        | `postgres`     |
-| `postgresql.host`                 | Hostname of the database to connect to (defaults to local) | `nil`          |
-| `postgresql.port`                 | Port of an external database to connect to                 | `5432`         |
-| `postgresql.connectionParameters` | database URI parameters (`key=value&key=value`)            | `""`           |
+| Name                                    | Description                                                                                                     | Value          |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------- |
+| `postgresql.auth.database`              | what DB to connect to                                                                                           | `orchestrator` |
+| `postgresql.auth.username`              | what user to connect as                                                                                         | `postgres`     |
+| `postgresql.auth.password`              | what password to use for connecting                                                                             | `postgres`     |
+| `postgresql.auth.credentialsSecretName` | An alternative to giving username and password; must have `POSTGRESQL_USERNAME` and `POSTGRESQL_PASSWORD` keys. | `nil`          |
+| `postgresql.host`                       | Hostname of the database to connect to (defaults to local)                                                      | `nil`          |
+| `postgresql.port`                       | Port of an external database to connect to                                                                      | `5432`         |
+| `postgresql.connectionParameters`       | database URI parameters (`key=value&key=value`)                                                                 | `""`           |
 
 ### Integrated PostgreSQL settings
 
-| Name                                                  | Description                                                                   | Value                     |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------- |
-| `integrated-postgresql.enabled`                       | Deploy a PostgreSQL instance along the orchestrator for its use               | `true`                    |
-| `integrated-postgresql.auth.enablePostgresUser`       | enable the "postgres" admin user                                              | `true`                    |
-| `integrated-postgresql.auth.postgresPassword`         | password for the postgres admin user                                          | `postgres`                |
-| `integrated-postgresql.auth.username`                 | PostgreSQL user (creates a non-admin user when username is not `postgres`)    | `postgres`                |
-| `integrated-postgresql.auth.password`                 | PostgreSQL user password                                                      | `postgres`                |
-| `integrated-postgresql.auth.database`                 | PostgreSQL database the orchestrator should use                               | `orchestrator`            |
-| `integrated-postgresql.primary.extendedConfiguration` | Extended PostgreSQL configuration (appended to main or default configuration) | `tcp_keepalives_idle = 5` |
+See Bitnami documentation
+
+| Name                            | Description                                                     | Value  |
+| ------------------------------- | --------------------------------------------------------------- | ------ |
+| `integrated-postgresql.enabled` | Deploy a PostgreSQL instance along the orchestrator for its use | `true` |
 
 ### Hyperledger Fabric settings
 
