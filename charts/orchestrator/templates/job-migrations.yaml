@@ -39,5 +39,5 @@ spec:
         - configMapRef:
             name: {{ template "orchestrator.server.fullname" . }}-database
         - secretRef:
-            name: {{ template "orchestrator.server.fullname" . }}-database
+            name: {{ template "substra-orc.postgresql.secret-name" . }}
 {{- end }}
