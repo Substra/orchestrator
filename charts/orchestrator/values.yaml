@@ -169,6 +169,10 @@ postgresql:
     username: &psql-username postgres
     ## @param postgresql.auth.password what password to use for connecting
     password: &psql-password postgres
+    
+    ## @param postgresql.auth.credentialsSecretName An alternative to giving username and password; must have `POSTGRESQL_USERNAME` and `POSTGRESQL_PASSWORD` keys.
+    ##
+    credentialsSecretName: null
   
   ## @param postgresql.host Hostname of the database to connect to (defaults to local)
   host: null
@@ -181,31 +185,21 @@ postgresql:
   connectionParameters: ""
 
 ## @section Integrated PostgreSQL settings
+## (see Bitnami documentation)
 ##
 integrated-postgresql:
   ## @param integrated-postgresql.enabled Deploy a PostgreSQL instance along the orchestrator for its use
   ##
   enabled: true
-  
+  ## @skip integrated-postgresql.auth
   auth:
-    ## @param integrated-postgresql.auth.enablePostgresUser enable the "postgres" admin user
-    ##
     enablePostgresUser: true
-    ## @param integrated-postgresql.auth.postgresPassword password for the postgres admin user
-    ##
     postgresPassword: *psql-password
-    ## @param integrated-postgresql.auth.username PostgreSQL user (creates a non-admin user when username is not `postgres`)
-    ##
     username: *psql-username
-    ## @param integrated-postgresql.auth.password PostgreSQL user password
-    ##
     password: *psql-password
-    ## @param integrated-postgresql.auth.database PostgreSQL database the orchestrator should use
-    ##
     database: *psql-database
+  ## @skip integrated-postgresql.primary
   primary:
-    ## @param integrated-postgresql.primary.extendedConfiguration Extended PostgreSQL configuration (appended to main or default configuration)
-    ##
     extendedConfiguration: |-
       tcp_keepalives_idle = 5
 
