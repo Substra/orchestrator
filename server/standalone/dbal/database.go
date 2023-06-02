@@ -28,7 +28,11 @@ type SQLLogger struct {
 
 // https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
 func BuildConnectionString(hostname string, port int, database string, username string, password string, params string) string {
-	return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s %s", hostname, port, database, username, password, params)
+	connString := fmt.Sprintf("postgresql://%s:%s@%s:%d/%s", username, password, hostname, port, database)
+	if len(params) > 0 {
+		connString += "?" + params
+	}
+	return connString
 }
 
 func (l *SQLLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
