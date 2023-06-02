@@ -110,13 +110,13 @@ jobs:
           LATEST_RELEASE_TAG=$(git tag -l | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | sort -V | tail -n 1)
           gsutil cp gs://${DB_DUMPS_BUCKET_NAME}/${LATEST_RELEASE_TAG} dump.sql
           psql $POSTGRESQL_CONNECTION_STRING < dump.sql
-          INITIAL_MIGRATION_VERSION=$(migrate -source "${ORCHESTRATOR_MIGRATION_DIR}" -database "${POSTGRESQL_CONNECTION_STRING}" version 2>&1 > /dev/null)
+          INITIAL_MIGRATION_VERSION=$(migrate -source "${MIGRATION_DIR}" -database "${POSTGRESQL_CONNECTION_STRING}" version 2>&1 > /dev/null)
           echo "::set-output name=initial_migration_version::$INITIAL_MIGRATION_VERSION"
 
       - name: Migrate db up from previous release data
         if: steps.changed_migrations.outputs.any_changed == 'true'
         run: |
-          migrate -source "${ORCHESTRATOR_MIGRATION_DIR}" -database "${POSTGRESQL_CONNECTION_STRING}" up
+          migrate -source "${MIGRATION_DIR}" -database "${POSTGRESQL_CONNECTION_STRING}" up
 
       - name: Setup channel configuration
         run: |
@@ -134,7 +134,7 @@ jobs:
       - name: Run e2e tests on previous release data
         if: steps.changed_migrations.outputs.any_changed == 'true'
         env:
-          ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
+          CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
         run: |
           ./bin/orchestrator > server.prepopulated.run.log 2>&1 &
           go test -tags=e2e ./e2e -v -short --failfast -server_addr localhost:9000
@@ -143,7 +143,7 @@ jobs:
         if: steps.changed_migrations.outputs.any_changed == 'true'
         run: >
           migrate
-          -source "${ORCHESTRATOR_MIGRATION_DIR}"
+          -source "${MIGRATION_DIR}"
           -database "${POSTGRESQL_CONNECTION_STRING}"
           goto ${{ steps.restore_db.outputs.initial_migration_version }}
 
@@ -157,11 +157,11 @@ jobs:
 
       - name: Migrate db up
         run: |
-          migrate -source "${ORCHESTRATOR_MIGRATION_DIR}/" -database "${POSTGRESQL_CONNECTION_STRING}" up
+          migrate -source "${MIGRATION_DIR}/" -database "${POSTGRESQL_CONNECTION_STRING}" up
 
       - name: Run e2e tests
         env:
-          ORCHESTRATOR_CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
+          CHANNEL_CONFIG: ${{runner.temp}}/config.yaml
         run: |
           ./bin/orchestrator > server.log 2>&1 &
           go test -tags=e2e ./e2e -v -short --failfast -server_addr localhost:9000

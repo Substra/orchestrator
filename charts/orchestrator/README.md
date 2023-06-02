@@ -67,7 +67,7 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `postgresql.auth.username`        | what user to connect as                                    | `postgres`     |
 | `postgresql.auth.password`        | what password to use for connecting                        | `postgres`     |
 | `postgresql.host`                 | Hostname of the database to connect to (defaults to local) | `nil`          |
-| `postgresql.port`                 | Port of an external database to connect to                 | `nil`          |
+| `postgresql.port`                 | Port of an external database to connect to                 | `5432`         |
 | `postgresql.connectionParameters` | database URI parameters (`key=value&key=value`)            | `""`           |
 
 ### Integrated PostgreSQL settings
