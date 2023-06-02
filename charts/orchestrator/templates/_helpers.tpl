@@ -158,7 +158,7 @@ example:
 {{- end -}}
 
 
-{{- define "substra-orc.database.secret-name" -}}
+{{- define "substra-orc.postgresql.secret-name" -}}
     {{- if .Values.postgresql.auth.credentialsSecretName -}}
         {{- .Values.postgresql.auth.credentialsSecretName }}
     {{- else -}}

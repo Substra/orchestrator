@@ -92,7 +92,7 @@ spec:
             - configMapRef:
                 name: {{ template "orchestrator.server.fullname" . }}-database
             - secretRef:
-                name: {{ template "substra-orc.database.secret-name" . }}
+                name: {{ template "substra-orc.postgresql.secret-name" . }}
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
