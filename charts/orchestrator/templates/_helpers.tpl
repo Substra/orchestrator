@@ -172,7 +172,7 @@ The hostname we should connect to (external is defined, otherwise integrated)
 {{- define "substra-orc.database.host" -}}
     {{- if .Values.database.host }}
         {{- .Values.database.host }}
-    {{- else }}
+    {{- else if (get .Subcharts "postgresql") }}
         {{- template "postgresql.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
     {{- end }}
 {{- end -}}
