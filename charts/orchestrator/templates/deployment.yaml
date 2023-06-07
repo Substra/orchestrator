@@ -37,6 +37,17 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              DATABASE_URI="postgres://$POSTGRESQL_USERNAME:$POSTGRESQL_PASSWORD@$POSTGRESQL_HOSTNAME:$POSTGRESQL_PORT/$POSTGRESQL_DATABASE"
+              if [ -n $POSTGRESQL_CONNECTION_PARAMETERS ]; then
+                DATABASE_URI="$DATABASE_URI?$POSTGRESQL_CONNECTION_PARAMETERS"
+              fi
+              export ORCHESTRATOR_DATABASE_URL="$DATABASE_URI"
+              /app/orchestrator
           ports:
             - name: grpc
               containerPort: 9000
