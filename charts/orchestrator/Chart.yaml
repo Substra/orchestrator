@@ -3,7 +3,7 @@ name: orchestrator
 description: substra orchestration
 
 type: application
-version: 8.0.0
+version: 7.5.0
 appVersion: 0.34.0
 kubeVersion: ">= 1.19.0-0"
 icon: https://avatars.githubusercontent.com/u/84009910?s=400
@@ -20,7 +20,6 @@ maintainers:
 
 dependencies:
   - name: postgresql
-    alias: integrated-postgresql
     repository: https://charts.bitnami.com/bitnami
     version: 11.6.2
-    condition: integrated-postgresql.enabled
+    condition: postgresql.enabled

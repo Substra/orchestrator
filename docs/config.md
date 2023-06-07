@@ -20,13 +20,13 @@ Unless specified, all settings are mandatory.
 | `FABRIC_CERT`                                 | distributed             | string (path)                                                      | path of the certificate to present to fabric's peer                                                                 |
 | `FABRIC_KEY`                                  | distributed             | string (path)                                                      | path of the key corresponding to fabric's certificate                                                               |
 | `FABRIC_GATEWAY_TIMEOUT`                      | distributed             | duration ([go format](https://golang.org/pkg/time/#ParseDuration)) | Commit timeout for all transaction submissions for the gateway                                                      |
-| `POSTGRESQL_CONNECTION_STRING`                | standalone              | string                                                             | [postgresql connection string](http://www.postgresql.cn/docs/13/libpq-connect.html#LIBPQ-CONNSTRING); takes precedence over other PostgreSQL settings               |
-| `POSTGRESQL_HOSTNAME`                         | standalone              | string | |
-| `POSTGRESQL_PORT`                             | standalone              | int    | |
-| `POSTGRESQL_DATABASE`                         | standalone              | string | |
-| `POSTGRESQL_USERNAME`                         | standalone              | string | |
-| `POSTGRESQL_PASSWORD`                         | standalone              | string | |
-| `POSTGRESQL_CONNECTION_PARAMETERS`            | standalone              | string | connection parameters in space-separated `key=value` format |
+| `DATABASE_CONNECTION_STRING`                | standalone              | string                                                             | [postgresql connection string](http://www.postgresql.cn/docs/13/libpq-connect.html#LIBPQ-CONNSTRING); takes precedence over other PostgreSQL settings               |
+| `DATABASE_HOSTNAME`                         | standalone              | string | |
+| `DATABASE_PORT`                             | standalone              | int    | |
+| `DATABASE_DATABASE`                         | standalone              | string | |
+| `DATABASE_USERNAME`                         | standalone              | string | |
+| `DATABASE_PASSWORD`                         | standalone              | string | |
+| `DATABASE_CONNECTION_PARAMETERS`            | standalone              | string | connection parameters in space-separated `key=value` format |
 | `VERIFY_CLIENT_MSP_ID`                        | standalone, distributed | bool: `true`/`false`                                               | whether to check that client certificate matches the MSPID header                                                   |
 | `CHANNEL_CONFIG`                              | standalone, distributed | string (path)                                                      | where to find the [application configuration](#orchestration-configuration)                                         |
 | `REPLAY_EVENTS_BATCH_SIZE`                    | standalone              | integer                                                            | the size of the batch of events used by the `SubscribeToEvents` method to replay existing events (default to `100`) |

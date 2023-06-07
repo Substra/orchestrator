@@ -29,7 +29,7 @@ orchestrator:
 metrics:
   enabled: true
 
-integrated-postgresql:
+postgresql:
   enabled: true
   primary:
     persistence:

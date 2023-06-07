@@ -158,9 +158,9 @@ example:
 {{- end -}}
 
 
-{{- define "substra-orc.postgresql.secret-name" -}}
-    {{- if .Values.postgresql.auth.credentialsSecretName -}}
-        {{- .Values.postgresql.auth.credentialsSecretName }}
+{{- define "substra-orc.database.secret-name" -}}
+    {{- if .Values.database.auth.credentialsSecretName -}}
+        {{- .Values.database.auth.credentialsSecretName }}
     {{- else -}}
         {{- template "orchestrator.server.fullname" . }}-database
     {{- end -}}
@@ -169,21 +169,21 @@ example:
 {{/*
 The hostname we should connect to (external is defined, otherwise integrated)
 */}}
-{{- define "substra-orc.postgresql.host" -}}
-    {{- if .Values.postgresql.host }}
-        {{- .Values.postgresql.host }}
+{{- define "substra-orc.database.host" -}}
+    {{- if .Values.database.host }}
+        {{- .Values.database.host }}
     {{- else }}
-        {{- template "postgresql.primary.fullname" (index .Subcharts "integrated-postgresql") }}.{{ .Release.Namespace }}
+        {{- template "postgresql.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
     {{- end }}
 {{- end -}}
 
 {{/*
 Disable SSL if using the integrated Postgres, otherwise leave users with the option of setting their own.
 */}}
-{{- define "substra-orc.postgresql.connectionParameters" -}}
-    {{- if .Values.postgresql.connectionParameters -}}
-        {{ .Values.postgresql.connectionParameters }}
-    {{- else if index .Values "integrated-postgresql" "enabled" -}}
+{{- define "substra-orc.database.connectionParameters" -}}
+    {{- if .Values.database.connectionParameters -}}
+        {{ .Values.database.connectionParameters }}
+    {{- else if .Values.postgresql.enabled -}}
         sslmode=disable
     {{- end }}
 {{- end -}}

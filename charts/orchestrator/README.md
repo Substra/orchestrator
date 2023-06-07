@@ -59,25 +59,25 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `tolerations`                              | Tolerations labels for pod assignment                                         | `[]`                     |
 | `affinity`                                 | Affinity settings for pod assignment                                          | `{}`                     |
 
-### PostgreSQL settings
+### Database connection settings
 
-| Name                                    | Description                                                                                                     | Value          |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------- |
-| `postgresql.auth.database`              | what DB to connect to                                                                                           | `orchestrator` |
-| `postgresql.auth.username`              | what user to connect as                                                                                         | `postgres`     |
-| `postgresql.auth.password`              | what password to use for connecting                                                                             | `postgres`     |
-| `postgresql.auth.credentialsSecretName` | An alternative to giving username and password; must have `POSTGRESQL_USERNAME` and `POSTGRESQL_PASSWORD` keys. | `nil`          |
-| `postgresql.host`                       | Hostname of the database to connect to (defaults to local)                                                      | `nil`          |
-| `postgresql.port`                       | Port of an external database to connect to                                                                      | `5432`         |
-| `postgresql.connectionParameters`       | database URI parameters (`key=value&key=value`)                                                                 | `""`           |
+| Name                                  | Description                                                                                                 | Value          |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------- |
+| `database.auth.database`              | what DB to connect to                                                                                       | `orchestrator` |
+| `database.auth.username`              | what user to connect as                                                                                     | `postgres`     |
+| `database.auth.password`              | what password to use for connecting                                                                         | `postgres`     |
+| `database.auth.credentialsSecretName` | An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys. | `nil`          |
+| `database.host`                       | Hostname of the database to connect to (defaults to local)                                                  | `nil`          |
+| `database.port`                       | Port of an external database to connect to                                                                  | `5432`         |
+| `database.connectionParameters`       | database URI parameters (`key=value&key=value`)                                                             | `""`           |
 
 ### Integrated PostgreSQL settings
 
 See Bitnami documentation
 
-| Name                            | Description                                                     | Value  |
-| ------------------------------- | --------------------------------------------------------------- | ------ |
-| `integrated-postgresql.enabled` | Deploy a PostgreSQL instance along the orchestrator for its use | `true` |
+| Name                 | Description                                                     | Value  |
+| -------------------- | --------------------------------------------------------------- | ------ |
+| `postgresql.enabled` | Deploy a PostgreSQL instance along the orchestrator for its use | `true` |
 
 ### Hyperledger Fabric settings
 
@@ -196,11 +196,11 @@ This options needs both `orchestrator.tls.enabled` and `orchestrator.tls.mtls.en
 If you change connection settings for the internal database such as credentials, don't forget to also update the ones used for connecting:
 
 ```yaml
-postgresql:
+database:
   auth:
     password: abcd1234 # the password the backend will use
 
-integrated-postgresql:
+postgresql:
   auth:
     password: abcd1234 # the password the database expects
 ```
@@ -212,7 +212,7 @@ integrated-postgresql:
 In standalone mode (`orchestrator.mode=standalone`), the orchestrator uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
 
 ```yaml
-postgresql:
+database:
   host: my.database.host
   
   auth:
@@ -220,6 +220,6 @@ postgresql:
     password: aStrongPassword
     database: orchestrator
 
-integrated-postgresql:
+postgresql:
   enabled: false
 ```

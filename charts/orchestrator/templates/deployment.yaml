@@ -29,7 +29,7 @@ spec:
       {{- if eq .Values.orchestrator.mode "standalone" }}
       - name: wait-postgresql
         image: postgres
-        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.postgresql.host" . }} --port={{ .Values.postgresql.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       {{- end}}
       containers:
         - name: {{ .Chart.Name }}
@@ -42,9 +42,9 @@ spec:
             - -c
             - |
               set -eu
-              DATABASE_URI="postgres://$POSTGRESQL_USERNAME:$POSTGRESQL_PASSWORD@$POSTGRESQL_HOSTNAME:$POSTGRESQL_PORT/$POSTGRESQL_DATABASE"
-              if [ -n $POSTGRESQL_CONNECTION_PARAMETERS ]; then
-                DATABASE_URI="$DATABASE_URI?$POSTGRESQL_CONNECTION_PARAMETERS"
+              DATABASE_URI="postgres://$DATABASE_USERNAME:$DATABASE_PASSWORD@$DATABASE_HOSTNAME:$DATABASE_PORT/$DATABASE_DATABASE"
+              if [ -n $DATABASE_CONNECTION_PARAMETERS ]; then
+                DATABASE_URI="$DATABASE_URI?$DATABASE_CONNECTION_PARAMETERS"
               fi
               export ORCHESTRATOR_DATABASE_URL="$DATABASE_URI"
               /app/orchestrator
@@ -103,7 +103,7 @@ spec:
             - configMapRef:
                 name: {{ template "orchestrator.server.fullname" . }}-database
             - secretRef:
-                name: {{ template "substra-orc.postgresql.secret-name" . }}
+                name: {{ template "substra-orc.database.secret-name" . }}
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
