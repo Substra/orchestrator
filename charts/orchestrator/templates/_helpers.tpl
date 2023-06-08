@@ -107,19 +107,6 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{/*
-Redefine the postgresql service name because we can't use subchart templates directly.
-*/}}
-{{- define "postgresql.serviceName" -}}
-{{- $name := default "postgresql" .Values.postgresql.nameOverride -}}
-{{- $fullname := default (printf "%s-%s" .Release.Name $name) .Values.postgresql.fullnameOverride -}}
-{{- if .Values.postgresql.replication.enabled -}}
-{{- printf "%s-%s" $fullname "primary" | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s" $fullname | trunc 63 | trimSuffix "-" }}
-{{- end -}}
-{{- end -}}
-
 
 {{/*
 Generate ingress backend entry that is compatible with all ports types.
@@ -168,4 +155,35 @@ example:
     {{- else -}}
     {{- printf "%s:%s" .img.repository $tag -}}
     {{- end -}}
+{{- end -}}
+
+
+{{- define "substra-orc.database.secret-name" -}}
+    {{- if .Values.database.auth.credentialsSecretName -}}
+        {{- .Values.database.auth.credentialsSecretName }}
+    {{- else -}}
+        {{- template "orchestrator.server.fullname" . }}-database
+    {{- end -}}
+{{- end -}}
+
+{{/*
+The hostname we should connect to (external is defined, otherwise integrated)
+*/}}
+{{- define "substra-orc.database.host" -}}
+    {{- if .Values.database.host }}
+        {{- .Values.database.host }}
+    {{- else if (get .Subcharts "postgresql") }}
+        {{- template "postgresql.primary.fullname" .Subcharts.postgresql }}.{{ .Release.Namespace }}
+    {{- end }}
+{{- end -}}
+
+{{/*
+Disable SSL if using the integrated Postgres, otherwise leave users with the option of setting their own.
+*/}}
+{{- define "substra-orc.database.connectionParameters" -}}
+    {{- if .Values.database.connectionParameters -}}
+        {{ .Values.database.connectionParameters }}
+    {{- else if .Values.postgresql.enabled -}}
+        sslmode=disable
+    {{- end }}
 {{- end -}}

@@ -59,19 +59,27 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `tolerations`                              | Tolerations labels for pod assignment                                         | `[]`                     |
 | `affinity`                                 | Affinity settings for pod assignment                                          | `{}`                     |
 
+### Database connection settings
+
+| Name                                  | Description                                                                                                 | Value          |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------- |
+| `database.auth.database`              | what DB to connect to                                                                                       | `orchestrator` |
+| `database.auth.username`              | what user to connect as                                                                                     | `postgres`     |
+| `database.auth.password`              | what password to use for connecting                                                                         | `postgres`     |
+| `database.auth.credentialsSecretName` | An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys. | `nil`          |
+| `database.host`                       | Hostname of the database to connect to (defaults to local)                                                  | `nil`          |
+| `database.port`                       | Port of an external database to connect to                                                                  | `5432`         |
+| `database.connectionParameters`       | database URI parameters (`key=value&key=value`)                                                             | `""`           |
 
 ### PostgreSQL settings
 
-| Name                                       | Description                                                                   | Value                     |
-| ------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------- |
-| `postgresql.enabled`                       | If true, deploy PostgreSQL                                                    | `true`                    |
-| `postgresql.auth.enablePostgresUser`       | creates a PostgreSQL user                                                     | `true`                    |
-| `postgresql.auth.postgresPassword`         | password for the postgres admin user                                          | `postgres`                |
-| `postgresql.auth.username`                 | PostgreSQL user (creates a non-admin user when username is not `postgres`)    | `postgres`                |
-| `postgresql.auth.password`                 | PostgreSQL user password                                                      | `postgres`                |
-| `postgresql.auth.database`                 | PostgreSQL database the orchestrator should use                               | `orchestrator`            |
-| `postgresql.primary.extendedConfiguration` | Extended PostgreSQL configuration (appended to main or default configuration) | `tcp_keepalives_idle = 5` |
+Database included as a subchart used by default.
 
+See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
+
+| Name                 | Description                                                     | Value  |
+| -------------------- | --------------------------------------------------------------- | ------ |
+| `postgresql.enabled` | Deploy a PostgreSQL instance along the orchestrator for its use | `true` |
 
 ### Hyperledger Fabric settings
 
@@ -92,7 +100,6 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `fabric.secrets.user.key`           | Hyperledger Fabric Peer user certificate key                                                           | `hlf-msp-key-user`                                      |
 | `fabric.secrets.peer.tls.client`    | Hyperledger Fabric Peer TLS client key/cert                                                            | `hlf-tls-user`                                          |
 | `fabric.secrets.peer.tls.server`    | Hyperledger Fabric Peer TLS server key/cert                                                            | `hlf-tls-admin`                                         |
-
 
 ### Orchestrator application specific parameters
 
@@ -120,13 +127,11 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `orchestrator.tls.mtls.enabled`                  | If true, enable TLS client verification                                                                                                                                  | `false`                        |
 | `orchestrator.tls.mtls.clientCACerts`            | A map whose keys are names of the CAs, and values are a list of configmaps containing CA certificates                                                                    | `{}`                           |
 
-
 ### Channels settings
 
 | Name       | Description                                | Value |
 | ---------- | ------------------------------------------ | ----- |
 | `channels` | List of channels and their members (MSPID) | `[]`  |
-
 
 ### migration job settings
 
@@ -185,3 +190,38 @@ Note: If you use nginx-ingress, use the `--enable-ssl-passthrough`.
 In additional to the protections offered by mutual TLS, the identity of users can be validated with the setting `Values.verifyClientMSPID`. Without this extra check, it is possible for malicious users with a valid certificate to impersonate other valid users. The verification checks that the "Subject Organization" (`O=...`) of the SSL certificate provided by the client matches the  `mspid` gRPC header supplied by the client.
 
 This options needs both `orchestrator.tls.enabled` and `orchestrator.tls.mtls.enabled` to be true.
+
+### Database
+
+#### Internal
+
+If you change connection settings for the internal database such as credentials, don't forget to also update the ones used for connecting:
+
+```yaml
+database:
+  auth:
+    password: abcd1234 # the password the backend will use
+
+postgresql:
+  auth:
+    password: abcd1234 # the password the database expects
+```
+
+(you could use YAML anchors for this)
+
+#### External
+
+In standalone mode (`orchestrator.mode=standalone`), the orchestrator uses a PostgreSQL database. By default it will deploy one as a subchart. To avoid this behavior, set the appropriate values:
+
+```yaml
+database:
+  host: my.database.host
+  
+  auth:
+    username: my-user
+    password: aStrongPassword
+    database: orchestrator
+
+postgresql:
+  enabled: false
+```

@@ -1,0 +1,13 @@
+{{- if eq .Values.orchestrator.mode "standalone" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "orchestrator.server.fullname" . }}-database
+  labels:
+    {{- include "orchestrator.server.labels" . | nindent 4 }}
+data:
+  DATABASE_HOSTNAME: !!str {{ include "substra-orc.database.host" . }}
+  DATABASE_PORT: !!str {{ .Values.database.port }}
+  DATABASE_DATABASE: !!str {{ .Values.database.auth.database }}
+  DATABASE_CONNECTION_PARAMETERS: !!str {{ include "substra-orc.database.connectionParameters" . }}
+{{- end }}
