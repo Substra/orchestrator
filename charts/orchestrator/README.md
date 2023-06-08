@@ -71,9 +71,11 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `database.port`                       | Port of an external database to connect to                                                                  | `5432`         |
 | `database.connectionParameters`       | database URI parameters (`key=value&key=value`)                                                             | `""`           |
 
-### Integrated PostgreSQL settings
+### PostgreSQL settings
 
-See Bitnami documentation
+Database included as a subchart used by default.
+
+See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
 
 | Name                 | Description                                                     | Value  |
 | -------------------- | --------------------------------------------------------------- | ------ |
