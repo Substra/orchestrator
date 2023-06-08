@@ -41,12 +41,14 @@ spec:
             - sh
             - -c
             - |
+              {{- if eq .Values.orchestrator.mode "standalone" }}
               set -eu
               DATABASE_URI="postgres://$DATABASE_USERNAME:$DATABASE_PASSWORD@$DATABASE_HOSTNAME:$DATABASE_PORT/$DATABASE_DATABASE"
               if [ -n $DATABASE_CONNECTION_PARAMETERS ]; then
                 DATABASE_URI="$DATABASE_URI?$DATABASE_CONNECTION_PARAMETERS"
               fi
               export ORCHESTRATOR_DATABASE_URL="$DATABASE_URI"
+              {{- end }}
               /app/orchestrator
           ports:
             - name: grpc
@@ -100,10 +102,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ template "orchestrator.server.fullname" . }}-env
+            {{- if eq .Values.orchestrator.mode "standalone" }}
             - configMapRef:
                 name: {{ template "orchestrator.server.fullname" . }}-database
             - secretRef:
                 name: {{ template "substra-orc.database.secret-name" . }}
+            {{- end }}
           env:
            - name: LOG_LEVEL
              value: {{ .Values.orchestrator.logLevel | default "INFO" }}
