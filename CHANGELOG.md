@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.35.0](https://github.com/Substra/orchestrator/releases/tag/0.35.0) - 2023-06-12
 
-- No changes on the app
+- No changes on the appqs
 
 ## [0.34.0](https://github.com/Substra/orchestrator/releases/tag/0.34.0) - 2023-05-11
 
