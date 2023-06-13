@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0](https://github.com/Substra/orchestrator/releases/tag/0.35.0) - 2023-06-12
+
+### Added
+
+- Connecting to an external database in standalone mode rather than using the one packaged as a subchart. ([#210](https://github.com/Substra/orchestrator/pull/210))
+
 ## [0.34.0](https://github.com/Substra/orchestrator/releases/tag/0.34.0) - 2023-05-11
 
 ### Changed
