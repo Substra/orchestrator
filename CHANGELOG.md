@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.1](https://github.com/Substra/orchestrator/releases/tag/0.35.1) - 2023-06-27
+
+### Changed
+
+- Minor dependency updates. See commit history for more details.
+
+
 ## [0.35.0](https://github.com/Substra/orchestrator/releases/tag/0.35.0) - 2023-06-12
 
 ### Added
