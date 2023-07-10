@@ -45,7 +45,7 @@ jobs:
 
       - name: Get changed migration files
         id: changed_migrations
-        uses: tj-actions/changed-files@v36.4.1
+        uses: tj-actions/changed-files@v37.1.0
         with:
           files: server/standalone/migration/*.sql
 
