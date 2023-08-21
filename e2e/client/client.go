@@ -553,6 +553,19 @@ func (c *TestClient) UpdateFunction(functionRef string, name string) *asset.Upda
 	return resp
 }
 
+func (c *TestClient) UpdateFunctionStatus(functionRef string, status asset.FunctionStatus) *asset.UpdateFunctionStatusResponse {
+	param := &asset.UpdateFunctionStatusParam{
+		Key:  c.ks.GetKey(functionRef),
+		Status: status,
+	}
+	c.logger.Debug().Str("function key", c.ks.GetKey(functionRef)).Msg("UpdateFunctionStatus")
+	resp, err := c.functionService.UpdateFunctionStatus(c.ctx, param)
+	if err != nil {
+		c.logger.Fatal().Err(err).Msg("UpdateFunctionStatus failed")
+	}
+	return resp
+}
+
 func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken string, pageSize int) *asset.QueryEventsResponse {
 	resp, err := c.eventService.QueryEvents(c.ctx, &asset.QueryEventsParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {

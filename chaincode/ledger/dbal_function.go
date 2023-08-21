@@ -189,3 +189,12 @@ func (db *DB) UpdateFunction(function *asset.Function) error {
 
 	return db.putState(asset.FunctionKind, function.GetKey(), functionBytes)
 }
+
+func (db *DB) UpdateFunctionStatus(function *asset.Function) error {
+	functionBytes, err := marshaller.Marshal(function)
+	if err != nil {
+		return err
+	}
+
+	return db.putState(asset.FunctionKind, function.GetKey(), functionBytes)
+}

@@ -16,6 +16,11 @@ type updateFunctionTestCase struct {
 	valid    bool
 }
 
+type updateFunctionStatusTestCase struct {
+	update *UpdateFunctionStatusParam
+	valid    bool
+}
+
 func TestFunctionValidate(t *testing.T) {
 	validAddressable := &Addressable{
 		StorageAddress: "https://somewhere",
@@ -153,6 +158,28 @@ func TestUpdateFunctionValidate(t *testing.T) {
 			assert.NoError(t, tc.function.Validate(), name+" should be valid")
 		} else {
 			assert.Error(t, tc.function.Validate(), name+" should be invalid")
+		}
+	}
+}
+
+func TestUpdateFunctionStatusValidate(t *testing.T) {
+	cases := map[string]updateFunctionStatusTestCase{
+		"empty": {&UpdateFunctionStatusParam{}, false},
+		"invalidFunctionKey": {&UpdateFunctionStatusParam{
+			Key:  "not36chars",
+			Status: FunctionStatus_FUNCTION_STATUS_BUILDING,
+		}, false},
+		"valid": {&UpdateFunctionStatusParam{
+			Key:  "834f47c3-2d95-4ccd-a718-7143b64e61c0",
+			Status: FunctionStatus_FUNCTION_STATUS_BUILDING,
+		}, true},
+	}
+
+	for name, tc := range cases {
+		if tc.valid {
+			assert.NoError(t, tc.update.Validate(), name+" should be valid")
+		} else {
+			assert.Error(t, tc.update.Validate(), name+" should be invalid")
 		}
 	}
 }

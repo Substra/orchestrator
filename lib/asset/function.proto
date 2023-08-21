@@ -93,4 +93,13 @@ service FunctionService {
   rpc GetFunction(GetFunctionParam) returns (Function);
   rpc QueryFunctions(QueryFunctionsParam) returns (QueryFunctionsResponse);
   rpc UpdateFunction(UpdateFunctionParam) returns (UpdateFunctionResponse);
+  rpc UpdateFunctionStatus(UpdateFunctionStatusParam) returns (UpdateFunctionStatusResponse);
+
 }
+
+message UpdateFunctionStatusParam {
+  string key = 1;
+  FunctionStatus status = 2;
+}
+
+message UpdateFunctionStatusResponse {}
