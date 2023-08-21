@@ -22,6 +22,7 @@ type sqlFunction struct {
 	Owner        string
 	CreationDate time.Time
 	Metadata     map[string]string
+	Status       asset.FunctionStatus
 }
 
 func (a *sqlFunction) toFunction() *asset.Function {
@@ -34,6 +35,7 @@ func (a *sqlFunction) toFunction() *asset.Function {
 		Owner:        a.Owner,
 		CreationDate: timestamppb.New(a.CreationDate),
 		Metadata:     a.Metadata,
+		Status:       a.Status,
 	}
 }
 
@@ -51,8 +53,8 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 
 	stmt := getStatementBuilder().
 		Insert("functions").
-		Columns("key", "channel", "name", "description", "functionAddress", "permissions", "owner", "creation_date", "metadata").
-		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Function.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata)
+		Columns("key", "channel", "name", "description", "functionAddress", "permissions", "owner", "creation_date", "metadata", "status").
+		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Function.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String())
 
 	err = d.exec(stmt)
 	if err != nil {
@@ -75,7 +77,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 // GetFunction implements persistence.FunctionDBAL
 func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata").
+		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata", "status").
 		From("expanded_functions").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
@@ -85,7 +87,7 @@ func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	}
 
 	al := sqlFunction{}
-	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
+	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -144,7 +146,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata").
+		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata", "status").
 		From("expanded_functions").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").
@@ -173,7 +175,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	for rows.Next() {
 		al := sqlFunction{}
 
-		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata)
+		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
 		if err != nil {
 			return nil, "", err
 		}
@@ -198,7 +200,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	return functions, bookmark, nil
 }
 
-// UpdateFunction updates the mutable fields of an function in the DB. List of mutable fields: name.
+// UpdateFunction updates the mutable fields of an function in the DB. List of mutable fields: name, status.
 func (d *DBAL) UpdateFunction(function *asset.Function) error {
 	stmt := getStatementBuilder().
 		Update("functions").
