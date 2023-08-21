@@ -18,6 +18,15 @@ message FunctionOutput {
   bool multiple = 2;
 }
 
+
+enum FunctionStatus {
+    FUNCTION_STATUS_CREATED = 0;
+    FUNCTION_STATUS_BUILDING = 1;
+    FUNCTION_STATUS_READY = 2;
+    FUNCTION_STATUS_CANCELED = 3;
+    FUNCTION_STATUS_FAILED = 4;
+}
+
 // Function represents the code which will be used
 // to produce or test a model.
 message Function {
@@ -34,6 +43,7 @@ message Function {
   map<string, string> metadata = 16;
   map<string, FunctionInput> inputs = 17;
   map<string, FunctionOutput> outputs = 18;
+  FunctionStatus status = 19;
 }
 
 // NewFunction is used to register an Function.
