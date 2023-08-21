@@ -32,6 +32,12 @@ func (o *UpdateFunctionParam) Validate() error {
 	)
 }
 
+func (o *UpdateFunctionStatusParam) Validate() error {
+	return validation.ValidateStruct(o,
+		validation.Field(&o.Key, validation.Required, is.UUID),
+	)
+}
+
 func validateInputs(input interface{}) error {
 	functionInputs, ok := input.(map[string]*FunctionInput)
 	if !ok {

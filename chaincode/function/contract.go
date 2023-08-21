@@ -159,6 +159,35 @@ func (s *SmartContract) UpdateFunction(ctx ledger.TransactionContext, wrapper *c
 	return nil
 }
 
+func (s *SmartContract) UpdateFunctionStatus(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+	provider, err := ctx.GetProvider()
+	if err != nil {
+		return err
+	}
+	service := provider.GetFunctionService()
+
+	params := new(asset.UpdateFunctionStatusParam)
+	err = wrapper.Unwrap(params)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to unwrap param")
+		return err
+	}
+
+	requester, err := ledger.GetTxCreator(ctx.GetStub())
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to extract tx creator")
+		return err
+	}
+
+	err = service.UpdateFunctionStatus(params, requester)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to update function")
+		return err
+	}
+
+	return nil
+}
+
 // GetEvaluateTransactions returns functions of SmartContract not to be tagged as submit
 func (s *SmartContract) GetEvaluateTransactions() []string {
 	return commonserv.ReadOnlyMethods["Function"]
