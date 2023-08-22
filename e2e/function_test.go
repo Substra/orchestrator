@@ -151,13 +151,12 @@ func TestUpdateFunction(t *testing.T) {
 	e2erequire.ProtoEqual(t, expectedFunction, eventFunction)
 }
 
-
 func TestUpdateFunctionStatusBuilding(t *testing.T) {
 	appClient := factory.NewTestClient()
 	keyRef := "function_filter_simple"
 	registeredFunction := appClient.RegisterFunction(client.DefaultSimpleFunctionOptions().WithKeyRef(keyRef))
 	status := asset.FunctionStatus_FUNCTION_STATUS_BUILDING
-	appClient.UpdateFunctionStatus(keyRef,status)
+	appClient.UpdateFunctionStatus(keyRef, status)
 
 	expectedFunction := registeredFunction
 	expectedFunction.Status = status

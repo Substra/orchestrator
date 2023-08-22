@@ -555,7 +555,7 @@ func (c *TestClient) UpdateFunction(functionRef string, name string) *asset.Upda
 
 func (c *TestClient) UpdateFunctionStatus(functionRef string, status asset.FunctionStatus) *asset.UpdateFunctionStatusResponse {
 	param := &asset.UpdateFunctionStatusParam{
-		Key:  c.ks.GetKey(functionRef),
+		Key:    c.ks.GetKey(functionRef),
 		Status: status,
 	}
 	c.logger.Debug().Str("function key", c.ks.GetKey(functionRef)).Msg("UpdateFunctionStatus")
