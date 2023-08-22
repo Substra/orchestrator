@@ -115,7 +115,7 @@ func TestUpdateFunctionStatus(t *testing.T) {
 	adapter := NewFunctionAdapter()
 
 	updatedA := &asset.UpdateFunctionStatusParam{
-		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Key:    "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
 	}
 

@@ -18,7 +18,7 @@ type updateFunctionTestCase struct {
 
 type updateFunctionStatusTestCase struct {
 	update *UpdateFunctionStatusParam
-	valid    bool
+	valid  bool
 }
 
 func TestFunctionValidate(t *testing.T) {
@@ -166,11 +166,11 @@ func TestUpdateFunctionStatusValidate(t *testing.T) {
 	cases := map[string]updateFunctionStatusTestCase{
 		"empty": {&UpdateFunctionStatusParam{}, false},
 		"invalidFunctionKey": {&UpdateFunctionStatusParam{
-			Key:  "not36chars",
+			Key:    "not36chars",
 			Status: FunctionStatus_FUNCTION_STATUS_BUILDING,
 		}, false},
 		"valid": {&UpdateFunctionStatusParam{
-			Key:  "834f47c3-2d95-4ccd-a718-7143b64e61c0",
+			Key:    "834f47c3-2d95-4ccd-a718-7143b64e61c0",
 			Status: FunctionStatus_FUNCTION_STATUS_BUILDING,
 		}, true},
 	}
