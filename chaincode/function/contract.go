@@ -159,14 +159,14 @@ func (s *SmartContract) UpdateFunction(ctx ledger.TransactionContext, wrapper *c
 	return nil
 }
 
-func (s *SmartContract) UpdateFunctionStatus(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
+func (s *SmartContract) ApplyFunctionAction(ctx ledger.TransactionContext, wrapper *communication.Wrapper) error {
 	provider, err := ctx.GetProvider()
 	if err != nil {
 		return err
 	}
 	service := provider.GetFunctionService()
 
-	params := new(asset.UpdateFunctionStatusParam)
+	params := new(asset.ApplyFunctionActionParam)
 	err = wrapper.Unwrap(params)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to unwrap param")
@@ -179,7 +179,7 @@ func (s *SmartContract) UpdateFunctionStatus(ctx ledger.TransactionContext, wrap
 		return err
 	}
 
-	err = service.UpdateFunctionStatus(params, requester)
+	err = service.ApplyFunctionAction(params.FunctionKey, params.Action, "", requester)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to update function")
 		return err

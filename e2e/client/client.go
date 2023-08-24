@@ -553,17 +553,32 @@ func (c *TestClient) UpdateFunction(functionRef string, name string) *asset.Upda
 	return resp
 }
 
-func (c *TestClient) UpdateFunctionStatus(functionRef string, status asset.FunctionStatus) *asset.UpdateFunctionStatusResponse {
-	param := &asset.UpdateFunctionStatusParam{
-		Key:    c.ks.GetKey(functionRef),
-		Status: status,
-	}
-	c.logger.Debug().Str("function key", c.ks.GetKey(functionRef)).Msg("UpdateFunctionStatus")
-	resp, err := c.functionService.UpdateFunctionStatus(c.ctx, param)
+func (c *TestClient) BuildFunction(keyRef string) {
+	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_BUILDING)
+}
+
+func (c *TestClient) CancelFunction(keyRef string) {
+	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_CANCELED)
+}
+
+func (c *TestClient) FailFunction(keyRef string) {
+	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_FAILED)
+}
+
+func (c *TestClient) SetReadyFunction(keyRef string) {
+	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_READY)
+}
+
+func (c *TestClient) applyFunctionAction(keyRef string, action asset.FunctionAction) {
+	functionKey := c.ks.GetKey(keyRef)
+	c.logger.Debug().Str("functionKey", functionKey).Str("action", action.String()).Msg("applying function action")
+	_, err := c.functionService.ApplyFunctionAction(c.ctx, &asset.ApplyFunctionActionParam{
+		FunctionKey: functionKey,
+		Action:      action,
+	})
 	if err != nil {
-		c.logger.Fatal().Err(err).Msg("UpdateFunctionStatus failed")
+		c.logger.Fatal().Err(err).Msgf("failed to mark function as %v", action)
 	}
-	return resp
 }
 
 func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken string, pageSize int) *asset.QueryEventsResponse {

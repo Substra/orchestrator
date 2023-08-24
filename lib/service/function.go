@@ -17,7 +17,8 @@ type FunctionAPI interface {
 	CanDownload(key string, requester string) (bool, error)
 	FunctionExists(key string) (bool, error)
 	UpdateFunction(function *asset.UpdateFunctionParam, requester string) error
-	UpdateFunctionStatus(function *asset.UpdateFunctionStatusParam, requester string) error // UpdateFunctionStatus(function *asset.UpdateFunctionStatusParam, requester string) error
+	ApplyFunctionAction(key string, action asset.FunctionAction, reason string, requester string) error
+	applyFunctionAction(task *asset.Function, action functionTransition, reason string) error
 }
 
 // FunctionServiceProvider defines an object able to provide an FunctionAPI instance
@@ -160,40 +161,4 @@ func (s *FunctionService) UpdateFunction(a *asset.UpdateFunctionParam, requester
 	}
 
 	return s.GetFunctionDBAL().UpdateFunction(function)
-}
-
-// UpdateFunction updates mutable fields of an function. List of mutable fields : name.
-func (s *FunctionService) UpdateFunctionStatus(a *asset.UpdateFunctionStatusParam, requester string) error {
-	s.GetLogger().Debug().Str("requester", requester).Interface("functionUpdateStatus", a).Msg("Updating function status")
-	err := a.Validate()
-	if err != nil {
-		return orcerrors.FromValidationError(asset.FunctionKind, err)
-	}
-
-	functionKey := a.Key
-
-	function, err := s.GetFunctionDBAL().GetFunction(functionKey)
-	if err != nil {
-		return orcerrors.NewNotFound(asset.FunctionKind, functionKey)
-	}
-
-	if function.GetOwner() != requester {
-		return orcerrors.NewPermissionDenied("requester does not own the function")
-	}
-
-	// Update function status
-	function.Status = a.Status
-
-	event := &asset.Event{
-		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
-		AssetKey:  functionKey,
-		AssetKind: asset.AssetKind_ASSET_FUNCTION,
-		Asset:     &asset.Event_Function{Function: function},
-	}
-	err = s.GetEventService().RegisterEvents(event)
-	if err != nil {
-		return err
-	}
-
-	return s.GetFunctionDBAL().UpdateFunctionStatus(function)
 }

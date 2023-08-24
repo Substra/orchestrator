@@ -7,6 +7,7 @@ import (
 	"github.com/substra/orchestrator/lib/common"
 	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 // AddFunction stores a new function
@@ -162,12 +163,12 @@ func (db *DB) getComputePlanFunctionKeys(planKey string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		task := &asset.ComputeTask{}
-		err = protojson.Unmarshal(storedAsset.Asset, task)
+		function := &asset.ComputeTask{}
+		err = protojson.Unmarshal(storedAsset.Asset, function)
 		if err != nil {
 			return nil, err
 		}
-		uniqueKeys[task.FunctionKey] = struct{}{}
+		uniqueKeys[function.FunctionKey] = struct{}{}
 	}
 
 	keys := make([]string, len(uniqueKeys))
@@ -189,12 +190,25 @@ func (db *DB) UpdateFunction(function *asset.Function) error {
 
 	return db.putState(asset.FunctionKind, function.GetKey(), functionBytes)
 }
-
-func (db *DB) UpdateFunctionStatus(function *asset.Function) error {
-	functionBytes, err := marshaller.Marshal(function)
+func (db *DB) UpdateFunctionStatus(functionKey string, functionStatus asset.FunctionStatus) error {
+	// We need the current function to be able to update its indexes
+	prevFunction, err := db.GetFunction(functionKey)
 	if err != nil {
 		return err
 	}
 
-	return db.putState(asset.FunctionKind, function.GetKey(), functionBytes)
+	updatedFunction := proto.Clone(prevFunction).(*asset.Function)
+	updatedFunction.Status = functionStatus
+
+	b, err := marshaller.Marshal(updatedFunction)
+	if err != nil {
+		return err
+	}
+
+	err = db.putState(asset.FunctionKind, functionKey, b)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

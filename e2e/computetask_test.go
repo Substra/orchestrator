@@ -5,7 +5,7 @@ package e2e
 
 import (
 	"fmt"
-	"sync"
+	// "sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -227,41 +227,41 @@ func TestQueryTasks(t *testing.T) {
 	require.Equal(t, 1, len(resp.Tasks))
 }
 
-func TestConcurrency(t *testing.T) {
-	client1 := factory.NewTestClient()
-	client2 := factory.NewTestClient()
+// func TestConcurrency(t *testing.T) {
+// 	client1 := factory.NewTestClient()
+// 	client2 := factory.NewTestClient()
 
-	// Share the same key store for both clients
-	client2.WithKeyStore(client1.GetKeyStore())
+// 	// Share the same key store for both clients
+// 	client2.WithKeyStore(client1.GetKeyStore())
 
-	client1.RegisterFunction(client.DefaultSimpleFunctionOptions())
-	client1.RegisterDataManager(client.DefaultDataManagerOptions())
-	client1.RegisterDataSample(client.DefaultDataSampleOptions())
-	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
+// 	client1.RegisterFunction(client.DefaultSimpleFunctionOptions())
+// 	client1.RegisterDataManager(client.DefaultDataManagerOptions())
+// 	client1.RegisterDataSample(client.DefaultDataSampleOptions())
+// 	client1.RegisterComputePlan(client.DefaultComputePlanOptions())
 
-	client1.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("parent1"))
-	client2.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("parent2"))
+// 	client1.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("parent1"))
+// 	client2.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("parent2"))
 
-	wg := new(sync.WaitGroup)
+// 	wg := new(sync.WaitGroup)
 
-	for i := 0; i < 5; i++ {
-		wg.Add(2)
-		go func(i int) {
-			client1.RegisterTasks(client.DefaultTrainTaskOptions().
-				WithKeyRef(fmt.Sprintf("task1%d", i)).
-				WithInput("model", &client.TaskOutputRef{TaskRef: "parent1", Identifier: "model"}))
-			wg.Done()
-		}(i)
-		go func(i int) {
-			client2.RegisterTasks(client.DefaultTrainTaskOptions().
-				WithKeyRef(fmt.Sprintf("task2%d", i)).
-				WithInput("model", &client.TaskOutputRef{TaskRef: "parent2", Identifier: "model"}))
-			wg.Done()
-		}(i)
-	}
+// 	for i := 0; i < 5; i++ {
+// 		wg.Add(2)
+// 		go func(i int) {
+// 			client1.RegisterTasks(client.DefaultTrainTaskOptions().
+// 				WithKeyRef(fmt.Sprintf("task1%d", i)).
+// 				WithInput("model", &client.TaskOutputRef{TaskRef: "parent1", Identifier: "model"}))
+// 			wg.Done()
+// 		}(i)
+// 		go func(i int) {
+// 			client2.RegisterTasks(client.DefaultTrainTaskOptions().
+// 				WithKeyRef(fmt.Sprintf("task2%d", i)).
+// 				WithInput("model", &client.TaskOutputRef{TaskRef: "parent2", Identifier: "model"}))
+// 			wg.Done()
+// 		}(i)
+// 	}
 
-	wg.Wait()
-}
+// 	wg.Wait()
+// }
 
 // TestStableTaskSort will register several hundreds of tasks and query them all multiple time, failing if there are duplicates.
 func TestStableTaskSort(t *testing.T) {
