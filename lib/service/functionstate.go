@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
-	// "errors"
+	"errors"
 	"fmt"
 
 	"github.com/looplab/fsm"
 	"github.com/substra/orchestrator/lib/asset"
+	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 )
 
@@ -169,24 +170,35 @@ func (s *FunctionService) onFailure(e *fsm.Event) {
 		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
 		return
 	}
-	// function, ok := e.Args[0].(*asset.ComputeTask)
-	// if !ok {
-	// 	e.Err = orcerrors.NewInternal("cannot cast argument into function")
-	// 	return
-	// }
 
-	// err := s.GetComputePlanService().failPlan(function.ComputePlanKey)
-	// if err != nil {
-	// 	orcErr := new(orcerrors.OrcError)
-	// 	if errors.As(err, &orcErr) && orcErr.Kind == orcerrors.ErrTerminatedComputePlan {
-	// 		s.GetLogger().Debug().
-	// 			Str("functionKey", function.Key).
-	// 			Str("computePlanKey", function.ComputePlanKey).
-	// 			Msg("already terminated compute plan won't be set to failed")
 
-	// 		return
-	// 	}
+	function, ok := e.Args[0].(*asset.Function)
+	if !ok {
+		e.Err = orcerrors.NewInternal("cannot cast argument into function")
+		return
+	}
 
-	// 	e.Err = err
-	// }
+	
+	pagination := common.NewPagination("", 2)
+	filter := &asset.TaskQueryFilter{
+		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		FunctionKey: function.Key,
+	}
+	tasks, _, err := s.GetComputeTaskService().QueryTasks(pagination, filter)
+
+	if err != nil {
+		orcErr := new(orcerrors.OrcError)
+		if errors.As(err, &orcErr) && orcErr.Kind == orcerrors.ErrTerminatedComputePlan {
+			s.GetLogger().Debug().
+				Str("functionKey", function.Key).
+				Msg("cannot get tasks")
+
+			return
+		}
+	}
+
+	for _, task := range tasks {
+		s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Function building failed", function.Owner)
+	}
+
 }
