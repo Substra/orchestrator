@@ -83,24 +83,3 @@ func (s *FunctionServer) UpdateFunction(ctx context.Context, params *asset.Updat
 
 	return &asset.UpdateFunctionResponse{}, nil
 }
-
-// UpdateFunction will update mutable fields of the existing Function. List of mutable fields: name.
-func (s *FunctionServer) UpdateFunctionStatus(ctx context.Context, params *asset.UpdateFunctionStatusParam) (*asset.UpdateFunctionStatusResponse, error) {
-	log.Ctx(ctx).Debug().Interface("function", params).Msg("Update Function status")
-
-	mspid, err := commonInterceptors.ExtractMSPID(ctx)
-	if err != nil {
-		return nil, err
-	}
-	services, err := interceptors.ExtractProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	err = services.GetFunctionService().UpdateFunctionStatus(params, mspid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &asset.UpdateFunctionStatusResponse{}, nil
-}

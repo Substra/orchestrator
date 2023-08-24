@@ -32,12 +32,6 @@ func (o *UpdateFunctionParam) Validate() error {
 	)
 }
 
-func (o *UpdateFunctionStatusParam) Validate() error {
-	return validation.ValidateStruct(o,
-		validation.Field(&o.Key, validation.Required, is.UUID),
-	)
-}
-
 func validateInputs(input interface{}) error {
 	functionInputs, ok := input.(map[string]*FunctionInput)
 	if !ok {
@@ -107,4 +101,16 @@ func validateOutputs(input interface{}) error {
 	}
 
 	return nil
+}
+
+func (p *ApplyFunctionActionParam) Validate() error {
+	return validation.ValidateStruct(p,
+		validation.Field(&p.FunctionKey, validation.Required, is.UUID),
+		validation.Field(&p.Action, validation.Required, validation.In(
+			FunctionAction_FUNCTION_ACTION_BUILDING,
+			FunctionAction_FUNCTION_ACTION_FAILED,
+			FunctionAction_FUNCTION_ACTION_CANCELED,
+			FunctionAction_FUNCTION_ACTION_READY,
+		)),
+	)
 }

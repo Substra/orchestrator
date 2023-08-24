@@ -150,28 +150,3 @@ func TestUpdateFunction(t *testing.T) {
 	eventFunction := resp.Events[0].GetFunction()
 	e2erequire.ProtoEqual(t, expectedFunction, eventFunction)
 }
-
-func TestUpdateFunctionStatusBuilding(t *testing.T) {
-	appClient := factory.NewTestClient()
-	keyRef := "function_filter_simple"
-	registeredFunction := appClient.RegisterFunction(client.DefaultSimpleFunctionOptions().WithKeyRef(keyRef))
-	status := asset.FunctionStatus_FUNCTION_STATUS_BUILDING
-	appClient.UpdateFunctionStatus(keyRef, status)
-
-	expectedFunction := registeredFunction
-	expectedFunction.Status = status
-
-	retrievedFunction := appClient.GetFunction(keyRef)
-	e2erequire.ProtoEqual(t, expectedFunction, retrievedFunction)
-
-	resp := appClient.QueryEvents(&asset.EventQueryFilter{
-		AssetKey:  registeredFunction.Key,
-		AssetKind: asset.AssetKind_ASSET_FUNCTION,
-		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
-	}, "", 100)
-
-	require.Len(t, resp.Events, 1, "Unexpected number of events")
-
-	eventFunction := resp.Events[0].GetFunction()
-	e2erequire.ProtoEqual(t, expectedFunction, eventFunction)
-}

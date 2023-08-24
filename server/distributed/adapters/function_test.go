@@ -110,22 +110,3 @@ func TestUpdateFunction(t *testing.T) {
 	_, err := adapter.UpdateFunction(ctx, updatedA)
 	assert.NoError(t, err, "Update should pass")
 }
-
-func TestUpdateFunctionStatus(t *testing.T) {
-	adapter := NewFunctionAdapter()
-
-	updatedA := &asset.UpdateFunctionStatusParam{
-		Key:    "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
-	}
-
-	newCtx := context.TODO()
-	invocator := &chaincode.MockInvocator{}
-
-	invocator.On("Call", utils.AnyContext, "orchestrator.function:UpdateFunctionStatus", updatedA, nil).Return(nil)
-
-	ctx := interceptors.WithInvocator(newCtx, invocator)
-
-	_, err := adapter.UpdateFunctionStatus(ctx, updatedA)
-	assert.NoError(t, err, "Update should pass")
-}

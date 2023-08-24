@@ -16,11 +16,6 @@ type updateFunctionTestCase struct {
 	valid    bool
 }
 
-type updateFunctionStatusTestCase struct {
-	update *UpdateFunctionStatusParam
-	valid  bool
-}
-
 func TestFunctionValidate(t *testing.T) {
 	validAddressable := &Addressable{
 		StorageAddress: "https://somewhere",
@@ -161,25 +156,41 @@ func TestUpdateFunctionValidate(t *testing.T) {
 		}
 	}
 }
-
-func TestUpdateFunctionStatusValidate(t *testing.T) {
-	cases := map[string]updateFunctionStatusTestCase{
-		"empty": {&UpdateFunctionStatusParam{}, false},
-		"invalidFunctionKey": {&UpdateFunctionStatusParam{
-			Key:    "not36chars",
-			Status: FunctionStatus_FUNCTION_STATUS_BUILDING,
-		}, false},
-		"valid": {&UpdateFunctionStatusParam{
-			Key:    "834f47c3-2d95-4ccd-a718-7143b64e61c0",
-			Status: FunctionStatus_FUNCTION_STATUS_BUILDING,
-		}, true},
+func TestApplyFunctionActionParam(t *testing.T) {
+	empty := &ApplyFunctionActionParam{}
+	valid := &ApplyFunctionActionParam{
+		FunctionKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
+		Action:         FunctionAction_FUNCTION_ACTION_BUILDING,
+	}
+	missingKey := &ApplyFunctionActionParam{
+		Action: FunctionAction_FUNCTION_ACTION_BUILDING,
+	}
+	missingAction := &ApplyFunctionActionParam{
+		FunctionKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
+	}
+	invalidAction := &ApplyFunctionActionParam{
+		FunctionKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
+		Action:         FunctionAction_FUNCTION_ACTION_UNKNOWN,
 	}
 
-	for name, tc := range cases {
-		if tc.valid {
-			assert.NoError(t, tc.update.Validate(), name+" should be valid")
-		} else {
-			assert.Error(t, tc.update.Validate(), name+" should be invalid")
-		}
+	cases := map[string]struct {
+		valid bool
+		param *ApplyFunctionActionParam
+	}{
+		"valid":          {valid: true, param: valid},
+		"empty":          {valid: false, param: empty},
+		"missing key":    {valid: false, param: missingKey},
+		"missing action": {valid: false, param: missingAction},
+		"invalid action": {valid: false, param: invalidAction},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			if c.valid {
+				assert.NoError(t, c.param.Validate())
+			} else {
+				assert.Error(t, c.param.Validate())
+			}
+		})
 	}
 }

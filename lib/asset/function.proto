@@ -18,6 +18,13 @@ message FunctionOutput {
   bool multiple = 2;
 }
 
+enum FunctionAction {
+  FUNCTION_ACTION_UNKNOWN = 0;
+  FUNCTION_ACTION_BUILDING = 1;
+  FUNCTION_ACTION_CANCELED = 2;
+  FUNCTION_ACTION_FAILED = 3;
+  FUNCTION_ACTION_READY = 4;
+}
 
 enum FunctionStatus {
     FUNCTION_STATUS_CREATED = 0;
@@ -93,13 +100,13 @@ service FunctionService {
   rpc GetFunction(GetFunctionParam) returns (Function);
   rpc QueryFunctions(QueryFunctionsParam) returns (QueryFunctionsResponse);
   rpc UpdateFunction(UpdateFunctionParam) returns (UpdateFunctionResponse);
-  rpc UpdateFunctionStatus(UpdateFunctionStatusParam) returns (UpdateFunctionStatusResponse);
+  rpc ApplyFunctionAction(ApplyFunctionActionParam) returns (ApplyFunctionActionResponse);
 
 }
 
-message UpdateFunctionStatusParam {
-  string key = 1;
-  FunctionStatus status = 2;
+message ApplyFunctionActionParam {
+  string Function_key = 1;
+  FunctionAction action = 2;
 }
 
-message UpdateFunctionStatusResponse {}
+message ApplyFunctionActionResponse {}

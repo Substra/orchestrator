@@ -210,11 +210,11 @@ func (d *DBAL) UpdateFunction(function *asset.Function) error {
 	return d.exec(stmt)
 }
 
-func (d *DBAL) UpdateFunctionStatus(function *asset.Function) error {
+func (d *DBAL) UpdateFunctionStatus(functionKey string, status asset.FunctionStatus) error {
 	stmt := getStatementBuilder().
 		Update("functions").
-		Set("status", function.Status.String()).
-		Where(sq.Eq{"channel": d.channel, "key": function.Key})
+		Set("status", status.String()).
+		Where(sq.Eq{"channel": d.channel, "key": functionKey})
 
 	return d.exec(stmt)
 }
