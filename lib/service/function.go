@@ -31,6 +31,7 @@ type FunctionDependencyProvider interface {
 	LoggerProvider
 	persistence.FunctionDBALProvider
 	EventServiceProvider
+	ComputeTaskServiceProvider
 	PermissionServiceProvider
 	TimeServiceProvider
 }

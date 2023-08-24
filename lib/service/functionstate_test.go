@@ -79,6 +79,7 @@ func TestDispatchOnFunctionTransition(t *testing.T) {
 	es.AssertExpectations(t)
 }
 
+// Testing that failing a Function propagate to tasks using this function
 func TestUpdateFunctionStateCanceled(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
@@ -108,34 +109,46 @@ func TestUpdateFunctionStateCanceled(t *testing.T) {
 	es.AssertExpectations(t)
 }
 
-// func TestUpdateFunctionStateDone(t *testing.T) {
-// 	dbal := new(persistence.MockDBAL)
-// 	es := new(MockEventAPI)
-// 	provider := newMockedProvider()
+func TestUpdateFunctionStateFailed(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	es := new(MockEventAPI)
+	ct := new(MockComputeTaskAPI)
+	provider := newMockedProvider()
 
-// 	provider.On("GetFunctionDBAL").Return(dbal)
-// 	provider.On("GetEventService").Return(es)
+	provider.On("GetFunctionDBAL").Return(dbal)
+	provider.On("GetComputeTaskService").Return(ct)
+	provider.On("GetEventService").Return(es)
 
-// 	dbal.On("GetFunction", "uuid").Return(&asset.Function{
-// 		Key:    "uuid",
-// 		Status: asset.FunctionStatus_STATUS_DOING,
-// 		Owner:  "owner",
-// 		Worker: "worker",
-// 	}, nil)
+	functionKey := "uuid"
+	
+	dbal.On("GetFunction", "uuid").Return(&asset.Function{
+		Key:    functionKey,
+		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+		Owner:  "owner",
+	}, nil)
+	
+	taskKey := "uuid_ct"
+	ct.On("QueryTasks", mock.Anything, &asset.TaskQueryFilter{Status: asset.ComputeTaskStatus_STATUS_DOING, FunctionKey:functionKey}).Return([]*asset.ComputeTask{
+		{
+			Key: taskKey,
+			Owner: "owner",
+			FunctionKey: functionKey,
+			Status: asset.ComputeTaskStatus_STATUS_DOING,
+		},
+	}, "", nil)
+	ct.On("ApplyTaskAction", taskKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, mock.Anything, "owner").Return(nil)
+	es.On("RegisterEvents", mock.Anything).Return(nil)
 
-// 	es.On("RegisterEvents", mock.Anything).Return(nil)
+	updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_FAILED, Owner: "owner"}
 
-// 	updatedFunction := &asset.Function{Key: "uuid", Status: asset.FunctionStatus_STATUS_DONE, Owner: "owner", Worker: "worker"}
+	dbal.On("UpdateFunctionStatus", updatedFunction.Key, updatedFunction.Status).Return(nil)
 
-// 	dbal.On("UpdateFunctionStatus", updatedFunction.Key, updatedFunction.Status).Return(nil)
 
-// 	dbal.On("GetFunctionChildren", "uuid").Return([]*asset.Function{}, nil)
+	service := NewFunctionService(provider)
 
-// 	service := NewFunctionService(provider)
+	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_FAILED, "", "owner")
+	assert.NoError(t, err)
 
-// 	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_TASK_ACTION_DONE, "", "worker")
-// 	assert.NoError(t, err)
-
-// 	dbal.AssertExpectations(t)
-// 	es.AssertExpectations(t)
-// }
+	dbal.AssertExpectations(t)
+	es.AssertExpectations(t)
+}

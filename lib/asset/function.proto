@@ -105,7 +105,7 @@ service FunctionService {
 }
 
 message ApplyFunctionActionParam {
-  string Function_key = 1;
+  string function_key = 1;
   FunctionAction action = 2;
 }
 
