@@ -135,13 +135,13 @@ func (k *EventKind) Scan(value interface{}) error {
 
 // Value implements the driver.Valuer interface.
 // Simply returns the string representation of the FunctionStatus.
-func (ts *FunctionStatus) Value() (driver.Value, error) {
-	return ts.String(), nil
+func (fs *FunctionStatus) Value() (driver.Value, error) {
+	return fs.String(), nil
 }
 
 // Scan implements the sql.Scanner interface.
 // Simply decodes a string into the FunctionStatus.
-func (ts *FunctionStatus) Scan(value interface{}) error {
+func (fs *FunctionStatus) Scan(value interface{}) error {
 	s, ok := value.(string)
 	if !ok {
 		return errors.NewInternal("cannot scan function status: invalid string")
@@ -151,7 +151,7 @@ func (ts *FunctionStatus) Scan(value interface{}) error {
 	if !ok {
 		return errors.NewInternal("cannot scan function status: unknown value")
 	}
-	*ts = FunctionStatus(v)
+	*fs = FunctionStatus(v)
 
 	return nil
 }
