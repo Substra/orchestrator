@@ -202,7 +202,7 @@ func (s *FunctionService) onFailure(e *fsm.Event) {
 				Err(err).
 				Str("functionKey", function.Key).
 				Msg("failed to apply task action when applying function action")
-			return err
+			return 
 		}
 	}
 
