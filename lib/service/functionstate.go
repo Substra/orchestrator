@@ -196,7 +196,14 @@ func (s *FunctionService) onFailure(e *fsm.Event) {
 	}
 
 	for _, task := range tasks {
-		s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Function building failed", function.Owner)
+		err := s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Function building failed", function.Owner)
+		if err != nil {
+			s.logger.Error().
+				Err(err).
+				Str("functionKey", function.Key).
+				Msg("failed to apply task action when applying function action")
+			return err
+		}
 	}
 
 }
