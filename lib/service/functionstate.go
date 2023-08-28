@@ -90,7 +90,7 @@ func (s *FunctionService) ApplyFunctionAction(key string, action asset.FunctionA
 	if err != nil {
 		return err
 	}
-	if requester != function.Owner{
+	if requester != function.Owner {
 		return orcerrors.NewPermissionDenied("only function owner can update it")
 	}
 
@@ -171,17 +171,15 @@ func (s *FunctionService) onFailure(e *fsm.Event) {
 		return
 	}
 
-
 	function, ok := e.Args[0].(*asset.Function)
 	if !ok {
 		e.Err = orcerrors.NewInternal("cannot cast argument into function")
 		return
 	}
 
-	
 	pagination := common.NewPagination("", 2)
 	filter := &asset.TaskQueryFilter{
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status:      asset.ComputeTaskStatus_STATUS_DOING,
 		FunctionKey: function.Key,
 	}
 	tasks, _, err := s.GetComputeTaskService().QueryTasks(pagination, filter)
