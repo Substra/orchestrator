@@ -160,7 +160,7 @@ func TestApplyFunctionActionParam(t *testing.T) {
 	empty := &ApplyFunctionActionParam{}
 	valid := &ApplyFunctionActionParam{
 		FunctionKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
-		Action:         FunctionAction_FUNCTION_ACTION_BUILDING,
+		Action:      FunctionAction_FUNCTION_ACTION_BUILDING,
 	}
 	missingKey := &ApplyFunctionActionParam{
 		Action: FunctionAction_FUNCTION_ACTION_BUILDING,
@@ -170,7 +170,7 @@ func TestApplyFunctionActionParam(t *testing.T) {
 	}
 	invalidAction := &ApplyFunctionActionParam{
 		FunctionKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
-		Action:         FunctionAction_FUNCTION_ACTION_UNKNOWN,
+		Action:      FunctionAction_FUNCTION_ACTION_UNKNOWN,
 	}
 
 	cases := map[string]struct {

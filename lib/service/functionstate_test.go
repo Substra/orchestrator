@@ -49,16 +49,16 @@ func TestDispatchOnFunctionTransition(t *testing.T) {
 	service := NewFunctionService(provider)
 
 	returnedFunction := &asset.Function{
-		Key:            "uuid",
-		Status:         asset.FunctionStatus_FUNCTION_STATUS_CREATED,
-		Owner:          "owner",
+		Key:    "uuid",
+		Status: asset.FunctionStatus_FUNCTION_STATUS_CREATED,
+		Owner:  "owner",
 	}
 	dbal.On("GetFunction", "uuid").Return(returnedFunction, nil)
 
 	expectedFunction := &asset.Function{
-		Key:            "uuid",
-		Status:         asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
-		Owner:          "owner",
+		Key:    "uuid",
+		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+		Owner:  "owner",
 	}
 	dbal.On("UpdateFunctionStatus", expectedFunction.Key, expectedFunction.Status).Once().Return(nil)
 
@@ -120,20 +120,20 @@ func TestUpdateFunctionStateFailed(t *testing.T) {
 	provider.On("GetEventService").Return(es)
 
 	functionKey := "uuid"
-	
+
 	dbal.On("GetFunction", "uuid").Return(&asset.Function{
 		Key:    functionKey,
 		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
 		Owner:  "owner",
 	}, nil)
-	
+
 	taskKey := "uuid_ct"
-	ct.On("QueryTasks", mock.Anything, &asset.TaskQueryFilter{Status: asset.ComputeTaskStatus_STATUS_DOING, FunctionKey:functionKey}).Return([]*asset.ComputeTask{
+	ct.On("QueryTasks", mock.Anything, &asset.TaskQueryFilter{Status: asset.ComputeTaskStatus_STATUS_DOING, FunctionKey: functionKey}).Return([]*asset.ComputeTask{
 		{
-			Key: taskKey,
-			Owner: "owner",
+			Key:         taskKey,
+			Owner:       "owner",
 			FunctionKey: functionKey,
-			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Status:      asset.ComputeTaskStatus_STATUS_DOING,
 		},
 	}, "", nil)
 	ct.On("ApplyTaskAction", taskKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, mock.Anything, "owner").Return(nil)
@@ -142,7 +142,6 @@ func TestUpdateFunctionStateFailed(t *testing.T) {
 	updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_FAILED, Owner: "owner"}
 
 	dbal.On("UpdateFunctionStatus", updatedFunction.Key, updatedFunction.Status).Return(nil)
-
 
 	service := NewFunctionService(provider)
 
