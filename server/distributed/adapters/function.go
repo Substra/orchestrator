@@ -93,7 +93,7 @@ func (a *FunctionAdapter) ApplyFunctionAction(ctx context.Context, param *asset.
 	if err != nil {
 		return nil, err
 	}
-	method := "orchestrator.computetask:ApplyFunctionAction"
+	method := "orchestrator.function:ApplyFunctionAction"
 
 	err = invocator.Call(ctx, method, param, nil)
 	if err != nil {

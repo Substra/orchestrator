@@ -163,12 +163,12 @@ func (db *DB) getComputePlanFunctionKeys(planKey string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		function := &asset.ComputeTask{}
-		err = protojson.Unmarshal(storedAsset.Asset, function)
+		task := &asset.ComputeTask{}
+		err = protojson.Unmarshal(storedAsset.Asset, task)
 		if err != nil {
 			return nil, err
 		}
-		uniqueKeys[function.FunctionKey] = struct{}{}
+		uniqueKeys[task.FunctionKey] = struct{}{}
 	}
 
 	keys := make([]string, len(uniqueKeys))
