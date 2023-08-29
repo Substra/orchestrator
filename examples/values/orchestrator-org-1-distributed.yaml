@@ -43,9 +43,8 @@ postgresql:
 ingress:
   enabled: true
   hostname: "orchestrator.org-1.com"
-  annotations:
-    spec.ingressClassName: nginx
-
+  ingressClassName: nginx
+  
 channels:
   - name: mychannel
     organizations: [ MyOrg1MSP ] # single org required here
