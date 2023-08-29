@@ -171,8 +171,8 @@ Here's a sample ingress configuration:
 ```yaml
 ingress:
   enabled: true
+  ingressClassName: nginx
   annotations:
-    kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
   hosts:
   - host: orchestrator.org-1.com
