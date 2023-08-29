@@ -172,7 +172,7 @@ Here's a sample ingress configuration:
 ingress:
   enabled: true
   annotations:
-    kubernetes.io/ingress.class: nginx
+    spec.ingressClassName: nginx
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
   hosts:
   - host: orchestrator.org-1.com

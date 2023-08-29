@@ -42,7 +42,7 @@ ingress:
   enabled: true
   hostname: "orchestrator.org-1.com"
   annotations:
-    kubernetes.io/ingress.class: nginx
+    spec.ingressClassName: nginx
 
 channels:
   - name: mychannel
