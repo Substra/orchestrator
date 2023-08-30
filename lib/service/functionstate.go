@@ -175,5 +175,11 @@ func (s *FunctionService) onFailure(e *fsm.Event) {
 		return
 	}
 
-	s.GetComputeTaskService().propagateFunctionCancelation(function.Key, function.Owner)
+	err := s.GetComputeTaskService().propagateFunctionCancelation(function.Key, function.Owner)
+	if err != nil {
+		s.GetLogger().Error().
+			Err(err).
+			Str("functionKey", function.Key).
+			Msg("failed to propagate function action")
+	}
 }
