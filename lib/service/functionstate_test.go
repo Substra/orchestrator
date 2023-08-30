@@ -127,16 +127,7 @@ func TestUpdateFunctionStateFailed(t *testing.T) {
 		Owner:  "owner",
 	}, nil)
 
-	taskKey := "uuid_ct"
-	ct.On("QueryTasks", mock.Anything, &asset.TaskQueryFilter{Status: asset.ComputeTaskStatus_STATUS_DOING, FunctionKey: functionKey}).Return([]*asset.ComputeTask{
-		{
-			Key:         taskKey,
-			Owner:       "owner",
-			FunctionKey: functionKey,
-			Status:      asset.ComputeTaskStatus_STATUS_DOING,
-		},
-	}, "", nil)
-	ct.On("ApplyTaskAction", taskKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, mock.Anything, "owner").Return(nil)
+	ct.On("propagateFunctionCancelation", functionKey, "owner").Return(nil)
 	es.On("RegisterEvents", mock.Anything).Return(nil)
 
 	updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_FAILED, Owner: "owner"}
