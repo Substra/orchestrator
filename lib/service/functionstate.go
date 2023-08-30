@@ -2,12 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/looplab/fsm"
 	"github.com/substra/orchestrator/lib/asset"
-	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 )
 
@@ -177,33 +175,5 @@ func (s *FunctionService) onFailure(e *fsm.Event) {
 		return
 	}
 
-	pagination := common.NewPagination("", 2)
-	filter := &asset.TaskQueryFilter{
-		Status:      asset.ComputeTaskStatus_STATUS_DOING,
-		FunctionKey: function.Key,
-	}
-	tasks, _, err := s.GetComputeTaskService().QueryTasks(pagination, filter)
-
-	if err != nil {
-		orcErr := new(orcerrors.OrcError)
-		if errors.As(err, &orcErr) && orcErr.Kind == orcerrors.ErrTerminatedComputePlan {
-			s.GetLogger().Debug().
-				Str("functionKey", function.Key).
-				Msg("cannot get tasks")
-
-			return
-		}
-	}
-
-	for _, task := range tasks {
-		err := s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Function building failed", function.Owner)
-		if err != nil {
-			s.GetLogger().Error().
-				Err(err).
-				Str("functionKey", function.Key).
-				Msg("failed to apply task action when applying function action")
-			return
-		}
-	}
-
+	s.GetComputeTaskService().propagateFunctionCancelation(function.Key, function.Owner)
 }

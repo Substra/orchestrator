@@ -33,4 +33,7 @@ SELECT execute($$
     UPDATE events e
     SET asset = jsonb_set(asset, '{status}', to_jsonb('FUNCTION_STATUS_READY'::function_status))
     WHERE asset_kind = 'ASSET_FUNCTION';
+
+    CREATE INDEX ix_compute_tasks_function_key_status ON compute_tasks (function_key, status);
+    
 $$) WHERE NOT column_exists('public', 'functions', 'status');

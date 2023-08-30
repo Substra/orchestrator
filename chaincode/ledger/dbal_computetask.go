@@ -39,6 +39,11 @@ func (db *DB) addComputeTask(t *asset.ComputeTask) error {
 	if err != nil {
 		return err
 	}
+
+	err = db.createIndex(computeTaskFunctionStatusIndex, []string{asset.ComputeTaskKind, t.FunctionKey, t.Status.String(), t.Key})
+	if err != nil {
+		return err
+	}
 	for _, parentTask := range service.GetParentTaskKeys(t.Inputs) {
 		err = db.createIndex(computeTaskParentIndex, []string{asset.ComputeTaskKind, parentTask, t.Key})
 		if err != nil {
@@ -91,6 +96,14 @@ func (db *DB) UpdateComputeTaskStatus(taskKey string, taskStatus asset.ComputeTa
 			computePlanTaskStatusIndex,
 			[]string{asset.ComputePlanKind, prevTask.ComputePlanKey, prevTask.Status.String(), prevTask.Key},
 			[]string{asset.ComputePlanKind, updatedTask.ComputePlanKey, updatedTask.Status.String(), taskKey},
+		)
+		if err != nil {
+			return err
+		}
+		err = db.updateIndex(
+			computeTaskFunctionStatusIndex,
+			[]string{asset.ComputeTaskKind, prevTask.FunctionKey, prevTask.Status.String(), prevTask.Key},
+			[]string{asset.ComputeTaskKind, updatedTask.FunctionKey, updatedTask.Status.String(), updatedTask.Key},
 		)
 		if err != nil {
 			return err
@@ -409,4 +422,19 @@ func (db *DB) GetComputeTaskOutputAssets(taskKey, identifier string) ([]*asset.C
 	}
 
 	return outputAssets, nil
+}
+
+
+func (db *DB) GetFunctionRunnableTasksKeys(key string) ([]string, error) {
+	keysTodo, err := db.getIndexKeys(computeTaskFunctionStatusIndex, []string{asset.ComputeTaskKind, asset.ComputeTaskStatus_STATUS_TODO.String(), key})
+	if err != nil {
+		return nil, err
+	}
+
+	keysDoing, err := db.getIndexKeys(computeTaskFunctionStatusIndex, []string{asset.ComputeTaskKind, asset.ComputeTaskAction_TASK_ACTION_DOING.String(), key})
+	if err != nil {
+		return nil, err
+	}
+
+	return append(keysTodo, keysDoing...) , nil
 }

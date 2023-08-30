@@ -329,13 +329,36 @@ func getInitialStatusFromParents(parents []*asset.ComputeTask) asset.ComputeTask
 
 // updateAllowed returns true if the requester can update the task with given action.
 // This does not take into account the task status, only ownership.
+// The owner can fail a task as function is building on the owner, which is failable
 func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requester string) bool {
 	switch action {
-	case asset.ComputeTaskAction_TASK_ACTION_CANCELED:
+	case asset.ComputeTaskAction_TASK_ACTION_CANCELED, asset.ComputeTaskAction_TASK_ACTION_FAILED:
 		return requester == task.Owner || requester == task.Worker
-	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_FAILED, asset.ComputeTaskAction_TASK_ACTION_DONE:
+	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_DONE:
 		return requester == task.Worker
 	default:
 		return false
 	}
+}
+
+func (s *ComputeTaskService) propagateFunctionCancelation(functionKey string, requester string) error {
+	taskKeys, err := s.GetComputeTaskDBAL().GetFunctionRunnableTasksKeys(functionKey)
+
+	if err != nil {
+		return err
+	}
+
+	for _, taskKey := range taskKeys {
+		err := s.ApplyTaskAction(taskKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Function building failed", requester)
+		if err != nil {
+			s.GetLogger().Error().
+				Err(err).
+				Str("functionKey", functionKey).
+				Str("taskKey", taskKey).
+				Msg("failed to propagate task action when applying function action")
+			return err
+		}
+	}
+
+	return nil
 }
