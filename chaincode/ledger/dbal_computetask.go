@@ -424,7 +424,6 @@ func (db *DB) GetComputeTaskOutputAssets(taskKey, identifier string) ([]*asset.C
 	return outputAssets, nil
 }
 
-
 func (db *DB) GetFunctionRunnableTasksKeys(key string) ([]string, error) {
 	keysTodo, err := db.getIndexKeys(computeTaskFunctionStatusIndex, []string{asset.ComputeTaskKind, asset.ComputeTaskStatus_STATUS_TODO.String(), key})
 	if err != nil {
@@ -436,5 +435,5 @@ func (db *DB) GetFunctionRunnableTasksKeys(key string) ([]string, error) {
 		return nil, err
 	}
 
-	return append(keysTodo, keysDoing...) , nil
+	return append(keysTodo, keysDoing...), nil
 }

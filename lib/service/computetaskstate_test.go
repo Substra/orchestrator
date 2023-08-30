@@ -263,7 +263,6 @@ func TestUpdateAllowed(t *testing.T) {
 	}
 }
 
-
 func TestPropagateFunctionCancelation(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	es := new(MockEventAPI)
@@ -283,7 +282,6 @@ func TestPropagateFunctionCancelation(t *testing.T) {
 	dbal.On("GetComputeTask", task.Key).Return(task, nil)
 	dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)
 	es.On("RegisterEvents", mock.Anything).Return(nil)
-
 
 	err := service.propagateFunctionCancelation(functionKey, "owner")
 
