@@ -4,7 +4,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -43,17 +42,17 @@ func main() {
 		log.Fatal().Err(err).Msg("error creating substra chaincode")
 	}
 
-	key, err := ioutil.ReadFile(os.Getenv("TLS_KEY_FILE"))
+	key, err := os.ReadFile(os.Getenv("TLS_KEY_FILE"))
 	if err != nil {
 		log.Fatal().Err(err).Str("path", os.Getenv("TLS_KEY_FILE")).Msg("unable to read key file")
 	}
 
-	cert, err := ioutil.ReadFile(os.Getenv("TLS_CERT_FILE"))
+	cert, err := os.ReadFile(os.Getenv("TLS_CERT_FILE"))
 	if err != nil {
 		log.Fatal().Err(err).Str("path", os.Getenv("TLS_CERT_FILE")).Msg("unable to read cert file")
 	}
 
-	ca, err := ioutil.ReadFile(os.Getenv("TLS_ROOTCERT_FILE"))
+	ca, err := os.ReadFile(os.Getenv("TLS_ROOTCERT_FILE"))
 	if err != nil {
 		log.Fatal().Err(err).Str("path", os.Getenv("TLS_ROOTCERT_FILE")).Msg("unable to read CA cert file")
 	}

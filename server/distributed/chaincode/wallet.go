@@ -1,7 +1,7 @@
 package chaincode
 
 import (
-	"io/ioutil"
+	"os"
 	"sync"
 
 	"github.com/hyperledger/fabric-sdk-go/pkg/gateway"
@@ -32,12 +32,12 @@ func (w *Wallet) EnsureIdentity(label string, mspid string) error {
 	if !knownIdentity {
 		w.m.Lock()
 		defer w.m.Unlock()
-		cert, err := ioutil.ReadFile(w.certPath)
+		cert, err := os.ReadFile(w.certPath)
 		if err != nil {
 			return err
 		}
 
-		key, err := ioutil.ReadFile(w.keyPath)
+		key, err := os.ReadFile(w.keyPath)
 		if err != nil {
 			return err
 		}

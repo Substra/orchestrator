@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace deprecated ioutil package with os ([#269](https://github.com/Substra/orchestrator/pull/269))
+
 ## [0.35.2](https://github.com/Substra/orchestrator/releases/tag/0.35.2) - 2023-07-25
 
 ### Changed
