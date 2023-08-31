@@ -12,6 +12,7 @@ import (
 	orcerrors "github.com/substra/orchestrator/lib/errors"
 )
 
+// TODO: add tests with function
 func TestRegisterFailureReport(t *testing.T) {
 	taskService := new(MockComputeTaskAPI)
 	failureReportDBAL := new(persistence.MockFailureReportDBAL)
@@ -28,34 +29,36 @@ func TestRegisterFailureReport(t *testing.T) {
 	timeService.On("GetTransactionTime").Once().Return(transactionTime)
 
 	newFailureReport := &asset.NewFailureReport{
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		ErrorType:      asset.ErrorType_ERROR_TYPE_EXECUTION,
+		AssetKey:  "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		AssetType: asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK,
+		ErrorType: asset.ErrorType_ERROR_TYPE_EXECUTION,
 		LogsAddress: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		},
 	}
 
-	taskService.On("GetTask", newFailureReport.ComputeTaskKey).Once().Return(&asset.ComputeTask{
-		Key:    newFailureReport.ComputeTaskKey,
+	taskService.On("GetTask", newFailureReport.AssetKey).Once().Return(&asset.ComputeTask{
+		Key:    newFailureReport.AssetKey,
 		Status: asset.ComputeTaskStatus_STATUS_DOING,
 		Worker: "test",
 	}, nil)
 
-	taskService.On("ApplyTaskAction", newFailureReport.ComputeTaskKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, "failure report registered", "test").Once().Return(nil)
+	taskService.On("ApplyTaskAction", newFailureReport.AssetKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, "failure report registered", "test").Once().Return(nil)
 
 	storedFailureReport := &asset.FailureReport{
-		ComputeTaskKey: newFailureReport.ComputeTaskKey,
-		ErrorType:      newFailureReport.ErrorType,
-		LogsAddress:    newFailureReport.LogsAddress,
-		CreationDate:   timestamppb.New(transactionTime),
-		Owner:          "test",
+		AssetKey:     newFailureReport.AssetKey,
+		AssetType:    asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK,
+		ErrorType:    newFailureReport.ErrorType,
+		LogsAddress:  newFailureReport.LogsAddress,
+		CreationDate: timestamppb.New(transactionTime),
+		Owner:        "test",
 	}
 	failureReportDBAL.On("AddFailureReport", storedFailureReport).Once().Return(nil)
 
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-		AssetKey:  newFailureReport.ComputeTaskKey,
+		AssetKey:  newFailureReport.AssetKey,
 		AssetKind: asset.AssetKind_ASSET_FAILURE_REPORT,
 		Asset:     &asset.Event_FailureReport{FailureReport: storedFailureReport},
 	}
@@ -63,7 +66,7 @@ func TestRegisterFailureReport(t *testing.T) {
 
 	failureReport, err := service.RegisterFailureReport(newFailureReport, "test")
 	assert.NoError(t, err)
-	assert.Equal(t, failureReport.ComputeTaskKey, newFailureReport.ComputeTaskKey)
+	assert.Equal(t, failureReport.AssetKey, newFailureReport.AssetKey)
 
 	taskService.AssertExpectations(t)
 	failureReportDBAL.AssertExpectations(t)
@@ -79,15 +82,16 @@ func TestRegisterFailureOnFailedTask(t *testing.T) {
 	service := NewFailureReportService(provider)
 
 	newFailureReport := &asset.NewFailureReport{
-		ComputeTaskKey: "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		ErrorType:      asset.ErrorType_ERROR_TYPE_EXECUTION,
+		AssetKey:  "08680966-97ae-4573-8b2d-6c4db2b3c532",
+		AssetType: asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK,
+		ErrorType: asset.ErrorType_ERROR_TYPE_EXECUTION,
 		LogsAddress: &asset.Addressable{
 			StorageAddress: "https://somewhere",
 			Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 		},
 	}
 
-	taskService.On("GetTask", newFailureReport.ComputeTaskKey).Once().Return(&asset.ComputeTask{
+	taskService.On("GetTask", newFailureReport.AssetKey).Once().Return(&asset.ComputeTask{
 		Status: asset.ComputeTaskStatus_STATUS_FAILED,
 		Worker: "test",
 	}, nil)
@@ -111,12 +115,12 @@ func TestGetFailure(t *testing.T) {
 	service := NewFailureReportService(provider)
 
 	failureReport := &asset.FailureReport{
-		ComputeTaskKey: "uuid",
+		AssetKey: "uuid",
 	}
 
-	dbal.On("GetFailureReport", failureReport.ComputeTaskKey).Once().Return(failureReport, nil)
+	dbal.On("GetFailureReport", failureReport.AssetKey).Once().Return(failureReport, nil)
 
-	ret, err := service.GetFailureReport(failureReport.ComputeTaskKey)
+	ret, err := service.GetFailureReport(failureReport.AssetKey)
 	assert.NoError(t, err)
 	assert.Equal(t, failureReport, ret)
 

@@ -155,3 +155,26 @@ func (fs *FunctionStatus) Scan(value interface{}) error {
 
 	return nil
 }
+
+// Value implements the driver.Valuer interface.
+// Simply returns the string representation of the FunctionStatus.
+func (fak *FailedAssetKind) Value() (driver.Value, error) {
+	return fak.String(), nil
+}
+
+// Scan implements the sql.Scanner interface.
+// Simply decodes a string into the FunctionStatus.
+func (fak *FailedAssetKind) Scan(value interface{}) error {
+	s, ok := value.(string)
+	if !ok {
+		return errors.NewInternal("cannot scan failed asset kind: invalid string")
+	}
+
+	v, ok := FailedAssetKind_value[s]
+	if !ok {
+		return errors.NewInternal("cannot scan failed asset kind: unknown value")
+	}
+	*fak = FailedAssetKind(v)
+
+	return nil
+}

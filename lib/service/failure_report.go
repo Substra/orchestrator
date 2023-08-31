@@ -11,7 +11,7 @@ import (
 
 type FailureReportAPI interface {
 	RegisterFailureReport(failure *asset.NewFailureReport, owner string) (*asset.FailureReport, error)
-	GetFailureReport(computeTaskKey string) (*asset.FailureReport, error)
+	GetFailureReport(assetKey string) (*asset.FailureReport, error)
 }
 
 type FailureReportServiceProvider interface {
@@ -22,6 +22,7 @@ type FailureReportDependencyProvider interface {
 	LoggerProvider
 	persistence.FailureReportDBALProvider
 	ComputeTaskServiceProvider
+	FunctionServiceProvider
 	EventServiceProvider
 	TimeServiceProvider
 }
@@ -42,30 +43,45 @@ func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.New
 		return nil, errors.FromValidationError(asset.FailureReportKind, err)
 	}
 
-	task, err := s.GetComputeTaskService().GetTask(newFailureReport.ComputeTaskKey)
-	if err != nil {
-		return nil, err
-	}
+	switch newFailureReport.AssetType {
+	case asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK:
+		task, err := s.GetComputeTaskService().GetTask(newFailureReport.AssetKey)
+		if err != nil {
+			return nil, err
+		}
 
-	if task.Worker != requester {
-		return nil, errors.NewPermissionDenied(fmt.Sprintf("only %q worker can register failure report", task.Worker))
-	}
+		if task.Worker != requester {
+			return nil, errors.NewPermissionDenied(fmt.Sprintf("only %q worker can register failure report for compute task", task.Worker))
+		}
 
-	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
-		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register failure report for task with status %q", task.Status.String()))
-	}
+		if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
+			return nil, errors.NewBadRequest(fmt.Sprintf("cannot register failure report for task with status %q", task.Status.String()))
+		}
 
-	err = s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "failure report registered", requester)
-	if err != nil {
-		return nil, err
+		err = s.GetComputeTaskService().ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "failure report registered", requester)
+		if err != nil {
+			return nil, err
+		}
+	case asset.FailedAssetKind_FAILED_ASSET_FUNCTION:
+		function, err := s.GetFunctionService().GetFunction(newFailureReport.AssetKey)
+		if err != nil {
+			return nil, err
+		}
+
+		if function.Owner != requester {
+			return nil, errors.NewPermissionDenied(fmt.Sprintf("only %q owner can register failure report for function", function.Owner))
+		}
+	default:
+		return nil, errors.NewBadRequest("can only register failure for asset_kind values function and compute task")
 	}
 
 	failureReport := &asset.FailureReport{
-		ComputeTaskKey: newFailureReport.ComputeTaskKey,
-		ErrorType:      newFailureReport.ErrorType,
-		LogsAddress:    newFailureReport.LogsAddress,
-		CreationDate:   timestamppb.New(s.GetTimeService().GetTransactionTime()),
-		Owner:          requester,
+		AssetKey:     newFailureReport.AssetKey,
+		AssetType:    newFailureReport.AssetType,
+		ErrorType:    newFailureReport.ErrorType,
+		LogsAddress:  newFailureReport.LogsAddress,
+		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
+		Owner:        requester,
 	}
 
 	err = s.GetFailureReportDBAL().AddFailureReport(failureReport)
@@ -75,7 +91,7 @@ func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.New
 
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
-		AssetKey:  failureReport.ComputeTaskKey,
+		AssetKey:  failureReport.AssetKey,
 		AssetKind: asset.AssetKind_ASSET_FAILURE_REPORT,
 		Asset:     &asset.Event_FailureReport{FailureReport: failureReport},
 	}
@@ -87,7 +103,7 @@ func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.New
 	return failureReport, nil
 }
 
-func (s *FailureReportService) GetFailureReport(computeTaskKey string) (*asset.FailureReport, error) {
-	s.GetLogger().Debug().Str("computeTaskKey", computeTaskKey).Msg("Get failure report")
-	return s.GetFailureReportDBAL().GetFailureReport(computeTaskKey)
+func (s *FailureReportService) GetFailureReport(assetKey string) (*asset.FailureReport, error) {
+	s.GetLogger().Debug().Str("assetKey", assetKey).Msg("Get failure report")
+	return s.GetFailureReportDBAL().GetFailureReport(assetKey)
 }

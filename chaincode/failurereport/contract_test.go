@@ -29,8 +29,9 @@ func TestRegisterFailureReport(t *testing.T) {
 	mspid := "org"
 
 	newFailureReport := &asset.NewFailureReport{
-		ComputeTaskKey: "taskUUID",
-		LogsAddress:    &asset.Addressable{},
+		AssetKey:    "taskUUID",
+		AssetType:   asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK,
+		LogsAddress: &asset.Addressable{},
 	}
 	wrapper, err := communication.Wrap(context.Background(), newFailureReport)
 	assert.NoError(t, err)
@@ -55,7 +56,7 @@ func TestGetFailureReport(t *testing.T) {
 	contract := &SmartContract{}
 
 	param := &asset.GetFailureReportParam{
-		ComputeTaskKey: "uuid",
+		AssetKey: "uuid",
 	}
 	wrapper, err := communication.Wrap(context.Background(), param)
 	assert.NoError(t, err)
@@ -63,7 +64,8 @@ func TestGetFailureReport(t *testing.T) {
 	ctx := new(ledger.MockTransactionContext)
 
 	failureReport := &asset.FailureReport{
-		ComputeTaskKey: param.ComputeTaskKey,
+		AssetKey:  param.AssetKey,
+		AssetType: asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK,
 	}
 	mockService := getMockedService(ctx)
 	mockService.On("GetFailureReport", "uuid").Return(failureReport, nil).Once()
@@ -74,7 +76,7 @@ func TestGetFailureReport(t *testing.T) {
 	resp := new(asset.FailureReport)
 	err = wrapped.Unwrap(resp)
 	assert.NoError(t, err)
-	assert.Equal(t, resp.ComputeTaskKey, param.ComputeTaskKey)
+	assert.Equal(t, resp.AssetKey, param.AssetKey)
 
 	mockService.AssertExpectations(t)
 }
