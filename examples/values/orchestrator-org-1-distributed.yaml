@@ -20,9 +20,9 @@ orchestrator:
       clientCACerts:
         orchestrator-ca:
           - orchestrator-tls-cacert
-        MyOrg1MSP:
+        MyOrg1:
           - orchestrator-tls-cacert
-        MyOrg2MSP:
+        MyOrg2:
           - orchestrator-tls-cacert
   txRetryBudget: 90s
   fabricGatewayTimeout: 40s
@@ -33,7 +33,7 @@ metrics:
 
 fabric:
   organization: MyOrg1
-  mspID: MyOrg1MSP
+  mspID: MyOrg1
   peer:
     host: network-org-1-peer-1-hlf-peer.org-1.svc.cluster.local
 
@@ -47,10 +47,10 @@ ingress:
   
 channels:
   - name: mychannel
-    organizations: [ MyOrg1MSP ] # single org required here
+    organizations: [ MyOrg1 ] # single org required here
     fabric:
       chaincodes: [ mycc ]
   - name: yourchannel
-    organizations: [ MyOrg1MSP ]
+    organizations: [ MyOrg1 ]
     fabric:
       chaincodes: [ yourcc ]
