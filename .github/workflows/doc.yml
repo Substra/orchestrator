@@ -36,7 +36,7 @@ jobs:
       DB_DIAGRAM_PATH: docs/schemas/standalone-database.svg
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT_OWLFRED_DOC_GENERATION }}
       - name: Install tools
