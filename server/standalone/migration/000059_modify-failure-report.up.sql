@@ -11,6 +11,8 @@ SELECT execute($$
     ADD COLUMN asset_type failed_asset_kind DEFAULT 'FAILED_ASSET_COMPUTE_TASK';
     ALTER TABLE failure_reports
     ALTER COLUMN asset_type SET DEFAULT 'FAILED_ASSET_UNKNOWN';
+    ALTER TABLE failure_reports
+    DROP CONSTRAINT failure_reports_compute_task_key_fkey;
 
     DROP VIEW IF EXISTS expanded_failure_reports;
     CREATE VIEW expanded_failure_reports AS
