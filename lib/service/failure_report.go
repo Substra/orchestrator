@@ -35,7 +35,6 @@ func NewFailureReportService(provider FailureReportDependencyProvider) *FailureR
 	return &FailureReportService{provider}
 }
 
-
 func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.NewFailureReport, requester string) (*asset.FailureReport, error) {
 	s.GetLogger().Debug().Interface("failureReport", newFailureReport).Str("requester", requester).Msg("Registering new failure report")
 
@@ -44,12 +43,12 @@ func (s *FailureReportService) RegisterFailureReport(newFailureReport *asset.New
 		return nil, errors.FromValidationError(asset.FailureReportKind, err)
 	}
 	switch newFailureReport.AssetType {
-		case asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK:
-			err = s.processTaskFailure(newFailureReport.AssetKey, requester)
-		case asset.FailedAssetKind_FAILED_ASSET_FUNCTION:
-			err = s.processFunctionFailure(newFailureReport.AssetKey, requester)
-		default:
-			return nil, errors.NewBadRequest("can only register failure for asset_kind values function and compute task")
+	case asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK:
+		err = s.processTaskFailure(newFailureReport.AssetKey, requester)
+	case asset.FailedAssetKind_FAILED_ASSET_FUNCTION:
+		err = s.processFunctionFailure(newFailureReport.AssetKey, requester)
+	default:
+		return nil, errors.NewBadRequest("can only register failure for asset_kind values function and compute task")
 	}
 
 	if err != nil {
@@ -88,7 +87,6 @@ func (s *FailureReportService) GetFailureReport(assetKey string) (*asset.Failure
 	s.GetLogger().Debug().Str("assetKey", assetKey).Msg("Get failure report")
 	return s.GetFailureReportDBAL().GetFailureReport(assetKey)
 }
-
 
 func checkTaskPermissions(task *asset.ComputeTask, requester string) error {
 	if task.Worker != requester {
