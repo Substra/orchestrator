@@ -353,6 +353,7 @@ func DefaultSimpleFunctionOptions() *FunctionOptions {
 		Outputs: map[string]*asset.FunctionOutput{
 			"model": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
+		Status: asset.FunctionStatus_FUNCTION_STATUS_CREATED,
 	}
 }
 
