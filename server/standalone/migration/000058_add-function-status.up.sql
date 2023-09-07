@@ -1,5 +1,6 @@
 SELECT execute($$
     CREATE TYPE function_status AS ENUM (
+        'FUNCTION_STATUS_UNKNOWN',
         'FUNCTION_STATUS_CREATED',
         'FUNCTION_STATUS_BUILDING',
         'FUNCTION_STATUS_READY',
@@ -8,7 +9,7 @@ SELECT execute($$
     );
 
     ALTER TABLE functions
-    ADD COLUMN status function_status DEFAULT 'FUNCTION_STATUS_READY';
+    ADD COLUMN status function_status DEFAULT 'FUNCTION_STATUS_UNKNOWN';
     ALTER TABLE functions
     ALTER COLUMN status DROP DEFAULT;
 
@@ -31,7 +32,7 @@ SELECT execute($$
         JOIN addressables function_add ON functions.functionAddress = function_add.storage_address;
 
     UPDATE events e
-    SET asset = jsonb_set(asset, '{status}', to_jsonb('FUNCTION_STATUS_READY'::function_status))
+    SET asset = jsonb_set(asset, '{status}', to_jsonb('FUNCTION_STATUS_UNKNOWN'::function_status))
     WHERE asset_kind = 'ASSET_FUNCTION';
 
     CREATE INDEX ix_compute_tasks_function_key_status ON compute_tasks (function_key, status);
