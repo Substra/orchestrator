@@ -45,7 +45,6 @@ func TestRegisterFunction(t *testing.T) {
 		Function:       functionAddress,
 		Description:    description,
 		NewPermissions: newPerms,
-
 	}
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
