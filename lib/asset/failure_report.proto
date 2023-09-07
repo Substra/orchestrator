@@ -36,7 +36,7 @@ message FailureReport {
   ErrorType error_type = 2;
   Addressable logs_address = 3;
   google.protobuf.Timestamp creation_date = 4;
-  // In the case of a compute task fialure, the owner of a failure report matches the 'worker' field of the associated compute task but can differ from
+  // In the case of a compute task failure, the owner of a failure report matches the 'worker' field of the associated compute task but can differ from
   // the owner of the compute task. Indeed, a task belonging to some user can be executed on an organization belonging
   // to another user.
   // In the case of a function, the owner will be the owner of the function (which builds the function).
