@@ -634,7 +634,7 @@ func (c *TestClient) GetFailureReport(assetRef string) *asset.FailureReport {
 		AssetKey: c.ks.GetKey(assetRef),
 	}
 
-	c.logger.Debug().Str("asset key", param.AssetKey).Msg("getting failure report")
+	c.logger.Debug().Str("asset key", param.AssetKey).Str("asset type", param.AssetType).Msg("getting failure report")
 	failureReport, err := c.failureReportService.GetFailureReport(c.ctx, param)
 	if err != nil {
 		c.logger.Fatal().Err(err).Msg("GetFailureReport failed")

@@ -92,8 +92,7 @@ func TestEventKindValue(t *testing.T) {
 }
 
 func TestFailedAssetKindKindValue(t *testing.T) {
-	k := FailedAssetKind_FAILED_ASSET_UNKNOWN
-	kind := &k
+	kind := &FailedAssetKind_FAILED_ASSET_UNKNOWN
 
 	value, err := kind.Value()
 	assert.NoError(t, err, "failed asset kind serialization should not fail")
