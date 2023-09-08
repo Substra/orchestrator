@@ -6,10 +6,10 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-func (db *DB) GetFailureReport(computeTaskKey string) (*asset.FailureReport, error) {
+func (db *DB) GetFailureReport(assetKey string) (*asset.FailureReport, error) {
 	failureReport := new(asset.FailureReport)
 
-	b, err := db.getState(asset.FailureReportKind, computeTaskKey)
+	b, err := db.getState(asset.FailureReportKind, assetKey)
 	if err != nil {
 		return nil, err
 	}
@@ -22,17 +22,17 @@ func (db *DB) GetFailureReport(computeTaskKey string) (*asset.FailureReport, err
 }
 
 func (db *DB) AddFailureReport(failureReport *asset.FailureReport) error {
-	exists, err := db.hasKey(asset.FailureReportKind, failureReport.GetComputeTaskKey())
+	exists, err := db.hasKey(asset.FailureReportKind, failureReport.GetAssetKey())
 	if err != nil {
 		return err
 	}
 	if exists {
-		return errors.NewConflict(asset.FailureReportKind, failureReport.GetComputeTaskKey())
+		return errors.NewConflict(asset.FailureReportKind, failureReport.GetAssetKey())
 	}
 	bytes, err := marshaller.Marshal(failureReport)
 	if err != nil {
 		return err
 	}
 
-	return db.putState(asset.FailureReportKind, failureReport.GetComputeTaskKey(), bytes)
+	return db.putState(asset.FailureReportKind, failureReport.GetAssetKey(), bytes)
 }

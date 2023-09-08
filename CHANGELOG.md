@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Enum `FailedAssetKind` ([#277](https://github.com/Substra/orchestrator/pull/277))
+- Field `asset_type` of type `FailedAssetKind` in `FailureReport` ([#277](https://github.com/Substra/orchestrator/pull/277))
+
+
+### Changed
+
+- Renamed `compute_task_key`by `asset_key` in `FailureReport` ([#277](https://github.com/Substra/orchestrator/pull/277))
+- `FailureReport` now can be reference a `ComputeTask` or a `Function` through `asset_key` + `asset_type` ([#277](https://github.com/Substra/orchestrator/pull/277))
+
+
 ## [0.35.2](https://github.com/Substra/orchestrator/releases/tag/0.35.2) - 2023-07-25
 
 ### Changed

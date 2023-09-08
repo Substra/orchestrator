@@ -24,30 +24,40 @@ enum ErrorType {
   ERROR_TYPE_INTERNAL = 3;
 }
 
+enum FailedAssetKind {
+    FAILED_ASSET_UNKNOWN = 0;
+    FAILED_ASSET_COMPUTE_TASK = 1;
+    FAILED_ASSET_FUNCTION = 2;
+}
+
 // FailureReport is used to store information related to a failed ComputeTask.
 message FailureReport {
-  string compute_task_key = 1;
+  string asset_key = 1;
   ErrorType error_type = 2;
   Addressable logs_address = 3;
   google.protobuf.Timestamp creation_date = 4;
-  // The owner of a failure report matches the 'worker' field of the associated compute task but can differ from
+  // In the case of a compute task failure, the owner of a failure report matches the 'worker' field of the associated compute task but can differ from
   // the owner of the compute task. Indeed, a task belonging to some user can be executed on an organization belonging
-  // to another user. The failure report generated will be located on the execution organization and belong to the owner
+  // to another user.
+  // In the case of a function, the owner will be the owner of the function (which builds the function).
+  // The failure report generated will be located on the execution organization and belong to the owner
   // of this organization.
   string owner = 5;
+  FailedAssetKind asset_type = 6;
 }
 
 // NewFailureReport is used to register a FailureReport.
 // It will be processed into a FailureReport.
 message NewFailureReport {
-  string compute_task_key = 1;
+  string asset_key = 1;
   ErrorType error_type = 2;
   Addressable logs_address = 3;
+  FailedAssetKind asset_type = 4;
 }
 
 // GetFailureReportParam is used to fetch a Failure.
 message GetFailureReportParam {
-  string compute_task_key = 1;
+  string asset_key = 1;
 }
 
 service FailureReportService {

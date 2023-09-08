@@ -609,10 +609,11 @@ func (c *TestClient) QueryPlans(filter *asset.PlanQueryFilter, pageToken string,
 	return resp
 }
 
-func (c *TestClient) RegisterFailureReport(taskRef string) *asset.FailureReport {
+func (c *TestClient) RegisterFailureReport(assetRef string) *asset.FailureReport {
 	newFailureReport := &asset.NewFailureReport{
-		ComputeTaskKey: c.ks.GetKey(taskRef),
-		ErrorType:      asset.ErrorType_ERROR_TYPE_EXECUTION,
+		AssetKey:  c.ks.GetKey(assetRef),
+		AssetType: asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK,
+		ErrorType: asset.ErrorType_ERROR_TYPE_EXECUTION,
 		LogsAddress: &asset.Addressable{
 			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
 			StorageAddress: "http://somewhere.local/failure/" + uuid.NewString(),
@@ -628,12 +629,12 @@ func (c *TestClient) RegisterFailureReport(taskRef string) *asset.FailureReport 
 	return failureReport
 }
 
-func (c *TestClient) GetFailureReport(taskRef string) *asset.FailureReport {
+func (c *TestClient) GetFailureReport(assetRef string) *asset.FailureReport {
 	param := &asset.GetFailureReportParam{
-		ComputeTaskKey: c.ks.GetKey(taskRef),
+		AssetKey: c.ks.GetKey(assetRef),
 	}
 
-	c.logger.Debug().Str("task key", param.ComputeTaskKey).Msg("getting failure report")
+	c.logger.Debug().Str("asset key", param.AssetKey).Str("asset type", param.AssetType).Msg("getting failure report")
 	failureReport, err := c.failureReportService.GetFailureReport(c.ctx, param)
 	if err != nil {
 		c.logger.Fatal().Err(err).Msg("GetFailureReport failed")
