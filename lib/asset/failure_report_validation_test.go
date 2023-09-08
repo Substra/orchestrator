@@ -19,9 +19,15 @@ func TestFailureReportValidate(t *testing.T) {
 
 	cases := map[string]failureReportTestCase{
 		"empty": {&NewFailureReport{}, false},
-		"invalidAssetKey": {&NewFailureReport{
+		"invalidAssetKeyFunction": {&NewFailureReport{
 			AssetKey:    "notUUID",
 			AssetType:   FailedAssetKind_FAILED_ASSET_FUNCTION,
+			ErrorType:   ErrorType_ERROR_TYPE_BUILD,
+			LogsAddress: nil,
+		}, false},
+		"invalidAssetKeyComputeTask": {&NewFailureReport{
+			AssetKey:    "notUUID",
+			AssetType:   FailedAssetKind_FAILED_ASSET_COMPUTE_TASK,
 			ErrorType:   ErrorType_ERROR_TYPE_BUILD,
 			LogsAddress: nil,
 		}, false},
