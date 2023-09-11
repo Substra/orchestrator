@@ -15,7 +15,7 @@ jobs:
           - orchestrator-chaincode
           - orchestrator-chaincode-init
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: owkin/docker-dependency-updater@v1
         with:
