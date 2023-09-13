@@ -10,6 +10,7 @@ function generate_cacert {
 function generate_new_k8s_cacert {
     kubectl -n "org-1" create configmap orchestrator-tls-cacert --from-file=ca.crt --dry-run=client --output=yaml > "cm-tls-org-1-cacert.yaml"
     kubectl -n "org-2" create configmap orchestrator-tls-cacert --from-file=ca.crt --dry-run=client --output=yaml > "cm-tls-org-2-cacert.yaml"
+    kubectl -n "org-3" create configmap orchestrator-tls-cacert --from-file=ca.crt --dry-run=client --output=yaml > "cm-tls-org-3-cacert.yaml"
     kubectl -n "cert-manager" create secret tls orchestrator-tls-ca --key="ca.key" --cert="ca.crt" --dry-run=client --output=yaml > "secret-cacert-certmanager.yaml"
     echo "Don't forget to update the \"orchestrator-tls-cacert\" ConfigMaps in substra-backend"
 }

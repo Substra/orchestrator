@@ -2,6 +2,7 @@
 /bin
 .vscode/
 /wallet
+.DS_Store
 # Generated files
 lib/asset/*.pb.go
 mock_*.go
