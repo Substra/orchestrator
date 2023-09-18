@@ -63,8 +63,7 @@ func newFunctionState(updater functionStateUpdater, function *asset.Function) *f
 	)
 }
 
-// ApplyFunctionAction apply an asset.FunctioNStatus to the function.
-// Depending on the current state and action, this may update children functions
+// ApplyFunctionAction apply an asset.FunctionStatus to the function.
 func (s *FunctionService) ApplyFunctionAction(key string, action asset.FunctionAction, reason string, requester string) error {
 	var transition functionTransition
 	switch action {
@@ -101,10 +100,6 @@ func (s *FunctionService) applyFunctionAction(function *asset.Function, action f
 	s.GetLogger().Debug().Str("functionKey", function.Key).Str("action", string(action)).Str("reason", reason).Msg("Applying function action")
 	state := newFunctionState(s, function)
 	err := state.Event(context.Background(), string(action), function, reason)
-
-	// if err == nil {
-	// 	metrics.FunctionUpdatedTotal.WithLabelValues(s.GetChannel(), state.Current()).Inc()
-	// }
 
 	return err
 }

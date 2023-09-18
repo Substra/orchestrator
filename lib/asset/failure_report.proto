@@ -30,7 +30,7 @@ enum FailedAssetKind {
     FAILED_ASSET_FUNCTION = 2;
 }
 
-// FailureReport is used to store information related to a failed ComputeTask.
+// FailureReport is used to store information related to a failed ComputeTask or Function builds.
 message FailureReport {
   string asset_key = 1;
   ErrorType error_type = 2;
