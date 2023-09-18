@@ -15,7 +15,7 @@ func TestOnFunctionStateChange(t *testing.T) {
 	updater := new(mockFunctionStateUpdater)
 	updater.On("onStateChange", mock.Anything).Once()
 
-	state := newFunctionState(updater, &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_CREATED, Key: "uuid"})
+	state := newFunctionState(updater, &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING, Key: "uuid"})
 
 	err := state.Event(context.Background(), string(transitionFunctionBuilding), &asset.Function{})
 
@@ -50,7 +50,7 @@ func TestDispatchOnFunctionTransition(t *testing.T) {
 
 	returnedFunction := &asset.Function{
 		Key:    "uuid",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_CREATED,
+		Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING,
 		Owner:  "owner",
 	}
 	dbal.On("GetFunction", "uuid").Return(returnedFunction, nil)
@@ -60,7 +60,7 @@ func TestDispatchOnFunctionTransition(t *testing.T) {
 		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
 		Owner:  "owner",
 	}
-	dbal.On("UpdateFunctionStatus", expectedFunction.Key, expectedFunction.Status).Once().Return(nil)
+	dbal.On("UpdateFunction", expectedFunction).Once().Return(nil)
 
 	expectedEvent := &asset.Event{
 		AssetKey:  "uuid",
@@ -76,7 +76,9 @@ func TestDispatchOnFunctionTransition(t *testing.T) {
 	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_BUILDING, "", "owner")
 	assert.NoError(t, err)
 
+	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
+	provider.AssertExpectations(t)
 }
 
 // Testing that failing a Function propagate to tasks using this function
@@ -91,14 +93,14 @@ func TestUpdateFunctionStateCanceled(t *testing.T) {
 	// function is retrieved from persistence layer
 	dbal.On("GetFunction", "uuid").Return(&asset.Function{
 		Key:    "uuid",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_CREATED,
+		Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING,
 		Owner:  "owner",
 	}, nil)
 	// An update event should be enqueued
 	es.On("RegisterEvents", mock.Anything).Return(nil)
 	// Updated function should be saved
 	updatedFunction := &asset.Function{Key: "uuid", Status: asset.FunctionStatus_FUNCTION_STATUS_CANCELED, Owner: "owner"}
-	dbal.On("UpdateFunctionStatus", updatedFunction.Key, updatedFunction.Status).Return(nil)
+	dbal.On("UpdateFunction", updatedFunction).Return(nil)
 
 	service := NewFunctionService(provider)
 
@@ -132,7 +134,7 @@ func TestUpdateFunctionStateFailed(t *testing.T) {
 
 	updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_FAILED, Owner: "owner"}
 
-	dbal.On("UpdateFunctionStatus", updatedFunction.Key, updatedFunction.Status).Return(nil)
+	dbal.On("UpdateFunction", updatedFunction).Return(nil)
 
 	service := NewFunctionService(provider)
 

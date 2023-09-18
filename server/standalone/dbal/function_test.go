@@ -21,7 +21,7 @@ func makeFunctionRows(keys ...string) *pgxmock.Rows {
 	res := pgxmock.NewRows([]string{"key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata", "status"})
 
 	for _, key := range keys {
-		res.AddRow(key, "name", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{}, asset.FunctionStatus_FUNCTION_STATUS_CREATED.String())
+		res.AddRow(key, "name", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{}, asset.FunctionStatus_FUNCTION_STATUS_WAITING.String())
 	}
 
 	return res
