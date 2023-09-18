@@ -37,7 +37,6 @@ type FunctionDBAL interface {
 	QueryFunctions(p *common.Pagination, filter *asset.FunctionQueryFilter) ([]*asset.Function, common.PaginationToken, error)
 	FunctionExists(key string) (bool, error)
 	UpdateFunction(function *asset.Function) error
-	UpdateFunctionStatus(functionKey string, functionStatus asset.FunctionStatus) error
 }
 
 // DataManagerDBAL is the database abstraction layer for DataManagers

@@ -7,7 +7,6 @@ import (
 	"github.com/substra/orchestrator/lib/common"
 	"github.com/substra/orchestrator/lib/errors"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 )
 
 // AddFunction stores a new function
@@ -189,26 +188,4 @@ func (db *DB) UpdateFunction(function *asset.Function) error {
 	}
 
 	return db.putState(asset.FunctionKind, function.GetKey(), functionBytes)
-}
-func (db *DB) UpdateFunctionStatus(functionKey string, functionStatus asset.FunctionStatus) error {
-	// We need the current function to be able to update its indexes
-	prevFunction, err := db.GetFunction(functionKey)
-	if err != nil {
-		return err
-	}
-
-	updatedFunction := proto.Clone(prevFunction).(*asset.Function)
-	updatedFunction.Status = functionStatus
-
-	b, err := marshaller.Marshal(updatedFunction)
-	if err != nil {
-		return err
-	}
-
-	err = db.putState(asset.FunctionKind, functionKey, b)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

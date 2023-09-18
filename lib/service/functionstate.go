@@ -22,12 +22,12 @@ const (
 var functionStateEvents = fsm.Events{
 	{
 		Name: string(transitionFunctionCanceled),
-		Src:  []string{asset.FunctionStatus_FUNCTION_STATUS_CREATED.String(), asset.FunctionStatus_FUNCTION_STATUS_BUILDING.String()},
+		Src:  []string{asset.FunctionStatus_FUNCTION_STATUS_WAITING.String(), asset.FunctionStatus_FUNCTION_STATUS_BUILDING.String()},
 		Dst:  asset.FunctionStatus_FUNCTION_STATUS_CANCELED.String(),
 	},
 	{
 		Name: string(transitionFunctionBuilding),
-		Src:  []string{asset.FunctionStatus_FUNCTION_STATUS_CREATED.String()},
+		Src:  []string{asset.FunctionStatus_FUNCTION_STATUS_WAITING.String()},
 		Dst:  asset.FunctionStatus_FUNCTION_STATUS_BUILDING.String(),
 	},
 	{
@@ -141,7 +141,7 @@ func (s *FunctionService) onStateChange(e *fsm.Event) {
 		Str("reason", reason).
 		Msg("Updating function status")
 
-	err := s.GetFunctionDBAL().UpdateFunctionStatus(function.Key, function.Status)
+	err := s.GetFunctionDBAL().UpdateFunction(function)
 	if err != nil {
 		e.Err = err
 		return
