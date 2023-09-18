@@ -329,12 +329,11 @@ func getInitialStatusFromParents(parents []*asset.ComputeTask) asset.ComputeTask
 
 // updateAllowed returns true if the requester can update the task with given action.
 // This does not take into account the task status, only ownership.
-// The owner can fail a task as function is building on the owner, which is failable
 func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requester string) bool {
 	switch action {
-	case asset.ComputeTaskAction_TASK_ACTION_CANCELED, asset.ComputeTaskAction_TASK_ACTION_FAILED:
+	case asset.ComputeTaskAction_TASK_ACTION_CANCELED:
 		return requester == task.Owner || requester == task.Worker
-	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_DONE:
+	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_FAILED, asset.ComputeTaskAction_TASK_ACTION_DONE:
 		return requester == task.Worker
 	default:
 		return false
@@ -342,19 +341,20 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 }
 
 func (s *ComputeTaskService) propagateFunctionCancelation(functionKey string, requester string) error {
-	taskKeys, err := s.GetComputeTaskDBAL().GetFunctionRunnableTasksKeys(functionKey)
+	tasks, err := s.GetComputeTaskDBAL().GetFunctionRunnableTasks(functionKey)
 
 	if err != nil {
 		return err
 	}
 
-	for _, taskKey := range taskKeys {
-		err := s.ApplyTaskAction(taskKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Function building failed", requester)
+	for _, task := range tasks {
+		// We bypass the `requester` check as we checked the requester on the function state machine.
+		err := s.ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Function building failed", task.Worker)
 		if err != nil {
 			s.GetLogger().Error().
 				Err(err).
 				Str("functionKey", functionKey).
-				Str("taskKey", taskKey).
+				Str("taskKey", task.Key).
 				Msg("failed to propagate task action when applying function action")
 			return err
 		}

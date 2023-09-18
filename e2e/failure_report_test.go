@@ -25,7 +25,7 @@ func TestRegisterFailureReport(t *testing.T) {
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
 
-	registeredFailureReport := appClient.RegisterFailureReport(client.DefaultTrainTaskRef)
+	registeredFailureReport := appClient.RegisterTaskFailureReport(client.DefaultTrainTaskRef)
 	task := appClient.GetComputeTask(client.DefaultTrainTaskRef)
 
 	require.Equal(t, task.Key, registeredFailureReport.AssetKey)

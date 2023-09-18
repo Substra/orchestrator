@@ -347,11 +347,12 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 	return keys, nil
 }
 
-// GetFunctionRunnableTasksKeys returns the list of task keys linked with a function
+// GetFunctionRunnableTasks returns the list of tasks linked with a function
 // that are running or going to
-func (d *DBAL) GetFunctionRunnableTasksKeys(key string) ([]string, error) {
+func (d *DBAL) GetFunctionRunnableTasks(key string) ([]*asset.ComputeTask, error) {
 	stmt := getStatementBuilder().
-		Select("key").
+		Select("key", "compute_plan_key", "status", "worker", "owner", "rank", "creation_date",
+			"logs_permission", "metadata", "function_key").
 		From("compute_tasks").
 		Where(sq.Eq{
 			"function_key": key,
@@ -366,20 +367,25 @@ func (d *DBAL) GetFunctionRunnableTasksKeys(key string) ([]string, error) {
 	}
 	defer rows.Close()
 
-	keys := []string{}
+	tasks := []*asset.ComputeTask{}
 	for rows.Next() {
-		var key string
-		err := rows.Scan(&key)
+		ct := new(sqlComputeTask)
+
+		err = rows.Scan(
+			&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
+			&ct.LogsPermission, &ct.Metadata, &ct.FunctionKey)
 		if err != nil {
 			return nil, err
 		}
-		keys = append(keys, key)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
+		task, err := ct.toComputeTask()
+		if err != nil {
+			return nil, err
+		}
+
+		tasks = append(tasks, task)
 	}
 
-	return keys, nil
+	return tasks, nil
 }
 
 func (d *DBAL) CountComputeTaskRegisteredOutputs(key string) (persistence.ComputeTaskOutputCounter, error) {

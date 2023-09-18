@@ -278,7 +278,7 @@ func TestPropagateFunctionCancelation(t *testing.T) {
 	task := &asset.ComputeTask{Key: "uuid_t", Status: asset.ComputeTaskStatus_STATUS_TODO, Owner: "owner", Worker: "worker"}
 
 	cps.On("failPlan", mock.Anything).Return(nil)
-	dbal.On("GetFunctionRunnableTasksKeys", functionKey).Return([]string{task.Key}, nil)
+	dbal.On("GetFunctionRunnableTasks", functionKey).Return([]*asset.ComputeTask{task}, nil)
 	dbal.On("GetComputeTask", task.Key).Return(task, nil)
 	dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)
 	es.On("RegisterEvents", mock.Anything).Return(nil)
@@ -287,6 +287,8 @@ func TestPropagateFunctionCancelation(t *testing.T) {
 
 	assert.NoError(t, err)
 
+	cps.AssertExpectations(t)
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
+	provider.AssertExpectations(t)
 }
