@@ -192,4 +192,9 @@ Disable SSL if using the integrated Postgres, otherwise leave users with the opt
 - name: wait-postgresql
   image: postgres
   command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
 {{- end -}}

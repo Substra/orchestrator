@@ -16,11 +16,22 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      securityContext:
+        runAsNonRoot: true 
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
       restartPolicy: OnFailure
       initContainers:
         {{- include "substra-orc.waitPostgresqlInitContainer" . | nindent 8 }}
       containers:
       - name: db-migrations
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
         command:
           - sh
