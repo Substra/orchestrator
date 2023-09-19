@@ -18,10 +18,10 @@ import (
 func makeFunctionRows(keys ...string) *pgxmock.Rows {
 	permissions := []byte(`{"process": {"public": true}, "download": {"public": true}}`)
 
-	res := pgxmock.NewRows([]string{"key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata"})
+	res := pgxmock.NewRows([]string{"key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata", "status"})
 
 	for _, key := range keys {
-		res.AddRow(key, "name", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{})
+		res.AddRow(key, "name", "address", "checksum", "address", "checksum", permissions, "owner", time.Unix(1337, 0), map[string]string{}, asset.FunctionStatus_FUNCTION_STATUS_WAITING.String())
 	}
 
 	return res
@@ -59,7 +59,7 @@ func TestQueryFunctions(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata FROM expanded_functions`).
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata, status FROM expanded_functions`).
 		WithArgs(testChannel, computePlanKey).WillReturnRows(makeFunctionRows("key1", "key2"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT function_key, identifier, kind, multiple, optional FROM function_inputs WHERE function_key IN ($1,$2)`)).
@@ -95,7 +95,7 @@ func TestPaginatedQueryFunctions(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata FROM expanded_functions`).
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata, status FROM expanded_functions`).
 		WithArgs(testChannel, computePlanKey).WillReturnRows(makeFunctionRows("key1", "key2"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT function_key, identifier, kind, multiple, optional FROM function_inputs WHERE function_key IN ($1)`)).
@@ -128,7 +128,7 @@ func TestGetFunction(t *testing.T) {
 	mock.ExpectBegin()
 
 	uid := "key1"
-	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata FROM expanded_functions`).WillReturnRows(makeFunctionRows("key1"))
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata, status FROM expanded_functions`).WillReturnRows(makeFunctionRows("key1"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT function_key, identifier, kind, multiple, optional FROM function_inputs WHERE function_key IN ($1)`)).
 		WithArgs("key1").WillReturnRows(makeFunctionInputRows("key1"))
@@ -156,7 +156,7 @@ func TestGetFunctionFail(t *testing.T) {
 	mock.ExpectBegin()
 
 	uid := "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83"
-	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata FROM expanded_functions`).WillReturnError(pgx.ErrNoRows)
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata, status FROM expanded_functions`).WillReturnError(pgx.ErrNoRows)
 
 	tx, err := mock.Begin(context.Background())
 	require.NoError(t, err)
@@ -176,7 +176,7 @@ func TestQueryFunctionsByComputePlan(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata FROM expanded_functions .* key IN \(SELECT DISTINCT`).
+	mock.ExpectQuery(`SELECT key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata, status FROM expanded_functions .* key IN \(SELECT DISTINCT`).
 		WithArgs(testChannel, "CPKey").WillReturnRows(makeFunctionRows("key1", "key2"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT function_key, identifier, kind, multiple, optional FROM function_inputs WHERE function_key IN ($1,$2)`)).
@@ -203,7 +203,7 @@ func TestQueryFunctionsNilFilter(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	mock.ExpectQuery(`key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata FROM expanded_functions`).
+	mock.ExpectQuery(`key, name, description_address, description_checksum, function_address, function_checksum, permissions, owner, creation_date, metadata, status FROM expanded_functions`).
 		WithArgs(testChannel).
 		WillReturnRows(makeFunctionRows("key1", "key2"))
 

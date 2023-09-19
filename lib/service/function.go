@@ -17,6 +17,8 @@ type FunctionAPI interface {
 	CanDownload(key string, requester string) (bool, error)
 	FunctionExists(key string) (bool, error)
 	UpdateFunction(function *asset.UpdateFunctionParam, requester string) error
+	ApplyFunctionAction(key string, action asset.FunctionAction, reason string, requester string) error
+	applyFunctionAction(function *asset.Function, action functionTransition, reason string) error
 }
 
 // FunctionServiceProvider defines an object able to provide an FunctionAPI instance
@@ -29,6 +31,7 @@ type FunctionDependencyProvider interface {
 	LoggerProvider
 	persistence.FunctionDBALProvider
 	EventServiceProvider
+	ComputeTaskServiceProvider
 	PermissionServiceProvider
 	TimeServiceProvider
 }
@@ -70,6 +73,7 @@ func (s *FunctionService) RegisterFunction(a *asset.NewFunction, owner string) (
 		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
 		Inputs:       a.Inputs,
 		Outputs:      a.Outputs,
+		Status:       asset.FunctionStatus_FUNCTION_STATUS_WAITING,
 	}
 
 	function.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)

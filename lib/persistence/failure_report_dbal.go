@@ -5,7 +5,7 @@ import (
 )
 
 type FailureReportDBAL interface {
-	GetFailureReport(computeTaskKey string) (*asset.FailureReport, error)
+	GetFailureReport(assetKey string) (*asset.FailureReport, error)
 	AddFailureReport(f *asset.FailureReport) error
 }
 

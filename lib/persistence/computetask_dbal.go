@@ -21,6 +21,7 @@ type ComputeTaskDBAL interface {
 	// GetComputePlanTasks returns the tasks of the compute plan identified by the given key
 	GetComputePlanTasks(key string) ([]*asset.ComputeTask, error)
 	GetComputePlanTasksKeys(key string) ([]string, error)
+	GetFunctionRunnableTasks(key string) ([]*asset.ComputeTask, error)
 	AddComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 	// CountComputeTaskRegisteredOutputs returns the number of registered outputs by identifier
 	CountComputeTaskRegisteredOutputs(key string) (ComputeTaskOutputCounter, error)

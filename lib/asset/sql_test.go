@@ -90,3 +90,17 @@ func TestEventKindValue(t *testing.T) {
 
 	assert.Equal(t, kind, scanned)
 }
+
+func TestFailedAssetKindKindValue(t *testing.T) {
+	k := FailedAssetKind_FAILED_ASSET_UNKNOWN
+	kind := &k
+
+	value, err := kind.Value()
+	assert.NoError(t, err, "failed asset kind serialization should not fail")
+
+	scanned := new(FailedAssetKind)
+	err = scanned.Scan(value)
+	assert.NoError(t, err, "failed asset kind scan should not fail")
+
+	assert.Equal(t, kind, scanned)
+}
