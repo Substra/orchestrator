@@ -83,3 +83,21 @@ func (s *FunctionServer) UpdateFunction(ctx context.Context, params *asset.Updat
 
 	return &asset.UpdateFunctionResponse{}, nil
 }
+
+func (s *FunctionServer) ApplyFunctionAction(ctx context.Context, param *asset.ApplyFunctionActionParam) (*asset.ApplyFunctionActionResponse, error) {
+	requester, err := commonInterceptors.ExtractMSPID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	provider, err := interceptors.ExtractProvider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = provider.GetFunctionService().ApplyFunctionAction(param.FunctionKey, param.Action, "", requester)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.ApplyFunctionActionResponse{}, nil
+}

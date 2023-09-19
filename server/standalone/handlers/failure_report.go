@@ -36,5 +36,5 @@ func (s *FailureReportServer) GetFailureReport(ctx context.Context, in *asset.Ge
 	if err != nil {
 		return nil, err
 	}
-	return services.GetFailureReportService().GetFailureReport(in.ComputeTaskKey)
+	return services.GetFailureReportService().GetFailureReport(in.AssetKey)
 }

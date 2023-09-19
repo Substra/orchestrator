@@ -553,6 +553,34 @@ func (c *TestClient) UpdateFunction(functionRef string, name string) *asset.Upda
 	return resp
 }
 
+func (c *TestClient) BuildFunction(keyRef string) {
+	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_BUILDING)
+}
+
+func (c *TestClient) CancelFunction(keyRef string) {
+	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_CANCELED)
+}
+
+func (c *TestClient) FailFunction(keyRef string) {
+	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_FAILED)
+}
+
+func (c *TestClient) SetReadyFunction(keyRef string) {
+	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_READY)
+}
+
+func (c *TestClient) applyFunctionAction(keyRef string, action asset.FunctionAction) {
+	functionKey := c.ks.GetKey(keyRef)
+	c.logger.Debug().Str("functionKey", functionKey).Str("action", action.String()).Msg("applying function action")
+	_, err := c.functionService.ApplyFunctionAction(c.ctx, &asset.ApplyFunctionActionParam{
+		FunctionKey: functionKey,
+		Action:      action,
+	})
+	if err != nil {
+		c.logger.Fatal().Err(err).Msgf("failed to mark function as %v", action)
+	}
+}
+
 func (c *TestClient) QueryEvents(filter *asset.EventQueryFilter, pageToken string, pageSize int) *asset.QueryEventsResponse {
 	resp, err := c.eventService.QueryEvents(c.ctx, &asset.QueryEventsParam{Filter: filter, PageToken: pageToken, PageSize: uint32(pageSize)})
 	if err != nil {
@@ -581,10 +609,11 @@ func (c *TestClient) QueryPlans(filter *asset.PlanQueryFilter, pageToken string,
 	return resp
 }
 
-func (c *TestClient) RegisterFailureReport(taskRef string) *asset.FailureReport {
+func (c *TestClient) RegisterTaskFailureReport(assetRef string) *asset.FailureReport {
 	newFailureReport := &asset.NewFailureReport{
-		ComputeTaskKey: c.ks.GetKey(taskRef),
-		ErrorType:      asset.ErrorType_ERROR_TYPE_EXECUTION,
+		AssetKey:  c.ks.GetKey(assetRef),
+		AssetType: asset.FailedAssetKind_FAILED_ASSET_COMPUTE_TASK,
+		ErrorType: asset.ErrorType_ERROR_TYPE_EXECUTION,
 		LogsAddress: &asset.Addressable{
 			Checksum:       "5e12e1a2687d81b268558217856547f8a4519f9688933351386a7f902cf1ce5d",
 			StorageAddress: "http://somewhere.local/failure/" + uuid.NewString(),
@@ -600,12 +629,12 @@ func (c *TestClient) RegisterFailureReport(taskRef string) *asset.FailureReport 
 	return failureReport
 }
 
-func (c *TestClient) GetFailureReport(taskRef string) *asset.FailureReport {
+func (c *TestClient) GetFailureReport(assetRef string) *asset.FailureReport {
 	param := &asset.GetFailureReportParam{
-		ComputeTaskKey: c.ks.GetKey(taskRef),
+		AssetKey: c.ks.GetKey(assetRef),
 	}
 
-	c.logger.Debug().Str("task key", param.ComputeTaskKey).Msg("getting failure report")
+	c.logger.Debug().Str("asset key", param.AssetKey).Msg("getting failure report")
 	failureReport, err := c.failureReportService.GetFailureReport(c.ctx, param)
 	if err != nil {
 		c.logger.Fatal().Err(err).Msg("GetFailureReport failed")

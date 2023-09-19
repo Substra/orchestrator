@@ -102,3 +102,15 @@ func validateOutputs(input interface{}) error {
 
 	return nil
 }
+
+func (p *ApplyFunctionActionParam) Validate() error {
+	return validation.ValidateStruct(p,
+		validation.Field(&p.FunctionKey, validation.Required, is.UUID),
+		validation.Field(&p.Action, validation.Required, validation.In(
+			FunctionAction_FUNCTION_ACTION_BUILDING,
+			FunctionAction_FUNCTION_ACTION_FAILED,
+			FunctionAction_FUNCTION_ACTION_CANCELED,
+			FunctionAction_FUNCTION_ACTION_READY,
+		)),
+	)
+}

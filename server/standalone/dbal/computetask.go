@@ -347,6 +347,47 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 	return keys, nil
 }
 
+// GetFunctionRunnableTasks returns the list of tasks linked with a function
+// that are running or going to
+func (d *DBAL) GetFunctionRunnableTasks(key string) ([]*asset.ComputeTask, error) {
+	stmt := getStatementBuilder().
+		Select("key", "compute_plan_key", "status", "worker", "owner", "rank", "creation_date",
+			"logs_permission", "metadata", "function_key").
+		From("compute_tasks").
+		Where(sq.Eq{
+			"function_key": key,
+			"status": []asset.ComputeTaskStatus{
+				asset.ComputeTaskStatus_STATUS_DOING,
+				asset.ComputeTaskStatus_STATUS_TODO,
+			}})
+
+	rows, err := d.query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tasks := []*asset.ComputeTask{}
+	for rows.Next() {
+		ct := new(sqlComputeTask)
+
+		err = rows.Scan(
+			&ct.Key, &ct.ComputePlanKey, &ct.Status, &ct.Worker, &ct.Owner, &ct.Rank, &ct.CreationDate,
+			&ct.LogsPermission, &ct.Metadata, &ct.FunctionKey)
+		if err != nil {
+			return nil, err
+		}
+		task, err := ct.toComputeTask()
+		if err != nil {
+			return nil, err
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
+
 func (d *DBAL) CountComputeTaskRegisteredOutputs(key string) (persistence.ComputeTaskOutputCounter, error) {
 	counter := make(persistence.ComputeTaskOutputCounter)
 
