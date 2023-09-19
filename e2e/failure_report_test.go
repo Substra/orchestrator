@@ -25,17 +25,17 @@ func TestRegisterFailureReport(t *testing.T) {
 
 	appClient.StartTask(client.DefaultTrainTaskRef)
 
-	registeredFailureReport := appClient.RegisterFailureReport(client.DefaultTrainTaskRef)
+	registeredFailureReport := appClient.RegisterTaskFailureReport(client.DefaultTrainTaskRef)
 	task := appClient.GetComputeTask(client.DefaultTrainTaskRef)
 
-	require.Equal(t, task.Key, registeredFailureReport.ComputeTaskKey)
+	require.Equal(t, task.Key, registeredFailureReport.AssetKey)
 	require.Equal(t, asset.ComputeTaskStatus_STATUS_FAILED, task.Status)
 
 	retrievedFailureReport := appClient.GetFailureReport(client.DefaultTrainTaskRef)
 	e2erequire.ProtoEqual(t, registeredFailureReport, retrievedFailureReport)
 
 	eventResp := appClient.QueryEvents(&asset.EventQueryFilter{
-		AssetKey:  registeredFailureReport.ComputeTaskKey,
+		AssetKey:  registeredFailureReport.AssetKey,
 		AssetKind: asset.AssetKind_ASSET_FAILURE_REPORT,
 		EventKind: asset.EventKind_EVENT_ASSET_CREATED,
 	}, "", 100)

@@ -37,3 +37,31 @@ Function outputs must verify the following constraints:
 
 - An output `kind` must be one of the following: `MODEL`, `PERFORMANCE`
 - An output of kind `PERFORMANCE` cannot be `Multiple`
+
+
+## Status
+
+A function can have several status (see _States_ below for available transitions):
+
+- WAITING: A function has been registered and is waiting to build.
+- BUILDING: function is being build by the function owner.
+- READY:  function is ready to be used for compute task. 
+- FAILED: function build has failed.
+- CANCELED: function has been cancelled.
+
+## State
+
+A compute task will go through different state during a compute plan execution.
+This is an overview of a task's lifecycle:
+
+![](./schemas/function.state.svg)
+
+A task can be created in TODO or WAITING state depending on its parents.
+
+During the ComputePlan execution, as tasks are DONE, their statuses will be reflected to their children.
+If all the parents of a child task are DONE, this task enters TODO state.
+
+When a parent task fails, children statuses are not changed.
+
+A task may produce one or more [models](./model.md), they can only be registered when the task is in DOING.
+This is to ensure that when a task starts (switch to DOING), all its inputs are available.

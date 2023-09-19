@@ -13,20 +13,22 @@ import (
 )
 
 type sqlFailureReport struct {
-	ComputeTaskKey string
-	ErrorType      asset.ErrorType
-	CreationDate   time.Time
-	Owner          string
-	LogsChecksum   pgtype.Text
-	LogsAddress    pgtype.Text
+	AssetKey     string
+	AssetType    asset.FailedAssetKind
+	ErrorType    asset.ErrorType
+	CreationDate time.Time
+	Owner        string
+	LogsChecksum pgtype.Text
+	LogsAddress  pgtype.Text
 }
 
 func (r sqlFailureReport) toFailureReport() *asset.FailureReport {
 	failureReport := &asset.FailureReport{
-		ComputeTaskKey: r.ComputeTaskKey,
-		ErrorType:      r.ErrorType,
-		CreationDate:   timestamppb.New(r.CreationDate),
-		Owner:          r.Owner,
+		AssetKey:     r.AssetKey,
+		AssetType:    r.AssetType,
+		ErrorType:    r.ErrorType,
+		CreationDate: timestamppb.New(r.CreationDate),
+		Owner:        r.Owner,
 	}
 
 	if r.LogsAddress.Status == pgtype.Present {
@@ -39,11 +41,11 @@ func (r sqlFailureReport) toFailureReport() *asset.FailureReport {
 	return failureReport
 }
 
-func (d *DBAL) GetFailureReport(computeTaskKey string) (*asset.FailureReport, error) {
+func (d *DBAL) GetFailureReport(assetKey string) (*asset.FailureReport, error) {
 	stmt := getStatementBuilder().
-		Select("compute_task_key", "error_type", "creation_date", "owner", "logs_address", "logs_checksum").
+		Select("asset_key", "asset_type", "error_type", "creation_date", "owner", "logs_address", "logs_checksum").
 		From("expanded_failure_reports").
-		Where(sq.Eq{"channel": d.channel, "compute_task_key": computeTaskKey})
+		Where(sq.Eq{"channel": d.channel, "asset_key": assetKey})
 
 	row, err := d.queryRow(stmt)
 	if err != nil {
@@ -51,11 +53,11 @@ func (d *DBAL) GetFailureReport(computeTaskKey string) (*asset.FailureReport, er
 	}
 
 	r := new(sqlFailureReport)
-	err = row.Scan(&r.ComputeTaskKey, &r.ErrorType, &r.CreationDate, &r.Owner, &r.LogsAddress, &r.LogsChecksum)
+	err = row.Scan(&r.AssetKey, &r.AssetType, &r.ErrorType, &r.CreationDate, &r.Owner, &r.LogsAddress, &r.LogsChecksum)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, orcerrors.NewNotFound("failure report", computeTaskKey)
+			return nil, orcerrors.NewNotFound("failure report", assetKey)
 		}
 		return nil, err
 	}
@@ -81,8 +83,8 @@ func (d *DBAL) AddFailureReport(failureReport *asset.FailureReport) error {
 
 	stmt := getStatementBuilder().
 		Insert("failure_reports").
-		Columns("compute_task_key", "channel", "error_type", "creation_date", "owner", "logs_address").
-		Values(failureReport.ComputeTaskKey, d.channel, failureReport.ErrorType, failureReport.CreationDate.AsTime(), failureReport.Owner, logsAddress)
+		Columns("asset_key", "asset_type", "channel", "error_type", "creation_date", "owner", "logs_address").
+		Values(failureReport.AssetKey, failureReport.AssetType.String(), d.channel, failureReport.ErrorType, failureReport.CreationDate.AsTime(), failureReport.Owner, logsAddress)
 
 	return d.exec(stmt)
 }
