@@ -24,17 +24,29 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "orchestrator.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
       initContainers:
       {{- if eq .Values.orchestrator.mode "standalone" }}
       - name: wait-postgresql
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
         image: postgres
         command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
       {{- end}}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy }}
           command:
