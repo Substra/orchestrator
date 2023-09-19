@@ -205,6 +205,17 @@ postgresql:
   primary:
     extendedConfiguration: |-
       tcp_keepalives_idle = 5
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      fsGroup: 1001
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
 
 # grpcOptions:
 #   keepalive:
