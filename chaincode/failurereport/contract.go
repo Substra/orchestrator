@@ -77,7 +77,7 @@ func (s *SmartContract) GetFailureReport(ctx ledger.TransactionContext, wrapper 
 		return nil, err
 	}
 
-	model, err := service.GetFailureReport(params.GetComputeTaskKey())
+	model, err := service.GetFailureReport(params.GetAssetKey())
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to fetch failure report")
 		return nil, err

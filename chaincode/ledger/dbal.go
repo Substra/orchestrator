@@ -65,6 +65,7 @@ type storedAsset struct {
 const computePlanTaskStatusIndex = "computePlan~computePlanKey~status~task"
 const computeTaskParentIndex = "computeTask~parentTask~key"
 const computeTaskChildIndex = "computeTask~childTask~key"
+const computeTaskFunctionStatusIndex = "computeTask~functionKey~status~key"
 const modelTaskKeyIndex = "model~taskKey~modelKey"
 const performanceIndex = "performance~taskKey~metricKey"
 const allOrganizationsIndex = "organizations~id"

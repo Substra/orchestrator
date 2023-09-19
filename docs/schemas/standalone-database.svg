@@ -79,45 +79,48 @@
 <!-- public.functions -->
 <g id="node4" class="node">
 <title>public.functions</title>
-<polygon fill="#efefef" stroke="transparent" points="2148.5,-619.5 2148.5,-654.5 2416.5,-654.5 2416.5,-619.5 2148.5,-619.5"/>
-<polygon fill="none" stroke="#000000" points="2148.5,-619.5 2148.5,-654.5 2416.5,-654.5 2416.5,-619.5 2148.5,-619.5"/>
-<text text-anchor="start" x="2156.6997" y="-632.3" font-family="Arial Bold" font-size="18.00" fill="#000000">public.functions</text>
-<text text-anchor="start" x="2280.7323" y="-632.3" font-family="Arial" font-size="14.00" fill="#000000">    </text>
-<text text-anchor="start" x="2314.9371" y="-632.3" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-589.5 2148.5,-619.5 2416.5,-619.5 2416.5,-589.5 2148.5,-589.5"/>
-<text text-anchor="start" x="2155.5" y="-600.9" font-family="Arial" font-size="14.00" fill="#000000">key </text>
-<text text-anchor="start" x="2181.1732" y="-600.9" font-family="Arial" font-size="14.00" fill="#666666">[uuid]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-559.5 2148.5,-589.5 2416.5,-589.5 2416.5,-559.5 2148.5,-559.5"/>
-<text text-anchor="start" x="2155.5" y="-570.9" font-family="Arial" font-size="14.00" fill="#000000">channel </text>
-<text text-anchor="start" x="2208.4102" y="-570.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-529.5 2148.5,-559.5 2416.5,-559.5 2416.5,-529.5 2148.5,-529.5"/>
-<text text-anchor="start" x="2155.5" y="-540.9" font-family="Arial" font-size="14.00" fill="#000000">name </text>
-<text text-anchor="start" x="2194.399" y="-540.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-499.5 2148.5,-529.5 2416.5,-529.5 2416.5,-499.5 2148.5,-499.5"/>
-<text text-anchor="start" x="2155.5" y="-510.9" font-family="Arial" font-size="14.00" fill="#000000">description </text>
-<text text-anchor="start" x="2227.068" y="-510.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(200)]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-469.5 2148.5,-499.5 2416.5,-499.5 2416.5,-469.5 2148.5,-469.5"/>
-<text text-anchor="start" x="2155.5" y="-480.9" font-family="Arial" font-size="14.00" fill="#000000">functionaddress </text>
-<text text-anchor="start" x="2258.1998" y="-480.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(200)]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-439.5 2148.5,-469.5 2416.5,-469.5 2416.5,-439.5 2148.5,-439.5"/>
-<text text-anchor="start" x="2155.5" y="-450.9" font-family="Arial" font-size="14.00" fill="#000000">permissions </text>
-<text text-anchor="start" x="2234.0554" y="-450.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-409.5 2148.5,-439.5 2416.5,-439.5 2416.5,-409.5 2148.5,-409.5"/>
-<text text-anchor="start" x="2155.5" y="-420.9" font-family="Arial" font-size="14.00" fill="#000000">owner </text>
-<text text-anchor="start" x="2197.5056" y="-420.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-379.5 2148.5,-409.5 2416.5,-409.5 2416.5,-379.5 2148.5,-379.5"/>
-<text text-anchor="start" x="2155.3079" y="-390.9" font-family="Arial" font-size="14.00" fill="#000000">creation_date </text>
-<text text-anchor="start" x="2244.0077" y="-390.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
-<polygon fill="none" stroke="#000000" points="2148.5,-349.5 2148.5,-379.5 2416.5,-379.5 2416.5,-349.5 2148.5,-349.5"/>
-<text text-anchor="start" x="2155.5" y="-360.9" font-family="Arial" font-size="14.00" fill="#000000">metadata </text>
-<text text-anchor="start" x="2217.7454" y="-360.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
+<polygon fill="#efefef" stroke="transparent" points="2148.5,-634.5 2148.5,-669.5 2416.5,-669.5 2416.5,-634.5 2148.5,-634.5"/>
+<polygon fill="none" stroke="#000000" points="2148.5,-634.5 2148.5,-669.5 2416.5,-669.5 2416.5,-634.5 2148.5,-634.5"/>
+<text text-anchor="start" x="2156.6997" y="-647.3" font-family="Arial Bold" font-size="18.00" fill="#000000">public.functions</text>
+<text text-anchor="start" x="2280.7323" y="-647.3" font-family="Arial" font-size="14.00" fill="#000000">    </text>
+<text text-anchor="start" x="2314.9371" y="-647.3" font-family="Arial" font-size="14.00" fill="#666666">[BASE TABLE]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-604.5 2148.5,-634.5 2416.5,-634.5 2416.5,-604.5 2148.5,-604.5"/>
+<text text-anchor="start" x="2155.5" y="-615.9" font-family="Arial" font-size="14.00" fill="#000000">key </text>
+<text text-anchor="start" x="2181.1732" y="-615.9" font-family="Arial" font-size="14.00" fill="#666666">[uuid]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-574.5 2148.5,-604.5 2416.5,-604.5 2416.5,-574.5 2148.5,-574.5"/>
+<text text-anchor="start" x="2155.5" y="-585.9" font-family="Arial" font-size="14.00" fill="#000000">channel </text>
+<text text-anchor="start" x="2208.4102" y="-585.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-544.5 2148.5,-574.5 2416.5,-574.5 2416.5,-544.5 2148.5,-544.5"/>
+<text text-anchor="start" x="2155.5" y="-555.9" font-family="Arial" font-size="14.00" fill="#000000">name </text>
+<text text-anchor="start" x="2194.399" y="-555.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-514.5 2148.5,-544.5 2416.5,-544.5 2416.5,-514.5 2148.5,-514.5"/>
+<text text-anchor="start" x="2155.5" y="-525.9" font-family="Arial" font-size="14.00" fill="#000000">description </text>
+<text text-anchor="start" x="2227.068" y="-525.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(200)]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-484.5 2148.5,-514.5 2416.5,-514.5 2416.5,-484.5 2148.5,-484.5"/>
+<text text-anchor="start" x="2155.5" y="-495.9" font-family="Arial" font-size="14.00" fill="#000000">functionaddress </text>
+<text text-anchor="start" x="2258.1998" y="-495.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(200)]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-454.5 2148.5,-484.5 2416.5,-484.5 2416.5,-454.5 2148.5,-454.5"/>
+<text text-anchor="start" x="2155.5" y="-465.9" font-family="Arial" font-size="14.00" fill="#000000">permissions </text>
+<text text-anchor="start" x="2234.0554" y="-465.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-424.5 2148.5,-454.5 2416.5,-454.5 2416.5,-424.5 2148.5,-424.5"/>
+<text text-anchor="start" x="2155.5" y="-435.9" font-family="Arial" font-size="14.00" fill="#000000">owner </text>
+<text text-anchor="start" x="2197.5056" y="-435.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-394.5 2148.5,-424.5 2416.5,-424.5 2416.5,-394.5 2148.5,-394.5"/>
+<text text-anchor="start" x="2155.3079" y="-405.9" font-family="Arial" font-size="14.00" fill="#000000">creation_date </text>
+<text text-anchor="start" x="2244.0077" y="-405.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-364.5 2148.5,-394.5 2416.5,-394.5 2416.5,-364.5 2148.5,-364.5"/>
+<text text-anchor="start" x="2155.5" y="-375.9" font-family="Arial" font-size="14.00" fill="#000000">metadata </text>
+<text text-anchor="start" x="2217.7454" y="-375.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
+<polygon fill="none" stroke="#000000" points="2148.5,-334.5 2148.5,-364.5 2416.5,-364.5 2416.5,-334.5 2148.5,-334.5"/>
+<text text-anchor="start" x="2155.5" y="-345.9" font-family="Arial" font-size="14.00" fill="#000000">status </text>
+<text text-anchor="start" x="2196.737" y="-345.9" font-family="Arial" font-size="14.00" fill="#666666">[function_status]</text>
 </g>
 <!-- public.functions&#45;&gt;public.organizations -->
 <g id="edge2" class="edge">
 <title>public.functions:owner&#45;&gt;public.organizations:id</title>
-<path fill="none" stroke="#000000" d="M2138.5121,-423.8317C2076.1478,-414.8872 2118.7895,-318.5063 2058.5,-277 1993.3492,-232.1469 1437.5976,-147.5 1358.5,-147.5"/>
-<polygon fill="#000000" stroke="#000000" points="2138.5223,-423.8323 2148.1995,-428.99 2143.5112,-424.1661 2148.5,-424.5 2148.5,-424.5 2148.5,-424.5 2143.5112,-424.1661 2148.8005,-420.01 2138.5223,-423.8323 2138.5223,-423.8323"/>
-<text text-anchor="start" x="1808.536" y="-434.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (owner, channel) REFERENCES organizations(id, channel)</text>
+<path fill="none" stroke="#000000" d="M2138.2099,-438.8246C2071.0365,-429.3674 2122.4925,-323.0693 2058.5,-277 1994.3071,-230.7864 1437.5976,-147.5 1358.5,-147.5"/>
+<polygon fill="#000000" stroke="#000000" points="2138.5215,-438.845 2148.2052,-443.9903 2143.5107,-439.1725 2148.5,-439.5 2148.5,-439.5 2148.5,-439.5 2143.5107,-439.1725 2148.7948,-435.0097 2138.5215,-438.845 2138.5215,-438.845"/>
+<text text-anchor="start" x="1808.536" y="-449.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (owner, channel) REFERENCES organizations(id, channel)</text>
 </g>
 <!-- public.addressables -->
 <g id="node13" class="node">
@@ -137,16 +140,16 @@
 <!-- public.functions&#45;&gt;public.addressables -->
 <g id="edge3" class="edge">
 <title>public.functions:functionaddress&#45;&gt;public.addressables:storage_address</title>
-<path fill="none" stroke="#000000" d="M2138.1664,-483.7912C2073.1999,-474.2898 2109.7405,-371.4313 2148.5,-307 2195.4391,-228.9714 2282.5609,-289.0286 2329.5,-211 2350.9211,-175.391 2371.0556,-117.5 2329.5,-117.5"/>
-<polygon fill="#000000" stroke="#000000" points="2138.5234,-483.8156 2148.192,-488.9895 2143.5117,-484.1578 2148.5,-484.5 2148.5,-484.5 2148.5,-484.5 2143.5117,-484.1578 2148.808,-480.0105 2138.5234,-483.8156 2138.5234,-483.8156"/>
-<text text-anchor="start" x="2155.0855" y="-494.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (functionaddress) REFERENCES addressables(storage_address)</text>
+<path fill="none" stroke="#000000" d="M2138.2999,-498.9153C2059.5767,-489.4157 2100.305,-366.3688 2148.5,-292 2196.4299,-218.0403 2281.5701,-284.9597 2329.5,-211 2352.0996,-176.127 2371.0556,-117.5 2329.5,-117.5"/>
+<polygon fill="#000000" stroke="#000000" points="2138.5164,-498.9276 2148.2424,-503.9926 2143.5082,-499.2138 2148.5,-499.5 2148.5,-499.5 2148.5,-499.5 2143.5082,-499.2138 2148.7576,-495.0074 2138.5164,-498.9276 2138.5164,-498.9276"/>
+<text text-anchor="start" x="2155.0855" y="-509.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (functionaddress) REFERENCES addressables(storage_address)</text>
 </g>
 <!-- public.functions&#45;&gt;public.addressables -->
 <g id="edge4" class="edge">
 <title>public.functions:description&#45;&gt;public.addressables:storage_address</title>
-<path fill="none" stroke="#000000" d="M2138.3114,-513.9225C2059.773,-504.5384 2102.8183,-382.9384 2148.5,-307 2195.4391,-228.9714 2282.5609,-289.0286 2329.5,-211 2350.9211,-175.391 2371.0556,-117.5 2329.5,-117.5"/>
-<polygon fill="#000000" stroke="#000000" points="2138.516,-513.934 2148.2453,-518.9928 2143.508,-514.217 2148.5,-514.5 2148.5,-514.5 2148.5,-514.5 2143.508,-514.217 2148.7547,-510.0072 2138.516,-513.934 2138.516,-513.934"/>
-<text text-anchor="start" x="1801.204" y="-524.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (description) REFERENCES addressables(storage_address)</text>
+<path fill="none" stroke="#000000" d="M2138.4819,-526.7533C2099.1307,-503.0662 2121.8155,-333.1764 2148.5,-292 2196.4299,-218.0403 2281.5701,-284.9597 2329.5,-211 2352.0996,-176.127 2371.0556,-117.5 2329.5,-117.5"/>
+<polygon fill="#000000" stroke="#000000" points="2138.8559,-526.8558 2147.3101,-533.8398 2143.678,-528.1779 2148.5,-529.5 2148.5,-529.5 2148.5,-529.5 2143.678,-528.1779 2149.6899,-525.1602 2138.8559,-526.8558 2138.8559,-526.8558"/>
+<text text-anchor="start" x="1801.204" y="-539.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (description) REFERENCES addressables(storage_address)</text>
 </g>
 <!-- public.datamanagers -->
 <g id="node5" class="node">
@@ -195,14 +198,14 @@
 <title>public.datamanagers:owner&#45;&gt;public.organizations:id</title>
 <path fill="none" stroke="#000000" d="M1688.2072,-544.0324C1585.7929,-534.1211 1718.6013,-369.0309 1645.5,-277 1558.461,-167.4223 1498.4395,-147.5 1358.5,-147.5"/>
 <polygon fill="#000000" stroke="#000000" points="1688.5103,-544.0461 1698.2957,-548.9954 1693.5052,-544.273 1698.5,-544.5 1698.5,-544.5 1698.5,-544.5 1693.5052,-544.273 1698.7043,-540.0046 1688.5103,-544.0461 1688.5103,-544.0461"/>
-<text text-anchor="start" x="1705.536" y="-554.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (owner, channel) REFERENCES organizations(id, channel)</text>
+<text text-anchor="start" x="1445.286" y="-528.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (owner, channel) REFERENCES organizations(id, channel)</text>
 </g>
 <!-- public.datamanagers&#45;&gt;public.addressables -->
 <g id="edge6" class="edge">
 <title>public.datamanagers:description&#45;&gt;public.addressables:storage_address</title>
 <path fill="none" stroke="#000000" d="M2016.8158,-483.9529C2156.5168,-468.1988 1869.7397,-117.5 2029.5,-117.5"/>
 <polygon fill="#000000" stroke="#000000" points="2016.486,-483.9703 2006.2616,-480.0063 2011.493,-484.2351 2006.5,-484.5 2006.5,-484.5 2006.5,-484.5 2011.493,-484.2351 2006.7384,-488.9937 2016.486,-483.9703 2016.486,-483.9703"/>
-<text text-anchor="start" x="1836.204" y="-468.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (description) REFERENCES addressables(storage_address)</text>
+<text text-anchor="start" x="1659.204" y="-494.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (description) REFERENCES addressables(storage_address)</text>
 </g>
 <!-- public.datamanagers&#45;&gt;public.addressables -->
 <g id="edge7" class="edge">
@@ -270,7 +273,7 @@
 <!-- public.compute_tasks&#45;&gt;public.functions -->
 <g id="edge10" class="edge">
 <title>public.compute_tasks:function_key&#45;&gt;public.functions:key</title>
-<path fill="none" stroke="#000000" d="M1092.702,-971.0838C1196.6752,-962.2717 1145.0322,-815.9428 1246.5,-764 1407.2795,-681.6948 1899.3592,-813.4308 2058.5,-728 2118.3402,-695.8763 2080.5825,-604.5 2148.5,-604.5"/>
+<path fill="none" stroke="#000000" d="M1092.702,-971.0838C1196.6752,-962.2717 1145.0322,-815.9428 1246.5,-764 1407.2795,-681.6948 1896.7593,-808.3998 2058.5,-728 2114.6036,-700.1114 2085.8471,-619.5 2148.5,-619.5"/>
 <polygon fill="#000000" stroke="#000000" points="1092.4917,-971.0923 1082.3165,-967.0037 1087.4958,-971.2962 1082.5,-971.5 1082.5,-971.5 1082.5,-971.5 1087.4958,-971.2962 1082.6835,-975.9963 1092.4917,-971.0923 1092.4917,-971.0923"/>
 <text text-anchor="start" x="1018.4875" y="-955.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (function_key) REFERENCES functions(key)</text>
 </g>
@@ -753,8 +756,8 @@
 <!-- public.function_inputs&#45;&gt;public.functions -->
 <g id="edge28" class="edge">
 <title>public.function_inputs:function_key&#45;&gt;public.functions:key</title>
-<path fill="none" stroke="#000000" d="M2660.5688,-1029.2112C2614.5321,-1005.9712 2648.1007,-812.5834 2618.5,-764 2558.9814,-666.3126 2530.8909,-604.5 2416.5,-604.5"/>
-<polygon fill="#000000" stroke="#000000" points="2660.7554,-1029.2541 2669.4893,-1035.885 2665.6277,-1030.3771 2670.5,-1031.5 2670.5,-1031.5 2670.5,-1031.5 2665.6277,-1030.3771 2671.5107,-1027.115 2660.7554,-1029.2541 2660.7554,-1029.2541"/>
+<path fill="none" stroke="#000000" d="M2660.5813,-1029.2033C2614.6706,-1005.8846 2649.2441,-811.868 2618.5,-764 2558.8479,-671.1228 2526.8836,-619.5 2416.5,-619.5"/>
+<polygon fill="#000000" stroke="#000000" points="2660.7578,-1029.2441 2669.4848,-1035.884 2665.6289,-1030.372 2670.5,-1031.5 2670.5,-1031.5 2670.5,-1031.5 2665.6289,-1030.372 2671.5152,-1027.116 2660.7578,-1029.2441 2660.7578,-1029.2441"/>
 <text text-anchor="start" x="2393.4875" y="-1041.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (function_key) REFERENCES functions(key)</text>
 </g>
 <!-- public.function_inputs&#45;&gt;public.asset_kinds -->
@@ -788,8 +791,8 @@
 <!-- public.function_outputs&#45;&gt;public.functions -->
 <g id="edge30" class="edge">
 <title>public.function_outputs:function_key&#45;&gt;public.functions:key</title>
-<path fill="none" stroke="#000000" d="M2231.3559,-1015.6826C2180.4421,-1006.7209 2217.5041,-925.9972 2241.5,-869 2283.6948,-768.7753 2374.3052,-798.2247 2416.5,-698 2432.6243,-659.7002 2458.0556,-604.5 2416.5,-604.5"/>
-<polygon fill="#000000" stroke="#000000" points="2231.5323,-1015.6967 2241.1385,-1020.9855 2236.5162,-1016.0983 2241.5,-1016.5 2241.5,-1016.5 2241.5,-1016.5 2236.5162,-1016.0983 2241.8615,-1012.0145 2231.5323,-1015.6967 2231.5323,-1015.6967"/>
+<path fill="none" stroke="#000000" d="M2231.3434,-1015.6771C2180.295,-1006.657 2216.2058,-925.4331 2241.5,-869 2284.1166,-773.9194 2373.8834,-808.0806 2416.5,-713 2433.4966,-675.0793 2458.0556,-619.5 2416.5,-619.5"/>
+<polygon fill="#000000" stroke="#000000" points="2231.5327,-1015.6924 2241.1366,-1020.9853 2236.5163,-1016.0962 2241.5,-1016.5 2241.5,-1016.5 2241.5,-1016.5 2236.5163,-1016.0962 2241.8634,-1012.0147 2231.5327,-1015.6924 2231.5327,-1015.6924"/>
 <text text-anchor="start" x="2248.4875" y="-1000.5" font-family="Arial" font-size="10.00" fill="#000000">FOREIGN KEY (function_key) REFERENCES functions(key)</text>
 </g>
 <!-- public.function_outputs&#45;&gt;public.asset_kinds -->
@@ -948,44 +951,47 @@
 <!-- public.expanded_functions -->
 <g id="node28" class="node">
 <title>public.expanded_functions</title>
-<polygon fill="#efefef" stroke="transparent" points="4161.5,-2020.5 4161.5,-2055.5 4465.5,-2055.5 4465.5,-2020.5 4161.5,-2020.5"/>
-<polygon fill="none" stroke="#000000" points="4161.5,-2020.5 4161.5,-2055.5 4465.5,-2055.5 4465.5,-2020.5 4161.5,-2020.5"/>
-<text text-anchor="start" x="4168.0767" y="-2033.3" font-family="Arial Bold" font-size="18.00" fill="#000000">public.expanded_functions</text>
-<text text-anchor="start" x="4381.1589" y="-2033.3" font-family="Arial" font-size="14.00" fill="#000000">    </text>
-<text text-anchor="start" x="4415.3637" y="-2033.3" font-family="Arial" font-size="14.00" fill="#666666">[VIEW]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1990.5 4161.5,-2020.5 4465.5,-2020.5 4465.5,-1990.5 4161.5,-1990.5"/>
-<text text-anchor="start" x="4168.5" y="-2001.9" font-family="Arial" font-size="14.00" fill="#000000">key </text>
-<text text-anchor="start" x="4194.1732" y="-2001.9" font-family="Arial" font-size="14.00" fill="#666666">[uuid]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1960.5 4161.5,-1990.5 4465.5,-1990.5 4465.5,-1960.5 4161.5,-1960.5"/>
-<text text-anchor="start" x="4168.5" y="-1971.9" font-family="Arial" font-size="14.00" fill="#000000">name </text>
-<text text-anchor="start" x="4207.399" y="-1971.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1930.5 4161.5,-1960.5 4465.5,-1960.5 4465.5,-1930.5 4161.5,-1930.5"/>
-<text text-anchor="start" x="4168.5" y="-1941.9" font-family="Arial" font-size="14.00" fill="#000000">description_address </text>
-<text text-anchor="start" x="4297.6416" y="-1941.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(200)]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1900.5 4161.5,-1930.5 4465.5,-1930.5 4465.5,-1900.5 4161.5,-1900.5"/>
-<text text-anchor="start" x="4168.5" y="-1911.9" font-family="Arial" font-size="14.00" fill="#000000">description_checksum </text>
-<text text-anchor="start" x="4310.859" y="-1911.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(64)]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1870.5 4161.5,-1900.5 4465.5,-1900.5 4465.5,-1870.5 4161.5,-1870.5"/>
-<text text-anchor="start" x="4168.5" y="-1881.9" font-family="Arial" font-size="14.00" fill="#000000">function_address </text>
-<text text-anchor="start" x="4278.9824" y="-1881.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(200)]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1840.5 4161.5,-1870.5 4465.5,-1870.5 4465.5,-1840.5 4161.5,-1840.5"/>
-<text text-anchor="start" x="4168.5" y="-1851.9" font-family="Arial" font-size="14.00" fill="#000000">function_checksum </text>
-<text text-anchor="start" x="4292.1998" y="-1851.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(64)]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1810.5 4161.5,-1840.5 4465.5,-1840.5 4465.5,-1810.5 4161.5,-1810.5"/>
-<text text-anchor="start" x="4168.5" y="-1821.9" font-family="Arial" font-size="14.00" fill="#000000">permissions </text>
-<text text-anchor="start" x="4247.0554" y="-1821.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1780.5 4161.5,-1810.5 4465.5,-1810.5 4465.5,-1780.5 4161.5,-1780.5"/>
-<text text-anchor="start" x="4168.5" y="-1791.9" font-family="Arial" font-size="14.00" fill="#000000">owner </text>
-<text text-anchor="start" x="4210.5056" y="-1791.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1750.5 4161.5,-1780.5 4465.5,-1780.5 4465.5,-1750.5 4161.5,-1750.5"/>
-<text text-anchor="start" x="4168.5" y="-1761.9" font-family="Arial" font-size="14.00" fill="#000000">creation_date </text>
-<text text-anchor="start" x="4257.1998" y="-1761.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1720.5 4161.5,-1750.5 4465.5,-1750.5 4465.5,-1720.5 4161.5,-1720.5"/>
-<text text-anchor="start" x="4168.5" y="-1731.9" font-family="Arial" font-size="14.00" fill="#000000">metadata </text>
-<text text-anchor="start" x="4230.7454" y="-1731.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
-<polygon fill="none" stroke="#000000" points="4161.5,-1690.5 4161.5,-1720.5 4465.5,-1720.5 4465.5,-1690.5 4161.5,-1690.5"/>
-<text text-anchor="start" x="4168.5" y="-1701.9" font-family="Arial" font-size="14.00" fill="#000000">channel </text>
-<text text-anchor="start" x="4221.4102" y="-1701.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="#efefef" stroke="transparent" points="4161.5,-2035.5 4161.5,-2070.5 4465.5,-2070.5 4465.5,-2035.5 4161.5,-2035.5"/>
+<polygon fill="none" stroke="#000000" points="4161.5,-2035.5 4161.5,-2070.5 4465.5,-2070.5 4465.5,-2035.5 4161.5,-2035.5"/>
+<text text-anchor="start" x="4168.0767" y="-2048.3" font-family="Arial Bold" font-size="18.00" fill="#000000">public.expanded_functions</text>
+<text text-anchor="start" x="4381.1589" y="-2048.3" font-family="Arial" font-size="14.00" fill="#000000">    </text>
+<text text-anchor="start" x="4415.3637" y="-2048.3" font-family="Arial" font-size="14.00" fill="#666666">[VIEW]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-2005.5 4161.5,-2035.5 4465.5,-2035.5 4465.5,-2005.5 4161.5,-2005.5"/>
+<text text-anchor="start" x="4168.5" y="-2016.9" font-family="Arial" font-size="14.00" fill="#000000">key </text>
+<text text-anchor="start" x="4194.1732" y="-2016.9" font-family="Arial" font-size="14.00" fill="#666666">[uuid]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1975.5 4161.5,-2005.5 4465.5,-2005.5 4465.5,-1975.5 4161.5,-1975.5"/>
+<text text-anchor="start" x="4168.5" y="-1986.9" font-family="Arial" font-size="14.00" fill="#000000">name </text>
+<text text-anchor="start" x="4207.399" y="-1986.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1945.5 4161.5,-1975.5 4465.5,-1975.5 4465.5,-1945.5 4161.5,-1945.5"/>
+<text text-anchor="start" x="4168.5" y="-1956.9" font-family="Arial" font-size="14.00" fill="#000000">description_address </text>
+<text text-anchor="start" x="4297.6416" y="-1956.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(200)]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1915.5 4161.5,-1945.5 4465.5,-1945.5 4465.5,-1915.5 4161.5,-1915.5"/>
+<text text-anchor="start" x="4168.5" y="-1926.9" font-family="Arial" font-size="14.00" fill="#000000">description_checksum </text>
+<text text-anchor="start" x="4310.859" y="-1926.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(64)]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1885.5 4161.5,-1915.5 4465.5,-1915.5 4465.5,-1885.5 4161.5,-1885.5"/>
+<text text-anchor="start" x="4168.5" y="-1896.9" font-family="Arial" font-size="14.00" fill="#000000">function_address </text>
+<text text-anchor="start" x="4278.9824" y="-1896.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(200)]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1855.5 4161.5,-1885.5 4465.5,-1885.5 4465.5,-1855.5 4161.5,-1855.5"/>
+<text text-anchor="start" x="4168.5" y="-1866.9" font-family="Arial" font-size="14.00" fill="#000000">function_checksum </text>
+<text text-anchor="start" x="4292.1998" y="-1866.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(64)]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1825.5 4161.5,-1855.5 4465.5,-1855.5 4465.5,-1825.5 4161.5,-1825.5"/>
+<text text-anchor="start" x="4168.5" y="-1836.9" font-family="Arial" font-size="14.00" fill="#000000">permissions </text>
+<text text-anchor="start" x="4247.0554" y="-1836.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1795.5 4161.5,-1825.5 4465.5,-1825.5 4465.5,-1795.5 4161.5,-1795.5"/>
+<text text-anchor="start" x="4168.5" y="-1806.9" font-family="Arial" font-size="14.00" fill="#000000">owner </text>
+<text text-anchor="start" x="4210.5056" y="-1806.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1765.5 4161.5,-1795.5 4465.5,-1795.5 4465.5,-1765.5 4161.5,-1765.5"/>
+<text text-anchor="start" x="4168.5" y="-1776.9" font-family="Arial" font-size="14.00" fill="#000000">creation_date </text>
+<text text-anchor="start" x="4257.1998" y="-1776.9" font-family="Arial" font-size="14.00" fill="#666666">[timestamp with time zone]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1735.5 4161.5,-1765.5 4465.5,-1765.5 4465.5,-1735.5 4161.5,-1735.5"/>
+<text text-anchor="start" x="4168.5" y="-1746.9" font-family="Arial" font-size="14.00" fill="#000000">metadata </text>
+<text text-anchor="start" x="4230.7454" y="-1746.9" font-family="Arial" font-size="14.00" fill="#666666">[jsonb]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1705.5 4161.5,-1735.5 4465.5,-1735.5 4465.5,-1705.5 4161.5,-1705.5"/>
+<text text-anchor="start" x="4168.5" y="-1716.9" font-family="Arial" font-size="14.00" fill="#000000">channel </text>
+<text text-anchor="start" x="4221.4102" y="-1716.9" font-family="Arial" font-size="14.00" fill="#666666">[varchar(100)]</text>
+<polygon fill="none" stroke="#000000" points="4161.5,-1675.5 4161.5,-1705.5 4465.5,-1705.5 4465.5,-1675.5 4161.5,-1675.5"/>
+<text text-anchor="start" x="4168.5" y="-1686.9" font-family="Arial" font-size="14.00" fill="#000000">status </text>
+<text text-anchor="start" x="4209.737" y="-1686.9" font-family="Arial" font-size="14.00" fill="#666666">[function_status]</text>
 </g>
 </g>
 </svg>

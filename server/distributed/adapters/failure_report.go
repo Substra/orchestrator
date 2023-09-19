@@ -35,7 +35,7 @@ func (a *FailureReportAdapter) RegisterFailureReport(ctx context.Context, newFai
 		// In this very specific case we are in a retry context after a timeout.
 		// We can assume that the previous request succeeded and created the asset.
 		// So we convert the error in a success response.
-		err = invocator.Call(ctx, "orchestrator.failurereport:GetFailureReport", &asset.GetFailureReportParam{ComputeTaskKey: newFailureReport.ComputeTaskKey}, failureReport)
+		err = invocator.Call(ctx, "orchestrator.failurereport:GetFailureReport", &asset.GetFailureReportParam{AssetKey: newFailureReport.AssetKey}, failureReport)
 		return failureReport, err
 	}
 
