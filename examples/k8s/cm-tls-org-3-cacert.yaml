@@ -29,6 +29,5 @@ data:
     -----END CERTIFICATE-----
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: orchestrator-tls-cacert
   namespace: org-3

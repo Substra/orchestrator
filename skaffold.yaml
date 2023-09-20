@@ -1,8 +1,62 @@
+---
+apiVersion: skaffold/v4beta2
+kind: Config
+metadata:
+  name: cert_manager
+manifests:
+  helm:
+    releases:
+      - name: cert-manager
+        remoteChart: jetstack/cert-manager
+        namespace: cert-manager
+        version: v1.9.1
+        createNamespace: true
+deploy:
+  helm:
+    hooks:
+      before:
+        - host:
+            command:
+              - sh
+              - -c
+              - kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.9.1/cert-manager.crds.yaml
+profiles:
+  - name: apponly
+    patches:
+      - op: remove
+        path: /manifests/helm
+---
+apiVersion: skaffold/v4beta2
+kind: Config
+metadata:
+  name: certificates
+requires:
+  - configs:
+    - cert_manager
+manifests:
+  rawYaml:
+    - examples/k8s/cm-tls-org-1-cacert.yaml
+    - examples/k8s/secret-cacert-certmanager.yaml
+    - examples/k8s/certmanagerca.yaml
+    - examples/k8s/cm-tls-org-2-cacert.yaml
+deploy:
+  kubectl: {}
+profiles:
+  - name: apponly
+    patches:
+      - op: remove
+        path: /manifests/rawYaml
+  - name: three-orgs
+    patches:
+      - op: add
+        path: /manifests/rawYaml/-
+        value: "examples/k8s/cm-tls-org-3-cacert.yaml"
+---
 apiVersion: skaffold/v4beta2
 kind: Config
 requires:
   - configs:
-      - cert_manager
+    - cert_manager
 build:
   artifacts:
     - image: substra/orchestrator-server
@@ -50,56 +104,3 @@ profiles:
       - op: add
         path: /manifests/helm/releases/0/skipBuildDependencies
         value: true
----
-apiVersion: skaffold/v4beta2
-kind: Config
-metadata:
-  name: certificates
-requires:
-  - configs:
-      - cert_manager
-manifests:
-  rawYaml:
-    - examples/k8s/cm-tls-org-1-cacert.yaml
-    - examples/k8s/secret-cacert-certmanager.yaml
-    - examples/k8s/certmanagerca.yaml
-    - examples/k8s/cm-tls-org-2-cacert.yaml
-deploy:
-  kubectl: {}
-profiles:
-  - name: apponly
-    patches:
-      - op: remove
-        path: /manifests/rawYaml
-  - name: three-orgs
-    patches:
-      - op: add
-        path: /manifests/rawYaml/-
-        value: "examples/k8s/cm-tls-org-3-cacert.yaml"
----
-apiVersion: skaffold/v4beta2
-kind: Config
-metadata:
-  name: cert_manager
-manifests:
-  helm:
-    releases:
-      - name: cert-manager
-        remoteChart: jetstack/cert-manager
-        namespace: cert-manager
-        version: v1.9.1
-        createNamespace: true
-deploy:
-  helm:
-    hooks:
-      before:
-        - host:
-            command:
-              - sh
-              - -c
-              - kubectl apply --context=${SKAFFOLD_KUBE_CONTEXT} -f https://github.com/jetstack/cert-manager/releases/download/v1.9.1/cert-manager.crds.yaml
-profiles:
-  - name: apponly
-    patches:
-      - op: remove
-        path: /manifests/helm
