@@ -17,7 +17,7 @@ type sqlFunction struct {
 	Key          string
 	Name         string
 	Description  asset.Addressable
-	Function     asset.Addressable
+	Archive      asset.Addressable
 	Permissions  asset.Permissions
 	Owner        string
 	CreationDate time.Time
@@ -30,7 +30,7 @@ func (a *sqlFunction) toFunction() *asset.Function {
 		Key:          a.Key,
 		Name:         a.Name,
 		Description:  &a.Description,
-		Function:     &a.Function,
+		Archive:      &a.Archive,
 		Permissions:  &a.Permissions,
 		Owner:        a.Owner,
 		CreationDate: timestamppb.New(a.CreationDate),
@@ -46,7 +46,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 		return err
 	}
 
-	err = d.addAddressable(function.Function)
+	err = d.addAddressable(function.Archive)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 	stmt := getStatementBuilder().
 		Insert("functions").
 		Columns("key", "channel", "name", "description", "functionAddress", "permissions", "owner", "creation_date", "metadata", "status").
-		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Function.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String())
+		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Archive.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String())
 
 	err = d.exec(stmt)
 	if err != nil {
@@ -87,7 +87,7 @@ func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	}
 
 	al := sqlFunction{}
-	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
+	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -175,7 +175,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	for rows.Next() {
 		al := sqlFunction{}
 
-		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
+		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
 		if err != nil {
 			return nil, "", err
 		}

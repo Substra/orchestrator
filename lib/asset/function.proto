@@ -44,7 +44,7 @@ message Function {
   string key = 1;
   string name = 2;
   Addressable description = 4;
-  Addressable function = 5;
+  Addressable archive = 5;
   Permissions permissions = 6;
   string owner = 7;
   google.protobuf.Timestamp creation_date = 8;
@@ -63,7 +63,7 @@ message NewFunction {
   string key = 1;
   string name = 2;
   Addressable description = 4;
-  Addressable function = 5;
+  Addressable archive = 5;
   NewPermissions new_permissions = 6;
   map<string, string> metadata = 17;
   map<string, FunctionInput> inputs = 18;

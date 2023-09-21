@@ -15,7 +15,7 @@ func (a *NewFunction) Validate() error {
 		validation.Field(&a.Key, validation.Required, is.UUID),
 		validation.Field(&a.Name, nameValidationRules...),
 		validation.Field(&a.Description, validation.Required),
-		validation.Field(&a.Function, validation.Required),
+		validation.Field(&a.Archive, validation.Required),
 		validation.Field(&a.Metadata, validation.By(validateMetadata)),
 		validation.Field(&a.NewPermissions, validation.Required),
 		validation.Field(&a.Inputs, validation.By(validateInputs)),
