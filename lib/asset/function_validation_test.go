@@ -32,21 +32,21 @@ func TestFunctionValidate(t *testing.T) {
 		"invalidKey": {&NewFunction{
 			Key:            "not36chars",
 			Name:           "invalid key",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 		}, false},
 		"valid": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 		}, true},
 		"invalid_input_kind": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 			Inputs: map[string]*FunctionInput{
@@ -56,7 +56,7 @@ func TestFunctionValidate(t *testing.T) {
 		"invalid_output_kind": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 			Outputs: map[string]*FunctionOutput{
@@ -66,7 +66,7 @@ func TestFunctionValidate(t *testing.T) {
 		"invalid_input: data manager + optional": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 			Inputs: map[string]*FunctionInput{
@@ -76,7 +76,7 @@ func TestFunctionValidate(t *testing.T) {
 		"invalid_input: data manager + multiple": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 			Inputs: map[string]*FunctionInput{
@@ -86,7 +86,7 @@ func TestFunctionValidate(t *testing.T) {
 		"invalid_output: performance + multiple": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 			Outputs: map[string]*FunctionOutput{
@@ -96,7 +96,7 @@ func TestFunctionValidate(t *testing.T) {
 		"invalid inputs: multiple data managers": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 			Inputs: map[string]*FunctionInput{
@@ -107,7 +107,7 @@ func TestFunctionValidate(t *testing.T) {
 		"invalid inputs: data manager without data sample": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 			Inputs: map[string]*FunctionInput{
@@ -117,7 +117,7 @@ func TestFunctionValidate(t *testing.T) {
 		"invalid inputs: data sample without data manager": {&NewFunction{
 			Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 			Name:           "Test function",
-			Function:       validAddressable,
+			Archive:        validAddressable,
 			Description:    validAddressable,
 			NewPermissions: validPerms,
 			Inputs: map[string]*FunctionInput{
