@@ -1,61 +1,3 @@
-apiVersion: skaffold/v4beta2
-kind: Config
-requires:
-  - configs:
-      - cert_manager
-build:
-  artifacts:
-    - image: substra/orchestrator-server
-      context: .
-      docker:
-        dockerfile: docker/orchestrator-server/Dockerfile
-manifests:
-  helm:
-    releases:
-      - name: orchestrator-org-1
-        chartPath: charts/orchestrator
-        valuesFiles:
-          - examples/values/orchestrator-org-1.yaml
-        namespace: org-1
-        setValueTemplates:
-          orchestrator.image.registry: "{{.IMAGE_DOMAIN_substra_orchestrator_server}}"
-          orchestrator.image.repository: "{{.IMAGE_REPO_NO_DOMAIN_substra_orchestrator_server}}"
-          orchestrator.image.tag: "{{.IMAGE_TAG_substra_orchestrator_server}}@{{.IMAGE_DIGEST_substra_orchestrator_server}}"
-        createNamespace: true
-deploy:
-  helm: {}
-profiles:
-  - name: nodeps
-    patches:
-      - op: add
-        path: /manifests/helm/releases/0/skipBuildDependencies
-        value: true
----
-apiVersion: skaffold/v4beta2
-kind: Config
-metadata:
-  name: certificates
-requires:
-  - configs:
-      - cert_manager
-manifests:
-  rawYaml:
-    - examples/k8s/cm-tls-org-1-cacert.yaml
-    - examples/k8s/secret-cacert-certmanager.yaml
-    - examples/k8s/certmanagerca.yaml
-    - examples/k8s/cm-tls-org-2-cacert.yaml
-deploy:
-  kubectl: {}
-profiles:
-  - name: apponly
-    patches:
-      - op: remove
-        path: /manifests/rawYaml
-  - name: three-orgs
-    patches:
-      - op: add
-        path: /manifests/rawYaml/-
-        value: "examples/k8s/cm-tls-org-3-cacert.yaml"
 ---
 apiVersion: skaffold/v4beta2
 kind: Config
@@ -83,3 +25,62 @@ profiles:
     patches:
       - op: remove
         path: /manifests/helm
+---
+apiVersion: skaffold/v4beta2
+kind: Config
+metadata:
+  name: certificates
+requires:
+  - configs:
+    - cert_manager
+manifests:
+  rawYaml:
+    - examples/k8s/cm-tls-org-1-cacert.yaml
+    - examples/k8s/secret-cacert-certmanager.yaml
+    - examples/k8s/certmanagerca.yaml
+    - examples/k8s/cm-tls-org-2-cacert.yaml
+deploy:
+  kubectl: {}
+profiles:
+  - name: apponly
+    patches:
+      - op: remove
+        path: /manifests/rawYaml
+  - name: three-orgs
+    patches:
+      - op: add
+        path: /manifests/rawYaml/-
+        value: "examples/k8s/cm-tls-org-3-cacert.yaml"
+---
+apiVersion: skaffold/v4beta2
+kind: Config
+requires:
+  - configs:
+    - cert_manager
+build:
+  artifacts:
+    - image: substra/orchestrator-server
+      context: .
+      docker:
+        dockerfile: docker/orchestrator-server/Dockerfile
+manifests:
+  helm:
+    releases:
+      - name: orchestrator-org-1
+        chartPath: charts/orchestrator
+        valuesFiles:
+          - examples/values/orchestrator-org-1.yaml
+        namespace: org-1
+        setValueTemplates:
+          orchestrator.image.registry: "{{.IMAGE_DOMAIN_substra_orchestrator_server}}"
+          orchestrator.image.repository: "{{.IMAGE_REPO_NO_DOMAIN_substra_orchestrator_server}}"
+          orchestrator.image.tag: "{{.IMAGE_TAG_substra_orchestrator_server}}@{{.IMAGE_DIGEST_substra_orchestrator_server}}"
+        createNamespace: true
+deploy:
+  helm: {}
+profiles:
+  - name: nodeps
+    patches:
+      - op: add
+        path: /manifests/helm/releases/0/skipBuildDependencies
+        value: true
