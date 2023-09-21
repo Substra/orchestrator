@@ -23,6 +23,7 @@ type sqlFunction struct {
 	CreationDate time.Time
 	Metadata     map[string]string
 	Status       asset.FunctionStatus
+	Image        asset.Addressable
 }
 
 func (a *sqlFunction) toFunction() *asset.Function {
@@ -36,6 +37,7 @@ func (a *sqlFunction) toFunction() *asset.Function {
 		CreationDate: timestamppb.New(a.CreationDate),
 		Metadata:     a.Metadata,
 		Status:       a.Status,
+		Image:        &a.Image,
 	}
 }
 
@@ -51,10 +53,19 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 		return err
 	}
 
+	var imageStorageAdress string
+	if function.Image != nil {
+		err = d.addAddressable(function.Image)
+		if err != nil {
+			return err
+		}
+		imageStorageAdress = function.Image.StorageAddress
+	}
+
 	stmt := getStatementBuilder().
 		Insert("functions").
-		Columns("key", "channel", "name", "description", "functionAddress", "permissions", "owner", "creation_date", "metadata", "status").
-		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Archive.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String())
+		Columns("key", "channel", "name", "description", "archive_address", "permissions", "owner", "creation_date", "metadata", "status", "image_address").
+		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Archive.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String(), imageStorageAdress)
 
 	err = d.exec(stmt)
 	if err != nil {
@@ -77,7 +88,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 // GetFunction implements persistence.FunctionDBAL
 func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata", "status").
+		Select("key", "name", "description_address", "description_checksum", "archive_address", "archive_checksum", "permissions", "owner", "creation_date", "metadata", "status", "image_address", "image_checksum").
 		From("expanded_functions").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
@@ -87,7 +98,7 @@ func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	}
 
 	al := sqlFunction{}
-	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
+	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &al.Image.StorageAddress, &al.Image.Checksum)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -146,7 +157,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata", "status").
+		Select("key", "name", "description_address", "description_checksum", "archive_address", "archive_checksum", "permissions", "owner", "creation_date", "metadata", "status", "image_address", "image_checksum").
 		From("expanded_functions").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").
@@ -175,7 +186,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	for rows.Next() {
 		al := sqlFunction{}
 
-		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
+		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &al.Image.StorageAddress, &al.Image.Checksum)
 		if err != nil {
 			return nil, "", err
 		}
