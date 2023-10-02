@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
 	orcerrors "github.com/substra/orchestrator/lib/errors"
@@ -129,7 +131,7 @@ func (s *FunctionService) FunctionExists(key string) (bool, error) {
 	return s.GetFunctionDBAL().FunctionExists(key)
 }
 
-// UpdateFunction updates mutable fields of an function. List of mutable fields : name.
+// UpdateFunction updates mutable fields of an function. List of mutable fields : name, image.
 func (s *FunctionService) UpdateFunction(a *asset.UpdateFunctionParam, requester string) error {
 	s.GetLogger().Debug().Str("requester", requester).Interface("functionUpdate", a).Msg("Updating function")
 	err := a.Validate()
@@ -148,8 +150,13 @@ func (s *FunctionService) UpdateFunction(a *asset.UpdateFunctionParam, requester
 		return orcerrors.NewPermissionDenied("requester does not own the function")
 	}
 
+	if function.Image == nil && function.Status == asset.FunctionStatus_FUNCTION_STATUS_READY {
+		return orcerrors.FromValidationError(asset.FunctionKind, errors.New("Image should not be null when function status is ready"))
+	}
+
 	// Update function name
 	function.Name = a.Name
+	function.Image = a.Image
 
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
