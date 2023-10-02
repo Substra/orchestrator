@@ -93,6 +93,7 @@ message QueryFunctionsParam {
 message UpdateFunctionParam {
   string key = 1;
   string name = 2;
+  Addressable image = 3;
 }
 
 message UpdateFunctionResponse {}
