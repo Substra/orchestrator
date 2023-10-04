@@ -197,4 +197,11 @@ Disable SSL if using the integrated Postgres, otherwise leave users with the opt
     capabilities:
       drop:
         - ALL
+  env:
+    - name: PGUSER
+      value: {{ .Values.database.auth.username }}
+    - name: PGPASSWORD
+      value: {{ .Values.database.auth.password }}
+    - name: PGDATABASE
+      value: {{ .Values.database.auth.database }}
 {{- end -}}
