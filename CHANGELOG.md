@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.1](https://github.com/Substra/orchestrator/releases/tag/0.36.1) - 2023-10-06
+
 ### Added
 
 - `three_orgs` Skaffold profile for standalone orchestrator ([#280](https://github.com/Substra/orchestrator/pull/280))
