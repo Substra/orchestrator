@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.5.6] - 2023-10-07
+
+## Changed
+
+- `wait-postgresql` initContainers refactored to Helm helper templates
+
 ## [7.5.5] - 2023-10-06
 
 ### Changed

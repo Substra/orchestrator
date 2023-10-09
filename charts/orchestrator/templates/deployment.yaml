@@ -25,12 +25,10 @@ spec:
       serviceAccountName: {{ include "orchestrator.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      initContainers:
       {{- if eq .Values.orchestrator.mode "standalone" }}
-      - name: wait-postgresql
-        image: postgres
-        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
-      {{- end}}
+      initContainers:
+        {{- include "substra-orc.waitPostgresqlInitContainer" . | nindent  8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
