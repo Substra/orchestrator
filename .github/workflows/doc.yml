@@ -61,7 +61,7 @@ jobs:
           rm -f "$DB_DIAGRAM_PATH"
           mv "$TBLS_DIR/schema.svg" "$DB_DIAGRAM_PATH"
       - name: Commit
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           file_pattern: docs/schemas/standalone-database.svg
           commit_message: '[auto] generate database diagram'

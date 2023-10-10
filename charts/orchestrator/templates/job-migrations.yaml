@@ -19,9 +19,7 @@ spec:
       {{- end }}
       restartPolicy: OnFailure
       initContainers:
-      - name: wait-postgresql
-        image: postgres
-        command: ['sh', '-c', 'until pg_isready --host={{ template "substra-orc.database.host" . }} --port={{ .Values.database.port }}; do echo "Waiting for postgresql service"; sleep 2; done;']
+        {{- include "substra-orc.waitPostgresqlInitContainer" . | nindent 8 }}
       containers:
       - name: db-migrations
         image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
