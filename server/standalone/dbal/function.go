@@ -1,6 +1,7 @@
 package dbal
 
 import (
+	"database/sql"
 	"errors"
 	"strconv"
 	"time"
@@ -53,13 +54,16 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 		return err
 	}
 
-	var imageStorageAdress string
+	var imageStorageAdress sql.NullString
 	if function.Image != nil {
 		err = d.addAddressable(function.Image)
 		if err != nil {
 			return err
 		}
-		imageStorageAdress = function.Image.StorageAddress
+		imageStorageAdress.String = function.Image.StorageAddress
+		if function.Image.StorageAddress == "" {
+			imageStorageAdress.Valid = false
+		}
 	}
 
 	stmt := getStatementBuilder().
@@ -98,7 +102,12 @@ func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	}
 
 	al := sqlFunction{}
-	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &al.Image.StorageAddress, &al.Image.Checksum)
+	var imageStorageAdress sql.NullString
+	var imageChecksum sql.NullString
+	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &imageStorageAdress, &imageChecksum)
+
+	al.Image.StorageAddress = imageStorageAdress.String
+	al.Image.Checksum = imageChecksum.String
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -186,10 +195,15 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	for rows.Next() {
 		al := sqlFunction{}
 
+		var imageStorageAdress sql.NullString
+		var imageChecksum sql.NullString
 		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &al.Image.StorageAddress, &al.Image.Checksum)
 		if err != nil {
 			return nil, "", err
 		}
+
+		al.Image.StorageAddress = imageStorageAdress.String
+		al.Image.Checksum = imageChecksum.String
 
 		functions = append(functions, al.toFunction())
 		count++
