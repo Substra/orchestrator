@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `compute_task_key`by `asset_key` in `FailureReport` ([#277](https://github.com/Substra/orchestrator/pull/277))
 - `FailureReport` now can be reference a `ComputeTask` or a `Function` through `asset_key` + `asset_type` ([#277](https://github.com/Substra/orchestrator/pull/277))
 
+### Fixed
+
+- incorrect link in documentation ([#307](https://github.com/Substra/orchestrator/pull/307))
+
 ## [0.37.0](https://github.com/Substra/orchestrator/releases/tag/0.37.0) - 2023-10-18
 
 ### Added
