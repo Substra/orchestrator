@@ -6,6 +6,7 @@ MIGRATIONS_DIR = $(PROJECT_ROOT)/server/standalone/migration
 VERSION = dirty-$(shell git rev-parse --short HEAD)
 protos = $(PROJECT_ROOT)/lib/asset
 go_src = $(shell find . -type f -name '*.go')
+files_to_lint := $(shell gofmt -l -s .)
 sql_migrations = $(wildcard $(MIGRATIONS_DIR)/*.sql)
 
 protobufs = $(wildcard $(protos)/*.proto)
@@ -26,8 +27,18 @@ orchestrator: $(ORCHESTRATOR_BIN)  ## Build server binary
 .PHONY: codegen
 codegen: $(pbgo) $(migrations_binpack)  ## Build codegen tool
 
+.PHONY: gofmt
+gofmt: gofmt -l -s .
+
+.PHONY: lint-gofmt ## Lint the codebase with gofmt
+lint-gofmt:
+	@if [ "$(files_to_lint)" ]; then \
+		@echo "Following files should be linted:"; \
+		echo "$(files_to_lint)"; \
+		exit 1; \
+	fi
 .PHONY: lint
-lint: codegen mocks  ## Analyze the codebase
+lint: codegen mocks lint-gofmt  ## Analyze the codebase
 	golangci-lint run
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
