@@ -227,12 +227,26 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 
 // UpdateFunction updates the mutable fields of an function in the DB. List of mutable fields: name, status, image.
 func (d *DBAL) UpdateFunction(function *asset.Function) error {
-	stmt := getStatementBuilder().
-		Update("functions").
-		Set("name", function.Name).
-		Set("status", function.Status.String()).
-		Set("image", function.Image).
-		Where(sq.Eq{"channel": d.channel, "key": function.Key})
+	var err error
+	if function.Image.StorageAddress != "" {
+		err = d.updateAddressable(function.Image)
+		if err != nil {
+			return err
+		}
+		stmt := getStatementBuilder().
+			Update("functions").
+			Set("name", function.Name).
+			Set("status", function.Status.String()).
+			Set("image_address", function.Image.StorageAddress).
+			Where(sq.Eq{"channel": d.channel, "key": function.Key})
+		return d.exec(stmt)
+	} else {
+		stmt := getStatementBuilder().
+			Update("functions").
+			Set("name", function.Name).
+			Set("status", function.Status.String()).
+			Where(sq.Eq{"channel": d.channel, "key": function.Key})
+		return d.exec(stmt)
+	}
 
-	return d.exec(stmt)
 }
