@@ -43,5 +43,7 @@ jobs:
           go install github.com/vektra/mockery/v2@v2.13.1
       - name: Build
         run: make
+      - name: Lint
+        run: make lint-gofmt
       - name: Test
         run: make test
