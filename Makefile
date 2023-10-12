@@ -41,6 +41,10 @@ lint-gofmt:
 lint: codegen mocks lint-gofmt  ## Analyze the codebase
 	golangci-lint run
 
+.PHONY: format
+format: codegen # Format codebase
+	gofmt -s -w .
+
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 	$(build_env) go build -o $(ORCHESTRATOR_BIN) -ldflags="-X 'github.com/substra/orchestrator/server/common.Version=$(VERSION)'" ./server
 
