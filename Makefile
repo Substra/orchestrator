@@ -33,7 +33,7 @@ goimports: goimports -l .
 .PHONY: lint-goimports ## Lint the codebase with gimports
 lint-goimports:
 	@if [ "$(files_to_lint)" ]; then \
-		@echo "Following files should be linted:"; \
+		echo "Following files should be linted:"; \
 		echo "$(files_to_lint)"; \
 		exit 1; \
 	fi
