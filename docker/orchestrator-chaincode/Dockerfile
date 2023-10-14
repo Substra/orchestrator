@@ -1,13 +1,11 @@
 # Build stage
-FROM golang:1.19-alpine3.16 AS build
-COPY ./docker/orchestrator-chaincode/dependencies.json /tmp/dependencies.json
+FROM golang:1.19-bookworm AS build
 
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+# Install necessary utilities
+RUN apt-get update && apt-get install -y git make protoc protobuf-dev --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
-# hadolint ignore=DL3018
-RUN apk update && apk add --no-cache jq \
-    && jq -r '.[] | "\(.name)=\(.version)"' /tmp/dependencies.json | xargs apk add --no-cache \
-    && rm /tmp/dependencies.json
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 ARG VERSION=dev
 ENV GO111MODULE=on
@@ -29,7 +27,7 @@ RUN make ./bin/chaincode VERSION=$VERSION && mv ./bin/chaincode /bin/chaincode
 
 
 # Expose the binary
-FROM alpine:3.16 as prod
+FROM debian:bookworm-slim as prod
 
 COPY --from=build /bin/chaincode /app/chaincode
 USER 1000
