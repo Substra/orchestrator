@@ -41,9 +41,10 @@ jobs:
           go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
           go install github.com/vektra/mockery/v2@v2.13.1
+          go install golang.org/x/tools/cmd/goimports@latest
       - name: Build
         run: make
       - name: Lint
-        run: make lint-gofmt
+        run: make lint-goimports
       - name: Test
         run: make test
