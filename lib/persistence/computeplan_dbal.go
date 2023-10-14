@@ -1,9 +1,10 @@
 package persistence
 
 import (
+	"time"
+
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/lib/common"
-	"time"
 )
 
 type ComputePlanDBAL interface {

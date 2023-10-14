@@ -2,10 +2,11 @@ package service
 
 import (
 	"errors"
-	"github.com/substra/orchestrator/lib/persistence"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 	"time"
+
+	"github.com/substra/orchestrator/lib/persistence"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/substra/orchestrator/lib/asset"

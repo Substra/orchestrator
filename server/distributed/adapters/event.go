@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+
 	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/lib/asset"
 	"github.com/substra/orchestrator/server/distributed/chaincode"
