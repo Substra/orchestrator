@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.19-alpine3.16 AS build
+FROM golang:1.21-alpine3.18 AS build
 COPY ./docker/orchestrator-chaincode/dependencies.json /tmp/dependencies.json
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
