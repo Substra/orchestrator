@@ -29,7 +29,7 @@ RUN make ./bin/chaincode VERSION=$VERSION && mv ./bin/chaincode /bin/chaincode
 
 
 # Expose the binary
-FROM alpine:3.16 as prod
+FROM alpine:3.18 as prod
 
 COPY --from=build /bin/chaincode /app/chaincode
 USER 1000

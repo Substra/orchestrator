@@ -39,7 +39,7 @@ RUN make ./bin/orchestrator VERSION=$VERSION && mv ./bin/orchestrator /bin/orche
 
 
 # Expose the binary
-FROM alpine:3.16 as prod
+FROM alpine:3.18 as prod
 
 COPY --from=build /bin/orchestrator /app/orchestrator
 COPY --from=build /bin/grpc_health_probe /bin/grpc_health_probe
