@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.19-alpine3.16 AS build
+FROM golang:1.21-alpine3.18 AS build
 COPY ./docker/orchestrator-chaincode/dependencies.json /tmp/dependencies.json
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
@@ -29,7 +29,7 @@ RUN make ./bin/chaincode VERSION=$VERSION && mv ./bin/chaincode /bin/chaincode
 
 
 # Expose the binary
-FROM alpine:3.16 as prod
+FROM alpine:3.18 as prod
 
 COPY --from=build /bin/chaincode /app/chaincode
 USER 1000
