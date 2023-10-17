@@ -1,6 +1,6 @@
 module github.com/substra/orchestrator
 
-go 1.18
+go 1.21
 
 replace github.com/hyperledger/fabric-sdk-go => github.com/owkin/fabric-sdk-go v1.0.1-0.20220727074314-4462385f801d
 
