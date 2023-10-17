@@ -2,8 +2,9 @@ package failurereport
 
 import (
 	"context"
-	"github.com/substra/orchestrator/lib/service"
 	"testing"
+
+	"github.com/substra/orchestrator/lib/service"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/substra/orchestrator/chaincode/communication"

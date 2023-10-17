@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"encoding/json"
+
 	"github.com/substra/orchestrator/lib/asset"
 
 	"github.com/hyperledger/fabric-chaincode-go/shim"
