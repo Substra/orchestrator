@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- BREAKING: `distributed` Skaffold profile and mentions in doc
+- BREAKING: `chaincode-init` and `chaincode` Dockerfiles
+
 ## [0.37.0](https://github.com/Substra/orchestrator/releases/tag/0.37.0) - 2023-10-18
 
 ### Added
