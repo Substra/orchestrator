@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [main]
 
-concurrency: 
+concurrency:
   group: "${{ github.workflow_ref }} - ${{ github.ref }} - ${{ github.event_name }}"
   cancel-in-progress: true
 
@@ -16,7 +16,7 @@ jobs:
   build:
     strategy:
       matrix:
-        images: [orchestrator-server, orchestrator-chaincode, orchestrator-chaincode-init]
+        images: [orchestrator-server]
     uses: substra/substra-gha-workflows/.github/workflows/docker-build.yaml@main
     with:
       image: ${{ matrix.images }}

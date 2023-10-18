@@ -12,8 +12,6 @@ jobs:
       matrix:
         dockerfile:
           - orchestrator-server
-          - orchestrator-chaincode
-          - orchestrator-chaincode-init
     steps:
       - uses: actions/checkout@v4
 
