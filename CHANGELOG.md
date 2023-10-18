@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0](https://github.com/Substra/orchestrator/releases/tag/0.37.0) - 2023-10-18
+
+### Added
+
+- Source code formatting ([#313](https://github.com/Substra/orchestrator/pull/313))
+
+### Changed
+
+- Bump go version to 1.21 ([#316](https://github.com/Substra/orchestrator/pull/316))
+
 ## [0.36.1](https://github.com/Substra/orchestrator/releases/tag/0.36.1) - 2023-10-06
 
 ### Added
