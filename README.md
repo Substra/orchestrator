@@ -108,43 +108,6 @@ grpcurl -insecure orchestrator.org-1.com:443 list
 
 You can also deploy [substra-backend](https://github.com/substra/substra-backend) with a `skaffold dev` or `skaffold run`
 
-### Distributed mode
-
-In distributed mode, the orchestrator only requires a matching chaincode.
-So you need to build the chaincode image (from this repo) to be used in `hlf-k8s` in your k8s cluster.
-Choose a tag (example uses `dev`).
-
-```bash
-# If you use minikube, run `eval $(minikube -p minikube docker-env)` before the `docker build` command
-# If you use kind, run `kind load docker-image ghcr.io/substra/orchestrator-chaincode:dev` after the `docker build` command
-# If you use k3d, run `k3d image import ghcr.io/substra/orchestrator-chaincode:dev`
-docker build -f docker/orchestrator-chaincode/Dockerfile -t ghcr.io/substra/orchestrator-chaincode:dev .
-docker build -f docker/orchestrator-chaincode-init/Dockerfile -t ghcr.io/substra/orchestrator-chaincode-init:dev .
-```
-
-Update hlf-k8s' values so that it uses your `dev` image instead of `latest`.
-
-Deploy [hlf-k8s](https://github.com/substra/hlf-k8s) with a `skaffold dev` or `skaffold run`.
-
-Then, in the orchestrator repo:
-
-```bash
-skaffold dev -p distributed
-```
-
-or
-```bash
-skaffold run -p distributed
-```
-
-Assuming `orchestrator.org-1.com` and `orchestrator.org-2.com` are pointing to your local k8s cluster IP (edit your `/etc/hosts` file for that), the following command should list available services:
-
-```bash
-grpcurl --cacert examples/tools/ca.crt --key examples/tools/client-org-1.key --cert examples/tools/client-org-1.crt --rpc-header 'mspid: MyOrg1MSP' --rpc-header 'channel: mychannel' --rpc-header 'chaincode: mycc' orchestrator.org-1.com:443 list
-```
-
-You can also deploy [substra-backend](https://github.com/substra/substra-backend) with a `skaffold dev -p distributed` or `skaffold run -p distributed`
-
 ### Testing
 
 You can call the local orchestrator gRPC endpoint using [evans](https://github.com/ktr0731/evans)
