@@ -32,20 +32,19 @@ func (d *DBAL) AddressableExists(storageAddress string) (bool, error) {
 }
 
 func (d *DBAL) updateAddressable(addressable *asset.Addressable) error {
-	addressable_exist, err := d.AddressableExists(addressable.StorageAddress)
+	addressableExist, err := d.AddressableExists(addressable.StorageAddress)
 	if err != nil {
 		return err
 	}
-	if addressable_exist {
+	if addressableExist {
 		stmt := getStatementBuilder().
 			Update("addressables").
 			Set("storage_address", addressable.StorageAddress).
 			Set("checksum", addressable.Checksum).
 			Where(sq.Eq{"storage_address": addressable.StorageAddress})
 		return d.exec(stmt)
-	} else {
-		return d.addAddressable(addressable)
 	}
+	return d.addAddressable(addressable)
 }
 
 func (d *DBAL) deleteAddressable(storageAddress string) error {

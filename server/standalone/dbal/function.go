@@ -240,13 +240,12 @@ func (d *DBAL) UpdateFunction(function *asset.Function) error {
 			Set("image_address", function.Image.StorageAddress).
 			Where(sq.Eq{"channel": d.channel, "key": function.Key})
 		return d.exec(stmt)
-	} else {
-		stmt := getStatementBuilder().
-			Update("functions").
-			Set("name", function.Name).
-			Set("status", function.Status.String()).
-			Where(sq.Eq{"channel": d.channel, "key": function.Key})
-		return d.exec(stmt)
 	}
+	stmt := getStatementBuilder().
+		Update("functions").
+		Set("name", function.Name).
+		Set("status", function.Status.String()).
+		Where(sq.Eq{"channel": d.channel, "key": function.Key})
+	return d.exec(stmt)
 
 }
