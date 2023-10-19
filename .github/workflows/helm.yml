@@ -18,74 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-helm@v3.5
-        with:
-          version: "v3.12.0"
-        id: install
-      - name: Build dependencies
-        run: helm dep update charts/orchestrator
-      - name: Lint Chart
-        run: helm lint charts/orchestrator
-
-  generate-chart-readme:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Execute readme-generator-for-helm
-        run: make docs-charts
-      - name: Check diff
-        run: |
-          if [ -z "$(git status --porcelain)" ]; then
-            exit 0
-          else
-            echo "There should be no change generated, please run 'make docs-charts' to update the chart README.md"
-            git diff
-            exit 1
-          fi
-
-  publish:
-    name: Publish
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs:
-      - test
-      - generate-chart-readme
-    steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-helm@v3.5
-        with:
-          version: "v3.12.0"
-        id: install
-
-      - name: Add dependencies repo
-        run: |
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-
-      - name: Package chart
-        run: |
-          helm dep build charts/orchestrator
-          helm package charts/orchestrator
-
-      - name: Clone Substra charts
-        uses: actions/checkout@v4
-        with:
-          repository: Substra/charts
-          ref: 'main'
-          token:  ${{ secrets.CHARTS_GITHUB_TOKEN }}
-          path: substra-charts
-
-      - name: Publish chart
-        run: |
-          mv orchestrator-$(grep -e "^version" charts/orchestrator/Chart.yaml | cut -c10-).tgz substra-charts/
-          cd substra-charts
-          helm repo index .
-          git add .
-          git config --global user.email "gh-actions@github.com"
-          git config --global user.name "GitHub Action"
-          git commit -s --message "GitHub Action: ${{ github.repository }}@${{ github.sha }}"
-          git push --quiet --set-upstream origin main
+  test-generate-publish:
+    uses: substra/substra-gha-workflows/.github/workflows/helm.yml@main
+    with:
+      helm-repositories: '[{"name": "bitnami", "url": "https://charts.bitnami.com/bitnami"}]'
