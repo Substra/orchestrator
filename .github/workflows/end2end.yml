@@ -16,7 +16,7 @@ jobs:
   e2e:
     services:
       postgres:
-        image: postgres:14.6
+        image: postgres:16.0
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
