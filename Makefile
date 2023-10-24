@@ -16,10 +16,7 @@ pbgo = $(protobufs:.proto=.pb.go)
 build_env = CGO_ENABLED=0
 
 .PHONY: all
-all: chaincode orchestrator  ## Build all binaries
-
-.PHONY: chaincode
-chaincode: $(CHAINCODE_BIN)  ## Build chaincode binary
+all: orchestrator  ## Build all binaries
 
 .PHONY: orchestrator
 orchestrator: $(ORCHESTRATOR_BIN)  ## Build server binary
