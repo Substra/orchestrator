@@ -4,11 +4,20 @@ SELECT execute($$
         'FAILED_ASSET_COMPUTE_TASK',
         'FAILED_ASSET_FUNCTION'
     );
+    CREATE TABLE failed_asset_kinds (
+        kind VARCHAR(100) PRIMARY KEY
+    );
+
+    INSERT INTO failed_asset_kinds(kind)
+    VALUES  ('FAILED_ASSET_UNKNOWN'),
+            ('FAILED_ASSET_COMPUTE_TASK'),
+            ('FAILED_ASSET_FUNCTION');
 
     ALTER TABLE failure_reports
     RENAME COLUMN compute_task_key TO asset_key;
     ALTER TABLE failure_reports
-    ADD COLUMN asset_type failed_asset_kind DEFAULT 'FAILED_ASSET_COMPUTE_TASK';
+    ADD COLUMN asset_type VARCHAR(100) DEFAULT 'FAILED_ASSET_COMPUTE_TASK'
+    CONSTRAINT asset_kind_fkey REFERENCES failed_asset_kinds (kind);
     ALTER TABLE failure_reports
     ALTER COLUMN asset_type SET DEFAULT 'FAILED_ASSET_UNKNOWN';
     ALTER TABLE failure_reports
@@ -31,7 +40,7 @@ SELECT execute($$
     SET asset = jsonb_set(asset, '{assetKey}', asset->'computeTaskKey') - 'computeTaskKey'
     WHERE asset_kind = 'ASSET_FAILURE_REPORT' AND NOT(asset ? 'assetKey');
     UPDATE events e
-    SET asset = jsonb_set(asset, '{assetType}', to_jsonb('FAILED_ASSET_COMPUTE_TASK'::failed_asset_kind))
+    SET asset = jsonb_set(asset, '{assetType}', to_jsonb('FAILED_ASSET_COMPUTE_TASK'::text))
     WHERE asset_kind = 'ASSET_FAILURE_REPORT';
     
 $$) WHERE NOT column_exists('public', 'failure_reports', 'asset_type');
