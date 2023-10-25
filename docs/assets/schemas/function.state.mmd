@@ -1,0 +1,9 @@
+stateDiagram-v2
+    WAITING --> BUILDING
+    WAITING --> CANCELED
+    WAITING --> FAILED
+    BUILDING --> FAILED
+    BUILDING --> READY
+    READY --> [*]
+    FAILED --> [*]
+    CANCELED --> [*]

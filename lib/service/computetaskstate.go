@@ -339,3 +339,26 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 		return false
 	}
 }
+
+func (s *ComputeTaskService) propagateFunctionCancelation(functionKey string, requester string) error {
+	tasks, err := s.GetComputeTaskDBAL().GetFunctionRunnableTasks(functionKey)
+
+	if err != nil {
+		return err
+	}
+
+	for _, task := range tasks {
+		// We bypass the `requester` check as we checked the requester on the function state machine.
+		err := s.ApplyTaskAction(task.Key, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Function building failed", task.Worker)
+		if err != nil {
+			s.GetLogger().Error().
+				Err(err).
+				Str("functionKey", functionKey).
+				Str("taskKey", task.Key).
+				Msg("failed to propagate task action when applying function action")
+			return err
+		}
+	}
+
+	return nil
+}

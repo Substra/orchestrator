@@ -156,3 +156,41 @@ func TestUpdateFunctionValidate(t *testing.T) {
 		}
 	}
 }
+func TestApplyFunctionActionParam(t *testing.T) {
+	empty := &ApplyFunctionActionParam{}
+	valid := &ApplyFunctionActionParam{
+		FunctionKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
+		Action:      FunctionAction_FUNCTION_ACTION_BUILDING,
+	}
+	missingKey := &ApplyFunctionActionParam{
+		Action: FunctionAction_FUNCTION_ACTION_BUILDING,
+	}
+	missingAction := &ApplyFunctionActionParam{
+		FunctionKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
+	}
+	invalidAction := &ApplyFunctionActionParam{
+		FunctionKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
+		Action:      FunctionAction_FUNCTION_ACTION_UNKNOWN,
+	}
+
+	cases := map[string]struct {
+		valid bool
+		param *ApplyFunctionActionParam
+	}{
+		"valid":          {valid: true, param: valid},
+		"empty":          {valid: false, param: empty},
+		"missing key":    {valid: false, param: missingKey},
+		"missing action": {valid: false, param: missingAction},
+		"invalid action": {valid: false, param: invalidAction},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			if c.valid {
+				assert.NoError(t, c.param.Validate())
+			} else {
+				assert.Error(t, c.param.Validate())
+			}
+		})
+	}
+}

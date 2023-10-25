@@ -31,7 +31,7 @@ func TestMarshalUnmarshalEventAsset(t *testing.T) {
 		},
 		"failureReport": {
 			AssetKind: AssetKind_ASSET_FAILURE_REPORT,
-			Asset:     &Event_FailureReport{FailureReport: &FailureReport{ComputeTaskKey: "failed-task"}},
+			Asset:     &Event_FailureReport{FailureReport: &FailureReport{AssetKey: "failed-task"}},
 		},
 		"model": {
 			AssetKind: AssetKind_ASSET_MODEL,

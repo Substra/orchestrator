@@ -87,3 +87,18 @@ func (a *FunctionAdapter) UpdateFunction(ctx context.Context, query *asset.Updat
 
 	return response, err
 }
+
+func (a *FunctionAdapter) ApplyFunctionAction(ctx context.Context, param *asset.ApplyFunctionActionParam) (*asset.ApplyFunctionActionResponse, error) {
+	invocator, err := interceptors.ExtractInvocator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	method := "orchestrator.function:ApplyFunctionAction"
+
+	err = invocator.Call(ctx, method, param, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asset.ApplyFunctionActionResponse{}, nil
+}

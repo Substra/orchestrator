@@ -60,6 +60,7 @@ func TestRegisterFunction(t *testing.T) {
 		Permissions:  perms,
 		Owner:        "owner",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
+		Status:       asset.FunctionStatus_FUNCTION_STATUS_WAITING,
 	}
 	dbal.On("AddFunction", storedFunction).Return(nil).Once()
 

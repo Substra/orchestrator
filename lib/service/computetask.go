@@ -37,6 +37,7 @@ type ComputeTaskAPI interface {
 	applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error
 	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 	getTaskOutputCounter(taskKey string) (persistence.ComputeTaskOutputCounter, error)
+	propagateFunctionCancelation(functionKey string, requester string) error
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance

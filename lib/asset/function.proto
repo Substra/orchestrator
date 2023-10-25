@@ -18,6 +18,23 @@ message FunctionOutput {
   bool multiple = 2;
 }
 
+enum FunctionAction {
+  FUNCTION_ACTION_UNKNOWN = 0;
+  FUNCTION_ACTION_BUILDING = 1;
+  FUNCTION_ACTION_CANCELED = 2;
+  FUNCTION_ACTION_FAILED = 3;
+  FUNCTION_ACTION_READY = 4;
+}
+
+enum FunctionStatus {
+    FUNCTION_STATUS_UNKNOWN = 0;
+    FUNCTION_STATUS_WAITING = 1;
+    FUNCTION_STATUS_BUILDING = 2;
+    FUNCTION_STATUS_READY = 3;
+    FUNCTION_STATUS_CANCELED = 4;
+    FUNCTION_STATUS_FAILED = 5;
+}
+
 // Function represents the code which will be used
 // to produce or test a model.
 message Function {
@@ -34,6 +51,7 @@ message Function {
   map<string, string> metadata = 16;
   map<string, FunctionInput> inputs = 17;
   map<string, FunctionOutput> outputs = 18;
+  FunctionStatus status = 19;
 }
 
 // NewFunction is used to register an Function.
@@ -83,4 +101,13 @@ service FunctionService {
   rpc GetFunction(GetFunctionParam) returns (Function);
   rpc QueryFunctions(QueryFunctionsParam) returns (QueryFunctionsResponse);
   rpc UpdateFunction(UpdateFunctionParam) returns (UpdateFunctionResponse);
+  rpc ApplyFunctionAction(ApplyFunctionActionParam) returns (ApplyFunctionActionResponse);
+
 }
+
+message ApplyFunctionActionParam {
+  string function_key = 1;
+  FunctionAction action = 2;
+}
+
+message ApplyFunctionActionResponse {}
