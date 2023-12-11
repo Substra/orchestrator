@@ -169,16 +169,16 @@ database:
     username: &psql-username postgres
     ## @param database.auth.password what password to use for connecting
     password: &psql-password postgres
-    
+
     ## @param database.auth.credentialsSecretName An alternative to giving username and password; must have `DATABASE_USERNAME` and `DATABASE_PASSWORD` keys.
     ##
     credentialsSecretName: null
-  
+
   ## @param database.host Hostname of the database to connect to (defaults to local)
   host: null
   ## @param database.port Port of an external database to connect to
   port: 5432
-  
+
   ## @param database.connectionParameters database URI parameters (`key=value&key=value`)
   ## (https://www.postgresql.org/docs/15/libpq-connect.html#LIBPQ-CONNSTRING)
   ## if using the integrated PostgreSQL and this is empty, it is set to `sslmode=disable`
@@ -205,63 +205,6 @@ postgresql:
   primary:
     extendedConfiguration: |-
       tcp_keepalives_idle = 5
-
-## @section Hyperledger Fabric settings
-##
-fabric:
-  ## @param fabric.organization Hyperledger Fabric Peer organization name
-  ##
-  organization: MyOrg1
-  ## @param fabric.mspID Hyperledger Fabric Peer MSP ID
-  ##
-  mspID: MyOrg1MSP
-  ## @param fabric.channels A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/substra/hlf-k8s)
-  ##
-  channels:
-    - mychannel
-    - yourchannel
-  ## @param fabric.user.name Hyperledger Fabric Peer user name
-  ##
-  user:
-    name: User
-  peer:
-    ## @param fabric.peer.host Hyperledger Fabric Peer hostname
-    ##
-    host: network-org-1-peer-1-hlf-peer.org-1.svc.cluster.local
-    ## @param fabric.peer.port Hyperledger Fabric Peer port
-    ##
-    port: 7051
-  ## @param fabric.waitForEventTimeoutSeconds Time to wait for confirmation from the Peers that the transaction has been committed
-  ##
-  waitForEventTimeoutSeconds: 45
-  ## @param fabric.logLevel Log level for `fabric-sdk-go`
-  ##
-  logLevel: INFO
-  ## @param fabric.strategy.invoke Chaincode invocation endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers)
-  ## @param fabric.strategy.query Chaincode query endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all Peers)
-  ##
-  strategy:
-    invoke: ALL
-    query: SELF
-  secrets:
-    ## @param fabric.secrets.caCert Hyperledger Fabric CA Cert
-    ##
-    caCert: hlf-cacert
-    user:
-      ## @param fabric.secrets.user.cert Hyperledger Fabric Peer user certificate
-      ##
-      cert: hlf-msp-cert-user
-      ## @param fabric.secrets.user.key Hyperledger Fabric Peer user certificate key
-      ##
-      key: hlf-msp-key-user
-    peer:
-      tls:
-        ## @param fabric.secrets.peer.tls.client Hyperledger Fabric Peer TLS client key/cert
-        ##
-        client: hlf-tls-user
-        ## @param fabric.secrets.peer.tls.server Hyperledger Fabric Peer TLS server key/cert
-        ##
-        server: hlf-tls-admin
 
 # grpcOptions:
 #   keepalive:
@@ -308,9 +251,6 @@ orchestrator:
   ## @param orchestrator.txRetryBudget Duration ([go format](https://golang.org/pkg/time/#ParseDuration)) during which the transaction can be retried in case of conflicting writes
   ##
   txRetryBudget: 500ms
-  ## @param orchestrator.fabricGatewayTimeout Commit timeout ([go format](https://golang.org/pkg/time/#ParseDuration)) for all transaction submissions for the gateway (only used in distributed mode)
-  ##
-  fabricGatewayTimeout: 20s
 
   tls:
     createCertificates:
@@ -353,17 +293,6 @@ orchestrator:
       clientCACerts: {}
 
 ## @section Channels settings
-## @param channels List of channels and their members (MSPID)
-## e.g:
-##  - name: mychannel
-##    organizations: [ MyOrg1MSP, MyOrg2MSP ]
-##    fabric: # relevant only in distributed mode
-##      chaincodes: [ mycc ]
-##  - name: yourchannel
-##    organizations: [ MyOrg1MSP, MyOrg2MSP ]
-##    fabric:
-##      chaincodes: [ yourcc ]
-##
 channels: []
 
 

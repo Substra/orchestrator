@@ -7,8 +7,6 @@ As explained in the [overview](./architecture.md), asset handling is done throug
 - a protobuf definition in `lib/asset/<asset>.proto`
 - a service definition in `lib/service/<asset>.go`
 - a standalone gRPC server in `server/standalone/handlers/<asset>.go`
-- a distributed gRPC server in `server/distributed/adapters/<asset>.go`
-- a smart contract as a `chaincode` submodule
 
 ## Step by step implementation
 
@@ -93,65 +91,3 @@ You may need the MSPID in your logic, this can also be retrieved from context th
 The new gRPC service can be registered into the gRPC server: this happen in the `server/standalone/server.go` file somewhere in the *GetServer* function.
 
 At this point, standalone orchestration should be functional, you can launch the orchestrator in standalone mode and manually test your gRPC service.
-
-### 5. Declare the smart contract
-
-Define a smartcontract according to [contractapi](https://github.com/hyperledger/fabric-contract-api-go) in `chaincode/<asset>/contract.go`.
-
-Make sure that on creation the smartcontract gets its properties set correctly.
-Ideally in the *NewSmartContract*  method:
-
-```go
-func NewSmartContract() *SmartContract {
-    contract := &SmartContract{}
-    contract.Name = "orchestrator.<asset>"
-    contract.TransactionContextHandler = ledger.NewContext()
-    contract.BeforeTransaction = ledger.GetBeforeTransactionHook(contract)
-    contract.AfterTransaction = ledger.AfterTransactionHook
-
-    return contract
-}
-```
-
-It is **essential** that the contract has:
-- `BeforeTransaction` set to `ledger.GetBeforeTransactionHook(contract)` to properly set the transaction context
-- `AfterTransaction` set to `ledger.AfterTransactionHook` to properly dispatch events
-
-The TransactionContextHandler is also necessary since that's how you can retrieve the *DependenciesProvider*.
-
-Don't forget to flag the evaluate transaction (query only) by implementing `GetEvaluateTransactions() []string`
-(refer to [contractapi documentation](https://pkg.go.dev/github.com/hyperledger/fabric-contract-api-go@v1.1.1/contractapi#EvaluationContractInterface) for more details).
-
-Using the *DependenciesProvider* is as easy as writing: `provider := ctx.GetProvider()` in your contracts.
-
-Finally, you can add your smart contract to the contract provider in `chaincode/contracts/provider.go` to have it published.
-
-**Note**: contracts should have the same inputs and outputs than the gRPC service.
-That way, the *Invocator* (more below) can transparently handle the serialization/deserialization.
-
-#### gRPC adapter
-
-gRPC service relying on chaincode is defined in `server/distributed/adapters/<asset>.go`
-
-This is done the same way as for the standalone mode, except that there is a chaincode invocation instead of orchestration logic.
-
-A specific structure, the *Invocator* is provided to invoke the chaincode.
-This *Invocator* is available from the context: `invocator, err := ExtractInvocator(ctx)`.
-
-Most of the service methods should look like this:
-
-```go
-func (a *AssetAdapter) DoSomething(ctx context.Context, input *assets.AssetDoSomethingParam) (*assets.DoSomethingResponse, error) {
-    invocator, err := ExtractInvocator(ctx)
-    if err != nil {
-        return nil, err
-    }
-    response := &assets.DoSomethingResponse
-
-    err = invocator.Call(ctx, "orchestrator.asset:DoSomething", input, response)
-
-    return response, err
-}
-```
-
-The new gRPC service can be registered into the gRPC server: this happens in the `server/distributed/server.go` file somewhere in the *GetServer* function.

@@ -62,7 +62,7 @@ spec:
                 - "-tls"
                 - "-tls-ca-cert=/var/orchestrator/tls/server/cacert/ca.crt"
                 {{- if .Values.ingress.hostname }}
-                - "-tls-server-name={{ .Values.ingress.hostname}}" 
+                - "-tls-server-name={{ .Values.ingress.hostname}}"
                 {{- else }}
                 - "-tls-server-name={{ include "orchestrator.server.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
                 {{- end }}
@@ -83,7 +83,7 @@ spec:
                 - "-tls"
                 - "-tls-ca-cert=/var/orchestrator/tls/server/cacert/ca.crt"
                 {{- if .Values.ingress.hostname }}
-                - "-tls-server-name={{ .Values.ingress.hostname}}" 
+                - "-tls-server-name={{ .Values.ingress.hostname}}"
                 {{- else }}
                 - "-tls-server-name={{ include "orchestrator.server.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
                 {{- end }}
@@ -118,21 +118,6 @@ spec:
               mountPath: /var/orchestrator/config.yaml
               subPath: config.yaml
               readOnly: true
-            {{- if eq .Values.orchestrator.mode "distributed" }}
-            - name: fabric-config
-              mountPath: /var/hyperledger/fabric-config.yaml
-              subPath: fabric-config.yaml
-            - name: user-cert
-              mountPath: /var/hyperledger/msp/signcerts
-            - name: user-key
-              mountPath: /var/hyperledger/msp/keystore
-            - name: peer-tls-server
-              mountPath: /var/hyperledger/tls/server/pair
-            - name: peer-tls-client
-              mountPath: /var/hyperledger/tls/client/pair
-            - name: cacert
-              mountPath: /var/hyperledger/tls/server/cert/
-            {{- end }}
             {{- if $.Values.orchestrator.tls.enabled }}
             - name: orchestrator-tls-server-pair
               mountPath: /var/orchestrator/tls/server/pair
@@ -155,26 +140,6 @@ spec:
             items:
               - key: "config.yaml"
                 path: "config.yaml"
-        {{- if eq .Values.orchestrator.mode "distributed" }}
-        - name: user-cert
-          secret:
-            secretName: {{ $.Values.fabric.secrets.user.cert }}
-        - name: user-key
-          secret:
-            secretName: {{ $.Values.fabric.secrets.user.key }}
-        - name: peer-tls-server
-          secret:
-            secretName: {{ $.Values.fabric.secrets.peer.tls.server }}
-        - name: peer-tls-client
-          secret:
-            secretName: {{ $.Values.fabric.secrets.peer.tls.client }}
-        - name: cacert
-          secret:
-            secretName: {{ $.Values.fabric.secrets.caCert }}
-        - name: fabric-config
-          configMap:
-            name: {{ include "orchestrator.fullname" . }}-fabric
-        {{- end }}
         {{- if $.Values.orchestrator.tls.enabled }}
         - name: orchestrator-tls-cacert
           configMap:

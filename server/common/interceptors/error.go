@@ -43,33 +43,6 @@ func InterceptStandaloneErrors(ctx context.Context, req interface{}, info *grpc.
 	return res, nil
 }
 
-// InterceptDistributedErrors is a gRPC interceptor which converts orchestration errors into nice gRPC ones.
-// This allows clients to properly take action based on the returned status.
-// In distributed mode, errors returned by the chaincode are generic: our only way to distinguish them is to look at the message.
-// This interceptor attempts to set an appropriate error return code by matching the message against known orchestration errors.
-func InterceptDistributedErrors(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	res, err := handler(ctx, req)
-
-	// Passthrough for ignored methods
-	for _, m := range IgnoredMethods {
-		if strings.Contains(info.FullMethod, m) {
-			return res, err
-		}
-	}
-
-	var wrappedErr error
-	if err != nil {
-		wrappedErr = fromMessage(err.Error())
-		log.Ctx(ctx).Error().
-			Str("method", info.FullMethod).
-			Err(err).
-			Str("grpcCode", status.Code(wrappedErr).String()).
-			Msg("Error response")
-	}
-
-	return res, wrappedErr
-}
-
 // fromMessage converts an error to a gRPC status by matching its error message
 func fromMessage(msg string) error {
 	switch {

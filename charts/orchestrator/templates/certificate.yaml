@@ -13,9 +13,6 @@ spec:
       {{- include "orchestrator.server.labels" . | nindent 6 }}
   duration: {{ .Values.orchestrator.tls.createCertificates.duration }}
   renewBefore: 360h # 15 days
-  subject:
-    organizations:
-      - {{ .Values.fabric.organization | default "Owkin" }}
   isCA: false
   privateKey:
     algorithm: RSA

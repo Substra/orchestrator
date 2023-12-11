@@ -37,10 +37,7 @@ type GrpcMethodChecker struct{}
 IsEvaluateMethod maps for each gRPC service its "read only" methods.
 Those are methods which should not have any side effect on the storage,
 ie: they should not write to the database or ledger.
-This mapping is used in distributed mode to flag non Evaluate transactions
-and prevent the use of non-safe storage primitives in non evaluate context.
-In Standalone mode it is used in a similar way to initiate read-only transactions
-when possible.
+It is used to initiate read-only transactions when possible.
 */
 func (c GrpcMethodChecker) IsEvaluateMethod(method string) bool {
 	re := regexp.MustCompile(`^/orchestrator\.(\w+)Service/(\w+)$`)
