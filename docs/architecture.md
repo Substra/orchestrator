@@ -2,7 +2,7 @@
 
 The orchestrator is the core piece handling Substra assets such as Organizations, ComputePlans, TrainTuples, etc.
 
-This repository contains two binaries: `orchestrator` and `chaincode`.
+This repository contain binaries for the `orchestrator`.
 
 ![](./schemas/archi.png)
 

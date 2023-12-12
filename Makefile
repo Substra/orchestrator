@@ -1,5 +1,4 @@
 OUTPUT_DIR = ./bin
-CHAINCODE_BIN = $(OUTPUT_DIR)/chaincode
 ORCHESTRATOR_BIN = $(OUTPUT_DIR)/orchestrator
 PROJECT_ROOT = .
 MIGRATIONS_DIR = $(PROJECT_ROOT)/server/standalone/migration
@@ -44,9 +43,6 @@ format: codegen # Format codebase
 
 $(ORCHESTRATOR_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
 	$(build_env) go build -o $(ORCHESTRATOR_BIN) -ldflags="-X 'github.com/substra/orchestrator/server/common.Version=$(VERSION)'" ./server
-
-$(CHAINCODE_BIN): $(pbgo) $(go_src) $(OUTPUT_DIR) $(lib_generated)
-	$(build_env) go build -o $(CHAINCODE_BIN) -ldflags="-X 'github.com/substra/orchestrator/chaincode/info.Version=$(VERSION)'" ./chaincode
 
 $(OUTPUT_DIR):
 	mkdir $(OUTPUT_DIR)
