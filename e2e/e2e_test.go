@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 func setUp() {
 	setUpLogging()
 	initGrpcConn()
-	initTestClientFactory(conn, *mspid, *channel, *chaincode)
+	initTestClientFactory(conn, *mspid, *channel)
 }
 
 func tearDown() {

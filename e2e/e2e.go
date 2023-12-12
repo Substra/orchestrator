@@ -10,6 +10,6 @@ import (
 
 var factory *client.TestClientFactory
 
-func initTestClientFactory(conn *grpc.ClientConn, mspid, channel, chaincode string) {
-	factory = client.NewTestClientFactory(conn, mspid, channel, chaincode)
+func initTestClientFactory(conn *grpc.ClientConn, mspid, channel) {
+	factory = client.NewTestClientFactory(conn, mspid, channel)
 }
