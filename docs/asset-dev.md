@@ -12,18 +12,12 @@ As explained in the [overview](./architecture.md), asset handling is done throug
 
 ### 1. Define the proto
 
-The protobuf definition define the main structures of the asset, it is used by both the communication layer (gRPC/chaincode) and the persistence layer.
+The protobuf definition define the main structures of the asset, it is used by both the communication layer (gRPC) and the persistence layer.
 
 Create an `asset.proto` file in the asset directory and define your messages and methods.
 This will be automatically picked up by the Makefile to generate the corresponding go code.
 
 You can run `make proto-codegen` to generate go code from your protobuf or `make proto-docgen` to generate the [protobuf documentation](./assets/protos).
-
-Converting from the existing chaincode is mostly a 3 steps process:
-
-- define RPC methods from the chaincode contracts (check [main.go](https://github.com/SubstraFoundation/substra-chaincode/blob/0.2.0/chaincode/main.go#L76) for the full list)
-- define the parameter messages from the existing [inputs](https://github.com/SubstraFoundation/substra-chaincode/blob/0.2.0/chaincode/input.go)
-- define the response messages from the existing [output](https://github.com/SubstraFoundation/substra-chaincode/blob/0.2.0/chaincode/output.go)
 
 **Validation**: some assets are expected to have specific properties enforced: a valid URL, SHA256 hash, string length, etc
 This validation should be implemented in `lib/asset/<asset>_validation.go`, there are several existing examples.
@@ -40,7 +34,7 @@ The ability to scan a raw database value into an asset, this can be done by impl
 Converting the other way around, from an asset into a database value can be done by implementing *driver.Value*.
 Examples of such implementations are available in `lib/asset/sql.go` file, it boils down to serializing/deserializing the assets in JSON.
 
-Now, implement the DBAL interface for both storage backends: postgres in `server/standalone` module and the ledger in `chaincode/ledger` module.
+Now, implement the DBAL interface for both storage backends: postgres in `server/standalone` module.
 You may have to create a new table for postgres, this can be done by adding a migration in the `server/standalone/migration` module.
 
 Mocks are automatically generated when running `make test`.
