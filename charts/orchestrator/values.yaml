@@ -242,7 +242,7 @@ orchestrator:
   ## @param orchestrator.logSQLVerbose Log SQL statements with debug verbosity
   ##
   logSQLVerbose: false
-  ## @param orchestrator.mode Orchestrator mode, either "standalone" or "distributed"
+  ## @param orchestrator.mode Orchestrator mode, "standalone"
   ##
   mode: standalone
   ## @param orchestrator.verifyClientMSPID If true, validates incoming gRPC requests by checking the `mspid` header matches the subject organization of the client SSL certificate. See [MSPID check](#MSPID-check)
