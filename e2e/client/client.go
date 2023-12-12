@@ -96,7 +96,7 @@ type TestClientFactory struct {
 	channel   string
 }
 
-func NewTestClientFactory(conn *grpc.ClientConn, mspid, channel) *TestClientFactory {
+func NewTestClientFactory(conn *grpc.ClientConn, mspid, channel string) *TestClientFactory {
 	return &TestClientFactory{
 		conn: conn, mspid: mspid, channel: channel,
 	}
