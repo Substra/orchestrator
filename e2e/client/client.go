@@ -91,9 +91,9 @@ type TestClient struct {
 }
 
 type TestClientFactory struct {
-	conn      *grpc.ClientConn
-	mspid     string
-	channel   string
+	conn    *grpc.ClientConn
+	mspid   string
+	channel string
 }
 
 func NewTestClientFactory(conn *grpc.ClientConn, mspid, channel string) *TestClientFactory {
@@ -144,20 +144,19 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 
 func (f *TestClientFactory) WithMSPID(mspid string) *TestClientFactory {
 	return &TestClientFactory{
-		conn:      f.conn,
-		mspid:     mspid,
-		channel:   f.channel,
+		conn:    f.conn,
+		mspid:   mspid,
+		channel: f.channel,
 	}
 }
 
 func (f *TestClientFactory) WithChannel(channel string) *TestClientFactory {
 	return &TestClientFactory{
-		conn:      f.conn,
-		mspid:     f.mspid,
-		channel:   channel,
+		conn:    f.conn,
+		mspid:   f.mspid,
+		channel: channel,
 	}
 }
-
 
 func (c *TestClient) WithKeyStore(ks *KeyStore) *TestClient {
 	c.ks = ks
