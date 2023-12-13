@@ -127,7 +127,7 @@ Then you can launch call like this:
 ```
 package orchestrator
 service OrganizationService
-header mspid=MyOrg1MSP channel=mychannel chaincode=mycc
+header mspid=MyOrg1MSP channel=mychannel
 call GetAllOrganizations
 ```
 
