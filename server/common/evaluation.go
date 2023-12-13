@@ -7,8 +7,7 @@ import (
 )
 
 // ReadOnlyMethods maps for service "read only" methods.
-// This mapping is used in chaincode mode to determine Evaluate transactions
-// and in Standalone mode to set transactions as "read only"
+// This mapping is used to set transactions as "read only"
 var ReadOnlyMethods = map[string][]string{
 	"Metric":        {"GetMetric", "QueryMetrics"},
 	"Organization":  {"GetAllOrganizations"},

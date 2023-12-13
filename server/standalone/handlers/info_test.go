@@ -18,6 +18,5 @@ func TestInfoServerReturnVersion(t *testing.T) {
 
 	version, err := server.QueryVersion(context.TODO(), &asset.QueryVersionParam{})
 	assert.Equal(t, version.Orchestrator, "dev", "Orchestrator version should match")
-	assert.Equal(t, version.Chaincode, "", "Chaincode version should match")
 	assert.NoError(t, err)
 }
