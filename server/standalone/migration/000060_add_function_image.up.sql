@@ -1,6 +1,6 @@
 SELECT execute($$
     ALTER TABLE functions
-    ADD COLUMN image_address VARCHAR(200) NULL;
+    ADD COLUMN image_address VARCHAR(200) DEFAULT '' NOT NULL;
 
     ALTER TABLE functions
     RENAME COLUMN functionAddress to archive_address;
@@ -31,7 +31,7 @@ SELECT execute($$
     WHERE asset_kind = 'ASSET_FUNCTION' AND NOT(asset ? 'archiveAddress');
 
     UPDATE events
-    SET asset = asset - imageAddress
+    SET asset = jsonb_set(asset, '{imageAddress}',  '')
     WHERE asset_kind = 'ASSET_FUNCTION' AND NOT(asset ? 'imageAddress');
     
 $$) WHERE NOT column_exists('public', 'functions', 'image_address');
