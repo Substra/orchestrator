@@ -33,8 +33,8 @@ Here is an overview of the orchestration part:
 To avoid tight coupling, the `Provider` implements a dependency injection pattern
 so that an asset service can call other services.
 
-There are two implementations of the DBAL interface:
-Postgresql in standalone mode.
+The DBAL implements an interface to PostgreSQL.
+
 
 ## Event dispatch
 
@@ -64,3 +64,9 @@ sequenceDiagram
     database-->>orchestrator: event notification
     orchestrator-->>backend2: send event (gRPC)
 ```
+
+## Concurrent request processing
+
+The consistency is provided  by leveraging [postgresql's isolation level](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-SERIALIZABLE).
+
+By enforcing serializable transaction, we make sure we don't rely on inconsistent data.

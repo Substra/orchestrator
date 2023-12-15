@@ -34,7 +34,8 @@ The ability to scan a raw database value into an asset, this can be done by impl
 Converting the other way around, from an asset into a database value can be done by implementing *driver.Value*.
 Examples of such implementations are available in `lib/asset/sql.go` file, it boils down to serializing/deserializing the assets in JSON.
 
-Now, implement the DBAL interface for both storage backends: postgres in `server/standalone` module.
+Now, implement the DBAL interface for postgres in `server/standalone` module.
+
 You may have to create a new table for postgres, this can be done by adding a migration in the `server/standalone/migration` module.
 
 Mocks are automatically generated when running `make test`.
