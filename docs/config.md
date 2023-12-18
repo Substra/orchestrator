@@ -42,8 +42,6 @@ listeners:
     - yourcc
 ```
 
-`listeners` in a map of *channel*: []*chaincode*.
-
 ## Orchestration configuration
 
 The orchestrator controls the access to channels for each call.

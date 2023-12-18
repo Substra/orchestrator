@@ -8,7 +8,6 @@ message QueryVersionParam {}
 
 message QueryVersionResponse {
     string orchestrator = 1;
-    string chaincode = 2;
 }
 
 service InfoService {
