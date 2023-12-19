@@ -164,7 +164,7 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 		Msg("onDone: updating children statuses")
 
 	for _, child := range children {
-		err := s.propagateDone(task, child)
+		err := s.propagateDoneFromParent(child)
 		if err != nil {
 			e.Err = err
 			return
@@ -174,18 +174,18 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 	metrics.TaskUpdateCascadeSize.WithLabelValues(s.GetChannel(), string(transitionTodo)).Observe(float64(len(children)))
 }
 
-// propagateDone propagates the DONE status of a parent to the task.
+// propagateDoneFromParent propagates the DONE status of a parent to the task.
 // This will iterate over task parents and mark it as TODO if all parents are DONE.
-func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.ComputeTask) error {
-	logger := s.GetLogger().With().
-		Str("triggeringParent", triggeringParent.Key).
-		Str("triggeringParentStatus", triggeringParent.Status.String()).
-		Str("child", child.Key).
-		Str("childStatus", child.Status.String()).
-		Logger()
+func (s *ComputeTaskService) propagateDoneBase(child *asset.ComputeTask) error {
+	// logger := s.GetLogger().With().
+	// 	Str("triggeringParent", triggeringParent.Key).
+	// 	Str("triggeringParentStatus", triggeringParent.Status.String()).
+	// 	Str("child", child.Key).
+	// 	Str("childStatus", child.Status.String()).
+	// 	Logger()
 	state := newState(s, child)
 	if !state.Can(string(transitionTodo)) {
-		logger.Info().Msg("propagateDone: skipping child due to incompatible state")
+		// logger.Info().Msg("propagateDone: skipping child due to incompatible state")
 		// this is expected as we might go over already failed children (from another parent)
 		return nil
 	}
@@ -195,23 +195,54 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 		return err
 	}
 
+	// funct propagateDoneFunction
 	for _, parent := range parents {
 		if parent.Status != asset.ComputeTaskStatus_STATUS_DONE {
-			logger.Debug().
-				Str("parent", parent.Key).
-				Str("parentStatus", parent.Status.String()).
-				Msg("propagateDone: skipping child due to pending parent")
+			// logger.Debug().
+			// 	Str("parent", parent.Key).
+			// 	Str("parentStatus", parent.Status.String()).
+			// 	Msg("propagateDone: skipping child due to pending parent")
 			// At least one of the parents is not done, so no change for children
 			// but no error, this is expected.
 			return nil
 		}
 	}
-	err = s.applyTaskAction(child, transitionTodo, fmt.Sprintf("Last parent task %s done", triggeringParent.Key))
+	err = s.applyTaskAction(child, transitionTodo, fmt.Sprintf("Last parent task done"))
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// propagateDoneFromParent propagates the DONE status of a parent to the task.
+// This will iterate over task parents and mark it as TODO if all parents are DONE.
+func (s *ComputeTaskService) propagateDoneFromParent(child *asset.ComputeTask) error {
+	// logger := s.GetLogger().With().
+	// 	Str("triggeringParent", triggeringParent.Key).
+	// 	Str("triggeringParentStatus", triggeringParent.Status.String()).
+	// 	Str("child", child.Key).
+	// 	Str("childStatus", child.Status.String()).
+	// 	Logger()
+	state := newState(s, child)
+	if !state.Can(string(transitionTodo)) {
+		// logger.Info().Msg("propagateDone: skipping child due to incompatible state")
+		// this is expected as we might go over already failed children (from another parent)
+		return nil
+	}
+
+	// TODO: add verification function is_ready
+
+	function, err := s.GetFunctionService().GetFunction(child.FunctionKey)
+	if err != nil {
+		return err
+	}
+
+	if function.Status != asset.FunctionStatus_FUNCTION_STATUS_READY {
+		return nil
+	}
+
+	return s.propagateDoneBase(child)
 }
 
 // onStateChange enqueue an orchestration event and saves the task
