@@ -1,7 +1,6 @@
 package dbal
 
 import (
-	"database/sql"
 	"errors"
 	"strconv"
 	"time"
@@ -54,22 +53,15 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 		return err
 	}
 
-	var imageStorageAdress sql.NullString
-	if function.Image != nil {
-		err = d.addAddressable(function.Image)
-		if err != nil {
-			return err
-		}
-		imageStorageAdress.String = function.Image.StorageAddress
-		if function.Image.StorageAddress == "" {
-			imageStorageAdress.Valid = false
-		}
+	err = d.addAddressable(function.Image)
+	if err != nil {
+		return err
 	}
 
 	stmt := getStatementBuilder().
 		Insert("functions").
 		Columns("key", "channel", "name", "description", "archive_address", "permissions", "owner", "creation_date", "metadata", "status", "image_address").
-		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Archive.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String(), imageStorageAdress)
+		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Archive.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String(), function.Image.StorageAddress)
 
 	err = d.exec(stmt)
 	if err != nil {
@@ -102,12 +94,8 @@ func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	}
 
 	al := sqlFunction{}
-	var imageStorageAdress sql.NullString
-	var imageChecksum sql.NullString
-	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &imageStorageAdress, &imageChecksum)
 
-	al.Image.StorageAddress = imageStorageAdress.String
-	al.Image.Checksum = imageChecksum.String
+	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &al.Image.StorageAddress, &al.Image.Checksum)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -195,15 +183,10 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	for rows.Next() {
 		al := sqlFunction{}
 
-		var imageStorageAdress sql.NullString
-		var imageChecksum sql.NullString
 		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &al.Image.StorageAddress, &al.Image.Checksum)
 		if err != nil {
 			return nil, "", err
 		}
-
-		al.Image.StorageAddress = imageStorageAdress.String
-		al.Image.Checksum = imageChecksum.String
 
 		functions = append(functions, al.toFunction())
 		count++
@@ -225,7 +208,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	return functions, bookmark, nil
 }
 
-// UpdateFunction updates the mutable fields of an function in the DB. List of mutable fields: name, status, image.
+// UpdateFunction updates the mutable fields of a function in the DB. List of mutable fields: name, status, image.
 func (d *DBAL) UpdateFunction(function *asset.Function) error {
 	var err error
 	if function.Image.StorageAddress != "" {

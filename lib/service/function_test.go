@@ -37,6 +37,10 @@ func TestRegisterFunction(t *testing.T) {
 		StorageAddress: "ftp://127.0.0.1/test",
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
+	functionImage := &asset.Addressable{
+		StorageAddress: "ftp://127.0.0.1/test",
+		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+	}
 	newPerms := &asset.NewPermissions{Public: true}
 
 	function := &asset.NewFunction{
@@ -45,6 +49,7 @@ func TestRegisterFunction(t *testing.T) {
 		Archive:        functionAddress,
 		Description:    description,
 		NewPermissions: newPerms,
+		Image:          functionImage,
 	}
 
 	perms := &asset.Permissions{Process: &asset.Permission{Public: true}}
@@ -61,6 +66,7 @@ func TestRegisterFunction(t *testing.T) {
 		Owner:        "owner",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 		Status:       asset.FunctionStatus_FUNCTION_STATUS_WAITING,
+		Image:        functionImage,
 	}
 	dbal.On("AddFunction", storedFunction).Return(nil).Once()
 

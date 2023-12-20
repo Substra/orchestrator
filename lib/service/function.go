@@ -76,7 +76,7 @@ func (s *FunctionService) RegisterFunction(a *asset.NewFunction, owner string) (
 		Inputs:       a.Inputs,
 		Outputs:      a.Outputs,
 		Status:       asset.FunctionStatus_FUNCTION_STATUS_WAITING,
-		Image:        nil,
+		Image:        a.Image,
 	}
 
 	function.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)
@@ -150,8 +150,8 @@ func (s *FunctionService) UpdateFunction(a *asset.UpdateFunctionParam, requester
 		return orcerrors.NewPermissionDenied("requester does not own the function")
 	}
 
-	if function.Image == nil && function.Status == asset.FunctionStatus_FUNCTION_STATUS_READY {
-		return orcerrors.FromValidationError(asset.FunctionKind, errors.New("Image should not be null when function status is ready"))
+	if len(a.Image.GetChecksum()) == 0 && function.Status == asset.FunctionStatus_FUNCTION_STATUS_READY {
+		return orcerrors.FromValidationError(asset.FunctionKind, errors.New("Image checksum should not be empty when function status is ready"))
 	}
 
 	// Update function name
