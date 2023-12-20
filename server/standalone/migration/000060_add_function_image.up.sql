@@ -27,11 +27,11 @@ SELECT execute($$
         LEFT JOIN addressables image_add ON functions.image_address = image_add.storage_address;
 
     UPDATE events
-    SET asset = jsonb_set(asset, '{archiveAddress}', asset->'functionAddress') - 'functionAddress'
-    WHERE asset_kind = 'ASSET_FUNCTION' AND NOT(asset ? 'archiveAddress');
+    SET asset = jsonb_set(asset, '{archive}', asset->'function') - 'function'
+    WHERE asset_kind = 'ASSET_FUNCTION' AND NOT(asset ? 'archive');
 
     UPDATE events
-    SET asset = jsonb_set(asset, '{imageAddress}',  '')
-    WHERE asset_kind = 'ASSET_FUNCTION' AND NOT(asset ? 'imageAddress');
-    
+    SET asset = jsonb_set(asset, '{image}',  '{"storageAddress": "", "checksum":""}')
+    WHERE asset_kind = 'ASSET_FUNCTION' AND NOT(asset ? 'image');
+
 $$) WHERE NOT column_exists('public', 'functions', 'image_address');
