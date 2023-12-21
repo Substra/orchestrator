@@ -2,7 +2,6 @@
 
 interface lib.persistence.Database
 lib.persistence.Database <|-- standalone.Postgres
-lib.persistence.Database <|-- distributed.LedgerDB
 
 lib.persistence.Database *-- lib.orchestration.Provider
 interface lib.orchestration.ServiceProvider

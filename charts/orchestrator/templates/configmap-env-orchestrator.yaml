@@ -16,15 +16,6 @@ data:
   LOG_SQL_VERBOSE: "{{ .Values.orchestrator.logSQLVerbose }}"
   {{- end }}
 
-  # Distributed settings
-  {{- if eq .Values.orchestrator.mode "distributed" }}
-  ORCHESTRATOR_FABRIC_CERT: /var/hyperledger/msp/signcerts/cert.pem
-  ORCHESTRATOR_FABRIC_KEY: /var/hyperledger/msp/keystore/key.pem
-  ORCHESTRATOR_MSPID: {{ .Values.fabric.mspID }}
-  ORCHESTRATOR_NETWORK_CONFIG: /var/hyperledger/fabric-config.yaml
-  ORCHESTRATOR_FABRIC_GATEWAY_TIMEOUT: {{ .Values.orchestrator.fabricGatewayTimeout }}
-  {{- end }}
-
   # TLS settings
   ORCHESTRATOR_TLS_ENABLED: "{{ $.Values.orchestrator.tls.enabled }}"
   ORCHESTRATOR_MTLS_ENABLED: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled }}"

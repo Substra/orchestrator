@@ -91,15 +91,14 @@ type TestClient struct {
 }
 
 type TestClientFactory struct {
-	conn      *grpc.ClientConn
-	mspid     string
-	channel   string
-	chaincode string
+	conn    *grpc.ClientConn
+	mspid   string
+	channel string
 }
 
-func NewTestClientFactory(conn *grpc.ClientConn, mspid, channel, chaincode string) *TestClientFactory {
+func NewTestClientFactory(conn *grpc.ClientConn, mspid, channel string) *TestClientFactory {
 	return &TestClientFactory{
-		conn: conn, mspid: mspid, channel: channel, chaincode: chaincode,
+		conn: conn, mspid: mspid, channel: channel,
 	}
 }
 
@@ -107,7 +106,6 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 	logger := log.With().
 		Str("mspid", f.mspid).
 		Str("channel", f.channel).
-		Str("chaincode", f.chaincode).
 		Logger()
 
 	pc, _, _, ok := runtime.Caller(1)
@@ -119,7 +117,7 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 	}
 
 	ctx := context.Background()
-	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", f.mspid, "channel", f.channel, "chaincode", f.chaincode)
+	ctx = metadata.AppendToOutgoingContext(ctx, "mspid", f.mspid, "channel", f.channel)
 
 	client := &TestClient{
 		MSPID:                f.mspid,
@@ -146,28 +144,17 @@ func (f *TestClientFactory) NewTestClient() *TestClient {
 
 func (f *TestClientFactory) WithMSPID(mspid string) *TestClientFactory {
 	return &TestClientFactory{
-		conn:      f.conn,
-		mspid:     mspid,
-		channel:   f.channel,
-		chaincode: f.chaincode,
+		conn:    f.conn,
+		mspid:   mspid,
+		channel: f.channel,
 	}
 }
 
 func (f *TestClientFactory) WithChannel(channel string) *TestClientFactory {
 	return &TestClientFactory{
-		conn:      f.conn,
-		mspid:     f.mspid,
-		channel:   channel,
-		chaincode: f.chaincode,
-	}
-}
-
-func (f *TestClientFactory) WithChaincode(chaincode string) *TestClientFactory {
-	return &TestClientFactory{
-		conn:      f.conn,
-		mspid:     f.mspid,
-		channel:   f.channel,
-		chaincode: chaincode,
+		conn:    f.conn,
+		mspid:   f.mspid,
+		channel: channel,
 	}
 }
 

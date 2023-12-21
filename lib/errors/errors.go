@@ -1,8 +1,6 @@
 // Package errors defines orchestration errors.
 // This is following the patterns from https://blog.golang.org/go1.13-errors
 // Error messages should contain a unique code easily parsable from string representation.
-// This limitation comes from the fact that chaincode only returns string representation of errors,
-// meaning we loose the grpc return code between chaincode and orchestrator. This error ID is a way to circumvent that.
 // Error IDs are 4 digit prefixed by "OE" (for Orchestration Error).
 // Each error kind has 100 numbers reserved, here are the assigned ranges:
 // - generic errors: 0-99

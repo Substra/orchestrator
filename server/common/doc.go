@@ -1,2 +1,2 @@
-// Package common regroup structures used by both standalone and distributed mode.
+// Package common regroup structures used by the orchestrator.
 package common

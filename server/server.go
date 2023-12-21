@@ -1,6 +1,4 @@
 // server binary exposing a gRPC interface to manage distributed learning asset.
-// It can run in either standalone or distributed mode.
-// In standalone mode it handles all the logic while in distributed mode everything is delegated to a chaincode.
 package main
 
 import (
@@ -21,7 +19,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 	"github.com/substra/orchestrator/server/common"
-	"github.com/substra/orchestrator/server/distributed"
 	"github.com/substra/orchestrator/server/standalone"
 	"github.com/substra/orchestrator/utils"
 	"golang.org/x/sync/errgroup"
@@ -33,20 +30,6 @@ import (
 
 const httpPort = "8484"
 const grpcPort = "9000"
-
-func getDistributedServer(params common.AppParameters) common.Runnable {
-	networkConfig := common.MustGetEnv("NETWORK_CONFIG")
-	certificate := common.MustGetEnv("FABRIC_CERT")
-	key := common.MustGetEnv("FABRIC_KEY")
-	gatewayTimeout := common.MustParseDuration(common.MustGetEnv("FABRIC_GATEWAY_TIMEOUT"))
-
-	server, err := distributed.GetServer(networkConfig, certificate, key, gatewayTimeout, params)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create standalone server")
-	}
-
-	return server
-}
 
 func getStandaloneServer(params common.AppParameters, healthcheck *health.Server) common.Runnable {
 	dbURL := common.MustGetEnv("DATABASE_URL")
@@ -62,7 +45,7 @@ func getStandaloneServer(params common.AppParameters, healthcheck *health.Server
 func main() {
 	var app common.Runnable
 	var httpServer *http.Server
-	var standaloneMode = false
+	var standaloneMode = true
 
 	utils.InitLogging()
 
@@ -70,16 +53,6 @@ func main() {
 	flag.BoolVar(&standaloneMode, "s", true, "Run the server in standalone mode (shorthand)")
 
 	flag.Parse()
-
-	mode, ok := common.GetEnv("MODE")
-	if ok {
-		switch mode {
-		case "distributed":
-			standaloneMode = false
-		case "standalone":
-			standaloneMode = true
-		}
-	}
 
 	serverOptions := []grpc.ServerOption{}
 	if tlsOptions := common.GetTLSOptions(); tlsOptions != nil {
@@ -109,8 +82,6 @@ func main() {
 
 	if standaloneMode {
 		app = getStandaloneServer(params, healthcheck)
-	} else {
-		app = getDistributedServer(params)
 	}
 
 	// Register reflection service

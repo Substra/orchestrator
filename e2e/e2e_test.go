@@ -29,7 +29,6 @@ var (
 	serverAddr   = flag.String("server_addr", "localhost:9000", "The server address in the format of host:port")
 	mspid        = flag.String("mspid", "MyOrg1MSP", "MSP ID")
 	channel      = flag.String("channel", "mychannel", "Channel to use")
-	chaincode    = flag.String("chaincode", "mycc", "Chaincode to use (only relevant in distributed mode)")
 
 	conn *grpc.ClientConn
 )
@@ -49,7 +48,7 @@ func TestMain(m *testing.M) {
 func setUp() {
 	setUpLogging()
 	initGrpcConn()
-	initTestClientFactory(conn, *mspid, *channel, *chaincode)
+	initTestClientFactory(conn, *mspid, *channel)
 }
 
 func tearDown() {
