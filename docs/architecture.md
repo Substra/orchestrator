@@ -2,7 +2,7 @@
 
 The orchestrator is the core piece handling Substra assets such as Organizations, ComputePlans, TrainTuples, etc.
 
-This repository contain binaries for the `orchestrator`.
+This repository contains binaries for the `orchestrator`.
 
 ![](./schemas/archi.png)
 
@@ -70,3 +70,30 @@ sequenceDiagram
 The consistency is provided  by leveraging [postgresql's isolation level](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-SERIALIZABLE).
 
 By enforcing serializable transaction, we make sure we don't rely on inconsistent data.
+
+## Authentication
+
+**Note**: MSP ID stands for **Membership Service Provider** (legacy name from distributed mode).
+In this section uses the two terms `MSPID` and `Organization` are used interchangeably.
+
+Access control is done at the transport level: if `ORCHESTRATOR_MTLS_ENABLED` is enabled, the client is required to provide a valid certificate.
+
+Assets are owned by different organizations, so we need to identify the caller:
+this is done through the `mspid` request header.
+
+This header can be freely set by the caller, so we should assume that this is insecure.
+
+To address an adversarial user in the network, we can enable `ORCHESTRATOR_VERIFY_CLIENT_MSP_ID`.
+This will add several checks to the header
+
+**Certificate's organization check**: the given mspid header will be checked against the client certificate's organizations.
+If the header is not included in the certificate organizations, the access will be denied.
+
+**CA organization check**: the orchestrator will make sure that the client certificate has been signed by a CA valid for the given organization.
+Enabling mutual TLS is not enough because we would still be vulnerable to the case where an adversarial organization creates a certificate for another org (`mspid`).
+Since any certificate signed by a trusted CA is considered valid, a client certificate for *org2* signed by CA cert *org1* would be valid.
+To address this issue, we maintain a list of valid CA per organization and make sure that the client certificate has been signed by a CA allowed for the given `mspid`.
+
+**Note**: CA check is not a silver bullet, there are some pitfalls to avoid:
+- if the same CA certificate is used by two different organization, it would still be possible to impersonate one from the other;
+- if you trust a public CA (like let's encrypt), anyone can request a certificate, leaving you open to impersonation as well;
