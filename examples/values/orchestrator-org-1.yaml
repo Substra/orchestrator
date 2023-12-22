@@ -1,6 +1,5 @@
 ---
 orchestrator:
-  mode: standalone
   logLevel: DEBUG
   logSQLVerbose: true
   tls:
