@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -45,14 +44,8 @@ func getStandaloneServer(params common.AppParameters, healthcheck *health.Server
 func main() {
 	var app common.Runnable
 	var httpServer *http.Server
-	var standaloneMode = true
 
 	utils.InitLogging()
-
-	flag.BoolVar(&standaloneMode, "standalone", true, "Run the server in standalone mode")
-	flag.BoolVar(&standaloneMode, "s", true, "Run the server in standalone mode (shorthand)")
-
-	flag.Parse()
 
 	serverOptions := []grpc.ServerOption{}
 	if tlsOptions := common.GetTLSOptions(); tlsOptions != nil {
@@ -80,9 +73,7 @@ func main() {
 
 	healthcheck := health.NewServer()
 
-	if standaloneMode {
-		app = getStandaloneServer(params, healthcheck)
-	}
+	app = getStandaloneServer(params, healthcheck)
 
 	// Register reflection service
 	reflection.Register(app.GetGrpcServer())
