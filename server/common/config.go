@@ -1,7 +1,7 @@
 package common
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
@@ -21,7 +21,7 @@ var Version = "dev"
 func NewConfig(path string) *OrchestratorConfiguration {
 	conf := new(OrchestratorConfiguration)
 
-	yamlFile, err := ioutil.ReadFile(path)
+	yamlFile, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to read config file")
 	}
