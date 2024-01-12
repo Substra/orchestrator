@@ -15,3 +15,5 @@ linters-settings:
     "commonserv": github.com/substra/orchestrator/server/common
     "sq": github.com/Masterminds/squirrel
     "e2erequire": github.com/substra/orchestrator/e2e/require
+  revive:
+    severity: error

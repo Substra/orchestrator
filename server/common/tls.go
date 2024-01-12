@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"encoding/pem"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -47,7 +46,7 @@ func GetTLSOptions() grpc.ServerOption {
 		// - Clients to connect using certificates issued by our CA
 		// - Connecting to ourselves using our own cert/key (e.g. health probe)
 		serverCA := MustGetEnv("TLS_SERVER_CA_CERT")
-		pemServerCA, err := ioutil.ReadFile(serverCA)
+		pemServerCA, err := os.ReadFile(serverCA)
 		if err != nil {
 			log.Fatal().Str("CA Cert", serverCA).Msg("Failed to load TLS server CA")
 		}
@@ -62,7 +61,7 @@ func GetTLSOptions() grpc.ServerOption {
 			log.Fatal().Err(err).Msg("Failed to load TLS client CA certificates")
 		}
 		for _, f := range clientCAFiles {
-			pemClientCA, err := ioutil.ReadFile(f)
+			pemClientCA, err := os.ReadFile(f)
 			if err != nil {
 				log.Fatal().Str("cacert", f).Msg("Failed to load TLS client CA certificate")
 			}
@@ -86,24 +85,28 @@ type clientCACertCallback = func(org, filepath string) error
 // Expected structure is to have a directory per org, and one or more certificates in it.
 // The callback will receive the parent organization name along with the file path.
 func walkClientCACerts(root string, callback clientCACertCallback) error {
-	fileInfo, err := ioutil.ReadDir(root)
+	entries, err := os.ReadDir(root)
 	if err != nil {
 		return err
 	}
 
 	// for each org directory
-	for _, orgDir := range fileInfo {
+	for _, orgDir := range entries {
 		if !orgDir.IsDir() {
 			continue
 		}
 		orgFullPath := path.Join(root, orgDir.Name())
-		fileInfo, err = ioutil.ReadDir(orgFullPath)
+		entries, err = os.ReadDir(orgFullPath)
 		if err != nil {
 			return err
 		}
 
 		// for each inode inside the org directory
-		for _, file := range fileInfo {
+		for _, entry := range entries {
+			file, err := entry.Info()
+			if err != nil {
+				return err
+			}
 			filePath := path.Join(orgFullPath, file.Name())
 
 			// resolve symlinks
@@ -182,7 +185,7 @@ func GetOrgCACerts() (OrgCACertList, error) {
 
 // getCAKeyID returns the identifier of the CA certificate
 func getCAKeyID(file string) (string, error) {
-	rawPem, err := ioutil.ReadFile(file)
+	rawPem, err := os.ReadFile(file)
 	if err != nil {
 		return "", err
 	}

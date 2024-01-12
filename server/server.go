@@ -90,7 +90,8 @@ func main() {
 	}
 
 	httpServer = &http.Server{
-		Addr: fmt.Sprintf(":%s", httpPort),
+		Addr:              fmt.Sprintf(":%s", httpPort),
+		ReadHeaderTimeout: 2 * time.Second,
 	}
 
 	g, ctx := errgroup.WithContext(ctx)
