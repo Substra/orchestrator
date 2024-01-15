@@ -192,10 +192,6 @@ func (c *TestClient) RegisterFunction(o *FunctionOptions) *asset.Function {
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/function/" + uuid.NewString(),
 		},
-		Image: &asset.Addressable{
-			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
-			StorageAddress: "http://somewhere.local/function/" + uuid.NewString(),
-		},
 		NewPermissions: &asset.NewPermissions{Public: true},
 		Inputs:         o.Inputs,
 		Outputs:        o.Outputs,

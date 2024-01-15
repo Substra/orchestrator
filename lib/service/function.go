@@ -76,7 +76,7 @@ func (s *FunctionService) RegisterFunction(a *asset.NewFunction, owner string) (
 		Inputs:       a.Inputs,
 		Outputs:      a.Outputs,
 		Status:       asset.FunctionStatus_FUNCTION_STATUS_WAITING,
-		Image:        a.Image,
+		Image:        &asset.Addressable{StorageAddress: "", Checksum: ""},
 	}
 
 	function.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)
