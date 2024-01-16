@@ -38,8 +38,8 @@ func TestRegisterFunction(t *testing.T) {
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
 	functionImage := &asset.Addressable{
-		StorageAddress: "ftp://127.0.0.1/test",
-		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+		StorageAddress: "",
+		Checksum:       "",
 	}
 	newPerms := &asset.NewPermissions{Public: true}
 
