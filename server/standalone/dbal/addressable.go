@@ -14,6 +14,18 @@ func (d *DBAL) addAddressable(addressable *asset.Addressable) error {
 	return d.exec(stmt)
 }
 
+func (d *DBAL) getOrAddAddressable(addressable *asset.Addressable) error {
+	addressableExist, err := d.AddressableExists(addressable.StorageAddress)
+	if err != nil {
+		return err
+	}
+	if !addressableExist {
+		return d.addAddressable(addressable)
+	} else {
+		return nil
+	}
+}
+
 func (d *DBAL) AddressableExists(storageAddress string) (bool, error) {
 	stmt := getStatementBuilder().
 		Select("COUNT(storage_address)").
