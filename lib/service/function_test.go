@@ -178,17 +178,20 @@ func TestUpdateSingleExistingFunction(t *testing.T) {
 		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		Name:  "function name",
 		Owner: "owner",
+		Image: &asset.Addressable{StorageAddress: "", Checksum: ""},
 	}
 
 	updateFunctionParam := &asset.UpdateFunctionParam{
-		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
-		Name: "Updated function name",
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name:  "Updated function name",
+		Image: &asset.Addressable{StorageAddress: "test/storage/address", Checksum: "4c67ad88309a48b48bc4c2e2c1a87a83"},
 	}
 
 	storedFunction := &asset.Function{
 		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		Name:  "Updated function name",
 		Owner: "owner",
+		Image: &asset.Addressable{StorageAddress: "test/storage/address", Checksum: "4c67ad88309a48b48bc4c2e2c1a87a83"},
 	}
 
 	e := &asset.Event{
