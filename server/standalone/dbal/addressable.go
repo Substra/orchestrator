@@ -21,9 +21,8 @@ func (d *DBAL) getOrAddAddressable(addressable *asset.Addressable) error {
 	}
 	if !addressableExist {
 		return d.addAddressable(addressable)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func (d *DBAL) AddressableExists(storageAddress string) (bool, error) {
