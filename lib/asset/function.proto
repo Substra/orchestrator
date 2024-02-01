@@ -69,7 +69,6 @@ message NewFunction {
   map<string, string> metadata = 17;
   map<string, FunctionInput> inputs = 18;
   map<string, FunctionOutput> outputs = 19;
-  Addressable image = 20;
 }
 
 message GetFunctionParam {

@@ -76,7 +76,7 @@ func (s *FunctionService) RegisterFunction(a *asset.NewFunction, owner string) (
 		Inputs:       a.Inputs,
 		Outputs:      a.Outputs,
 		Status:       asset.FunctionStatus_FUNCTION_STATUS_WAITING,
-		Image:        a.Image,
+		Image:        &asset.Addressable{StorageAddress: "", Checksum: ""},
 	}
 
 	function.Permissions, err = s.GetPermissionService().CreatePermissions(owner, a.NewPermissions)
@@ -150,13 +150,17 @@ func (s *FunctionService) UpdateFunction(a *asset.UpdateFunctionParam, requester
 		return orcerrors.NewPermissionDenied("requester does not own the function")
 	}
 
-	if len(a.Image.GetChecksum()) == 0 && function.Status == asset.FunctionStatus_FUNCTION_STATUS_READY {
-		return orcerrors.FromValidationError(asset.FunctionKind, errors.New("Image checksum should not be empty when function status is ready"))
+	// Update function name. Name cannot be blank.
+	function.Name = a.Name
+
+	// Update Image if given
+	if len(a.Image.GetChecksum()) != 0 {
+		function.Image = a.Image
 	}
 
-	// Update function name
-	function.Name = a.Name
-	function.Image = a.Image
+	if len(function.Image.GetChecksum()) == 0 && function.Status == asset.FunctionStatus_FUNCTION_STATUS_READY {
+		return orcerrors.FromValidationError(asset.FunctionKind, errors.New("Image checksum should not be empty when function status is ready"))
+	}
 
 	event := &asset.Event{
 		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,

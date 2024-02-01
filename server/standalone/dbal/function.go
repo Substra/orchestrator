@@ -53,7 +53,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 		return err
 	}
 
-	err = d.addAddressable(function.Image)
+	err = d.getOrAddAddressable(function.Image)
 	if err != nil {
 		return err
 	}
