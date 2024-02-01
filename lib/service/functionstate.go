@@ -84,6 +84,7 @@ func (s *FunctionService) ApplyFunctionAction(key string, action asset.FunctionA
 	}
 
 	function, err := s.GetFunctionDBAL().GetFunction(key)
+
 	if err != nil {
 		return err
 	}

@@ -150,7 +150,7 @@ func (s *FunctionService) UpdateFunction(a *asset.UpdateFunctionParam, requester
 		return orcerrors.NewPermissionDenied("requester does not own the function")
 	}
 
-	// Update function name
+	// Update function name. Name cannot be blank.
 	function.Name = a.Name
 
 	// Update Image if given
