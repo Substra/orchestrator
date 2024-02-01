@@ -239,7 +239,7 @@ func TestUpdateSingleExistingFunction(t *testing.T) {
 
 }
 
-func TestUpdateNamOnlySingleExistingFunction(t *testing.T) {
+func TestUpdateNameOnlySingleExistingFunction(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	provider := newMockedProvider()
 	es := new(MockEventAPI)
