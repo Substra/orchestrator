@@ -68,7 +68,7 @@ func (d *DBAL) GetFailureReport(assetKey string) (*asset.FailureReport, error) {
 func (d *DBAL) AddFailureReport(failureReport *asset.FailureReport) error {
 	var logsAddress pgtype.Text
 	if failureReport.LogsAddress != nil {
-		err := d.addAddressable(failureReport.LogsAddress)
+		err := d.addAddressable(failureReport.LogsAddress, false)
 		if err != nil {
 			return err
 		}

@@ -5,24 +5,17 @@ import (
 	"github.com/substra/orchestrator/lib/asset"
 )
 
-func (d *DBAL) addAddressable(addressable *asset.Addressable) error {
+func (d *DBAL) addAddressable(addressable *asset.Addressable, ignore_conflict bool) error {
 	stmt := getStatementBuilder().
 		Insert("addressables").
 		Columns("storage_address", "checksum").
 		Values(addressable.StorageAddress, addressable.Checksum)
 
-	return d.exec(stmt)
-}
+	if ignore_conflict {
+		stmt = stmt.Suffix("ON CONFLICT DO NOTHING")
+	}
 
-func (d *DBAL) getOrAddAddressable(addressable *asset.Addressable) error {
-	addressableExist, err := d.AddressableExists(addressable.StorageAddress)
-	if err != nil {
-		return err
-	}
-	if !addressableExist {
-		return d.addAddressable(addressable)
-	}
-	return nil
+	return d.exec(stmt)
 }
 
 func (d *DBAL) AddressableExists(storageAddress string) (bool, error) {
@@ -55,7 +48,7 @@ func (d *DBAL) updateAddressable(addressable *asset.Addressable) error {
 			Where(sq.Eq{"storage_address": addressable.StorageAddress})
 		return d.exec(stmt)
 	}
-	return d.addAddressable(addressable)
+	return d.addAddressable(addressable, false)
 }
 
 func (d *DBAL) deleteAddressable(storageAddress string) error {

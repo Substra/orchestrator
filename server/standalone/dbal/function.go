@@ -43,17 +43,18 @@ func (a *sqlFunction) toFunction() *asset.Function {
 
 // AddFunction implements persistence.FunctionDBAL
 func (d *DBAL) AddFunction(function *asset.Function) error {
-	err := d.addAddressable(function.Description)
+	err := d.addAddressable(function.Description, false)
 	if err != nil {
 		return err
 	}
 
-	err = d.addAddressable(function.Archive)
+	err = d.addAddressable(function.Archive, false)
 	if err != nil {
 		return err
 	}
 
-	err = d.getOrAddAddressable(function.Image)
+	// We allow conflict as the default Image with empty string as chesum and address already exists in table.
+	err = d.addAddressable(function.Image, true)
 	if err != nil {
 		return err
 	}
