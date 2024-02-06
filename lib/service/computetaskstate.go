@@ -164,7 +164,7 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 		Msg("onDone: updating children statuses")
 
 	for _, child := range children {
-		err := s.propagateDone(task, child)
+		err := s.startChildrenTaskFromParents(task, child)
 		if err != nil {
 			e.Err = err
 			return
@@ -176,7 +176,7 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 
 // propagateDone propagates the DONE status of a parent to the task.
 // This will iterate over task parents and mark it as TODO if all parents are DONE.
-func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.ComputeTask) error {
+func (s *ComputeTaskService) startChildrenTaskFromParents(triggeringParent, child *asset.ComputeTask) error {
 	logger := s.GetLogger().With().
 		Str("triggeringParent", triggeringParent.Key).
 		Str("triggeringParentStatus", triggeringParent.Status.String()).
@@ -185,7 +185,7 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 		Logger()
 	state := newState(s, child)
 	if !state.Can(string(transitionTodo)) {
-		logger.Info().Msg("propagateDone: skipping child due to incompatible state")
+		logger.Info().Msg("startChildrenTaskFromParents: skipping child due to incompatible state")
 		// this is expected as we might go over already failed children (from another parent)
 		return nil
 	}
