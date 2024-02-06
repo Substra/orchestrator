@@ -179,3 +179,19 @@ func (s *FunctionService) onFailure(e *fsm.Event) {
 			Msg("failed to propagate function action")
 	}
 }
+
+func (s *FunctionService) CheckFunctionReady(functionKey string) (bool, error) {
+	function, err := s.GetFunctionDBAL().GetFunction(functionKey)
+	if err != nil {
+		return false, err
+	}
+
+	if function.Status != asset.FunctionStatus_FUNCTION_STATUS_READY {
+		s.GetLogger().Debug().
+			Str("function", functionKey).
+			Msg("CheckFunctionReady: function is not built")
+		return false, nil
+	}
+
+	return true, nil
+}
