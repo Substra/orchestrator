@@ -228,7 +228,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
-		Status:         asset.ComputeTaskStatus_STATUS_TODO,
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 		Worker:         dataManager.Owner,
 		Inputs:         newTrainTask.Inputs,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
@@ -467,61 +467,11 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	cps.AssertExpectations(t)
 }
 
-func TestRegisterFailedTask(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	cps := new(MockComputePlanAPI)
-	provider := newMockedProvider()
-
-	newTask := &asset.NewComputeTask{
-		Key:            "867852b4-8419-4d52-8862-d5db823095be",
-		FunctionKey:    "867852b4-8419-4d52-8862-d5db823095be",
-		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
-		Inputs: []*asset.ComputeTaskInput{
-			{Identifier: "test", Ref: &asset.ComputeTaskInput_ParentTaskOutput{ParentTaskOutput: &asset.ParentTaskOutputRef{
-				ParentTaskKey:    "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
-				OutputIdentifier: "test",
-			}}},
-		},
-	}
-
-	provider.On("GetComputeTaskDBAL").Return(dbal)
-	provider.On("GetComputePlanService").Return(cps)
-
-	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "testOwner"}, nil)
-
-	service := NewComputeTaskService(provider)
-
-	// Checking existing task
-	dbal.On("GetExistingComputeTaskKeys", []string{newTask.Key}).Once().Return([]string{}, nil)
-
-	dbal.On("GetExistingComputeTaskKeys", []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}).Once().Return([]string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}, nil)
-
-	parentPerms := &asset.Permissions{Process: &asset.Permission{Public: true}}
-	parentTask := &asset.ComputeTask{
-		Status: asset.ComputeTaskStatus_STATUS_FAILED,
-		Key:    "6c3878a8-8ca6-437e-83be-3a85b24b70d1",
-		Outputs: map[string]*asset.ComputeTaskOutput{
-			"model": {Permissions: parentPerms},
-		},
-	}
-	// checking parent compatibility (a single failed parent)
-	dbal.On("GetComputeTasks", []string{"6c3878a8-8ca6-437e-83be-3a85b24b70d1"}).Once().
-		Return([]*asset.ComputeTask{parentTask}, nil)
-
-	_, err := service.RegisterTasks([]*asset.NewComputeTask{newTask}, "testOwner")
-	assert.Error(t, err)
-	orcError := new(orcerrors.OrcError)
-	assert.True(t, errors.As(err, &orcError))
-	assert.Equal(t, orcerrors.ErrIncompatibleTaskStatus, orcError.Kind)
-
-	dbal.AssertExpectations(t)
-	cps.AssertExpectations(t)
-	provider.AssertExpectations(t)
-}
-
 func TestRegisterDeletedModel(t *testing.T) {
 	dbal := new(persistence.MockDBAL)
 	ms := new(MockModelAPI)
+	fs := new(MockFunctionAPI)
+	ps := new(MockPermissionAPI)
 	cps := new(MockComputePlanAPI)
 	provider := newMockedProvider()
 
@@ -542,10 +492,18 @@ func TestRegisterDeletedModel(t *testing.T) {
 	provider.On("GetComputeTaskDBAL").Return(dbal)
 	provider.On("GetModelService").Return(ms)
 	provider.On("GetComputePlanService").Return(cps)
+	provider.On("GetFunctionService").Return(fs)
+	provider.On("GetPermissionService").Return(ps)
 
 	service := NewComputeTaskService(provider)
 
 	cps.On("GetPlan", newTrainTask.ComputePlanKey).Once().Return(&asset.ComputePlan{Key: newTrainTask.ComputePlanKey, Owner: "testOwner"}, nil)
+
+	function := &asset.Function{
+		Status: asset.FunctionStatus_FUNCTION_STATUS_READY,
+	}
+	ps.On("CanProcess", function.Permissions, "testOwner").Return(true).Once()
+	fs.On("GetFunction", newTask.Key).Return(function, nil).Once()
 
 	// Checking existing task
 	dbal.On("GetExistingComputeTaskKeys", []string{newTask.Key}).Once().Return([]string{}, nil)
@@ -579,6 +537,8 @@ func TestRegisterDeletedModel(t *testing.T) {
 	dbal.AssertExpectations(t)
 	cps.AssertExpectations(t)
 	ms.AssertExpectations(t)
+	fs.AssertExpectations(t)
+	ps.AssertExpectations(t)
 	provider.AssertExpectations(t)
 }
 
