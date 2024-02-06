@@ -38,6 +38,7 @@ type ComputeTaskAPI interface {
 	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 	getTaskOutputCounter(taskKey string) (persistence.ComputeTaskOutputCounter, error)
 	propagateFunctionCancelation(functionKey string, requester string) error
+	GetTasksByFunction(functionKey string, statuses []asset.ComputeTaskStatus) ([]*asset.ComputeTask, error)
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance
@@ -925,4 +926,14 @@ func GetParentTaskKeys(inputs []*asset.ComputeTaskInput) []string {
 	}
 
 	return parentKeys
+}
+
+func (s *ComputeTaskService) GetTasksByFunction(functionKey string, statuses []asset.ComputeTaskStatus) ([]*asset.ComputeTask, error) {
+	tasks, err := s.GetComputeTaskDBAL().GetFunctionFromTasksWithStatus(functionKey, statuses)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
 }

@@ -341,7 +341,7 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 }
 
 func (s *ComputeTaskService) propagateFunctionCancelation(functionKey string, requester string) error {
-	tasks, err := s.GetComputeTaskDBAL().GetFunctionRunnableTasks(functionKey)
+	tasks, err := s.GetTasksByFunction(functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_TODO, asset.ComputeTaskStatus_STATUS_DOING})
 
 	if err != nil {
 		return err
