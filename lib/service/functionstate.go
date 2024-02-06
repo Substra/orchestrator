@@ -50,6 +50,8 @@ type functionStateUpdater interface {
 	onStateChange(e *fsm.Event)
 	// Set the compute plan to failed when a function fails.
 	onFailure(e *fsm.Event)
+	// Start tasks when function is ready
+	onReady(e *fsm.Event)
 }
 
 func newFunctionState(updater functionStateUpdater, function *asset.Function) *fsm.FSM {
@@ -59,6 +61,7 @@ func newFunctionState(updater functionStateUpdater, function *asset.Function) *f
 		fsm.Callbacks{
 			"enter_state":            wrapFsmCallbackContext(updater.onStateChange),
 			"after_transitionFailed": wrapFsmCallbackContext(updater.onFailure),
+			"after_transitionReady":  wrapFsmCallbackContext(updater.onReady),
 		},
 	)
 }
@@ -177,6 +180,30 @@ func (s *FunctionService) onFailure(e *fsm.Event) {
 			Err(err).
 			Str("functionKey", function.Key).
 			Msg("failed to propagate function action")
+	}
+}
+
+func (s *FunctionService) onReady(e *fsm.Event) {
+	if len(e.Args) != 2 {
+		e.Err = orcerrors.NewInternal(fmt.Sprintf("cannot handle state change with argument: %v", e.Args))
+		return
+	}
+
+	function, ok := e.Args[0].(*asset.Function)
+	if !ok {
+		e.Err = orcerrors.NewInternal("cannot cast argument into function")
+		return
+	}
+	tasks, err := s.GetComputeTaskService().GetTasksByFunction(function.Key, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_WAITING})
+	if err != nil {
+		s.GetLogger().Error().
+			Err(err).
+			Str("functionKey", function.Key).
+			Msg("failed to propagate function action")
+	}
+
+	for _, task := range tasks {
+		s.GetComputeTaskService().StartDependentTask(task, fmt.Sprintf("Function %s finished building", function.Key))
 	}
 }
 
