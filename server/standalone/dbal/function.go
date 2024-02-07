@@ -53,7 +53,8 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 		return err
 	}
 
-	// We allow conflict as the default Image with empty string as chesum and address already exists in table.
+	// We allow conflict as the default Image with empty string as checksum
+	// and storage_address already exists in table.
 	err = d.addAddressable(function.Image, true)
 	if err != nil {
 		return err

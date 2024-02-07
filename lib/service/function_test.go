@@ -254,7 +254,7 @@ func TestUpdateNameOnlySingleExistingFunction(t *testing.T) {
 		Image: &asset.Addressable{StorageAddress: "test/storage/address", Checksum: "4c67ad88309a48b48bc4c2e2c1a87a83"},
 	}
 
-	// Not given image is equivalent to give Image: &asset.Addressable{StorageAddress: "", Checksum: ""}. Update an image with blank value will be ignored.
+	// Not giving an image is equivalent to giving Image: &asset.Addressable{StorageAddress: "", Checksum: ""}. Update an image with blank value will be ignored.
 	updateFunctionParam := &asset.UpdateFunctionParam{
 		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		Name: "Updated function name",
