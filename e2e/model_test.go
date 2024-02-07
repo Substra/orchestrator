@@ -19,6 +19,8 @@ func TestRegisterModel(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
+
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -56,6 +58,7 @@ func TestRegisterTwoSimpleModelsForTrainTask(t *testing.T) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	_, err := appClient.FailableRegisterModels(
 		client.DefaultModelOptions().WithKeyRef("mod1"),
@@ -75,6 +78,7 @@ func TestRegisterAllModelsForCompositeTask(t *testing.T) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultCompositeTaskOptions())
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultCompositeFunctionRef)
 	appClient.StartTask(client.DefaultCompositeTaskRef)
 	appClient.RegisterModels(
 		client.DefaultModelOptions().WithTaskRef(client.DefaultCompositeTaskRef).WithKeyRef("mod1").WithTaskOutput("local"),

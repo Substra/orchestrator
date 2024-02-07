@@ -62,6 +62,7 @@ func TestSubscribeReplayEvents(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	plan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -89,6 +90,7 @@ func TestSubscribeEventsEmittedWhileSubscribed(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	plan := appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -115,6 +117,7 @@ func TestSubscribeEventsEmittedWhileSubscribed(t *testing.T) {
 func TestSubscribeReplayThenListen(t *testing.T) {
 	appClient := factory.NewTestClient()
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	manager := appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 
 	replayedSamples := make([]*asset.DataSample, 5)

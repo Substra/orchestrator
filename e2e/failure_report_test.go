@@ -23,6 +23,7 @@ func TestRegisterFailureReport(t *testing.T) {
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.StartTask(client.DefaultTrainTaskRef)
 
 	registeredFailureReport := appClient.RegisterTaskFailureReport(client.DefaultTrainTaskRef)

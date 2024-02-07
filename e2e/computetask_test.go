@@ -68,6 +68,7 @@ func TestTrainTaskLifecycle(t *testing.T) {
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("anotherTask").
 		WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.StartTask(client.DefaultTrainTaskRef)
 }
 
@@ -93,6 +94,10 @@ func TestPredictTaskLifecycle(t *testing.T) {
 		WithKeyRef("test").
 		WithInput("predictions", &client.TaskOutputRef{TaskRef: "predict", Identifier: "predictions"}).
 		WithFunctionRef("metric"))
+
+	appClient.SetReadyFromWaitingFunction("train_function")
+	appClient.SetReadyFromWaitingFunction("predict_function")
+	appClient.SetReadyFromWaitingFunction("metric")
 
 	appClient.StartTask("train")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("train").WithKeyRef("train_end"))
@@ -125,6 +130,7 @@ func TestCascadeCancel(t *testing.T) {
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.CancelTask(client.DefaultTrainTaskRef)
 
@@ -153,6 +159,7 @@ func TestCascadeTodo(t *testing.T) {
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions())
 	appClient.DoneTask(client.DefaultTrainTaskRef)
@@ -183,6 +190,7 @@ func TestCascadeFailure(t *testing.T) {
 			WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 	}
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.FailTask(client.DefaultTrainTaskRef)
 
@@ -350,6 +358,9 @@ func TestQueryTaskInputs(t *testing.T) {
 
 	otherTaskOptions := client.DefaultTrainTaskOptions().WithKeyRef(otherTaskRef).WithPlanRef(cpRef)
 	appClient.RegisterTasks(otherTaskOptions)
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
+	appClient.SetReadyFromWaitingFunction(parentFunctionRef)
+	appClient.SetReadyFromWaitingFunction(childFunctionRef)
 	appClient.StartTask(otherTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef(inputModelRef).WithTaskRef(otherTaskRef))
 
@@ -455,6 +466,8 @@ func TestEventsDuringComputeTaskLifecycle(t *testing.T) {
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	registeredTask := appClient.RegisterTasks(client.DefaultTrainTaskOptions())[0]
 
 	getEventTask := func(eventKind asset.EventKind) *asset.ComputeTask {
@@ -464,6 +477,7 @@ func TestEventsDuringComputeTaskLifecycle(t *testing.T) {
 			EventKind: eventKind,
 		}, "", 100)
 
+		// One for the fr
 		require.Len(t, res.Events, 1)
 		return res.Events[0].GetComputeTask()
 	}
@@ -501,6 +515,8 @@ func TestWorkerCancelTaskInFailedComputePlan(t *testing.T) {
 		WithInput("model", &client.TaskOutputRef{TaskRef: "trainTask1", Identifier: "model"}).
 		WithWorker("MyOrg2MSP"))
 
+	client1.SetReadyFromWaitingFunction("trainFunction")
+	client1.SetReadyFromWaitingFunction("aggFunction")
 	client1.StartTask("trainTask1")
 	client1.RegisterModel(client.DefaultModelOptions().WithTaskRef("trainTask1"))
 
@@ -526,6 +542,8 @@ func TestGetTaskInputAssets(t *testing.T) {
 		client.DefaultTrainTaskOptions().WithKeyRef("train2").WithFunctionRef("train_function"), // Make sure we have several models as aggregate input to check order
 	)
 
+	appClient.SetReadyFromWaitingFunction("train_function")
+
 	// Check that train has expected inputs
 	trainInputs := appClient.GetTaskInputAssets("train")
 	assert.Len(t, trainInputs, 2)
@@ -550,6 +568,7 @@ func TestGetTaskInputAssets(t *testing.T) {
 			}).
 			WithKeyRef("aggregate_function"),
 	)
+	appClient.SetReadyFromWaitingFunction("aggregate_function")
 	appClient.RegisterTasks(
 		client.DefaultAggregateTaskOptions().
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "train", Identifier: "model"}).
@@ -592,6 +611,7 @@ func TestGetTaskInputAssetsFromComposite(t *testing.T) {
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 
+	appClient.SetReadyFromWaitingFunction("comp_function")
 	appClient.RegisterTasks(
 		client.DefaultCompositeTaskOptions().WithKeyRef("comp1").WithFunctionRef("comp_function"),
 		client.DefaultCompositeTaskOptions().WithKeyRef("comp2").WithFunctionRef("comp_function"),
@@ -621,6 +641,7 @@ func TestGetTaskInputAssetsFromComposite(t *testing.T) {
 			}).
 			WithKeyRef("aggregate_function"),
 	)
+	appClient.SetReadyFromWaitingFunction("aggregate_function")
 	appClient.RegisterTasks(
 		client.DefaultAggregateTaskOptions().
 			WithInput("sink", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}).
