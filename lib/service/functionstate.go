@@ -203,7 +203,15 @@ func (s *FunctionService) onReady(e *fsm.Event) {
 	}
 
 	for _, task := range tasks {
-		s.GetComputeTaskService().StartDependentTask(task, fmt.Sprintf("Function %s finished building", function.Key))
+		err := s.GetComputeTaskService().StartDependentTask(task, fmt.Sprintf("Function %s finished building", function.Key))
+
+		if err != nil {
+			s.GetLogger().Error().
+				Err(err).
+				Str("functionKey", function.Key).
+				Str("taskKey", task.Key).
+				Msg("onReady: failed to start dependent task")
+		}
 	}
 }
 

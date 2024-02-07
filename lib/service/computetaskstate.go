@@ -331,13 +331,18 @@ func getInitialStatus(parents []*asset.ComputeTask, function *asset.Function) as
 		}
 	}
 
-	if doneParents == len(parents) && function.Status == asset.FunctionStatus_FUNCTION_STATUS_READY {
-		status = asset.ComputeTaskStatus_STATUS_TODO
-	} else if function.Status == asset.FunctionStatus_FUNCTION_STATUS_FAILED {
+	switch function.Status {
+	case asset.FunctionStatus_FUNCTION_STATUS_READY:
+		if doneParents == len(parents) {
+			status = asset.ComputeTaskStatus_STATUS_TODO
+		} else {
+			status = asset.ComputeTaskStatus_STATUS_WAITING
+		}
+	case asset.FunctionStatus_FUNCTION_STATUS_FAILED:
 		status = asset.ComputeTaskStatus_STATUS_FAILED
-	} else if function.Status == asset.FunctionStatus_FUNCTION_STATUS_CANCELED {
+	case asset.FunctionStatus_FUNCTION_STATUS_CANCELED:
 		status = asset.ComputeTaskStatus_STATUS_CANCELED
-	} else {
+	default:
 		status = asset.ComputeTaskStatus_STATUS_WAITING
 	}
 
