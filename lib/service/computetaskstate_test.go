@@ -20,17 +20,17 @@ func TestGetInitialStatus(t *testing.T) {
 		"no parents + function not ready": {
 			parents:  []*asset.ComputeTask{},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},
-			outcome:  asset.ComputeTaskStatus_STATUS_WAITING,
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		},
 		"no parents + function ready": {
 			parents:  []*asset.ComputeTask{},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},
-			outcome:  asset.ComputeTaskStatus_STATUS_WAITING,
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		},
 		"parent waiting + function ready": {
-			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING}},
+			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS}},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_READY},
-			outcome:  asset.ComputeTaskStatus_STATUS_WAITING,
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		},
 		"parent waiting + function not ready": {
 			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING}},
@@ -40,12 +40,12 @@ func TestGetInitialStatus(t *testing.T) {
 		"parent ready + function not ready": {
 			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},
-			outcome:  asset.ComputeTaskStatus_STATUS_WAITING,
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		},
 		"parent ready + function ready": {
 			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_READY},
-			outcome:  asset.ComputeTaskStatus_STATUS_TODO,
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		},
 		"parent failed": {
 			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_FAILED}},
@@ -85,7 +85,7 @@ func TestOnStateChange(t *testing.T) {
 	updater := new(mockTaskStateUpdater)
 	updater.On("onStateChange", mock.Anything).Once()
 
-	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_TODO, Key: "uuid"})
+	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, Key: "uuid"})
 
 	err := state.Event(context.Background(), string(transitionDoing), &asset.ComputeTask{})
 
@@ -120,7 +120,7 @@ func TestDispatchOnTransition(t *testing.T) {
 
 	returnedTask := &asset.ComputeTask{
 		Key:            "uuid",
-		Status:         asset.ComputeTaskStatus_STATUS_TODO,
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		Worker:         "worker",
 		ComputePlanKey: "uuidcp",
 	}
@@ -162,7 +162,7 @@ func TestUpdateTaskStateCanceled(t *testing.T) {
 	// task is retrieved from persistence layer
 	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
 		Key:    "uuid",
-		Status: asset.ComputeTaskStatus_STATUS_WAITING,
+		Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		Owner:  "owner",
 	}, nil)
 	// An update event should be enqueued
@@ -233,7 +233,7 @@ func TestCascadeStatusDone(t *testing.T) {
 		{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE},
 	}, nil)
 	dbal.On("GetComputeTaskChildren", "uuid").Return([]*asset.ComputeTask{
-		{Key: "child", Status: asset.ComputeTaskStatus_STATUS_WAITING},
+		{Key: "child", Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS},
 	}, nil)
 
 	// There should be two updates: 1 for the parent, 1 for the child
@@ -242,7 +242,7 @@ func TestCascadeStatusDone(t *testing.T) {
 	fs.On("CheckFunctionReady", task.FunctionKey).Return(true, nil).Once()
 	// Updated task should be saved
 	updatedParent := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE, Owner: "owner", Worker: "worker"}
-	updatedChild := &asset.ComputeTask{Key: "child", Status: asset.ComputeTaskStatus_STATUS_TODO}
+	updatedChild := &asset.ComputeTask{Key: "child", Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT}
 	dbal.On("UpdateComputeTaskStatus", updatedParent.Key, updatedParent.Status).Return(nil)
 	dbal.On("UpdateComputeTaskStatus", updatedChild.Key, updatedChild.Status).Return(nil)
 
@@ -312,11 +312,11 @@ func TestPropagateFunctionCancelation(t *testing.T) {
 	provider.On("GetComputePlanService").Return(cps)
 
 	functionKey := "uuid_f"
-	task := &asset.ComputeTask{Key: "uuid_t", Status: asset.ComputeTaskStatus_STATUS_TODO, Owner: "owner", Worker: "worker"}
+	task := &asset.ComputeTask{Key: "uuid_t", Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, Owner: "owner", Worker: "worker"}
 
 	cps.On("failPlan", mock.Anything).Return(nil)
 	dbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{
-		asset.ComputeTaskStatus_STATUS_TODO,
+		asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		asset.ComputeTaskStatus_STATUS_DOING,
 	}).Return([]*asset.ComputeTask{task}, nil)
 	dbal.On("GetComputeTask", task.Key).Return(task, nil)
@@ -347,7 +347,7 @@ func TestCheckParentDone(t *testing.T) {
 			outcome: true,
 		},
 		"1 parent done + 1 parent waiting": {
-			parents: []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING}},
+			parents: []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS}},
 			outcome: false,
 		},
 	}

@@ -228,7 +228,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
-		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		Worker:         dataManager.Owner,
 		Inputs:         newTrainTask.Inputs,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
@@ -378,7 +378,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	// All parents already exist
 	dbal.On("GetExistingComputeTaskKeys", []string{parent1.Key, parent2.Key}).Once().Return([]string{parent1.Key, parent2.Key}, nil)
 
-	// TODO: we fetch the same data several times
+	// STATUS_WAITING_FOR_EXECUTOR_SLOT: we fetch the same data several times
 	// Since this will change with task category removal, let's revisit later
 	dbal.On("GetComputeTasks", []string{parent1.Key, parent2.Key}).Once().Return([]*asset.ComputeTask{parent1, parent2}, nil)
 	dbal.On("GetComputeTask", parent1.Key).Once().Return(parent1, nil)
@@ -432,7 +432,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Owner:          "testOwner",
 		ComputePlanKey: newTask.ComputePlanKey,
 		Metadata:       newTask.Metadata,
-		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		Worker:         dataManager.Owner,
 		Rank:           1,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
@@ -1485,7 +1485,7 @@ func TestGetInputAssetsTaskUnready(t *testing.T) {
 		Once().
 		Return(&asset.ComputeTask{
 			Key:    "uuid",
-			Status: asset.ComputeTaskStatus_STATUS_WAITING,
+			Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		}, nil)
 
 	_, err := service.GetInputAssets("uuid")
@@ -1525,7 +1525,7 @@ func TestGetInputAssets(t *testing.T) {
 		Once().
 		Return(&asset.ComputeTask{
 			Key:    "uuid",
-			Status: asset.ComputeTaskStatus_STATUS_TODO,
+			Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 			Inputs: []*asset.ComputeTaskInput{
 				{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:ds"}},
 				{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm"}},

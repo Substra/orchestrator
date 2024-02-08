@@ -14,28 +14,40 @@ import (
 type taskTransition string
 
 const (
-	transitionTodo     taskTransition = "transitionTodo"
-	transitionDone     taskTransition = "transitionDone"
-	transitionCanceled taskTransition = "transitionCanceled"
-	transitionFailed   taskTransition = "transitionFailed"
-	transitionDoing    taskTransition = "transitionDoing"
+	transitionBuilding            taskTransition = "transitionBuilding"
+	transitionWaitingParentTasks  taskTransition = "transitionWaitingParentTasks"
+	transitionWaitingExecutorSlot taskTransition = "transitionWaitingExecutorSlot"
+	transitionDone                taskTransition = "transitionDone"
+	transitionCanceled            taskTransition = "transitionCanceled"
+	transitionFailed              taskTransition = "transitionFailed"
+	transitionDoing               taskTransition = "transitionDoing"
 )
 
 // taskStateEvents is the definition of the state machine representing task states
 var taskStateEvents = fsm.Events{
 	{
+		Name: string(transitionBuilding),
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String()},
+		Dst:  asset.ComputeTaskStatus_STATUS_BUILDING.String(),
+	},
+	{
+		Name: string(transitionWaitingParentTasks),
+		Src:  []string{asset.ComputeTaskStatus_STATUS_BUILDING.String()},
+		Dst:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(),
+	},
+	{
 		Name: string(transitionCanceled),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String(), asset.ComputeTaskStatus_STATUS_WAITING.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_CANCELED.String(),
 	},
 	{
-		Name: string(transitionTodo),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING.String()},
-		Dst:  asset.ComputeTaskStatus_STATUS_TODO.String(),
+		Name: string(transitionWaitingExecutorSlot),
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String()},
+		Dst:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(),
 	},
 	{
 		Name: string(transitionDoing),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String()},
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_DOING.String(),
 	},
 	{
@@ -45,7 +57,7 @@ var taskStateEvents = fsm.Events{
 	},
 	{
 		Name: string(transitionFailed),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_TODO.String(), asset.ComputeTaskStatus_STATUS_WAITING.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_FAILED.String(),
 	},
 }
@@ -171,7 +183,7 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 		}
 	}
 
-	metrics.TaskUpdateCascadeSize.WithLabelValues(s.GetChannel(), string(transitionTodo)).Observe(float64(len(children)))
+	metrics.TaskUpdateCascadeSize.WithLabelValues(s.GetChannel(), string(transitionWaitingExecutorSlot)).Observe(float64(len(children)))
 }
 
 // startChildrenTaskFromParents checks which tasks can be started when a parent finishes.
@@ -184,7 +196,7 @@ func (s *ComputeTaskService) startChildrenTaskFromParents(triggeringParent, chil
 		Str("childStatus", child.Status.String()).
 		Logger()
 	state := newState(s, child)
-	if !state.Can(string(transitionTodo)) {
+	if !state.Can(string(transitionWaitingExecutorSlot)) {
 		logger.Info().Msg("startChildrenTaskFromParents: skipping child due to incompatible state")
 		// this is expected as we might go over already failed children (from another parent)
 		return nil
@@ -221,13 +233,13 @@ func (s *ComputeTaskService) StartDependentTask(child *asset.ComputeTask, reason
 		Logger()
 
 	state := newState(s, child)
-	if !state.Can(string(transitionTodo)) {
+	if !state.Can(string(transitionWaitingExecutorSlot)) {
 		logger.Info().Msg("StartDependentTask: skipping child due to incompatible state")
 		// this is expected as we might go over already failed children (from another parent)
 		return nil
 	}
 
-	err = s.applyTaskAction(child, transitionTodo, reason)
+	err = s.applyTaskAction(child, transitionWaitingExecutorSlot, reason)
 	if err != nil {
 		return err
 	}
@@ -334,16 +346,16 @@ func getInitialStatus(parents []*asset.ComputeTask, function *asset.Function) as
 	switch function.Status {
 	case asset.FunctionStatus_FUNCTION_STATUS_READY:
 		if doneParents == len(parents) {
-			status = asset.ComputeTaskStatus_STATUS_TODO
+			status = asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT
 		} else {
-			status = asset.ComputeTaskStatus_STATUS_WAITING
+			status = asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS
 		}
 	case asset.FunctionStatus_FUNCTION_STATUS_FAILED:
 		status = asset.ComputeTaskStatus_STATUS_FAILED
 	case asset.FunctionStatus_FUNCTION_STATUS_CANCELED:
 		status = asset.ComputeTaskStatus_STATUS_CANCELED
 	default:
-		status = asset.ComputeTaskStatus_STATUS_WAITING
+		status = asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS
 	}
 
 	return status
@@ -363,7 +375,7 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 }
 
 func (s *ComputeTaskService) propagateFunctionCancelation(functionKey string, requester string) error {
-	tasks, err := s.GetTasksByFunction(functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_TODO, asset.ComputeTaskStatus_STATUS_DOING})
+	tasks, err := s.GetTasksByFunction(functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, asset.ComputeTaskStatus_STATUS_DOING})
 
 	if err != nil {
 		return err

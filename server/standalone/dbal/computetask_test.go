@@ -65,7 +65,7 @@ func makeTaskRows(taskKeys ...string) *pgxmock.Rows {
 		"logs_permission", "metadata", "function_key"})
 
 	for _, key := range taskKeys {
-		res = res.AddRow(key, "cp_key", "STATUS_WAITING", "worker", "owner", int32(0), time.Unix(0, 100),
+		res = res.AddRow(key, "cp_key", "STATUS_WAITING_FOR_PARENT_TASKS", "worker", "owner", int32(0), time.Unix(0, 100),
 			[]byte("{}"), map[string]string{}, "function_key")
 	}
 
@@ -216,7 +216,7 @@ func TestAddComputeTask(t *testing.T) {
 	newTask := &asset.ComputeTask{
 		Key:            "8d9fc421-15a6-4c3d-9082-3337a5436e83",
 		ComputePlanKey: "b16dcd88-32ca-4971-89a7-734b4ad1d778",
-		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		Worker:         "testOrg",
 		Inputs: []*asset.ComputeTaskInput{
 			{
@@ -271,7 +271,7 @@ func TestAddComputeTasks(t *testing.T) {
 		{
 			Key:            "8d9fc421-15a6-4c3d-9082-3337a5436e83",
 			ComputePlanKey: "899e7403-7e23-4c95-bb3f-7eb9e6d86b04",
-			Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+			Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 			Worker:         "testOrg",
 			Inputs: []*asset.ComputeTaskInput{
 				{
@@ -296,7 +296,7 @@ func TestAddComputeTasks(t *testing.T) {
 		{
 			Key:            "99d44ec9-d642-4afa-bad0-00dda84a6b9d",
 			ComputePlanKey: "899e7403-7e23-4c95-bb3f-7eb9e6d86b04",
-			Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+			Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 			Worker:         "testOrg",
 			Inputs: []*asset.ComputeTaskInput{
 				{

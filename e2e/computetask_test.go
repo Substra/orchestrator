@@ -111,7 +111,7 @@ func TestPredictTaskLifecycle(t *testing.T) {
 	require.Equal(t, predictTask.Status, asset.ComputeTaskStatus_STATUS_DONE)
 
 	testTask := appClient.GetComputeTask("test")
-	require.Equal(t, testTask.Status, asset.ComputeTaskStatus_STATUS_TODO)
+	require.Equal(t, testTask.Status, asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT)
 }
 
 // TestCascadeCancel registers 10 children tasks and cancel their parent
@@ -136,7 +136,7 @@ func TestCascadeCancel(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
-		require.Equal(t, asset.ComputeTaskStatus_STATUS_WAITING, task.Status, "child task should be WAITING")
+		require.Equal(t, asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS, task.Status, "child task should be WAITING_FOR_PARENT_TASKS ")
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
@@ -166,7 +166,7 @@ func TestCascadeTodo(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
-		require.Equal(t, asset.ComputeTaskStatus_STATUS_TODO, task.Status, "child task should be TODO")
+		require.Equal(t, asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, task.Status, "child task should be STATUS_WAITING_FOR_EXECUTOR_SLOT")
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
@@ -196,7 +196,7 @@ func TestCascadeFailure(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		task := appClient.GetComputeTask(fmt.Sprintf("task%d", i))
-		require.Equal(t, asset.ComputeTaskStatus_STATUS_WAITING, task.Status, "child task should be WAITING")
+		require.Equal(t, asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS, task.Status, "child task should be WAITING_FOR_PARENT_TASKS")
 	}
 
 	plan := appClient.GetComputePlan(client.DefaultPlanRef)
@@ -577,7 +577,7 @@ func TestGetTaskInputAssets(t *testing.T) {
 			WithFunctionRef("aggregate_function"),
 	)
 
-	// Fetching inputs for a task not in TODO should return an error
+	// Fetching inputs for a task not in STATUS_WAITING_FOR_EXECUTOR_SLOT should return an error
 	_, err := appClient.FailableGetTaskInputAssets("aggregate")
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "inputs may not be defined")
@@ -650,7 +650,7 @@ func TestGetTaskInputAssetsFromComposite(t *testing.T) {
 			WithFunctionRef("aggregate_function"),
 	)
 
-	// Fetching inputs for a task not in TODO should return an error
+	// Fetching inputs for a task not in STATUS_WAITING_FOR_EXECUTOR_SLOT should return an error
 	_, err := appClient.FailableGetTaskInputAssets("aggregate")
 	assert.Error(t, err)
 	assert.ErrorContains(t, err, "inputs may not be defined")

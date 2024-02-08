@@ -12,12 +12,14 @@ option go_package = "github.com/substra/orchestrator/lib/asset";
 
 enum ComputeTaskStatus {
   STATUS_UNKNOWN = 0;
-  STATUS_WAITING = 1;
-  STATUS_TODO = 2;
+  STATUS_WAITING_FOR_PARENT_TASKS = 1;
+  STATUS_WAITING_FOR_EXECUTOR_SLOT = 2;
   STATUS_DOING = 3;
   STATUS_DONE = 4;
   STATUS_CANCELED = 5;
   STATUS_FAILED = 6;
+  STATUS_WAITING_FOR_BUILDER_SLOT = 7;
+  STATUS_BUILDING = 8;
 }
 
 message ParentTaskOutputRef {
