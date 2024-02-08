@@ -114,7 +114,7 @@ func (d *DBAL) GetComputeTaskOutputModels(key string) ([]*asset.Model, error) {
 }
 
 func (d *DBAL) AddModel(model *asset.Model, identifier string) error {
-	err := d.addAddressable(model.Address)
+	err := d.addAddressable(model.Address, false)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func (d *DBAL) UpdateModel(model *asset.Model) error {
 	}
 
 	if model.Address != nil {
-		err = d.addAddressable(model.Address)
+		err = d.addAddressable(model.Address, false)
 		if err != nil {
 			return err
 		}

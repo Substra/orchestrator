@@ -21,7 +21,7 @@ func TestToComputeTask(t *testing.T) {
 		Key:         "function_key",
 		Name:        "function_name",
 		Description: asset.Addressable{},
-		Function:    asset.Addressable{},
+		Archive:     asset.Addressable{},
 		Permissions: asset.Permissions{
 			Download: &asset.Permission{},
 			Process:  &asset.Permission{},

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `Image` addressable to `Function` object. By default, `Image` is set to an empty string adressable. This addressable is updated when the `checksum` and `storageAddress` are available ([#288](https://github.com/Substra/orchestrator/pull/288))
 - Enum `FailedAssetKind` ([#277](https://github.com/Substra/orchestrator/pull/277))
 - BREAKING: Field `asset_type` of type `FailedAssetKind` in `FailureReport` ([#277](https://github.com/Substra/orchestrator/pull/277))
 - BREAKING: Add `FunctionStatus` ([#263](https://github.com/Substra/orchestrator/pull/263))
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Rename `Function` addressable to `Archive` ([#288](https://github.com/Substra/orchestrator/pull/288))
 - Renamed `compute_task_key`by `asset_key` in `FailureReport` ([#277](https://github.com/Substra/orchestrator/pull/277))
 - `FailureReport` now can be reference a `ComputeTask` or a `Function` through `asset_key` + `asset_type` ([#277](https://github.com/Substra/orchestrator/pull/277))
 

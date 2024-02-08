@@ -43,12 +43,12 @@ func (dm *sqlDataManager) toDataManager() *asset.DataManager {
 
 // AddDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) AddDataManager(datamanager *asset.DataManager) error {
-	err := d.addAddressable(datamanager.Description)
+	err := d.addAddressable(datamanager.Description, false)
 	if err != nil {
 		return err
 	}
 
-	err = d.addAddressable(datamanager.Opener)
+	err = d.addAddressable(datamanager.Opener, false)
 	if err != nil {
 		return err
 	}

@@ -188,7 +188,7 @@ func (c *TestClient) RegisterFunction(o *FunctionOptions) *asset.Function {
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/desc/" + uuid.NewString(),
 		},
-		Function: &asset.Addressable{
+		Archive: &asset.Addressable{
 			Checksum:       "1d55e9c55fa7ad6b6a49ad79da897d58be7ce8b76f92ced4c20f361ba3a0af6e",
 			StorageAddress: "http://somewhere.local/function/" + uuid.NewString(),
 		},
@@ -527,10 +527,11 @@ func (c *TestClient) GetAssetCreationEvent(assetKey string) *asset.Event {
 	return resp.Events[0]
 }
 
-func (c *TestClient) UpdateFunction(functionRef string, name string) *asset.UpdateFunctionResponse {
+func (c *TestClient) UpdateFunction(functionRef string, name string, image *asset.Addressable) *asset.UpdateFunctionResponse {
 	param := &asset.UpdateFunctionParam{
-		Key:  c.ks.GetKey(functionRef),
-		Name: name,
+		Key:   c.ks.GetKey(functionRef),
+		Name:  name,
+		Image: image,
 	}
 	c.logger.Debug().Str("function key", c.ks.GetKey(functionRef)).Msg("UpdateFunction")
 	resp, err := c.functionService.UpdateFunction(c.ctx, param)

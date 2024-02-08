@@ -44,7 +44,7 @@ message Function {
   string key = 1;
   string name = 2;
   Addressable description = 4;
-  Addressable function = 5;
+  Addressable archive = 5;
   Permissions permissions = 6;
   string owner = 7;
   google.protobuf.Timestamp creation_date = 8;
@@ -52,6 +52,7 @@ message Function {
   map<string, FunctionInput> inputs = 17;
   map<string, FunctionOutput> outputs = 18;
   FunctionStatus status = 19;
+  Addressable image = 20;
 }
 
 // NewFunction is used to register an Function.
@@ -63,7 +64,7 @@ message NewFunction {
   string key = 1;
   string name = 2;
   Addressable description = 4;
-  Addressable function = 5;
+  Addressable archive = 5;
   NewPermissions new_permissions = 6;
   map<string, string> metadata = 17;
   map<string, FunctionInput> inputs = 18;
@@ -92,6 +93,7 @@ message QueryFunctionsParam {
 message UpdateFunctionParam {
   string key = 1;
   string name = 2;
+  Addressable image = 3;
 }
 
 message UpdateFunctionResponse {}

@@ -37,12 +37,16 @@ func TestRegisterFunction(t *testing.T) {
 		StorageAddress: "ftp://127.0.0.1/test",
 		Checksum:       "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
 	}
+	functionImage := &asset.Addressable{
+		StorageAddress: "",
+		Checksum:       "",
+	}
 	newPerms := &asset.NewPermissions{Public: true}
 
 	function := &asset.NewFunction{
 		Key:            "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:           "Test function",
-		Function:       functionAddress,
+		Archive:        functionAddress,
 		Description:    description,
 		NewPermissions: newPerms,
 	}
@@ -55,12 +59,13 @@ func TestRegisterFunction(t *testing.T) {
 	storedFunction := &asset.Function{
 		Key:          "08680966-97ae-4573-8b2d-6c4db2b3c532",
 		Name:         "Test function",
-		Function:     functionAddress,
+		Archive:      functionAddress,
 		Description:  description,
 		Permissions:  perms,
 		Owner:        "owner",
 		CreationDate: timestamppb.New(time.Unix(1337, 0)),
 		Status:       asset.FunctionStatus_FUNCTION_STATUS_WAITING,
+		Image:        functionImage,
 	}
 	dbal.On("AddFunction", storedFunction).Return(nil).Once()
 
@@ -173,8 +178,83 @@ func TestUpdateSingleExistingFunction(t *testing.T) {
 		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		Name:  "function name",
 		Owner: "owner",
+		Image: &asset.Addressable{StorageAddress: "", Checksum: ""},
 	}
 
+	updateFunctionParam := &asset.UpdateFunctionParam{
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name:  "Updated function name",
+		Image: &asset.Addressable{StorageAddress: "test/storage/address", Checksum: "4c67ad88309a48b48bc4c2e2c1a87a83"},
+	}
+
+	storedFunction := &asset.Function{
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name:  "Updated function name",
+		Owner: "owner",
+		Image: &asset.Addressable{StorageAddress: "test/storage/address", Checksum: "4c67ad88309a48b48bc4c2e2c1a87a83"},
+	}
+
+	e := &asset.Event{
+		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+		AssetKind: asset.AssetKind_ASSET_FUNCTION,
+		AssetKey:  storedFunction.Key,
+		Asset:     &asset.Event_Function{Function: storedFunction},
+	}
+
+	cases := map[string]struct {
+		requester string
+		valid     bool
+	}{
+		"update successful": {
+			requester: "owner",
+			valid:     true,
+		},
+		"update rejected: requester is not owner": {
+			requester: "user",
+			valid:     false,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			dbal.On("GetFunction", existingFunction.GetKey()).Return(existingFunction, nil).Once()
+
+			if tc.valid {
+				dbal.On("UpdateFunction", storedFunction).Return(nil).Once()
+				es.On("RegisterEvents", e).Once().Return(nil)
+			}
+
+			err := service.UpdateFunction(updateFunctionParam, tc.requester)
+
+			if tc.valid {
+				assert.NoError(t, err, "Update of function should not fail")
+			} else {
+				assert.Error(t, err, "Update of function should fail")
+			}
+
+			dbal.AssertExpectations(t)
+			es.AssertExpectations(t)
+		})
+	}
+
+}
+
+func TestUpdateNameOnlySingleExistingFunction(t *testing.T) {
+	dbal := new(persistence.MockDBAL)
+	provider := newMockedProvider()
+	es := new(MockEventAPI)
+	provider.On("GetEventService").Return(es)
+	provider.On("GetFunctionDBAL").Return(dbal)
+	service := NewFunctionService(provider)
+
+	existingFunction := &asset.Function{
+		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
+		Name:  "function name",
+		Owner: "owner",
+		Image: &asset.Addressable{StorageAddress: "test/storage/address", Checksum: "4c67ad88309a48b48bc4c2e2c1a87a83"},
+	}
+
+	// Not giving an image is equivalent to giving Image: &asset.Addressable{StorageAddress: "", Checksum: ""}. Update an image with blank value will be ignored.
 	updateFunctionParam := &asset.UpdateFunctionParam{
 		Key:  "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		Name: "Updated function name",
@@ -184,6 +264,7 @@ func TestUpdateSingleExistingFunction(t *testing.T) {
 		Key:   "4c67ad88-309a-48b4-8bc4-c2e2c1a87a83",
 		Name:  "Updated function name",
 		Owner: "owner",
+		Image: &asset.Addressable{StorageAddress: "test/storage/address", Checksum: "4c67ad88309a48b48bc4c2e2c1a87a83"},
 	}
 
 	e := &asset.Event{

@@ -17,12 +17,13 @@ type sqlFunction struct {
 	Key          string
 	Name         string
 	Description  asset.Addressable
-	Function     asset.Addressable
+	Archive      asset.Addressable
 	Permissions  asset.Permissions
 	Owner        string
 	CreationDate time.Time
 	Metadata     map[string]string
 	Status       asset.FunctionStatus
+	Image        asset.Addressable
 }
 
 func (a *sqlFunction) toFunction() *asset.Function {
@@ -30,31 +31,39 @@ func (a *sqlFunction) toFunction() *asset.Function {
 		Key:          a.Key,
 		Name:         a.Name,
 		Description:  &a.Description,
-		Function:     &a.Function,
+		Archive:      &a.Archive,
 		Permissions:  &a.Permissions,
 		Owner:        a.Owner,
 		CreationDate: timestamppb.New(a.CreationDate),
 		Metadata:     a.Metadata,
 		Status:       a.Status,
+		Image:        &a.Image,
 	}
 }
 
 // AddFunction implements persistence.FunctionDBAL
 func (d *DBAL) AddFunction(function *asset.Function) error {
-	err := d.addAddressable(function.Description)
+	err := d.addAddressable(function.Description, false)
 	if err != nil {
 		return err
 	}
 
-	err = d.addAddressable(function.Function)
+	err = d.addAddressable(function.Archive, false)
+	if err != nil {
+		return err
+	}
+
+	// We allow conflict as the default Image with empty string as checksum
+	// and storage_address already exists in table.
+	err = d.addAddressable(function.Image, true)
 	if err != nil {
 		return err
 	}
 
 	stmt := getStatementBuilder().
 		Insert("functions").
-		Columns("key", "channel", "name", "description", "functionAddress", "permissions", "owner", "creation_date", "metadata", "status").
-		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Function.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String())
+		Columns("key", "channel", "name", "description", "archive_address", "permissions", "owner", "creation_date", "metadata", "status", "image_address").
+		Values(function.Key, d.channel, function.Name, function.Description.StorageAddress, function.Archive.StorageAddress, function.Permissions, function.Owner, function.CreationDate.AsTime(), function.Metadata, function.Status.String(), function.Image.StorageAddress)
 
 	err = d.exec(stmt)
 	if err != nil {
@@ -77,7 +86,7 @@ func (d *DBAL) AddFunction(function *asset.Function) error {
 // GetFunction implements persistence.FunctionDBAL
 func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata", "status").
+		Select("key", "name", "description_address", "description_checksum", "archive_address", "archive_checksum", "permissions", "owner", "creation_date", "metadata", "status", "image_address", "image_checksum").
 		From("expanded_functions").
 		Where(sq.Eq{"key": key, "channel": d.channel})
 
@@ -87,7 +96,8 @@ func (d *DBAL) GetFunction(key string) (*asset.Function, error) {
 	}
 
 	al := sqlFunction{}
-	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
+
+	err = row.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &al.Image.StorageAddress, &al.Image.Checksum)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -146,7 +156,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "name", "description_address", "description_checksum", "function_address", "function_checksum", "permissions", "owner", "creation_date", "metadata", "status").
+		Select("key", "name", "description_address", "description_checksum", "archive_address", "archive_checksum", "permissions", "owner", "creation_date", "metadata", "status", "image_address", "image_checksum").
 		From("expanded_functions").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").
@@ -175,7 +185,7 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	for rows.Next() {
 		al := sqlFunction{}
 
-		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Function.StorageAddress, &al.Function.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status)
+		err = rows.Scan(&al.Key, &al.Name, &al.Description.StorageAddress, &al.Description.Checksum, &al.Archive.StorageAddress, &al.Archive.Checksum, &al.Permissions, &al.Owner, &al.CreationDate, &al.Metadata, &al.Status, &al.Image.StorageAddress, &al.Image.Checksum)
 		if err != nil {
 			return nil, "", err
 		}
@@ -200,13 +210,27 @@ func (d *DBAL) queryFunctions(p *common.Pagination, filter *asset.FunctionQueryF
 	return functions, bookmark, nil
 }
 
-// UpdateFunction updates the mutable fields of an function in the DB. List of mutable fields: name, status.
+// UpdateFunction updates the mutable fields of a function in the DB. List of mutable fields: name, status, image.
 func (d *DBAL) UpdateFunction(function *asset.Function) error {
+	var err error
+	if function.Image.StorageAddress != "" {
+		err = d.updateAddressable(function.Image)
+		if err != nil {
+			return err
+		}
+		stmt := getStatementBuilder().
+			Update("functions").
+			Set("name", function.Name).
+			Set("status", function.Status.String()).
+			Set("image_address", function.Image.StorageAddress).
+			Where(sq.Eq{"channel": d.channel, "key": function.Key})
+		return d.exec(stmt)
+	}
 	stmt := getStatementBuilder().
 		Update("functions").
 		Set("name", function.Name).
 		Set("status", function.Status.String()).
 		Where(sq.Eq{"channel": d.channel, "key": function.Key})
-
 	return d.exec(stmt)
+
 }

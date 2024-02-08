@@ -131,7 +131,7 @@ func TestUpdateFunction(t *testing.T) {
 	keyRef := "function_filter_simple"
 	registeredFunction := appClient.RegisterFunction(client.DefaultSimpleFunctionOptions().WithKeyRef(keyRef))
 
-	appClient.UpdateFunction(keyRef, "new function name")
+	appClient.UpdateFunction(keyRef, "new function name", registeredFunction.Image)
 
 	expectedFunction := registeredFunction
 	expectedFunction.Name = "new function name"
