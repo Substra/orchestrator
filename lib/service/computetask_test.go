@@ -196,7 +196,8 @@ func TestRegisterTrainTask(t *testing.T) {
 	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
 	function := &asset.Function{
-		Key: "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
+		Key:    "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
+		Status: asset.FunctionStatus_FUNCTION_STATUS_READY,
 		Permissions: &asset.Permissions{
 			Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
 			Download: &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
@@ -228,7 +229,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
-		Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		Worker:         dataManager.Owner,
 		Inputs:         newTrainTask.Inputs,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),

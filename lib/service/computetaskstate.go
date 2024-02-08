@@ -37,12 +37,12 @@ var taskStateEvents = fsm.Events{
 	},
 	{
 		Name: string(transitionCanceled),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_CANCELED.String(),
 	},
 	{
 		Name: string(transitionWaitingExecutorSlot),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String()},
+		Src:  []string{asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(),
 	},
 	{
@@ -375,7 +375,7 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 }
 
 func (s *ComputeTaskService) propagateFunctionCancelation(functionKey string, requester string) error {
-	tasks, err := s.GetTasksByFunction(functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, asset.ComputeTaskStatus_STATUS_DOING})
+	tasks, err := s.GetTasksByFunction(functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_BUILDING})
 
 	if err != nil {
 		return err

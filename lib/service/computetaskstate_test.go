@@ -17,30 +17,45 @@ func TestGetInitialStatus(t *testing.T) {
 		function *asset.Function
 		outcome  asset.ComputeTaskStatus
 	}{
-		"no parents + function not ready": {
+		"no parents + function waiting": {
+			parents:  []*asset.ComputeTask{},
+			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING},
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT,
+		},
+		"no parents + function building": {
 			parents:  []*asset.ComputeTask{},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},
-			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
+			outcome:  asset.ComputeTaskStatus_STATUS_BUILDING,
 		},
 		"no parents + function ready": {
 			parents:  []*asset.ComputeTask{},
+			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_READY},
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
+		},
+		"parent waiting + function waiting": {
+			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS}},
+			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING},
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT,
+		},
+		"parent waiting + function building": {
+			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS}},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},
-			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
+			outcome:  asset.ComputeTaskStatus_STATUS_BUILDING,
 		},
 		"parent waiting + function ready": {
 			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS}},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_READY},
 			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		},
-		"parent waiting + function not ready": {
-			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING}},
-			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},
-			outcome:  asset.ComputeTaskStatus_STATUS_WAITING,
+		"parent ready + function waiting": {
+			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
+			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING},
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT,
 		},
-		"parent ready + function not ready": {
+		"parent ready + function building": {
 			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},
-			outcome:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
+			outcome:  asset.ComputeTaskStatus_STATUS_BUILDING,
 		},
 		"parent ready + function ready": {
 			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
@@ -239,7 +254,6 @@ func TestCascadeStatusDone(t *testing.T) {
 	// There should be two updates: 1 for the parent, 1 for the child
 	es.On("RegisterEvents", mock.Anything).Times(2).Return(nil)
 
-	fs.On("CheckFunctionReady", task.FunctionKey).Return(true, nil).Once()
 	// Updated task should be saved
 	updatedParent := &asset.ComputeTask{Key: "uuid", Status: asset.ComputeTaskStatus_STATUS_DONE, Owner: "owner", Worker: "worker"}
 	updatedChild := &asset.ComputeTask{Key: "child", Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT}
@@ -316,8 +330,7 @@ func TestPropagateFunctionCancelation(t *testing.T) {
 
 	cps.On("failPlan", mock.Anything).Return(nil)
 	dbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{
-		asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
-		asset.ComputeTaskStatus_STATUS_DOING,
+		asset.ComputeTaskStatus_STATUS_BUILDING,
 	}).Return([]*asset.ComputeTask{task}, nil)
 	dbal.On("GetComputeTask", task.Key).Return(task, nil)
 	dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)

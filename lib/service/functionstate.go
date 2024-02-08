@@ -52,6 +52,8 @@ type functionStateUpdater interface {
 	onFailure(e *fsm.Event)
 	// Start tasks when function is ready
 	onReady(e *fsm.Event)
+	// Start tasks when function is building
+	onBuilding(e *fsm.Event)
 }
 
 func newFunctionState(updater functionStateUpdater, function *asset.Function) *fsm.FSM {
@@ -194,7 +196,7 @@ func (s *FunctionService) onReady(e *fsm.Event) {
 		e.Err = orcerrors.NewInternal("cannot cast argument into function")
 		return
 	}
-	tasks, err := s.GetComputeTaskService().GetTasksByFunction(function.Key, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_WAITING})
+	tasks, err := s.GetComputeTaskService().GetTasksByFunction(function.Key, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_BUILDING})
 	if err != nil {
 		s.GetLogger().Error().
 			Err(err).

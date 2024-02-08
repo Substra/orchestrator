@@ -151,8 +151,8 @@ func TestIsPlanRunning(t *testing.T) {
 
 	rows := pgxmock.NewRows([]string{"count"}).AddRow(1)
 	mock.
-		ExpectQuery(`SELECT COUNT(*) FROM compute_tasks WHERE channel = $1 AND compute_plan_key = $2 AND status IN ($3,$4,$5)`).
-		WithArgs(testChannel, cpKey, "STATUS_WAITING_FOR_PARENT_TASKS", "STATUS_WAITING_FOR_EXECUTOR_SLOT", "STATUS_DOING").
+		ExpectQuery(`SELECT COUNT(*) FROM compute_tasks WHERE channel = $1 AND compute_plan_key = $2 AND status IN ($3,$4,$5,$6,$7)`).
+		WithArgs(testChannel, cpKey, asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_DOING.String()).
 		WillReturnRows(rows)
 
 	tx, err := mock.Begin(context.Background())

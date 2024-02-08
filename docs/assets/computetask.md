@@ -54,8 +54,10 @@ Since parents are set during task definition, the rank is an immutable property.
 
 A task can have several status (see _States_ below for available transitions):
 
-- WAITING: new task waiting for its parents to be DONE. In this state the task cannot be processed yet.
-- TODO: all dependencies are built (all parents DONE) so the task can be picked up by a worker and processed.
+- WAITING_FOR_BUILDER_SLOT: the function needed by the task is waiting to be built
+- BUILDING: the function is currently being built.
+- WAITING_FOR_PARENT_TASK: new task waiting for its parents to be DONE. In this state the task cannot be processed yet.
+- WAITING_FOR_EXECUTOR_SLOT: all dependencies are built (all parents DONE) so the task can be picked up by a worker and processed.
 - DOING: the task is being processed by a worker.
 - DONE: task has been successfully completed.
 - FAILED: task execution has failed.
@@ -68,10 +70,11 @@ This is an overview of a task's lifecycle:
 
 ![](./schemas/computetask.state.svg)
 
-A task can be created in TODO or WAITING state depending on its parents.
+
+A task can be created in `WAITING_FOR_BUILDING`, `BUILDING`, `CANCELED`, `FAILED`, `WAITING_FOR_PARENT_TASKS` and `WAITING_FOR_EXECUTOR_SLOT` state, based on its parents and the linked function. The 4 former are based on the function status, the 2 latter based on the parent status.
 
 During the ComputePlan execution, as tasks are DONE, their statuses will be reflected to their children.
-If all the parents of a child task are DONE, this task enters TODO state.
+If all the parents of a child task are DONE, this task enters STATUS_WAITING_FOR_EXECUTOR_SLOT state.
 
 When a parent task fails, children statuses are not changed.
 
@@ -83,20 +86,24 @@ This is to ensure that when a task starts (switch to DOING), all its inputs are 
 A status change is a reaction to an action.
 Task actions should match the following restrictions:
 
-| action ↓ / sender → | Owner | Worker | Other |
-| ------------------- | ----- | ------ | ----- |
-| DOING               | n     | y      | n     |
-| CANCELED            | y     | n      | n     |
-| FAILED              | n     | y      | n     |
-| DONE                | n     | y      | n     |
+| action ↓ / sender →  | Owner | Worker | Other |
+| -------------------- | ----- | ------ | ----- |
+| WAITING_FOR_BUILDING | y     | n      | n     |
+| BUILDING             | y     | n      | n     |
+| DOING                | n     | y      | n     |
+| CANCELED             | y     | n      | n     |
+| FAILED               | y     | y      | n     |
+| DONE                 | n     | y      | n     |
 
 Basically:
 
-- only the owner can cancel a task
-- only the worker can act on a task processing (DOING/DONE/FAILED)
+- only the owner can cancel a task or act on building (function being built on owner)
+- only the worker can act on a task processing (DOING/DONE)
+- both can fail a task (depends on if it is coming from the function workflow or the task processing)
 
 ## Worker
 
+A task is built on a worker in the task owner.
 A task is processed on a specific worker.
 
 Most of the time, the worker can be inferred from task inputs: it should be where the data is, ie. the datamanager's owner.

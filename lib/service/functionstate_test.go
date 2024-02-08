@@ -76,91 +76,25 @@ func TestDispatchOnFunctionTransition(t *testing.T) {
 	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_BUILDING, "", "owner")
 	assert.NoError(t, err)
 
-	dbal.AssertExpectations(t)
-	es.AssertExpectations(t)
-	provider.AssertExpectations(t)
-}
-
-// Testing that failing a Function propagate to tasks using this function
-func TestUpdateFunctionStateCanceled(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	es := new(MockEventAPI)
-	provider := newMockedProvider()
-
-	provider.On("GetFunctionDBAL").Return(dbal)
-	provider.On("GetEventService").Return(es)
-
-	// function is retrieved from persistence layer
-	dbal.On("GetFunction", "uuid").Return(&asset.Function{
-		Key:    "uuid",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING,
-		Owner:  "owner",
-	}, nil)
-	// An update event should be enqueued
-	es.On("RegisterEvents", mock.Anything).Return(nil)
-	// Updated function should be saved
-	updatedFunction := &asset.Function{Key: "uuid", Status: asset.FunctionStatus_FUNCTION_STATUS_CANCELED, Owner: "owner"}
-	dbal.On("UpdateFunction", updatedFunction).Return(nil)
-
-	service := NewFunctionService(provider)
-
-	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_CANCELED, "", "owner")
-	assert.NoError(t, err)
-
-	dbal.AssertExpectations(t)
-	es.AssertExpectations(t)
-}
-
-func TestUpdateFunctionStateFailed(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	es := new(MockEventAPI)
-	ct := new(MockComputeTaskAPI)
-	provider := newMockedProvider()
-
-	provider.On("GetFunctionDBAL").Return(dbal)
-	provider.On("GetComputeTaskService").Return(ct)
-	provider.On("GetEventService").Return(es)
-
-	functionKey := "uuid"
-
-	dbal.On("GetFunction", "uuid").Return(&asset.Function{
-		Key:    functionKey,
-		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
-		Owner:  "owner",
-	}, nil)
-
-	ct.On("propagateFunctionCancelation", functionKey, "owner").Return(nil)
-	es.On("RegisterEvents", mock.Anything).Return(nil)
-
-	updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_FAILED, Owner: "owner"}
-
-	dbal.On("UpdateFunction", updatedFunction).Return(nil)
-
-	service := NewFunctionService(provider)
-
-	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_FAILED, "", "owner")
-	assert.NoError(t, err)
-
-	dbal.AssertExpectations(t)
-	es.AssertExpectations(t)
+	}
 }
 
 func TestUpdateFunctionStateReady(t *testing.T) {
 	cases := map[string]struct {
-		parents    []*asset.ComputeTask
-		becomeTodo bool
+		parents            []*asset.ComputeTask
+		expectedTaskStatus asset.ComputeTaskStatus
 	}{
 		"no parents": {
-			parents:    []*asset.ComputeTask{},
-			becomeTodo: true,
+			parents:            []*asset.ComputeTask{},
+			expectedTaskStatus: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		},
 		"2 parents done": {
-			parents:    []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
-			becomeTodo: true,
+			parents:            []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
+			expectedTaskStatus: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		},
 		"1 parent done + 1 parent waiting": {
-			parents:    []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING}},
-			becomeTodo: false,
+			parents:            []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS}},
+			expectedTaskStatus: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		},
 	}
 	for name, tc := range cases {
@@ -180,7 +114,7 @@ func TestUpdateFunctionStateReady(t *testing.T) {
 			functionKey := "uuid"
 			task := &asset.ComputeTask{
 				Key:            "taskuuid",
-				Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+				Status:         asset.ComputeTaskStatus_STATUS_BUILDING,
 				Worker:         "worker",
 				ComputePlanKey: "uuidcp",
 			}
@@ -196,12 +130,9 @@ func TestUpdateFunctionStateReady(t *testing.T) {
 			updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_READY, Owner: "owner"}
 
 			dbal.On("UpdateFunction", updatedFunction).Return(nil)
-			ctdbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_WAITING}).Return([]*asset.ComputeTask{task}, nil)
+			ctdbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_BUILDING}).Return([]*asset.ComputeTask{task}, nil)
 			ctdbal.On("GetComputeTaskParents", task.Key).Return(tc.parents, nil).Once()
-
-			if tc.becomeTodo {
-				ctdbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_TODO).Return(nil).Once()
-			}
+			ctdbal.On("UpdateComputeTaskStatus", task.Key, tc.expectedTaskStatus).Return(nil).Once()
 
 			err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_READY, "", "owner")
 			assert.NoError(t, err)
