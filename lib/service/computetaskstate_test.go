@@ -32,6 +32,11 @@ func TestGetInitialStatus(t *testing.T) {
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_READY},
 			outcome:  asset.ComputeTaskStatus_STATUS_WAITING,
 		},
+		"parent waiting + function not ready": {
+			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING}},
+			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},
+			outcome:  asset.ComputeTaskStatus_STATUS_WAITING,
+		},
 		"parent ready + function not ready": {
 			parents:  []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
 			function: &asset.Function{Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING},

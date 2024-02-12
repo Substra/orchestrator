@@ -174,8 +174,8 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 	metrics.TaskUpdateCascadeSize.WithLabelValues(s.GetChannel(), string(transitionTodo)).Observe(float64(len(children)))
 }
 
-// startChildrenTaskFromParents propagates the DONE status of a parent to the task.
-// This will iterate over task parents and mark it as TODO if all parents are DONE.
+// startChildrenTaskFromParents checks which tasks can be started when a parent finishes.
+// For each child task, it will check that the function finished building and the other parents statuses are all DONE.
 func (s *ComputeTaskService) startChildrenTaskFromParents(triggeringParent, child *asset.ComputeTask) error {
 	logger := s.GetLogger().With().
 		Str("triggeringParent", triggeringParent.Key).
@@ -317,7 +317,7 @@ func (s *ComputeTaskService) onFailure(e *fsm.Event) {
 	}
 }
 
-// getInitialStatusFromParents will infer task status from its parents statuses.
+// getInitialStatus will infer task status from its parents statuses.
 func getInitialStatus(parents []*asset.ComputeTask, function *asset.Function) asset.ComputeTaskStatus {
 	var status asset.ComputeTaskStatus
 	var doneParents = 0
