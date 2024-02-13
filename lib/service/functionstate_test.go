@@ -39,43 +39,78 @@ func TestFailedFunctionStateChange(t *testing.T) {
 }
 
 func TestDispatchOnFunctionTransition(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	es := new(MockEventAPI)
-	provider := newMockedProvider()
-
-	provider.On("GetFunctionDBAL").Return(dbal)
-	provider.On("GetEventService").Return(es)
-
-	service := NewFunctionService(provider)
-
-	returnedFunction := &asset.Function{
-		Key:    "uuid",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING,
-		Owner:  "owner",
-	}
-	dbal.On("GetFunction", "uuid").Return(returnedFunction, nil)
-
-	expectedFunction := &asset.Function{
-		Key:    "uuid",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
-		Owner:  "owner",
-	}
-	dbal.On("UpdateFunction", expectedFunction).Once().Return(nil)
-
-	expectedEvent := &asset.Event{
-		AssetKey:  "uuid",
-		AssetKind: asset.AssetKind_ASSET_FUNCTION,
-		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
-		Asset:     &asset.Event_Function{Function: expectedFunction},
-		Metadata: map[string]string{
-			"reason": "User action",
+	cases := map[string]struct {
+		functionStatusBefore         asset.FunctionStatus
+		functionAction               asset.FunctionAction
+		expectedFunctionStatusAfter  asset.FunctionStatus
+		expectedPropagatedTaskAction asset.ComputeTaskAction
+	}{
+		"build started": {
+			functionStatusBefore:         asset.FunctionStatus_FUNCTION_STATUS_WAITING,
+			functionAction:               asset.FunctionAction_FUNCTION_ACTION_BUILDING,
+			expectedFunctionStatusAfter:  asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+			expectedPropagatedTaskAction: asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
+		},
+		"failed": {
+			functionStatusBefore:         asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+			functionAction:               asset.FunctionAction_FUNCTION_ACTION_FAILED,
+			expectedFunctionStatusAfter:  asset.FunctionStatus_FUNCTION_STATUS_FAILED,
+			expectedPropagatedTaskAction: asset.ComputeTaskAction_TASK_ACTION_FAILED,
+		},
+		"canceled": {
+			functionStatusBefore:         asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+			functionAction:               asset.FunctionAction_FUNCTION_ACTION_CANCELED,
+			expectedFunctionStatusAfter:  asset.FunctionStatus_FUNCTION_STATUS_CANCELED,
+			expectedPropagatedTaskAction: asset.ComputeTaskAction_TASK_ACTION_CANCELED,
 		},
 	}
-	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			dbal := new(persistence.MockDBAL)
+			ct := new(MockComputeTaskAPI)
+			es := new(MockEventAPI)
+			provider := newMockedProvider()
 
-	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_BUILDING, "", "owner")
-	assert.NoError(t, err)
+			provider.On("GetFunctionDBAL").Return(dbal)
+			provider.On("GetComputeTaskService").Return(ct)
+			provider.On("GetEventService").Return(es)
 
+			service := NewFunctionService(provider)
+
+			returnedFunction := &asset.Function{
+				Key:    "uuid",
+				Status: tc.functionStatusBefore,
+				Owner:  "owner",
+			}
+			dbal.On("GetFunction", returnedFunction.Key).Return(returnedFunction, nil)
+
+			expectedFunction := &asset.Function{
+				Key:    returnedFunction.Key,
+				Status: tc.expectedFunctionStatusAfter,
+				Owner:  returnedFunction.Owner,
+			}
+			dbal.On("UpdateFunction", expectedFunction).Once().Return(nil)
+
+			expectedEvent := &asset.Event{
+				AssetKey:  returnedFunction.Key,
+				AssetKind: asset.AssetKind_ASSET_FUNCTION,
+				EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+				Asset:     &asset.Event_Function{Function: expectedFunction},
+				Metadata: map[string]string{
+					"reason": "User action",
+				},
+			}
+			es.On("RegisterEvents", expectedEvent).Once().Return(nil)
+			ct.On("PropagateActionFromFunction", "uuid", tc.expectedPropagatedTaskAction, "User action", expectedFunction.Owner).Return(nil).Once()
+
+			err := service.ApplyFunctionAction("uuid", tc.functionAction, "", expectedFunction.Owner)
+			assert.NoError(t, err)
+
+			ct.AssertExpectations(t)
+			dbal.AssertExpectations(t)
+			es.AssertExpectations(t)
+			provider.AssertExpectations(t)
+		})
 	}
 }
 

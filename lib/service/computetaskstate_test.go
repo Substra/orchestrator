@@ -280,6 +280,36 @@ func TestUpdateAllowed(t *testing.T) {
 		action    asset.ComputeTaskAction
 		outcome   bool
 	}{
+		"owner build start": {
+			requester: "owner",
+			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
+			outcome:   true,
+		},
+		"worker build start": {
+			requester: "worker",
+			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
+			outcome:   false,
+		},
+		"owner build finish": {
+			requester: "owner",
+			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
+			outcome:   true,
+		},
+		"worker build finish": {
+			requester: "worker",
+			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
+			outcome:   false,
+		},
+		"owner doing": {
+			requester: "owner",
+			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
+			outcome:   false,
+		},
+		"worker doing": {
+			requester: "worker",
+			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
+			outcome:   true,
+		},
 		"owner cancel": {
 			requester: "owner",
 			action:    asset.ComputeTaskAction_TASK_ACTION_CANCELED,
@@ -290,20 +320,25 @@ func TestUpdateAllowed(t *testing.T) {
 			action:    asset.ComputeTaskAction_TASK_ACTION_CANCELED,
 			outcome:   true,
 		},
-		"worker fail": {
+		"owner failed": {
+			requester: "owner",
+			action:    asset.ComputeTaskAction_TASK_ACTION_FAILED,
+			outcome:   true,
+		},
+		"worker failed": {
 			requester: "worker",
 			action:    asset.ComputeTaskAction_TASK_ACTION_FAILED,
 			outcome:   true,
 		},
-		"worker doing": {
-			requester: "worker",
-			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
-			outcome:   true,
-		},
-		"owner doing": {
+		"owner done": {
 			requester: "owner",
-			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
+			action:    asset.ComputeTaskAction_TASK_ACTION_DONE,
 			outcome:   false,
+		},
+		"worker done": {
+			requester: "worker",
+			action:    asset.ComputeTaskAction_TASK_ACTION_DONE,
+			outcome:   true,
 		},
 	}
 
@@ -336,7 +371,7 @@ func TestPropagateFunctionCancelation(t *testing.T) {
 	dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)
 	es.On("RegisterEvents", mock.Anything).Return(nil)
 
-	err := service.propagateFunctionCancelation(functionKey, "owner")
+	err := service.PropagateActionFromFunction(functionKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Building failed", "owner")
 
 	assert.NoError(t, err)
 

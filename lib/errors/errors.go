@@ -67,6 +67,9 @@ var (
 
 	// ErrTerminatedComputePlan occurs when attempting to cancel or fail an already terminated compute plan
 	ErrTerminatedComputePlan = "OE0109"
+
+	// ErrTerminatedComputeTask occurs when attempting to cancel or fail an already terminated compute plan
+	ErrTerminatedComputeTask = "OE0110"
 )
 
 // OrcError represents an orchestration error.
@@ -182,6 +185,12 @@ func NewMissingTaskOutput(taskKey, identifier string) *OrcError {
 func NewTerminatedComputePlan(planKey string) *OrcError {
 	msg := fmt.Sprintf("compute plan %s is already terminated", planKey)
 	return newErrorWithSource(ErrTerminatedComputePlan, msg)
+}
+
+// NewTerminatedComputeTask returns an ErrTerminatedComputeTask kind of OrcError with given message
+func NewTerminatedComputeTask(taskKey string) *OrcError {
+	msg := fmt.Sprintf("compute task %s is already terminated", taskKey)
+	return newErrorWithSource(ErrTerminatedComputeTask, msg)
 }
 
 func NewIncompatibleTaskOutput(taskKey, identifier, expected, actual string) *OrcError {

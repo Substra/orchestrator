@@ -37,7 +37,7 @@ type ComputeTaskAPI interface {
 	applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error
 	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 	getTaskOutputCounter(taskKey string) (persistence.ComputeTaskOutputCounter, error)
-	propagateFunctionCancelation(functionKey string, requester string) error
+	PropagateActionFromFunction(functionKey string, action asset.ComputeTaskAction, reason string, requester string) error
 	GetTasksByFunction(functionKey string, statuses []asset.ComputeTaskStatus) ([]*asset.ComputeTask, error)
 	StartDependentTask(child *asset.ComputeTask, reason string) error
 }

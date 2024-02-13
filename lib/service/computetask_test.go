@@ -314,14 +314,16 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	}
 
 	functionParent1 := &asset.Function{
-		Key: "d29118a9-f989-41af-ae02-90f0c4aaffe3",
+		Key:    "d29118a9-f989-41af-ae02-90f0c4aaffe3",
+		Status: asset.FunctionStatus_FUNCTION_STATUS_READY,
 		Outputs: map[string]*asset.FunctionOutput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
 	functionParent2 := &asset.Function{
-		Key: "cc765417-1e14-41c8-9f7b-653ed335d30d",
+		Key:    "cc765417-1e14-41c8-9f7b-653ed335d30d",
+		Status: asset.FunctionStatus_FUNCTION_STATUS_READY,
 		Outputs: map[string]*asset.FunctionOutput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
@@ -433,7 +435,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Owner:          "testOwner",
 		ComputePlanKey: newTask.ComputePlanKey,
 		Metadata:       newTask.Metadata,
-		Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		Worker:         dataManager.Owner,
 		Rank:           1,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),

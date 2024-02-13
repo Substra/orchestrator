@@ -118,6 +118,8 @@ enum ComputeTaskAction {
   TASK_ACTION_CANCELED = 2;
   TASK_ACTION_FAILED = 3;
   TASK_ACTION_DONE = 4;
+  TASK_ACTION_BUILD_STARTED = 5;
+  TASK_ACTION_BUILD_FINISHED = 6;
 }
 
 // ComputeTaskOutputAsset links an asset to a task output.
