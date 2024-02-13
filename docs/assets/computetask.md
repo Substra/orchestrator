@@ -88,8 +88,8 @@ Task actions should match the following restrictions:
 
 | action ↓ / sender →  | Owner | Worker | Other |
 | -------------------- | ----- | ------ | ----- |
-| WAITING_FOR_BUILDING | y     | n      | n     |
-| BUILDING             | y     | n      | n     |
+| BUILD_STARTED        | y     | n      | n     |
+| BUILD_FINISHED       | y     | n      | n     |
 | DOING                | n     | y      | n     |
 | CANCELED             | y     | n      | n     |
 | FAILED               | y     | y      | n     |
