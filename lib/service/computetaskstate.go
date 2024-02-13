@@ -164,7 +164,7 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 		Msg("onDone: updating children statuses")
 
 	for _, child := range children {
-		err := s.propagateDone(task, child)
+		err := s.startChildrenTaskFromParents(task, child)
 		if err != nil {
 			e.Err = err
 			return
@@ -174,9 +174,9 @@ func (s *ComputeTaskService) onDone(e *fsm.Event) {
 	metrics.TaskUpdateCascadeSize.WithLabelValues(s.GetChannel(), string(transitionTodo)).Observe(float64(len(children)))
 }
 
-// propagateDone propagates the DONE status of a parent to the task.
-// This will iterate over task parents and mark it as TODO if all parents are DONE.
-func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.ComputeTask) error {
+// startChildrenTaskFromParents checks which tasks can be started when a parent finishes.
+// For each child task, it will check that the function finished building and the other parents statuses are all DONE.
+func (s *ComputeTaskService) startChildrenTaskFromParents(triggeringParent, child *asset.ComputeTask) error {
 	logger := s.GetLogger().With().
 		Str("triggeringParent", triggeringParent.Key).
 		Str("triggeringParentStatus", triggeringParent.Status.String()).
@@ -185,28 +185,49 @@ func (s *ComputeTaskService) propagateDone(triggeringParent, child *asset.Comput
 		Logger()
 	state := newState(s, child)
 	if !state.Can(string(transitionTodo)) {
-		logger.Info().Msg("propagateDone: skipping child due to incompatible state")
+		logger.Info().Msg("startChildrenTaskFromParents: skipping child due to incompatible state")
 		// this is expected as we might go over already failed children (from another parent)
 		return nil
 	}
 
-	parents, err := s.GetComputeTaskDBAL().GetComputeTaskParents(child.Key)
+	done, err := s.GetFunctionService().CheckFunctionReady(child.FunctionKey)
+	if err != nil {
+		return err
+	}
+	if !done {
+		return nil
+	}
+
+	err = s.StartDependentTask(child, fmt.Sprintf("Last parent task %s done", triggeringParent.Key))
 	if err != nil {
 		return err
 	}
 
-	for _, parent := range parents {
-		if parent.Status != asset.ComputeTaskStatus_STATUS_DONE {
-			logger.Debug().
-				Str("parent", parent.Key).
-				Str("parentStatus", parent.Status.String()).
-				Msg("propagateDone: skipping child due to pending parent")
-			// At least one of the parents is not done, so no change for children
-			// but no error, this is expected.
-			return nil
-		}
+	return nil
+}
+
+func (s *ComputeTaskService) StartDependentTask(child *asset.ComputeTask, reason string) error {
+	done, err := s.checkParentTasksDone(child.Key)
+	if err != nil {
+		return err
 	}
-	err = s.applyTaskAction(child, transitionTodo, fmt.Sprintf("Last parent task %s done", triggeringParent.Key))
+	if !done {
+		return nil
+	}
+
+	logger := s.GetLogger().With().
+		Str("child", child.Key).
+		Str("childStatus", child.Status.String()).
+		Logger()
+
+	state := newState(s, child)
+	if !state.Can(string(transitionTodo)) {
+		logger.Info().Msg("StartDependentTask: skipping child due to incompatible state")
+		// this is expected as we might go over already failed children (from another parent)
+		return nil
+	}
+
+	err = s.applyTaskAction(child, transitionTodo, reason)
 	if err != nil {
 		return err
 	}
@@ -296,31 +317,32 @@ func (s *ComputeTaskService) onFailure(e *fsm.Event) {
 	}
 }
 
-// getInitialStatusFromParents will infer task status from its parents statuses.
-func getInitialStatusFromParents(parents []*asset.ComputeTask) asset.ComputeTaskStatus {
+// getInitialStatus will infer task status from its parents statuses.
+func getInitialStatus(parents []*asset.ComputeTask, function *asset.Function) asset.ComputeTaskStatus {
 	var status asset.ComputeTaskStatus
-
-	statusCount := map[asset.ComputeTaskStatus]int{
-		// preset DONE counter to make sure we match TODO status for tasks without parents
-		asset.ComputeTaskStatus_STATUS_DONE: 0,
-	}
+	var doneParents = 0
 
 	for _, task := range parents {
-		statusCount[task.Status]++
+		if task.Status == asset.ComputeTaskStatus_STATUS_FAILED || task.Status == asset.ComputeTaskStatus_STATUS_CANCELED {
+			status = asset.ComputeTaskStatus_STATUS_CANCELED
+			return status
+		} else if task.Status == asset.ComputeTaskStatus_STATUS_DONE {
+			doneParents++
+		}
 	}
 
-	if c, ok := statusCount[asset.ComputeTaskStatus_STATUS_FAILED]; ok && c > 0 {
+	switch function.Status {
+	case asset.FunctionStatus_FUNCTION_STATUS_READY:
+		if doneParents == len(parents) {
+			status = asset.ComputeTaskStatus_STATUS_TODO
+		} else {
+			status = asset.ComputeTaskStatus_STATUS_WAITING
+		}
+	case asset.FunctionStatus_FUNCTION_STATUS_FAILED:
+		status = asset.ComputeTaskStatus_STATUS_FAILED
+	case asset.FunctionStatus_FUNCTION_STATUS_CANCELED:
 		status = asset.ComputeTaskStatus_STATUS_CANCELED
-		return status
-	}
-	if c, ok := statusCount[asset.ComputeTaskStatus_STATUS_CANCELED]; ok && c > 0 {
-		status = asset.ComputeTaskStatus_STATUS_CANCELED
-		return status
-	}
-
-	if c, ok := statusCount[asset.ComputeTaskStatus_STATUS_DONE]; ok && c == len(parents) {
-		status = asset.ComputeTaskStatus_STATUS_TODO
-	} else {
+	default:
 		status = asset.ComputeTaskStatus_STATUS_WAITING
 	}
 
@@ -341,7 +363,7 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 }
 
 func (s *ComputeTaskService) propagateFunctionCancelation(functionKey string, requester string) error {
-	tasks, err := s.GetComputeTaskDBAL().GetFunctionRunnableTasks(functionKey)
+	tasks, err := s.GetTasksByFunction(functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_TODO, asset.ComputeTaskStatus_STATUS_DOING})
 
 	if err != nil {
 		return err
@@ -361,4 +383,25 @@ func (s *ComputeTaskService) propagateFunctionCancelation(functionKey string, re
 	}
 
 	return nil
+}
+
+func (s *ComputeTaskService) checkParentTasksDone(childKey string) (bool, error) {
+	parents, err := s.GetComputeTaskDBAL().GetComputeTaskParents(childKey)
+	if err != nil {
+		return false, err
+	}
+
+	for _, parent := range parents {
+		if parent.Status != asset.ComputeTaskStatus_STATUS_DONE {
+			s.GetLogger().Debug().
+				Str("child", childKey).
+				Str("parent", parent.Key).
+				Msg("checkParentTasksDone: skipping child due to pending parent")
+			// At least one of the parents is not done, so no change for children
+			// but no error, this is expected.
+			return false, nil
+		}
+	}
+
+	return true, nil
 }

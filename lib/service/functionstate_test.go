@@ -144,3 +144,72 @@ func TestUpdateFunctionStateFailed(t *testing.T) {
 	dbal.AssertExpectations(t)
 	es.AssertExpectations(t)
 }
+
+func TestUpdateFunctionStateReady(t *testing.T) {
+	cases := map[string]struct {
+		parents    []*asset.ComputeTask
+		becomeTodo bool
+	}{
+		"no parents": {
+			parents:    []*asset.ComputeTask{},
+			becomeTodo: true,
+		},
+		"2 parents done": {
+			parents:    []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
+			becomeTodo: true,
+		},
+		"1 parent done + 1 parent waiting": {
+			parents:    []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING}},
+			becomeTodo: false,
+		},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			dbal := new(persistence.MockDBAL)
+			ctdbal := new(persistence.MockDBAL)
+			es := new(MockEventAPI)
+			provider := newMockedProvider()
+
+			service := NewFunctionService(provider)
+
+			provider.On("GetFunctionDBAL").Return(dbal)
+			provider.On("GetComputeTaskService").Return(NewComputeTaskService(provider))
+			provider.On("GetEventService").Return(es)
+			provider.On("GetComputeTaskDBAL").Return(ctdbal)
+
+			functionKey := "uuid"
+			task := &asset.ComputeTask{
+				Key:            "taskuuid",
+				Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+				Worker:         "worker",
+				ComputePlanKey: "uuidcp",
+			}
+
+			dbal.On("GetFunction", "uuid").Return(&asset.Function{
+				Key:    functionKey,
+				Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+				Owner:  "owner",
+			}, nil)
+
+			es.On("RegisterEvents", mock.Anything).Return(nil)
+
+			updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_READY, Owner: "owner"}
+
+			dbal.On("UpdateFunction", updatedFunction).Return(nil)
+			ctdbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_WAITING}).Return([]*asset.ComputeTask{task}, nil)
+			ctdbal.On("GetComputeTaskParents", task.Key).Return(tc.parents, nil).Once()
+
+			if tc.becomeTodo {
+				ctdbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_TODO).Return(nil).Once()
+			}
+
+			err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_READY, "", "owner")
+			assert.NoError(t, err)
+
+			provider.AssertExpectations(t)
+			ctdbal.AssertExpectations(t)
+			dbal.AssertExpectations(t)
+			es.AssertExpectations(t)
+		})
+	}
+}

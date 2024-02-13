@@ -19,6 +19,7 @@ func TestRegisterPerformance(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds"))
@@ -29,6 +30,7 @@ func TestRegisterPerformance(t *testing.T) {
 	appClient.DoneTask(client.DefaultTrainTaskRef)
 
 	appClient.RegisterFunction(client.DefaultPredictFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultPredictFunctionRef)
 
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithKeyRef("predictTask").
@@ -39,6 +41,7 @@ func TestRegisterPerformance(t *testing.T) {
 	appClient.DoneTask("predictTask")
 
 	appClient.RegisterFunction(client.DefaultMetricFunctionOptions().WithKeyRef("testmetric"))
+	appClient.SetReadyFromWaitingFunction("testmetric")
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().
 		WithKeyRef("testTask").
 		WithFunctionRef("testmetric").
@@ -76,6 +79,7 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds"))
@@ -86,6 +90,7 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 	appClient.DoneTask(client.DefaultTrainTaskRef)
 
 	appClient.RegisterFunction(client.DefaultPredictFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultPredictFunctionRef)
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithKeyRef("predictTask").
 		WithDataSampleRef("testds").
@@ -95,6 +100,7 @@ func TestRegisterMultiplePerformances(t *testing.T) {
 	appClient.DoneTask("predictTask")
 
 	appClient.RegisterFunction(client.DefaultMetricFunctionOptions().WithKeyRef("testmetric"))
+	appClient.SetReadyFromWaitingFunction("testmetric")
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().
 		WithKeyRef("testTask").
 		WithDataSampleRef("testds").
@@ -114,6 +120,7 @@ func TestRegisterMultiplePerformancesForSameTaskOutput(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds"))
@@ -124,6 +131,7 @@ func TestRegisterMultiplePerformancesForSameTaskOutput(t *testing.T) {
 	appClient.DoneTask(client.DefaultTrainTaskRef)
 
 	appClient.RegisterFunction(client.DefaultPredictFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultPredictFunctionRef)
 
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithKeyRef("predictTask").
@@ -134,6 +142,7 @@ func TestRegisterMultiplePerformancesForSameTaskOutput(t *testing.T) {
 	appClient.DoneTask("predictTask")
 
 	appClient.RegisterFunction(client.DefaultMetricFunctionOptions().WithKeyRef("testmetric"))
+	appClient.SetReadyFromWaitingFunction("testmetric")
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().
 		WithKeyRef("testTask").
 		WithFunctionRef("testmetric").
@@ -159,6 +168,7 @@ func TestQueryPerformances(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions().WithKeyRef("testds"))
@@ -169,6 +179,7 @@ func TestQueryPerformances(t *testing.T) {
 	appClient.DoneTask(client.DefaultTrainTaskRef)
 
 	appClient.RegisterFunction(client.DefaultPredictFunctionOptions().WithKeyRef("predictFunction"))
+	appClient.SetReadyFromWaitingFunction("predictFunction")
 	appClient.RegisterTasks(client.DefaultPredictTaskOptions().
 		WithKeyRef("predictTask").
 		WithDataSampleRef("testds").
@@ -179,6 +190,7 @@ func TestQueryPerformances(t *testing.T) {
 	appClient.DoneTask("predictTask")
 
 	appClient.RegisterFunction(client.DefaultMetricFunctionOptions().WithKeyRef("testmetric"))
+	appClient.SetReadyFromWaitingFunction("testmetric")
 	appClient.RegisterTasks(client.DefaultTestTaskOptions().
 		WithKeyRef("testTask").
 		WithDataSampleRef("testds").

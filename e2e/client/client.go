@@ -557,6 +557,11 @@ func (c *TestClient) SetReadyFunction(keyRef string) {
 	c.applyFunctionAction(keyRef, asset.FunctionAction_FUNCTION_ACTION_READY)
 }
 
+func (c *TestClient) SetReadyFromWaitingFunction(keyRef string) {
+	c.BuildFunction(keyRef)
+	c.SetReadyFunction(keyRef)
+}
+
 func (c *TestClient) applyFunctionAction(keyRef string, action asset.FunctionAction) {
 	functionKey := c.ks.GetKey(keyRef)
 	c.logger.Debug().Str("functionKey", functionKey).Str("action", action.String()).Msg("applying function action")

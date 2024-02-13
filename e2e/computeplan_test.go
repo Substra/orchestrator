@@ -68,6 +68,10 @@ func TestCancelComputePlan(t *testing.T) {
 		WithInput("local", &client.TaskOutputRef{TaskRef: "cmp2", Identifier: "local"}).
 		WithInput("shared", &client.TaskOutputRef{TaskRef: "agg1", Identifier: "model"}))
 
+	// Set the function to the right status.
+	appClient.SetReadyFromWaitingFunction("aggFunction")
+	appClient.SetReadyFromWaitingFunction("compFunction")
+
 	// We start processing the compute plan
 	appClient.StartTask("cmp1")
 	appClient.StartTask("cmp2")
@@ -181,6 +185,10 @@ func TestMultiStageComputePlan(t *testing.T) {
 	if lastAggregate.Rank != 3 {
 		log.Fatal().Int32("rank", lastAggregate.Rank).Msg("last aggegation task has not expected rank")
 	}
+
+	// Set the function to the right status.
+	appClient.SetReadyFromWaitingFunction("functionComp")
+	appClient.SetReadyFromWaitingFunction("functionAgg")
 
 	// Start step 1
 	appClient.StartTask("compA1")
@@ -302,6 +310,7 @@ func TestBatchLargeComputePlan(t *testing.T) {
 	nbQuery := 5000 // 10k exceed max response size
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
@@ -385,6 +394,8 @@ func TestAggregateComposite(t *testing.T) {
 			WithInput("shared", &client.TaskOutputRef{TaskRef: "a1", Identifier: "model"}).
 			WithInput("local", &client.TaskOutputRef{TaskRef: "c1", Identifier: "local"}))
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultCompositeFunctionRef)
+	appClient.SetReadyFromWaitingFunction("aggFunction")
 	appClient.StartTask("c1")
 	models := []*client.ModelOptions{
 		client.DefaultModelOptions().WithTaskRef("c1").WithKeyRef("m1H").WithTaskOutput("local"),
@@ -427,6 +438,9 @@ func TestFailLargeComputePlan(t *testing.T) {
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
+
+	appClient.SetReadyFromWaitingFunction("functionComp")
+	appClient.SetReadyFromWaitingFunction("functionAgg")
 
 	newTasks := make([]client.Taskable, 0)
 	start := time.Now()
@@ -519,6 +533,7 @@ func TestGetComputePlan(t *testing.T) {
 	require.Nil(t, plan.FailureDate)
 	require.Nil(t, plan.CancelationDate)
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.StartTask(client.DefaultTrainTaskRef)
 
 	appClient.FailTask("task#1")
@@ -545,6 +560,7 @@ func TestCompositeParentChild(t *testing.T) {
 			WithInput("local", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "local"}).
 			WithInput("shared", &client.TaskOutputRef{TaskRef: "comp1", Identifier: "shared"}))
 
+	appClient.SetReadyFromWaitingFunction("functionComp")
 	appClient.StartTask("comp1")
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1H").WithTaskOutput("local"))
 	appClient.RegisterModel(client.DefaultModelOptions().WithTaskRef("comp1").WithKeyRef("model1T").WithTaskOutput("shared"))
@@ -603,12 +619,15 @@ func TestDisableTransientOutput(t *testing.T) {
 	appClient := factory.NewTestClient()
 
 	appClient.RegisterFunction(client.DefaultSimpleFunctionOptions())
+	appClient.RegisterFunction(client.DefaultPredictFunctionOptions())
 	appClient.RegisterDataManager(client.DefaultDataManagerOptions())
 	appClient.RegisterDataSample(client.DefaultDataSampleOptions())
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions())
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithOutput("model", &asset.NewPermissions{Public: true}, true))
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("child1").WithInput("model", &client.TaskOutputRef{TaskRef: client.DefaultTrainTaskRef, Identifier: "model"}))
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
+	appClient.SetReadyFromWaitingFunction(client.DefaultPredictFunctionRef)
 	// First task done
 	appClient.StartTask(client.DefaultTrainTaskRef)
 	appClient.RegisterModel(client.DefaultModelOptions().WithKeyRef("model0"))
@@ -647,6 +666,7 @@ func TestIsPlanRunning(t *testing.T) {
 	resp = appClient.IsPlanRunning(client.DefaultPlanRef)
 	require.True(t, resp.IsRunning)
 
+	appClient.SetReadyFromWaitingFunction(client.DefaultSimpleFunctionRef)
 	appClient.StartTask(client.DefaultTrainTaskRef)
 
 	resp = appClient.IsPlanRunning(client.DefaultPlanRef)

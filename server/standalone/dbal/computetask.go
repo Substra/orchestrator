@@ -347,19 +347,16 @@ func (d *DBAL) GetComputePlanTasksKeys(key string) ([]string, error) {
 	return keys, nil
 }
 
-// GetFunctionRunnableTasks returns the list of tasks linked with a function
-// that are running or going to
-func (d *DBAL) GetFunctionRunnableTasks(key string) ([]*asset.ComputeTask, error) {
+// GetFunctionFromTasksWithStatus returns the list of tasks linked with a function
+func (d *DBAL) GetFunctionFromTasksWithStatus(key string, statuses []asset.ComputeTaskStatus) ([]*asset.ComputeTask, error) {
 	stmt := getStatementBuilder().
 		Select("key", "compute_plan_key", "status", "worker", "owner", "rank", "creation_date",
 			"logs_permission", "metadata", "function_key").
 		From("compute_tasks").
 		Where(sq.Eq{
 			"function_key": key,
-			"status": []asset.ComputeTaskStatus{
-				asset.ComputeTaskStatus_STATUS_DOING,
-				asset.ComputeTaskStatus_STATUS_TODO,
-			}})
+			"status":       statuses,
+		})
 
 	rows, err := d.query(stmt)
 	if err != nil {

@@ -38,6 +38,8 @@ type ComputeTaskAPI interface {
 	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 	getTaskOutputCounter(taskKey string) (persistence.ComputeTaskOutputCounter, error)
 	propagateFunctionCancelation(functionKey string, requester string) error
+	GetTasksByFunction(functionKey string, statuses []asset.ComputeTaskStatus) ([]*asset.ComputeTask, error)
+	StartDependentTask(child *asset.ComputeTask, reason string) error
 }
 
 // ComputeTaskServiceProvider defines an object able to provide a ComputeTaskAPI instance
@@ -371,18 +373,14 @@ func (s *ComputeTaskService) createTask(input *asset.NewComputeTask, owner strin
 		return nil, err
 	}
 
-	status := getInitialStatusFromParents(parentTasks)
-
-	if status == asset.ComputeTaskStatus_STATUS_CANCELED || status == asset.ComputeTaskStatus_STATUS_FAILED {
-		return nil, orcerrors.NewError(orcerrors.ErrIncompatibleTaskStatus, fmt.Sprintf("cannot create a task with status %q", status.String()))
-	}
-
-	if err := s.allModelsAvailable(parentTasks); err != nil {
+	function, err := s.getCheckedFunction(input.FunctionKey, owner)
+	if err != nil {
 		return nil, err
 	}
 
-	function, err := s.getCheckedFunction(input.FunctionKey, owner)
-	if err != nil {
+	status := getInitialStatus(parentTasks, function)
+
+	if err := s.allModelsAvailable(parentTasks); err != nil {
 		return nil, err
 	}
 
@@ -925,4 +923,14 @@ func GetParentTaskKeys(inputs []*asset.ComputeTaskInput) []string {
 	}
 
 	return parentKeys
+}
+
+func (s *ComputeTaskService) GetTasksByFunction(functionKey string, statuses []asset.ComputeTaskStatus) ([]*asset.ComputeTask, error) {
+	tasks, err := s.GetComputeTaskDBAL().GetFunctionFromTasksWithStatus(functionKey, statuses)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
 }

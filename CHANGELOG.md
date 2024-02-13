@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `Function` addressable to `Archive` ([#288](https://github.com/Substra/orchestrator/pull/288))
 - Renamed `compute_task_key`by `asset_key` in `FailureReport` ([#277](https://github.com/Substra/orchestrator/pull/277))
 - `FailureReport` now can be reference a `ComputeTask` or a `Function` through `asset_key` + `asset_type` ([#277](https://github.com/Substra/orchestrator/pull/277))
+- Logic to determine new compute task status takes in account the status of the function. A new task can now be created with the status `FAILED`or `CANCELLED` (if the function reached the corresponding status) ([#365](https://github.com/Substra/orchestrator/pull/365))
+- BREAKING: Transition to status `TODO` for a given compute task is done after the function is built([#365](https://github.com/Substra/orchestrator/pull/365))
 
 ### Fixed
 
