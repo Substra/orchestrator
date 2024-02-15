@@ -104,7 +104,7 @@ Basically:
 
 ## Worker
 
-A task is built on a worker in the task owner.
+A function associated with a task is built in the organization owning the function.
 A task is processed on a specific worker.
 
 Most of the time, the worker can be inferred from task inputs: it should be where the data is, ie. the datamanager's owner.
