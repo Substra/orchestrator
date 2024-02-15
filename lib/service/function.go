@@ -21,7 +21,6 @@ type FunctionAPI interface {
 	UpdateFunction(function *asset.UpdateFunctionParam, requester string) error
 	ApplyFunctionAction(key string, action asset.FunctionAction, reason string, requester string) error
 	applyFunctionAction(function *asset.Function, action functionTransition, reason string) error
-	CheckFunctionReady(functionKey string) (bool, error)
 }
 
 // FunctionServiceProvider defines an object able to provide an FunctionAPI instance

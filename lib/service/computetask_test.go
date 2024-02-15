@@ -196,7 +196,8 @@ func TestRegisterTrainTask(t *testing.T) {
 	dms.On("CheckDataManager", dataManager, dataSampleKeys, "testOwner").Once().Return(nil)
 
 	function := &asset.Function{
-		Key: "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
+		Key:    "b09cc8eb-cb76-49ce-8f93-2f8b3185e7b7",
+		Status: asset.FunctionStatus_FUNCTION_STATUS_READY,
 		Permissions: &asset.Permissions{
 			Process:  &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
 			Download: &asset.Permission{Public: false, AuthorizedIds: []string{"testOwner"}},
@@ -228,7 +229,7 @@ func TestRegisterTrainTask(t *testing.T) {
 		Owner:          "testOwner",
 		ComputePlanKey: newTrainTask.ComputePlanKey,
 		Metadata:       newTrainTask.Metadata,
-		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+		Status:         asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		Worker:         dataManager.Owner,
 		Inputs:         newTrainTask.Inputs,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
@@ -313,14 +314,16 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	}
 
 	functionParent1 := &asset.Function{
-		Key: "d29118a9-f989-41af-ae02-90f0c4aaffe3",
+		Key:    "d29118a9-f989-41af-ae02-90f0c4aaffe3",
+		Status: asset.FunctionStatus_FUNCTION_STATUS_READY,
 		Outputs: map[string]*asset.FunctionOutput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
 		},
 	}
 	functionParent2 := &asset.Function{
-		Key: "cc765417-1e14-41c8-9f7b-653ed335d30d",
+		Key:    "cc765417-1e14-41c8-9f7b-653ed335d30d",
+		Status: asset.FunctionStatus_FUNCTION_STATUS_READY,
 		Outputs: map[string]*asset.FunctionOutput{
 			"local":  {Kind: asset.AssetKind_ASSET_MODEL},
 			"shared": {Kind: asset.AssetKind_ASSET_MODEL},
@@ -378,7 +381,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	// All parents already exist
 	dbal.On("GetExistingComputeTaskKeys", []string{parent1.Key, parent2.Key}).Once().Return([]string{parent1.Key, parent2.Key}, nil)
 
-	// TODO: we fetch the same data several times
+	// STATUS_WAITING_FOR_EXECUTOR_SLOT: we fetch the same data several times
 	// Since this will change with task category removal, let's revisit later
 	dbal.On("GetComputeTasks", []string{parent1.Key, parent2.Key}).Once().Return([]*asset.ComputeTask{parent1, parent2}, nil)
 	dbal.On("GetComputeTask", parent1.Key).Once().Return(parent1, nil)
@@ -432,7 +435,6 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 		Owner:          "testOwner",
 		ComputePlanKey: newTask.ComputePlanKey,
 		Metadata:       newTask.Metadata,
-		Status:         asset.ComputeTaskStatus_STATUS_WAITING,
 		Worker:         dataManager.Owner,
 		Rank:           1,
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
@@ -1485,7 +1487,7 @@ func TestGetInputAssetsTaskUnready(t *testing.T) {
 		Once().
 		Return(&asset.ComputeTask{
 			Key:    "uuid",
-			Status: asset.ComputeTaskStatus_STATUS_WAITING,
+			Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		}, nil)
 
 	_, err := service.GetInputAssets("uuid")
@@ -1525,7 +1527,7 @@ func TestGetInputAssets(t *testing.T) {
 		Once().
 		Return(&asset.ComputeTask{
 			Key:    "uuid",
-			Status: asset.ComputeTaskStatus_STATUS_TODO,
+			Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 			Inputs: []*asset.ComputeTaskInput{
 				{Identifier: "data", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:ds"}},
 				{Identifier: "opener", Ref: &asset.ComputeTaskInput_AssetKey{AssetKey: "uuid:dm"}},

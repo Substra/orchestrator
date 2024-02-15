@@ -25,6 +25,7 @@ func (p *ApplyTaskActionParam) Validate() error {
 	return validation.ValidateStruct(p,
 		validation.Field(&p.ComputeTaskKey, validation.Required, is.UUID),
 		validation.Field(&p.Action, validation.Required, validation.In(
+			// TASK_ACTION_BUILDING, TASK_ACTION_WAITING_FOR_EXECUTION  are managed internally based on function status
 			ComputeTaskAction_TASK_ACTION_DOING,
 			ComputeTaskAction_TASK_ACTION_FAILED,
 			ComputeTaskAction_TASK_ACTION_CANCELED,

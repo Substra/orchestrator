@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: Field `asset_type` of type `FailedAssetKind` in `FailureReport` ([#277](https://github.com/Substra/orchestrator/pull/277))
 - BREAKING: Add `FunctionStatus` ([#263](https://github.com/Substra/orchestrator/pull/263))
 - Add Function status event machine ([#263](https://github.com/Substra/orchestrator/pull/263))
+- BREAKING: Add statuses `WAITING_FOR_BUILDER_SLOT` and `BUILDING` on tasks to reflect associated function status ([#366](https://github.com/Substra/orchestrator/pull/366))
+- Add task actions `BUILD_STARTED` and `BUILD_FINISHED` to propagate status change from function to compute task ([#366](https://github.com/Substra/orchestrator/pull/366))
 
 ### Changed
 
@@ -29,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `FailureReport` now can be reference a `ComputeTask` or a `Function` through `asset_key` + `asset_type` ([#277](https://github.com/Substra/orchestrator/pull/277))
 - Logic to determine new compute task status takes in account the status of the function. A new task can now be created with the status `FAILED`or `CANCELLED` (if the function reached the corresponding status) ([#365](https://github.com/Substra/orchestrator/pull/365))
 - BREAKING: Transition to status `TODO` for a given compute task is done after the function is built([#365](https://github.com/Substra/orchestrator/pull/365))
+- BREAKING: Rename `TODO` to `WAITING_FOR_EXECUTOR_SLOT` and `WAITING` to `WAITING_FOR_PARENT_TASKS`([#366](https://github.com/Substra/orchestrator/pull/366))
 
 ### Fixed
 

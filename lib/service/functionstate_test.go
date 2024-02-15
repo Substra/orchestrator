@@ -39,128 +39,97 @@ func TestFailedFunctionStateChange(t *testing.T) {
 }
 
 func TestDispatchOnFunctionTransition(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	es := new(MockEventAPI)
-	provider := newMockedProvider()
-
-	provider.On("GetFunctionDBAL").Return(dbal)
-	provider.On("GetEventService").Return(es)
-
-	service := NewFunctionService(provider)
-
-	returnedFunction := &asset.Function{
-		Key:    "uuid",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING,
-		Owner:  "owner",
-	}
-	dbal.On("GetFunction", "uuid").Return(returnedFunction, nil)
-
-	expectedFunction := &asset.Function{
-		Key:    "uuid",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
-		Owner:  "owner",
-	}
-	dbal.On("UpdateFunction", expectedFunction).Once().Return(nil)
-
-	expectedEvent := &asset.Event{
-		AssetKey:  "uuid",
-		AssetKind: asset.AssetKind_ASSET_FUNCTION,
-		EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
-		Asset:     &asset.Event_Function{Function: expectedFunction},
-		Metadata: map[string]string{
-			"reason": "User action",
+	cases := map[string]struct {
+		functionStatusBefore         asset.FunctionStatus
+		functionAction               asset.FunctionAction
+		expectedFunctionStatusAfter  asset.FunctionStatus
+		expectedPropagatedTaskAction asset.ComputeTaskAction
+	}{
+		"build started": {
+			functionStatusBefore:         asset.FunctionStatus_FUNCTION_STATUS_WAITING,
+			functionAction:               asset.FunctionAction_FUNCTION_ACTION_BUILDING,
+			expectedFunctionStatusAfter:  asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+			expectedPropagatedTaskAction: asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
+		},
+		"failed": {
+			functionStatusBefore:         asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+			functionAction:               asset.FunctionAction_FUNCTION_ACTION_FAILED,
+			expectedFunctionStatusAfter:  asset.FunctionStatus_FUNCTION_STATUS_FAILED,
+			expectedPropagatedTaskAction: asset.ComputeTaskAction_TASK_ACTION_FAILED,
+		},
+		"canceled": {
+			functionStatusBefore:         asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
+			functionAction:               asset.FunctionAction_FUNCTION_ACTION_CANCELED,
+			expectedFunctionStatusAfter:  asset.FunctionStatus_FUNCTION_STATUS_CANCELED,
+			expectedPropagatedTaskAction: asset.ComputeTaskAction_TASK_ACTION_CANCELED,
 		},
 	}
-	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			dbal := new(persistence.MockDBAL)
+			ct := new(MockComputeTaskAPI)
+			es := new(MockEventAPI)
+			provider := newMockedProvider()
 
-	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_BUILDING, "", "owner")
-	assert.NoError(t, err)
+			provider.On("GetFunctionDBAL").Return(dbal)
+			provider.On("GetComputeTaskService").Return(ct)
+			provider.On("GetEventService").Return(es)
 
-	dbal.AssertExpectations(t)
-	es.AssertExpectations(t)
-	provider.AssertExpectations(t)
-}
+			service := NewFunctionService(provider)
 
-// Testing that failing a Function propagate to tasks using this function
-func TestUpdateFunctionStateCanceled(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	es := new(MockEventAPI)
-	provider := newMockedProvider()
+			returnedFunction := &asset.Function{
+				Key:    "uuid",
+				Status: tc.functionStatusBefore,
+				Owner:  "owner",
+			}
+			dbal.On("GetFunction", returnedFunction.Key).Return(returnedFunction, nil)
 
-	provider.On("GetFunctionDBAL").Return(dbal)
-	provider.On("GetEventService").Return(es)
+			expectedFunction := &asset.Function{
+				Key:    returnedFunction.Key,
+				Status: tc.expectedFunctionStatusAfter,
+				Owner:  returnedFunction.Owner,
+			}
+			dbal.On("UpdateFunction", expectedFunction).Once().Return(nil)
 
-	// function is retrieved from persistence layer
-	dbal.On("GetFunction", "uuid").Return(&asset.Function{
-		Key:    "uuid",
-		Status: asset.FunctionStatus_FUNCTION_STATUS_WAITING,
-		Owner:  "owner",
-	}, nil)
-	// An update event should be enqueued
-	es.On("RegisterEvents", mock.Anything).Return(nil)
-	// Updated function should be saved
-	updatedFunction := &asset.Function{Key: "uuid", Status: asset.FunctionStatus_FUNCTION_STATUS_CANCELED, Owner: "owner"}
-	dbal.On("UpdateFunction", updatedFunction).Return(nil)
+			expectedEvent := &asset.Event{
+				AssetKey:  returnedFunction.Key,
+				AssetKind: asset.AssetKind_ASSET_FUNCTION,
+				EventKind: asset.EventKind_EVENT_ASSET_UPDATED,
+				Asset:     &asset.Event_Function{Function: expectedFunction},
+				Metadata: map[string]string{
+					"reason": "User action",
+				},
+			}
+			es.On("RegisterEvents", expectedEvent).Once().Return(nil)
+			ct.On("PropagateActionFromFunction", "uuid", tc.expectedPropagatedTaskAction, "User action", expectedFunction.Owner).Return(nil).Once()
 
-	service := NewFunctionService(provider)
+			err := service.ApplyFunctionAction("uuid", tc.functionAction, "", expectedFunction.Owner)
+			assert.NoError(t, err)
 
-	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_CANCELED, "", "owner")
-	assert.NoError(t, err)
-
-	dbal.AssertExpectations(t)
-	es.AssertExpectations(t)
-}
-
-func TestUpdateFunctionStateFailed(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	es := new(MockEventAPI)
-	ct := new(MockComputeTaskAPI)
-	provider := newMockedProvider()
-
-	provider.On("GetFunctionDBAL").Return(dbal)
-	provider.On("GetComputeTaskService").Return(ct)
-	provider.On("GetEventService").Return(es)
-
-	functionKey := "uuid"
-
-	dbal.On("GetFunction", "uuid").Return(&asset.Function{
-		Key:    functionKey,
-		Status: asset.FunctionStatus_FUNCTION_STATUS_BUILDING,
-		Owner:  "owner",
-	}, nil)
-
-	ct.On("propagateFunctionCancelation", functionKey, "owner").Return(nil)
-	es.On("RegisterEvents", mock.Anything).Return(nil)
-
-	updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_FAILED, Owner: "owner"}
-
-	dbal.On("UpdateFunction", updatedFunction).Return(nil)
-
-	service := NewFunctionService(provider)
-
-	err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_FAILED, "", "owner")
-	assert.NoError(t, err)
-
-	dbal.AssertExpectations(t)
-	es.AssertExpectations(t)
+			ct.AssertExpectations(t)
+			dbal.AssertExpectations(t)
+			es.AssertExpectations(t)
+			provider.AssertExpectations(t)
+		})
+	}
 }
 
 func TestUpdateFunctionStateReady(t *testing.T) {
 	cases := map[string]struct {
-		parents    []*asset.ComputeTask
-		becomeTodo bool
+		parents            []*asset.ComputeTask
+		expectedTaskStatus asset.ComputeTaskStatus
 	}{
 		"no parents": {
-			parents:    []*asset.ComputeTask{},
-			becomeTodo: true,
+			parents:            []*asset.ComputeTask{},
+			expectedTaskStatus: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		},
 		"2 parents done": {
-			parents:    []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
-			becomeTodo: true,
+			parents:            []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_DONE}},
+			expectedTaskStatus: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 		},
 		"1 parent done + 1 parent waiting": {
-			parents:    []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING}},
-			becomeTodo: false,
+			parents:            []*asset.ComputeTask{{Status: asset.ComputeTaskStatus_STATUS_DONE}, {Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS}},
+			expectedTaskStatus: asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS,
 		},
 	}
 	for name, tc := range cases {
@@ -180,7 +149,7 @@ func TestUpdateFunctionStateReady(t *testing.T) {
 			functionKey := "uuid"
 			task := &asset.ComputeTask{
 				Key:            "taskuuid",
-				Status:         asset.ComputeTaskStatus_STATUS_WAITING,
+				Status:         asset.ComputeTaskStatus_STATUS_BUILDING,
 				Worker:         "worker",
 				ComputePlanKey: "uuidcp",
 			}
@@ -196,12 +165,9 @@ func TestUpdateFunctionStateReady(t *testing.T) {
 			updatedFunction := &asset.Function{Key: functionKey, Status: asset.FunctionStatus_FUNCTION_STATUS_READY, Owner: "owner"}
 
 			dbal.On("UpdateFunction", updatedFunction).Return(nil)
-			ctdbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_WAITING}).Return([]*asset.ComputeTask{task}, nil)
+			ctdbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{asset.ComputeTaskStatus_STATUS_BUILDING}).Return([]*asset.ComputeTask{task}, nil)
 			ctdbal.On("GetComputeTaskParents", task.Key).Return(tc.parents, nil).Once()
-
-			if tc.becomeTodo {
-				ctdbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_TODO).Return(nil).Once()
-			}
+			ctdbal.On("UpdateComputeTaskStatus", task.Key, tc.expectedTaskStatus).Return(nil).Once()
 
 			err := service.ApplyFunctionAction("uuid", asset.FunctionAction_FUNCTION_ACTION_READY, "", "owner")
 			assert.NoError(t, err)

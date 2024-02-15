@@ -15,7 +15,7 @@ import (
 // Task statuses in which the inputs are defined
 var inputDefinedStatus = []asset.ComputeTaskStatus{
 	asset.ComputeTaskStatus_STATUS_DOING,
-	asset.ComputeTaskStatus_STATUS_TODO,
+	asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 	asset.ComputeTaskStatus_STATUS_FAILED,
 }
 
@@ -37,7 +37,7 @@ type ComputeTaskAPI interface {
 	applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error
 	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 	getTaskOutputCounter(taskKey string) (persistence.ComputeTaskOutputCounter, error)
-	propagateFunctionCancelation(functionKey string, requester string) error
+	PropagateActionFromFunction(functionKey string, action asset.ComputeTaskAction, reason string, requester string) error
 	GetTasksByFunction(functionKey string, statuses []asset.ComputeTaskStatus) ([]*asset.ComputeTask, error)
 	StartDependentTask(child *asset.ComputeTask, reason string) error
 }

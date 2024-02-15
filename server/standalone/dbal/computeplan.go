@@ -178,7 +178,7 @@ func (d *DBAL) IsPlanRunning(key string) (bool, error) {
 		Select("COUNT(*)").
 		From("compute_tasks").
 		Where(sq.Eq{
-			"status":           []string{"STATUS_WAITING", "STATUS_TODO", "STATUS_DOING"},
+			"status":           []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
 			"compute_plan_key": key,
 			"channel":          d.channel,
 		})
