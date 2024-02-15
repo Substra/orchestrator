@@ -413,8 +413,9 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 		return requester == task.Owner || requester == task.Worker
 	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_DONE:
 		return requester == task.Worker
+	// These changes can only be triggered from inside the orchestrator (cf Validation()) therefore it should always be allowed
 	case asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED, asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED:
-		return requester == task.Owner
+		return true
 	default:
 		return false
 	}

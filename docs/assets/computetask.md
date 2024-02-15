@@ -88,8 +88,8 @@ Task actions should match the following restrictions:
 
 | action ↓ / sender →  | Owner | Worker | Other |
 | -------------------- | ----- | ------ | ----- |
-| BUILD_STARTED        | y     | n      | n     |
-| BUILD_FINISHED       | y     | n      | n     |
+| BUILD_STARTED        | n     | n      | y     |
+| BUILD_FINISHED       | n     | n      | y     |
 | DOING                | n     | y      | n     |
 | CANCELED             | y     | n      | n     |
 | FAILED               | y     | y      | n     |
@@ -97,9 +97,10 @@ Task actions should match the following restrictions:
 
 Basically:
 
+- BUILD_STARTED & BUILD_FINISHED are done internally
 - only the owner can cancel a task or act on building (function being built on owner)
 - only the worker can act on a task processing (DOING/DONE)
-- both can fail a task (depends on if it is coming from the function workflow or the task processing)
+- both can fail a task 
 
 ## Worker
 

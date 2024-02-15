@@ -280,25 +280,15 @@ func TestUpdateAllowed(t *testing.T) {
 		action    asset.ComputeTaskAction
 		outcome   bool
 	}{
-		"owner build start": {
-			requester: "owner",
+		"random build start": {
+			requester: "random",
 			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
 			outcome:   true,
 		},
-		"worker build start": {
-			requester: "worker",
-			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
-			outcome:   false,
-		},
-		"owner build finish": {
-			requester: "owner",
+		"random build finish": {
+			requester: "random",
 			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
 			outcome:   true,
-		},
-		"worker build finish": {
-			requester: "worker",
-			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
-			outcome:   false,
 		},
 		"owner doing": {
 			requester: "owner",
