@@ -58,7 +58,7 @@ func (s *PerformanceService) RegisterPerformance(newPerf *asset.NewPerformance, 
 		return nil, errors.NewPermissionDenied(fmt.Sprintf("only %q worker can register performance", task.Worker))
 	}
 
-	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
+	if task.Status != asset.ComputeTaskStatus_STATUS_EXECUTING {
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register performance for task with status %q", task.Status.String()))
 	}
 

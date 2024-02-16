@@ -75,7 +75,7 @@ func (s *ModelService) registerModel(newModel *asset.NewModel, requester string,
 		return nil, errors.NewPermissionDenied(fmt.Sprintf("only %q worker can register model", task.Worker))
 	}
 
-	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
+	if task.Status != asset.ComputeTaskStatus_STATUS_EXECUTING {
 		return nil, errors.NewBadRequest(fmt.Sprintf("cannot register model for task with status %q", task.Status.String()))
 	}
 

@@ -72,7 +72,7 @@ func TestQueryTasks(t *testing.T) {
 
 	pagination := common.NewPagination("", 2)
 	filter := &asset.TaskQueryFilter{
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 	}
 
 	returnedTasks := []*asset.ComputeTask{{}, {}}
@@ -333,7 +333,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	parent1 := &asset.ComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-111111111111",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
-		Status:         asset.ComputeTaskStatus_STATUS_DOING,
+		Status:         asset.ComputeTaskStatus_STATUS_EXECUTING,
 		FunctionKey:    functionParent1.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
@@ -343,7 +343,7 @@ func TestRegisterCompositeTaskWithCompositeParents(t *testing.T) {
 	parent2 := &asset.ComputeTask{
 		Key:            "aaaaaaaa-cccc-bbbb-eeee-222222222222",
 		ComputePlanKey: "867852b4-8419-4d52-8862-d5db823095be",
-		Status:         asset.ComputeTaskStatus_STATUS_DOING,
+		Status:         asset.ComputeTaskStatus_STATUS_EXECUTING,
 		FunctionKey:    functionParent2.Key,
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {Permissions: sharedPerms},
@@ -1196,7 +1196,7 @@ func TestDisableOutputs(t *testing.T) {
 	})
 	t.Run("task not in terminal state", func(t *testing.T) {
 		task := &asset.ComputeTask{
-			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 			Worker: "myorg",
 		}
 
@@ -1312,7 +1312,7 @@ func TestDisableOutputs(t *testing.T) {
 		}
 
 		child := &asset.ComputeTask{
-			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		}
 
 		outputAsset := &asset.ComputeTaskOutputAsset{AssetKind: asset.AssetKind_ASSET_MODEL}

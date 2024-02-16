@@ -36,7 +36,7 @@ func TestPermissionValue(t *testing.T) {
 }
 
 func TestComputeTaskStatusValue(t *testing.T) {
-	s := ComputeTaskStatus_STATUS_DOING
+	s := ComputeTaskStatus_STATUS_EXECUTING
 	status := &s
 
 	value, err := status.Value()

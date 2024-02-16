@@ -36,7 +36,7 @@ func TestToComputeTask(t *testing.T) {
 		Owner:          "owner",
 		ComputePlanKey: "cp_key",
 		Rank:           0,
-		Status:         asset.ComputeTaskStatus_STATUS_DOING,
+		Status:         asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker:         "worker",
 		CreationDate:   time.Unix(100, 10).UTC(),
 		LogsPermission: asset.Permission{

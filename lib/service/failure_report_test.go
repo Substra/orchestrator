@@ -40,7 +40,7 @@ func TestRegisterComputeTaskFailureReport(t *testing.T) {
 
 	taskService.On("GetTask", newFailureReport.AssetKey).Once().Return(&asset.ComputeTask{
 		Key:    newFailureReport.AssetKey,
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 	}, nil)
 

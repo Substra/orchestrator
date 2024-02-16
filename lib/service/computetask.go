@@ -14,7 +14,7 @@ import (
 
 // Task statuses in which the inputs are defined
 var inputDefinedStatus = []asset.ComputeTaskStatus{
-	asset.ComputeTaskStatus_STATUS_DOING,
+	asset.ComputeTaskStatus_STATUS_EXECUTING,
 	asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT,
 	asset.ComputeTaskStatus_STATUS_FAILED,
 }

@@ -3,7 +3,7 @@ stateDiagram-v2
 	building: BUILDING
 	waitingParent: WAITING_FOR_PARENT_TASKS
 	waitingExecutor: WAITING_FOR_EXECUTOR_SLOT
-	doing: DOING
+	executing: EXECUTING
 	canceled: CANCELED
 	failed: FAILED
 	done: DONE
@@ -19,18 +19,18 @@ stateDiagram-v2
 	waitingBuilding --> building
 	building --> waitingParent
 	waitingParent --> waitingExecutor
-	waitingExecutor --> doing
-	doing --> done
+	waitingExecutor --> executing
+	executing --> done
 	done --> [*]
 
 	
 	building --> failed
-	doing --> failed
+	executing --> failed
 	failed --> [*]
 	
 	waitingBuilding --> canceled
 	building --> canceled
 	waitingParent --> canceled
 	waitingExecutor --> canceled
-	doing --> canceled
+	executing --> canceled
 	canceled --> [*]

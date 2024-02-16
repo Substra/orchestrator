@@ -172,10 +172,10 @@ func TestApplyTaskActionParam(t *testing.T) {
 	empty := &ApplyTaskActionParam{}
 	valid := &ApplyTaskActionParam{
 		ComputeTaskKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
-		Action:         ComputeTaskAction_TASK_ACTION_DOING,
+		Action:         ComputeTaskAction_TASK_ACTION_EXECUTING,
 	}
 	missingKey := &ApplyTaskActionParam{
-		Action: ComputeTaskAction_TASK_ACTION_DOING,
+		Action: ComputeTaskAction_TASK_ACTION_EXECUTING,
 	}
 	missingAction := &ApplyTaskActionParam{
 		ComputeTaskKey: "972bef4c-1b42-4743-bbe9-cc3f4a69952f",
