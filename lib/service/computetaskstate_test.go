@@ -384,7 +384,6 @@ func TestPropagateFunctionCancelation(t *testing.T) {
 			dbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{
 				asset.ComputeTaskStatus_STATUS_BUILDING,
 			}).Return([]*asset.ComputeTask{task}, nil)
-			dbal.On("GetComputeTask", task.Key).Return(task, nil)
 			dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)
 			es.On("RegisterEvents", mock.Anything).Return(nil)
 
