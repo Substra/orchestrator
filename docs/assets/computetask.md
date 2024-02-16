@@ -86,18 +86,18 @@ This is to ensure that when a task starts (switch to DOING), all its inputs are 
 A status change is a reaction to an action.
 Task actions should match the following restrictions:
 
-| action ↓ / sender →  | Owner | Worker | Other |
-| -------------------- | ----- | ------ | ----- |
-| BUILD_STARTED        | n     | n      | y     |
-| BUILD_FINISHED       | n     | n      | y     |
-| DOING                | n     | y      | n     |
-| CANCELED             | y     | n      | n     |
-| FAILED               | y     | y      | n     |
-| DONE                 | n     | y      | n     |
+| action ↓ / sender →  | Owner | Worker | Function Owner |
+| -------------------- | ----- | ------ | -------------- |
+| BUILD_STARTED        | n     | n      | y              |
+| BUILD_FINISHED       | n     | n      | y              |
+| DOING                | n     | y      | n              |
+| CANCELED             | y     | n      | y              |
+| FAILED               | y     | y      | y              |
+| DONE                 | n     | y      | n              |
 
 Basically:
 
-- BUILD_STARTED & BUILD_FINISHED are done internally
+- BUILD_STARTED, BUILD_FINISHED, CANCELED & FAILED are done from the function status change
 - only the owner can cancel a task or act on building (function being built on owner)
 - only the worker can act on a task processing (DOING/DONE)
 - both can fail a task 
