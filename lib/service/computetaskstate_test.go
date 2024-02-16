@@ -280,18 +280,29 @@ func TestUpdateAllowed(t *testing.T) {
 		action    asset.ComputeTaskAction
 		outcome   bool
 	}{
-		"random build start": {
-			requester: "random",
+		// BUILD_STARTED & BUILD_FINISHED should not be accessible from outside
+		"owner build start": {
+			requester: task.Owner,
 			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
-			outcome:   true,
+			outcome:   false,
 		},
-		"random build finish": {
-			requester: "random",
+		"worker build start": {
+			requester: task.Worker,
+			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
+			outcome:   false,
+		},
+		"owner build finish": {
+			requester: task.Owner,
 			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
-			outcome:   true,
+			outcome:   false,
+		},
+		"worker build finish": {
+			requester: task.Worker,
+			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
+			outcome:   false,
 		},
 		"owner doing": {
-			requester: "owner",
+			requester: task.Owner,
 			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
 			outcome:   false,
 		},
@@ -351,13 +362,12 @@ func TestPropagateFunctionCancelation(t *testing.T) {
 	provider.On("GetComputePlanService").Return(cps)
 
 	functionKey := "uuid_f"
-	task := &asset.ComputeTask{Key: "uuid_t", Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, Owner: "owner", Worker: "worker"}
+	task := &asset.ComputeTask{Key: "uuid_t", Status: asset.ComputeTaskStatus_STATUS_BUILDING, Owner: "owner", Worker: "worker"}
 
 	cps.On("failPlan", mock.Anything).Return(nil)
 	dbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{
 		asset.ComputeTaskStatus_STATUS_BUILDING,
 	}).Return([]*asset.ComputeTask{task}, nil)
-	dbal.On("GetComputeTask", task.Key).Return(task, nil)
 	dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)
 	es.On("RegisterEvents", mock.Anything).Return(nil)
 
