@@ -262,7 +262,7 @@ func TestCascadeStatusDone(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	err := service.applyTaskAction(task, transitionDone, "reason")
+	err := service.applyTaskTransition(task, transitionDone, "reason")
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
@@ -280,18 +280,29 @@ func TestUpdateAllowed(t *testing.T) {
 		action    asset.ComputeTaskAction
 		outcome   bool
 	}{
-		"random build start": {
-			requester: "random",
+		// BUILD_STARTED & BUILD_FINISHED should not be accessible from outside
+		"owner build start": {
+			requester: task.Owner,
 			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
-			outcome:   true,
+			outcome:   false,
 		},
-		"random build finish": {
-			requester: "random",
+		"worker build start": {
+			requester: task.Worker,
+			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED,
+			outcome:   false,
+		},
+		"owner build finish": {
+			requester: task.Owner,
 			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
-			outcome:   true,
+			outcome:   false,
+		},
+		"worker build finish": {
+			requester: task.Worker,
+			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
+			outcome:   false,
 		},
 		"owner doing": {
-			requester: "owner",
+			requester: task.Owner,
 			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
 			outcome:   false,
 		},
@@ -340,35 +351,59 @@ func TestUpdateAllowed(t *testing.T) {
 }
 
 func TestPropagateFunctionCancelation(t *testing.T) {
-	dbal := new(persistence.MockDBAL)
-	es := new(MockEventAPI)
-	cps := new(MockComputePlanAPI)
-	provider := newMockedProvider()
-	service := NewComputeTaskService(provider)
+	cases := map[string]struct {
+		taskOwner     string
+		functionOwner string
+	}{
+		"same owner": {
+			taskOwner:     "owner",
+			functionOwner: "owner",
+		},
+		"different owners": {
+			taskOwner:     "taskOwner",
+			functionOwner: "functionOwner",
+		},
+	}
 
-	provider.On("GetComputeTaskDBAL").Return(dbal)
-	provider.On("GetEventService").Return(es)
-	provider.On("GetComputePlanService").Return(cps)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			dbal := new(persistence.MockDBAL)
+			es := new(MockEventAPI)
+			cps := new(MockComputePlanAPI)
+			provider := newMockedProvider()
+			service := NewComputeTaskService(provider)
 
-	functionKey := "uuid_f"
-	task := &asset.ComputeTask{Key: "uuid_t", Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, Owner: "owner", Worker: "worker"}
+			provider.On("GetComputeTaskDBAL").Return(dbal)
+			provider.On("GetEventService").Return(es)
+			provider.On("GetComputePlanService").Return(cps)
 
-	cps.On("failPlan", mock.Anything).Return(nil)
-	dbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{
-		asset.ComputeTaskStatus_STATUS_BUILDING,
-	}).Return([]*asset.ComputeTask{task}, nil)
-	dbal.On("GetComputeTask", task.Key).Return(task, nil)
-	dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)
-	es.On("RegisterEvents", mock.Anything).Return(nil)
+			functionKey := "uuid_f"
+			task := &asset.ComputeTask{Key: "uuid_t", Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, Owner: tc.taskOwner, Worker: "worker"}
 
-	err := service.PropagateActionFromFunction(functionKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Building failed", "owner")
+			cps.On("failPlan", mock.Anything).Return(nil)
+			dbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{
+				asset.ComputeTaskStatus_STATUS_BUILDING,
+			}).Return([]*asset.ComputeTask{task}, nil)
+			dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)
+			es.On("RegisterEvents", mock.Anything).Return(nil)
 
-	assert.NoError(t, err)
+			cps.On("failPlan", mock.Anything).Return(nil)
+			dbal.On("GetFunctionFromTasksWithStatus", functionKey, []asset.ComputeTaskStatus{
+				asset.ComputeTaskStatus_STATUS_BUILDING,
+			}).Return([]*asset.ComputeTask{task}, nil)
+			dbal.On("UpdateComputeTaskStatus", task.Key, asset.ComputeTaskStatus_STATUS_FAILED).Return(nil)
+			es.On("RegisterEvents", mock.Anything).Return(nil)
 
-	cps.AssertExpectations(t)
-	dbal.AssertExpectations(t)
-	es.AssertExpectations(t)
-	provider.AssertExpectations(t)
+			err := service.PropagateActionFromFunction(functionKey, asset.ComputeTaskAction_TASK_ACTION_FAILED, "Building failed", tc.functionOwner)
+
+			assert.NoError(t, err)
+
+			cps.AssertExpectations(t)
+			dbal.AssertExpectations(t)
+			es.AssertExpectations(t)
+			provider.AssertExpectations(t)
+		})
+	}
 }
 
 func TestCheckParentDone(t *testing.T) {

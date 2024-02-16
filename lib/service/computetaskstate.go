@@ -106,8 +106,24 @@ func wrapFsmCallbackContext(f func(*fsm.Event)) func(context.Context, *fsm.Event
 }
 
 // ApplyTaskAction apply an asset.ComputeTaskAction to the task.
+// It checks the permission and delegate to `applyTaskAction`
 // Depending on the current state and action, this may update children tasks
 func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error {
+	task, err := s.GetComputeTaskDBAL().GetComputeTask(key)
+	if err != nil {
+		return err
+	}
+	if !updateAllowed(task, action, requester) {
+		return orcerrors.NewPermissionDenied("only task owner can update it")
+	}
+
+	return s.applyTaskAction(task, action, reason)
+}
+
+// applyTaskAction apply an asset.ComputeTaskAction to the task.
+// This function does NOT check the permissions.
+// Depending on the current state and action, this may update children tasks
+func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action asset.ComputeTaskAction, reason string) error {
 	var transition taskTransition
 	// need to be declared seprately otherwise transition got redeclared
 	var err error
@@ -123,7 +139,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 	case asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED:
 		transition = transitionBuilding
 	case asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED:
-		transition, err = s.getTransitionBuildFinished(key)
+		transition, err = s.getTransitionBuildFinished(task.Key)
 		if err != nil {
 			return err
 		}
@@ -135,15 +151,7 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 		reason = "User action"
 	}
 
-	task, err := s.GetComputeTaskDBAL().GetComputeTask(key)
-	if err != nil {
-		return err
-	}
-	if !updateAllowed(task, action, requester) {
-		return orcerrors.NewPermissionDenied("only task owner can update it")
-	}
-
-	return s.applyTaskAction(task, transition, reason)
+	return s.applyTaskTransition(task, transition, reason)
 }
 
 func (s *ComputeTaskService) getTransitionBuildFinished(taskKey string) (taskTransition, error) {
@@ -166,9 +174,9 @@ func (s *ComputeTaskService) getTransitionBuildFinished(taskKey string) (taskTra
 	}
 }
 
-// applyTaskAction is the internal method allowing any transition (string).
+// applyTaskTransition is the internal method allowing any transition (string).
 // This allows to use this method with internal only transitions (abort).
-func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
+func (s *ComputeTaskService) applyTaskTransition(task *asset.ComputeTask, action taskTransition, reason string) error {
 	s.GetLogger().Debug().Str("taskKey", task.Key).Str("action", string(action)).Str("reason", reason).Msg("Applying task action")
 	state := newState(s, task)
 	err := state.Event(context.Background(), string(action), task, reason)
@@ -250,7 +258,7 @@ func (s *ComputeTaskService) StartDependentTask(child *asset.ComputeTask, reason
 	}
 	if !done {
 		if child.Status != asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS {
-			err = s.applyTaskAction(child, transitionWaitingParentTasks, reason)
+			err = s.applyTaskTransition(child, transitionWaitingParentTasks, reason)
 			if err != nil {
 				return err
 			}
@@ -270,7 +278,7 @@ func (s *ComputeTaskService) StartDependentTask(child *asset.ComputeTask, reason
 		return nil
 	}
 
-	err = s.applyTaskAction(child, transitionWaitingExecutorSlot, reason)
+	err = s.applyTaskTransition(child, transitionWaitingExecutorSlot, reason)
 	if err != nil {
 		return err
 	}
@@ -413,9 +421,6 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 		return requester == task.Owner || requester == task.Worker
 	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_DONE:
 		return requester == task.Worker
-	// These changes can only be triggered from inside the orchestrator (cf Validation()) therefore it should always be allowed
-	case asset.ComputeTaskAction_TASK_ACTION_BUILD_STARTED, asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED:
-		return true
 	default:
 		return false
 	}
@@ -441,7 +446,7 @@ func (s *ComputeTaskService) PropagateActionFromFunction(functionKey string, act
 			// Bypass `ApplyTaskAction` as we don't want to run
 			err = s.StartDependentTask(task, fmt.Sprintf("Function %s finished building", functionKey))
 		} else {
-			err = s.ApplyTaskAction(task.Key, action, reason, requester)
+			err = s.applyTaskAction(task, action, reason)
 		}
 		if err != nil {
 			s.GetLogger().Error().

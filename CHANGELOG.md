@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - incorrect link in documentation ([#307](https://github.com/Substra/orchestrator/pull/307))
+- Skip compute ask permissions checks when the action is propagated from the function status change ([#367](https://github.com/Substra/orchestrator/pull/367))
 
 ## [0.37.0](https://github.com/Substra/orchestrator/releases/tag/0.37.0) - 2023-10-18
 

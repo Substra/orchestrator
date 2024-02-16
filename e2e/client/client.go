@@ -319,22 +319,22 @@ func (c *TestClient) FailableRegisterTasks(optList ...Taskable) (*asset.Register
 }
 
 func (c *TestClient) StartTask(keyRef string) {
-	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_DOING)
+	c.applyTaskTransition(keyRef, asset.ComputeTaskAction_TASK_ACTION_DOING)
 }
 
 func (c *TestClient) CancelTask(keyRef string) {
-	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_CANCELED)
+	c.applyTaskTransition(keyRef, asset.ComputeTaskAction_TASK_ACTION_CANCELED)
 }
 
 func (c *TestClient) FailTask(keyRef string) {
-	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_FAILED)
+	c.applyTaskTransition(keyRef, asset.ComputeTaskAction_TASK_ACTION_FAILED)
 }
 
 func (c *TestClient) DoneTask(keyRef string) {
-	c.applyTaskAction(keyRef, asset.ComputeTaskAction_TASK_ACTION_DONE)
+	c.applyTaskTransition(keyRef, asset.ComputeTaskAction_TASK_ACTION_DONE)
 }
 
-func (c *TestClient) applyTaskAction(keyRef string, action asset.ComputeTaskAction) {
+func (c *TestClient) applyTaskTransition(keyRef string, action asset.ComputeTaskAction) {
 	taskKey := c.ks.GetKey(keyRef)
 	c.logger.Debug().Str("taskKey", taskKey).Str("action", action.String()).Msg("applying task action")
 	_, err := c.computeTaskService.ApplyTaskAction(c.ctx, &asset.ApplyTaskActionParam{
