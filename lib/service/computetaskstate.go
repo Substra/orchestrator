@@ -108,6 +108,14 @@ func wrapFsmCallbackContext(f func(*fsm.Event)) func(context.Context, *fsm.Event
 // ApplyTaskAction apply an asset.ComputeTaskAction to the task.
 // Depending on the current state and action, this may update children tasks
 func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error {
+	task, err := s.GetComputeTaskDBAL().GetComputeTask(key)
+	if err != nil {
+		return err
+	}
+	if !updateAllowed(task, action, requester) {
+		return orcerrors.NewPermissionDenied("only task owner can update it")
+	}
+
 	var transition taskTransition
 	// need to be declared seprately otherwise transition got redeclared
 	var err error
@@ -135,15 +143,9 @@ func (s *ComputeTaskService) ApplyTaskAction(key string, action asset.ComputeTas
 		reason = "User action"
 	}
 
-	task, err := s.GetComputeTaskDBAL().GetComputeTask(key)
-	if err != nil {
-		return err
-	}
-	if !updateAllowed(task, action, requester) {
-		return orcerrors.NewPermissionDenied("only task owner can update it")
-	}
 
-	return s.applyTaskAction(task, transition, reason)
+
+	return s.applyTaskTransition(task, transition, reason)
 }
 
 func (s *ComputeTaskService) getTransitionBuildFinished(taskKey string) (taskTransition, error) {
@@ -166,9 +168,9 @@ func (s *ComputeTaskService) getTransitionBuildFinished(taskKey string) (taskTra
 	}
 }
 
-// applyTaskAction is the internal method allowing any transition (string).
+// applyTaskTransition is the internal method allowing any transition (string).
 // This allows to use this method with internal only transitions (abort).
-func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error {
+func (s *ComputeTaskService) applyTaskTransition(task *asset.ComputeTask, action taskTransition, reason string) error {
 	s.GetLogger().Debug().Str("taskKey", task.Key).Str("action", string(action)).Str("reason", reason).Msg("Applying task action")
 	state := newState(s, task)
 	err := state.Event(context.Background(), string(action), task, reason)
@@ -250,7 +252,7 @@ func (s *ComputeTaskService) StartDependentTask(child *asset.ComputeTask, reason
 	}
 	if !done {
 		if child.Status != asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS {
-			err = s.applyTaskAction(child, transitionWaitingParentTasks, reason)
+			err = s.applyTaskTransition(child, transitionWaitingParentTasks, reason)
 			if err != nil {
 				return err
 			}
@@ -270,7 +272,7 @@ func (s *ComputeTaskService) StartDependentTask(child *asset.ComputeTask, reason
 		return nil
 	}
 
-	err = s.applyTaskAction(child, transitionWaitingExecutorSlot, reason)
+	err = s.applyTaskTransition(child, transitionWaitingExecutorSlot, reason)
 	if err != nil {
 		return err
 	}

@@ -33,8 +33,8 @@ type ComputeTaskAPI interface {
 	ApplyTaskAction(key string, action asset.ComputeTaskAction, reason string, requester string) error
 	GetInputAssets(key string) ([]*asset.ComputeTaskInputAsset, error)
 	DisableOutput(taskKey string, identifier string, requester string) error
-	// applyTaskAction is internal only, it will trigger a task status update.
-	applyTaskAction(task *asset.ComputeTask, action taskTransition, reason string) error
+	// applyTaskTransition is internal only, it will trigger a task status update.
+	applyTaskTransition(task *asset.ComputeTask, transition taskTransition, reason string) error
 	addComputeTaskOutputAsset(output *asset.ComputeTaskOutputAsset) error
 	getTaskOutputCounter(taskKey string) (persistence.ComputeTaskOutputCounter, error)
 	PropagateActionFromFunction(functionKey string, action asset.ComputeTaskAction, reason string, requester string) error

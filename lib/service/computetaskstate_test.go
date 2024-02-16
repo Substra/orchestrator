@@ -262,7 +262,7 @@ func TestCascadeStatusDone(t *testing.T) {
 
 	service := NewComputeTaskService(provider)
 
-	err := service.applyTaskAction(task, transitionDone, "reason")
+	err := service.applyTaskTransition(task, transitionDone, "reason")
 	assert.NoError(t, err)
 
 	dbal.AssertExpectations(t)
