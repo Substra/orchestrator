@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [0.38.0](https://github.com/Substra/orchestrator/releases/tag/0.38.0) - 2024-02-20
+## [0.38.0](https://github.com/Substra/orchestrator/releases/tag/0.38.0) - 2024-02-26
 
 ### Removed
 
