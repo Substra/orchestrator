@@ -11,6 +11,7 @@ on:
       - main
     paths:
       - "charts/**"
+  workflow_dispatch: {}
 
 concurrency:
   # Cancel previous workflows on branch push
@@ -20,5 +21,6 @@ concurrency:
 jobs:
   test-generate-publish:
     uses: substra/substra-gha-workflows/.github/workflows/helm.yml@main
+    secrets: inherit
     with:
       helm-repositories: '[{"name": "bitnami", "url": "https://charts.bitnami.com/bitnami"}]'
