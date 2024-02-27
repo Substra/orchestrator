@@ -59,6 +59,7 @@ jobs:
           path: ~/go/pkg/mod
           key: build-${{ hashFiles('**/go.sum') }}
 
+
       - name: Install protobuf codegen tool
         run: |
           curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.18.1/protoc-3.18.1-linux-x86_64.zip
@@ -91,9 +92,9 @@ jobs:
 
       - name: Install psql
         if: steps.changed_migrations.outputs.any_changed == 'true' || github.ref_type == 'tag'
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends postgresql-client
+        uses: tj-actions/install-postgresql@v3
+        with:
+          postgresql-version: 16
 
       - name: Wait for postgres
         run: |
