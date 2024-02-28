@@ -199,9 +199,9 @@ Disable SSL if using the integrated Postgres, otherwise leave users with the opt
         - ALL
   env:
     - name: PGUSER
-      value: somepguser
+      value: {{ .Values.database.auth.username }}
     - name: PGPASSWORD
-      value: somepgpassword
+      value: {{ .Values.database.auth.password }}
     - name: PGDATABASE
-      value: somepgdatabase
+      value: {{ .Values.database.auth.database }}
 {{- end -}}
