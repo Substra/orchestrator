@@ -29,10 +29,8 @@ spec:
         seccompProfile:
           type: RuntimeDefault
         runAsNonRoot: true
-      {{- if eq .Values.orchestrator.mode "standalone" }}
       initContainers:
         {{- include "substra-orc.waitPostgresqlInitContainer" . | nindent 8 }}
-      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
