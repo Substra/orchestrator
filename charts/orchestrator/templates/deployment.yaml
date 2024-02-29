@@ -24,13 +24,20 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "orchestrator.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
       initContainers:
-        {{- include "substra-orc.waitPostgresqlInitContainer" . | nindent  8 }}
+        {{- include "substra-orc.waitPostgresqlInitContainer" . | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           image: {{ include "substra-orc.images.name" (dict "img" .Values.orchestrator.image "defaultTag" $.Chart.AppVersion) }}
           imagePullPolicy: {{ .Values.orchestrator.image.pullPolicy }}
           command:
