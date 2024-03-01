@@ -88,7 +88,7 @@ jobs:
 
       - name: Set up Google Cloud CLI
         if: steps.changed_migrations.outputs.any_changed == 'true' || github.ref_type == 'tag'
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Install psql
         if: steps.changed_migrations.outputs.any_changed == 'true' || github.ref_type == 'tag'
