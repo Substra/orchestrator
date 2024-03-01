@@ -22,7 +22,7 @@ jobs:
           apply: true
 
       - name: Create PR
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore(deps): update apt/apk dependencies in Dockerfile ${{ matrix.dockerfile }}"
           signoff: true
