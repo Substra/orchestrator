@@ -93,7 +93,7 @@ func checkTaskPermissions(task *asset.ComputeTask, requester string) error {
 		return errors.NewPermissionDenied(fmt.Sprintf("only %q worker can register failure report for compute task", task.Worker))
 	}
 
-	if task.Status != asset.ComputeTaskStatus_STATUS_DOING {
+	if task.Status != asset.ComputeTaskStatus_STATUS_EXECUTING {
 		return errors.NewBadRequest(fmt.Sprintf("cannot register failure report for task with status %q", task.Status.String()))
 	}
 

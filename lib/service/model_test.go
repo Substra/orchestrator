@@ -181,7 +181,7 @@ func TestRegisterTrainModel(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
@@ -284,7 +284,7 @@ func TestRegisterAggregateModel(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
@@ -383,7 +383,7 @@ func TestRegisterDuplicateModel(t *testing.T) {
 		persistence.ComputeTaskOutputCounter{"model": 1},
 		&asset.ComputeTask{
 			Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 			Worker: "test",
 			Outputs: map[string]*asset.ComputeTaskOutput{
 				"model": {
@@ -441,7 +441,7 @@ func TestRegisterHeadModel(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {
@@ -562,7 +562,7 @@ func TestRegisterMultipleHeads(t *testing.T) {
 		persistence.ComputeTaskOutputCounter{"local": 1},
 		&asset.ComputeTask{
 			Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
-			Status: asset.ComputeTaskStatus_STATUS_DOING,
+			Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 			Worker: "test",
 			Outputs: map[string]*asset.ComputeTaskOutput{
 				"shared": {
@@ -616,7 +616,7 @@ func TestRegisterInvalidOutput(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
@@ -696,7 +696,7 @@ func TestRegisterModelsTrainTask(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"model": {
@@ -804,7 +804,7 @@ func TestRegisterHeadAndTrunkModel(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:    "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"shared": {
@@ -939,7 +939,7 @@ func TestRegisterMissingOutput(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:     "08680966-97ae-4573-8b2d-6c4db2b3c532",
-		Status:  asset.ComputeTaskStatus_STATUS_DOING,
+		Status:  asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker:  "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{},
 	}

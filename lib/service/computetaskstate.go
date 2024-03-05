@@ -20,7 +20,7 @@ const (
 	transitionDone                taskTransition = "transitionDone"
 	transitionCanceled            taskTransition = "transitionCanceled"
 	transitionFailed              taskTransition = "transitionFailed"
-	transitionDoing               taskTransition = "transitionDoing"
+	transitionExecuting           taskTransition = "transitionExecuting"
 )
 
 // taskStateEvents is the definition of the state machine representing task states
@@ -37,7 +37,7 @@ var taskStateEvents = fsm.Events{
 	},
 	{
 		Name: string(transitionCanceled),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_EXECUTING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_CANCELED.String(),
 	},
 	{
@@ -46,18 +46,18 @@ var taskStateEvents = fsm.Events{
 		Dst:  asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(),
 	},
 	{
-		Name: string(transitionDoing),
+		Name: string(transitionExecuting),
 		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String()},
-		Dst:  asset.ComputeTaskStatus_STATUS_DOING.String(),
+		Dst:  asset.ComputeTaskStatus_STATUS_EXECUTING.String(),
 	},
 	{
 		Name: string(transitionDone),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Src:  []string{asset.ComputeTaskStatus_STATUS_EXECUTING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_DONE.String(),
 	},
 	{
 		Name: string(transitionFailed),
-		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_DOING.String()},
+		Src:  []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_EXECUTING.String()},
 		Dst:  asset.ComputeTaskStatus_STATUS_FAILED.String(),
 	},
 }
@@ -130,8 +130,8 @@ func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action ass
 	switch action {
 	case asset.ComputeTaskAction_TASK_ACTION_CANCELED:
 		transition = transitionCanceled
-	case asset.ComputeTaskAction_TASK_ACTION_DOING:
-		transition = transitionDoing
+	case asset.ComputeTaskAction_TASK_ACTION_EXECUTING:
+		transition = transitionExecuting
 	case asset.ComputeTaskAction_TASK_ACTION_FAILED:
 		transition = transitionFailed
 	case asset.ComputeTaskAction_TASK_ACTION_DONE:
@@ -419,7 +419,7 @@ func updateAllowed(task *asset.ComputeTask, action asset.ComputeTaskAction, requ
 	switch action {
 	case asset.ComputeTaskAction_TASK_ACTION_CANCELED, asset.ComputeTaskAction_TASK_ACTION_FAILED:
 		return requester == task.Owner || requester == task.Worker
-	case asset.ComputeTaskAction_TASK_ACTION_DOING, asset.ComputeTaskAction_TASK_ACTION_DONE:
+	case asset.ComputeTaskAction_TASK_ACTION_EXECUTING, asset.ComputeTaskAction_TASK_ACTION_DONE:
 		return requester == task.Worker
 	default:
 		return false

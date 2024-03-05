@@ -319,7 +319,7 @@ func (c *TestClient) FailableRegisterTasks(optList ...Taskable) (*asset.Register
 }
 
 func (c *TestClient) StartTask(keyRef string) {
-	c.applyTaskTransition(keyRef, asset.ComputeTaskAction_TASK_ACTION_DOING)
+	c.applyTaskTransition(keyRef, asset.ComputeTaskAction_TASK_ACTION_EXECUTING)
 }
 
 func (c *TestClient) CancelTask(keyRef string) {

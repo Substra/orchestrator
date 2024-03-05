@@ -26,7 +26,7 @@ func TestRegisterPerformance(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:    "taskTest",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 		Outputs: map[string]*asset.ComputeTaskOutput{
 			"auc": {},
@@ -84,7 +84,7 @@ func TestRegisterPerformanceInvalidTask(t *testing.T) {
 	service := NewPerformanceService(provider)
 
 	cts.On("GetTask", "08680966-97ae-4573-8b2d-6c4db2b3c532").Return(&asset.ComputeTask{
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker: "test",
 	}, nil)
 

@@ -102,7 +102,7 @@ func TestOnStateChange(t *testing.T) {
 
 	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT, Key: "uuid"})
 
-	err := state.Event(context.Background(), string(transitionDoing), &asset.ComputeTask{})
+	err := state.Event(context.Background(), string(transitionExecuting), &asset.ComputeTask{})
 
 	assert.NoError(t, err)
 	updater.AssertExpectations(t)
@@ -112,9 +112,9 @@ func TestOnStateChange(t *testing.T) {
 func TestFailedStateChange(t *testing.T) {
 	updater := new(mockTaskStateUpdater)
 
-	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DOING, Key: "uuid"})
+	state := newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_EXECUTING, Key: "uuid"})
 
-	err := state.Event(context.Background(), string(transitionDoing), &asset.ComputeTask{})
+	err := state.Event(context.Background(), string(transitionExecuting), &asset.ComputeTask{})
 	assert.IsType(t, fsm.InvalidEventError{}, err)
 
 	state = newState(updater, &asset.ComputeTask{Status: asset.ComputeTaskStatus_STATUS_DONE, Key: "uuid"})
@@ -143,7 +143,7 @@ func TestDispatchOnTransition(t *testing.T) {
 
 	expectedTask := &asset.ComputeTask{
 		Key:            "uuid",
-		Status:         asset.ComputeTaskStatus_STATUS_DOING,
+		Status:         asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Worker:         "worker",
 		ComputePlanKey: "uuidcp",
 	}
@@ -160,7 +160,7 @@ func TestDispatchOnTransition(t *testing.T) {
 	}
 	es.On("RegisterEvents", expectedEvent).Once().Return(nil)
 
-	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_DOING, "", "worker")
+	err := service.ApplyTaskAction("uuid", asset.ComputeTaskAction_TASK_ACTION_EXECUTING, "", "worker")
 	assert.NoError(t, err)
 
 	es.AssertExpectations(t)
@@ -205,7 +205,7 @@ func TestUpdateTaskStateDone(t *testing.T) {
 
 	dbal.On("GetComputeTask", "uuid").Return(&asset.ComputeTask{
 		Key:    "uuid",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Owner:  "owner",
 		Worker: "worker",
 	}, nil)
@@ -239,7 +239,7 @@ func TestCascadeStatusDone(t *testing.T) {
 
 	task := &asset.ComputeTask{
 		Key:    "uuid",
-		Status: asset.ComputeTaskStatus_STATUS_DOING,
+		Status: asset.ComputeTaskStatus_STATUS_EXECUTING,
 		Owner:  "owner",
 		Worker: "worker",
 	}
@@ -301,14 +301,14 @@ func TestUpdateAllowed(t *testing.T) {
 			action:    asset.ComputeTaskAction_TASK_ACTION_BUILD_FINISHED,
 			outcome:   false,
 		},
-		"owner doing": {
+		"owner executing": {
 			requester: task.Owner,
-			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
+			action:    asset.ComputeTaskAction_TASK_ACTION_EXECUTING,
 			outcome:   false,
 		},
-		"worker doing": {
+		"worker executing": {
 			requester: "worker",
-			action:    asset.ComputeTaskAction_TASK_ACTION_DOING,
+			action:    asset.ComputeTaskAction_TASK_ACTION_EXECUTING,
 			outcome:   true,
 		},
 		"owner cancel": {
