@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.39.0](https://github.com/Substra/orchestrator/releases/tag/0.39.0) - 2024-03-07
+
 ### Changed
 
 - Compute task status `DOING` is renamed `EXECUTING` ([#371](https://github.com/Substra/orchestrator/pull/371))
