@@ -1,0 +1,17 @@
+stateDiagram-v2
+  created: CREATED
+  doing: DOING
+  done: DONE
+  canceled: CANCELED
+  failed: FAILED
+  
+	[*] --> created
+  created --> doing
+  doing --> done
+  doing --> canceled
+  doing --> failed
+  created --> canceled
+
+  done --> [*]
+  canceled --> [*]
+  failed --> [*]
