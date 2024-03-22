@@ -20,7 +20,6 @@ type sqlDataManager struct {
 	Permissions    asset.Permissions
 	Description    asset.Addressable
 	Opener         asset.Addressable
-	Type           string
 	CreationDate   time.Time
 	LogsPermission asset.Permission
 	Metadata       map[string]string
@@ -34,7 +33,6 @@ func (dm *sqlDataManager) toDataManager() *asset.DataManager {
 		Permissions:    &dm.Permissions,
 		Description:    &dm.Description,
 		Opener:         &dm.Opener,
-		Type:           dm.Type,
 		CreationDate:   timestamppb.New(dm.CreationDate),
 		LogsPermission: &dm.LogsPermission,
 		Metadata:       dm.Metadata,
@@ -56,7 +54,7 @@ func (d *DBAL) AddDataManager(datamanager *asset.DataManager) error {
 	stmt := getStatementBuilder().
 		Insert("datamanagers").
 		Columns("key", "channel", "name", "owner", "permissions", "description", "opener", "type", "creation_date", "logs_permission", "metadata").
-		Values(datamanager.Key, d.channel, datamanager.Name, datamanager.Owner, datamanager.Permissions, datamanager.Description.StorageAddress, datamanager.Opener.StorageAddress, datamanager.Type, datamanager.CreationDate.AsTime(), datamanager.LogsPermission, datamanager.Metadata)
+		Values(datamanager.Key, d.channel, datamanager.Name, datamanager.Owner, datamanager.Permissions, datamanager.Description.StorageAddress, datamanager.Opener.StorageAddress, datamanager.CreationDate.AsTime(), datamanager.LogsPermission, datamanager.Metadata)
 
 	return d.exec(stmt)
 }
@@ -92,7 +90,7 @@ func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 	}
 
 	dm := new(sqlDataManager)
-	err = row.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.Type, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata)
+	err = row.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -132,7 +130,7 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 	for rows.Next() {
 		dm := new(sqlDataManager)
 
-		err = rows.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.Type, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata)
+		err = rows.Scan(&dm.Key, &dm.Name, &dm.Owner, &dm.Permissions, &dm.Description.StorageAddress, &dm.Description.Checksum, &dm.Opener.StorageAddress, &dm.Opener.Checksum, &dm.CreationDate, &dm.LogsPermission, &dm.Metadata)
 		if err != nil {
 			return nil, "", err
 		}
