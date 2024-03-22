@@ -53,7 +53,7 @@ func (d *DBAL) AddDataManager(datamanager *asset.DataManager) error {
 
 	stmt := getStatementBuilder().
 		Insert("datamanagers").
-		Columns("key", "channel", "name", "owner", "permissions", "description", "opener", "type", "creation_date", "logs_permission", "metadata").
+		Columns("key", "channel", "name", "owner", "permissions", "description", "opener", "creation_date", "logs_permission", "metadata").
 		Values(datamanager.Key, d.channel, datamanager.Name, datamanager.Owner, datamanager.Permissions, datamanager.Description.StorageAddress, datamanager.Opener.StorageAddress, datamanager.CreationDate.AsTime(), datamanager.LogsPermission, datamanager.Metadata)
 
 	return d.exec(stmt)
@@ -80,7 +80,7 @@ func (d *DBAL) DataManagerExists(key string) (bool, error) {
 // GetDataManager implements persistence.DataManagerDBAL
 func (d *DBAL) GetDataManager(key string) (*asset.DataManager, error) {
 	stmt := getStatementBuilder().
-		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata").
+		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "creation_date", "logs_permission", "metadata").
 		From("expanded_datamanagers").
 		Where(sq.Eq{"channel": d.channel, "key": key})
 
@@ -110,7 +110,7 @@ func (d *DBAL) QueryDataManagers(p *common.Pagination) ([]*asset.DataManager, co
 	}
 
 	stmt := getStatementBuilder().
-		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "type", "creation_date", "logs_permission", "metadata").
+		Select("key", "name", "owner", "permissions", "description_address", "description_checksum", "opener_address", "opener_checksum", "creation_date", "logs_permission", "metadata").
 		From("expanded_datamanagers").
 		Where(sq.Eq{"channel": d.channel}).
 		OrderByClause("creation_date ASC, key").
