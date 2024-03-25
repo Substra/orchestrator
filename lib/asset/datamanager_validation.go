@@ -15,7 +15,6 @@ func (d *NewDataManager) Validate() error {
 		validation.Field(&d.Description, validation.Required),
 		validation.Field(&d.Opener, validation.Required),
 		validation.Field(&d.Metadata, validation.By(validateMetadata)),
-		validation.Field(&d.Type, validation.Required, validation.Length(1, 30)),
 		validation.Field(&d.LogsPermission, validation.Required),
 	)
 }

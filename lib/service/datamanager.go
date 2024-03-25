@@ -74,7 +74,6 @@ func (s *DataManagerService) RegisterDataManager(d *asset.NewDataManager, owner 
 		Description:  d.GetDescription(),
 		Opener:       d.GetOpener(),
 		Metadata:     d.GetMetadata(),
-		Type:         d.GetType(),
 		CreationDate: timestamppb.New(s.GetTimeService().GetTransactionTime()),
 	}
 

@@ -50,7 +50,6 @@ func TestRegisterDataManager(t *testing.T) {
 		Name:           "test datamanager",
 		Description:    description,
 		Opener:         opener,
-		Type:           "test dm",
 		NewPermissions: newPerms,
 		LogsPermission: newLogsPerm,
 	}
@@ -62,7 +61,6 @@ func TestRegisterDataManager(t *testing.T) {
 		Permissions:    perms,
 		Description:    description,
 		Opener:         opener,
-		Type:           "test dm",
 		CreationDate:   timestamppb.New(time.Unix(1337, 0)),
 		LogsPermission: logsPerm,
 	}

@@ -35,7 +35,6 @@ func TestDataManagerValidate(t *testing.T) {
 			NewPermissions: validPermissions,
 			Description:    validAddressable,
 			Opener:         validAddressable,
-			Type:           "test",
 			LogsPermission: validPermissions,
 		}, false},
 		"valid": {&NewDataManager{
@@ -44,7 +43,6 @@ func TestDataManagerValidate(t *testing.T) {
 			NewPermissions: validPermissions,
 			Description:    validAddressable,
 			Opener:         validAddressable,
-			Type:           "test",
 			LogsPermission: validPermissions,
 		}, true},
 	}
