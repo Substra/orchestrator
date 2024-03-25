@@ -1,0 +1,1 @@
+- BREAKING: remove `type` from `datamanager` table ([https://github.com/Substra/orchestrator/pull/394](https://github.com/Substra/orchestrator/pull/394))
