@@ -10,7 +10,6 @@ SELECT execute($$
            desc_add.checksum   AS description_checksum,
            opener              AS opener_address,
            opener_add.checksum AS opener_checksum,
-           type,
            creation_date,
            logs_permission,
            metadata
