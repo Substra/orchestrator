@@ -1,23 +1,18 @@
 apiVersion: v2
 name: orchestrator
 description: substra orchestration
-
 type: application
-version: 8.3.0
-appVersion: 0.39.0
+version: 8.4.0
+appVersion: 0.40.0-rc1
 kubeVersion: ">= 1.19.0-0"
 icon: https://avatars.githubusercontent.com/u/84009910?s=400
-
 keywords:
   - substra
-
 sources:
   - https://github.com/Substra/orchestrator/
-
 maintainers:
   - name: Substra Team
     email: support@substra.org
-
 dependencies:
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
