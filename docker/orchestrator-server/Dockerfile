@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine3.18 AS build
+FROM golang:1.21-alpine3.19 AS build
 
 COPY ./docker/orchestrator-server/dependencies.json /tmp/dependencies.json
 
@@ -7,8 +7,8 @@ SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # hadolint ignore=DL3018
 RUN apk update && apk add --no-cache jq \
-        && jq -r '.[] | "\(.name)=\(.version)"' /tmp/dependencies.json | xargs apk add --no-cache \
-        && rm /tmp/dependencies.json
+    && jq -r '.[] | "\(.name)=\(.version)"' /tmp/dependencies.json | xargs apk add --no-cache \
+    && rm /tmp/dependencies.json
 
 ARG VERSION=dev
 ENV GO111MODULE=on
@@ -38,7 +38,7 @@ RUN make ./bin/orchestrator VERSION=$VERSION && mv ./bin/orchestrator /bin/orche
 
 
 # Expose the binary
-FROM alpine:3.18 as prod
+FROM alpine:3.19 as prod
 
 COPY --from=build /bin/orchestrator /app/orchestrator
 COPY --from=build /bin/grpc_health_probe /bin/grpc_health_probe
