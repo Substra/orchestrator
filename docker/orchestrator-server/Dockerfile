@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.21-alpine3.18 AS build
+FROM golang:1.21-alpine3.19 AS build
 
 COPY ./docker/orchestrator-server/dependencies.json /tmp/dependencies.json
 
@@ -7,17 +7,17 @@ SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # hadolint ignore=DL3018
 RUN apk update && apk add --no-cache jq \
-        && jq -r '.[] | "\(.name)=\(.version)"' /tmp/dependencies.json | xargs apk add --no-cache \
-        && rm /tmp/dependencies.json
+    && jq -r '.[] | "\(.name)=\(.version)"' /tmp/dependencies.json | xargs apk add --no-cache \
+    && rm /tmp/dependencies.json
 
 ARG VERSION=dev
 ENV GO111MODULE=on
 ENV SRC_DIR=/usr/src/orchestrator
 
-RUN wget -q https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.12/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe && chmod +x /bin/grpc_health_probe
+RUN wget -q https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.25/grpc_health_probe-linux-amd64 -O /bin/grpc_health_probe && chmod +x /bin/grpc_health_probe
 
 # Install migration tool
-RUN wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xzf - -C /bin/
+RUN wget -qO- https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xzf - -C /bin/
 
 # Install protobuf codegen dependencies
 RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1 && \
@@ -38,7 +38,7 @@ RUN make ./bin/orchestrator VERSION=$VERSION && mv ./bin/orchestrator /bin/orche
 
 
 # Expose the binary
-FROM alpine:3.18 as prod
+FROM alpine:3.19 as prod
 
 COPY --from=build /bin/orchestrator /app/orchestrator
 COPY --from=build /bin/grpc_health_probe /bin/grpc_health_probe

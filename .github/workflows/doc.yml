@@ -29,7 +29,7 @@ jobs:
           - 5432:5432
     runs-on: ubuntu-latest
     env:
-      GOLANG_MIGRATE_VERSION: v4.15.2
+      GOLANG_MIGRATE_VERSION: v4.17.0
       TBLS_VERSION: v1.64.0
       ORCHESTRATOR_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable
       TBLS_DIR: tbls_tmp
