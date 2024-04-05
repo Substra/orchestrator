@@ -54,7 +54,10 @@ helm install my-release charts/orchestrator --set 'channels[0].name=mychannel' -
 | `ingress.pathType`                         | Ingress path type                                                             | `ImplementationSpecific` |
 | `ingress.extraHosts`                       | The list of additional hostnames to be covered with this ingress record       | `[]`                     |
 | `ingress.extraTls`                         | The tls configuration for hostnames to be coverred by the ingress             | `[]`                     |
-| `resources`                                | Resource configuration for the `orchestrator` container                       | `{}`                     |
+| `resources.requests.cpu`                   | CPU request for the `orchestrator` container                                  | `500m`                   |
+| `resources.requests.memory`                | memory request for the `orchestrator` container                               | `200Mi`                  |
+| `resources.limits.cpu`                     | CPU limits for the `orchestrator` container                                   | `500m`                   |
+| `resources.limits.memory`                  | memory limit for the `orchestrator` container                                 | `800Mi`                  |
 | `nodeSelector`                             | Node labels used for pod assignment                                           | `{}`                     |
 | `tolerations`                              | Tolerations labels for pod assignment                                         | `[]`                     |
 | `affinity`                                 | Affinity settings for pod assignment                                          | `{}`                     |

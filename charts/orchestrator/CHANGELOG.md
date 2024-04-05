@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
-## [8.4.0] - 2024-03-27
+## [8.5.0] - 2024-04-05
 
+### Added
+
+- Resources limits and requests (CPU and memory) for all containers.
+
+
+## [8.4.0] - 2024-03-27
 
 ### Changed
 
