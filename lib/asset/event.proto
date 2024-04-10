@@ -12,6 +12,7 @@ import "failure_report.proto";
 import "model.proto";
 import "organization.proto";
 import "performance.proto";
+import "profiling.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/substra/orchestrator/lib/asset";
@@ -43,6 +44,7 @@ message Event {
     Organization organization = 14;
     Performance performance = 15;
     ComputeTaskOutputAsset compute_task_output_asset = 16;
+    ProfilingStep profiling_step = 17;
   }
   map<string, string> metadata = 18;
 }
