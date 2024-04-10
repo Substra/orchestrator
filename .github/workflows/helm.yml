@@ -11,7 +11,14 @@ on:
       - main
     paths:
       - "charts/**"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      publish-alpha:
+        description: |
+          Publish alpha chart. Chart version must be X.Y.Z-alpha.N.
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   # Cancel previous workflows on branch push
@@ -24,3 +31,4 @@ jobs:
     secrets: inherit
     with:
       helm-repositories: '[{"name": "bitnami", "url": "https://charts.bitnami.com/bitnami"}]'
+      publish-alpha: ${{ inputs.publish-alpha == true }}
