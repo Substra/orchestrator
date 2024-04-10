@@ -22,6 +22,8 @@ var (
 	ModelKind = "model"
 	// PerformanceKind is the type of Performance assets
 	PerformanceKind = "performance"
+	// ProfilingStepKind is the type of Performance assets
+	ProfilingStepKind = "profiling_step"
 	// FailureReportKind is the type of FailureReport assets
 	FailureReportKind          = "failurereport"
 	ComputeTaskOutputAssetKind = "computetask_output_asset"
