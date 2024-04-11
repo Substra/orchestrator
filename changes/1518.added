@@ -1,0 +1,3 @@
+A new service called `ProfilingService` in charge of propagating profiling
+  - For now, only register and propagates profiling steps
+  - Introduce a new asset type, ASSET_PROFILING_STEP`
