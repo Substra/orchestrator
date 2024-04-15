@@ -143,8 +143,8 @@ spec:
                 path: "config.yaml"
         {{- if $.Values.orchestrator.tls.enabled }}
         - name: orchestrator-tls-cacert
-          configMap:
-            name: {{ $.Values.orchestrator.tls.cacert }}
+          secret:
+            secretName: {{ $.Values.orchestrator.tls.cacert }}
         - name: orchestrator-tls-server-pair
           secret:
             secretName: {{ $.Values.orchestrator.tls.secrets.pair }}
@@ -154,7 +154,7 @@ spec:
           projected:
             sources:
               {{- range $cert := $cacerts }}
-              - configMap:
+              - secret:
                   name: {{ $cert }}
                   items:
                     - key: ca.crt
