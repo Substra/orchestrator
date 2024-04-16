@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [8.6.0] - 2024-04-15
+
+### Changed
+
+- `orchestrator-tls-cacert` is now stored as secret
+  
 ## [8.5.0] - 2024-04-05
 
 ### Added
