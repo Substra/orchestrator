@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "orchestrator.name" . }}-backend-client-ingress
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "orchestrator.server.labels" . | nindent 10 }}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          role-orchestrator-client: 'true'
+    ports:
+    - protocol: TCP
+      port: {{ .Values.service.port }}
+
