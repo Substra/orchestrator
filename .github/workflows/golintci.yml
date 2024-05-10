@@ -45,7 +45,7 @@ jobs:
       - name: Build
         run: make codegen mocks
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v5
+        uses: golangci/golangci-lint-action@v6
         with:
           version: v1.55.2
           skip-pkg-cache: true
