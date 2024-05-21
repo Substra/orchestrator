@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [8.7.0] - 2024-05-21
+
+### Added
+
+- Network policies that:
+  -  Limit connection from pods to the DB (except from server and migrations) 
+  -  Allow server pod to communicate with internet (outside of cluster) and pods that have the label `role-orchestrator-client: 'true'`
+
 ## [8.6.0] - 2024-04-15
 
 ### Changed
