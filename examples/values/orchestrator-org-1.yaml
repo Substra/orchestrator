@@ -25,7 +25,7 @@ orchestrator:
           - orchestrator-tls-cacert
         MyOrg3MSP:
           - orchestrator-tls-cacert
-  verifyClientMSPID: true
+  verifyClientMSPID: false
 
 metrics:
   enabled: true
@@ -46,6 +46,12 @@ ingress:
 
 channels:
   - name: mychannel
-    organizations: [MyOrg1MSP, MyOrg2MSP, MyOrg3MSP]
+    organizations:
+      - "First Organization"
+      - "MyOrg2MSP"
+      - "MyOrg3MSP"
   - name: yourchannel
-    organizations: [MyOrg1MSP, MyOrg2MSP, MyOrg3MSP]
+    organizations:
+      - "First Organization"
+      - "MyOrg2MSP"
+      - "MyOrg3MSP"
