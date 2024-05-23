@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "orchestrator.name" . }}-database
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: primary
+      app.kubernetes.io/name: postgresql
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          {{- include "orchestrator.migrations.labels" . | nindent 10 }}
+    - podSelector:
+        matchLabels:
+          {{- include "orchestrator.server.labels" . | nindent 10 }}
+    ports:
+    - protocol: TCP
+      port: {{ .Values.database.port }}
+  egress: []

@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "orchestrator.name" . }}-common
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "orchestrator.common.labels" . | nindent 6 }}
+  policyTypes:
+  - Egress
+  egress:
+    - to:
+      # Allow internal DNS reslution
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: kube-system
+        podSelector:
+          matchLabels:
+            k8s-app: kube-dns
+      ports:
+      - protocol: TCP
+        port: 53
+      - protocol: UDP
+        port: 53
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: primary
+            app.kubernetes.io/name: postgresql
+      ports:
+      - protocol: TCP
+        port: {{ .Values.database.port }}

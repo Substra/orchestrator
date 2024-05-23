@@ -11,6 +11,8 @@ spec:
   template:
     metadata:
       name: {{ include "orchestrator.migrations.fullname" . }}
+      labels:
+        {{- include "orchestrator.migrations.labels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

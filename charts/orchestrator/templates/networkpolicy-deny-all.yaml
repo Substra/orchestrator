@@ -1,0 +1,10 @@
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "orchestrator.name" . }}-deny-all
+spec:
+  podSelector:
+    matchLabels:
+      {{ include "orchestrator.common.selectorLabels" . | nindent 6 }}
+  ingress: []
+  egress: []
