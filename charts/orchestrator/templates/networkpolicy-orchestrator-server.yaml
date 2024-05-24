@@ -9,17 +9,15 @@ spec:
   policyTypes:
   - Ingress
   ingress:
-    # Allow communication from internet
+    # Allow communication from internet, local address ranges are used for inter cluster communication in cloud provider
     - from:
       - ipBlock:
           cidr: 0.0.0.0/0
-          except:
-          - 10.0.0.0/8
-          - 192.168.0.0/16
-          - 172.16.0.0/20
       ports:
         - protocol: TCP
           port: 443
         - protocol: TCP
           port: 80
+        - protocol: TCP
+          port: {{ .Values.service.port }}
 
