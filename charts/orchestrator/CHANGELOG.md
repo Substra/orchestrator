@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [8.7.1] - 2024-05-24
+
+### Changed
+
+- Allo more connection to the server to work with cloud provider
+
 ## [8.7.0] - 2024-05-21
 
 ### Added
