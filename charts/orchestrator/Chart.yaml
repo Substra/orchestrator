@@ -2,7 +2,7 @@ apiVersion: v2
 name: orchestrator
 description: substra orchestration
 type: application
-version: 8.7.2
+version: 8.7.3
 appVersion: 0.41.0
 kubeVersion: ">= 1.19.0-0"
 icon: https://avatars.githubusercontent.com/u/84009910?s=400
@@ -16,5 +16,5 @@ maintainers:
 dependencies:
   - name: postgresql
     repository: https://charts.bitnami.com/bitnami
-    version: 13.1.2
+    version: 15.4.1
     condition: postgresql.enabled
