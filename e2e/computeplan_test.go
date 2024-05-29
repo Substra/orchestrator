@@ -688,6 +688,13 @@ func TestIsPlanRunning(t *testing.T) {
 	resp = appClient.IsPlanRunning(client.DefaultPlanRef)
 	require.False(t, resp.IsRunning)
 
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task3"))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithKeyRef("task4"))
+	appClient.FailTask("task3")
+
+	resp = appClient.IsPlanRunning(client.DefaultPlanRef)
+	require.False(t, resp.IsRunning)
+
 	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp2"))
 	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithPlanRef("cp2").WithKeyRef("task-cp2"))
 	appClient.StartTask("task-cp2")
