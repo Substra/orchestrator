@@ -1,0 +1,1 @@
+Compute plans are identified as not running if a task failed or is canceled, even if some tasks are still in doing.
