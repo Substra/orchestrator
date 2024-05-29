@@ -175,10 +175,13 @@ func (d *DBAL) FailComputePlan(plan *asset.ComputePlan, failureDate time.Time) e
 
 func (d *DBAL) IsPlanRunning(key string) (bool, error) {
 	stmt := getStatementBuilder().
-		Select("COUNT(*)").
+		Select("COUNT(*) as TotalCount",
+			"COALESCE(SUM(CASE WHEN status = '"+asset.ComputeTaskStatus_STATUS_DONE.String()+"' then 1 else 0 end), 0) AS DoneCount",
+			"COALESCE(SUM(CASE WHEN status = '"+asset.ComputeTaskStatus_STATUS_CANCELED.String()+"' then 1 else 0 end), 0) AS CanceledCount",
+			"COALESCE(SUM(CASE WHEN status = '"+asset.ComputeTaskStatus_STATUS_FAILED.String()+"' then 1 else 0 end), 0) AS FailedCount",
+		).
 		From("compute_tasks").
 		Where(sq.Eq{
-			"status":           []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_EXECUTING.String()},
 			"compute_plan_key": key,
 			"channel":          d.channel,
 		})
@@ -188,8 +191,14 @@ func (d *DBAL) IsPlanRunning(key string) (bool, error) {
 		return false, err
 	}
 
-	var count int
-	err = row.Scan(&count)
+	var totalCount, doneCount, canceledCount, failedCount int
+	err = row.Scan(&totalCount, &doneCount, &canceledCount, &failedCount)
 
-	return count > 0, err
+	if totalCount == doneCount {
+		return false, err
+	}
+	if canceledCount > 0 || failedCount > 0 {
+		return false, err
+	}
+	return true, err
 }
