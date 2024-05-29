@@ -194,11 +194,8 @@ func (d *DBAL) IsPlanRunning(key string) (bool, error) {
 	var totalCount, doneCount, canceledCount, failedCount int
 	err = row.Scan(&totalCount, &doneCount, &canceledCount, &failedCount)
 
-	if totalCount == doneCount {
-		return false, err
-	}
 	if canceledCount > 0 || failedCount > 0 {
 		return false, err
 	}
-	return true, err
+	return totalCount != doneCount, err
 }
