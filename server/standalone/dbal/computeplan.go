@@ -200,7 +200,7 @@ func (d *DBAL) IsPlanRunning(key string) (bool, error) {
 		if (status == asset.ComputeTaskStatus_STATUS_CANCELED.String() || status == asset.ComputeTaskStatus_STATUS_FAILED.String()) && count > 0 {
 			return false, err
 		} else if count > 0 {
-			// If one of the statuses (expect Canceled or Failed) is running, return true
+			// If one of the statuses (expect Canceled or Failed) count at least one task, return true
 			return true, err
 		}
 	}
