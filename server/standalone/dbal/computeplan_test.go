@@ -149,9 +149,16 @@ func TestIsPlanRunning(t *testing.T) {
 
 	mock.ExpectBegin()
 
-	rows := pgxmock.NewRows([]string{"canceledCount", "failedCount", "waitSlotCount", "buildingCount", "waitParentCount", "waitExecCount", "executingCount"}).AddRow(0, 0, 0, 1, 0, 0, 0)
+	rows := pgxmock.NewRows([]string{"status", "count"}).
+		AddRow(asset.ComputeTaskStatus_STATUS_CANCELED.String(), 0).
+		AddRow(asset.ComputeTaskStatus_STATUS_FAILED.String(), 0).
+		AddRow(asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), 0).
+		AddRow(asset.ComputeTaskStatus_STATUS_BUILDING.String(), 0).
+		AddRow(asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), 0).
+		AddRow(asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), 0).
+		AddRow(asset.ComputeTaskStatus_STATUS_EXECUTING.String(), 1)
 	mock.
-		ExpectQuery(`SELECT COUNT(status) FROM compute_tasks WHERE channel = $1 AND compute_plan_key = $2 AND status IN ($3,$4,$5,$6,$7,$8,$9) GROUP BY status`).
+		ExpectQuery(`SELECT status, COUNT(status) FROM compute_tasks WHERE channel = $1 AND compute_plan_key = $2 AND status IN ($3,$4,$5,$6,$7,$8,$9) GROUP BY status`).
 		WithArgs(testChannel, cpKey, asset.ComputeTaskStatus_STATUS_CANCELED.String(), asset.ComputeTaskStatus_STATUS_FAILED.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_EXECUTING.String()).
 		WillReturnRows(rows)
 
