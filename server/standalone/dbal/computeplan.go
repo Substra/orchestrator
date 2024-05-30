@@ -191,21 +191,19 @@ func (d *DBAL) IsPlanRunning(key string) (bool, error) {
 	}
 	defer rows.Close()
 
-	addCount := 0
-
 	for rows.Next() {
 		var status string
 		var count int
 
 		err = rows.Scan(&status, &count)
 
-		if status == asset.ComputeTaskStatus_STATUS_CANCELED.String() || status == asset.ComputeTaskStatus_STATUS_FAILED.String() {
-			if count > 0 {
-				return false, err
-			}
-		} else {
-			addCount += count
+		if (status == asset.ComputeTaskStatus_STATUS_CANCELED.String() || status == asset.ComputeTaskStatus_STATUS_FAILED.String()) && count > 0 {
+			return false, err
+		} else if count > 0 {
+			// If one of the statuses (expect Canceled or Failed) is running, return true
+			return true, err
 		}
 	}
-	return addCount > 0, err
+	// Reaching the end of the loop means all tasks are Done. The CP is terminated.
+	return false, err
 }
