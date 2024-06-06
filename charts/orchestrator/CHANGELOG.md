@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- towncrier release notes start -->
+## [8.7.3] - 2024-06-06
+
+### Changed
+
+- Upgraded postgres bitnami chart to 15.4.1
 
 ## [8.7.2] - 2024-06-03
 
@@ -19,14 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Allo more connection to the server to work with cloud provider
+- Allow more connection to the server to work with cloud provider
 
 ## [8.7.0] - 2024-05-21
 
 ### Added
 
 - Network policies that:
-  -  Limit connection from pods to the DB (except from server and migrations) 
+  -  Limit connection from pods to the DB (except from server and migrations)
   -  Allow server pod to communicate with internet (outside of cluster) and pods that have the label `role-orchestrator-client: 'true'`
 
 ## [8.6.0] - 2024-04-15
@@ -34,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `orchestrator-tls-cacert` is now stored as secret
-  
+
 ## [8.5.0] - 2024-04-05
 
 ### Added
