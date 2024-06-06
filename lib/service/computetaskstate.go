@@ -135,12 +135,16 @@ func (s *ComputeTaskService) applyTaskAction(task *asset.ComputeTask, action ass
 	case asset.ComputeTaskAction_TASK_ACTION_FAILED:
 		transition = transitionFailed
 	case asset.ComputeTaskAction_TASK_ACTION_DONE:
-		plan, err := s.GetComputePlanService().GetPlan(task.ComputePlanKey)
-		if err != nil {
-			return err
-		}
-		if plan.IsTerminated() {
-			transition = transitionCanceled
+		if task.ComputePlanKey != "" {
+			plan, err := s.GetComputePlanService().GetPlan(task.ComputePlanKey)
+			if err != nil {
+				return err
+			}
+			if plan.IsTerminated() {
+				transition = transitionCanceled
+			} else {
+				transition = transitionDone
+			}
 		} else {
 			transition = transitionDone
 		}
