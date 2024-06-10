@@ -175,21 +175,35 @@ func (d *DBAL) FailComputePlan(plan *asset.ComputePlan, failureDate time.Time) e
 
 func (d *DBAL) IsPlanRunning(key string) (bool, error) {
 	stmt := getStatementBuilder().
-		Select("COUNT(*)").
+		Select("status",
+			"COUNT(status)").
 		From("compute_tasks").
 		Where(sq.Eq{
-			"status":           []string{asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_EXECUTING.String()},
+			"status":           []string{asset.ComputeTaskStatus_STATUS_CANCELED.String(), asset.ComputeTaskStatus_STATUS_FAILED.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_BUILDER_SLOT.String(), asset.ComputeTaskStatus_STATUS_BUILDING.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_PARENT_TASKS.String(), asset.ComputeTaskStatus_STATUS_WAITING_FOR_EXECUTOR_SLOT.String(), asset.ComputeTaskStatus_STATUS_EXECUTING.String()},
 			"compute_plan_key": key,
 			"channel":          d.channel,
-		})
+		}).
+		GroupBy("status")
 
-	row, err := d.queryRow(stmt)
+	rows, err := d.query(stmt)
 	if err != nil {
 		return false, err
 	}
+	defer rows.Close()
 
-	var count int
-	err = row.Scan(&count)
+	for rows.Next() {
+		var status string
+		var count int
 
-	return count > 0, err
+		err = rows.Scan(&status, &count)
+
+		if (status == asset.ComputeTaskStatus_STATUS_CANCELED.String() || status == asset.ComputeTaskStatus_STATUS_FAILED.String()) && count > 0 {
+			return false, err
+		} else if count > 0 {
+			// If one of the statuses (except Canceled or Failed) count at least one task, return true
+			return true, err
+		}
+	}
+	// Reaching the end of the loop means all tasks are Done. The CP is terminated.
+	return false, err
 }
