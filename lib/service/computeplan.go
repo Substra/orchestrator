@@ -192,7 +192,7 @@ func (s *ComputePlanService) computePlanExists(key string) (bool, error) {
 func (s *ComputePlanService) IsPlanRunning(key string) (bool, error) {
 	plan, err := s.GetPlan(key)
 	if plan.IsTerminated() {
-		return true, err
+		return false, err
 	} else {
 		return s.GetComputePlanDBAL().IsPlanRunning(key)
 	}
