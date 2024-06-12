@@ -190,5 +190,10 @@ func (s *ComputePlanService) computePlanExists(key string) (bool, error) {
 // IsPlanRunning indicates whether there are tasks belonging to the compute plan
 // being executed or waiting to be executed
 func (s *ComputePlanService) IsPlanRunning(key string) (bool, error) {
-	return s.GetComputePlanDBAL().IsPlanRunning(key)
+	plan, err := s.GetPlan(key)
+	if plan.IsTerminated() {
+		return true, err
+	} else {
+		return s.GetComputePlanDBAL().IsPlanRunning(key)
+	}
 }
