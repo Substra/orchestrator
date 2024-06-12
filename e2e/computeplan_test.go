@@ -703,10 +703,14 @@ func TestIsPlanRunning(t *testing.T) {
 	require.Nil(t, err)
 
 	resp = appClient.IsPlanRunning("cp2")
-	require.True(t, resp.IsRunning)
+	require.False(t, resp.IsRunning)
 
-	appClient.CancelTask("task-cp2")
+	appClient.RegisterComputePlan(client.DefaultComputePlanOptions().WithKeyRef("cp3"))
+	appClient.RegisterTasks(client.DefaultTrainTaskOptions().WithPlanRef("cp3").WithKeyRef("task-cp3"))
+	appClient.StartTask("task-cp3")
 
-	resp = appClient.IsPlanRunning("cp2")
+	appClient.CancelTask("task-cp3")
+
+	resp = appClient.IsPlanRunning("cp3")
 	require.False(t, resp.IsRunning)
 }
