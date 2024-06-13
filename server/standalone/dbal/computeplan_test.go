@@ -167,7 +167,7 @@ func TestIsPlanRunning(t *testing.T) {
 
 	dbal := &DBAL{ctx: context.TODO(), tx: tx, channel: testChannel}
 
-	isRunning, err := dbal.IsPlanRunning(cpKey)
+	isRunning, err := dbal.ArePlanTasksRunning(cpKey)
 	assert.NoError(t, err)
 	assert.True(t, isRunning)
 

@@ -194,6 +194,6 @@ func (s *ComputePlanService) IsPlanRunning(key string) (bool, error) {
 	if plan.IsTerminated() {
 		return false, err
 	} else {
-		return s.GetComputePlanDBAL().IsPlanRunning(key)
+		return s.GetComputePlanDBAL().ArePlanTasksRunning(key)
 	}
 }
