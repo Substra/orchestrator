@@ -173,7 +173,7 @@ func (d *DBAL) FailComputePlan(plan *asset.ComputePlan, failureDate time.Time) e
 	return d.updateComputePlan(plan.Key, "failure_date", failureDate)
 }
 
-func (d *DBAL) IsPlanRunning(key string) (bool, error) {
+func (d *DBAL) ArePlanTasksRunning(key string) (bool, error) {
 	stmt := getStatementBuilder().
 		Select("status",
 			"COUNT(status)").
