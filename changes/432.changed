@@ -1,1 +1,0 @@
-Rename `ComputePlanDBAL().IsPlanRunning(key)` to `ComputePlanDBAL().ArePlanTaksRunning(key)`

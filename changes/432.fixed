@@ -1,1 +1,0 @@
-`IsPlanRunning` checks if a cancel of failure date is set before checking the tasks status.

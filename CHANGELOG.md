@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+## [0.42.0](https://github.com/Substra/orchestrator/releases/tag/0.42.0) - 2024-06-13
+
+
+### Changed
+
+- Rename `ComputePlanDBAL().IsPlanRunning(key)` to `ComputePlanDBAL().ArePlanTaksRunning(key)` ([#432](https://github.com/Substra/orchestrator/pull/432))
+
+### Fixed
+
+- Compute plans are identified as not running if a task failed or is canceled, even if some tasks are still in doing. ([#427](https://github.com/Substra/orchestrator/pull/427))
+- `IsPlanRunning` checks if a cancel of failure date is set before checking the tasks status. ([#432](https://github.com/Substra/orchestrator/pull/432))
+
+
 ## [0.41.0](https://github.com/Substra/orchestrator/releases/tag/0.41.0) - 2024-06-03
 
 
