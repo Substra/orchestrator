@@ -29,6 +29,7 @@ type DependenciesProvider interface {
 	ComputeTaskServiceProvider
 	ModelServiceProvider
 	ComputePlanServiceProvider
+	ProfilingServiceProvider
 	PerformanceServiceProvider
 	EventServiceProvider
 	LoggerProvider
@@ -55,6 +56,7 @@ type Provider struct {
 	computeTask   ComputeTaskAPI
 	model         ModelAPI
 	computePlan   ComputePlanAPI
+	profiling     ProfilingAPI
 	performance   PerformanceAPI
 	event         EventAPI
 	time          TimeAPI
@@ -220,6 +222,15 @@ func (sc *Provider) GetPerformanceService() PerformanceAPI {
 		sc.performance = NewPerformanceService(sc)
 	}
 	return sc.performance
+}
+
+// GetProfilingService returns a ProfilingAPI instance.
+// The service will be instanciated if needed.
+func (sc *Provider) GetProfilingService() ProfilingAPI {
+	if sc.profiling == nil {
+		sc.profiling = NewProfilingService(sc)
+	}
+	return sc.profiling
 }
 
 // GetEventService returns an EventAPI instance.

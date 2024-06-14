@@ -74,6 +74,7 @@ func GetServer(dbURL string, params common.AppParameters, healthcheck *health.Se
 	asset.RegisterModelServiceServer(server, handlers.NewModelServer())
 	asset.RegisterComputePlanServiceServer(server, handlers.NewComputePlanServer())
 	asset.RegisterPerformanceServiceServer(server, handlers.NewPerformanceServer())
+	asset.RegisterProfilingServiceServer(server, handlers.NewProfilingServer())
 	asset.RegisterEventServiceServer(server, handlers.NewEventServer())
 	asset.RegisterInfoServiceServer(server, handlers.NewInfoServer())
 	asset.RegisterFailureReportServiceServer(server, handlers.NewFailureReportServer())

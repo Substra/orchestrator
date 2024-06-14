@@ -31,6 +31,8 @@ func MarshalEventAsset(event *Event) ([]byte, error) {
 		m = event.GetOrganization()
 	case *Event_Performance:
 		m = event.GetPerformance()
+	case *Event_ProfilingStep:
+		m = event.GetProfilingStep()
 	case *Event_ComputeTaskOutputAsset:
 		m = event.GetComputeTaskOutputAsset()
 	default:
@@ -104,6 +106,12 @@ func UnmarshalEventAsset(b []byte, event *Event, assetKind AssetKind) error {
 			return err
 		}
 		event.Asset = &Event_ComputeTaskOutputAsset{ComputeTaskOutputAsset: out}
+	case AssetKind_ASSET_PROFILING_STEP:
+		out := new(ProfilingStep)
+		if err := protojson.Unmarshal(b, out); err != nil {
+			return err
+		}
+		event.Asset = &Event_ProfilingStep{ProfilingStep: out}
 	default:
 		return orcerrors.NewInternal(fmt.Sprintf("unsupported asset kind %T", assetKind))
 	}
