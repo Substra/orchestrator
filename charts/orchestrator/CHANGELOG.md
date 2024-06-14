@@ -6,12 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- towncrier release notes start -->
+## [8.7.5] - 2024-06-13
+
+
+### Changed
+
+- Bump app version to 0.42.0
+
 ## [8.7.4] - 2024-06-10
 
 ### Fixed
 
 - Remove Postgres default user (#430)
-  
+
 ## [8.7.3] - 2024-06-06
 
 ### Changed
