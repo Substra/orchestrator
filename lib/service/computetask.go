@@ -253,6 +253,11 @@ func (s *ComputeTaskService) DisableOutput(taskKey string, identifier string, re
 		return err
 	}
 
+	// If the task is failing because of the linked function failing, we may need
+	if len(outputAssets) == 0 {
+		return orcerrors.NewCannotDisableAsset(fmt.Sprintf("there is no output asset with identifier %s for task %s", identifier, taskKey))
+	}
+
 	var service disabler
 
 	// All outputs under the same identifier have the same kind so we use only the first one
