@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+
+## [8.7.5fake] - 2024-08-07
+
+Bump app version to 0.42.0fake
+
 ## [8.7.5fake] - 2024-08-07
 
 Bump app version to 0.42.0fake-rc1
