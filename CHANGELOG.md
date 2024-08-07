@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- towncrier release notes start -->
 
+# ## [0.42.0fake](https://github.com/Substra/orchestrator/releases/tag/0.42.0fake) - 2024-08-07
+
+### Added
+
+- A new service called `ProfilingService` in charge of propagating profiling
+    - For now, only register and propagates profiling steps
+    - Introduce a new asset type, `ASSET_PROFILING_STEP` ([#1519](https://github.com/Substra/orchestrator/pull/1519))
+
+
 ## [0.42.0](https://github.com/Substra/orchestrator/releases/tag/0.42.0) - 2024-06-13
 
 
