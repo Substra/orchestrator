@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- towncrier release notes start -->
 
 
+
+## [8.7.5fake] - 2024-08-08
+
+Bump app version to 0.42.10fake
+
 ## [8.7.5fake] - 2024-08-07
 
 Bump app version to 0.42.10fake
