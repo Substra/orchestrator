@@ -15,7 +15,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/looplab/fsm v1.0.2
 	github.com/pashagolub/pgxmock v1.8.0
-	github.com/prometheus/client_golang v1.20.2
+	github.com/prometheus/client_golang v1.20.3
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.8.0
