@@ -4,7 +4,8 @@
 # Call this function to generate a new CA cert/key pair instead.
 function generate_cacert {
     openssl genrsa -out ca.key 2048
-    openssl req -new -x509 -days 365 -sha256 -key ca.key -extensions v3_ca -config openssl-with-ca.cnf -subj "/C=FR/ST=Loire-Atlantique/L=Nantes/O=Orchestrator Root CA/CN=Orchestrator Root CA" -out ca.crt
+    # 18225 days = 5 years = 5 * 365
+    openssl req -new -x509 -days 1825 -sha256 -key ca.key -extensions v3_ca -config openssl-with-ca.cnf -subj "/C=FR/ST=Loire-Atlantique/L=Nantes/O=Orchestrator Root CA/CN=Orchestrator Root CA" -out ca.crt
 }
 
 function generate_new_k8s_cacert {
