@@ -35,10 +35,10 @@ requires:
     - cert_manager
 manifests:
   rawYaml:
-    - examples/k8s/cm-tls-org-1-cacert.yaml
+    - examples/k8s/secret-tls-org-1-cacert.yaml
     - examples/k8s/secret-cacert-certmanager.yaml
     - examples/k8s/certmanagerca.yaml
-    - examples/k8s/cm-tls-org-2-cacert.yaml
+    - examples/k8s/secret-tls-org-2-cacert.yaml
 deploy:
   kubectl: {}
 profiles:
@@ -50,7 +50,7 @@ profiles:
     patches:
       - op: add
         path: /manifests/rawYaml/-
-        value: "examples/k8s/cm-tls-org-3-cacert.yaml"
+        value: "examples/k8s/secret-tls-org-3-cacert.yaml"
 ---
 apiVersion: skaffold/v4beta2
 kind: Config
