@@ -120,6 +120,14 @@ See Bitnami documentation: https://bitnami.com/stack/postgresql/helm
 | ----------------------------- | --------------------------------------------------------- | ----- |
 | `migrations.fullnameOverride` | String to fully override the `migrations.server.fullname` | `""`  |
 
+### Images
+
+| Name                                   | Description                               | Value       |
+| -------------------------------------- | ----------------------------------------- | ----------- |
+| `initImages.initPostgresql.repository` | PostgreSQL image                          | `postgres`  |
+| `initImages.initPostgresql.tag`        | PostgreSQL tag                            | `17`        |
+| `initImages.initPostgresql.registry`   | The registry to pull the PostgreSQL image | `docker.io` |
+
 
 ## Usage
 
