@@ -325,10 +325,10 @@ migrations:
 ## @section Images
 ##
 initImages:
-  initPostgresql:
-    ## @param initImages.initPostgresql.repository PostgreSQL image
-    ## @param initImages.initPostgresql.tag PostgreSQL tag
-    ## @param initImages.initPostgresql.registry The registry to pull the PostgreSQL image
+  postgresql:
+    ## @param initImages.postgresql.repository PostgreSQL image
+    ## @param initImages.postgresql.tag PostgreSQL tag
+    ## @param initImages.postgresql.registry The registry to pull the PostgreSQL image
     registry: docker.io
     repository: postgres
     tag: "17"
