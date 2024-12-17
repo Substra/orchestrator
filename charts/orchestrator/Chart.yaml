@@ -2,7 +2,7 @@ apiVersion: v2
 name: orchestrator
 description: substra orchestration
 type: application
-version: 8.7.7
+version: 8.8.0
 appVersion: 1.0.0
 kubeVersion: '>= 1.19.0-0'
 icon: https://avatars.githubusercontent.com/u/84009910?s=400
